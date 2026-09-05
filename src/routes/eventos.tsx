@@ -9,11 +9,9 @@ import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
-import {
-  EventsGrid,
-  EventsHeader,
-  type CreateEventValues,
-} from "@/components/events/events-view";
+import type { CreateEventValues } from "@/components/events/create-event-form";
+import { EventsGrid } from "@/components/events/events-grid";
+import { EventsHeader } from "@/components/events/events-header";
 
 export const Route = createFileRoute("/eventos")({
   beforeLoad: requireAuth,
