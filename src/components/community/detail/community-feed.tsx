@@ -1,7 +1,7 @@
 import type { PostView } from "@/lib/api";
 import { texts } from "@/texts";
 
-import { PostCard } from "@/components/post-card";
+import { PostCard } from "@/components/post/post-card";
 
 export function CommunityFeed({ posts, emptyText }: { posts: PostView[]; emptyText: string }) {
   return (

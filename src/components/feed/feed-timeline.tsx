@@ -2,7 +2,7 @@ import { Loader2 } from "lucide-react";
 
 import type { PostView } from "@/lib/api";
 
-import { PostCard } from "@/components/post-card";
+import { PostCard } from "@/components/post/post-card";
 
 export function FeedTimeline({ posts, loading }: { posts: PostView[]; loading: boolean }) {
   return (
