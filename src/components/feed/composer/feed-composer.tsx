@@ -1,6 +1,6 @@
 import { type FormEventHandler, useRef } from "react";
 
-import { BarChart3, Calendar, FileText, Film, Image, Loader2, X } from "lucide-react";
+import { BarChart3, Calendar, FileText, Film, Image, Loader2 } from "lucide-react";
 
 import type { PostView, Profile } from "@/lib/api";
 import { texts } from "@/texts";
@@ -13,6 +13,8 @@ import {
 import { MentionTextarea } from "@/components/mention-textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
+import { ComposerAction } from "./composer-action";
+import { ComposerMediaPreview } from "./composer-media-preview";
 
 const composerPostActions: Array<{
   type: PostView["type"];
@@ -86,44 +88,7 @@ export function FeedComposer({
         />
       </div>
 
-      {media.length > 0 && (
-        <div className="relative mt-3">
-          {mediaType === "image" ? (
-            <div className={`grid gap-2 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
-              {media.map((item, index) => (
-                <div
-                  key={item.preview}
-                  className="relative overflow-hidden rounded-xl border border-border-soft"
-                >
-                  <img
-                    src={item.preview}
-                    alt=""
-                    className="h-48 w-full object-cover bg-surface-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onRemoveMedia(index)}
-                    className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="relative overflow-hidden rounded-xl border border-border-soft">
-              <video src={media[0].preview} controls className="max-h-64 w-full bg-surface-1" />
-              <button
-                type="button"
-                onClick={() => onRemoveMedia(0)}
-                className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <ComposerMediaPreview media={media} mediaType={mediaType} onRemove={onRemoveMedia} />
 
       <input
         ref={fileRef}
@@ -179,30 +144,5 @@ export function FeedComposer({
         </div>
       </div>
     </form>
-  );
-}
-
-function ComposerAction({
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: React.ElementType;
-  label: string;
-  active?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-light transition ${
-        active ? "bg-surface-2 text-primary" : "hover:bg-surface-3 hover:text-text-strong"
-      }`}
-    >
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
-    </button>
   );
 }

@@ -17,8 +17,8 @@ import {
 } from "@/utils/media";
 
 import { AppContainer } from "@/components/app-container";
-import { FeedComposer } from "@/components/feed/feed-composer";
-import { FeedSidebar } from "@/components/feed/feed-sidebar";
+import { FeedComposer } from "@/components/feed/composer/feed-composer";
+import { FeedSidebar } from "@/components/feed/sidebar/feed-sidebar";
 import { FeedTabs } from "@/components/feed/feed-tabs";
 import { FeedTimeline } from "@/components/feed/feed-timeline";
 
