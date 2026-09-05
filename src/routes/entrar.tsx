@@ -8,7 +8,8 @@ import { texts } from "@/texts";
 
 import { ForgotPasswordDialog } from "@/components/auth/forgot-password-dialog";
 import { LoginForm } from "@/components/auth/login-form";
-import { AuthPageLayout, type AuthTab } from "@/components/auth/auth-page-layout";
+import { AuthPageLayout } from "@/components/auth/layout/auth-page-layout";
+import type { AuthTab } from "@/components/auth/layout/auth-tab";
 import { SignupForm } from "@/components/auth/signup-form";
 
 const searchSchema = z.object({
