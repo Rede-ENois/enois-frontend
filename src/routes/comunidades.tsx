@@ -10,14 +10,12 @@ import { texts } from "@/texts";
 import { mergeUniquePage } from "@/utils/collections";
 
 import { AppContainer } from "@/components/app-container";
-import {
-  CommunitiesGrid,
-  CommunitiesHeader,
-  CommunitiesLoadMore,
-  CommunityTopicFilters,
-  type CommunityTopic,
-} from "@/components/community/community-list-view";
-import { CreateCommunityDialog } from "@/components/community/create-community-dialog";
+import { CommunitiesGrid } from "@/components/community/list/communities-grid";
+import { CommunitiesHeader } from "@/components/community/list/communities-header";
+import { CommunitiesLoadMore } from "@/components/community/list/communities-load-more";
+import { CommunityTopicFilters } from "@/components/community/list/community-topic-filters";
+import type { CommunityTopic } from "@/components/community/list/community-topics";
+import { CreateCommunityDialog } from "@/components/community/list/create-community-dialog";
 
 export const Route = createFileRoute("/comunidades")({
   beforeLoad: requireAuth,

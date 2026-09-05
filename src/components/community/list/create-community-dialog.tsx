@@ -2,14 +2,11 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { Plus } from "lucide-react";
+
 import { communitiesApi } from "@/lib/api";
 import { texts } from "@/texts";
 
-import {
-  COMMUNITY_TOPICS,
-  CreateCommunityButton,
-  type CommunityTopic,
-} from "@/components/community/community-list-view";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { COMMUNITY_TOPICS, type CommunityTopic } from "./community-topics";
 
 export function CreateCommunityDialog({
   open,
@@ -48,7 +46,9 @@ export function CreateCommunityDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <CreateCommunityButton />
+        <Button className="rounded-full gap-1.5">
+          <Plus className="h-4 w-4" /> {texts.communities.createCommunity}
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

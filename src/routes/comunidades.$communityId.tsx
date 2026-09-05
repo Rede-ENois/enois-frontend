@@ -9,12 +9,12 @@ import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
-import { CommunityBackLink } from "@/components/community/community-back-link";
-import { CommunityComposer } from "@/components/community/community-composer";
-import { CommunityFeed } from "@/components/community/community-feed";
-import { CommunityHeader } from "@/components/community/community-header";
-import { CommunityMembers } from "@/components/community/community-members";
-import { EditCommunityForm } from "@/components/community/edit-community-form";
+import { CommunityBackLink } from "@/components/community/detail/community-back-link";
+import { CommunityComposer } from "@/components/community/detail/community-composer";
+import { CommunityFeed } from "@/components/community/detail/community-feed";
+import { CommunityHeader } from "@/components/community/detail/community-header";
+import { CommunityMembers } from "@/components/community/detail/community-members";
+import { EditCommunityForm } from "@/components/community/detail/edit-community-form";
 
 export const Route = createFileRoute("/comunidades/$communityId")({
   beforeLoad: requireAuth,
