@@ -3,7 +3,7 @@ import { MessageCircle, Settings } from "lucide-react";
 import type { Profile } from "@/lib/api";
 import { texts } from "@/texts";
 
-import { EditProfileDialog } from "@/components/edit-profile-dialog";
+import { EditProfileDialog } from "@/components/profile/edit/edit-profile-dialog";
 import { Button } from "@/components/ui/button";
 
 export function ProfileActions({ user, isOwnProfile, connectionLabel, connectionDisabled, onMessage, onConnect }: {
