@@ -5,6 +5,7 @@ import { humanizeEnumLabel } from "@/utils/string";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { JobFilterGroup } from "./job-filter-group";
 
 const LEVELS = ["JUNIOR", "MID", "SENIOR", "LEAD"] as const;
 const TYPES = ["CLT", "PJ", "FREELANCE", "INTERN"] as const;
@@ -40,20 +41,20 @@ export function JobsFilters({ values, onChange, onClear }: JobsFiltersProps) {
         )}
       </div>
 
-      <FilterGroup
+      <JobFilterGroup
         label={texts.jobs.filters.level}
         values={LEVELS}
         selected={values.level}
         onChange={(value) => onChange("level", value)}
         getLabel={humanizeEnumLabel}
       />
-      <FilterGroup
+      <JobFilterGroup
         label={texts.jobs.filters.location}
         values={texts.jobs.filters.locations}
         selected={values.location}
         onChange={(value) => onChange("location", value)}
       />
-      <FilterGroup
+      <JobFilterGroup
         label={texts.jobs.filters.type}
         values={TYPES}
         selected={values.type}
@@ -76,42 +77,6 @@ export function JobsFilters({ values, onChange, onClear }: JobsFiltersProps) {
           placeholder={texts.jobs.skillsPlaceholder}
           className="h-9 max-w-xs rounded-full bg-muted"
         />
-      </div>
-    </div>
-  );
-}
-
-function FilterGroup({
-  label,
-  values,
-  selected,
-  onChange,
-  getLabel = (value) => value,
-}: {
-  label: string;
-  values: readonly string[];
-  selected: string;
-  onChange: (value: string) => void;
-  getLabel?: (value: string) => string;
-}) {
-  return (
-    <div className="mt-3 flex flex-wrap gap-2 first:mt-4">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="mr-1 text-xs font-medium text-muted-foreground">{label}</span>
-        {values.map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => onChange(selected === value ? "" : value)}
-            className={`rounded-full border px-3 py-1 text-xs transition ${
-              selected === value
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {getLabel(value)}
-          </button>
-        ))}
       </div>
     </div>
   );

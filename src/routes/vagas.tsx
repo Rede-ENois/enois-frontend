@@ -10,9 +10,11 @@ import { texts } from "@/texts";
 import { mergePage } from "@/utils/collections";
 
 import { AppContainer } from "@/components/app-container";
+import { JobsEmpty } from "@/components/jobs/jobs-empty";
 import { JobsFilters, type JobFilterValues } from "@/components/jobs/jobs-filters";
 import { JobsGrid } from "@/components/jobs/jobs-grid";
-import { JobsEmpty, JobsInfiniteScroll, JobsLoading } from "@/components/jobs/jobs-pagination";
+import { JobsInfiniteScroll } from "@/components/jobs/jobs-infinite-scroll";
+import { JobsLoading } from "@/components/jobs/jobs-loading";
 
 const initialFilters: JobFilterValues = {
   query: "",

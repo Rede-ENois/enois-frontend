@@ -1,23 +1,5 @@
 import { useEffect, useRef } from "react";
 
-import { Loader2 } from "lucide-react";
-
-import { texts } from "@/texts";
-
-export function JobsLoading({ visible }: { visible: boolean }) {
-  return visible ? (
-    <div className="flex justify-center py-6">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  ) : null;
-}
-
-export function JobsEmpty({ visible }: { visible: boolean }) {
-  return visible ? (
-    <p className="py-12 text-center text-sm text-muted-foreground">{texts.jobs.empty}</p>
-  ) : null;
-}
-
 export function JobsInfiniteScroll({
   hasMore,
   loading,
