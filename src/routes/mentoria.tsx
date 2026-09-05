@@ -9,11 +9,9 @@ import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
-import {
-  MentoringHero,
-  MentorsList,
-  type MentorListItem,
-} from "@/components/mentoring/mentoring-view";
+import type { MentorListItem } from "@/components/mentoring/mentor-list-item";
+import { MentoringHero } from "@/components/mentoring/mentoring-hero";
+import { MentorsList } from "@/components/mentoring/mentors-list";
 
 export const Route = createFileRoute("/mentoria")({
   beforeLoad: requireAuth,
