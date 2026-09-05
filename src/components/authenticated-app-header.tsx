@@ -6,12 +6,12 @@ import { Menu } from "lucide-react";
 import { profileApi } from "@/lib/api";
 import { texts } from "@/texts";
 
+import { GlobalSearch } from "@/components/global-search/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 
 import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
-import { GlobalSearch } from "./global-search";
 import { NotificationsPopover } from "./notifications-popover";
 
 type AuthenticatedAppHeaderProps = {
