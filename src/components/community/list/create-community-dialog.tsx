@@ -1,32 +1,17 @@
 import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Plus } from "lucide-react";
 
 import { communitiesApi } from "@/lib/api";
 import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { COMMUNITY_TOPICS, type CommunityTopic } from "./community-topics";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateCommunityForm } from "./create-community-form";
+import type { CommunityTopic } from "./community-topics";
 
-export function CreateCommunityDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (value: boolean) => void;
-}) {
+export function CreateCommunityDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (value: boolean) => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -51,51 +36,17 @@ export function CreateCommunityDialog({
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{texts.communities.create.title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
-            <Input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="h-10 border-transparent bg-muted"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">
-              {texts.communities.create.description}
-            </Label>
-            <Textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={3}
-              className="h-10 border-transparent bg-muted"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.topic}</Label>
-            <select
-              value={topic}
-              onChange={(event) => setTopic(event.target.value as CommunityTopic)}
-              className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {COMMUNITY_TOPICS.map((value) => (
-                <option key={value} value={value}>
-                  {texts.communities.topics[value]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button
-            className="w-full rounded-full"
-            disabled={!name.trim() || !description.trim() || create.isPending}
-            onClick={() => create.mutate()}
-          >
-            {create.isPending ? texts.common.creating : texts.common.create}
-          </Button>
-        </div>
+        <DialogHeader><DialogTitle>{texts.communities.create.title}</DialogTitle></DialogHeader>
+        <CreateCommunityForm
+          name={name}
+          description={description}
+          topic={topic}
+          pending={create.isPending}
+          onNameChange={setName}
+          onDescriptionChange={setDescription}
+          onTopicChange={setTopic}
+          onSubmit={() => create.mutate()}
+        />
       </DialogContent>
     </Dialog>
   );
