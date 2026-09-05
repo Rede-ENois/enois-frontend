@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { type ConnectionRequest, networkApi, profileApi } from "@/lib/api";
+import { networkApi, profileApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
@@ -15,12 +15,11 @@ import {
 } from "@/utils/network";
 
 import { AppContainer } from "@/components/app-container";
+import type { NetworkMatchItem } from "@/components/network/network-match-item";
 import { NetworkMatches } from "@/components/network/network-matches";
 import { NetworkOverview } from "@/components/network/network-overview";
-import {
-  PendingRequests,
-  type NetworkRequestItem,
-} from "@/components/network/network-pending-requests";
+import { PendingRequests } from "@/components/network/network-pending-requests";
+import type { NetworkRequestItem } from "@/components/network/network-request-item";
 
 export const Route = createFileRoute("/rede")({
   beforeLoad: requireAuth,
@@ -80,7 +79,7 @@ function NetworkRoute() {
     });
   });
 
-  const matchItems = users.map((user) => ({
+  const matchItems: NetworkMatchItem[] = users.map((user) => ({
     user,
     state: getConnectionUiState(user.connected, localStatus[user.id]),
   }));
