@@ -17,12 +17,10 @@ import {
 } from "@/utils/media";
 
 import { AppContainer } from "@/components/app-container";
-import {
-  FeedComposer,
-  FeedSidebar,
-  FeedTabs,
-  FeedTimeline,
-} from "@/components/feed/feed-view";
+import { FeedComposer } from "@/components/feed/feed-composer";
+import { FeedSidebar } from "@/components/feed/feed-sidebar";
+import { FeedTabs } from "@/components/feed/feed-tabs";
+import { FeedTimeline } from "@/components/feed/feed-timeline";
 
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,

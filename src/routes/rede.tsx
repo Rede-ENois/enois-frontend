@@ -15,12 +15,12 @@ import {
 } from "@/utils/network";
 
 import { AppContainer } from "@/components/app-container";
+import { NetworkMatches } from "@/components/network/network-matches";
+import { NetworkOverview } from "@/components/network/network-overview";
 import {
-  NetworkMatches,
-  NetworkOverview,
   PendingRequests,
   type NetworkRequestItem,
-} from "@/components/network/network-view";
+} from "@/components/network/network-pending-requests";
 
 export const Route = createFileRoute("/rede")({
   beforeLoad: requireAuth,

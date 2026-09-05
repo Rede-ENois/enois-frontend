@@ -18,8 +18,9 @@ import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
-import { ProfileMainContent, ProfileSidebar } from "@/components/profile/profile-content";
 import { ProfileHeader } from "@/components/profile/profile-header";
+import { ProfileMainContent } from "@/components/profile/profile-main-content";
+import { ProfileSidebar } from "@/components/profile/profile-sidebar";
 
 export const Route = createFileRoute("/perfil/$username")({
   loader: async ({ params }) => {
