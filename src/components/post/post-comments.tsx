@@ -1,11 +1,9 @@
 import type { FormEventHandler } from "react";
-
 import { Send } from "lucide-react";
 
 import type { CommentView, Profile } from "@/lib/api";
 import { texts } from "@/texts";
 import { getParentAuthorName, getReplies } from "@/utils/comments";
-
 import { MentionTextarea } from "@/components/mention-textarea/mention-textarea";
 import { PostCommentItem } from "@/components/post/post-comment-item";
 import { UserAvatar } from "@/components/user-avatar";
@@ -62,14 +60,12 @@ export function PostComments({
             </div>
           );
         })}
-
         {rootComments.length === 0 && (
           <p className="py-4 text-center text-[13px] font-light text-text-subtle">
             {texts.posts.comments.empty}
           </p>
         )}
       </div>
-
       <form onSubmit={onSubmitComment} className="mt-4 flex items-center gap-2.5">
         <UserAvatar
           src={currentUser?.avatar}
