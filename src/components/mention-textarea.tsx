@@ -3,6 +3,13 @@ import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { type UserSearchResult, usersApi } from "@/lib/api";
+import {
+  addUnique,
+  emptyMentionContext,
+  getMentionContext,
+  insertMention,
+  moveCircularIndex,
+} from "@/utils/mentions";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -40,71 +47,65 @@ export function MentionTextarea({
   }, [results.length]);
 
   const updateMention = (text: string, cursor: number) => {
-    const before = text.slice(0, cursor);
-    const at = before.lastIndexOf("@");
-    if (at === -1) {
-      setMentionQuery("");
-      setMentionIndex(-1);
-      return;
-    }
-    const term = before.slice(at + 1);
-    if (term.includes(" ") || term.includes("\n") || term.length === 0) {
-      setMentionQuery("");
-      setMentionIndex(-1);
-      return;
-    }
-    setMentionQuery(term);
-    setMentionIndex(at);
+    const context = getMentionContext(text, cursor);
+    setMentionQuery(context.query);
+    setMentionIndex(context.index);
   };
 
-  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    const el = e.currentTarget;
-    const next = el.value;
-    const cursor = el.selectionStart;
-    updateMention(next, cursor);
+  const handleInput = (event: React.FormEvent<HTMLTextAreaElement>) => {
+    const element = event.currentTarget;
+    const next = element.value;
+    updateMention(next, element.selectionStart);
     onChange(next, mentionedIds);
   };
 
   const pick = (user: UserSearchResult) => {
     if (mentionIndex === -1) return;
-    const before = value.slice(0, mentionIndex);
-    const after = value.slice(mentionIndex + mentionQuery.length + 1);
-    const next = `${before}@${user.username} ${after}`;
-    setMentionQuery("");
-    setMentionIndex(-1);
-    const ids = mentionedIds.includes(user.id) ? mentionedIds : [...mentionedIds, user.id];
+
+    const context = { query: mentionQuery, index: mentionIndex };
+    const insertion = insertMention(value, context, user.username);
+    const ids = addUnique(mentionedIds, user.id);
+
+    setMentionQuery(emptyMentionContext.query);
+    setMentionIndex(emptyMentionContext.index);
     setMentionedIds(ids);
-    onChange(next, ids);
+    onChange(insertion.value, ids);
+
     requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        const pos = before.length + user.username.length + 2;
-        textareaRef.current.setSelectionRange(pos, pos);
-        textareaRef.current.focus();
-      }
+      textareaRef.current?.setSelectionRange(insertion.cursor, insertion.cursor);
+      textareaRef.current?.focus();
     });
   };
 
-  const handleKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (mentionIndex === -1 || results.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIdx((i) => (i + 1) % results.length);
-      return;
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIdx((i) => (i - 1 + results.length) % results.length);
-      return;
-    }
-    if (e.key === "Tab" || e.key === "Enter") {
-      e.preventDefault();
-      pick(results[selectedIdx]);
-      return;
-    }
-    if (e.key === "Escape") {
-      setMentionQuery("");
-      setMentionIndex(-1);
-    }
+
+    const keyActions: Partial<
+      Record<string, { preventDefault: boolean; run: () => void }>
+    > = {
+      ArrowDown: {
+        preventDefault: true,
+        run: () => setSelectedIdx((index) => moveCircularIndex(index, 1, results.length)),
+      },
+      ArrowUp: {
+        preventDefault: true,
+        run: () => setSelectedIdx((index) => moveCircularIndex(index, -1, results.length)),
+      },
+      Tab: { preventDefault: true, run: () => pick(results[selectedIdx]) },
+      Enter: { preventDefault: true, run: () => pick(results[selectedIdx]) },
+      Escape: {
+        preventDefault: false,
+        run: () => {
+          setMentionQuery(emptyMentionContext.query);
+          setMentionIndex(emptyMentionContext.index);
+        },
+      },
+    };
+
+    const action = keyActions[event.key];
+    if (!action) return;
+    if (action.preventDefault) event.preventDefault();
+    action.run();
   };
 
   return (
@@ -121,17 +122,17 @@ export function MentionTextarea({
       />
       {mentionQuery.length >= 2 && results.length > 0 && (
         <div className="absolute bottom-full left-0 right-0 z-50 mb-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-popover shadow-lg">
-          {results.map((user, i) => (
+          {results.map((user, index) => (
             <button
               key={user.id}
               type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onMouseDown={(event) => {
+                event.preventDefault();
                 pick(user);
               }}
-              onMouseEnter={() => setSelectedIdx(i)}
+              onMouseEnter={() => setSelectedIdx(index)}
               className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition ${
-                i === selectedIdx ? "bg-muted" : "hover:bg-muted"
+                index === selectedIdx ? "bg-muted" : "hover:bg-muted"
               }`}
             >
               <UserAvatar src={user.avatar} alt={user.name} className="h-8 w-8 shrink-0" />

@@ -1,3 +1,11 @@
+import {
+  clearSession,
+  getRefreshToken,
+  getSessionToken,
+  storeSessionTokens,
+} from "@/utils/session";
+import { randomUUID } from "@/utils/uuid";
+
 const API_BACKEND = import.meta.env.VITE_API_BACKEND ?? "http://localhost:8081/api";
 
 function baseUrl(): string {
@@ -18,32 +26,9 @@ export class ApiError extends Error {
   }
 }
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("session_token");
-}
-
 function authHeaders(): Record<string, string> {
-  const token = getToken();
-  const headers: Record<string, string> = {};
-  if (token) headers["X-Session-Token"] = token;
-  return headers;
-}
-
-export function randomUUID(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  const bytes = new Uint8Array(16);
-  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
-    crypto.getRandomValues(bytes);
-  } else {
-    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
-  }
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  const token = getSessionToken();
+  return token ? { "X-Session-Token": token } : {};
 }
 
 function idemKey(): Record<string, string> {
@@ -53,14 +38,14 @@ function idemKey(): Record<string, string> {
 let isRefreshing = false;
 
 async function tryRefreshToken(): Promise<boolean> {
-  const token = localStorage.getItem("refresh_token");
-  if (!token) return false;
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
 
   try {
     const response = await fetch(`${baseUrl()}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: token }),
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
@@ -70,22 +55,16 @@ async function tryRefreshToken(): Promise<boolean> {
 
     const data = await response.json();
     const body = data?.body ?? data;
-    localStorage.setItem("session_token", body.token);
-    localStorage.setItem("refresh_token", body.refreshToken);
-    localStorage.setItem("session_expires_at", body.expiresAt);
-    localStorage.setItem("refresh_expires_at", body.refreshExpiresAt);
+    storeSessionTokens({
+      token: body.token,
+      refreshToken: body.refreshToken,
+      expiresAt: body.expiresAt,
+      refreshExpiresAt: body.refreshExpiresAt,
+    });
     return true;
   } catch {
     return false;
   }
-}
-
-function clearSession() {
-  localStorage.removeItem("session_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("session_expires_at");
-  localStorage.removeItem("refresh_expires_at");
-  localStorage.removeItem("current_user");
 }
 
 async function request<T>(
@@ -99,9 +78,7 @@ async function request<T>(
     ...authHeaders(),
   };
 
-  if (opts?.idempotent) {
-    Object.assign(headers, idemKey());
-  }
+  if (opts?.idempotent) Object.assign(headers, idemKey());
 
   let response: Response;
   try {
@@ -119,18 +96,19 @@ async function request<T>(
     );
   }
 
-  if (
+  const shouldRefresh =
     (response.status === 401 || response.status === 403) &&
     !isRefreshing &&
-    headers["X-Session-Token"] &&
-    !path.startsWith("/auth/")
-  ) {
+    Boolean(headers["X-Session-Token"]) &&
+    !path.startsWith("/auth/");
+
+  if (shouldRefresh) {
     isRefreshing = true;
     const refreshed = await tryRefreshToken();
     isRefreshing = false;
 
     if (refreshed) {
-      headers["X-Session-Token"] = getToken() ?? "";
+      headers["X-Session-Token"] = getSessionToken() ?? "";
       const retry = await fetch(`${baseUrl()}${path}`, {
         method,
         headers,
@@ -142,15 +120,13 @@ async function request<T>(
           return undefined as T;
         }
         const data = await retry.json();
-        if (data?.body !== undefined) return data.body as T;
-        return data as T;
+        return data?.body !== undefined ? (data.body as T) : (data as T);
       }
     }
 
     clearSession();
-    if (typeof window !== "undefined") {
-      window.location.href = "/entrar?tab=login";
-    }
+    if (typeof window !== "undefined") window.location.href = "/entrar?tab=login";
+
     throw new ApiError(
       response.status,
       "SESSION_EXPIRED",
@@ -174,9 +150,7 @@ async function request<T>(
   }
 
   const data = await response.json();
-
-  if (data?.body !== undefined) return data.body as T;
-  return data as T;
+  return data?.body !== undefined ? (data.body as T) : (data as T);
 }
 
 export const api = {
@@ -196,8 +170,8 @@ export function buildQuery(
       search.append(key, String(value));
     }
   }
-  const str = search.toString();
-  return str ? `?${str}` : "";
+  const stringified = search.toString();
+  return stringified ? `?${stringified}` : "";
 }
 
-export { getToken as getSessionToken };
+export { getSessionToken } from "@/utils/session";

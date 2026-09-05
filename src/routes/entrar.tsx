@@ -5,8 +5,10 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Eye, EyeOff, Loader2, MailCheck, Sparkles } from "lucide-react";
 import { z } from "zod";
 
-import { ApiError, authApi } from "@/lib/api";
+import { authApi } from "@/lib/api";
 import { texts } from "@/texts";
+import { mapValidationErrors } from "@/utils/forms";
+import { clearSession, storeAuthenticatedSession } from "@/utils/session";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,20 +19,10 @@ import { ErrorBanner } from "@/components/error-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 type Tab = "login" | "signup";
+type OAuthProvider = "GOOGLE" | "APPLE";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional().default("signup"),
-});
-
-export const Route = createFileRoute("/entrar")({
-  validateSearch: searchSchema,
-  head: () => ({
-    meta: [
-      { title: texts.auth.seo.authTitle },
-      { name: "description", content: texts.auth.seo.authDescription },
-    ],
-  }),
-  component: Auth,
 });
 
 const loginSchema = z.object({
@@ -44,11 +36,40 @@ const signupSchema = z.object({
   password: z.string().min(8, texts.auth.validation.passwordMin).max(128),
 });
 
+const oauthProviders: Record<
+  OAuthProvider,
+  { name: string; label: string; Icon: React.ElementType }
+> = {
+  GOOGLE: { name: "Google", label: texts.auth.social.google, Icon: GoogleIcon },
+  APPLE: { name: "Apple", label: texts.auth.social.apple, Icon: AppleIcon },
+};
+
+export const Route = createFileRoute("/entrar")({
+  validateSearch: searchSchema,
+  head: () => ({
+    meta: [
+      { title: texts.auth.seo.authTitle },
+      { name: "description", content: texts.auth.seo.authDescription },
+    ],
+  }),
+  component: Auth,
+});
+
 function Auth() {
   const initial = Route.useSearch().tab as Tab;
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>(initial);
   const [forgotOpen, setForgotOpen] = useState(false);
+
+  const authForms: Record<Tab, React.ReactNode> = {
+    signup: <SignupForm onDone={() => navigate({ to: "/feed" })} />,
+    login: (
+      <LoginForm
+        onDone={() => navigate({ to: "/feed" })}
+        onForgot={() => setForgotOpen(true)}
+      />
+    ),
+  };
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
@@ -56,15 +77,22 @@ function Auth() {
         className="relative hidden flex-col justify-between overflow-hidden p-10 text-primary-foreground lg:flex"
         style={{ background: "var(--gradient-primary)" }}
       >
-        <div aria-hidden className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl" />
-        <div aria-hidden className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl" />
+        <div
+          aria-hidden
+          className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl"
+        />
 
         <Link to="/" className="relative flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary-foreground/20 backdrop-blur">
             <Sparkles className="h-4 w-4" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            {texts.brand.prefix}<span className="gradient-text">{texts.brand.accent}</span>
+            {texts.brand.prefix}
+            <span className="gradient-text">{texts.brand.accent}</span>
           </span>
         </Link>
 
@@ -72,7 +100,9 @@ function Auth() {
           <p className="text-sm font-medium uppercase tracking-wider text-primary-foreground/80">
             {texts.auth.hero.eyebrow}
           </p>
-          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight">{texts.auth.hero.quote}</h2>
+          <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight">
+            {texts.auth.hero.quote}
+          </h2>
           <div className="mt-6 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary-foreground/25" />
             <div>
@@ -102,7 +132,8 @@ function Auth() {
               <Sparkles className="h-4 w-4" />
             </div>
             <span className="font-semibold tracking-tight">
-              {texts.brand.prefix}<span className="gradient-text">{texts.brand.accent}</span>
+              {texts.brand.prefix}
+              <span className="gradient-text">{texts.brand.accent}</span>
             </span>
           </Link>
           <ThemeToggle />
@@ -118,16 +149,7 @@ function Auth() {
             </TabBtn>
           </div>
 
-          <div className="mt-8">
-            {tab === "signup" ? (
-              <SignupForm onDone={() => navigate({ to: "/feed" })} />
-            ) : (
-              <LoginForm
-                onDone={() => navigate({ to: "/feed" })}
-                onForgot={() => setForgotOpen(true)}
-              />
-            )}
-          </div>
+          <div className="mt-8">{authForms[tab]}</div>
 
           <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} />
 
@@ -148,7 +170,15 @@ function Auth() {
   );
 }
 
-function TabBtn({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
+function TabBtn({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -164,39 +194,43 @@ function TabBtn({ active, children, onClick }: { active: boolean; children: Reac
 }
 
 function SocialButtons() {
-  const [loading, setLoading] = useState<"GOOGLE" | "APPLE" | null>(null);
+  const [loading, setLoading] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const startOAuth = async (provider: "GOOGLE" | "APPLE") => {
+  const startOAuth = async (provider: OAuthProvider) => {
     setLoading(provider);
     setError(null);
-    await new Promise((r) => setTimeout(r, 400));
-    const providerName = provider === "GOOGLE" ? "Google" : "Apple";
-    setError(texts.auth.social.unavailable(providerName));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    setError(texts.auth.social.unavailable(oauthProviders[provider].name));
     setLoading(null);
   };
 
   return (
     <div className="grid gap-2">
-      <button
-        type="button"
-        onClick={() => startOAuth("GOOGLE")}
-        disabled={loading !== null}
-        className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
-      >
-        {loading === "GOOGLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-        {texts.auth.social.google}
-      </button>
-      <button
-        type="button"
-        onClick={() => startOAuth("APPLE")}
-        disabled={loading !== null}
-        className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
-      >
-        {loading === "APPLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleIcon />}
-        {texts.auth.social.apple}
-      </button>
-      {error && <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</p>}
+      {(Object.entries(oauthProviders) as [OAuthProvider, (typeof oauthProviders)[OAuthProvider]][]).map(
+        ([provider, config]) => {
+          const { Icon } = config;
+          return (
+            <button
+              key={provider}
+              type="button"
+              onClick={() => startOAuth(provider)}
+              disabled={loading !== null}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
+            >
+              {loading === provider ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Icon />
+              )}
+              {config.label}
+            </button>
+          );
+        },
+      )}
+      {error && (
+        <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</p>
+      )}
     </div>
   );
 }
@@ -217,36 +251,26 @@ function SignupForm({ onDone }: { onDone: () => void }) {
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
 
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const parsed = signupSchema.safeParse(Object.fromEntries(fd));
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const parsed = signupSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+
     if (!parsed.success) {
-      const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) next[issue.path[0] as string] = issue.message;
-      setErrors(next);
+      setErrors(mapValidationErrors(parsed.error.issues));
       return;
     }
+
     setErrors({});
     setFormError(null);
     setLoading(true);
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("current_user");
+    clearSession();
+
     try {
-      const result = await authApi.signup({
-        name: parsed.data.name,
-        email: parsed.data.email,
-        password: parsed.data.password,
-      });
-      localStorage.setItem("session_token", result.token);
-      localStorage.setItem("refresh_token", result.refreshToken);
-      localStorage.setItem("session_expires_at", result.expiresAt);
-      localStorage.setItem("refresh_expires_at", result.refreshExpiresAt);
-      localStorage.setItem("current_user", JSON.stringify(result.user));
+      const result = await authApi.signup(parsed.data);
+      storeAuthenticatedSession(result);
       onDone();
-    } catch (err) {
-      setFormError(err);
+    } catch (error) {
+      setFormError(error);
     } finally {
       setLoading(false);
     }
@@ -264,7 +288,13 @@ function SignupForm({ onDone }: { onDone: () => void }) {
 
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Field label={texts.auth.fields.fullName} error={errors.name}>
-          <Input name="name" placeholder={texts.auth.placeholders.name} autoComplete="name" required maxLength={80} />
+          <Input
+            name="name"
+            placeholder={texts.auth.placeholders.name}
+            autoComplete="name"
+            required
+            maxLength={80}
+          />
         </Field>
         <Field label={texts.auth.fields.email} error={errors.email}>
           <Input
@@ -286,14 +316,7 @@ function SignupForm({ onDone }: { onDone: () => void }) {
               required
               maxLength={128}
             />
-            <button
-              type="button"
-              onClick={() => setShow((s) => !s)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground"
-              aria-label={show ? texts.auth.password.hide : texts.auth.password.show}
-            >
-              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            <PasswordVisibilityButton show={show} onToggle={() => setShow((value) => !value)} />
           </div>
         </Field>
 
@@ -318,32 +341,26 @@ function LoginForm({ onDone, onForgot }: { onDone: () => void; onForgot: () => v
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
 
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const parsed = loginSchema.safeParse(Object.fromEntries(fd));
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const parsed = loginSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+
     if (!parsed.success) {
-      const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) next[issue.path[0] as string] = issue.message;
-      setErrors(next);
+      setErrors(mapValidationErrors(parsed.error.issues));
       return;
     }
+
     setErrors({});
     setFormError(null);
     setLoading(true);
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("current_user");
+    clearSession();
+
     try {
-      const result = await authApi.login({ email: parsed.data.email, password: parsed.data.password });
-      localStorage.setItem("session_token", result.token);
-      localStorage.setItem("refresh_token", result.refreshToken);
-      localStorage.setItem("session_expires_at", result.expiresAt);
-      localStorage.setItem("refresh_expires_at", result.refreshExpiresAt);
-      localStorage.setItem("current_user", JSON.stringify(result.user));
+      const result = await authApi.login(parsed.data);
+      storeAuthenticatedSession(result);
       onDone();
-    } catch (err) {
-      setFormError(err);
+    } catch (error) {
+      setFormError(error);
     } finally {
       setLoading(false);
     }
@@ -374,7 +391,11 @@ function LoginForm({ onDone, onForgot }: { onDone: () => void; onForgot: () => v
           label={texts.auth.fields.password}
           error={errors.password}
           right={
-            <button type="button" onClick={onForgot} className="text-xs font-medium text-primary hover:underline">
+            <button
+              type="button"
+              onClick={onForgot}
+              className="text-xs font-medium text-primary hover:underline"
+            >
               {texts.auth.password.forgot}
             </button>
           }
@@ -388,14 +409,7 @@ function LoginForm({ onDone, onForgot }: { onDone: () => void; onForgot: () => v
               required
               maxLength={128}
             />
-            <button
-              type="button"
-              onClick={() => setShow((s) => !s)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground"
-              aria-label={show ? texts.auth.password.hide : texts.auth.password.show}
-            >
-              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            <PasswordVisibilityButton show={show} onToggle={() => setShow((value) => !value)} />
           </div>
         </Field>
 
@@ -411,6 +425,20 @@ function LoginForm({ onDone, onForgot }: { onDone: () => void; onForgot: () => v
         </Button>
       </form>
     </div>
+  );
+}
+
+function PasswordVisibilityButton({ show, onToggle }: { show: boolean; onToggle: () => void }) {
+  const Icon = show ? EyeOff : Eye;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground"
+      aria-label={show ? texts.auth.password.hide : texts.auth.password.show}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
   );
 }
 
@@ -437,28 +465,36 @@ function Field({
   );
 }
 
-function ForgotPasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function ForgotPasswordDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+}) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") ?? "").trim();
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = String(new FormData(event.currentTarget).get("email") ?? "").trim();
+
     if (!z.string().email().safeParse(email).success) {
       setErrors({ email: texts.auth.validation.invalidEmail });
       return;
     }
+
     setErrors({});
     setFormError(null);
     setLoading(true);
+
     try {
       await authApi.forgotPassword(email);
       setSent(true);
-    } catch (err) {
-      setFormError(err);
+    } catch (error) {
+      setFormError(error);
     } finally {
       setLoading(false);
     }
@@ -470,52 +506,56 @@ function ForgotPasswordDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     onOpenChange(false);
   };
 
+  const content = sent ? (
+    <div className="space-y-4 pb-2 pt-2">
+      <div className="flex items-start gap-3 rounded-xl bg-primary/10 p-4">
+        <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div>
+          <p className="text-sm font-medium">{texts.auth.forgot.checkEmail}</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            {texts.auth.forgot.sentDescription}
+          </p>
+        </div>
+      </div>
+      <Button className="w-full rounded-full" onClick={close}>
+        {texts.auth.forgot.understood}
+      </Button>
+    </div>
+  ) : (
+    <form onSubmit={submit} className="space-y-4 pb-2 pt-2" noValidate>
+      <p className="text-sm text-muted-foreground">{texts.auth.forgot.description}</p>
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium">{texts.auth.fields.email}</Label>
+        <Input
+          name="email"
+          type="email"
+          placeholder={texts.auth.placeholders.email}
+          autoComplete="email"
+          required
+          maxLength={255}
+        />
+        {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+      </div>
+      {formError && <ErrorBanner error={formError} />}
+      <Button type="submit" className="w-full gap-2 rounded-full" disabled={loading}>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            {texts.auth.forgot.sendLink} <ArrowRight className="h-4 w-4" />
+          </>
+        )}
+      </Button>
+    </form>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(v) : close())}>
+    <Dialog open={open} onOpenChange={(value) => (value ? onOpenChange(value) : close())}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-semibold tracking-tight">{texts.auth.forgot.title}</DialogTitle>
         </DialogHeader>
-        {sent ? (
-          <div className="space-y-4 pb-2 pt-2">
-            <div className="flex items-start gap-3 rounded-xl bg-primary/10 p-4">
-              <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              <div>
-                <p className="text-sm font-medium">{texts.auth.forgot.checkEmail}</p>
-                <p className="mt-1 text-[13px] text-muted-foreground">{texts.auth.forgot.sentDescription}</p>
-              </div>
-            </div>
-            <Button className="w-full rounded-full" onClick={close}>
-              {texts.auth.forgot.understood}
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-4 pb-2 pt-2" noValidate>
-            <p className="text-sm text-muted-foreground">{texts.auth.forgot.description}</p>
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">{texts.auth.fields.email}</Label>
-              <Input
-                name="email"
-                type="email"
-                placeholder={texts.auth.placeholders.email}
-                autoComplete="email"
-                required
-                maxLength={255}
-              />
-              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-            </div>
-            {formError && <ErrorBanner error={formError} />}
-            <Button type="submit" className="w-full gap-2 rounded-full" disabled={loading}>
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  {texts.auth.forgot.sendLink} <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        )}
+        {content}
       </DialogContent>
     </Dialog>
   );

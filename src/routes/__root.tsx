@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import { consumeOAuthSession } from "@/utils/session";
 
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import appCss from "../styles.css?url";
@@ -39,6 +40,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
@@ -118,17 +120,7 @@ function OAuthCallbackHandler() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const refreshToken = params.get("refreshToken");
-    const expiresAt = params.get("expiresAt");
-    const refreshExpiresAt = params.get("refreshExpiresAt");
-    if (token) {
-      localStorage.setItem("session_token", token);
-      if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
-      if (expiresAt) localStorage.setItem("session_expires_at", expiresAt);
-      if (refreshExpiresAt) localStorage.setItem("refresh_expires_at", refreshExpiresAt);
+    if (consumeOAuthSession(window.location.search)) {
       navigate({ to: "/feed", replace: true });
     }
   }, [navigate]);

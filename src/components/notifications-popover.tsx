@@ -7,6 +7,12 @@ import { Bell, CheckCheck } from "lucide-react";
 import { networkApi, notificationsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
+import {
+  getNotificationBadge,
+  getUnreadCount,
+  notificationTabs,
+  type NotificationTab,
+} from "@/utils/notifications";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -14,7 +20,7 @@ import { NotificationItem } from "./notification-item";
 
 export function NotificationsPopover() {
   const queryClient = useQueryClient();
-  const [notificationTab, setNotificationTab] = useState<"novas" | "historico">("novas");
+  const [notificationTab, setNotificationTab] = useState<NotificationTab>("novas");
 
   const { data: notificationsData } = useQuery({
     queryKey: ["notifications"],
@@ -43,10 +49,9 @@ export function NotificationsPopover() {
   });
 
   const notificationList = notificationsData?.items ?? [];
-  const unreadCount = notificationList.filter((notification) => !notification.read).length;
-  const displayedNotifications = notificationList.filter((notification) =>
-    notificationTab === "novas" ? !notification.read : notification.read,
-  );
+  const unreadCount = getUnreadCount(notificationList);
+  const activeTab = notificationTabs[notificationTab];
+  const displayedNotifications = notificationList.filter(activeTab.matches);
 
   return (
     <Popover>
@@ -62,7 +67,7 @@ export function NotificationsPopover() {
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute right-1.5 top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-medium leading-none text-primary-foreground">
-              {unreadCount > 9 ? "9+" : unreadCount}
+              {getNotificationBadge(unreadCount)}
             </span>
           )}
         </button>
@@ -87,44 +92,34 @@ export function NotificationsPopover() {
         </div>
 
         <div className="flex border-b border-border-soft">
-          <button
-            type="button"
-            onClick={() => setNotificationTab("novas")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[12px] font-light transition",
-              notificationTab === "novas"
-                ? "border-b-2 border-primary text-primary"
-                : "text-text-subtle hover:text-text-strong",
-            )}
-          >
-            {texts.notifications.tabs.new}
-            {unreadCount > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setNotificationTab("historico")}
-            className={cn(
-              "flex-1 py-2.5 text-[12px] font-light transition",
-              notificationTab === "historico"
-                ? "border-b-2 border-primary text-primary"
-                : "text-text-subtle hover:text-text-strong",
-            )}
-          >
-            {texts.notifications.tabs.history}
-          </button>
+          {(Object.entries(notificationTabs) as [NotificationTab, (typeof notificationTabs)[NotificationTab]][]).map(
+            ([key, config]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setNotificationTab(key)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[12px] font-light transition",
+                  notificationTab === key
+                    ? "border-b-2 border-primary text-primary"
+                    : "text-text-subtle hover:text-text-strong",
+                )}
+              >
+                {config.label}
+                {key === "novas" && unreadCount > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            ),
+          )}
         </div>
 
         <div className="max-h-[28rem] overflow-y-auto">
           {displayedNotifications.length === 0 ? (
             <p className="px-4 py-8 text-center text-[13px] font-light text-text-subtle">
-              {notificationTab === "novas"
-                ? texts.notifications.emptyNew
-                : texts.notifications.emptyHistory}
+              {activeTab.emptyMessage}
             </p>
           ) : (
             displayedNotifications.map((notification) => (

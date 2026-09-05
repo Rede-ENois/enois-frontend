@@ -3,35 +3,31 @@ import { useEffect, useState } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 
 import { texts } from "@/texts";
+import {
+  applyTheme,
+  getStoredTheme,
+  nextTheme,
+  saveTheme,
+  type Theme,
+} from "@/utils/theme";
 
-type Theme = "light" | "dark" | "system";
-
-const storageKey = "connect-grow-theme";
-
-function getSystemTheme() {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function applyTheme(theme: Theme) {
-  const resolved = theme === "system" ? getSystemTheme() : theme;
-  document.documentElement.classList.toggle("dark", resolved === "dark");
-}
+const themeMeta: Record<Theme, { Icon: React.ElementType; label: string }> = {
+  light: { Icon: Sun, label: texts.theme.light },
+  dark: { Icon: Moon, label: texts.theme.dark },
+  system: { Icon: Monitor, label: texts.theme.system },
+};
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(storageKey) as Theme | null;
-    const initial = stored ?? "system";
+    const initial = getStoredTheme();
     setTheme(initial);
     applyTheme(initial);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const syncSystem = () => {
-      if ((window.localStorage.getItem(storageKey) as Theme | null) === "system") {
-        applyTheme("system");
-      }
+      if (getStoredTheme() === "system") applyTheme("system");
     };
 
     media.addEventListener("change", syncSystem);
@@ -39,19 +35,12 @@ export function ThemeToggle() {
   }, []);
 
   const cycleTheme = () => {
-    const next: Theme = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
+    const next = nextTheme[theme];
     setTheme(next);
-    window.localStorage.setItem(storageKey, next);
-    applyTheme(next);
+    saveTheme(next);
   };
 
-  const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
-  const label =
-    theme === "light"
-      ? texts.theme.light
-      : theme === "dark"
-        ? texts.theme.dark
-        : texts.theme.system;
+  const { Icon, label } = themeMeta[theme];
 
   return (
     <button

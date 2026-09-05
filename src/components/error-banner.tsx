@@ -2,46 +2,22 @@ import { useState } from "react";
 
 import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
 
-import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
-
-function describe(err: unknown): { message: string; details: string[] } {
-  if (err instanceof ApiError) {
-    const details: string[] = [];
-    if (err.status) details.push(texts.errors.details.http(err.status));
-    if (err.code) details.push(err.code);
-    if (err.path) details.push(texts.errors.details.postPath(err.path));
-    return { message: err.message, details };
-  }
-  if (err instanceof Error) {
-    return {
-      message: err.message,
-      details: import.meta.env.DEV ? [err.stack ?? err.name] : [],
-    };
-  }
-  return { message: texts.errors.unexpected, details: [] };
-}
+import { describeError, formatErrorDetails, getErrorHint } from "@/utils/errors";
 
 export function ErrorBanner({ error, className }: { error: unknown; className?: string }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   if (!error) return null;
-  const { message, details } = describe(error);
-  const hint =
-    error instanceof ApiError && error.code
-      ? texts.errors.knownCodes[error.code as keyof typeof texts.errors.knownCodes]
-      : undefined;
+
+  const { message, details } = describeError(error);
+  const hint = getErrorHint(error);
 
   const copy = () => {
-    const text = [
-      texts.errors.details.error(message),
-      ...details.map((d) => `  ${d}`),
-      hint ? texts.errors.details.suggestion(hint) : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-    navigator.clipboard?.writeText(text).catch(() => {});
+    navigator.clipboard
+      ?.writeText(formatErrorDetails(message, details, hint))
+      .catch(() => undefined);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -58,7 +34,7 @@ export function ErrorBanner({ error, className }: { error: unknown; className?: 
         </p>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen((value) => !value)}
           className="shrink-0 p-0.5 text-destructive/70 transition hover:text-destructive"
           aria-label={open ? texts.errors.details.hide : texts.errors.details.show}
         >
@@ -69,9 +45,9 @@ export function ErrorBanner({ error, className }: { error: unknown; className?: 
       {open && (
         <div className="space-y-2 rounded-lg bg-background/40 p-3 text-xs">
           <ul className="list-inside list-disc space-y-0.5 text-destructive/90">
-            {details.map((d) => (
-              <li key={d} className="break-all font-mono">
-                {d}
+            {details.map((detail) => (
+              <li key={detail} className="break-all font-mono">
+                {detail}
               </li>
             ))}
           </ul>

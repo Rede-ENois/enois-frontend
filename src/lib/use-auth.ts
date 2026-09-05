@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
 import { profileApi } from "./api";
-import { getSessionToken } from "./api-client";
+import { getSessionToken } from "@/utils/session";
 
 export function isAuthenticated(): boolean {
-  return !!getSessionToken();
+  return Boolean(getSessionToken());
 }
 
 export function useAuth() {
@@ -15,7 +15,7 @@ export function useAuth() {
   const query = useQuery({
     queryKey: ["me"],
     queryFn: () => profileApi.me(),
-    enabled: !!token,
+    enabled: Boolean(token),
     retry: 1,
     staleTime: 60_000,
   });
@@ -23,13 +23,11 @@ export function useAuth() {
   return {
     user: query.data ?? null,
     isLoading: query.isLoading,
-    isAuthenticated: !!token,
+    isAuthenticated: Boolean(token),
     requireAuth: () => {
-      if (!token) {
-        navigate({ to: "/entrar", search: { tab: "login" } });
-        return false;
-      }
-      return true;
+      if (token) return true;
+      navigate({ to: "/entrar", search: { tab: "login" } });
+      return false;
     },
   };
 }

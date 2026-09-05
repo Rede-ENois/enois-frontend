@@ -3,48 +3,10 @@ import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 
 import { texts } from "@/texts";
+import { cropImage } from "@/utils/images";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-function createImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = url;
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-  });
-}
-
-async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<Blob> {
-  const img = await createImage(imageSrc);
-  const canvas = document.createElement("canvas");
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(
-    img,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height,
-  );
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Canvas toBlob failed"));
-      },
-      "image/jpeg",
-      0.9,
-    );
-  });
-}
 
 export function ImageCropDialog({
   open,
@@ -67,17 +29,15 @@ export function ImageCropDialog({
   const [saving, setSaving] = useState(false);
 
   const onCropChange = useCallback((location: { x: number; y: number }) => setCrop(location), []);
-  const onZoomChange = useCallback((z: number) => setZoom(z), []);
-
-  const onCropAreaChange = useCallback((_: Area, croppedAreaPixels: Area) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
+  const onZoomChange = useCallback((value: number) => setZoom(value), []);
+  const onCropAreaChange = useCallback((_: Area, pixels: Area) => setCroppedAreaPixels(pixels), []);
 
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
+
     setSaving(true);
     try {
-      const blob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      const blob = await cropImage(imageSrc, croppedAreaPixels);
       await onCropComplete(blob);
       onOpenChange(false);
     } catch {
@@ -111,7 +71,7 @@ export function ImageCropDialog({
             max={3}
             step={0.1}
             value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
+            onChange={(event) => setZoom(Number(event.target.value))}
             className="flex-1"
           />
         </div>

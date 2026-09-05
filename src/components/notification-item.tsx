@@ -4,7 +4,7 @@ import type { Notification } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
 import { navigateToHref } from "@/utils/navigation";
-import { formatNotificationTime } from "@/utils/notification-time";
+import { formatNotificationTime } from "@/utils/time";
 
 import { notificationMeta } from "./notification-meta";
 
@@ -13,6 +13,8 @@ type NotificationItemProps = {
   onMarkAsRead: (id: string) => void;
   onAcceptConnection: (actorId: string) => void;
 };
+
+type CtaKind = "accept" | "navigate" | "none";
 
 export function NotificationItem({
   notification,
@@ -23,7 +25,6 @@ export function NotificationItem({
   const kind = notification.kind.toLowerCase();
   const meta = notificationMeta[kind] ?? notificationMeta.connection;
   const Icon = meta.icon;
-  const canAcceptConnection = kind === "connection_request" && Boolean(notification.actorId);
 
   const markAsRead = () => {
     if (!notification.read) onMarkAsRead(notification.id);
@@ -36,10 +37,29 @@ export function NotificationItem({
 
   const handleAcceptConnection = () => {
     if (!notification.actorId) return;
-
     markAsRead();
     onAcceptConnection(notification.actorId);
   };
+
+  const canAcceptConnection = kind === "connection_request" && Boolean(notification.actorId);
+  const ctaKind: CtaKind = canAcceptConnection
+    ? "accept"
+    : notification.ctaLabel
+      ? "navigate"
+      : "none";
+
+  const ctaConfig: Record<Exclude<CtaKind, "none">, { label: string; onClick: () => void }> = {
+    accept: {
+      label: notification.ctaLabel || texts.notifications.accept,
+      onClick: handleAcceptConnection,
+    },
+    navigate: {
+      label: notification.ctaLabel ?? "",
+      onClick: handleNavigate,
+    },
+  };
+
+  const cta = ctaKind === "none" ? null : ctaConfig[ctaKind];
 
   return (
     <div
@@ -96,23 +116,15 @@ export function NotificationItem({
                 </button>
               )}
 
-              {canAcceptConnection ? (
+              {cta && (
                 <button
                   type="button"
-                  onClick={handleAcceptConnection}
+                  onClick={cta.onClick}
                   className="rounded-full bg-primary px-3 py-1 text-[11px] font-light text-primary-foreground transition hover:bg-primary/90"
                 >
-                  {notification.ctaLabel || texts.notifications.accept}
+                  {cta.label}
                 </button>
-              ) : notification.ctaLabel ? (
-                <button
-                  type="button"
-                  onClick={handleNavigate}
-                  className="rounded-full bg-primary px-3 py-1 text-[11px] font-light text-primary-foreground transition hover:bg-primary/90"
-                >
-                  {notification.ctaLabel}
-                </button>
-              ) : null}
+              )}
             </div>
           </div>
         </div>
