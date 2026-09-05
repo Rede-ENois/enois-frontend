@@ -1,36 +1,9 @@
-import type { ReactNode } from "react";
-
-type AppLayoutBlockProps = {
-  children: ReactNode;
-};
-
-function AppLayoutRoot({ children }: AppLayoutBlockProps) {
-  return <div className="min-h-screen bg-background">{children}</div>;
-}
-
-function AppLayoutHeader({ children }: AppLayoutBlockProps) {
-  return <>{children}</>;
-}
-
-function AppLayoutContent({ children }: AppLayoutBlockProps) {
-  return (
-    <div className="mx-auto flex max-w-7xl gap-6 px-3 py-4 sm:px-6 sm:py-6 lg:pb-6">
-      {children}
-    </div>
-  );
-}
-
-function AppLayoutSidebar({ children }: AppLayoutBlockProps) {
-  return <>{children}</>;
-}
-
-function AppLayoutMain({ children }: AppLayoutBlockProps) {
-  return <main className="min-w-0 flex-1">{children}</main>;
-}
-
-function AppLayoutNavigation({ children }: AppLayoutBlockProps) {
-  return <>{children}</>;
-}
+import { AppLayoutContent } from "@/components/app-layout/app-layout-content";
+import { AppLayoutHeader } from "@/components/app-layout/app-layout-header";
+import { AppLayoutMain } from "@/components/app-layout/app-layout-main";
+import { AppLayoutNavigation } from "@/components/app-layout/app-layout-navigation";
+import { AppLayoutRoot } from "@/components/app-layout/app-layout-root";
+import { AppLayoutSidebar } from "@/components/app-layout/app-layout-sidebar";
 
 export const AppLayout = Object.assign(AppLayoutRoot, {
   Header: AppLayoutHeader,
