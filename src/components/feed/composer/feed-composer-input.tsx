@@ -1,7 +1,7 @@
 import type { Profile } from "@/lib/api";
 import { texts } from "@/texts";
 
-import { MentionTextarea } from "@/components/mention-textarea";
+import { MentionTextarea } from "@/components/mention-textarea/mention-textarea";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedComposerInput({

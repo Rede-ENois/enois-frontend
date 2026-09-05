@@ -6,7 +6,7 @@ import type { CommentView, Profile } from "@/lib/api";
 import { texts } from "@/texts";
 import { getParentAuthorName, getReplies } from "@/utils/comments";
 
-import { MentionTextarea } from "@/components/mention-textarea";
+import { MentionTextarea } from "@/components/mention-textarea/mention-textarea";
 import { PostCommentItem } from "@/components/post/post-comment-item";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
