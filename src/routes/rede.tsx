@@ -9,6 +9,13 @@ import { type ConnectionRequest, networkApi, profileApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
+import {
+  getConnectionUiState,
+  getRequestDirection,
+  getRequestTargetUserId,
+  type ConnectionUiState,
+  type RequestDirection,
+} from "@/utils/network";
 
 import { Button } from "@/components/ui/button";
 
@@ -41,9 +48,11 @@ function Rede() {
   });
 
   const users = usersData?.items ?? [];
-  const pendingRequests = (requestsData?.items ?? []).filter((r) => r.status === "PENDING");
-  const incomingRequests = pendingRequests.filter((r) => r.fromUserId !== currentUser?.id);
-  const outgoingRequests = pendingRequests.filter((r) => r.fromUserId === currentUser?.id);
+  const pendingRequests = (requestsData?.items ?? []).filter((request) => request.status === "PENDING");
+  const requestGroups: Record<RequestDirection, ConnectionRequest[]> = {
+    incoming: pendingRequests.filter((request) => request.fromUserId !== currentUser?.id),
+    outgoing: pendingRequests.filter((request) => request.fromUserId === currentUser?.id),
+  };
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
 
@@ -60,11 +69,46 @@ function Rede() {
     onSuccess: invalidate,
   });
 
-  const statusFor = (userId: string): string => {
-    if (localStatus[userId]) return localStatus[userId];
-    if (pendingRequests.some((r) => r.fromUserId === userId)) return "PENDING_INCOMING";
-    return "NONE";
+  const connectionActions: Record<
+    ConnectionUiState,
+    {
+      Icon: React.ElementType;
+      label: string;
+      variant: "default" | "outline";
+      className: string;
+      run: (userId: string) => void;
+    }
+  > = {
+    connected: {
+      Icon: UserMinus,
+      label: texts.network.remove,
+      variant: "outline",
+      className: "text-destructive hover:text-destructive",
+      run: (userId) => {
+        remove.mutate(userId);
+        setLocalStatus((status) => ({ ...status, [userId]: "REMOVED" }));
+      },
+    },
+    requested: {
+      Icon: Send,
+      label: texts.network.requested,
+      variant: "default",
+      className: "",
+      run: (userId) => connect.mutate(userId),
+    },
+    available: {
+      Icon: UserPlus,
+      label: texts.network.connect,
+      variant: "default",
+      className: "",
+      run: (userId) => {
+        connect.mutate(userId);
+        setLocalStatus((status) => ({ ...status, [userId]: "REQUESTED" }));
+      },
+    },
   };
+
+  const totalPending = requestGroups.incoming.length + requestGroups.outgoing.length;
 
   return (
     <AppContainer>
@@ -84,49 +128,41 @@ function Rede() {
           </div>
         </div>
 
-        {(incomingRequests.length > 0 || outgoingRequests.length > 0) && (
+        {totalPending > 0 && (
           <section>
             <div className="mb-3">
               <h2 className="text-lg font-semibold">{texts.network.pendingTitle}</h2>
-              <p className="text-sm text-muted-foreground">
-                {texts.network.pendingCount(incomingRequests.length + outgoingRequests.length)}
-              </p>
+              <p className="text-sm text-muted-foreground">{texts.network.pendingCount(totalPending)}</p>
             </div>
             <div className="space-y-3">
-              {incomingRequests.length > 0 && (
-                <>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {texts.network.received}
-                  </p>
-                  {incomingRequests.map((req) => (
-                    <RequestCard
-                      key={req.id}
-                      request={req}
-                      currentUserId={currentUser?.id ?? ""}
-                      onAccept={acceptRequest.mutate}
-                      onCancel={remove.mutate}
-                    />
-                  ))}
-                </>
-              )}
-              {outgoingRequests.length > 0 && (
-                <>
-                  <div className={incomingRequests.length > 0 ? "pt-3" : ""}>
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      {texts.network.sent}
+              {(
+                [
+                  ["incoming", texts.network.received],
+                  ["outgoing", texts.network.sent],
+                ] as const
+              ).map(([direction, label]) => {
+                const requests = requestGroups[direction];
+                if (requests.length === 0) return null;
+
+                return (
+                  <div key={direction} className={direction === "outgoing" && requestGroups.incoming.length > 0 ? "pt-3" : ""}>
+                    <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {label}
                     </p>
+                    <div className="space-y-3">
+                      {requests.map((request) => (
+                        <RequestCard
+                          key={request.id}
+                          request={request}
+                          currentUserId={currentUser?.id ?? ""}
+                          onAccept={acceptRequest.mutate}
+                          onCancel={remove.mutate}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  {outgoingRequests.map((req) => (
-                    <RequestCard
-                      key={req.id}
-                      request={req}
-                      currentUserId={currentUser?.id ?? ""}
-                      onAccept={acceptRequest.mutate}
-                      onCancel={remove.mutate}
-                    />
-                  ))}
-                </>
-              )}
+                );
+              })}
             </div>
           </section>
         )}
@@ -140,60 +176,46 @@ function Rede() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {users.map((u) => (
-              <article key={u.id} className="surface-card overflow-hidden text-center">
-                <div className="h-16" style={{ background: "var(--gradient-soft)" }} />
-                <div className="-mt-10 px-5 pb-5">
-                  <UserAvatar
-                    src={u.avatar}
-                    alt={u.name}
-                    className="mx-auto h-20 w-20 ring-4 ring-card"
-                  />
-                  <Link
-                    to="/perfil/$username"
-                    params={{ username: u.username }}
-                    className="mt-3 block font-semibold hover:underline"
-                  >
-                    {u.name}
-                  </Link>
-                  <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-xs text-muted-foreground">
-                    {u.headline}
-                  </p>
-                  <p className="mt-2 text-xs text-primary">
-                    <Check className="mr-1 inline h-3 w-3" />
-                    {u.connected ? texts.network.connected : texts.network.commonInterests}
-                  </p>
-                  <Button
-                    className={`mt-4 w-full rounded-full gap-1.5 ${u.connected ? "text-destructive hover:text-destructive" : ""}`}
-                    variant={u.connected ? "outline" : "default"}
-                    disabled={connect.isPending || remove.isPending}
-                    onClick={() => {
-                      if (u.connected) {
-                        remove.mutate(u.id);
-                        setLocalStatus((s) => ({ ...s, [u.id]: "REMOVED" }));
-                      } else {
-                        connect.mutate(u.id);
-                        setLocalStatus((s) => ({ ...s, [u.id]: "REQUESTED" }));
-                      }
-                    }}
-                  >
-                    {u.connected ? (
-                      <>
-                        <UserMinus className="h-4 w-4" /> {texts.network.remove}
-                      </>
-                    ) : localStatus[u.id] === "REQUESTED" ? (
-                      <>
-                        <Send className="h-4 w-4" /> {texts.network.requested}
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="h-4 w-4" /> {texts.network.connect}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </article>
-            ))}
+            {users.map((user) => {
+              const state = getConnectionUiState(user.connected, localStatus[user.id]);
+              const action = connectionActions[state];
+              const ActionIcon = action.Icon;
+
+              return (
+                <article key={user.id} className="surface-card overflow-hidden text-center">
+                  <div className="h-16" style={{ background: "var(--gradient-soft)" }} />
+                  <div className="-mt-10 px-5 pb-5">
+                    <UserAvatar
+                      src={user.avatar}
+                      alt={user.name}
+                      className="mx-auto h-20 w-20 ring-4 ring-card"
+                    />
+                    <Link
+                      to="/perfil/$username"
+                      params={{ username: user.username }}
+                      className="mt-3 block font-semibold hover:underline"
+                    >
+                      {user.name}
+                    </Link>
+                    <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-xs text-muted-foreground">
+                      {user.headline}
+                    </p>
+                    <p className="mt-2 text-xs text-primary">
+                      <Check className="mr-1 inline h-3 w-3" />
+                      {user.connected ? texts.network.connected : texts.network.commonInterests}
+                    </p>
+                    <Button
+                      className={`mt-4 w-full rounded-full gap-1.5 ${action.className}`}
+                      variant={action.variant}
+                      disabled={connect.isPending || remove.isPending}
+                      onClick={() => action.run(user.id)}
+                    >
+                      <ActionIcon className="h-4 w-4" /> {action.label}
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>
@@ -212,13 +234,50 @@ function RequestCard({
   onAccept: (id: string) => void;
   onCancel: (id: string) => void;
 }) {
-  const isOutgoing = request.fromUserId === currentUserId;
-  const targetUserId = isOutgoing ? request.toUserId : request.fromUserId;
+  const direction = getRequestDirection(request, currentUserId);
+  const targetUserId = getRequestTargetUserId(request, direction);
 
   const { data: user } = useQuery({
     queryKey: ["profile", "by-id", targetUserId],
     queryFn: () => profileApi.getById(targetUserId),
   });
+
+  const descriptions: Record<RequestDirection, string> = {
+    outgoing: texts.network.requestSent,
+    incoming: texts.network.wantsToConnect,
+  };
+
+  const actions: Record<RequestDirection, React.ReactNode> = {
+    outgoing: (
+      <Button
+        size="sm"
+        variant="outline"
+        className="rounded-full shrink-0 gap-1.5"
+        onClick={() => onCancel(request.toUserId)}
+      >
+        <X className="h-4 w-4" /> {texts.network.cancel}
+      </Button>
+    ),
+    incoming: (
+      <div className="flex gap-2 shrink-0">
+        <Button
+          size="sm"
+          variant="outline"
+          className="rounded-full gap-1.5"
+          onClick={() => onCancel(request.fromUserId)}
+        >
+          <X className="h-4 w-4" /> {texts.network.reject}
+        </Button>
+        <Button
+          size="sm"
+          className="rounded-full gap-1.5"
+          onClick={() => onAccept(request.fromUserId)}
+        >
+          <Check className="h-4 w-4" /> {texts.network.accept}
+        </Button>
+      </div>
+    ),
+  };
 
   return (
     <div className="surface-card flex items-center justify-between gap-4 p-4">
@@ -232,42 +291,11 @@ function RequestCard({
           >
             {user?.name ?? texts.common.loading}
           </Link>
-          {user?.headline && (
-            <p className="truncate text-xs text-muted-foreground">{user.headline}</p>
-          )}
-          <p className="text-[11px] text-muted-foreground">
-            {isOutgoing ? texts.network.requestSent : texts.network.wantsToConnect}
-          </p>
+          {user?.headline && <p className="truncate text-xs text-muted-foreground">{user.headline}</p>}
+          <p className="text-[11px] text-muted-foreground">{descriptions[direction]}</p>
         </div>
       </div>
-      {isOutgoing ? (
-        <Button
-          size="sm"
-          variant="outline"
-          className="rounded-full shrink-0 gap-1.5"
-          onClick={() => onCancel(request.toUserId)}
-        >
-          <X className="h-4 w-4" /> {texts.network.cancel}
-        </Button>
-      ) : (
-        <div className="flex gap-2 shrink-0">
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-full gap-1.5"
-            onClick={() => onCancel(request.fromUserId)}
-          >
-            <X className="h-4 w-4" /> {texts.network.reject}
-          </Button>
-          <Button
-            size="sm"
-            className="rounded-full gap-1.5"
-            onClick={() => onAccept(request.fromUserId)}
-          >
-            <Check className="h-4 w-4" /> {texts.network.accept}
-          </Button>
-        </div>
-      )}
+      {actions[direction]}
     </div>
   );
 }

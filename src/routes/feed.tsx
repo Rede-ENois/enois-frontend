@@ -1,6 +1,6 @@
 import { type FormEvent, useRef, useState } from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import {
@@ -15,12 +15,20 @@ import {
   X,
 } from "lucide-react";
 
-import { ApiError, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
+import { eventsApi, feedApi, networkApi } from "@/lib/api";
 import type { PostView } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
+import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
-import type { UploadResult } from "@/lib/use-media-upload";
+import { useEventsQuery, useFeedQuery, useNetworkSuggestionsQuery } from "@/hooks/use-feed-data";
 import { texts } from "@/texts";
+import {
+  appendLocalMedia,
+  getLocalMediaTypeFromItems,
+  removeLocalMedia,
+  type LocalMediaItem,
+  type LocalMediaType,
+} from "@/utils/media";
 
 import { Button } from "@/components/ui/button";
 
@@ -29,11 +37,24 @@ import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
 import { UserAvatar } from "@/components/user-avatar";
 
-interface MediaItem {
-  type: "image" | "video";
-  file: File;
-  preview: string;
-}
+const composerPostActions: Array<{
+  type: PostView["type"];
+  icon: React.ElementType;
+  label: string;
+}> = [
+  { type: "INSIGHT", icon: Image, label: texts.feed.composer.types.insight },
+  { type: "ARTICLE", icon: FileText, label: texts.feed.composer.types.article },
+  { type: "QUESTION", icon: BarChart3, label: texts.feed.composer.types.question },
+  { type: "PROJECT", icon: Calendar, label: texts.feed.composer.types.project },
+];
+
+const feedTabs = [
+  { value: "FOR_YOU", label: texts.feed.tabs.forYou },
+  { value: "ALL", label: texts.feed.tabs.all },
+  { value: "FOLLOWING", label: texts.feed.tabs.following },
+  { value: "RECENT", label: texts.feed.tabs.discussions },
+  { value: "PROJECTS", label: texts.feed.tabs.projects },
+] as const;
 
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,
@@ -46,46 +67,18 @@ export const Route = createFileRoute("/feed")({
   component: Home,
 });
 
-function useFeed(tab: string | undefined) {
-  return useQuery({
-    queryKey: ["feed", tab],
-    queryFn: () => feedApi.list(null, 20, tab),
-  });
-}
-
-function useProfile() {
-  return useQuery({
-    queryKey: ["me"],
-    queryFn: () => profileApi.me(),
-  });
-}
-
-function useSuggestions() {
-  return useQuery({
-    queryKey: ["network", "suggestions"],
-    queryFn: () => networkApi.suggestions(4),
-  });
-}
-
-function useEvents() {
-  return useQuery({
-    queryKey: ["events"],
-    queryFn: () => eventsApi.list(),
-  });
-}
-
 function Home() {
   const queryClient = useQueryClient();
+  const { user: profileUser } = useAuth();
   const [tab, setTab] = useState<string | undefined>("FOR_YOU");
-  const { data: feedData, isFetching: feedLoading } = useFeed(tab);
-  const { data: profile } = useProfile();
-  const { data: suggestions } = useSuggestions();
-  const { data: eventsData } = useEvents();
+  const { data: feedData, isFetching: feedLoading } = useFeedQuery(tab);
+  const { data: suggestions } = useNetworkSuggestionsQuery(4);
+  const { data: eventsData } = useEventsQuery();
 
   const [draft, setDraft] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
-  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [media, setMedia] = useState<LocalMediaItem[]>([]);
   const [publishError, setPublishError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
@@ -109,54 +102,41 @@ function Home() {
 
     setPublishError(null);
     try {
-      let mediaIds: string[] = [];
-      if (media.length > 0) {
-        const results = await upload.uploadAll(media.map((m) => ({ file: m.file })));
-        mediaIds = results.map((r) => r.mediaId);
-      }
+      const results =
+        media.length > 0
+          ? await upload.uploadAll(media.map((item) => ({ file: item.file })))
+          : [];
+      const mediaIds = results.map((result) => result.mediaId);
+
       await createPost.mutateAsync({ content, type: postType, mediaIds, mentionedUserIds });
       setDraft("");
       setMentionedUserIds([]);
       setPostType("INSIGHT");
       setMedia([]);
-    } catch (err) {
-      setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : texts.feed.composer.publishError);
     }
   };
 
-  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    for (const file of Array.from(files)) {
-      const isVideo = file.type.startsWith("video/");
-      const isImage = file.type.startsWith("image/");
-      if (!isVideo && !isImage) continue;
-
-      const hasExistingImages = media.some((m) => m.type === "image");
-      const hasExistingVideo = media.some((m) => m.type === "video");
-
-      if (isVideo && (hasExistingImages || hasExistingVideo || media.length >= 1)) break;
-      if (isImage && hasExistingVideo) break;
-      if (isImage && media.length >= 4) break;
-
-      const preview = URL.createObjectURL(file);
-      setMedia((prev) => [...prev, { type: isVideo ? "video" : "image", file, preview }]);
-    }
-    e.target.value = "";
+  const handleMediaSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files?.length) return;
+    setMedia((current) => appendLocalMedia(current, files));
+    event.target.value = "";
   };
 
-  const removeMedia = (index: number) => {
-    setMedia((prev) => {
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
-    });
+  const mediaType = getLocalMediaTypeFromItems(media);
+  const mediaLabels: Record<LocalMediaType, string> = {
+    image: texts.feed.composer.mediaCount(media.length),
+    video: texts.feed.composer.video,
   };
-
-  const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
+  const mediaLabel = mediaType ? mediaLabels[mediaType] : texts.feed.composer.media;
+  const MediaIcon = mediaType === "video" ? Film : Image;
+  const isUploading = upload.status === "uploading";
+  const isPublishing = createPost.isPending || isUploading;
+  const publishingLabel = isUploading ? texts.common.sending : texts.common.publishing;
 
   const feedPosts = feedData?.items ?? [];
-  const profileUser = profile;
   const suggestionList = suggestions ?? [];
   const eventList = eventsData?.items ?? [];
 
@@ -176,8 +156,8 @@ function Home() {
               />
               <MentionTextarea
                 value={draft}
-                onChange={(val, ids) => {
-                  setDraft(val);
+                onChange={(value, ids) => {
+                  setDraft(value);
                   setMentionedUserIds(ids);
                 }}
                 placeholder={texts.feed.composer.placeholder}
@@ -189,18 +169,10 @@ function Home() {
             {media.length > 0 && (
               <div className="relative mt-3">
                 {mediaType === "image" ? (
-                  <div
-                    className={`grid gap-2 ${
-                      media.length === 1
-                        ? "grid-cols-1"
-                        : media.length === 2
-                          ? "grid-cols-2"
-                          : "grid-cols-2"
-                    }`}
-                  >
-                    {media.map((item, i) => (
+                  <div className={`grid gap-2 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                    {media.map((item, index) => (
                       <div
-                        key={i}
+                        key={item.preview}
                         className="relative overflow-hidden rounded-xl border border-border-soft"
                       >
                         <img
@@ -210,7 +182,7 @@ function Home() {
                         />
                         <button
                           type="button"
-                          onClick={() => removeMedia(i)}
+                          onClick={() => setMedia((items) => removeLocalMedia(items, index))}
                           className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
                         >
                           <X className="h-4 w-4" />
@@ -227,7 +199,7 @@ function Home() {
                     />
                     <button
                       type="button"
-                      onClick={() => removeMedia(0)}
+                      onClick={() => setMedia((items) => removeLocalMedia(items, 0))}
                       className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
                     >
                       <X className="h-4 w-4" />
@@ -248,39 +220,18 @@ function Home() {
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-[13px] font-light text-text-subtle">
               <div className="flex flex-wrap gap-1.5">
+                {composerPostActions.map((action) => (
+                  <ComposerAction
+                    key={action.type}
+                    icon={action.icon}
+                    label={action.label}
+                    active={postType === action.type}
+                    onClick={() => setPostType(action.type)}
+                  />
+                ))}
                 <ComposerAction
-                  icon={Image}
-                  label={texts.feed.composer.types.insight}
-                  active={postType === "INSIGHT"}
-                  onClick={() => setPostType("INSIGHT")}
-                />
-                <ComposerAction
-                  icon={FileText}
-                  label={texts.feed.composer.types.article}
-                  active={postType === "ARTICLE"}
-                  onClick={() => setPostType("ARTICLE")}
-                />
-                <ComposerAction
-                  icon={BarChart3}
-                  label={texts.feed.composer.types.question}
-                  active={postType === "QUESTION"}
-                  onClick={() => setPostType("QUESTION")}
-                />
-                <ComposerAction
-                  icon={Calendar}
-                  label={texts.feed.composer.types.project}
-                  active={postType === "PROJECT"}
-                  onClick={() => setPostType("PROJECT")}
-                />
-                <ComposerAction
-                  icon={mediaType === "video" ? Film : Image}
-                  label={
-                    mediaType === "video"
-                      ? texts.feed.composer.video
-                      : media.length > 0
-                        ? texts.feed.composer.mediaCount(media.length)
-                        : texts.feed.composer.media
-                  }
+                  icon={MediaIcon}
+                  label={mediaLabel}
                   active={media.length > 0}
                   onClick={() => fileRef.current?.click()}
                 />
@@ -291,7 +242,7 @@ function Home() {
                     {publishError}
                   </p>
                 )}
-                {!publishError && upload.status === "uploading" && (
+                {!publishError && isUploading && (
                   <span className="text-[12px] font-light text-text-subtle">
                     {texts.feed.composer.uploadProgress(upload.progress)}
                   </span>
@@ -299,14 +250,11 @@ function Home() {
                 <Button
                   size="sm"
                   className="rounded-full"
-                  disabled={!draft.trim() || createPost.isPending || upload.status === "uploading"}
+                  disabled={!draft.trim() || isPublishing}
                 >
-                  {createPost.isPending || upload.status === "uploading" ? (
+                  {isPublishing ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />{" "}
-                      {upload.status === "uploading"
-                        ? texts.common.sending
-                        : texts.common.publishing}
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> {publishingLabel}
                     </>
                   ) : (
                     texts.common.publish
@@ -317,21 +265,15 @@ function Home() {
           </form>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            <TabPill active={tab === "FOR_YOU"} onClick={() => setTab("FOR_YOU")}>
-              {texts.feed.tabs.forYou}
-            </TabPill>
-            <TabPill active={tab === "ALL"} onClick={() => setTab("ALL")}>
-              {texts.feed.tabs.all}
-            </TabPill>
-            <TabPill active={tab === "FOLLOWING"} onClick={() => setTab("FOLLOWING")}>
-              {texts.feed.tabs.following}
-            </TabPill>
-            <TabPill active={tab === "RECENT"} onClick={() => setTab("RECENT")}>
-              {texts.feed.tabs.discussions}
-            </TabPill>
-            <TabPill active={tab === "PROJECTS"} onClick={() => setTab("PROJECTS")}>
-              {texts.feed.tabs.projects}
-            </TabPill>
+            {feedTabs.map((feedTab) => (
+              <TabPill
+                key={feedTab.value}
+                active={tab === feedTab.value}
+                onClick={() => setTab(feedTab.value)}
+              >
+                {feedTab.label}
+              </TabPill>
+            ))}
           </div>
 
           <div className="space-y-4">
@@ -340,7 +282,7 @@ function Home() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             )}
-            {!feedLoading && feedPosts.map((p) => <PostCard key={p.id} post={p} />)}
+            {!feedLoading && feedPosts.map((post) => <PostCard key={post.id} post={post} />)}
           </div>
         </div>
 
@@ -390,33 +332,31 @@ function Home() {
                 {texts.feed.sidebar.suggestionsDescription}
               </p>
               <ul className="mt-4 space-y-3">
-                {suggestionList.map((u) => (
-                  <li key={u.id} className="flex items-center gap-3">
-                    <UserAvatar src={u.avatar} alt={u.name} className="h-10 w-10" />
+                {suggestionList.map((user) => (
+                  <li key={user.id} className="flex items-center gap-3">
+                    <UserAvatar src={user.avatar} alt={user.name} className="h-10 w-10" />
                     <div className="min-w-0 flex-1">
                       <Link
                         to="/perfil/$username"
-                        params={{ username: u.username }}
+                        params={{ username: user.username }}
                         className="block truncate text-[13px] font-light text-text-strong hover:underline"
                       >
-                        {u.name}
+                        {user.name}
                       </Link>
                       <p className="truncate text-[11px] font-light text-text-subtle">
-                        {u.headline}
+                        {user.headline}
                       </p>
                     </div>
                     <button
                       type="button"
                       className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary"
-                      onClick={() => {
-                        networkApi
-                          .connect(u.id)
-                          .then(() =>
-                            queryClient.invalidateQueries({
-                              queryKey: ["network", "suggestions"],
-                            }),
-                          );
-                      }}
+                      onClick={() =>
+                        networkApi.connect(user.id).then(() =>
+                          queryClient.invalidateQueries({
+                            queryKey: ["network", "suggestions"],
+                          }),
+                        )
+                      }
                     >
                       {texts.feed.sidebar.connect}
                     </button>
@@ -435,11 +375,11 @@ function Home() {
                 </h3>
               </div>
               <ul className="mt-3 space-y-3">
-                {eventList.slice(0, 3).map((e) => (
-                  <li key={e.id}>
-                    <p className="text-[13px] font-light text-text-strong">{e.title}</p>
+                {eventList.slice(0, 3).map((event) => (
+                  <li key={event.id}>
+                    <p className="text-[13px] font-light text-text-strong">{event.title}</p>
                     <p className="text-[11px] font-light text-text-subtle">
-                      {e.date} · {e.format} · {texts.feed.sidebar.confirmed(e.attendees)}
+                      {event.date} · {event.format} · {texts.feed.sidebar.confirmed(event.attendees)}
                     </p>
                   </li>
                 ))}

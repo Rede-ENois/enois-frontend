@@ -1,14 +1,16 @@
 import { useState } from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Calendar, MapPin, Plus, Users, Video } from "lucide-react";
 
+import { useEventsQuery } from "@/hooks/use-feed-data";
 import { eventsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
+import { getIsoDateParts } from "@/utils/time";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,12 @@ import { Label } from "@/components/ui/label";
 
 import { AppContainer } from "@/components/app-container";
 
+const eventFormatIcons: Record<keyof typeof texts.events.formats, React.ElementType> = {
+  ONLINE: Video,
+  IN_PERSON: MapPin,
+  HYBRID: MapPin,
+};
+
 export const Route = createFileRoute("/eventos")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.events.seoTitle }] }),
@@ -33,12 +41,7 @@ export const Route = createFileRoute("/eventos")({
 function Eventos() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-
-  const { data: eventsData } = useQuery({
-    queryKey: ["events"],
-    queryFn: () => eventsApi.list(),
-  });
-
+  const { data: eventsData } = useEventsQuery();
   const events = eventsData?.items ?? [];
 
   const attend = useMutation({
@@ -88,16 +91,21 @@ function Eventos() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((e) => {
-            const formatLabel =
-              texts.events.formats[e.format as keyof typeof texts.events.formats] ?? e.format;
-            const Icon = e.format === "ONLINE" ? Video : MapPin;
-            const [, month, day] = (e.date ?? "").split("-");
+          {events.map((event) => {
+            const formatKey = event.format as keyof typeof texts.events.formats;
+            const formatLabel = texts.events.formats[formatKey] ?? event.format;
+            const FormatIcon = eventFormatIcons[formatKey] ?? MapPin;
+            const { month, day } = getIsoDateParts(event.date);
+
             return (
-              <article key={e.id} className="surface-card overflow-hidden">
+              <article key={event.id} className="surface-card overflow-hidden">
                 <div className="relative">
-                  {e.cover ? (
-                    <img src={resolveCdnUrl(e.cover)} alt="" className="h-40 w-full object-cover" />
+                  {event.cover ? (
+                    <img
+                      src={resolveCdnUrl(event.cover)}
+                      alt=""
+                      className="h-40 w-full object-cover"
+                    />
                   ) : (
                     <div className="h-40 w-full bg-gradient-to-br from-primary/20 to-primary/5" />
                   )}
@@ -105,27 +113,29 @@ function Eventos() {
                     <p className="text-[10px] font-medium uppercase text-primary">
                       {texts.events.months[Number(month)] ?? month}
                     </p>
-                    <p className="text-lg font-semibold leading-none">{day ?? ""}</p>
+                    <p className="text-lg font-semibold leading-none">{day}</p>
                   </div>
                 </div>
                 <div className="p-5">
                   <Badge variant="outline" className="rounded-full bg-card font-normal">
-                    <Icon className="mr-1 h-3 w-3" /> {formatLabel}
+                    <FormatIcon className="mr-1 h-3 w-3" /> {formatLabel}
                   </Badge>
-                  <h3 className="mt-2 break-words font-semibold">{e.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{texts.events.hostedBy(e.host)}</p>
+                  <h3 className="mt-2 break-words font-semibold">{event.title}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {texts.events.hostedBy(event.host)}
+                  </p>
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" /> {e.date ?? ""} · {e.time ?? ""}
+                      <Calendar className="h-3.5 w-3.5" /> {event.date ?? ""} · {event.time ?? ""}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5" /> {e.attendees ?? 0}
+                      <Users className="h-3.5 w-3.5" /> {event.attendees ?? 0}
                     </span>
                   </div>
                   <Button
                     className="mt-4 w-full rounded-full"
                     disabled={attend.isPending}
-                    onClick={() => attend.mutate(e.id)}
+                    onClick={() => attend.mutate(event.id)}
                   >
                     {texts.events.attend}
                   </Button>
@@ -163,7 +173,7 @@ function CreateEventForm({
       <Field label={texts.events.form.title}>
         <Input
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(event) => setTitle(event.target.value)}
           className="h-10 border-transparent bg-muted"
         />
       </Field>
@@ -172,7 +182,7 @@ function CreateEventForm({
           <Input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(event) => setDate(event.target.value)}
             className="h-10 border-transparent bg-muted"
           />
         </Field>
@@ -180,7 +190,7 @@ function CreateEventForm({
           <Input
             type="time"
             value={time}
-            onChange={(e) => setTime(e.target.value)}
+            onChange={(event) => setTime(event.target.value)}
             className="h-10 border-transparent bg-muted"
           />
         </Field>
@@ -188,7 +198,7 @@ function CreateEventForm({
       <Field label={texts.events.form.host}>
         <Input
           value={host}
-          onChange={(e) => setHost(e.target.value)}
+          onChange={(event) => setHost(event.target.value)}
           placeholder={texts.events.form.hostPlaceholder}
           className="h-10 border-transparent bg-muted"
         />
@@ -196,8 +206,8 @@ function CreateEventForm({
       <Field label={texts.events.form.format}>
         <select
           value={format}
-          onChange={(e) => setFormat(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10 border-transparent bg-muted"
+          onChange={(event) => setFormat(event.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm border-transparent bg-muted"
         >
           {Object.entries(texts.events.formats).map(([value, label]) => (
             <option key={value} value={value}>

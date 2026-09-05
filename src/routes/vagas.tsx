@@ -9,6 +9,9 @@ import { jobsApi } from "@/lib/api";
 import type { Job } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
+import { mergePage } from "@/utils/collections";
+import { humanizeEnumLabel } from "@/utils/string";
+import { formatJobPostedAt } from "@/utils/time";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,16 +23,11 @@ import { AppContainer } from "@/components/app-container";
 const LEVELS = ["JUNIOR", "MID", "SENIOR", "LEAD"];
 const TYPES = ["CLT", "PJ", "FREELANCE", "INTERN"];
 
-function formatPostedAt(dateStr: string | null | undefined): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  const now = new Date();
-  const diffD = Math.floor((now.getTime() - date.getTime()) / 86400000);
-  if (diffD < 1) return texts.jobs.today;
-  if (diffD < 30) return texts.jobs.daysAgo(diffD);
-  return date.toLocaleDateString("pt-BR");
-}
+export const Route = createFileRoute("/vagas")({
+  beforeLoad: requireAuth,
+  head: () => ({ meta: [{ title: texts.jobs.seoTitle }] }),
+  component: Vagas,
+});
 
 function Vagas() {
   const queryClient = useQueryClient();
@@ -56,23 +54,18 @@ function Vagas() {
 
   const jobs = jobsData?.items ?? [];
   const nextCursor = jobsData?.nextCursor ?? null;
-
   const filtersKey = JSON.stringify(filters);
-  const prevKey = useRef(filtersKey);
+  const previousFiltersKey = useRef(filtersKey);
+
   useEffect(() => {
-    if (prevKey.current !== filtersKey) {
-      setAllJobs([]);
-      setCursor(null);
-      prevKey.current = filtersKey;
-    }
+    if (previousFiltersKey.current === filtersKey) return;
+    setAllJobs([]);
+    setCursor(null);
+    previousFiltersKey.current = filtersKey;
   }, [filtersKey]);
 
   useEffect(() => {
-    if (cursor === null && jobs.length > 0) {
-      setAllJobs(jobs);
-    } else if (cursor !== null && jobs.length > 0) {
-      setAllJobs((prev) => [...prev, ...jobs]);
-    }
+    setAllJobs((current) => mergePage(current, jobs, cursor === null));
   }, [jobs, cursor]);
 
   const apply = useMutation({
@@ -80,8 +73,7 @@ function Vagas() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
   });
 
-  const activeCount = [level, location, type].filter(Boolean).length;
-  const hasFilters = activeCount > 0 || skills !== "";
+  const hasFilters = [level, location, type, skills].some(Boolean);
 
   const clearFilters = () => {
     setLevel("");
@@ -111,73 +103,39 @@ function Vagas() {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground mr-1">{texts.jobs.filters.level}</span>
-              {LEVELS.map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLevel(level === l ? "" : l)}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${level === l
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  {l.charAt(0) + l.slice(1).toLowerCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground mr-1">{texts.jobs.filters.location}</span>
-              {texts.jobs.filters.locations.map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLocation(location === l ? "" : l)}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${location === l
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground mr-1">{texts.jobs.filters.type}</span>
-              {TYPES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setType(type === t ? "" : t)}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${type === t
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterGroup
+            label={texts.jobs.filters.level}
+            values={LEVELS}
+            selected={level}
+            onChange={setLevel}
+            getLabel={humanizeEnumLabel}
+          />
+          <FilterGroup
+            label={texts.jobs.filters.location}
+            values={texts.jobs.filters.locations}
+            selected={location}
+            onChange={setLocation}
+          />
+          <FilterGroup
+            label={texts.jobs.filters.type}
+            values={TYPES}
+            selected={type}
+            onChange={setType}
+          />
 
           <div className="mt-4 flex flex-wrap gap-3">
             <div className="relative max-w-sm flex-1">
               <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
                 placeholder={texts.jobs.searchPlaceholder}
                 className="h-9 rounded-full bg-muted pl-9"
               />
             </div>
             <Input
               value={skills}
-              onChange={(e) => setSkills(e.target.value)}
+              onChange={(event) => setSkills(event.target.value)}
               placeholder={texts.jobs.skillsPlaceholder}
               className="h-9 rounded-full bg-muted max-w-xs"
             />
@@ -185,49 +143,57 @@ function Vagas() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {allJobs.map((j) => (
-            <article key={j.id} className="surface-card flex flex-col p-5">
+          {allJobs.map((job) => (
+            <article key={job.id} className="surface-card flex flex-col p-5">
               <div className="flex items-start gap-3">
                 <Avatar className="h-12 w-12 rounded-xl">
-                  {j.logo && <AvatarImage src={j.logo} alt={j.company} className="rounded-xl" />}
-                  <AvatarFallback className="rounded-xl">{j.company[0]}</AvatarFallback>
+                  {job.logo && (
+                    <AvatarImage src={job.logo} alt={job.company} className="rounded-xl" />
+                  )}
+                  <AvatarFallback className="rounded-xl">{job.company[0]}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <h3 className="break-words font-semibold">{j.title}</h3>
-                  <p className="break-words text-sm text-muted-foreground">{j.company}</p>
+                  <h3 className="break-words font-semibold">{job.title}</h3>
+                  <p className="break-words text-sm text-muted-foreground">{job.company}</p>
                   <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" /> {j.location}
+                    <MapPin className="h-3 w-3" /> {job.location}
                   </p>
                 </div>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                {j.matchScore && (
+                {job.matchScore && (
                   <span className="rounded-full bg-primary-soft px-2.5 py-1 font-medium text-primary inline-flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" /> {texts.jobs.match(j.matchScore)}
+                    <Sparkles className="h-3 w-3" /> {texts.jobs.match(job.matchScore)}
                   </span>
                 )}
-                <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">{j.type}</span>
-                <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">{j.level}</span>
-                {j.salary && (
-                  <span className="rounded-full bg-growth/15 px-2.5 py-1 font-medium text-growth">{j.salary}</span>
+                <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+                  {job.type}
+                </span>
+                <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+                  {job.level}
+                </span>
+                {job.salary && (
+                  <span className="rounded-full bg-growth/15 px-2.5 py-1 font-medium text-growth">
+                    {job.salary}
+                  </span>
                 )}
               </div>
 
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {j.skills.map((s) => (
+                {job.skills.map((skill) => (
                   <Badge
-                    key={s}
+                    key={skill}
                     variant="secondary"
                     className="rounded-full bg-accent font-normal text-accent-foreground"
                   >
-                    {s}
+                    {skill}
                   </Badge>
                 ))}
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-                <span>{formatPostedAt(j.postedAt)}</span>
+                <span>{formatJobPostedAt(job.postedAt)}</span>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="rounded-full">
                     {texts.jobs.details}
@@ -236,7 +202,7 @@ function Vagas() {
                     size="sm"
                     className="rounded-full"
                     disabled={apply.isPending}
-                    onClick={() => apply.mutate(j.id)}
+                    onClick={() => apply.mutate(job.id)}
                   >
                     {texts.jobs.apply}
                   </Button>
@@ -253,7 +219,7 @@ function Vagas() {
         )}
 
         <InfiniteScroll
-          hasMore={!!nextCursor}
+          hasMore={Boolean(nextCursor)}
           loading={isFetching}
           onLoadMore={() => {
             if (nextCursor) setCursor(nextCursor);
@@ -268,11 +234,40 @@ function Vagas() {
   );
 }
 
-export const Route = createFileRoute("/vagas")({
-  beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.jobs.seoTitle }] }),
-  component: Vagas,
-});
+function FilterGroup({
+  label,
+  values,
+  selected,
+  onChange,
+  getLabel = (value) => value,
+}: {
+  label: string;
+  values: readonly string[];
+  selected: string;
+  onChange: (value: string) => void;
+  getLabel?: (value: string) => string;
+}) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-2 first:mt-4">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground mr-1">{label}</span>
+        {values.map((value) => (
+          <button
+            key={value}
+            onClick={() => onChange(selected === value ? "" : value)}
+            className={`rounded-full border px-3 py-1 text-xs transition ${
+              selected === value
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {getLabel(value)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function InfiniteScroll({
   hasMore,
@@ -286,19 +281,19 @@ function InfiniteScroll({
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || !hasMore) return;
+    const element = sentinelRef.current;
+    if (!element || !hasMore) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) onLoadMore();
+        if (entry.isIntersecting && !loading) onLoadMore();
       },
       { rootMargin: "300px" },
     );
-    observer.observe(el);
+
+    observer.observe(element);
     return () => observer.disconnect();
   }, [hasMore, loading, onLoadMore]);
 
-  if (!hasMore) return null;
-
-  return <div ref={sentinelRef} className="h-4" />;
+  return hasMore ? <div ref={sentinelRef} className="h-4" /> : null;
 }

@@ -3,11 +3,12 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { ApiError, profileApi } from "@/lib/api";
 import type { Certification, Education, Experience, Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import { buildProfileUpdate } from "@/utils/profile";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +32,9 @@ export function EditProfileDialog({ profile, children }: Props) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"info" | "experiences" | "education" | "certifications">("info");
+  const [tab, setTab] = useState<"info" | "experiences" | "education" | "certifications">(
+    "info",
+  );
 
   const [username, setUsername] = useState(profile.username);
   const [name, setName] = useState(profile.name);
@@ -63,8 +66,8 @@ export function EditProfileDialog({ profile, children }: Props) {
       }
       setOpen(false);
     },
-    onError: (err) => {
-      if (err instanceof ApiError && err.status === 409) {
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
         setUsernameError(texts.profile.edit.usernameTaken);
       }
     },
@@ -90,36 +93,23 @@ export function EditProfileDialog({ profile, children }: Props) {
 
   const handleSave = async () => {
     setUsernameError("");
-    await updateProfile.mutateAsync({
-      username: username !== profile.username ? username : undefined,
-      name: name !== profile.name ? name : undefined,
-      headline: headline || null,
-      bio: bio || null,
-      company: company || null,
-      location: location || null,
-      availability: availability || null,
-      portfolio: portfolio || null,
-      externalLinks: linksText
-        ? linksText
-            .split("\n")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-      skills: skillsText
-        ? skillsText
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-      goals: goalsText
-        ? goalsText
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : [],
-      openToWork,
-      isMentor,
-    });
+    await updateProfile.mutateAsync(
+      buildProfileUpdate(profile, {
+        username,
+        name,
+        headline,
+        bio,
+        company,
+        location,
+        availability,
+        portfolio,
+        linksText,
+        skillsText,
+        goalsText,
+        openToWork,
+        isMentor,
+      }),
+    );
   };
 
   const tabs = [
@@ -148,17 +138,17 @@ export function EditProfileDialog({ profile, children }: Props) {
             </div>
           </div>
           <div className="mt-4 flex gap-1 overflow-x-auto text-sm">
-            {tabs.map((t) => (
+            {tabs.map((item) => (
               <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
+                key={item.key}
+                onClick={() => setTab(item.key)}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-light transition ${
-                  tab === t.key
+                  tab === item.key
                     ? "bg-surface-2 text-primary"
                     : "text-text-subtle hover:bg-surface-3 hover:text-text-strong"
                 }`}
               >
-                {t.label}
+                {item.label}
               </button>
             ))}
           </div>
@@ -170,15 +160,15 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.name}>
                 <Input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(event) => setName(event.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
               </Field>
               <Field label={texts.profile.edit.fields.username} error={usernameError}>
                 <Input
                   value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
+                  onChange={(event) => {
+                    setUsername(event.target.value);
                     setUsernameError("");
                   }}
                   placeholder={texts.profile.edit.placeholders.username}
@@ -188,7 +178,7 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.headline}>
                 <Input
                   value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
+                  onChange={(event) => setHeadline(event.target.value)}
                   placeholder={texts.profile.edit.placeholders.headline}
                   className="h-10 border-border-soft bg-surface-1"
                 />
@@ -196,7 +186,7 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.bio}>
                 <Textarea
                   value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                  onChange={(event) => setBio(event.target.value)}
                   rows={3}
                   className="h-10 border-border-soft bg-surface-1 pl-9"
                 />
@@ -205,14 +195,14 @@ export function EditProfileDialog({ profile, children }: Props) {
                 <Field label={texts.profile.edit.fields.company}>
                   <Input
                     value={company}
-                    onChange={(e) => setCompany(e.target.value)}
+                    onChange={(event) => setCompany(event.target.value)}
                     className="h-10 border-border-soft bg-surface-1"
                   />
                 </Field>
                 <Field label={texts.profile.edit.fields.location}>
                   <Input
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    onChange={(event) => setLocation(event.target.value)}
                     className="h-10 border-border-soft bg-surface-1"
                   />
                 </Field>
@@ -220,7 +210,7 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.availability}>
                 <Input
                   value={availability}
-                  onChange={(e) => setAvailability(e.target.value)}
+                  onChange={(event) => setAvailability(event.target.value)}
                   placeholder={texts.profile.edit.placeholders.availability}
                   className="h-10 border-border-soft bg-surface-1"
                 />
@@ -228,7 +218,7 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.portfolio}>
                 <Input
                   value={portfolio}
-                  onChange={(e) => setPortfolio(e.target.value)}
+                  onChange={(event) => setPortfolio(event.target.value)}
                   placeholder={texts.profile.edit.placeholders.portfolio}
                   className="h-10 border-border-soft bg-surface-1"
                 />
@@ -236,7 +226,7 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.externalLinks}>
                 <Textarea
                   value={linksText}
-                  onChange={(e) => setLinksText(e.target.value)}
+                  onChange={(event) => setLinksText(event.target.value)}
                   rows={3}
                   className="h-10 border-border-soft bg-surface-1"
                 />
@@ -244,14 +234,14 @@ export function EditProfileDialog({ profile, children }: Props) {
               <Field label={texts.profile.edit.fields.skills}>
                 <Input
                   value={skillsText}
-                  onChange={(e) => setSkillsText(e.target.value)}
+                  onChange={(event) => setSkillsText(event.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
               </Field>
               <Field label={texts.profile.edit.fields.goals}>
                 <Input
                   value={goalsText}
-                  onChange={(e) => setGoalsText(e.target.value)}
+                  onChange={(event) => setGoalsText(event.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
               </Field>
@@ -272,12 +262,32 @@ export function EditProfileDialog({ profile, children }: Props) {
             <SubList<Experience, ExperienceRequest>
               items={experiences}
               fields={[
-                { key: "title", label: texts.profile.edit.experienceFields.title, required: true },
-                { key: "company", label: texts.profile.edit.experienceFields.company, required: true },
+                {
+                  key: "title",
+                  label: texts.profile.edit.experienceFields.title,
+                  required: true,
+                },
+                {
+                  key: "company",
+                  label: texts.profile.edit.experienceFields.company,
+                  required: true,
+                },
                 { key: "location", label: texts.profile.edit.experienceFields.location },
-                { key: "description", label: texts.profile.edit.experienceFields.description, multiline: true },
-                { key: "startDate", label: texts.profile.edit.experienceFields.startDate, type: "date" },
-                { key: "endDate", label: texts.profile.edit.experienceFields.endDate, type: "date" },
+                {
+                  key: "description",
+                  label: texts.profile.edit.experienceFields.description,
+                  multiline: true,
+                },
+                {
+                  key: "startDate",
+                  label: texts.profile.edit.experienceFields.startDate,
+                  type: "date",
+                },
+                {
+                  key: "endDate",
+                  label: texts.profile.edit.experienceFields.endDate,
+                  type: "date",
+                },
               ]}
               currentlyHereKey="currentlyHere"
               createApi={(data) => profileApi.experiences.create(data)}
@@ -300,12 +310,32 @@ export function EditProfileDialog({ profile, children }: Props) {
             <SubList<Education, EducationRequest>
               items={education}
               fields={[
-                { key: "school", label: texts.profile.edit.educationFields.school, required: true },
-                { key: "degree", label: texts.profile.edit.educationFields.degree, required: true },
+                {
+                  key: "school",
+                  label: texts.profile.edit.educationFields.school,
+                  required: true,
+                },
+                {
+                  key: "degree",
+                  label: texts.profile.edit.educationFields.degree,
+                  required: true,
+                },
                 { key: "field", label: texts.profile.edit.educationFields.field },
-                { key: "description", label: texts.profile.edit.educationFields.description, multiline: true },
-                { key: "startDate", label: texts.profile.edit.educationFields.startDate, type: "date" },
-                { key: "endDate", label: texts.profile.edit.educationFields.endDate, type: "date" },
+                {
+                  key: "description",
+                  label: texts.profile.edit.educationFields.description,
+                  multiline: true,
+                },
+                {
+                  key: "startDate",
+                  label: texts.profile.edit.educationFields.startDate,
+                  type: "date",
+                },
+                {
+                  key: "endDate",
+                  label: texts.profile.edit.educationFields.endDate,
+                  type: "date",
+                },
               ]}
               currentlyHereKey="currentlyHere"
               createApi={(data) => profileApi.education.create(data)}
@@ -328,12 +358,35 @@ export function EditProfileDialog({ profile, children }: Props) {
             <SubList<Certification, CertificationRequest>
               items={certifications}
               fields={[
-                { key: "name", label: texts.profile.edit.certificationFields.name, required: true },
-                { key: "issuer", label: texts.profile.edit.certificationFields.issuer, required: true },
-                { key: "description", label: texts.profile.edit.certificationFields.description, multiline: true },
-                { key: "issueDate", label: texts.profile.edit.certificationFields.issueDate, type: "date" },
-                { key: "expirationDate", label: texts.profile.edit.certificationFields.expirationDate, type: "date" },
-                { key: "credentialUrl", label: texts.profile.edit.certificationFields.credentialUrl },
+                {
+                  key: "name",
+                  label: texts.profile.edit.certificationFields.name,
+                  required: true,
+                },
+                {
+                  key: "issuer",
+                  label: texts.profile.edit.certificationFields.issuer,
+                  required: true,
+                },
+                {
+                  key: "description",
+                  label: texts.profile.edit.certificationFields.description,
+                  multiline: true,
+                },
+                {
+                  key: "issueDate",
+                  label: texts.profile.edit.certificationFields.issueDate,
+                  type: "date",
+                },
+                {
+                  key: "expirationDate",
+                  label: texts.profile.edit.certificationFields.expirationDate,
+                  type: "date",
+                },
+                {
+                  key: "credentialUrl",
+                  label: texts.profile.edit.certificationFields.credentialUrl,
+                },
               ]}
               createApi={(data) => profileApi.certifications.create(data)}
               updateApi={(id, data) => profileApi.certifications.update(id, data)}
@@ -381,6 +434,10 @@ interface SubField {
   multiline?: boolean;
   type?: string;
 }
+
+type ExperienceRequest = Parameters<typeof profileApi.experiences.create>[0];
+type EducationRequest = Parameters<typeof profileApi.education.create>[0];
+type CertificationRequest = Parameters<typeof profileApi.certifications.create>[0];
 
 function SubList<
   T extends { id: string },
@@ -438,11 +495,14 @@ function SubList<
 
   const startEdit = (item: T) => {
     setEditingId(item.id);
-    const values: Record<string, string> = {};
-    for (const f of fields) {
-      values[f.key] = String((item as Record<string, unknown>)[f.key] ?? "");
-    }
-    setForm(values);
+    setForm(
+      Object.fromEntries(
+        fields.map((field) => [
+          field.key,
+          String((item as Record<string, unknown>)[field.key] ?? ""),
+        ]),
+      ),
+    );
     if (currentlyHereKey) {
       setCurrentlyHere(Boolean((item as Record<string, unknown>)[currentlyHereKey]));
     }
@@ -454,11 +514,13 @@ function SubList<
       data[currentlyHereKey] = currentlyHere;
       if (currentlyHere) data.endDate = null;
     }
-    if (editingId && editingId !== "__new__") {
-      await update.mutateAsync({ id: editingId, data: data as TData });
-    } else {
-      await create.mutateAsync(data as TData);
-    }
+
+    const submitActions = {
+      create: () => create.mutateAsync(data as TData),
+      update: () => update.mutateAsync({ id: editingId!, data: data as TData }),
+    };
+    const action = editingId && editingId !== "__new__" ? "update" : "create";
+    await submitActions[action]();
   };
 
   const isPending = create.isPending || update.isPending;
@@ -468,20 +530,24 @@ function SubList<
     <div className="space-y-4">
       {showForm ? (
         <div className="space-y-3 rounded-xl border border-border-soft p-4">
-          {fields.map((f) => (
-            <Field key={f.key} label={f.label}>
-              {f.multiline ? (
+          {fields.map((field) => (
+            <Field key={field.key} label={field.label}>
+              {field.multiline ? (
                 <Textarea
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                  value={form[field.key] ?? ""}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, [field.key]: event.target.value }))
+                  }
                   rows={2}
                   className="h-10 border-border-soft bg-surface-1"
                 />
               ) : (
                 <Input
-                  type={f.type ?? "text"}
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                  type={field.type ?? "text"}
+                  value={form[field.key] ?? ""}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, [field.key]: event.target.value }))
+                  }
                   className="h-10 border-border-soft bg-surface-1"
                 />
               )}

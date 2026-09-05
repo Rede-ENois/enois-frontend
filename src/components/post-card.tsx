@@ -1,6 +1,6 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { Bookmark, Flag, Heart, MessageSquare, Send, Share2 } from "lucide-react";
@@ -10,25 +10,34 @@ import {
   REPORT_REASONS,
   commentsApi,
   feedApi,
-  mediaApi,
   profileApi,
   reactionsApi,
   reportsApi,
 } from "@/lib/api";
 import type { CommentView, PostView, ReactionType, ReportReason } from "@/lib/api";
-import { resolveCdnUrl } from "@/lib/api/media";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
+import { prependIfMissing, unique } from "@/utils/collections";
+import {
+  createReplyTarget,
+  getParentAuthorName,
+  getReplies,
+  getRootComments,
+} from "@/utils/comments";
+import { humanizeEnum } from "@/utils/string";
+import { formatRelativeTime } from "@/utils/time";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 
+import { MediaGrid } from "@/components/media-grid";
 import { MentionTextarea } from "@/components/mention-textarea";
+import { PostLinkPreviews } from "@/components/post-link-previews";
+import { RichText } from "@/components/rich-text";
 import { UserAvatar } from "@/components/user-avatar";
 
 const typeMeta: Record<
@@ -110,7 +119,7 @@ function ReactionsDialog({
   currentUserReaction: string | null;
   currentUserId?: string;
   open: boolean;
-  onOpenChange: (v: boolean) => void;
+  onOpenChange: (value: boolean) => void;
 }) {
   const { data } = useQuery({
     queryKey: ["reactions", postId],
@@ -119,22 +128,28 @@ function ReactionsDialog({
   });
 
   const apiReactions = data?.reactions ?? [];
-  const reactions =
-    currentUserReaction && currentUserId && !apiReactions.some((r) => r.userId === currentUserId)
-      ? [
-          { userId: currentUserId, type: currentUserReaction, createdAt: new Date().toISOString() },
-          ...apiReactions,
-        ]
-      : apiReactions;
+  const optimisticReaction =
+    currentUserReaction && currentUserId
+      ? {
+          userId: currentUserId,
+          type: currentUserReaction,
+          createdAt: new Date().toISOString(),
+        }
+      : null;
+  const reactions = prependIfMissing(
+    apiReactions,
+    optimisticReaction,
+    (reaction) => reaction.userId === currentUserId,
+  );
+  const uniqueUserIds = unique(reactions.map((reaction) => reaction.userId));
 
-  const uniqueUserIds = [...new Set(reactions.map((r) => r.userId))];
   const { data: users } = useQuery({
-    queryKey: ["profiles", "by-ids", uniqueUserIds.sort().join(",")],
+    queryKey: ["profiles", "by-ids", [...uniqueUserIds].sort().join(",")],
     queryFn: async () => {
       const results = await Promise.all(
         uniqueUserIds.map((id) => profileApi.getById(id).catch(() => null)),
       );
-      return Object.fromEntries(results.filter(Boolean).map((u) => [u!.id, u!]));
+      return Object.fromEntries(results.filter(Boolean).map((user) => [user!.id, user!]));
     },
     enabled: open && uniqueUserIds.length > 0,
   });
@@ -151,11 +166,11 @@ function ReactionsDialog({
           </p>
         ) : (
           <div className="space-y-2 pt-2">
-            {reactions.map((r) => {
-              const user = users?.[r.userId];
+            {reactions.map((reaction) => {
+              const user = users?.[reaction.userId];
               return (
                 <div
-                  key={`${r.userId}-${r.type}`}
+                  key={`${reaction.userId}-${reaction.type}`}
                   className="flex items-center gap-3 rounded-xl bg-surface-1 p-3"
                 >
                   <UserAvatar src={user?.avatar} alt={user?.name} className="h-9 w-9 shrink-0" />
@@ -164,7 +179,7 @@ function ReactionsDialog({
                       {user?.name ?? texts.common.loading}
                     </p>
                   </div>
-                  <span className="text-xl">{REACTION_EMOJIS[r.type] ?? r.type}</span>
+                  <span className="text-xl">{REACTION_EMOJIS[reaction.type] ?? reaction.type}</span>
                 </div>
               );
             })}
@@ -182,7 +197,7 @@ function ReportDialog({
 }: {
   postId: string;
   open: boolean;
-  onOpenChange: (v: boolean) => void;
+  onOpenChange: (value: boolean) => void;
 }) {
   const [reason, setReason] = useState<ReportReason>("SPAM");
   const [description, setDescription] = useState("");
@@ -198,7 +213,7 @@ function ReportDialog({
       onOpenChange(false);
       setDescription("");
     } catch {
-      /* silent */
+      // silently fail
     }
   };
 
@@ -213,23 +228,25 @@ function ReportDialog({
             <Label className="text-[11px] font-light text-text-subtle">{texts.posts.report.reason}</Label>
             <select
               value={reason}
-              onChange={(e) => setReason(e.target.value as ReportReason)}
-              className="flex h-10 w-full rounded-md border border-border-soft bg-background px-3 py-2 text-[13px] font-light text-text-strong border-transparent bg-muted"
+              onChange={(event) => setReason(event.target.value as ReportReason)}
+              className="flex h-10 w-full rounded-md border border-border-soft bg-muted px-3 py-2 text-[13px] font-light text-text-strong"
             >
-              {REPORT_REASONS.map((r) => (
-                <option key={r} value={r} className="h-10 border-transparent bg-muted">
-                  {r.replace(/_/g, " ").toLowerCase()}
+              {REPORT_REASONS.map((reportReason) => (
+                <option key={reportReason} value={reportReason}>
+                  {humanizeEnum(reportReason)}
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-light text-text-subtle">{texts.posts.report.description}</Label>
+            <Label className="text-[11px] font-light text-text-subtle">
+              {texts.posts.report.description}
+            </Label>
             <Textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(event) => setDescription(event.target.value)}
               rows={3}
-              className="border-border-soft bg-surface-1 text-[13px] font-light h-10 border-transparent bg-muted"
+              className="h-10 border-transparent bg-muted text-[13px] font-light"
             />
           </div>
           <Button className="w-full rounded-full" onClick={submit}>
@@ -268,12 +285,8 @@ export function PostCard({ post }: { post: PostView }) {
   });
 
   useEffect(() => {
-    if (savedData) {
-      setSaved(savedData.items.some((p) => p.id === post.id));
-    }
+    if (savedData) setSaved(savedData.items.some((savedPost) => savedPost.id === post.id));
   }, [savedData, post.id]);
-
-  const totalComments = useMemo(() => postCounters.comments, [postCounters.comments]);
 
   const submitComment = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -281,9 +294,14 @@ export function PostCard({ post }: { post: PostView }) {
     if (!content) return;
 
     try {
-      const newComment = await commentsApi.create(post.id, content, replyToId, commentMentions);
+      const newComment = await commentsApi.create(
+        post.id,
+        content,
+        replyToId,
+        commentMentions,
+      );
       setLocalComments((current) => [...current, newComment]);
-      setPostCounters((c) => ({ ...c, comments: c.comments + 1 }));
+      setPostCounters((counters) => ({ ...counters, comments: counters.comments + 1 }));
       setDraft("");
       setCommentMentions([]);
       setReplyToId(null);
@@ -294,15 +312,12 @@ export function PostCard({ post }: { post: PostView }) {
 
   const handleReaction = async (type: ReactionType) => {
     try {
-      if (reactionStatus === type) {
-        const result = await reactionsApi.removeReaction(post.id);
-        setReactionStatus(null);
-        if ("counters" in result) setPostCounters(result.counters!);
-      } else {
-        const result = await reactionsApi.react(post.id, type);
-        setReactionStatus(type);
-        if ("counters" in result) setPostCounters(result.counters!);
-      }
+      const removing = reactionStatus === type;
+      const result = removing
+        ? await reactionsApi.removeReaction(post.id)
+        : await reactionsApi.react(post.id, type);
+      setReactionStatus(removing ? null : type);
+      if ("counters" in result && result.counters) setPostCounters(result.counters);
     } catch {
       // silently fail
     }
@@ -313,7 +328,7 @@ export function PostCard({ post }: { post: PostView }) {
       const result = saved
         ? await reactionsApi.removeSave(post.id)
         : await reactionsApi.save(post.id);
-      setSaved(!saved);
+      setSaved((value) => !value);
       setPostCounters(result.counters);
     } catch {
       // silently fail
@@ -325,11 +340,11 @@ export function PostCard({ post }: { post: PostView }) {
       const result = await reactionsApi.share(post.id);
       setPostCounters(result.counters);
       const url = `${window.location.origin}/feed/${post.id}`;
-      if (navigator.share) {
-        await navigator.share({ url });
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
+      const shareActions = {
+        native: () => navigator.share({ url }),
+        clipboard: () => navigator.clipboard.writeText(url),
+      };
+      await (navigator.share ? shareActions.native : shareActions.clipboard)();
     } catch {
       // silently fail
     }
@@ -338,8 +353,8 @@ export function PostCard({ post }: { post: PostView }) {
   const handleDeleteComment = async (commentId: string) => {
     try {
       await commentsApi.remove(post.id, commentId);
-      setLocalComments((prev) => prev.filter((c) => c.id !== commentId));
-      setPostCounters((c) => ({ ...c, comments: c.comments - 1 }));
+      setLocalComments((comments) => comments.filter((comment) => comment.id !== commentId));
+      setPostCounters((counters) => ({ ...counters, comments: counters.comments - 1 }));
     } catch {
       // silently fail
     }
@@ -354,8 +369,17 @@ export function PostCard({ post }: { post: PostView }) {
         // silently fail
       }
     }
-    setShowComments((v) => !v);
+    setShowComments((value) => !value);
   };
+
+  const startReply = async (comment: CommentView) => {
+    const target = await createReplyTarget(comment);
+    setDraft(target.draft);
+    setCommentMentions(target.mentionedUserIds);
+    setReplyToId(target.replyToId);
+  };
+
+  const rootComments = getRootComments(localComments);
 
   return (
     <article className="min-w-0 rounded-2xl border border-border-soft bg-surface-card p-4 transition sm:p-5">
@@ -375,7 +399,7 @@ export function PostCard({ post }: { post: PostView }) {
       </header>
 
       <p className="mt-4 whitespace-pre-line break-words text-[15px] font-light leading-relaxed text-text-strong">
-        {linkifyText(post.content)}
+        <RichText text={post.content} />
       </p>
 
       {post.mediaIds.length > 0 && (
@@ -385,18 +409,17 @@ export function PostCard({ post }: { post: PostView }) {
       )}
 
       <ReactionsSummary postId={post.id} reactionStatus={reactionStatus} />
-
-      <LinkPreviews content={post.content} />
+      <PostLinkPreviews content={post.content} />
 
       {post.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {post.tags.map((t) => (
+          {post.tags.map((tag) => (
             <Badge
-              key={t}
+              key={tag}
               variant="secondary"
               className="rounded-full border border-border-soft bg-transparent font-light text-text-subtle"
             >
-              #{t}
+              #{tag}
             </Badge>
           ))}
         </div>
@@ -456,9 +479,8 @@ export function PostCard({ post }: { post: PostView }) {
             onClick={loadComments}
             className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground"
           >
-            <MessageSquare className="h-4 w-4" /> {totalComments}
+            <MessageSquare className="h-4 w-4" /> {postCounters.comments}
           </button>
-
           <button
             onClick={handleShare}
             className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground"
@@ -494,63 +516,34 @@ export function PostCard({ post }: { post: PostView }) {
       {showComments && (
         <section className="mt-4 border-t border-border-soft pt-4">
           <div className="space-y-3">
-            {localComments
-              .filter((c) => !c.parentCommentId)
-              .map((comment) => {
-                const replies = localComments.filter((r) => r.parentCommentId === comment.id);
-                return (
-                  <div key={comment.id}>
-                    <CommentItem
-                      comment={comment}
-                      currentUserId={currentUser?.id}
-                      onDelete={handleDeleteComment}
-                      onReply={async (c) => {
-                        try {
-                          const profile = await profileApi.getById(c.authorId);
-                          if (profile?.username) {
-                            setDraft(`@${profile.username} `);
-                            setCommentMentions([c.authorId]);
-                          }
-                        } catch {
-                          setDraft(`${c.authorName} `);
-                        }
-                        setReplyToId(c.id);
-                      }}
-                    />
-                    {replies.length > 0 && (
-                      <div className="ml-10 mt-2 space-y-2 border-l-2 border-border-soft pl-4">
-                        {replies.map((reply) => {
-                          const parentAuthor = localComments.find(
-                            (c) => c.id === reply.parentCommentId,
-                          )?.authorName;
-                          return (
-                            <CommentItem
-                              key={reply.id}
-                              comment={reply}
-                              replyingTo={parentAuthor}
-                              currentUserId={currentUser?.id}
-                              onDelete={handleDeleteComment}
-                              onReply={async (c) => {
-                                try {
-                                  const profile = await profileApi.getById(c.authorId);
-                                  if (profile?.username) {
-                                    setDraft(`@${profile.username} `);
-                                    setCommentMentions([c.authorId]);
-                                  }
-                                } catch {
-                                  setDraft(`${c.authorName} `);
-                                }
-                                setReplyToId(c.id);
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            {localComments.filter((c) => !c.parentCommentId).length === 0 && (
+            {rootComments.map((comment) => {
+              const replies = getReplies(localComments, comment.id);
+              return (
+                <div key={comment.id}>
+                  <CommentItem
+                    comment={comment}
+                    currentUserId={currentUser?.id}
+                    onDelete={handleDeleteComment}
+                    onReply={startReply}
+                  />
+                  {replies.length > 0 && (
+                    <div className="ml-10 mt-2 space-y-2 border-l-2 border-border-soft pl-4">
+                      {replies.map((reply) => (
+                        <CommentItem
+                          key={reply.id}
+                          comment={reply}
+                          replyingTo={getParentAuthorName(localComments, reply.parentCommentId)}
+                          currentUserId={currentUser?.id}
+                          onDelete={handleDeleteComment}
+                          onReply={startReply}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {rootComments.length === 0 && (
               <p className="py-4 text-center text-[13px] font-light text-text-subtle">
                 {texts.posts.comments.empty}
               </p>
@@ -566,8 +559,8 @@ export function PostCard({ post }: { post: PostView }) {
             <div className="flex flex-1 items-center gap-2 rounded-full border border-border-soft bg-surface-1 py-1.5 pl-4 pr-1.5">
               <MentionTextarea
                 value={draft}
-                onChange={(val, ids) => {
-                  setDraft(val);
+                onChange={(value, ids) => {
+                  setDraft(value);
                   setCommentMentions(ids);
                 }}
                 placeholder={texts.posts.comments.placeholder}
@@ -609,15 +602,15 @@ function CommentItem({
 
   const handleCommentReaction = async (type: ReactionType) => {
     try {
-      if (commentReaction === type) {
-        await reactionsApi.removeCommentReaction(comment.postId, comment.id);
-        setCommentReaction(null);
-      } else {
-        await reactionsApi.reactComment(comment.postId, comment.id, type);
-        setCommentReaction(type);
-      }
+      const removing = commentReaction === type;
+      const actions = {
+        remove: () => reactionsApi.removeCommentReaction(comment.postId, comment.id),
+        add: () => reactionsApi.reactComment(comment.postId, comment.id, type),
+      };
+      await (removing ? actions.remove : actions.add)();
+      setCommentReaction(removing ? null : type);
     } catch {
-      /* ignore */
+      // silently fail
     }
   };
 
@@ -638,11 +631,11 @@ function CommentItem({
               </span>
             )}
             <span className="text-[11px] font-light text-text-subtle">
-              {formatTime(comment.createdAt)}
+              {formatRelativeTime(comment.createdAt)}
             </span>
           </div>
           <p className="mt-0.5 break-words text-[13px] font-light leading-relaxed text-text-strong">
-            {linkifyText(comment.content)}
+            <RichText text={comment.content} />
           </p>
         </div>
         <div className="mt-1 flex items-center gap-3 px-3 text-[11px] font-light text-text-subtle">
@@ -726,258 +719,11 @@ function AuthorInfo({
           >
             {authorName}
           </Link>
-          <span className="text-[12px] font-light text-text-date">· {formatTime(createdAt)}</span>
+          <span className="text-[12px] font-light text-text-date">
+            · {formatRelativeTime(createdAt)}
+          </span>
         </div>
       </div>
     </div>
-  );
-}
-
-function EmbedPlayer({ type, id, url }: { type: string; id: string; url: string }) {
-  const [playing, setPlaying] = useState(false);
-
-  if (!playing) {
-    let thumbnail = "";
-    if (type === "youtube") thumbnail = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
-    if (type === "dailymotion") thumbnail = `https://www.dailymotion.com/thumbnail/video/${id}`;
-
-    return (
-      <button
-        type="button"
-        onClick={() => setPlaying(true)}
-        className="relative mt-3 block w-full overflow-hidden rounded-xl border border-border-soft text-left transition hover:opacity-90"
-      >
-        {thumbnail ? (
-          <img src={thumbnail} alt="" className="aspect-video w-full bg-surface-1 object-cover" />
-        ) : (
-          <div className="flex aspect-video w-full items-center justify-center bg-surface-1">
-            <div className="text-center">
-              <p className="text-2xl">
-                {type === "vimeo" ? "🎬" : type === "twitch" ? "📺" : "▶️"}
-              </p>
-              <p className="mt-1 text-[12px] font-light text-text-subtle">
-                {texts.posts.video.watchOn(type === "youtube" ? "YouTube" : type)}
-              </p>
-            </div>
-          </div>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-5 w-5">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        </div>
-      </button>
-    );
-  }
-
-  const srcs: Record<string, string> = {
-    youtube: `https://www.youtube.com/embed/${id}?autoplay=1`,
-    vimeo: `https://player.vimeo.com/video/${id}?autoplay=1`,
-    dailymotion: `https://www.dailymotion.com/embed/video/${id}?autoplay=1`,
-    twitch: `https://player.twitch.tv/?video=${id}&parent=${typeof window !== "undefined" ? window.location.hostname : ""}&autoplay=true`,
-  };
-
-  return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-border-soft bg-surface-1">
-      <iframe
-        src={srcs[type] ?? ""}
-        className="aspect-video w-full"
-        allow="autoplay; fullscreen; encrypted-media"
-        allowFullScreen
-      />
-    </div>
-  );
-}
-
-function LinkPreviews({ content }: { content: string }) {
-  const urlRegex = /https?:\/\/[^\s]+/g;
-  const urls = content.match(urlRegex) ?? [];
-  const seen = new Set<string>();
-
-  return (
-    <>
-      {urls.map((url) => {
-        if (seen.has(url)) return null;
-        seen.add(url);
-
-        const video = extractVideoId(url);
-        if (video) {
-          return <EmbedPlayer key={url} type={video.type} id={video.id} url={url} />;
-        }
-
-        return (
-          <a
-            key={url}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 flex items-center gap-3 rounded-xl border border-border-soft bg-surface-1 px-4 py-3 text-[13px] font-light transition hover:bg-surface-3"
-          >
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-xs font-bold text-primary">
-              {(() => {
-                try {
-                  return new URL(url).hostname.slice(0, 2).toUpperCase();
-                } catch {
-                  return "🌐";
-                }
-              })()}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate font-normal text-text-strong">
-                {(() => {
-                  try {
-                    return new URL(url).hostname;
-                  } catch {
-                    return url;
-                  }
-                })()}
-              </p>
-              <p className="truncate text-[11px] font-light text-text-subtle">{url}</p>
-            </div>
-          </a>
-        );
-      })}
-    </>
-  );
-}
-
-function extractVideoId(url: string): { type: string; id: string } | null {
-  const patterns: [RegExp, string][] = [
-    [/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/, "youtube"],
-    [/(?:dailymotion\.com\/video\/|dai\.ly\/)([a-zA-Z0-9]+)/, "dailymotion"],
-    [/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/, "vimeo"],
-    [/(?:twitch\.tv\/videos\/|clips\.twitch\.tv\/)([a-zA-Z0-9_-]+)/, "twitch"],
-    [/twitch\.tv\/([a-zA-Z0-9_]+)\/?$/, "twitch"],
-  ];
-  for (const [regex, type] of patterns) {
-    const m = url.match(regex);
-    if (m) return { type, id: m[1] };
-  }
-  return null;
-}
-
-function linkifyText(text: string) {
-  const parts: React.ReactNode[] = [];
-  const regex = /(@\w+|https?:\/\/[^\s]+)/g;
-  let last = 0;
-  let match: RegExpExecArray | null;
-  let key = 0;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > last) {
-      parts.push(text.slice(last, match.index));
-    }
-    const token = match[0];
-    if (token.startsWith("@")) {
-      const username = token.slice(1);
-      parts.push(
-        <Link
-          key={key++}
-          to="/perfil/$username"
-          params={{ username }}
-          className="font-medium text-primary hover:underline"
-        >
-          {token}
-        </Link>,
-      );
-    } else {
-      parts.push(
-        <a
-          key={key++}
-          href={token}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="break-words text-primary hover:underline"
-        >
-          {token}
-        </a>,
-      );
-    }
-    last = match.index + token.length;
-  }
-  if (last < text.length) {
-    parts.push(text.slice(last));
-  }
-  return parts.length > 0 ? parts : text;
-}
-
-function formatTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return texts.time.now;
-  if (diffMin < 60) return texts.time.minutesAgo(diffMin);
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return texts.time.hoursAgo(diffH);
-  const diffD = Math.floor(diffH / 24);
-  if (diffD < 7) return texts.time.daysAgo(diffD);
-  return date.toLocaleDateString("pt-BR");
-}
-
-function MediaGrid({ mediaIds }: { mediaIds: string[] }) {
-  const queryResults = useQueries({
-    queries: mediaIds.map((id) => ({
-      queryKey: ["media", id],
-      queryFn: () => mediaApi.get(id),
-      staleTime: 60_000,
-    })),
-  });
-
-  const items = queryResults.filter((q) => q.data?.cdnUrl).map((q) => q.data!);
-  const [fullscreenUrl, setFullscreenUrl] = useState<string | null>(null);
-
-  if (items.length === 0) return null;
-
-  const isVideo = items.some((m) => m.mimeType.startsWith("video/"));
-
-  if (isVideo) {
-    return (
-      <div className="overflow-hidden rounded-xl border border-border-soft">
-        <video
-          src={resolveCdnUrl(items[0].cdnUrl)}
-          controls
-          className="max-h-96 w-full bg-surface-1"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className={`grid gap-2 ${items.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
-        {items.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => setFullscreenUrl(resolveCdnUrl(m.cdnUrl) ?? null)}
-            className="overflow-hidden rounded-xl border border-border-soft text-left"
-          >
-            <img
-              src={resolveCdnUrl(m.cdnUrl)}
-              alt=""
-              className="h-48 w-full object-cover bg-surface-1 transition hover:scale-105"
-            />
-          </button>
-        ))}
-      </div>
-      {fullscreenUrl && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={() => setFullscreenUrl(null)}
-        >
-          <img
-            src={fullscreenUrl}
-            alt=""
-            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
-    </>
   );
 }
