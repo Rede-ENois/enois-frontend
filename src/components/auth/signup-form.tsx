@@ -11,7 +11,10 @@ import { clearSession, storeAuthenticatedSession } from "@/utils/session";
 import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Divider, Field, PasswordVisibilityButton, SocialButtons } from "./auth-controls";
+import { Divider } from "./controls/divider";
+import { Field } from "./controls/field";
+import { PasswordVisibilityButton } from "./controls/password-visibility-button";
+import { SocialButtons } from "./controls/social-buttons";
 
 const signupSchema = z.object({
   name: z.string().trim().min(2, texts.auth.validation.signupNameMin).max(80),
