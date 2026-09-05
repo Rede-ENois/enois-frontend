@@ -1,21 +1,5 @@
 {
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "eslint.config.js"],
-  "exclude": [
-    "src/pages",
-    "src/contexts",
-    "src/components/AppShell",
-    "src/components/CTAIntermediario",
-    "src/components/CartaAberta",
-    "src/components/FAQ",
-    "src/components/Features",
-    "src/components/Hero",
-    "src/components/Navbar",
-    "src/components/Problema",
-    "src/components/Roadmap",
-    "src/components/Rodape",
-    "src/components/Sistema",
-    "src/components/layouts"
-  ],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
