@@ -1,5 +1,7 @@
+import type { ElementType } from "react";
+
 export type NetworkUserCardAction = {
-  Icon: React.ElementType;
+  Icon: ElementType;
   label: string;
   variant: "default" | "outline";
   className: string;
