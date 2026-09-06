@@ -1,4 +1,8 @@
+import type { ReportInput, ReportReason } from "@/types/application/report/report";
+
 import { api } from "../api-client";
+
+export type { ReportInput, ReportReason } from "@/types/application/report/report";
 
 export const REPORT_REASONS = [
   "AI_GENERATED",
@@ -11,16 +15,7 @@ export const REPORT_REASONS = [
   "VIOLENCE",
   "COPYRIGHT",
   "OTHER",
-] as const;
-
-export type ReportReason = (typeof REPORT_REASONS)[number];
-
-export type ReportInput = {
-  targetId: string;
-  targetType: "POST" | "COMMENT" | "USER";
-  reason: ReportReason;
-  description?: string;
-};
+] as const satisfies readonly ReportReason[];
 
 export const reportApi = {
   create: (input: ReportInput) => api.post<{ id: string; status: string }>("/reports", input),

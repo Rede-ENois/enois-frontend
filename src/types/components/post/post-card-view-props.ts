@@ -1,27 +1,13 @@
-import type { FormEventHandler, ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import type { CommentView, PostView, Profile } from "@/lib/api";
+import type { PostView } from "@/types/application/feed/post-view";
 
-import type { PostProps } from "./post-props";
-import type { ReactionActionProps } from "./reaction-action-props";
+import type { PostActionsProps } from "./post-actions-props";
+import type { PostCommentsProps } from "./post-comments-props";
 
-export type PostCardViewProps = PostProps &
-  ReactionActionProps & {
-    currentUser: Profile | null | undefined;
-    counters: PostView["counters"];
-    isSaved: boolean;
+export type PostCardViewProps = PostActionsProps &
+  PostCommentsProps & {
+    post: PostView;
     areCommentsVisible: boolean;
-    comments: CommentView[];
-    rootComments: CommentView[];
-    commentContent: string;
     reactionSummary: ReactNode;
-    onOpenReactions: () => void;
-    onToggleComments: () => void;
-    onShare: () => void;
-    onReport: () => void;
-    onSave: () => void;
-    onDeleteComment: (commentId: string) => void;
-    onReply: (comment: CommentView) => void;
-    onCommentContentChange: (value: string, mentionedUserIds: string[]) => void;
-    onSubmitComment: FormEventHandler<HTMLFormElement>;
   };

@@ -1,10 +1,10 @@
 import type { ActionResponse } from "@/types/application/reaction/action-response";
-import type { ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
+import type { ReactionType, ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
 
 import { api } from "../api-client";
 
 export type { ActionResponse } from "@/types/application/reaction/action-response";
-export type { ReactionItem, ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
+export type { ReactionItem, ReactionType, ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
 
 export const REACTION_EMOJIS = {
   LIKE: "\u{1F44D}",
@@ -15,9 +15,7 @@ export const REACTION_EMOJIS = {
   CELEBRATE: "\u{1F389}",
   SUPPORT: "\u{1F4AA}",
   INSIGHTFUL: "\u{1F4A1}",
-} as const;
-
-export type ReactionType = keyof typeof REACTION_EMOJIS;
+} as const satisfies Record<ReactionType, string>;
 
 function createReaction(path: string, type: ReactionType) {
   return api.post<Partial<ActionResponse>>(path, { type });

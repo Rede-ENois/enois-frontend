@@ -1,4 +1,4 @@
-import type { PostView } from "@/lib/api";
+import type { PostView } from "@/types/application/feed/post-view";
 
 export type PostEngagementActionsProps = {
   counters: PostView["counters"];

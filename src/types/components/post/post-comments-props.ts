@@ -1,6 +1,7 @@
 import type { FormEventHandler } from "react";
 
-import type { CommentView, Profile } from "@/lib/api";
+import type { CommentView } from "@/types/application/comment/comment-view";
+import type { Profile } from "@/types/application/profile/profile";
 
 export type PostCommentsProps = {
   currentUser: Profile | null | undefined;

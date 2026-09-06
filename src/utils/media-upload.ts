@@ -1,7 +1,11 @@
 import { mediaApi } from "@/lib/api/media";
+import type { UploadResult } from "@/types/application/media/media-upload-response";
 import { createMediaFileName } from "@/utils/files";
 
-export async function uploadMediaFile(file: File, purpose = "POST_IMAGE") {
+export async function uploadMediaFile(
+  file: File,
+  purpose = "POST_IMAGE",
+): Promise<UploadResult> {
   const { id, cdnUrl } = await mediaApi.requestUpload({
     fileName: createMediaFileName(file),
     mimeType: file.type,

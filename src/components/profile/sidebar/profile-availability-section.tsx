@@ -1,9 +1,12 @@
 import { Clock } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { ProfileAvailabilitySectionProps } from "@/types/components/profile/sidebar/profile-availability-section-props";
 
 import { ProfileSection } from "../profile-section";
+
+type ProfileAvailabilitySectionProps = {
+  availability?: string | null;
+};
 
 export function ProfileAvailabilitySection({ availability }: ProfileAvailabilitySectionProps) {
   return (

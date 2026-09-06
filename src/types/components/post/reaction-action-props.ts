@@ -1,4 +1,4 @@
-import type { ReactionType } from "@/lib/api";
+import type { ReactionType } from "@/types/application/reaction/reactions-list-response";
 
 export type ReactionActionProps = {
   currentReaction: string | null;

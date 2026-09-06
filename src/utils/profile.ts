@@ -1,6 +1,6 @@
 import { profileApi } from "@/lib/api";
 import type { Profile } from "@/lib/api";
-import type { EditProfileInfoValues } from "@/types/components/profile/edit/edit-profile-info-values";
+import type { EditProfileInfoValues } from "@/types/components/profile/edit/edit-profile-info";
 import { parseCommaSeparatedList, parseLineSeparatedList } from "@/utils/forms";
 
 export function buildProfileUpdate(

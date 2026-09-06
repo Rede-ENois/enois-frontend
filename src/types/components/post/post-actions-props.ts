@@ -1,13 +1,8 @@
-import type { PostView } from "@/lib/api";
-
+import type { PostEngagementActionsProps } from "./post-engagement-actions-props";
 import type { ReactionActionProps } from "./reaction-action-props";
 
-export type PostActionsProps = ReactionActionProps & {
-  counters: PostView["counters"];
-  isSaved: boolean;
-  onOpenReactions: () => void;
-  onToggleComments: () => void;
-  onShare: () => void;
-  onReport: () => void;
-  onSave: () => void;
-};
+export type PostActionsProps = ReactionActionProps &
+  PostEngagementActionsProps & {
+    isSaved: boolean;
+    onSave: () => void;
+  };

@@ -1,6 +1,16 @@
+export type ReactionType =
+  | "LIKE"
+  | "LOVE"
+  | "LAUGH"
+  | "WOW"
+  | "SAD"
+  | "CELEBRATE"
+  | "SUPPORT"
+  | "INSIGHTFUL";
+
 export type ReactionItem = {
   userId: string;
-  type: string;
+  type: ReactionType;
   createdAt: string;
 };
 

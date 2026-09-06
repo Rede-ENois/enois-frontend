@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 
-import { uploadMediaFile, type UploadResult } from "@/utils/media-upload";
+import type { UploadResult } from "@/types/application/media/media-upload-response";
+import { uploadMediaFile } from "@/utils/media-upload";
 
-export type { UploadResult } from "@/utils/media-upload";
+export type { UploadResult } from "@/types/application/media/media-upload-response";
 
 export interface UploadState {
   status: "idle" | "uploading" | "done" | "error";
