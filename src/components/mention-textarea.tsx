@@ -2,7 +2,7 @@ import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 
 
 import { useQuery } from "@tanstack/react-query";
 
-import { usersApi } from "@/lib/api";
+import { usersApi } from "@/lib/api/users";
 import { texts } from "@/texts";
 import type { UserSearchResult } from "@/types/application/user/user-search-result";
 import type { Props } from "@/types/components/mention-textarea/props";
