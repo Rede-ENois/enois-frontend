@@ -1,6 +1,6 @@
 import type { ConnectionRequest } from "@/lib/api";
-import type { ConnectionUiState } from "@/types/components/network/connection-ui-state";
-import type { RequestDirection } from "@/types/components/network/request-direction";
+import type { ConnectionUiState } from "@/types/components/network/network-match-view-model";
+import type { RequestDirection } from "@/types/components/network/network-request-view-model";
 
 export function getConnectionUiState(
   connected: boolean,

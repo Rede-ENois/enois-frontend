@@ -1,6 +1,4 @@
-import type { LocalMediaItem } from "@/types/components/feed/local-media-item";
-import type { LocalMediaType } from "@/types/components/feed/local-media-type";
-import type { MediaRule } from "@/types/components/feed/media-rule";
+import type { LocalMediaItem, LocalMediaType, MediaRule } from "@/types/components/feed/local-media";
 
 const mediaRules: Record<LocalMediaType, MediaRule> = {
   image: { maxItems: 4, incompatibleWith: ["video"] },

@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import type { EditProfileInfoFieldsProps } from "@/types/components/profile/edit/edit-profile-info-fields-props";
+import type { EditProfileInfoFieldsProps } from "@/types/components/profile/edit/edit-profile-info";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

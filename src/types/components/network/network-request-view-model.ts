@@ -1,5 +1,6 @@
 import type { ConnectionRequest, Profile } from "@/lib/api";
-import type { RequestDirection } from "./request-direction";
+
+export type RequestDirection = "incoming" | "outgoing";
 
 export type NetworkRequestViewModel = {
   request: ConnectionRequest;

@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import type { EditProfileInfoSectionProps } from "@/types/components/profile/edit/edit-profile-info-section-props";
+import type { EditProfileInfoSectionProps } from "@/types/components/profile/edit/edit-profile-info";
 
 import { Input } from "@/components/ui/input";
 import { EditProfileField } from "./edit-profile-field";

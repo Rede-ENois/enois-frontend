@@ -2,8 +2,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { networkApi, profileApi } from "@/lib/api";
 import { useAuth } from "@/lib/use-auth";
-import type { NetworkRequestViewModel } from "@/types/components/network/network-request-view-model";
-import type { RequestDirection } from "@/types/components/network/request-direction";
+import type { NetworkRequestViewModel, RequestDirection } from "@/types/components/network/network-request-view-model";
 import {
   getRequestDirection,
   getRequestTargetUserId,

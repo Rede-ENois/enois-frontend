@@ -4,7 +4,7 @@ import { Film, Image } from "lucide-react";
 
 import { texts } from "@/texts";
 import type { ComposerMediaActionProps } from "@/types/components/feed/composer-media-action-props";
-import type { LocalMediaType } from "@/types/components/feed/local-media-type";
+import type { LocalMediaType } from "@/types/components/feed/local-media";
 
 import { ComposerAction } from "./composer-action";
 

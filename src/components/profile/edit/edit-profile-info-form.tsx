@@ -1,4 +1,4 @@
-import type { EditProfileInfoFieldsProps } from "@/types/components/profile/edit/edit-profile-info-fields-props";
+import type { EditProfileInfoFieldsProps } from "@/types/components/profile/edit/edit-profile-info";
 
 import { EditProfileDiscoveryFields } from "./info/edit-profile-discovery-fields";
 import { EditProfilePreferences } from "./info/edit-profile-preferences";

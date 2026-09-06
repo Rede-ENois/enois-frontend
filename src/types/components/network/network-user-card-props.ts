@@ -1,5 +1,5 @@
 import type { NetworkUser } from "@/lib/api";
-import type { ConnectionUiState } from "./connection-ui-state";
+import type { ConnectionUiState } from "./network-match-view-model";
 
 export type NetworkUserCardProps = {
   user: NetworkUser;

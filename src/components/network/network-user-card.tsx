@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Check, Send, UserMinus, UserPlus } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { ConnectionUiState } from "@/types/components/network/connection-ui-state";
+import type { ConnectionUiState } from "@/types/components/network/network-match-view-model";
 import type { NetworkUserCardAction } from "@/types/components/network/network-user-card-action";
 import type { NetworkUserCardProps } from "@/types/components/network/network-user-card-props";
 

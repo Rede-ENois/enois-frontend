@@ -6,7 +6,7 @@ import { feedApi } from "@/lib/api";
 import type { CreatePostInput, PostView } from "@/lib/api";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
-import type { LocalMediaItem } from "@/types/components/feed/local-media-item";
+import type { LocalMediaItem } from "@/types/components/feed/local-media";
 import { appendLocalMedia, removeLocalMedia } from "@/utils/media";
 
 export function useFeedComposer() {

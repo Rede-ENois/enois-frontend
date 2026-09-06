@@ -1,7 +1,7 @@
 import type { FormEventHandler } from "react";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { Profile } from "@/types/application/profile/profile";
-import type { LocalMediaItem } from "./local-media-item";
+import type { LocalMediaItem } from "./local-media";
 
 export type FeedComposerProps = {
   currentUser: Profile | null | undefined;

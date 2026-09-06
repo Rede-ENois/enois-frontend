@@ -1,6 +1,5 @@
 import type { PostView } from "@/types/application/feed/post-view";
-import type { LocalMediaItem } from "./local-media-item";
-import type { LocalMediaType } from "./local-media-type";
+import type { LocalMediaItem, LocalMediaType } from "./local-media";
 
 export type FeedComposerToolbarProps = {
   content: string;
