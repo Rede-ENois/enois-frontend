@@ -14,7 +14,7 @@ export type {
 } from "./profile";
 
 export { feedApi } from "./feed";
-export type { PostView, CreatePostInput, PageResponse, ReactionUser } from "./feed";
+export type { PostView, CreatePostInput, PageResponse } from "./feed";
 
 export { commentApi } from "./comment";
 export type { CommentView } from "./comment";
@@ -64,7 +64,7 @@ export { notificationApi } from "./notification";
 export type { Notification } from "./notification";
 
 export { searchApi } from "./search";
-export type { SearchResult, SearchResponse } from "./search";
+export type { SearchResult } from "./search";
 
 export { reportApi, REPORT_REASONS } from "./report";
 export type { ReportReason, ReportInput } from "./report";

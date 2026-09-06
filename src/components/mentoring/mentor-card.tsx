@@ -3,13 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { Calendar, Star } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
+import type { MentorViewModel } from "@/types/components/mentoring/mentor-view-model";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-export function MentorCard({ mentor, user, isOwner }: MentorCardProps) {
+export function MentorCard({ mentor, user, isOwner }: MentorViewModel) {
   return (
     <article className="surface-card mx-auto w-full max-w-5xl space-y-4 p-5">
       <header className="flex flex-wrap">
