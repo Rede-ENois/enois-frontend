@@ -1,14 +1,7 @@
 import { texts } from "@/texts";
+import type { NetworkMatchesProps } from "@/types/components/network/network-matches-props";
 
-import type { NetworkMatchViewModel } from "./network-types";
 import { NetworkUserCard } from "./network-user-card";
-
-type NetworkMatchesProps = {
-  matches: NetworkMatchViewModel[];
-  isConnectionActionPending: boolean;
-  onConnect: (userId: string) => void;
-  onRemove: (userId: string) => void;
-};
 
 export function NetworkMatches({
   matches,

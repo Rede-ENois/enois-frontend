@@ -3,9 +3,8 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { networkApi, type NetworkUser } from "@/lib/api";
+import type { NetworkMatchViewModel } from "@/types/components/network/network-match-view-model";
 import { getConnectionUiState } from "@/utils/network";
-
-import type { NetworkMatchViewModel } from "@/components/network/network-types";
 
 export function useNetworkActions(users: NetworkUser[]) {
   const queryClient = useQueryClient();

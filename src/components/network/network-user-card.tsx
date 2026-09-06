@@ -2,20 +2,13 @@ import { Link } from "@tanstack/react-router";
 
 import { Check, Send, UserMinus, UserPlus } from "lucide-react";
 
-import type { NetworkUser } from "@/lib/api";
 import { texts } from "@/texts";
-import type { ConnectionUiState } from "@/utils/network";
+import type { ConnectionUiState } from "@/types/components/network/connection-ui-state";
+import type { NetworkUserCardAction } from "@/types/components/network/network-user-card-action";
+import type { NetworkUserCardProps } from "@/types/components/network/network-user-card-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-
-type NetworkUserCardProps = {
-  user: NetworkUser;
-  connectionState: ConnectionUiState;
-  isConnectionActionPending: boolean;
-  onConnect: (userId: string) => void;
-  onRemove: (userId: string) => void;
-};
 
 export function NetworkUserCard({
   user,
@@ -24,16 +17,7 @@ export function NetworkUserCard({
   onConnect,
   onRemove,
 }: NetworkUserCardProps) {
-  const actionsByState: Record<
-    ConnectionUiState,
-    {
-      Icon: React.ElementType;
-      label: string;
-      variant: "default" | "outline";
-      className: string;
-      run: () => void;
-    }
-  > = {
+  const actionsByState: Record<ConnectionUiState, NetworkUserCardAction> = {
     connected: {
       Icon: UserMinus,
       label: texts.network.remove,

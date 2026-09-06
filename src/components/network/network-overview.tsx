@@ -1,12 +1,7 @@
-import type { NetworkSummary } from "@/lib/api";
 import { texts } from "@/texts";
+import type { NetworkOverviewProps } from "@/types/components/network/network-overview-props";
 
 import { NetworkStat } from "./network-stat";
-
-type NetworkOverviewProps = {
-  summary: NetworkSummary | undefined;
-  suggestionCount: number;
-};
 
 export function NetworkOverview({ summary, suggestionCount }: NetworkOverviewProps) {
   const stats = [

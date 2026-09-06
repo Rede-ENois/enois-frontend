@@ -3,17 +3,11 @@ import { Link } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { RequestDirection } from "@/utils/network";
+import type { NetworkRequestCardProps } from "@/types/components/network/network-request-card-props";
+import type { RequestDirection } from "@/types/components/network/request-direction";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import type { NetworkRequestViewModel } from "./network-types";
-
-type NetworkRequestCardProps = {
-  requestViewModel: NetworkRequestViewModel;
-  onAccept: (userId: string) => void;
-  onCancel: (userId: string) => void;
-};
 
 export function NetworkRequestCard({
   requestViewModel,

@@ -1,14 +1,7 @@
 import { texts } from "@/texts";
+import type { NetworkPendingRequestsProps } from "@/types/components/network/network-pending-requests-props";
 
 import { NetworkRequestCard } from "./network-request-card";
-import type { NetworkRequestViewModel } from "./network-types";
-
-type NetworkPendingRequestsProps = {
-  incomingRequests: NetworkRequestViewModel[];
-  outgoingRequests: NetworkRequestViewModel[];
-  onAccept: (userId: string) => void;
-  onCancel: (userId: string) => void;
-};
 
 export function NetworkPendingRequests({
   incomingRequests,

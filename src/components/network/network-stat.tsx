@@ -1,8 +1,4 @@
-type NetworkStatProps = {
-  label: string;
-  value: string;
-  isHighlighted?: boolean;
-};
+import type { NetworkStatProps } from "@/types/components/network/network-stat-props";
 
 export function NetworkStat({ label, value, isHighlighted }: NetworkStatProps) {
   return (
