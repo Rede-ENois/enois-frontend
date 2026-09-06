@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, CheckCheck } from "lucide-react";
 
-import { networkApi, notificationsApi } from "@/lib/api";
+import { networkApi } from "@/lib/api/network";
+import { notificationsApi } from "@/lib/api/notifications";
 import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
 import type { NotificationTab } from "@/types/components/notification/notification-tab";
