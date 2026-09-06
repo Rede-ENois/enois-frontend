@@ -8,19 +8,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { ProfileSection } from "../profile-section";
 
-export function ProfileRecommendSection({ user, open, comment, pending, onOpenChange, onCommentChange, onSubmit }: {
+type ProfileRecommendSectionProps = {
   user: Profile;
-  open: boolean;
+  isOpen: boolean;
   comment: string;
-  pending: boolean;
-  onOpenChange: (open: boolean) => void;
+  isPending: boolean;
+  onOpenChange: (isOpen: boolean) => void;
   onCommentChange: (value: string) => void;
   onSubmit: () => void;
-}) {
+};
+
+export function ProfileRecommendSection({
+  user,
+  isOpen,
+  comment,
+  isPending,
+  onOpenChange,
+  onCommentChange,
+  onSubmit,
+}: ProfileRecommendSectionProps) {
   return (
     <ProfileSection title={texts.profile.sections.recommend} icon={ThumbsUp}>
       <p className="mb-3 text-[13px] font-light text-text-subtle">{texts.profile.recommendDescription}</p>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
           <Button size="sm" className="w-full rounded-full gap-1.5"><ThumbsUp className="h-4 w-4" /> {texts.profile.recommendAction}</Button>
         </DialogTrigger>
@@ -28,8 +38,8 @@ export function ProfileRecommendSection({ user, open, comment, pending, onOpenCh
           <DialogHeader><DialogTitle className="font-light">{texts.profile.recommendTitle(user.name)}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <Textarea value={comment} onChange={(event) => onCommentChange(event.target.value)} placeholder={texts.profile.recommendPlaceholder} rows={3} className="border-border-soft bg-surface-1 text-[13px] font-light" />
-            <Button size="sm" className="w-full rounded-full" disabled={!comment.trim() || pending} onClick={onSubmit}>
-              {pending ? texts.common.sending : texts.profile.sendRecommendation}
+            <Button size="sm" className="w-full rounded-full" disabled={!comment.trim() || isPending} onClick={onSubmit}>
+              {isPending ? texts.common.sending : texts.profile.sendRecommendation}
             </Button>
           </div>
         </DialogContent>

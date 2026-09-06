@@ -4,15 +4,20 @@ import { texts } from "@/texts";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export function CommentReactionPicker({ reaction, onReaction }: {
-  reaction: string | null;
+type CommentReactionPickerProps = {
+  currentReaction: string | null;
   onReaction: (type: ReactionType) => void;
-}) {
+};
+
+export function CommentReactionPicker({
+  currentReaction,
+  onReaction,
+}: CommentReactionPickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button type="button" className="transition-colors hover:text-primary">
-          {reaction ? REACTION_EMOJIS[reaction] : texts.posts.reactions.react}
+          {currentReaction ? REACTION_EMOJIS[currentReaction] : texts.posts.reactions.react}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-fit rounded-2xl border-border-soft bg-surface-card p-1.5">
@@ -22,7 +27,7 @@ export function CommentReactionPicker({ reaction, onReaction }: {
               key={type}
               type="button"
               onClick={() => onReaction(type)}
-              className={`rounded-lg px-2 py-1 text-lg transition hover:bg-surface-2 ${reaction === type ? "bg-surface-2 ring-1 ring-primary" : ""}`}
+              className={`rounded-lg px-2 py-1 text-lg transition hover:bg-surface-2 ${currentReaction === type ? "bg-surface-2 ring-1 ring-primary" : ""}`}
             >
               {emoji}
             </button>

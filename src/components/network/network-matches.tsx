@@ -3,17 +3,19 @@ import { texts } from "@/texts";
 import type { NetworkMatchItem } from "./network-match-item";
 import { NetworkUserCard } from "./network-user-card";
 
-export function NetworkMatches({
-  items,
-  pending,
-  onConnect,
-  onRemove,
-}: {
+type NetworkMatchesProps = {
   items: NetworkMatchItem[];
-  pending: boolean;
+  isPending: boolean;
   onConnect: (userId: string) => void;
   onRemove: (userId: string) => void;
-}) {
+};
+
+export function NetworkMatches({
+  items,
+  isPending,
+  onConnect,
+  onRemove,
+}: NetworkMatchesProps) {
   return (
     <section>
       <div className="mb-3 flex items-end justify-between">
@@ -29,7 +31,7 @@ export function NetworkMatches({
             key={user.id}
             user={user}
             state={state}
-            pending={pending}
+            isPending={isPending}
             onConnect={onConnect}
             onRemove={onRemove}
           />

@@ -8,21 +8,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { RegisterMentorForm } from "./register-mentor-form";
+import { RegisterMentorForm, type RegisterMentorFormValues } from "./register-mentor-form";
+
+type RegisterMentorDialogProps = {
+  isOpen: boolean;
+  isPending: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onRegister: (values: RegisterMentorFormValues) => void;
+};
 
 export function RegisterMentorDialog({
-  open,
-  pending,
+  isOpen,
+  isPending,
   onOpenChange,
   onRegister,
-}: {
-  open: boolean;
-  pending: boolean;
-  onOpenChange: (open: boolean) => void;
-  onRegister: (data: { expertise: string[]; price: string }) => void;
-}) {
+}: RegisterMentorDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="rounded-full">
           {texts.mentoring.becomeMentor}
@@ -32,7 +34,7 @@ export function RegisterMentorDialog({
         <DialogHeader>
           <DialogTitle>{texts.mentoring.becomeMentorTitle}</DialogTitle>
         </DialogHeader>
-        <RegisterMentorForm onSave={onRegister} isPending={pending} />
+        <RegisterMentorForm onSave={onRegister} isPending={isPending} />
       </DialogContent>
     </Dialog>
   );

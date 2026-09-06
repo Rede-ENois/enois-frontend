@@ -6,9 +6,13 @@ import { ResetPasswordForm } from "./reset-password-form";
 import { ResetPasswordSuccess } from "./reset-password-success";
 import { useResetPassword } from "./use-reset-password";
 
-export function ResetPasswordPage({ token }: { token: string }) {
+type ResetPasswordPageProps = {
+  token: string;
+};
+
+export function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   const navigate = useNavigate();
-  const reset = useResetPassword(token);
+  const resetPassword = useResetPassword(token);
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
@@ -16,17 +20,17 @@ export function ResetPasswordPage({ token }: { token: string }) {
       <section className="flex flex-col px-6 py-10 sm:px-12">
         <ResetMobileHeader />
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">
-          {reset.done ? (
+          {resetPassword.isResetComplete ? (
             <ResetPasswordSuccess
               onContinue={() => navigate({ to: "/entrar", search: { tab: "login" } })}
             />
           ) : (
             <ResetPasswordForm
-              errors={reset.errors}
-              loading={reset.loading}
-              showPassword={reset.showPassword}
-              onTogglePassword={reset.togglePassword}
-              onSubmit={reset.submit}
+              errors={resetPassword.validationErrors}
+              isSubmitting={resetPassword.isSubmitting}
+              isPasswordVisible={resetPassword.isPasswordVisible}
+              onTogglePassword={resetPassword.handleTogglePassword}
+              onSubmit={resetPassword.handleSubmit}
             />
           )}
         </div>

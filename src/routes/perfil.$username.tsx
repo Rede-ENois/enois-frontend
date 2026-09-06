@@ -10,7 +10,7 @@ import { ProfilePage } from "@/components/profile/page/profile-page";
 export const Route = createFileRoute("/perfil/$username")({
   loader: async ({ params }) => {
     try {
-      return { user: await profileApi.get(params.username) };
+      return { user: await profileApi.getByUsername(params.username) };
     } catch {
       throw notFound();
     }

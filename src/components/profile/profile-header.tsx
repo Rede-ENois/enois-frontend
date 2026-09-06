@@ -7,30 +7,53 @@ import { ProfileAvatar } from "./header/profile-avatar";
 import { ProfileBanner } from "./header/profile-banner";
 import { ProfileIdentity } from "./header/profile-identity";
 
-export function ProfileHeader({ user, isOwnProfile, avatarUploading, bannerUploading, connectionLabel, connectionDisabled, onAvatarSelect, onBannerSelect, onMessage, onConnect }: {
+type ProfileHeaderProps = {
   user: Profile;
   isOwnProfile: boolean;
-  avatarUploading: boolean;
-  bannerUploading: boolean;
+  isAvatarUploading: boolean;
+  isBannerUploading: boolean;
   connectionLabel: string;
-  connectionDisabled: boolean;
+  isConnectionDisabled: boolean;
   onAvatarSelect: ChangeEventHandler<HTMLInputElement>;
   onBannerSelect: ChangeEventHandler<HTMLInputElement>;
   onMessage: () => void;
   onConnect: () => void;
-}) {
+};
+
+export function ProfileHeader({
+  user,
+  isOwnProfile,
+  isAvatarUploading,
+  isBannerUploading,
+  connectionLabel,
+  isConnectionDisabled,
+  onAvatarSelect,
+  onBannerSelect,
+  onMessage,
+  onConnect,
+}: ProfileHeaderProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
-      <ProfileBanner user={user} editable={isOwnProfile} uploading={bannerUploading} onSelect={onBannerSelect} />
+      <ProfileBanner
+        user={user}
+        isEditable={isOwnProfile}
+        isUploading={isBannerUploading}
+        onSelect={onBannerSelect}
+      />
       <div className="px-4 pb-5 sm:px-6 sm:pb-6">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-3 sm:-mt-14 sm:gap-4">
-          <ProfileAvatar user={user} editable={isOwnProfile} uploading={avatarUploading} onSelect={onAvatarSelect} />
+          <ProfileAvatar
+            user={user}
+            isEditable={isOwnProfile}
+            isUploading={isAvatarUploading}
+            onSelect={onAvatarSelect}
+          />
           <div className="flex flex-wrap gap-2">
             <ProfileActions
               user={user}
               isOwnProfile={isOwnProfile}
               connectionLabel={connectionLabel}
-              connectionDisabled={connectionDisabled}
+              isConnectionDisabled={isConnectionDisabled}
               onMessage={onMessage}
               onConnect={onConnect}
             />

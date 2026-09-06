@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
-import { communitiesApi } from "@/lib/api";
+import { communityApi } from "@/lib/api";
 import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CreateCommunityForm } from "./create-community-form";
 import type { CommunityTopic } from "./community-topics";
 
-export function CreateCommunityDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (value: boolean) => void }) {
+type CreateCommunityDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+};
+
+export function CreateCommunityDialog({ isOpen, onOpenChange }: CreateCommunityDialogProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [topic, setTopic] = useState<CommunityTopic>("TECNOLOGIA");
 
-  const create = useMutation({
-    mutationFn: () => communitiesApi.create({ name, description, topic }),
+  const createCommunityMutation = useMutation({
+    mutationFn: () => communityApi.create({ name, description, topic }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communities"] });
       onOpenChange(false);
@@ -29,7 +34,7 @@ export function CreateCommunityDialog({ open, onOpenChange }: { open: boolean; o
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button className="rounded-full gap-1.5">
           <Plus className="h-4 w-4" /> {texts.communities.createCommunity}
@@ -41,11 +46,11 @@ export function CreateCommunityDialog({ open, onOpenChange }: { open: boolean; o
           name={name}
           description={description}
           topic={topic}
-          pending={create.isPending}
+          isPending={createCommunityMutation.isPending}
           onNameChange={setName}
           onDescriptionChange={setDescription}
           onTopicChange={setTopic}
-          onSubmit={() => create.mutate()}
+          onSubmit={() => createCommunityMutation.mutate()}
         />
       </DialogContent>
     </Dialog>

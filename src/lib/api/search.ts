@@ -15,10 +15,10 @@ export interface SearchResponse {
 }
 
 export const searchApi = {
-  search: (q: string, types?: string[], limit = 10) =>
+  search: (query: string, types?: string[], limit = 10) =>
     api.get<SearchResponse>(
       `/search${buildQuery({
-        q,
+        q: query,
         types: types?.join(","),
         limit,
       })}`,

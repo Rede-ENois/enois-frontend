@@ -3,24 +3,24 @@ import { GlobalSearchPanel } from "./global-search-panel";
 import { useGlobalSearch } from "./use-global-search";
 
 export function GlobalSearch() {
-  const search = useGlobalSearch();
+  const searchState = useGlobalSearch();
 
   return (
     <>
-      <GlobalSearchMobileButton onOpen={search.openMobileSearch} />
+      <GlobalSearchMobileButton onOpen={searchState.openMobileSearch} />
       <GlobalSearchPanel
-        query={search.query}
-        debouncedQuery={search.debouncedQuery}
-        results={search.results}
-        isFetching={search.isFetching}
-        isOpen={search.isOpen}
-        isMobileOpen={search.isMobileOpen}
-        searchRef={search.searchRef}
-        inputRef={search.inputRef}
-        onQueryChange={search.handleQueryChange}
-        onFocus={search.handleFocus}
-        onCloseMobile={search.closeMobileSearch}
-        onSelect={search.handleSelect}
+        query={searchState.query}
+        debouncedQuery={searchState.debouncedQuery}
+        results={searchState.results}
+        isSearching={searchState.isSearching}
+        isOpen={searchState.isOpen}
+        isMobileOpen={searchState.isMobileOpen}
+        searchRef={searchState.searchRef}
+        inputRef={searchState.inputRef}
+        onQueryChange={searchState.handleQueryChange}
+        onFocus={searchState.handleFocus}
+        onCloseMobile={searchState.closeMobileSearch}
+        onSelect={searchState.handleSelect}
       />
     </>
   );

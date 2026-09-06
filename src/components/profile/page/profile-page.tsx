@@ -10,53 +10,66 @@ import { ProfileSidebar } from "@/components/profile/profile-sidebar";
 import { useProfilePageActions } from "./use-profile-page-actions";
 import { useProfilePageData } from "./use-profile-page-data";
 
-export function ProfilePage({ loaderUser }: { loaderUser: Profile }) {
-  const data = useProfilePageData(loaderUser);
-  const actions = useProfilePageActions(data.user, data.connectionStatus);
+type ProfilePageProps = {
+  loaderUser: Profile;
+};
+
+export function ProfilePage({ loaderUser }: ProfilePageProps) {
+  const profileData = useProfilePageData(loaderUser);
+  const profileActions = useProfilePageActions(
+    profileData.user,
+    profileData.connectionStatus,
+  );
 
   return (
     <AppContainer>
       <div className="space-y-6">
         <ProfileHeader
-          user={data.user}
-          isOwnProfile={data.isOwnProfile}
-          avatarUploading={actions.avatarUploading}
-          bannerUploading={actions.bannerUploading}
-          connectionLabel={actions.connectionLabel}
-          connectionDisabled={actions.connectionDisabled}
-          onAvatarSelect={actions.handleAvatarSelect}
-          onBannerSelect={actions.handleBannerSelect}
-          onMessage={actions.handleMessage}
-          onConnect={actions.handleConnect}
+          user={profileData.user}
+          isOwnProfile={profileData.isOwnProfile}
+          isAvatarUploading={profileActions.isAvatarUploading}
+          isBannerUploading={profileActions.isBannerUploading}
+          connectionLabel={profileActions.connectionLabel}
+          isConnectionDisabled={profileActions.isConnectionDisabled}
+          onAvatarSelect={profileActions.handleAvatarSelect}
+          onBannerSelect={profileActions.handleBannerSelect}
+          onMessage={profileActions.handleMessage}
+          onConnect={profileActions.handleConnect}
         />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <ProfileMainContent user={data.user} posts={data.posts} />
+          <ProfileMainContent user={profileData.user} posts={profileData.posts} />
           <ProfileSidebar
-            user={data.user}
-            isOwnProfile={data.isOwnProfile}
-            recommendations={data.recommendations}
-            recommenders={data.recommenders}
-            ranking={data.ranking}
-            recommendationOpen={actions.recommendOpen}
-            recommendationComment={actions.recommendComment}
-            recommendationPending={actions.recommendationPending}
-            onRecommendationOpenChange={actions.setRecommendOpen}
-            onRecommendationCommentChange={actions.setRecommendComment}
-            onRecommendationSubmit={actions.submitRecommendation}
+            user={profileData.user}
+            isOwnProfile={profileData.isOwnProfile}
+            recommendations={profileData.recommendations}
+            recommenderByUserId={profileData.recommenderByUserId}
+            ranking={profileData.ranking}
+            isRecommendationOpen={profileActions.isRecommendationOpen}
+            recommendationComment={profileActions.recommendationComment}
+            isRecommendationPending={profileActions.isRecommendationPending}
+            onRecommendationOpenChange={profileActions.setIsRecommendationOpen}
+            onRecommendationCommentChange={profileActions.setRecommendationComment}
+            onRecommendationSubmit={profileActions.handleRecommendationSubmit}
           />
         </div>
       </div>
       <div className="h-4 lg:hidden" />
 
-      {actions.cropImageSrc && actions.cropPurpose && (
+      {profileActions.cropImageSrc && profileActions.cropPurpose && (
         <ImageCropDialog
-          open
-          onOpenChange={(open) => { if (!open) actions.resetCrop(); }}
-          imageSrc={actions.cropImageSrc}
-          aspect={actions.cropPurpose === "AVATAR" ? 1 : 3}
-          title={actions.cropPurpose === "AVATAR" ? texts.profile.cropAvatar : texts.profile.cropCover}
-          onCropComplete={actions.handleCropComplete}
+          isOpen={Boolean(profileActions.cropImageSrc)}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) profileActions.resetCrop();
+          }}
+          imageSrc={profileActions.cropImageSrc}
+          aspect={profileActions.cropPurpose === "AVATAR" ? 1 : 3}
+          title={
+            profileActions.cropPurpose === "AVATAR"
+              ? texts.profile.cropAvatar
+              : texts.profile.cropCover
+          }
+          onCropComplete={profileActions.handleCropComplete}
         />
       )}
     </AppContainer>

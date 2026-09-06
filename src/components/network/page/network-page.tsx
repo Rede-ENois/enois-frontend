@@ -22,7 +22,7 @@ export function NetworkPage() {
         />
         <NetworkMatches
           items={actions.matchItems}
-          pending={actions.pending}
+          isPending={actions.isPending}
           onConnect={actions.connectUser}
           onRemove={actions.removeUser}
         />

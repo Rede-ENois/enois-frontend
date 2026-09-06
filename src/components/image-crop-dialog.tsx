@@ -8,47 +8,56 @@ import { cropImage } from "@/utils/images";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+type ImageCropDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  imageSrc: string;
+  aspect: number;
+  title: string;
+  onCropComplete: (croppedImageBlob: Blob) => Promise<void>;
+};
+
 export function ImageCropDialog({
-  open,
+  isOpen,
   onOpenChange,
   imageSrc,
   aspect,
   title,
   onCropComplete,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  imageSrc: string;
-  aspect: number;
-  title: string;
-  onCropComplete: (blob: Blob) => Promise<void>;
-}) {
+}: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const onCropChange = useCallback((location: { x: number; y: number }) => setCrop(location), []);
-  const onZoomChange = useCallback((value: number) => setZoom(value), []);
-  const onCropAreaChange = useCallback((_: Area, pixels: Area) => setCroppedAreaPixels(pixels), []);
+  const handleCropChange = useCallback(
+    (location: { x: number; y: number }) => setCrop(location),
+    [],
+  );
+  const handleZoomChange = useCallback((zoomValue: number) => setZoom(zoomValue), []);
+  const handleCropAreaChange = useCallback(
+    (_croppedArea: Area, nextCroppedAreaPixels: Area) =>
+      setCroppedAreaPixels(nextCroppedAreaPixels),
+    [],
+  );
 
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
 
-    setSaving(true);
+    setIsSaving(true);
     try {
-      const blob = await cropImage(imageSrc, croppedAreaPixels);
-      await onCropComplete(blob);
+      const croppedImageBlob = await cropImage(imageSrc, croppedAreaPixels);
+      await onCropComplete(croppedImageBlob);
       onOpenChange(false);
     } catch {
-      // silently fail
+      // Keep the existing silent-failure behavior.
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -59,9 +68,9 @@ export function ImageCropDialog({
             crop={crop}
             zoom={zoom}
             aspect={aspect}
-            onCropChange={onCropChange}
-            onZoomChange={onZoomChange}
-            onCropComplete={onCropAreaChange}
+            onCropChange={handleCropChange}
+            onZoomChange={handleZoomChange}
+            onCropComplete={handleCropAreaChange}
           />
         </div>
         <div className="flex items-center gap-3">
@@ -85,10 +94,10 @@ export function ImageCropDialog({
           </Button>
           <Button
             className="flex-1 rounded-full"
-            disabled={saving || !croppedAreaPixels}
+            disabled={isSaving || !croppedAreaPixels}
             onClick={handleSave}
           >
-            {saving ? texts.common.saving : texts.common.save}
+            {isSaving ? texts.common.saving : texts.common.save}
           </Button>
         </div>
       </DialogContent>

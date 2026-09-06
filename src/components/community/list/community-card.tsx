@@ -8,18 +8,20 @@ import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
 
-export function CommunityCard({
-  community,
-  pending,
-  onJoin,
-  onLeave,
-}: {
+type CommunityCardProps = {
   community: Community;
-  pending: boolean;
+  isPending: boolean;
   onJoin: (communityId: string) => void;
   onLeave: (communityId: string) => void;
-}) {
-  const action = community.joined
+};
+
+export function CommunityCard({
+  community,
+  isPending,
+  onJoin,
+  onLeave,
+}: CommunityCardProps) {
+  const membershipAction = community.joined
     ? {
         label: texts.communities.participating,
         variant: "secondary" as const,
@@ -61,15 +63,15 @@ export function CommunityCard({
             </span>
             <Button
               size="sm"
-              variant={action.variant}
+              variant={membershipAction.variant}
               className="rounded-full"
-              disabled={pending}
+              disabled={isPending}
               onClick={(event) => {
                 event.preventDefault();
-                action.run(community.id);
+                membershipAction.run(community.id);
               }}
             >
-              {action.label}
+              {membershipAction.label}
             </Button>
           </div>
         </div>

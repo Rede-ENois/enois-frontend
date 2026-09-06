@@ -10,43 +10,47 @@ const resetSchema = z.object({
 });
 
 export function useResetPassword(token: string) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [done, setDone] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isResetComplete, setIsResetComplete] = useState(false);
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const parsed = resetSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
     if (!parsed.success) {
-      const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) next[issue.path[0] as string] = issue.message;
-      setErrors(next);
+      const nextValidationErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        nextValidationErrors[issue.path[0] as string] = issue.message;
+      }
+      setValidationErrors(nextValidationErrors);
       return;
     }
     if (!token) {
-      setErrors({ form: texts.auth.reset.invalidLink });
+      setValidationErrors({ form: texts.auth.reset.invalidLink });
       return;
     }
 
-    setErrors({});
-    setLoading(true);
+    setValidationErrors({});
+    setIsSubmitting(true);
     try {
       await authApi.resetPassword(token, parsed.data.password);
-      setDone(true);
+      setIsResetComplete(true);
     } catch (error) {
-      setErrors({ form: error instanceof ApiError ? error.message : texts.errors.unexpected });
+      setValidationErrors({
+        form: error instanceof ApiError ? error.message : texts.errors.unexpected,
+      });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return {
-    errors,
-    loading,
-    showPassword,
-    done,
-    submit,
-    togglePassword: () => setShowPassword((value) => !value),
+    validationErrors,
+    isSubmitting,
+    isPasswordVisible,
+    isResetComplete,
+    handleSubmit,
+    handleTogglePassword: () => setIsPasswordVisible((isVisible) => !isVisible),
   };
 }

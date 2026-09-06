@@ -6,19 +6,19 @@ import { UserAvatar } from "@/components/user-avatar";
 type GlobalSearchResultsProps = {
   items: SearchResult[];
   query: string;
-  isFetching: boolean;
+  isSearching: boolean;
   onSelect: (item: SearchResult) => void;
 };
 
 export function GlobalSearchResults({
   items,
   query,
-  isFetching,
+  isSearching,
   onSelect,
 }: GlobalSearchResultsProps) {
   return (
     <>
-      {items.length === 0 && !isFetching && (
+      {items.length === 0 && !isSearching && (
         <p className="px-4 py-6 text-center text-sm text-text-subtle">
           {texts.search.noResults(query)}
         </p>

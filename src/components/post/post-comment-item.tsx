@@ -8,14 +8,22 @@ import { UserAvatar } from "@/components/user-avatar";
 import { CommentReactionPicker } from "./comment-reaction-picker";
 import { useCommentReaction } from "./use-comment-reaction";
 
-export function PostCommentItem({ comment, replyingTo, currentUserId, onDelete, onReply }: {
+type PostCommentItemProps = {
   comment: CommentView;
   replyingTo?: string;
   currentUserId?: string;
   onDelete?: (commentId: string) => void;
   onReply?: (comment: CommentView) => void;
-}) {
-  const { reaction, react } = useCommentReaction(comment);
+};
+
+export function PostCommentItem({
+  comment,
+  replyingTo,
+  currentUserId,
+  onDelete,
+  onReply,
+}: PostCommentItemProps) {
+  const { currentReaction, handleReaction } = useCommentReaction(comment);
   const canDelete = currentUserId === comment.authorId && onDelete;
 
   return (
@@ -38,7 +46,7 @@ export function PostCommentItem({ comment, replyingTo, currentUserId, onDelete, 
           <button type="button" onClick={() => onReply?.(comment)} className="transition-colors hover:text-primary">
             {texts.posts.comments.reply}
           </button>
-          <CommentReactionPicker reaction={reaction} onReaction={react} />
+          <CommentReactionPicker currentReaction={currentReaction} onReaction={handleReaction} />
           {canDelete && (
             <button type="button" onClick={() => onDelete(comment.id)} className="text-destructive transition-colors hover:text-destructive/80">
               {texts.posts.comments.delete}

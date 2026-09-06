@@ -6,34 +6,51 @@ import { ProfileRankingSection } from "./sidebar/profile-ranking-section";
 import { ProfileRecommendSection } from "./sidebar/profile-recommend-section";
 import { ProfileRecommendationsSection } from "./sidebar/profile-recommendations-section";
 
-export function ProfileSidebar({ user, isOwnProfile, recommendations, recommenders, ranking, recommendationOpen, recommendationComment, recommendationPending, onRecommendationOpenChange, onRecommendationCommentChange, onRecommendationSubmit }: {
+type ProfileSidebarProps = {
   user: Profile;
   isOwnProfile: boolean;
   recommendations: Recommendation[];
-  recommenders: Record<string, Profile>;
+  recommenderByUserId: Record<string, Profile>;
   ranking: RankingUser[];
-  recommendationOpen: boolean;
+  isRecommendationOpen: boolean;
   recommendationComment: string;
-  recommendationPending: boolean;
-  onRecommendationOpenChange: (open: boolean) => void;
+  isRecommendationPending: boolean;
+  onRecommendationOpenChange: (isOpen: boolean) => void;
   onRecommendationCommentChange: (value: string) => void;
   onRecommendationSubmit: () => void;
-}) {
+};
+
+export function ProfileSidebar({
+  user,
+  isOwnProfile,
+  recommendations,
+  recommenderByUserId,
+  ranking,
+  isRecommendationOpen,
+  recommendationComment,
+  isRecommendationPending,
+  onRecommendationOpenChange,
+  onRecommendationCommentChange,
+  onRecommendationSubmit,
+}: ProfileSidebarProps) {
   return (
     <aside className="space-y-6">
       <ProfileAvailabilitySection availability={user.availability} />
       {!isOwnProfile && (
         <ProfileRecommendSection
           user={user}
-          open={recommendationOpen}
+          isOpen={isRecommendationOpen}
           comment={recommendationComment}
-          pending={recommendationPending}
+          isPending={isRecommendationPending}
           onOpenChange={onRecommendationOpenChange}
           onCommentChange={onRecommendationCommentChange}
           onSubmit={onRecommendationSubmit}
         />
       )}
-      <ProfileRecommendationsSection recommendations={recommendations} recommenders={recommenders} />
+      <ProfileRecommendationsSection
+        recommendations={recommendations}
+        recommenders={recommenderByUserId}
+      />
       <ProfileRankingSection ranking={ranking} />
       <ProfileLinksSection links={user.externalLinks} />
     </aside>

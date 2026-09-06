@@ -9,15 +9,13 @@ import { UserAvatar } from "@/components/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-export function MentorCard({
-  mentor,
-  user,
-  isOwner,
-}: {
+type MentorCardProps = {
   mentor: Mentor;
   user?: Profile;
   isOwner: boolean;
-}) {
+};
+
+export function MentorCard({ mentor, user, isOwner }: MentorCardProps) {
   return (
     <article className="surface-card mx-auto w-full max-w-5xl space-y-4 p-5">
       <header className="flex flex-wrap">

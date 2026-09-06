@@ -17,8 +17,8 @@ export function useGlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query), 250);
-    return () => clearTimeout(timer);
+    const debounceTimer = setTimeout(() => setDebouncedQuery(query), 250);
+    return () => clearTimeout(debounceTimer);
   }, [query]);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function useGlobalSearch() {
     if (isMobileOpen) inputRef.current?.focus();
   }, [isMobileOpen]);
 
-  const { data, isFetching } = useQuery({
+  const { data: searchData, isFetching: isSearching } = useQuery({
     queryKey: ["search", debouncedQuery],
     queryFn: () => searchApi.search(debouncedQuery),
     enabled: debouncedQuery.length >= 2,
@@ -49,16 +49,16 @@ export function useGlobalSearch() {
     setIsMobileOpen(false);
     closeSearch();
   };
-  const handleSelect = (item: SearchResult) => {
+  const handleSelect = (searchResult: SearchResult) => {
     closeMobileSearch();
-    navigateToHref(item.href, navigate);
+    navigateToHref(searchResult.href, navigate);
   };
 
   return {
     query,
     debouncedQuery,
-    results: data?.items ?? [],
-    isFetching,
+    results: searchData?.items ?? [],
+    isSearching,
     isOpen,
     isMobileOpen,
     searchRef,

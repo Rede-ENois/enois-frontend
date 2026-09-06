@@ -1,16 +1,24 @@
 import { ImageCropDialog } from "@/components/image-crop-dialog";
 
-export function EditCommunityCropDialog({ crop, onClose, onComplete }: {
+type EditCommunityCropDialogProps = {
   crop: { imageSrc: string; aspect: number; title: string } | null;
   onClose: () => void;
-  onComplete: (blob: Blob) => Promise<void>;
-}) {
+  onComplete: (croppedImageBlob: Blob) => Promise<void>;
+};
+
+export function EditCommunityCropDialog({
+  crop,
+  onClose,
+  onComplete,
+}: EditCommunityCropDialogProps) {
   if (!crop) return null;
 
   return (
     <ImageCropDialog
-      open
-      onOpenChange={(open) => { if (!open) onClose(); }}
+      isOpen
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
       imageSrc={crop.imageSrc}
       aspect={crop.aspect}
       title={crop.title}

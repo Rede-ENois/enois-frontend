@@ -5,18 +5,21 @@ import { texts } from "@/texts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RegisterMentorDialog } from "./register-mentor-dialog";
+import type { RegisterMentorFormValues } from "./register-mentor-form";
+
+type MentoringHeroProps = {
+  isRegistrationOpen: boolean;
+  isRegistrationPending: boolean;
+  onRegistrationOpenChange: (isOpen: boolean) => void;
+  onRegister: (values: RegisterMentorFormValues) => void;
+};
 
 export function MentoringHero({
-  registrationOpen,
-  registrationPending,
+  isRegistrationOpen,
+  isRegistrationPending,
   onRegistrationOpenChange,
   onRegister,
-}: {
-  registrationOpen: boolean;
-  registrationPending: boolean;
-  onRegistrationOpenChange: (open: boolean) => void;
-  onRegister: (data: { expertise: string[]; price: string }) => void;
-}) {
+}: MentoringHeroProps) {
   return (
     <div
       className="surface-card relative overflow-hidden p-5 sm:p-8"
@@ -36,8 +39,8 @@ export function MentoringHero({
             {texts.mentoring.findMentor}
           </Button>
           <RegisterMentorDialog
-            open={registrationOpen}
-            pending={registrationPending}
+            isOpen={isRegistrationOpen}
+            isPending={isRegistrationPending}
             onOpenChange={onRegistrationOpenChange}
             onRegister={onRegister}
           />

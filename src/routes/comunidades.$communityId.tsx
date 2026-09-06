@@ -3,7 +3,7 @@ import { type FormEvent, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { communitiesApi, feedApi } from "@/lib/api";
+import { communityApi, feedApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/comunidades/$communityId")({
   beforeLoad: requireAuth,
   loader: async ({ params }) => {
     try {
-      return await communitiesApi.get(params.communityId);
+      return await communityApi.getById(params.communityId);
     } catch {
       throw notFound();
     }
@@ -28,61 +28,105 @@ export const Route = createFileRoute("/comunidades/$communityId")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.name ?? texts.communities.detail.seoFallback} · ${texts.brand.name}` }],
   }),
-  component: CommunityDetailRoute,
+  component: CommunityDetailPage,
 });
 
-function CommunityDetailRoute() {
+function CommunityDetailPage() {
   const queryClient = useQueryClient();
-  const community = Route.useLoaderData();
+  const initialCommunity = Route.useLoaderData();
   const { user: currentUser } = useAuth();
-  const [draft, setDraft] = useState("");
-  const [editOpen, setEditOpen] = useState(false);
-  const { data: live } = useQuery({ queryKey: ["community", community.id], queryFn: () => communitiesApi.get(community.id), initialData: community });
-  const { data: membersData } = useQuery({ queryKey: ["community", community.id, "members"], queryFn: () => communitiesApi.getMembers(community.id) });
-  const { data: feedData } = useQuery({ queryKey: ["community", community.id, "feed"], queryFn: () => communitiesApi.getFeed(community.id) });
+  const [postContent, setPostContent] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const { data: liveCommunity } = useQuery({
+    queryKey: ["community", initialCommunity.id],
+    queryFn: () => communityApi.getById(initialCommunity.id),
+    initialData: initialCommunity,
+  });
+  const { data: membersData } = useQuery({
+    queryKey: ["community", initialCommunity.id, "members"],
+    queryFn: () => communityApi.listMembers(initialCommunity.id),
+  });
+  const { data: feedData } = useQuery({
+    queryKey: ["community", initialCommunity.id, "feed"],
+    queryFn: () => communityApi.listFeed(initialCommunity.id),
+  });
+
   const members = membersData?.items ?? [];
   const posts = feedData?.items ?? [];
   const admins = members.filter((member) => member.role === "ADMIN");
   const isAdmin = Boolean(currentUser && admins.some((admin) => admin.userId === currentUser.id));
-  const isMember = live.joined;
-  const invalidateCommunity = () => queryClient.invalidateQueries({ queryKey: ["community", community.id] });
-  const join = useMutation({ mutationFn: () => communitiesApi.join(community.id), onSuccess: invalidateCommunity });
-  const leave = useMutation({ mutationFn: () => communitiesApi.leave(community.id), onSuccess: invalidateCommunity });
-  const createPost = useMutation({
-    mutationFn: (content: string) => feedApi.create({ type: "INSIGHT", content, communityId: community.id }),
+  const isMember = liveCommunity.joined;
+  const invalidateCommunity = () =>
+    queryClient.invalidateQueries({ queryKey: ["community", initialCommunity.id] });
+
+  const joinCommunityMutation = useMutation({
+    mutationFn: () => communityApi.join(initialCommunity.id),
+    onSuccess: invalidateCommunity,
+  });
+  const leaveCommunityMutation = useMutation({
+    mutationFn: () => communityApi.leave(initialCommunity.id),
+    onSuccess: invalidateCommunity,
+  });
+  const createPostMutation = useMutation({
+    mutationFn: (content: string) =>
+      feedApi.create({ type: "INSIGHT", content, communityId: initialCommunity.id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community", community.id, "feed"] });
+      queryClient.invalidateQueries({ queryKey: ["community", initialCommunity.id, "feed"] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
-      setDraft("");
+      setPostContent("");
     },
   });
-  const handlePost = (event: FormEvent<HTMLFormElement>) => {
+
+  const handlePostSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const content = draft.trim();
-    if (content) createPost.mutate(content);
+    const content = postContent.trim();
+    if (content) createPostMutation.mutate(content);
   };
+
   const membershipAction = isMember
-    ? { label: texts.communities.participating, variant: "secondary" as const, run: () => leave.mutate() }
-    : { label: texts.communities.enter, variant: "default" as const, run: () => join.mutate() };
-  const emptyFeedText = isMember ? texts.communities.detail.emptyMember : texts.communities.detail.emptyGuest;
+    ? {
+        label: texts.communities.participating,
+        variant: "secondary" as const,
+        run: () => leaveCommunityMutation.mutate(),
+      }
+    : {
+        label: texts.communities.enter,
+        variant: "default" as const,
+        run: () => joinCommunityMutation.mutate(),
+      };
+  const emptyFeedText = isMember
+    ? texts.communities.detail.emptyMember
+    : texts.communities.detail.emptyGuest;
+  const isMembershipPending =
+    joinCommunityMutation.isPending || leaveCommunityMutation.isPending;
 
   return (
     <AppContainer>
       <div className="space-y-6">
         <CommunityBackLink />
         <CommunityHeader
-          community={live}
+          community={liveCommunity}
           admins={admins}
           isAdmin={isAdmin}
-          editOpen={editOpen}
-          editForm={<EditCommunityForm community={live} onClose={() => setEditOpen(false)} />}
+          isEditOpen={isEditOpen}
+          editForm={
+            <EditCommunityForm community={liveCommunity} onClose={() => setIsEditOpen(false)} />
+          }
           membershipLabel={membershipAction.label}
           membershipVariant={membershipAction.variant}
-          membershipPending={join.isPending || leave.isPending}
-          onEditOpenChange={setEditOpen}
+          isMembershipPending={isMembershipPending}
+          onEditOpenChange={setIsEditOpen}
           onMembership={membershipAction.run}
         />
-        {isMember && <CommunityComposer draft={draft} pending={createPost.isPending} onDraftChange={setDraft} onSubmit={handlePost} />}
+        {isMember && (
+          <CommunityComposer
+            content={postContent}
+            isPending={createPostMutation.isPending}
+            onContentChange={setPostContent}
+            onSubmit={handlePostSubmit}
+          />
+        )}
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
           <CommunityFeed posts={posts} emptyText={emptyFeedText} />
           <CommunityMembers members={members} />

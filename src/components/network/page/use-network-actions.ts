@@ -9,39 +9,39 @@ import type { NetworkMatchItem } from "@/components/network/network-match-item";
 
 export function useNetworkActions(users: NetworkUser[]) {
   const queryClient = useQueryClient();
-  const [localStatus, setLocalStatus] = useState<Record<string, string>>({});
+  const [connectionStatusByUserId, setConnectionStatusByUserId] = useState<Record<string, string>>({});
   const invalidateNetwork = () => queryClient.invalidateQueries({ queryKey: ["network"] });
 
-  const acceptRequest = useMutation({
-    mutationFn: (id: string) => networkApi.accept(id),
+  const acceptConnectionRequestMutation = useMutation({
+    mutationFn: (targetUserId: string) => networkApi.acceptConnectionRequest(targetUserId),
     onSuccess: invalidateNetwork,
   });
-  const connect = useMutation({
-    mutationFn: (id: string) => networkApi.connect(id),
+  const sendConnectionRequestMutation = useMutation({
+    mutationFn: (targetUserId: string) => networkApi.sendConnectionRequest(targetUserId),
     onSuccess: invalidateNetwork,
   });
-  const remove = useMutation({
-    mutationFn: (id: string) => networkApi.remove(id),
+  const removeConnectionMutation = useMutation({
+    mutationFn: (targetUserId: string) => networkApi.removeConnection(targetUserId),
     onSuccess: invalidateNetwork,
   });
 
   const matchItems: NetworkMatchItem[] = users.map((user) => ({
     user,
-    state: getConnectionUiState(user.connected, localStatus[user.id]),
+    state: getConnectionUiState(user.connected, connectionStatusByUserId[user.id]),
   }));
 
   return {
     matchItems,
-    pending: connect.isPending || remove.isPending,
-    acceptRequest: acceptRequest.mutate,
-    cancelRequest: remove.mutate,
+    isPending: sendConnectionRequestMutation.isPending || removeConnectionMutation.isPending,
+    acceptRequest: acceptConnectionRequestMutation.mutate,
+    cancelRequest: removeConnectionMutation.mutate,
     connectUser: (userId: string) => {
-      connect.mutate(userId);
-      setLocalStatus((status) => ({ ...status, [userId]: "REQUESTED" }));
+      sendConnectionRequestMutation.mutate(userId);
+      setConnectionStatusByUserId((currentStatus) => ({ ...currentStatus, [userId]: "REQUESTED" }));
     },
     removeUser: (userId: string) => {
-      remove.mutate(userId);
-      setLocalStatus((status) => ({ ...status, [userId]: "REMOVED" }));
+      removeConnectionMutation.mutate(userId);
+      setConnectionStatusByUserId((currentStatus) => ({ ...currentStatus, [userId]: "REMOVED" }));
     },
   };
 }

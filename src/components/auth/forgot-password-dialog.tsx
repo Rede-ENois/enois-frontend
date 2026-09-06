@@ -12,54 +12,59 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function ForgotPasswordDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (value: boolean) => void;
-}) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+type ForgotPasswordDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+};
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
+export function ForgotPasswordDialog({
+  isOpen,
+  onOpenChange,
+}: ForgotPasswordDialogProps) {
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<unknown>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetEmailSent, setIsResetEmailSent] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const email = String(new FormData(event.currentTarget).get("email") ?? "").trim();
 
     if (!z.string().email().safeParse(email).success) {
-      setErrors({ email: texts.auth.validation.invalidEmail });
+      setValidationErrors({ email: texts.auth.validation.invalidEmail });
       return;
     }
 
-    setErrors({});
+    setValidationErrors({});
     setFormError(null);
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
-      await authApi.forgotPassword(email);
-      setSent(true);
+      await authApi.requestPasswordReset(email);
+      setIsResetEmailSent(true);
     } catch (error) {
       setFormError(error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const close = () => {
-    setSent(false);
-    setErrors({});
+  const handleClose = () => {
+    setIsResetEmailSent(false);
+    setValidationErrors({});
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(value) => (value ? onOpenChange(value) : close())}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(nextIsOpen) => (nextIsOpen ? onOpenChange(nextIsOpen) : handleClose())}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-semibold tracking-tight">{texts.auth.forgot.title}</DialogTitle>
         </DialogHeader>
-        {sent ? (
+        {isResetEmailSent ? (
           <div className="space-y-4 pb-2 pt-2">
             <div className="flex items-start gap-3 rounded-xl bg-primary/10 p-4">
               <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -68,19 +73,19 @@ export function ForgotPasswordDialog({
                 <p className="mt-1 text-[13px] text-muted-foreground">{texts.auth.forgot.sentDescription}</p>
               </div>
             </div>
-            <Button className="w-full rounded-full" onClick={close}>{texts.auth.forgot.understood}</Button>
+            <Button className="w-full rounded-full" onClick={handleClose}>{texts.auth.forgot.understood}</Button>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-4 pb-2 pt-2" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-4 pb-2 pt-2" noValidate>
             <p className="text-sm text-muted-foreground">{texts.auth.forgot.description}</p>
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">{texts.auth.fields.email}</Label>
               <Input name="email" type="email" placeholder={texts.auth.placeholders.email} autoComplete="email" required maxLength={255} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+              {validationErrors.email && <p className="text-xs text-destructive">{validationErrors.email}</p>}
             </div>
             {formError && <ErrorBanner error={formError} />}
-            <Button type="submit" className="w-full gap-2 rounded-full" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{texts.auth.forgot.sendLink} <ArrowRight className="h-4 w-4" /></>}
+            <Button type="submit" className="w-full gap-2 rounded-full" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{texts.auth.forgot.sendLink} <ArrowRight className="h-4 w-4" /></>}
             </Button>
           </form>
         )}

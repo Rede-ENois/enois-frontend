@@ -9,19 +9,21 @@ import type { ConnectionUiState } from "@/utils/network";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 
+type NetworkUserCardProps = {
+  user: NetworkUser;
+  state: ConnectionUiState;
+  isPending: boolean;
+  onConnect: (userId: string) => void;
+  onRemove: (userId: string) => void;
+};
+
 export function NetworkUserCard({
   user,
   state,
-  pending,
+  isPending,
   onConnect,
   onRemove,
-}: {
-  user: NetworkUser;
-  state: ConnectionUiState;
-  pending: boolean;
-  onConnect: (userId: string) => void;
-  onRemove: (userId: string) => void;
-}) {
+}: NetworkUserCardProps) {
   const actionMeta: Record<
     ConnectionUiState,
     {
@@ -83,7 +85,7 @@ export function NetworkUserCard({
         <Button
           className={`mt-4 w-full rounded-full gap-1.5 ${action.className}`}
           variant={action.variant}
-          disabled={pending}
+          disabled={isPending}
           onClick={action.run}
         >
           <ActionIcon className="h-4 w-4" /> {action.label}

@@ -10,22 +10,22 @@ export function isAuthenticated(): boolean {
 
 export function useAuth() {
   const navigate = useNavigate();
-  const token = getSessionToken();
+  const sessionToken = getSessionToken();
 
-  const query = useQuery({
+  const currentUserQuery = useQuery({
     queryKey: ["me"],
-    queryFn: () => profileApi.me(),
-    enabled: Boolean(token),
+    queryFn: () => profileApi.getCurrent(),
+    enabled: Boolean(sessionToken),
     retry: 1,
     staleTime: 60_000,
   });
 
   return {
-    user: query.data ?? null,
-    isLoading: query.isLoading,
-    isAuthenticated: Boolean(token),
+    user: currentUserQuery.data ?? null,
+    isLoading: currentUserQuery.isLoading,
+    isAuthenticated: Boolean(sessionToken),
     requireAuth: () => {
-      if (token) return true;
+      if (sessionToken) return true;
       navigate({ to: "/entrar", search: { tab: "login" } });
       return false;
     },

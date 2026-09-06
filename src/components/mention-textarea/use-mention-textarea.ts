@@ -2,7 +2,7 @@ import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 
 
 import { useQuery } from "@tanstack/react-query";
 
-import { type UserSearchResult, usersApi } from "@/lib/api";
+import { type UserSearchResult, userApi } from "@/lib/api";
 import {
   addUnique,
   emptyMentionContext,
@@ -21,13 +21,13 @@ export function useMentionTextarea(
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
 
-  const { data: results = [] } = useQuery({
+  const { data: mentionResults = [] } = useQuery({
     queryKey: ["users", "search", mentionQuery],
-    queryFn: () => usersApi.search(mentionQuery),
+    queryFn: () => userApi.search(mentionQuery),
     enabled: mentionQuery.length >= 2,
   });
 
-  useEffect(() => setSelectedIndex(0), [results.length]);
+  useEffect(() => setSelectedIndex(0), [mentionResults.length]);
 
   const clearMention = () => {
     setMentionQuery(emptyMentionContext.query);
@@ -35,21 +35,25 @@ export function useMentionTextarea(
   };
 
   const handleInput = (event: FormEvent<HTMLTextAreaElement>) => {
-    const element = event.currentTarget;
-    const context = getMentionContext(element.value, element.selectionStart);
-    setMentionQuery(context.query);
-    setMentionIndex(context.index);
-    onChange(element.value, mentionedUserIds);
+    const textarea = event.currentTarget;
+    const mentionContext = getMentionContext(textarea.value, textarea.selectionStart);
+    setMentionQuery(mentionContext.query);
+    setMentionIndex(mentionContext.index);
+    onChange(textarea.value, mentionedUserIds);
   };
 
   const handleSelect = (user: UserSearchResult) => {
     if (mentionIndex === -1) return;
-    const insertion = insertMention(value, { query: mentionQuery, index: mentionIndex }, user.username);
-    const nextIds = addUnique(mentionedUserIds, user.id);
+    const insertion = insertMention(
+      value,
+      { query: mentionQuery, index: mentionIndex },
+      user.username,
+    );
+    const nextMentionedUserIds = addUnique(mentionedUserIds, user.id);
 
     clearMention();
-    setMentionedUserIds(nextIds);
-    onChange(insertion.value, nextIds);
+    setMentionedUserIds(nextMentionedUserIds);
+    onChange(insertion.value, nextMentionedUserIds);
     requestAnimationFrame(() => {
       textareaRef.current?.setSelectionRange(insertion.cursor, insertion.cursor);
       textareaRef.current?.focus();
@@ -57,16 +61,16 @@ export function useMentionTextarea(
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (mentionIndex === -1 || results.length === 0) return;
+    if (mentionIndex === -1 || mentionResults.length === 0) return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       const direction = event.key === "ArrowDown" ? 1 : -1;
-      setSelectedIndex((index) => moveCircularIndex(index, direction, results.length));
+      setSelectedIndex((index) => moveCircularIndex(index, direction, mentionResults.length));
       return;
     }
     if (event.key === "Tab" || event.key === "Enter") {
       event.preventDefault();
-      handleSelect(results[selectedIndex]);
+      handleSelect(mentionResults[selectedIndex]);
       return;
     }
     if (event.key === "Escape") clearMention();
@@ -75,7 +79,7 @@ export function useMentionTextarea(
   return {
     textareaRef,
     mentionQuery,
-    results,
+    mentionResults,
     selectedIndex,
     setSelectedIndex,
     handleInput,

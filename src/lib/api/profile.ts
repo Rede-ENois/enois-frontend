@@ -1,6 +1,6 @@
 import { api } from "../api-client";
 
-export interface UserProfile {
+export interface Profile {
   id: string;
   username: string;
   name: string;
@@ -23,9 +23,7 @@ export interface UserProfile {
   reputation?: number;
 }
 
-export type Profile = UserProfile;
-
-export interface UpdateProfileRequest {
+export interface UpdateProfileInput {
   username?: string;
   name?: string;
   headline?: string | null;
@@ -54,7 +52,7 @@ export interface Experience {
   endDate: string | null;
 }
 
-export interface ExperienceRequest {
+export interface ExperienceInput {
   title: string;
   company: string;
   location?: string | null;
@@ -74,7 +72,7 @@ export interface Education {
   endDate: string | null;
 }
 
-export interface EducationRequest {
+export interface EducationInput {
   school: string;
   degree: string;
   field: string;
@@ -93,7 +91,7 @@ export interface Certification {
   credentialUrl: string | null;
 }
 
-export interface CertificationRequest {
+export interface CertificationInput {
   name: string;
   issuer: string;
   description?: string | null;
@@ -103,34 +101,35 @@ export interface CertificationRequest {
 }
 
 export const profileApi = {
-  me: () => api.get<Profile>("/me"),
+  getCurrent: () => api.get<Profile>("/me"),
 
-  get: (username: string) => api.get<Profile>(`/users/${username}`),
+  getByUsername: (username: string) => api.get<Profile>(`/users/${username}`),
 
-  getById: (id: string) => api.get<Profile>(`/users/by-id/${id}`),
+  getById: (userId: string) => api.get<Profile>(`/users/by-id/${userId}`),
 
-  update: (data: UpdateProfileRequest) => api.patch<Profile>("/me/profile", data),
+  updateCurrent: (input: UpdateProfileInput) => api.patch<Profile>("/me/profile", input),
 
   experiences: {
     list: () => api.get<Experience[]>("/me/experiences"),
-    create: (data: ExperienceRequest) => api.post<Experience>("/me/experiences", data),
-    update: (id: string, data: ExperienceRequest) =>
-      api.put<Experience>(`/me/experiences/${id}`, data),
-    delete: (id: string) => api.delete<void>(`/me/experiences/${id}`),
+    create: (input: ExperienceInput) => api.post<Experience>("/me/experiences", input),
+    update: (experienceId: string, input: ExperienceInput) =>
+      api.put<Experience>(`/me/experiences/${experienceId}`, input),
+    remove: (experienceId: string) => api.delete<void>(`/me/experiences/${experienceId}`),
   },
 
   education: {
     list: () => api.get<Education[]>("/me/education"),
-    create: (data: EducationRequest) => api.post<Education>("/me/education", data),
-    update: (id: string, data: EducationRequest) => api.put<Education>(`/me/education/${id}`, data),
-    delete: (id: string) => api.delete<void>(`/me/education/${id}`),
+    create: (input: EducationInput) => api.post<Education>("/me/education", input),
+    update: (educationId: string, input: EducationInput) =>
+      api.put<Education>(`/me/education/${educationId}`, input),
+    remove: (educationId: string) => api.delete<void>(`/me/education/${educationId}`),
   },
 
   certifications: {
     list: () => api.get<Certification[]>("/me/certifications"),
-    create: (data: CertificationRequest) => api.post<Certification>("/me/certifications", data),
-    update: (id: string, data: CertificationRequest) =>
-      api.put<Certification>(`/me/certifications/${id}`, data),
-    delete: (id: string) => api.delete<void>(`/me/certifications/${id}`),
+    create: (input: CertificationInput) => api.post<Certification>("/me/certifications", input),
+    update: (certificationId: string, input: CertificationInput) =>
+      api.put<Certification>(`/me/certifications/${certificationId}`, input),
+    remove: (certificationId: string) => api.delete<void>(`/me/certifications/${certificationId}`),
   },
 };

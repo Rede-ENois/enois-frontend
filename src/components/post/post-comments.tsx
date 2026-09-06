@@ -13,10 +13,10 @@ type PostCommentsProps = {
   currentUser: Profile | null | undefined;
   comments: CommentView[];
   rootComments: CommentView[];
-  draft: string;
+  commentContent: string;
   onDeleteComment: (commentId: string) => void;
   onReply: (comment: CommentView) => void;
-  onDraftChange: (value: string, mentionedUserIds: string[]) => void;
+  onCommentContentChange: (value: string, mentionedUserIds: string[]) => void;
   onSubmitComment: FormEventHandler<HTMLFormElement>;
 };
 
@@ -24,10 +24,10 @@ export function PostComments({
   currentUser,
   comments,
   rootComments,
-  draft,
+  commentContent,
   onDeleteComment,
   onReply,
-  onDraftChange,
+  onCommentContentChange,
   onSubmitComment,
 }: PostCommentsProps) {
   return (
@@ -74,8 +74,8 @@ export function PostComments({
         />
         <div className="flex flex-1 items-center gap-2 rounded-full border border-border-soft bg-surface-1 py-1.5 pl-4 pr-1.5">
           <MentionTextarea
-            value={draft}
-            onChange={onDraftChange}
+            value={commentContent}
+            onChange={onCommentContentChange}
             placeholder={texts.posts.comments.placeholder}
             className="h-6 min-h-6 flex-1 resize-none border-0 bg-transparent p-0 text-[13px] font-light outline-none"
             maxLength={280}
@@ -84,7 +84,7 @@ export function PostComments({
             type="submit"
             size="icon"
             className="h-7 w-7 shrink-0 rounded-full"
-            disabled={!draft.trim()}
+            disabled={!commentContent.trim()}
             aria-label={texts.posts.comments.send}
           >
             <Send className="h-3.5 w-3.5" />

@@ -1,5 +1,5 @@
 import { api } from "../api-client";
-import { getImageKitAuth } from "./imagekit-auth.fn";
+import { getImageKitAuth } from "./imagekit-auth";
 
 export interface MediaUploadResponse {
   id: string;
@@ -35,12 +35,12 @@ export function resolveCdnUrl(url: string | null | undefined): string | undefine
 }
 
 export const mediaApi = {
-  requestUpload: (data: { fileName: string; mimeType: string; size: number; purpose: string }) =>
-    api.post<MediaUploadResponse>("/media/uploads", data),
+  requestUpload: (input: { fileName: string; mimeType: string; size: number; purpose: string }) =>
+    api.post<MediaUploadResponse>("/media/uploads", input),
 
-  get: (mediaId: string) => api.get<MediaAsset>(`/media/${mediaId}`),
+  getById: (mediaId: string) => api.get<MediaAsset>(`/media/${mediaId}`),
 
-  delete: (mediaId: string) => api.delete<{ id: string; status: string }>(`/media/${mediaId}`),
+  remove: (mediaId: string) => api.delete<{ id: string; status: string }>(`/media/${mediaId}`),
 
   uploadToImageKit: async (cdnUrl: string, file: File) => {
     const absoluteUrl = resolveCdnUrl(cdnUrl) ?? cdnUrl;

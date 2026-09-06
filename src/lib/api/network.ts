@@ -36,32 +36,32 @@ export interface ConnectionStatus {
   status: string;
 }
 
-export interface ConnectionStatusResult {
+export interface ConnectionStatusDetails {
   targetUserId: string;
   status: "NONE" | "PENDING" | "ACCEPTED" | "REMOVED" | "BLOCKED";
 }
 
 export const networkApi = {
-  list: (query?: string, cursor?: string | null, limit = 20) =>
+  listUsers: (query?: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<NetworkUser>>(`/network/users${buildQuery({ query, cursor, limit })}`),
 
-  suggestions: (limit = 4) =>
+  listSuggestions: (limit = 4) =>
     api.get<NetworkUser[]>(`/network/suggestions${buildQuery({ limit })}`),
 
-  summary: () => api.get<NetworkSummary>("/network/summary"),
+  getSummary: () => api.get<NetworkSummary>("/network/summary"),
 
-  requests: (cursor?: string | null, limit = 20) =>
+  listRequests: (cursor?: string | null, limit = 20) =>
     api.get<PageResponse<ConnectionRequest>>(`/network/requests${buildQuery({ cursor, limit })}`),
 
-  connect: (targetUserId: string) =>
+  sendConnectionRequest: (targetUserId: string) =>
     api.post<ConnectionStatus>(`/network/connections/${targetUserId}`),
 
-  accept: (targetUserId: string) =>
+  acceptConnectionRequest: (targetUserId: string) =>
     api.put<ConnectionStatus>(`/network/connections/${targetUserId}/accept`),
 
-  remove: (targetUserId: string) =>
+  removeConnection: (targetUserId: string) =>
     api.delete<ConnectionStatus>(`/network/connections/${targetUserId}`),
 
-  status: (targetUserId: string) =>
-    api.get<ConnectionStatusResult>(`/network/connections/${targetUserId}/status`),
+  getConnectionStatus: (targetUserId: string) =>
+    api.get<ConnectionStatusDetails>(`/network/connections/${targetUserId}/status`),
 };

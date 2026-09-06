@@ -1,33 +1,35 @@
 import { ProfileSubForm } from "./profile-sub-form";
 import { ProfileSubItems } from "./profile-sub-items";
-import type { ProfileSubListProps } from "./profile-sub-list.types";
+import type { ProfileSubListProps } from "./profile-sub-list-types";
 import { useProfileSubList } from "./use-profile-sub-list";
 
-export function ProfileSubList<T extends { id: string }, TData extends object>(props: ProfileSubListProps<T, TData>) {
-  const state = useProfileSubList(props);
+export function ProfileSubList<T extends { id: string }, TInput extends object>(
+  props: ProfileSubListProps<T, TInput>,
+) {
+  const listState = useProfileSubList(props);
 
   return (
     <div className="space-y-4">
-      {state.editingId !== null ? (
+      {listState.editingId !== null ? (
         <ProfileSubForm
           fields={props.fields}
-          form={state.form}
+          formValues={listState.formValues}
           currentlyHereKey={props.currentlyHereKey}
-          currentlyHere={state.currentlyHere}
-          pending={state.isPending}
-          onFieldChange={state.setField}
-          onCurrentlyHereChange={state.setCurrentlyHere}
-          onSubmit={state.submit}
-          onCancel={state.reset}
+          isCurrentlyHere={listState.isCurrentlyHere}
+          isPending={listState.isPending}
+          onFieldChange={listState.setField}
+          onCurrentlyHereChange={listState.setIsCurrentlyHere}
+          onSubmit={listState.handleSubmit}
+          onCancel={listState.resetForm}
         />
       ) : (
         <ProfileSubItems
           items={props.items}
           fields={props.fields}
           emptyMessage={props.emptyMessage}
-          onEdit={state.startEdit}
-          onDelete={state.remove}
-          onAdd={state.startCreate}
+          onEdit={listState.handleEdit}
+          onDelete={listState.removeItem}
+          onAdd={listState.handleCreate}
         />
       )}
     </div>

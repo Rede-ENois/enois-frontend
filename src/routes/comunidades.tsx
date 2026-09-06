@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-router";
 
-import { communitiesApi } from "@/lib/api";
+import { communityApi } from "@/lib/api";
 import type { Community } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
@@ -20,72 +20,82 @@ import { CreateCommunityDialog } from "@/components/community/list/create-commun
 export const Route = createFileRoute("/comunidades")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.communities.seoTitle }] }),
-  component: CommunitiesRoute,
+  component: CommunitiesPage,
 });
 
-function CommunitiesRoute() {
+function CommunitiesPage() {
   const queryClient = useQueryClient();
   const matchRoute = useMatchRoute();
-  const [topic, setTopic] = useState<string | undefined>();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<string | undefined>();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>();
-  const [allItems, setAllItems] = useState<Community[]>([]);
+  const [loadedCommunities, setLoadedCommunities] = useState<Community[]>([]);
   const cursorRef = useRef(cursor);
   cursorRef.current = cursor;
-  const isDetail = Boolean(matchRoute({ to: "/comunidades/$communityId" }));
+  const isDetailRoute = Boolean(matchRoute({ to: "/comunidades/$communityId" }));
 
   const { data: communitiesData, isFetching } = useQuery({
-    queryKey: ["communities", topic, cursor],
-    queryFn: () => communitiesApi.list(topic, cursor),
-    enabled: !isDetail,
+    queryKey: ["communities", selectedTopic, cursor],
+    queryFn: () => communityApi.list(selectedTopic, cursor),
+    enabled: !isDetailRoute,
   });
 
   const nextCursor = communitiesData?.nextCursor ?? null;
 
   useEffect(() => {
-    const page = communitiesData?.items;
-    if (!page) return;
-    setAllItems((current) =>
-      mergeUniquePage(current, page, !cursorRef.current, (community) => community.id),
+    const pageItems = communitiesData?.items;
+    if (!pageItems) return;
+    setLoadedCommunities((currentCommunities) =>
+      mergeUniquePage(
+        currentCommunities,
+        pageItems,
+        !cursorRef.current,
+        (community) => community.id,
+      ),
     );
   }, [communitiesData]);
 
   const handleTopicChange = (nextTopic?: CommunityTopic) => {
-    setTopic(nextTopic);
+    setSelectedTopic(nextTopic);
     setCursor(undefined);
-    setAllItems([]);
+    setLoadedCommunities([]);
   };
 
-  const join = useMutation({
-    mutationFn: (id: string) => communitiesApi.join(id),
+  const joinCommunityMutation = useMutation({
+    mutationFn: (communityId: string) => communityApi.join(communityId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["communities"] }),
   });
 
-  const leave = useMutation({
-    mutationFn: (id: string) => communitiesApi.leave(id),
+  const leaveCommunityMutation = useMutation({
+    mutationFn: (communityId: string) => communityApi.leave(communityId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["communities"] }),
   });
 
-  if (isDetail) return <Outlet />;
+  if (isDetailRoute) return <Outlet />;
+
+  const isMembershipPending = joinCommunityMutation.isPending || leaveCommunityMutation.isPending;
 
   return (
     <AppContainer>
       <div className="space-y-6">
         <CommunitiesHeader
           createDialog={
-            <CreateCommunityDialog open={createOpen} onOpenChange={setCreateOpen} />
+            <CreateCommunityDialog
+              isOpen={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+            />
           }
         />
-        <CommunityTopicFilters selected={topic} onChange={handleTopicChange} />
+        <CommunityTopicFilters selectedTopic={selectedTopic} onChange={handleTopicChange} />
         <CommunitiesGrid
-          communities={allItems}
-          pending={join.isPending || leave.isPending}
-          onJoin={join.mutate}
-          onLeave={leave.mutate}
+          communities={loadedCommunities}
+          isPending={isMembershipPending}
+          onJoin={joinCommunityMutation.mutate}
+          onLeave={leaveCommunityMutation.mutate}
         />
         <CommunitiesLoadMore
-          visible={Boolean(nextCursor)}
-          loading={isFetching}
+          isVisible={Boolean(nextCursor)}
+          isLoading={isFetching}
           onLoadMore={() => {
             if (!isFetching && nextCursor) setCursor(nextCursor);
           }}

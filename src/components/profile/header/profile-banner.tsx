@@ -6,12 +6,19 @@ import type { Profile } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
 
-export function ProfileBanner({ user, editable, uploading, onSelect }: {
+type ProfileBannerProps = {
   user: Profile;
-  editable: boolean;
-  uploading: boolean;
+  isEditable: boolean;
+  isUploading: boolean;
   onSelect: ChangeEventHandler<HTMLInputElement>;
-}) {
+};
+
+export function ProfileBanner({
+  user,
+  isEditable,
+  isUploading,
+  onSelect,
+}: ProfileBannerProps) {
   return (
     <div className="group relative">
       {user.banner ? (
@@ -19,10 +26,10 @@ export function ProfileBanner({ user, editable, uploading, onSelect }: {
       ) : (
         <div className="h-40 w-full sm:h-52" style={{ background: "var(--gradient-primary)" }} />
       )}
-      {editable && (
+      {isEditable && (
         <>
-          <label htmlFor="profile-banner-upload" className={`absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 text-white opacity-0 transition group-hover:opacity-100 ${uploading ? "pointer-events-none" : ""}`}>
-            {uploading ? texts.common.sending : <Camera className="h-6 w-6" />}
+          <label htmlFor="profile-banner-upload" className={`absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 text-white opacity-0 transition group-hover:opacity-100 ${isUploading ? "pointer-events-none" : ""}`}>
+            {isUploading ? texts.common.sending : <Camera className="h-6 w-6" />}
           </label>
           <input id="profile-banner-upload" type="file" accept="image/*" className="hidden" onChange={onSelect} />
         </>

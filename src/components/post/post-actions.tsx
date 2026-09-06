@@ -4,21 +4,33 @@ import { PostEngagementActions } from "./post-engagement-actions";
 import { PostReactionAction } from "./post-reaction-action";
 import { PostSaveAction } from "./post-save-action";
 
-export function PostActions({ counters, reactionStatus, saved, onReaction, onOpenReactions, onToggleComments, onShare, onReport, onSave }: {
+type PostActionsProps = {
   counters: PostView["counters"];
-  reactionStatus: string | null;
-  saved: boolean;
+  currentReaction: string | null;
+  isSaved: boolean;
   onReaction: (type: ReactionType) => void;
   onOpenReactions: () => void;
   onToggleComments: () => void;
   onShare: () => void;
   onReport: () => void;
   onSave: () => void;
-}) {
+};
+
+export function PostActions({
+  counters,
+  currentReaction,
+  isSaved,
+  onReaction,
+  onOpenReactions,
+  onToggleComments,
+  onShare,
+  onReport,
+  onSave,
+}: PostActionsProps) {
   return (
     <footer className="mt-4 flex flex-wrap items-center justify-between gap-1 border-t border-border pt-3 text-sm text-muted-foreground">
       <div className="flex">
-        <PostReactionAction reactionStatus={reactionStatus} onReaction={onReaction} />
+        <PostReactionAction currentReaction={currentReaction} onReaction={onReaction} />
         <PostEngagementActions
           counters={counters}
           onOpenReactions={onOpenReactions}
@@ -27,7 +39,7 @@ export function PostActions({ counters, reactionStatus, saved, onReaction, onOpe
           onReport={onReport}
         />
       </div>
-      <PostSaveAction saved={saved} saves={counters.saves} onSave={onSave} />
+      <PostSaveAction isSaved={isSaved} saves={counters.saves} onSave={onSave} />
     </footer>
   );
 }

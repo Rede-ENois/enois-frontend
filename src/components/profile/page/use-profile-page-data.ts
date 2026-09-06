@@ -5,25 +5,25 @@ import {
   networkApi,
   profileApi,
   rankingApi,
-  recommendationsApi,
+  recommendationApi,
   type Profile,
 } from "@/lib/api";
 import { useAuth } from "@/lib/use-auth";
 
 export function useProfilePageData(loaderUser: Profile) {
-  const { user: me } = useAuth();
+  const { user: currentUser } = useAuth();
   const { data: liveProfile } = useQuery({
     queryKey: ["profile", loaderUser.username],
-    queryFn: () => profileApi.get(loaderUser.username),
+    queryFn: () => profileApi.getByUsername(loaderUser.username),
     initialData: loaderUser,
   });
   const user = liveProfile ?? loaderUser;
-  const isOwnProfile = me?.id === user.id;
+  const isOwnProfile = currentUser?.id === user.id;
 
-  const { data: connectionData } = useQuery({
+  const { data: connectionStatusData } = useQuery({
     queryKey: ["connection-status", user.id],
-    queryFn: () => networkApi.status(user.id),
-    enabled: !isOwnProfile && Boolean(me),
+    queryFn: () => networkApi.getConnectionStatus(user.id),
+    enabled: !isOwnProfile && Boolean(currentUser),
   });
   const { data: feedData } = useQuery({
     queryKey: ["feed", "user", user.id],
@@ -35,7 +35,7 @@ export function useProfilePageData(loaderUser: Profile) {
   });
   const { data: recommendationsData } = useQuery({
     queryKey: ["recommendations", user.id],
-    queryFn: () => recommendationsApi.listReceived(user.id),
+    queryFn: () => recommendationApi.listReceived(user.id),
   });
 
   const recommendations = recommendationsData ?? [];
@@ -46,7 +46,7 @@ export function useProfilePageData(loaderUser: Profile) {
       staleTime: 60_000,
     })),
   });
-  const recommenders = recommendations.reduce<Record<string, Profile>>(
+  const recommenderByUserId = recommendations.reduce<Record<string, Profile>>(
     (profiles, recommendation, index) => {
       const recommender = recommenderQueries[index]?.data;
       if (recommender) profiles[recommendation.recommenderId] = recommender;
@@ -58,10 +58,10 @@ export function useProfilePageData(loaderUser: Profile) {
   return {
     user,
     isOwnProfile,
-    connectionStatus: connectionData?.status ?? null,
+    connectionStatus: connectionStatusData?.status ?? null,
     posts: feedData?.items ?? [],
     ranking: rankingData ?? [],
     recommendations,
-    recommenders,
+    recommenderByUserId,
   };
 }

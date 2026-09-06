@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
 import { ApiError, profileApi } from "@/lib/api";
-import type { Profile } from "@/lib/api";
+import type { Profile, UpdateProfileInput } from "@/lib/api";
 import { texts } from "@/texts";
 import { buildProfileUpdate } from "@/utils/profile";
 
@@ -34,16 +34,16 @@ export function useEditProfileInfo(profile: Profile, onSaved: () => void) {
   const [usernameError, setUsernameError] = useState("");
   const [values, setValues] = useState<EditProfileInfoValues>(() => getInitialValues(profile));
 
-  const updateProfile = useMutation({
-    mutationFn: (data: Parameters<typeof profileApi.update>[0]) => profileApi.update(data),
-    onSuccess: (updated) => {
+  const updateProfileMutation = useMutation({
+    mutationFn: (input: UpdateProfileInput) => profileApi.updateCurrent(input),
+    onSuccess: (updatedProfile) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", profile.username] });
-      if (updated.username && updated.username !== profile.username) {
-        queryClient.invalidateQueries({ queryKey: ["profile", updated.username] });
+      if (updatedProfile.username && updatedProfile.username !== profile.username) {
+        queryClient.invalidateQueries({ queryKey: ["profile", updatedProfile.username] });
         router.navigate({
           to: "/perfil/$username",
-          params: { username: updated.username },
+          params: { username: updatedProfile.username },
           replace: true,
         });
       }
@@ -56,15 +56,24 @@ export function useEditProfileInfo(profile: Profile, onSaved: () => void) {
     },
   });
 
-  const onChange = <K extends keyof EditProfileInfoValues>(field: K, value: EditProfileInfoValues[K]) => {
-    setValues((current) => ({ ...current, [field]: value }));
+  const handleChange = <K extends keyof EditProfileInfoValues>(
+    field: K,
+    value: EditProfileInfoValues[K],
+  ) => {
+    setValues((currentValues) => ({ ...currentValues, [field]: value }));
     if (field === "username") setUsernameError("");
   };
 
-  const save = async () => {
+  const handleSave = async () => {
     setUsernameError("");
-    await updateProfile.mutateAsync(buildProfileUpdate(profile, values));
+    await updateProfileMutation.mutateAsync(buildProfileUpdate(profile, values));
   };
 
-  return { values, usernameError, onChange, save, saving: updateProfile.isPending };
+  return {
+    values,
+    usernameError,
+    handleChange,
+    handleSave,
+    isSaving: updateProfileMutation.isPending,
+  };
 }

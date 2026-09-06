@@ -12,12 +12,17 @@ import { UserAvatar } from "@/components/user-avatar";
 import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
 import { GlobalSearch } from "./global-search/global-search";
-import { NotificationsPopover } from "./notifications/notifications-popover";
+import { NotificationsPopover } from "./notification/notifications-popover";
 
-type AuthenticatedAppHeaderProps = { onOpenMobileMenu: () => void };
+type AuthenticatedAppHeaderProps = {
+  onOpenMobileMenu: () => void;
+};
 
 export function AuthenticatedAppHeader({ onOpenMobileMenu }: AuthenticatedAppHeaderProps) {
-  const { data: profile } = useQuery({ queryKey: ["me"], queryFn: () => profileApi.me() });
+  const { data: profile } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => profileApi.getCurrent(),
+  });
 
   return (
     <AppHeaderLayout>

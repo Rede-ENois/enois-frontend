@@ -6,17 +6,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 
 import { useReactionsDialog } from "./use-reactions-dialog";
 
-export function ReactionsDialog({ postId, currentUserReaction, currentUserId, open, onOpenChange }: {
+type ReactionsDialogProps = {
   postId: string;
   currentUserReaction: string | null;
   currentUserId?: string;
-  open: boolean;
-  onOpenChange: (value: boolean) => void;
-}) {
-  const { reactions, users } = useReactionsDialog({ postId, currentUserReaction, currentUserId, open });
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+};
+
+export function ReactionsDialog({
+  postId,
+  currentUserReaction,
+  currentUserId,
+  isOpen,
+  onOpenChange,
+}: ReactionsDialogProps) {
+  const { reactions, userById } = useReactionsDialog({
+    postId,
+    currentUserReaction,
+    currentUserId,
+    isOpen,
+  });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-light">{texts.posts.reactions.title}</DialogTitle>
@@ -26,7 +39,7 @@ export function ReactionsDialog({ postId, currentUserReaction, currentUserId, op
         ) : (
           <div className="space-y-2 pt-2">
             {reactions.map((reaction) => {
-              const user = users?.[reaction.userId];
+              const user = userById?.[reaction.userId];
               return (
                 <div key={`${reaction.userId}-${reaction.type}`} className="flex items-center gap-3 rounded-xl bg-surface-1 p-3">
                   <UserAvatar src={user?.avatar} alt={user?.name} className="h-9 w-9 shrink-0" />

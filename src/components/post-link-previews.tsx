@@ -4,14 +4,26 @@ import {
   getUrlMetadata,
 } from "@/utils/video";
 
-import { EmbedPlayer } from "@/components/post-link-previews/embed-player";
+import { VideoEmbedPlayer } from "@/components/post-link-previews/video-embed-player";
 
-export function PostLinkPreviews({ content }: { content: string }) {
+type PostLinkPreviewsProps = {
+  content: string;
+};
+
+export function PostLinkPreviews({ content }: PostLinkPreviewsProps) {
   return (
     <>
       {extractUniqueUrls(content).map((url) => {
         const video = extractVideoReference(url);
-        if (video) return <EmbedPlayer key={url} type={video.type} id={video.id} />;
+        if (video) {
+          return (
+            <VideoEmbedPlayer
+              key={url}
+              provider={video.type}
+              videoId={video.id}
+            />
+          );
+        }
 
         const metadata = getUrlMetadata(url);
         return (

@@ -1,66 +1,81 @@
 export { authApi } from "./auth";
-export type { SignupInput, LoginInput, AuthUser, AuthResponse } from "./auth";
+export type { SignUpInput, SignInInput, AuthUser, AuthResponse } from "./auth";
 
 export { profileApi } from "./profile";
 export type {
   Profile,
-  UpdateProfileRequest,
+  UpdateProfileInput,
   Experience,
+  ExperienceInput,
   Education,
+  EducationInput,
   Certification,
+  CertificationInput,
 } from "./profile";
 
 export { feedApi } from "./feed";
 export type { PostView, CreatePostInput, PageResponse, ReactionUser } from "./feed";
 
-export { commentsApi } from "./comments";
-export type { CommentView } from "./comments";
+export { commentApi } from "./comment";
+export type { CommentView } from "./comment";
 
-export { reactionsApi, REACTION_EMOJIS } from "./reactions";
+export { reactionApi, REACTION_EMOJIS } from "./reaction";
 export type {
   ActionResponse,
   ReactionType,
   ReactionItem,
   ReactionsListResponse,
-} from "./reactions";
+} from "./reaction";
 
 export { networkApi } from "./network";
-export type { NetworkUser, NetworkSummary, ConnectionRequest, ConnectionStatus } from "./network";
+export type {
+  NetworkUser,
+  NetworkSummary,
+  ConnectionRequest,
+  ConnectionStatus,
+  ConnectionStatusDetails,
+} from "./network";
 
 export { mediaApi } from "./media";
 export type { MediaUploadResponse, MediaAsset } from "./media";
 
-export { communitiesApi } from "./communities";
-export type { Community, CreateCommunityInput, CommunityMember } from "./communities";
+export { communityApi } from "./community";
+export type { Community, CreateCommunityInput, CommunityMember } from "./community";
 
-export { jobsApi } from "./jobs";
-export type { Job } from "./jobs";
+export { jobApi } from "./job";
+export type { Job, ListJobsOptions } from "./job";
 
-export { eventsApi } from "./events";
-export type { Event } from "./events";
+export { eventApi } from "./event";
+export type { Event, CreateEventInput } from "./event";
 
-export { mentorsApi } from "./mentors";
-export type { Mentor, TimeSlot, UpdateMentorInput } from "./mentors";
+export { mentorApi } from "./mentor";
+export type {
+  Mentor,
+  TimeSlot,
+  CreateMentorInput,
+  UpdateMentorInput,
+  CreateTimeSlotInput,
+} from "./mentor";
 
-export { messagesApi } from "./messages";
-export type { Conversation, Message, CreateConversationInput } from "./messages";
+export { messageApi } from "./message";
+export type { Conversation, Message, CreateConversationInput } from "./message";
 
-export { notificationsApi } from "./notifications";
-export type { Notification } from "./notifications";
+export { notificationApi } from "./notification";
+export type { Notification } from "./notification";
 
 export { searchApi } from "./search";
 export type { SearchResult, SearchResponse } from "./search";
 
-export { reportsApi, REPORT_REASONS } from "./reports";
-export type { ReportReason, ReportInput } from "./reports";
+export { reportApi, REPORT_REASONS } from "./report";
+export type { ReportReason, ReportInput } from "./report";
 
 export { rankingApi } from "./ranking";
 export type { RankingUser } from "./ranking";
 
-export { usersApi } from "./users";
-export type { UserSearchResult } from "./users";
+export { userApi } from "./user";
+export type { UserSearchResult } from "./user";
 
-export { recommendationsApi } from "./recommendations";
-export type { Recommendation } from "./recommendations";
+export { recommendationApi } from "./recommendation";
+export type { Recommendation, CreateRecommendationInput } from "./recommendation";
 
 export { api, ApiError, buildQuery, getSessionToken } from "../api-client";

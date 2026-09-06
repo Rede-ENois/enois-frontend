@@ -1,8 +1,8 @@
-export function humanizeEnum(value: string): string {
+export function formatEnumValue(value: string): string {
   return value.replace(/_/g, " ").toLowerCase();
 }
 
-export function humanizeEnumLabel(value: string): string {
-  const humanized = humanizeEnum(value);
-  return humanized.charAt(0).toUpperCase() + humanized.slice(1);
+export function formatEnumLabel(value: string): string {
+  const formattedValue = formatEnumValue(value);
+  return formattedValue.charAt(0).toUpperCase() + formattedValue.slice(1);
 }

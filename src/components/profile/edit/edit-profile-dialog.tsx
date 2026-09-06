@@ -6,26 +6,31 @@ import { EditProfileShell, type EditProfileTab } from "./edit-profile-shell";
 import { EditProfileTabContent } from "./edit-profile-tab-content";
 import { useEditProfileInfo } from "./use-edit-profile-info";
 
-export function EditProfileDialog({ profile, children }: { profile: Profile; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+type EditProfileDialogProps = {
+  profile: Profile;
+  children: React.ReactNode;
+};
+
+export function EditProfileDialog({ profile, children }: EditProfileDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [tab, setTab] = useState<EditProfileTab>("info");
-  const info = useEditProfileInfo(profile, () => setOpen(false));
+  const profileInfo = useEditProfileInfo(profile, () => setIsOpen(false));
 
   return (
     <EditProfileShell
-      open={open}
+      isOpen={isOpen}
       trigger={children}
       tab={tab}
-      saving={info.saving}
-      onOpenChange={setOpen}
+      isSaving={profileInfo.isSaving}
+      onOpenChange={setIsOpen}
       onTabChange={setTab}
-      onSave={info.save}
+      onSave={profileInfo.handleSave}
     >
       <EditProfileTabContent
         tab={tab}
-        values={info.values}
-        usernameError={info.usernameError}
-        onChange={info.onChange}
+        values={profileInfo.values}
+        usernameError={profileInfo.usernameError}
+        onChange={profileInfo.handleChange}
       />
     </EditProfileShell>
   );

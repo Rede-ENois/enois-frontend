@@ -8,33 +8,46 @@ import { EditCommunityCropDialog } from "./edit-community-crop-dialog";
 import { EditCommunityDetailsFields } from "./edit-community-details-fields";
 import { useEditCommunityForm } from "./use-edit-community-form";
 
-export function EditCommunityForm({ community, onClose }: { community: Community; onClose: () => void }) {
-  const state = useEditCommunityForm(community, onClose);
+type EditCommunityFormProps = {
+  community: Community;
+  onClose: () => void;
+};
+
+export function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
+  const formState = useEditCommunityForm(community, onClose);
 
   return (
     <div className="space-y-4 pt-2">
       <EditCommunityDetailsFields
-        name={state.name}
-        description={state.description}
-        onNameChange={state.setName}
-        onDescriptionChange={state.setDescription}
+        name={formState.name}
+        description={formState.description}
+        onNameChange={formState.setName}
+        onDescriptionChange={formState.setDescription}
       />
       <EditCommunityCoverField
-        cover={state.cover}
-        inputRef={state.coverRef}
-        onSelect={state.handleFileSelect("COVER")}
-        onRemove={() => state.setCover("")}
+        cover={formState.cover}
+        inputRef={formState.coverInputRef}
+        onSelect={formState.handleFileSelect("COVER")}
+        onRemove={() => formState.setCover("")}
       />
       <EditCommunityAvatarField
-        avatar={state.avatar}
-        inputRef={state.avatarRef}
-        onSelect={state.handleFileSelect("AVATAR")}
-        onRemove={() => state.setAvatar("")}
+        avatar={formState.avatar}
+        inputRef={formState.avatarInputRef}
+        onSelect={formState.handleFileSelect("AVATAR")}
+        onRemove={() => formState.setAvatar("")}
       />
-      <Button className="w-full rounded-full" disabled={!state.name.trim() || state.saving} onClick={() => state.save()}>
-        {state.saving ? texts.common.saving : texts.common.save}
+      <Button
+        className="w-full rounded-full"
+        disabled={!formState.name.trim() || formState.isSaving}
+        onClick={() => formState.save()}
+      >
+        {formState.isSaving ? texts.common.saving : texts.common.save}
       </Button>
-      <EditCommunityCropDialog crop={state.crop} onClose={state.resetCrop} onComplete={state.handleCropComplete} />
+      <EditCommunityCropDialog
+        crop={formState.crop}
+        onClose={formState.resetCrop}
+        onComplete={formState.handleCropComplete}
+      />
     </div>
   );
 }

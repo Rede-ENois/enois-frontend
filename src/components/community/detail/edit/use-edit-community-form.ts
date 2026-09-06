@@ -2,7 +2,7 @@ import { type ChangeEvent, useRef, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { communitiesApi, type Community } from "@/lib/api";
+import { communityApi, type Community } from "@/lib/api";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
 import { buildCommunityUpdate, type CommunityCropPurpose } from "@/utils/community";
@@ -16,8 +16,8 @@ export function useEditCommunityForm(community: Community, onClose: () => void) 
   const [avatar, setAvatar] = useState(community.avatar ?? "");
   const coverUpload = useMediaUpload();
   const avatarUpload = useMediaUpload();
-  const coverRef = useRef<HTMLInputElement>(null);
-  const avatarRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [cropPurpose, setCropPurpose] = useState<CommunityCropPurpose | null>(null);
 
@@ -34,21 +34,25 @@ export function useEditCommunityForm(community: Community, onClose: () => void) 
 
   const handleCropComplete = async (blob: Blob) => {
     if (!cropPurpose) return;
-    const config = cropConfig[cropPurpose];
-    const result = await config.upload.upload(new File([blob], "crop.jpg", { type: "image/jpeg" }), cropPurpose);
-    config.setValue(result.cdnUrl);
+    const activeCropConfig = cropConfig[cropPurpose];
+    const uploadResult = await activeCropConfig.upload.upload(
+      new File([blob], "crop.jpg", { type: "image/jpeg" }),
+      cropPurpose,
+    );
+    activeCropConfig.setValue(uploadResult.cdnUrl);
     resetCrop();
   };
 
-  const handleFileSelect = (purpose: CommunityCropPurpose) => (event: ChangeEvent<HTMLInputElement>) => {
-    const file = getFirstFile(event);
-    if (!file) return;
-    setCropPurpose(purpose);
-    setCropImageSrc(createObjectUrl(file));
-  };
+  const handleFileSelect = (purpose: CommunityCropPurpose) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = getFirstFile(event);
+      if (!file) return;
+      setCropPurpose(purpose);
+      setCropImageSrc(createObjectUrl(file));
+    };
 
-  const update = useMutation({
-    mutationFn: () => communitiesApi.update(
+  const updateCommunityMutation = useMutation({
+    mutationFn: () => communityApi.update(
       community.id,
       buildCommunityUpdate(community, { name, description, cover, avatar }),
     ),
@@ -58,14 +62,29 @@ export function useEditCommunityForm(community: Community, onClose: () => void) 
     },
   });
 
-  const activeCrop = cropPurpose ? cropConfig[cropPurpose] : null;
+  const activeCropConfig = cropPurpose ? cropConfig[cropPurpose] : null;
 
   return {
-    name, setName, description, setDescription, cover, setCover, avatar, setAvatar,
-    coverRef, avatarRef, handleFileSelect,
-    saving: update.isPending,
-    save: update.mutate,
-    crop: cropImageSrc && activeCrop ? { imageSrc: cropImageSrc, aspect: activeCrop.aspect, title: activeCrop.title } : null,
+    name,
+    setName,
+    description,
+    setDescription,
+    cover,
+    setCover,
+    avatar,
+    setAvatar,
+    coverInputRef,
+    avatarInputRef,
+    handleFileSelect,
+    isSaving: updateCommunityMutation.isPending,
+    save: updateCommunityMutation.mutate,
+    crop: cropImageSrc && activeCropConfig
+      ? {
+          imageSrc: cropImageSrc,
+          aspect: activeCropConfig.aspect,
+          title: activeCropConfig.title,
+        }
+      : null,
     resetCrop,
     handleCropComplete,
   };

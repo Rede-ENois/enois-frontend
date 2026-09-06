@@ -18,27 +18,28 @@ export function MentionTextarea({
   maxLength,
   rows,
 }: MentionTextareaProps) {
-  const mention = useMentionTextarea(value, onChange);
-  const showSuggestions = mention.mentionQuery.length >= 2 && mention.results.length > 0;
+  const mentionState = useMentionTextarea(value, onChange);
+  const hasSuggestions =
+    mentionState.mentionQuery.length >= 2 && mentionState.mentionResults.length > 0;
 
   return (
     <div className="relative min-w-0 flex-1">
       <textarea
-        ref={mention.textareaRef}
+        ref={mentionState.textareaRef}
         value={value}
-        onInput={mention.handleInput}
-        onKeyDown={mention.handleKeyDown}
+        onInput={mentionState.handleInput}
+        onKeyDown={mentionState.handleKeyDown}
         placeholder={placeholder}
         className={`w-full resize-none ${className}`}
         maxLength={maxLength}
         rows={rows}
       />
-      {showSuggestions && (
+      {hasSuggestions && (
         <MentionSuggestions
-          results={mention.results}
-          selectedIndex={mention.selectedIndex}
-          onSelect={mention.handleSelect}
-          onHover={mention.setSelectedIndex}
+          results={mentionState.mentionResults}
+          selectedIndex={mentionState.selectedIndex}
+          onSelect={mentionState.handleSelect}
+          onHover={mentionState.setSelectedIndex}
         />
       )}
     </div>

@@ -2,58 +2,90 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { ProfileSubListProps } from "./profile-sub-list.types";
+import type { ProfileSubListProps } from "./profile-sub-list-types";
 
-export function useProfileSubList<T extends { id: string }, TData extends object>(props: ProfileSubListProps<T, TData>) {
+export function useProfileSubList<T extends { id: string }, TInput extends object>(
+  props: ProfileSubListProps<T, TInput>,
+) {
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<Record<string, string>>({ ...props.newItem });
-  const [currentlyHere, setCurrentlyHere] = useState(false);
+  const [formValues, setFormValues] = useState<Record<string, string>>({ ...props.newItem });
+  const [isCurrentlyHere, setIsCurrentlyHere] = useState(false);
 
-  const reset = () => {
+  const resetForm = () => {
     setEditingId(null);
-    setForm({ ...props.newItem });
-    setCurrentlyHere(false);
+    setFormValues({ ...props.newItem });
+    setIsCurrentlyHere(false);
   };
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: props.queryKey });
-  const create = useMutation({ mutationFn: (data: TData) => props.createApi(data), onSuccess: () => { invalidate(); reset(); } });
-  const update = useMutation({ mutationFn: ({ id, data }: { id: string; data: TData }) => props.updateApi(id, data), onSuccess: () => { invalidate(); reset(); } });
-  const remove = useMutation({ mutationFn: (id: string) => props.deleteApi(id), onSuccess: invalidate });
+  const invalidateList = () => queryClient.invalidateQueries({ queryKey: props.queryKey });
 
-  const startEdit = (item: T) => {
+  const createItemMutation = useMutation({
+    mutationFn: (input: TInput) => props.createApi(input),
+    onSuccess: () => {
+      invalidateList();
+      resetForm();
+    },
+  });
+  const updateItemMutation = useMutation({
+    mutationFn: ({ itemId, input }: { itemId: string; input: TInput }) =>
+      props.updateApi(itemId, input),
+    onSuccess: () => {
+      invalidateList();
+      resetForm();
+    },
+  });
+  const removeItemMutation = useMutation({
+    mutationFn: (itemId: string) => props.removeApi(itemId),
+    onSuccess: invalidateList,
+  });
+
+  const handleEdit = (item: T) => {
     setEditingId(item.id);
-    setForm(Object.fromEntries(props.fields.map((field) => [field.key, String((item as Record<string, unknown>)[field.key] ?? "")])));
-    if (props.currentlyHereKey) setCurrentlyHere(Boolean((item as Record<string, unknown>)[props.currentlyHereKey]));
-  };
-
-  const startCreate = () => {
-    setEditingId("__new__");
-    setForm({ ...props.newItem });
-    setCurrentlyHere(false);
-  };
-
-  const submit = async () => {
-    const data: Record<string, unknown> = { ...form };
+    setFormValues(
+      Object.fromEntries(
+        props.fields.map((field) => [
+          field.key,
+          String((item as Record<string, unknown>)[field.key] ?? ""),
+        ]),
+      ),
+    );
     if (props.currentlyHereKey) {
-      data[props.currentlyHereKey] = currentlyHere;
-      if (currentlyHere) data.endDate = null;
+      setIsCurrentlyHere(Boolean((item as Record<string, unknown>)[props.currentlyHereKey]));
     }
-    const typedData = data as TData;
-    if (editingId && editingId !== "__new__") await update.mutateAsync({ id: editingId, data: typedData });
-    else await create.mutateAsync(typedData);
+  };
+
+  const handleCreate = () => {
+    setEditingId("__new__");
+    setFormValues({ ...props.newItem });
+    setIsCurrentlyHere(false);
+  };
+
+  const handleSubmit = async () => {
+    const inputValues: Record<string, unknown> = { ...formValues };
+    if (props.currentlyHereKey) {
+      inputValues[props.currentlyHereKey] = isCurrentlyHere;
+      if (isCurrentlyHere) inputValues.endDate = null;
+    }
+    const input = inputValues as TInput;
+    if (editingId && editingId !== "__new__") {
+      await updateItemMutation.mutateAsync({ itemId: editingId, input });
+    } else {
+      await createItemMutation.mutateAsync(input);
+    }
   };
 
   return {
     editingId,
-    form,
-    currentlyHere,
-    isPending: create.isPending || update.isPending,
-    setField: (key: string, value: string) => setForm((current) => ({ ...current, [key]: value })),
-    setCurrentlyHere,
-    reset,
-    startEdit,
-    startCreate,
-    submit,
-    remove: remove.mutate,
+    formValues,
+    isCurrentlyHere,
+    isPending: createItemMutation.isPending || updateItemMutation.isPending,
+    setField: (key: string, value: string) =>
+      setFormValues((currentValues) => ({ ...currentValues, [key]: value })),
+    setIsCurrentlyHere,
+    resetForm,
+    handleEdit,
+    handleCreate,
+    handleSubmit,
+    removeItem: removeItemMutation.mutate,
   };
 }

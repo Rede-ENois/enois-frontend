@@ -2,11 +2,12 @@ export function getOtherParticipantId(
   participantIds: string[],
   currentUserId: string | null | undefined,
 ): string | undefined {
-  return participantIds.find((id) => id !== currentUserId);
+  return participantIds.find((participantId) => participantId !== currentUserId);
 }
 
-export function sortByTime<T extends { time: string }>(items: T[]): T[] {
-  return [...items].sort(
-    (left, right) => new Date(left.time).getTime() - new Date(right.time).getTime(),
+export function sortMessagesByTime<T extends { time: string }>(messages: T[]): T[] {
+  return [...messages].sort(
+    (leftMessage, rightMessage) =>
+      new Date(leftMessage.time).getTime() - new Date(rightMessage.time).getTime(),
   );
 }

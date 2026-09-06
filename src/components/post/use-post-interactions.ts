@@ -2,77 +2,91 @@ import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
-import { feedApi, reactionsApi } from "@/lib/api";
+import { feedApi, reactionApi } from "@/lib/api";
 import type { PostView, ReactionType } from "@/lib/api";
 
 export function usePostInteractions(post: PostView) {
   const [counters, setCounters] = useState(post.counters);
-  const [reactionStatus, setReactionStatus] = useState<string | null>(post.currentUserReaction ?? null);
-  const [saved, setSaved] = useState(false);
-  const [showReactions, setShowReactions] = useState(false);
-  const [showReport, setShowReport] = useState(false);
+  const [currentReaction, setCurrentReaction] = useState<string | null>(
+    post.currentUserReaction ?? null,
+  );
+  const [isSaved, setIsSaved] = useState(false);
+  const [isReactionsDialogOpen, setIsReactionsDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
-  useEffect(() => setReactionStatus(post.currentUserReaction ?? null), [post.currentUserReaction]);
+  useEffect(
+    () => setCurrentReaction(post.currentUserReaction ?? null),
+    [post.currentUserReaction],
+  );
 
-  const { data: savedData } = useQuery({
+  const { data: savedPostsData } = useQuery({
     queryKey: ["saved-posts"],
     queryFn: () => feedApi.listSaved(),
     staleTime: 30_000,
   });
 
   useEffect(() => {
-    if (savedData) setSaved(savedData.items.some((savedPost) => savedPost.id === post.id));
-  }, [savedData, post.id]);
+    if (savedPostsData) {
+      setIsSaved(savedPostsData.items.some((savedPost) => savedPost.id === post.id));
+    }
+  }, [savedPostsData, post.id]);
 
-  const react = async (type: ReactionType) => {
+  const handleReaction = async (type: ReactionType) => {
     try {
-      const removing = reactionStatus === type;
-      const result = removing
-        ? await reactionsApi.removeReaction(post.id)
-        : await reactionsApi.react(post.id, type);
-      setReactionStatus(removing ? null : type);
+      const isRemovingReaction = currentReaction === type;
+      const result = isRemovingReaction
+        ? await reactionApi.removePostReaction(post.id)
+        : await reactionApi.reactToPost(post.id, type);
+      setCurrentReaction(isRemovingReaction ? null : type);
       if ("counters" in result && result.counters) setCounters(result.counters);
     } catch {
       // Keep the existing silent-failure behavior.
     }
   };
 
-  const save = async () => {
+  const handleSave = async () => {
     try {
-      const result = saved ? await reactionsApi.removeSave(post.id) : await reactionsApi.save(post.id);
-      setSaved((value) => !value);
+      const result = isSaved
+        ? await reactionApi.unsavePost(post.id)
+        : await reactionApi.savePost(post.id);
+      setIsSaved((wasSaved) => !wasSaved);
       setCounters(result.counters);
     } catch {
       // Keep the existing silent-failure behavior.
     }
   };
 
-  const share = async () => {
+  const handleShare = async () => {
     try {
-      const result = await reactionsApi.share(post.id);
+      const result = await reactionApi.sharePost(post.id);
       setCounters(result.counters);
       const url = `${window.location.origin}/feed/${post.id}`;
-      await (navigator.share ? navigator.share({ url }) : navigator.clipboard.writeText(url));
+      await (navigator.share
+        ? navigator.share({ url })
+        : navigator.clipboard.writeText(url));
     } catch {
       // Keep the existing silent-failure behavior.
     }
   };
 
-  const changeCommentCount = (delta: number) => {
-    setCounters((current) => ({ ...current, comments: current.comments + delta }));
+  const handleCommentCountChange = (delta: number) => {
+    setCounters((currentCounters) => ({
+      ...currentCounters,
+      comments: currentCounters.comments + delta,
+    }));
   };
 
   return {
     counters,
-    reactionStatus,
-    saved,
-    showReactions,
-    showReport,
-    setShowReactions,
-    setShowReport,
-    react,
-    save,
-    share,
-    changeCommentCount,
+    currentReaction,
+    isSaved,
+    isReactionsDialogOpen,
+    isReportDialogOpen,
+    setIsReactionsDialogOpen,
+    setIsReportDialogOpen,
+    handleReaction,
+    handleSave,
+    handleShare,
+    handleCommentCountChange,
   };
 }

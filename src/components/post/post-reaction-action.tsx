@@ -6,19 +6,24 @@ import { texts } from "@/texts";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export function PostReactionAction({ reactionStatus, onReaction }: {
-  reactionStatus: string | null;
+type PostReactionActionProps = {
+  currentReaction: string | null;
   onReaction: (type: ReactionType) => void;
-}) {
+};
+
+export function PostReactionAction({
+  currentReaction,
+  onReaction,
+}: PostReactionActionProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground ${reactionStatus ? "text-primary" : ""}`}
-          title={reactionStatus ? texts.posts.reactions.reactedWith(REACTION_EMOJIS[reactionStatus]) : texts.posts.reactions.react}
+          className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground ${currentReaction ? "text-primary" : ""}`}
+          title={currentReaction ? texts.posts.reactions.reactedWith(REACTION_EMOJIS[currentReaction]) : texts.posts.reactions.react}
         >
-          {reactionStatus ? <span className="text-base leading-none">{REACTION_EMOJIS[reactionStatus]}</span> : <Heart className="h-4 w-4" />}
+          {currentReaction ? <span className="text-base leading-none">{REACTION_EMOJIS[currentReaction]}</span> : <Heart className="h-4 w-4" />}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-fit rounded-2xl border-border p-1.5">
@@ -28,7 +33,7 @@ export function PostReactionAction({ reactionStatus, onReaction }: {
               key={type}
               type="button"
               onClick={() => onReaction(type)}
-              className={`rounded-lg px-2 py-1 text-xl transition hover:bg-muted ${reactionStatus === type ? "bg-muted ring-1 ring-primary" : ""}`}
+              className={`rounded-lg px-2 py-1 text-xl transition hover:bg-muted ${currentReaction === type ? "bg-muted ring-1 ring-primary" : ""}`}
               title={type.toLowerCase()}
             >
               {emoji}

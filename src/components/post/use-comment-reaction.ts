@@ -1,24 +1,24 @@
 import { useState } from "react";
 
-import { reactionsApi } from "@/lib/api";
+import { reactionApi } from "@/lib/api";
 import type { CommentView, ReactionType } from "@/lib/api";
 
 export function useCommentReaction(comment: CommentView) {
-  const [reaction, setReaction] = useState<string | null>(null);
+  const [currentReaction, setCurrentReaction] = useState<string | null>(null);
 
-  const react = async (type: ReactionType) => {
+  const handleReaction = async (type: ReactionType) => {
     try {
-      const removing = reaction === type;
-      if (removing) {
-        await reactionsApi.removeCommentReaction(comment.postId, comment.id);
+      const isRemovingReaction = currentReaction === type;
+      if (isRemovingReaction) {
+        await reactionApi.removeCommentReaction(comment.postId, comment.id);
       } else {
-        await reactionsApi.reactComment(comment.postId, comment.id, type);
+        await reactionApi.reactToComment(comment.postId, comment.id, type);
       }
-      setReaction(removing ? null : type);
+      setCurrentReaction(isRemovingReaction ? null : type);
     } catch {
       // Keep the existing silent-failure behavior.
     }
   };
 
-  return { reaction, react };
+  return { currentReaction, handleReaction };
 }

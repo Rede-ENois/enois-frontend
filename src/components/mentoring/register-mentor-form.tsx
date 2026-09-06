@@ -6,15 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function RegisterMentorForm({
-  onSave,
-  isPending,
-}: {
-  onSave: (data: { expertise: string[]; price: string }) => void;
+export type RegisterMentorFormValues = {
+  expertise: string[];
+  price: string;
+};
+
+type RegisterMentorFormProps = {
+  onSave: (values: RegisterMentorFormValues) => void;
   isPending: boolean;
-}) {
+};
+
+export function RegisterMentorForm({ onSave, isPending }: RegisterMentorFormProps) {
   const [skillsText, setSkillsText] = useState("");
   const [price, setPrice] = useState(texts.mentoring.free);
+
+  const handleSave = () => {
+    const expertise = skillsText
+      .split(",")
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    onSave({ expertise, price: price || texts.mentoring.free });
+  };
 
   return (
     <div className="space-y-4 pt-2">
@@ -39,13 +51,7 @@ export function RegisterMentorForm({
       <Button
         className="w-full rounded-full"
         disabled={!skillsText.trim() || isPending}
-        onClick={() => {
-          const expertise = skillsText
-            .split(",")
-            .map((skill) => skill.trim())
-            .filter(Boolean);
-          onSave({ expertise, price: price || texts.mentoring.free });
-        }}
+        onClick={handleSave}
       >
         {isPending ? texts.common.saving : texts.common.save}
       </Button>

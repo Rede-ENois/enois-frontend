@@ -1,35 +1,50 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { profileApi, reactionsApi } from "@/lib/api";
+import { profileApi, reactionApi } from "@/lib/api";
 import { prependIfMissing, unique } from "@/utils/collections";
 
-export function useReactionsDialog({ postId, currentUserReaction, currentUserId, open }: {
+type UseReactionsDialogOptions = {
   postId: string;
   currentUserReaction: string | null;
   currentUserId?: string;
-  open: boolean;
-}) {
-  const { data } = useQuery({
+  isOpen: boolean;
+};
+
+export function useReactionsDialog({
+  postId,
+  currentUserReaction,
+  currentUserId,
+  isOpen,
+}: UseReactionsDialogOptions) {
+  const { data: reactionsData } = useQuery({
     queryKey: ["reactions", postId],
-    queryFn: () => reactionsApi.listReactions(postId),
-    enabled: open,
+    queryFn: () => reactionApi.listPostReactions(postId),
+    enabled: isOpen,
   });
   const optimisticReaction = currentUserReaction && currentUserId
-    ? { userId: currentUserId, type: currentUserReaction, createdAt: new Date().toISOString() }
+    ? {
+        userId: currentUserId,
+        type: currentUserReaction,
+        createdAt: new Date().toISOString(),
+      }
     : null;
   const reactions = prependIfMissing(
-    data?.reactions ?? [],
+    reactionsData?.reactions ?? [],
     optimisticReaction,
     (reaction) => reaction.userId === currentUserId,
   );
   const userIds = unique(reactions.map((reaction) => reaction.userId));
-  const { data: users } = useQuery({
+  const { data: userById } = useQuery({
     queryKey: ["profiles", "by-ids", [...userIds].sort().join(",")],
     queryFn: async () => {
-      const results = await Promise.all(userIds.map((id) => profileApi.getById(id).catch(() => null)));
-      return Object.fromEntries(results.filter(Boolean).map((user) => [user!.id, user!]));
+      const profiles = await Promise.all(
+        userIds.map((userId) => profileApi.getById(userId).catch(() => null)),
+      );
+      return Object.fromEntries(
+        profiles.filter(Boolean).map((profile) => [profile!.id, profile!]),
+      );
     },
-    enabled: open && userIds.length > 0,
+    enabled: isOpen && userIds.length > 0,
   });
-  return { reactions, users };
+  return { reactions, userById };
 }

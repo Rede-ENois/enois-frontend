@@ -3,18 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { jobsApi } from "@/lib/api";
+import { jobApi } from "@/lib/api";
 import type { Job } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
 import { mergePage } from "@/utils/collections";
 
 import { AppContainer } from "@/components/app-container";
-import { JobsEmpty } from "@/components/jobs/jobs-empty";
-import { JobsFilters, type JobFilterValues } from "@/components/jobs/jobs-filters";
-import { JobsGrid } from "@/components/jobs/jobs-grid";
-import { JobsInfiniteScroll } from "@/components/jobs/jobs-infinite-scroll";
-import { JobsLoading } from "@/components/jobs/jobs-loading";
+import { JobEmptyState } from "@/components/job/job-empty-state";
+import { JobFilters, type JobFilterValues } from "@/components/job/job-filters";
+import { JobGrid } from "@/components/job/job-grid";
+import { JobInfiniteScroll } from "@/components/job/job-infinite-scroll";
+import { JobLoading } from "@/components/job/job-loading";
 
 const initialFilters: JobFilterValues = {
   query: "",
@@ -27,14 +27,14 @@ const initialFilters: JobFilterValues = {
 export const Route = createFileRoute("/vagas")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.jobs.seoTitle }] }),
-  component: JobsRoute,
+  component: JobsPage,
 });
 
-function JobsRoute() {
+function JobsPage() {
   const queryClient = useQueryClient();
   const [filterValues, setFilterValues] = useState<JobFilterValues>(initialFilters);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [loadedJobs, setLoadedJobs] = useState<Job[]>([]);
 
   const filters = {
     query: filterValues.query || undefined,
@@ -46,7 +46,7 @@ function JobsRoute() {
 
   const { data: jobsData, isFetching } = useQuery({
     queryKey: ["jobs", filters, cursor],
-    queryFn: () => jobsApi.list({ ...filters, cursor, limit: 10 }),
+    queryFn: () => jobApi.list({ ...filters, cursor, limit: 10 }),
   });
 
   const jobs = jobsData?.items ?? [];
@@ -56,42 +56,50 @@ function JobsRoute() {
 
   useEffect(() => {
     if (previousFiltersKey.current === filtersKey) return;
-    setAllJobs([]);
+    setLoadedJobs([]);
     setCursor(null);
     previousFiltersKey.current = filtersKey;
   }, [filtersKey]);
 
   useEffect(() => {
-    setAllJobs((current) => mergePage(current, jobs, cursor === null));
+    setLoadedJobs((currentJobs) => mergePage(currentJobs, jobs, cursor === null));
   }, [jobs, cursor]);
 
-  const apply = useMutation({
-    mutationFn: (jobId: string) => jobsApi.apply(jobId),
+  const applyToJobMutation = useMutation({
+    mutationFn: (jobId: string) => jobApi.apply(jobId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
   });
 
-  const updateFilter = (field: keyof JobFilterValues, value: string) => {
-    setFilterValues((current) => ({ ...current, [field]: value }));
+  const handleFilterChange = (field: keyof JobFilterValues, value: string) => {
+    setFilterValues((currentValues) => ({ ...currentValues, [field]: value }));
   };
 
-  const clearFilters = () => {
-    setFilterValues((current) => ({ ...initialFilters, query: current.query }));
+  const handleClearFilters = () => {
+    setFilterValues((currentValues) => ({ ...initialFilters, query: currentValues.query }));
   };
 
   return (
     <AppContainer>
       <div className="space-y-6">
-        <JobsFilters values={filterValues} onChange={updateFilter} onClear={clearFilters} />
-        <JobsGrid jobs={allJobs} applying={apply.isPending} onApply={apply.mutate} />
-        <JobsLoading visible={isFetching && allJobs.length > 0} />
-        <JobsInfiniteScroll
+        <JobFilters
+          values={filterValues}
+          onChange={handleFilterChange}
+          onClear={handleClearFilters}
+        />
+        <JobGrid
+          jobs={loadedJobs}
+          isApplying={applyToJobMutation.isPending}
+          onApply={applyToJobMutation.mutate}
+        />
+        <JobLoading isVisible={isFetching && loadedJobs.length > 0} />
+        <JobInfiniteScroll
           hasMore={Boolean(nextCursor)}
-          loading={isFetching}
+          isLoading={isFetching}
           onLoadMore={() => {
             if (nextCursor) setCursor(nextCursor);
           }}
         />
-        <JobsEmpty visible={!isFetching && allJobs.length === 0} />
+        <JobEmptyState isVisible={!isFetching && loadedJobs.length === 0} />
       </div>
     </AppContainer>
   );

@@ -12,15 +12,15 @@ import { FeedComposerToolbar } from "./feed-composer-toolbar";
 
 type FeedComposerProps = {
   profile: Profile | null | undefined;
-  draft: string;
+  content: string;
   postType: PostView["type"];
-  media: LocalMediaItem[];
-  publishError: string | null;
+  mediaItems: LocalMediaItem[];
+  publicationError: string | null;
   isUploading: boolean;
   uploadProgress: number;
   isPublishing: boolean;
   onSubmit: FormEventHandler<HTMLFormElement>;
-  onDraftChange: (value: string, mentionedUserIds: string[]) => void;
+  onContentChange: (value: string, mentionedUserIds: string[]) => void;
   onPostTypeChange: (type: PostView["type"]) => void;
   onMediaSelect: (files: FileList) => void;
   onRemoveMedia: (index: number) => void;
@@ -28,34 +28,34 @@ type FeedComposerProps = {
 
 export function FeedComposer({
   profile,
-  draft,
+  content,
   postType,
-  media,
-  publishError,
+  mediaItems,
+  publicationError,
   isUploading,
   uploadProgress,
   isPublishing,
   onSubmit,
-  onDraftChange,
+  onContentChange,
   onPostTypeChange,
   onMediaSelect,
   onRemoveMedia,
 }: FeedComposerProps) {
-  const mediaType = getLocalMediaTypeFromItems(media);
+  const mediaType = getLocalMediaTypeFromItems(mediaItems);
 
   return (
     <form
       onSubmit={onSubmit}
       className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
     >
-      <FeedComposerInput profile={profile} draft={draft} onDraftChange={onDraftChange} />
-      <ComposerMediaPreview media={media} mediaType={mediaType} onRemove={onRemoveMedia} />
+      <FeedComposerInput profile={profile} content={content} onContentChange={onContentChange} />
+      <ComposerMediaPreview media={mediaItems} mediaType={mediaType} onRemove={onRemoveMedia} />
       <FeedComposerToolbar
-        draft={draft}
+        content={content}
         postType={postType}
-        media={media}
+        media={mediaItems}
         mediaType={mediaType}
-        publishError={publishError}
+        publicationError={publicationError}
         isUploading={isUploading}
         uploadProgress={uploadProgress}
         isPublishing={isPublishing}

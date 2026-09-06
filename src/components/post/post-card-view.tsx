@@ -2,7 +2,7 @@ import { PostActions } from "./post-actions";
 import { PostComments } from "./post-comments";
 import { PostContent } from "./post-content";
 import { PostHeader } from "./post-header";
-import type { PostCardViewProps } from "./post-card-view.types";
+import type { PostCardViewProps } from "./post-card-view-types";
 
 export function PostCardView(props: PostCardViewProps) {
   return (
@@ -11,8 +11,8 @@ export function PostCardView(props: PostCardViewProps) {
       <PostContent post={props.post} reactionSummary={props.reactionSummary} />
       <PostActions
         counters={props.counters}
-        reactionStatus={props.reactionStatus}
-        saved={props.saved}
+        currentReaction={props.currentReaction}
+        isSaved={props.isSaved}
         onReaction={props.onReaction}
         onOpenReactions={props.onOpenReactions}
         onToggleComments={props.onToggleComments}
@@ -20,15 +20,15 @@ export function PostCardView(props: PostCardViewProps) {
         onReport={props.onReport}
         onSave={props.onSave}
       />
-      {props.showComments && (
+      {props.areCommentsVisible && (
         <PostComments
           currentUser={props.currentUser}
           comments={props.comments}
           rootComments={props.rootComments}
-          draft={props.draft}
+          commentContent={props.commentContent}
           onDeleteComment={props.onDeleteComment}
           onReply={props.onReply}
-          onDraftChange={props.onDraftChange}
+          onCommentContentChange={props.onCommentContentChange}
           onSubmitComment={props.onSubmitComment}
         />
       )}

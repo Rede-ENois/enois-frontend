@@ -6,18 +6,31 @@ import { CommunityHeaderActions } from "./header/community-header-actions";
 import { CommunityHeaderCover } from "./header/community-header-cover";
 import { CommunityHeaderIdentity } from "./header/community-header-identity";
 
-export function CommunityHeader({ community, admins, isAdmin, editOpen, editForm, membershipLabel, membershipVariant, membershipPending, onEditOpenChange, onMembership }: {
+type CommunityHeaderProps = {
   community: Community;
   admins: CommunityMember[];
   isAdmin: boolean;
-  editOpen: boolean;
+  isEditOpen: boolean;
   editForm: ReactNode;
   membershipLabel: string;
   membershipVariant: "default" | "secondary";
-  membershipPending: boolean;
-  onEditOpenChange: (open: boolean) => void;
+  isMembershipPending: boolean;
+  onEditOpenChange: (isOpen: boolean) => void;
   onMembership: () => void;
-}) {
+};
+
+export function CommunityHeader({
+  community,
+  admins,
+  isAdmin,
+  isEditOpen,
+  editForm,
+  membershipLabel,
+  membershipVariant,
+  isMembershipPending,
+  onEditOpenChange,
+  onMembership,
+}: CommunityHeaderProps) {
   return (
     <div className="surface-card overflow-hidden">
       <CommunityHeaderCover community={community} />
@@ -26,11 +39,11 @@ export function CommunityHeader({ community, admins, isAdmin, editOpen, editForm
           <CommunityHeaderIdentity community={community} admins={admins} />
           <CommunityHeaderActions
             isAdmin={isAdmin}
-            editOpen={editOpen}
+            isEditOpen={isEditOpen}
             editForm={editForm}
             membershipLabel={membershipLabel}
             membershipVariant={membershipVariant}
-            membershipPending={membershipPending}
+            isMembershipPending={isMembershipPending}
             onEditOpenChange={onEditOpenChange}
             onMembership={onMembership}
           />

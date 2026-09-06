@@ -7,10 +7,10 @@ import { z } from "zod";
 import { texts } from "@/texts";
 
 import { ForgotPasswordDialog } from "@/components/auth/forgot-password-dialog";
-import { LoginForm } from "@/components/auth/login-form";
+import { SignInForm } from "@/components/auth/sign-in-form";
 import { AuthPageLayout } from "@/components/auth/layout/auth-page-layout";
 import type { AuthTab } from "@/components/auth/layout/auth-tab";
-import { SignupForm } from "@/components/auth/signup-form";
+import { SignUpForm } from "@/components/auth/sign-up-form";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional().default("signup"),
@@ -24,25 +24,33 @@ export const Route = createFileRoute("/entrar")({
       { name: "description", content: texts.auth.seo.authDescription },
     ],
   }),
-  component: AuthRoute,
+  component: AuthPage,
 });
 
-function AuthRoute() {
+function AuthPage() {
   const initialTab = Route.useSearch().tab as AuthTab;
   const navigate = useNavigate();
-  const [tab, setTab] = useState<AuthTab>(initialTab);
-  const [forgotOpen, setForgotOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<AuthTab>(initialTab);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
-  const handleDone = () => navigate({ to: "/feed" });
-  const forms: Record<AuthTab, React.ReactNode> = {
-    signup: <SignupForm onDone={handleDone} />,
-    login: <LoginForm onDone={handleDone} onForgot={() => setForgotOpen(true)} />,
+  const handleAuthenticated = () => navigate({ to: "/feed" });
+  const formByTab: Record<AuthTab, React.ReactNode> = {
+    signup: <SignUpForm onAuthenticated={handleAuthenticated} />,
+    login: (
+      <SignInForm
+        onAuthenticated={handleAuthenticated}
+        onForgotPassword={() => setIsForgotPasswordOpen(true)}
+      />
+    ),
   };
 
   return (
-    <AuthPageLayout tab={tab} onTabChange={setTab}>
-      {forms[tab]}
-      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} />
+    <AuthPageLayout tab={activeTab} onTabChange={setActiveTab}>
+      {formByTab[activeTab]}
+      <ForgotPasswordDialog
+        isOpen={isForgotPasswordOpen}
+        onOpenChange={setIsForgotPasswordOpen}
+      />
     </AuthPageLayout>
   );
 }

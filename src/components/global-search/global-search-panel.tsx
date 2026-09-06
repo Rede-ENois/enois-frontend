@@ -8,24 +8,11 @@ import { texts } from "@/texts";
 import { Input } from "@/components/ui/input";
 import { GlobalSearchResults } from "./global-search-results";
 
-export function GlobalSearchPanel({
-  query,
-  debouncedQuery,
-  results,
-  isFetching,
-  isOpen,
-  isMobileOpen,
-  searchRef,
-  inputRef,
-  onQueryChange,
-  onFocus,
-  onCloseMobile,
-  onSelect,
-}: {
+type GlobalSearchPanelProps = {
   query: string;
   debouncedQuery: string;
   results: SearchResult[];
-  isFetching: boolean;
+  isSearching: boolean;
   isOpen: boolean;
   isMobileOpen: boolean;
   searchRef: RefObject<HTMLDivElement | null>;
@@ -34,7 +21,22 @@ export function GlobalSearchPanel({
   onFocus: () => void;
   onCloseMobile: () => void;
   onSelect: (item: SearchResult) => void;
-}) {
+};
+
+export function GlobalSearchPanel({
+  query,
+  debouncedQuery,
+  results,
+  isSearching,
+  isOpen,
+  isMobileOpen,
+  searchRef,
+  inputRef,
+  onQueryChange,
+  onFocus,
+  onCloseMobile,
+  onSelect,
+}: GlobalSearchPanelProps) {
   return (
     <div
       ref={searchRef}
@@ -55,7 +57,7 @@ export function GlobalSearchPanel({
           placeholder={texts.search.placeholder}
           className="h-12 rounded-full border-border-soft bg-surface-card pl-10 pr-4 focus-visible:border-primary md:h-10 md:bg-surface-1 md:pl-9"
         />
-        {isFetching && (
+        {isSearching && (
           <Loader2 className="absolute right-7 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-text-subtle md:right-3" />
         )}
         {isOpen && debouncedQuery.length >= 2 && (
@@ -63,7 +65,7 @@ export function GlobalSearchPanel({
             <GlobalSearchResults
               items={results}
               query={debouncedQuery}
-              isFetching={isFetching}
+              isSearching={isSearching}
               onSelect={onSelect}
             />
           </div>

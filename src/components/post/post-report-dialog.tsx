@@ -1,30 +1,28 @@
 import { useState } from "react";
 
-import { REPORT_REASONS, reportsApi } from "@/lib/api";
+import { REPORT_REASONS, reportApi } from "@/lib/api";
 import type { ReportReason } from "@/lib/api";
 import { texts } from "@/texts";
-import { humanizeEnum } from "@/utils/string";
+import { formatEnumLabel } from "@/utils/string";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export function PostReportDialog({
-  postId,
-  open,
-  onOpenChange,
-}: {
+type PostReportDialogProps = {
   postId: string;
-  open: boolean;
-  onOpenChange: (value: boolean) => void;
-}) {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+};
+
+export function PostReportDialog({ postId, isOpen, onOpenChange }: PostReportDialogProps) {
   const [reason, setReason] = useState<ReportReason>("SPAM");
   const [description, setDescription] = useState("");
 
-  const submit = async () => {
+  const handleSubmit = async () => {
     try {
-      await reportsApi.create({
+      await reportApi.create({
         targetId: postId,
         targetType: "POST",
         reason,
@@ -38,7 +36,7 @@ export function PostReportDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-light">{texts.posts.report.title}</DialogTitle>
@@ -53,7 +51,7 @@ export function PostReportDialog({
             >
               {REPORT_REASONS.map((reportReason) => (
                 <option key={reportReason} value={reportReason}>
-                  {humanizeEnum(reportReason)}
+                  {formatEnumLabel(reportReason)}
                 </option>
               ))}
             </select>
@@ -71,7 +69,7 @@ export function PostReportDialog({
             />
           </div>
 
-          <Button className="w-full rounded-full" onClick={submit}>
+          <Button className="w-full rounded-full" onClick={handleSubmit}>
             {texts.posts.report.action}
           </Button>
         </div>
