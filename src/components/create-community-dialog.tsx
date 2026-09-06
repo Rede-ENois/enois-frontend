@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
+import { COMMUNITY_TOPICS } from "@/constants/community-topics";
 import { communitiesApi } from "@/lib/api/communities";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
@@ -73,9 +73,9 @@ export function CreateCommunityDialog({
               onChange={(event) => setTopic(event.target.value as CommunityTopic)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10 border-transparent bg-muted"
             >
-              {TOPICS.filter((item) => item !== "Todas").map((item) => (
-                <option key={item} value={item}>
-                  {TOPIC_LABELS[item]}
+              {COMMUNITY_TOPICS.filter(({ value }) => value !== "Todas").map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
                 </option>
               ))}
             </select>

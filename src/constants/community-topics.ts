@@ -1,23 +1,12 @@
 import { texts } from "@/texts";
 
-export const TOPICS = [
-  "Todas",
-  "TECNOLOGIA",
-  "ENGENHARIA",
-  "DESIGN",
-  "PRODUTO",
-  "LIDERANCA",
-  "CARREIRA",
-  "FREELANCE",
+export const COMMUNITY_TOPICS = [
+  { value: "Todas", label: texts.communities.topics.all },
+  { value: "TECNOLOGIA", label: texts.communities.topics.TECNOLOGIA },
+  { value: "ENGENHARIA", label: texts.communities.topics.ENGENHARIA },
+  { value: "DESIGN", label: texts.communities.topics.DESIGN },
+  { value: "PRODUTO", label: texts.communities.topics.PRODUTO },
+  { value: "LIDERANCA", label: texts.communities.topics.LIDERANCA },
+  { value: "CARREIRA", label: texts.communities.topics.CARREIRA },
+  { value: "FREELANCE", label: texts.communities.topics.FREELANCE },
 ] as const;
-
-export const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
-  Todas: texts.communities.topics.all,
-  TECNOLOGIA: texts.communities.topics.TECNOLOGIA,
-  ENGENHARIA: texts.communities.topics.ENGENHARIA,
-  DESIGN: texts.communities.topics.DESIGN,
-  PRODUTO: texts.communities.topics.PRODUTO,
-  LIDERANCA: texts.communities.topics.LIDERANCA,
-  CARREIRA: texts.communities.topics.CARREIRA,
-  FREELANCE: texts.communities.topics.FREELANCE,
-};

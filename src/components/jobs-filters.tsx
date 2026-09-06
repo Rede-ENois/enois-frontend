@@ -1,6 +1,6 @@
 import { Briefcase, X } from "lucide-react";
 
-import { JOB_LEVELS, JOB_LOCATIONS, JOB_TYPES } from "@/constants/job-filters";
+import { JOB_FILTERS } from "@/constants/job-filters";
 import { texts } from "@/texts";
 import type { JobsFiltersProps } from "@/types/components/jobs/jobs-filters-props";
 
@@ -46,7 +46,7 @@ export function JobsFilters({
           <span className="mr-1 text-xs font-medium text-muted-foreground">
             {texts.jobs.filters.level}
           </span>
-          {JOB_LEVELS.map((item) => (
+          {JOB_FILTERS.levels.map((item) => (
             <button
               key={item}
               onClick={() => onLevelChange(level === item ? "" : item)}
@@ -67,7 +67,7 @@ export function JobsFilters({
           <span className="mr-1 text-xs font-medium text-muted-foreground">
             {texts.jobs.filters.location}
           </span>
-          {JOB_LOCATIONS.map((item, index) => (
+          {JOB_FILTERS.locations.map((item, index) => (
             <button
               key={item}
               onClick={() => onLocationChange(location === item ? "" : item)}
@@ -88,7 +88,7 @@ export function JobsFilters({
           <span className="mr-1 text-xs font-medium text-muted-foreground">
             {texts.jobs.filters.type}
           </span>
-          {JOB_TYPES.map((item) => (
+          {JOB_FILTERS.types.map((item) => (
             <button
               key={item}
               onClick={() => onTypeChange(type === item ? "" : item)}

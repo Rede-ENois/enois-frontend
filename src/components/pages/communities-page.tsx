@@ -5,7 +5,7 @@ import { Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 
 import { Loader2, Plus, Users } from "lucide-react";
 
-import { TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
+import { COMMUNITY_TOPICS } from "@/constants/community-topics";
 import { communitiesApi } from "@/lib/api/communities";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
@@ -51,7 +51,7 @@ export function Comunidades() {
     if (nextCursor && !isFetching) setCursor(nextCursor);
   };
 
-  const handleTopicChange = (nextTopic: (typeof TOPICS)[number]) => {
+  const handleTopicChange = (nextTopic: (typeof COMMUNITY_TOPICS)[number]["value"]) => {
     setTopic(nextTopic === "Todas" ? undefined : nextTopic);
     setCursor(undefined);
     setAllItems([]);
@@ -85,17 +85,17 @@ export function Comunidades() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {TOPICS.map((item) => (
+          {COMMUNITY_TOPICS.map(({ value, label }) => (
             <button
-              key={item}
-              onClick={() => handleTopicChange(item)}
+              key={value}
+              onClick={() => handleTopicChange(value)}
               className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                (item === "Todas" && !topic) || item === topic
+                (value === "Todas" && !topic) || value === topic
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {TOPIC_LABELS[item]}
+              {label}
             </button>
           ))}
         </div>
