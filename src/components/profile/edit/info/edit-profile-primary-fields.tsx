@@ -1,15 +1,11 @@
 import { texts } from "@/texts";
+import type { EditProfilePrimaryFieldsProps } from "@/types/components/profile/edit/edit-profile-primary-fields-props";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EditProfileField } from "./edit-profile-field";
-import type { EditProfileInfoChange, EditProfileInfoValues } from "../edit-profile-info-types";
 
-export function EditProfilePrimaryFields({ values, usernameError, onChange }: {
-  values: EditProfileInfoValues;
-  usernameError: string;
-  onChange: EditProfileInfoChange;
-}) {
+export function EditProfilePrimaryFields({ values, usernameError, onChange }: EditProfilePrimaryFieldsProps) {
   return (
     <>
       <EditProfileField label={texts.profile.edit.fields.name}>

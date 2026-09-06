@@ -1,15 +1,11 @@
 import { useState } from "react";
 
-import type { Profile } from "@/lib/api";
+import type { EditProfileDialogProps } from "@/types/components/profile/edit/edit-profile-dialog-props";
+import type { EditProfileTab } from "@/types/components/profile/edit/edit-profile-tab";
 
-import { EditProfileShell, type EditProfileTab } from "./edit-profile-shell";
+import { EditProfileShell } from "./edit-profile-shell";
 import { EditProfileTabContent } from "./edit-profile-tab-content";
 import { useEditProfileInfo } from "./use-edit-profile-info";
-
-type EditProfileDialogProps = {
-  profile: Profile;
-  children: React.ReactNode;
-};
 
 export function EditProfileDialog({ profile, children }: EditProfileDialogProps) {
   const [isOpen, setIsOpen] = useState(false);

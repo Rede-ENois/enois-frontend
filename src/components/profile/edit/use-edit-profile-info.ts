@@ -6,9 +6,8 @@ import { useRouter } from "@tanstack/react-router";
 import { ApiError, profileApi } from "@/lib/api";
 import type { Profile, UpdateProfileInput } from "@/lib/api";
 import { texts } from "@/texts";
+import type { EditProfileInfoValues } from "@/types/components/profile/edit/edit-profile-info-values";
 import { buildProfileUpdate } from "@/utils/profile";
-
-import type { EditProfileInfoValues } from "./edit-profile-info-types";
 
 function getInitialValues(profile: Profile): EditProfileInfoValues {
   return {

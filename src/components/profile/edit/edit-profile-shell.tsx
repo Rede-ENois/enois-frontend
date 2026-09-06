@@ -1,11 +1,9 @@
-import type { ReactNode } from "react";
-
 import { texts } from "@/texts";
+import type { EditProfileShellProps } from "@/types/components/profile/edit/edit-profile-shell-props";
+import type { EditProfileTab } from "@/types/components/profile/edit/edit-profile-tab";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
-export type EditProfileTab = "info" | "experiences" | "education" | "certifications";
 
 const tabs: Array<{ key: EditProfileTab; label: string }> = [
   { key: "info", label: texts.profile.edit.tabs.info },
@@ -13,17 +11,6 @@ const tabs: Array<{ key: EditProfileTab; label: string }> = [
   { key: "education", label: texts.profile.edit.tabs.education },
   { key: "certifications", label: texts.profile.edit.tabs.certifications },
 ];
-
-type EditProfileShellProps = {
-  isOpen: boolean;
-  trigger: ReactNode;
-  tab: EditProfileTab;
-  isSaving: boolean;
-  children: ReactNode;
-  onOpenChange: (isOpen: boolean) => void;
-  onTabChange: (tab: EditProfileTab) => void;
-  onSave: () => void;
-};
 
 export function EditProfileShell({
   isOpen,

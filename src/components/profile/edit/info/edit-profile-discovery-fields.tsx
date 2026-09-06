@@ -1,14 +1,11 @@
 import { texts } from "@/texts";
+import type { EditProfileDiscoveryFieldsProps } from "@/types/components/profile/edit/edit-profile-discovery-fields-props";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EditProfileField } from "./edit-profile-field";
-import type { EditProfileInfoChange, EditProfileInfoValues } from "../edit-profile-info-types";
 
-export function EditProfileDiscoveryFields({ values, onChange }: {
-  values: EditProfileInfoValues;
-  onChange: EditProfileInfoChange;
-}) {
+export function EditProfileDiscoveryFields({ values, onChange }: EditProfileDiscoveryFieldsProps) {
   return (
     <>
       <EditProfileField label={texts.profile.edit.fields.externalLinks}>
