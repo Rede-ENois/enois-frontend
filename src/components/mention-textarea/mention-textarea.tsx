@@ -1,14 +1,7 @@
+import type { MentionTextareaProps } from "@/types/components/mention-textarea/mention-textarea-props";
+
 import { MentionSuggestions } from "./mention-suggestions";
 import { useMentionTextarea } from "./use-mention-textarea";
-
-type MentionTextareaProps = {
-  value: string;
-  onChange: (value: string, mentionedUserIds: string[]) => void;
-  placeholder?: string;
-  className?: string;
-  maxLength?: number;
-  rows?: number;
-};
 
 export function MentionTextarea({
   value,

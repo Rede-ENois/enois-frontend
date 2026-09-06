@@ -1,4 +1,4 @@
-import type { UserSearchResult } from "@/lib/api";
+import type { MentionSuggestionsProps } from "@/types/components/mention-textarea/mention-suggestions-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -7,12 +7,7 @@ export function MentionSuggestions({
   selectedIndex,
   onSelect,
   onHover,
-}: {
-  results: UserSearchResult[];
-  selectedIndex: number;
-  onSelect: (user: UserSearchResult) => void;
-  onHover: (index: number) => void;
-}) {
+}: MentionSuggestionsProps) {
   return (
     <div className="absolute bottom-full left-0 right-0 z-50 mb-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-popover shadow-lg">
       {results.map((user, index) => (

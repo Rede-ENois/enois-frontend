@@ -1,7 +1,4 @@
-export type MentionContext = {
-  query: string;
-  index: number;
-};
+import type { MentionContext } from "@/types/components/mention-textarea/mention-context";
 
 export const emptyMentionContext: MentionContext = {
   query: "",
@@ -14,7 +11,7 @@ export function getMentionContext(text: string, cursor: number): MentionContext 
   if (index === -1) return emptyMentionContext;
 
   const query = beforeCursor.slice(index + 1);
-  const invalidQuery = query.length === 0 || /\s/.test(query);
+  const invalidQuery = query.length === 0 || query.includes(" ");
 
   return invalidQuery ? emptyMentionContext : { query, index };
 }

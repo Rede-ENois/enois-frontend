@@ -1,8 +1,9 @@
 import { Search } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { GlobalSearchMobileButtonProps } from "@/types/components/global-search/global-search-mobile-button-props";
 
-export function GlobalSearchMobileButton({ onOpen }: { onOpen: () => void }) {
+export function GlobalSearchMobileButton({ onOpen }: GlobalSearchMobileButtonProps) {
   return (
     <button
       onClick={onOpen}

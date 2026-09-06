@@ -1,14 +1,7 @@
-import type { SearchResult } from "@/lib/api";
 import { texts } from "@/texts";
+import type { GlobalSearchResultsProps } from "@/types/components/global-search/global-search-results-props";
 
 import { UserAvatar } from "@/components/user-avatar";
-
-type GlobalSearchResultsProps = {
-  items: SearchResult[];
-  query: string;
-  isSearching: boolean;
-  onSelect: (item: SearchResult) => void;
-};
 
 export function GlobalSearchResults({
   items,
@@ -23,7 +16,6 @@ export function GlobalSearchResults({
           {texts.search.noResults(query)}
         </p>
       )}
-
       <ul className="max-h-80 overflow-y-auto">
         {items.map((item) => (
           <li key={`${item.type}-${item.id}`}>
