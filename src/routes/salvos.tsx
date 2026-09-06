@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { ArrowLeft, Bookmark } from "lucide-react";
 
-import { feedApi } from "@/lib/api";
+import { feedApi } from "@/lib/api/feed";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
 
@@ -21,7 +21,6 @@ function SavedPosts() {
     queryKey: ["saved-posts"],
     queryFn: () => feedApi.listSaved(),
   });
-
   const savedPosts = savedData?.items ?? [];
 
   return (
@@ -40,22 +39,18 @@ function SavedPosts() {
             <Bookmark className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-semibold tracking-tight">{texts.saved.title}</h1>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {texts.saved.count(savedPosts.length)}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{texts.saved.count(savedPosts.length)}</p>
         </div>
 
         {savedPosts.length === 0 ? (
           <div className="surface-card p-8 text-center">
             <Bookmark className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm text-muted-foreground">
-              {texts.saved.empty}
-            </p>
+            <p className="mt-3 text-sm text-muted-foreground">{texts.saved.empty}</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {savedPosts.map((p) => (
-              <PostCard key={p.id} post={p} />
+            {savedPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         )}

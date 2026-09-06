@@ -39,6 +39,21 @@ export function persistAuthTokens(
   storage.setItem("refresh_expires_at", session.refreshExpiresAt);
 }
 
+export function persistOAuthTokens(
+  token: string,
+  refreshToken?: string | null,
+  expiresAt?: string | null,
+  refreshExpiresAt?: string | null,
+) {
+  const storage = getStorage();
+  if (!storage) return;
+
+  storage.setItem("session_token", token);
+  if (refreshToken) storage.setItem("refresh_token", refreshToken);
+  if (expiresAt) storage.setItem("session_expires_at", expiresAt);
+  if (refreshExpiresAt) storage.setItem("refresh_expires_at", refreshExpiresAt);
+}
+
 export function persistAuthSession(session: AuthResponse) {
   const storage = getStorage();
   if (!storage) return;
