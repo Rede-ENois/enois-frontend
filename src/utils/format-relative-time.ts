@@ -1,6 +1,6 @@
 import { texts } from "@/texts";
 
-export function formatPostTime(iso: string | null | undefined): string {
+export function formatRelativeTime(iso: string | null | undefined): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (isNaN(date.getTime())) return "";

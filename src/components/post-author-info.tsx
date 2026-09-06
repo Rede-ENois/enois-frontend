@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { AuthorInfoProps } from "@/types/components/post/author-info-props";
-import { formatPostTime } from "@/utils/format-post-time";
+import { formatRelativeTime } from "@/utils/format-relative-time";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -33,7 +33,7 @@ export function AuthorInfo({
             {authorName}
           </Link>
           <span className="text-[12px] font-light text-text-date">
-            {texts.posts.authorTime(formatPostTime(createdAt))}
+            {texts.posts.authorTime(formatRelativeTime(createdAt))}
           </span>
         </div>
       </div>

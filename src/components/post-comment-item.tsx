@@ -9,7 +9,7 @@ import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
-import { formatPostTime } from "@/utils/format-post-time";
+import { formatRelativeTime } from "@/utils/format-relative-time";
 import { linkifyText } from "@/utils/linkify-text";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -80,7 +80,7 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
               </span>
             )}
             <span className="text-[11px] font-light text-text-subtle">
-              {formatPostTime(comment.createdAt)}
+              {formatRelativeTime(comment.createdAt)}
             </span>
           </div>
           <p className="mt-0.5 break-words text-[13px] font-light leading-relaxed text-text-strong">
