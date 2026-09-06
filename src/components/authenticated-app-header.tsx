@@ -11,13 +11,18 @@ import { UserAvatar } from "@/components/user-avatar";
 
 import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
-import { GlobalSearch } from "./global-search/global-search";
 import { NotificationsPopover } from "./notifications/notifications-popover";
+import { GlobalSearch } from "./global-search/global-search";
 
-type AuthenticatedAppHeaderProps = { onOpenMobileMenu: () => void };
+type AuthenticatedAppHeaderProps = {
+  onOpenMobileMenu: () => void;
+};
 
 export function AuthenticatedAppHeader({ onOpenMobileMenu }: AuthenticatedAppHeaderProps) {
-  const { data: profile } = useQuery({ queryKey: ["me"], queryFn: () => profileApi.me() });
+  const { data: profile } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => profileApi.me(),
+  });
 
   return (
     <AppHeaderLayout>
@@ -28,8 +33,10 @@ export function AuthenticatedAppHeader({ onOpenMobileMenu }: AuthenticatedAppHea
       >
         <Menu className="h-5 w-5" />
       </button>
+
       <AppBrand />
       <GlobalSearch />
+
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
         <NotificationsPopover />
