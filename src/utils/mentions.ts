@@ -11,7 +11,7 @@ export function getMentionContext(text: string, cursor: number): MentionContext 
   if (index === -1) return emptyMentionContext;
 
   const query = beforeCursor.slice(index + 1);
-  const invalidQuery = query.length === 0 || query.includes(" ");
+  const invalidQuery = query.length === 0 || /\s/.test(query);
 
   return invalidQuery ? emptyMentionContext : { query, index };
 }
