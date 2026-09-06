@@ -1,104 +1,22 @@
+import type { Certification } from "@/types/application/profile/certification";
+import type { CertificationInput } from "@/types/application/profile/certification-input";
+import type { Education } from "@/types/application/profile/education";
+import type { EducationInput } from "@/types/application/profile/education-input";
+import type { Experience } from "@/types/application/profile/experience";
+import type { ExperienceInput } from "@/types/application/profile/experience-input";
+import type { Profile } from "@/types/application/profile/profile";
+import type { UpdateProfileInput } from "@/types/application/profile/update-profile-input";
+
 import { api } from "../api-client";
 
-export interface Profile {
-  id: string;
-  username: string;
-  name: string;
-  headline: string | null;
-  email: string;
-  company: string | null;
-  location: string | null;
-  avatar: string | null;
-  banner: string | null;
-  bio: string | null;
-  skills: string[];
-  goals: string[];
-  availability: string | null;
-  portfolio: string | null;
-  externalLinks: string[];
-  openToWork: boolean;
-  isMentor: boolean;
-  connectionsCount?: number;
-  followersCount?: number;
-  reputation?: number;
-}
-
-export interface UpdateProfileInput {
-  username?: string;
-  name?: string;
-  headline?: string | null;
-  company?: string | null;
-  location?: string | null;
-  avatar?: string | null;
-  banner?: string | null;
-  bio?: string | null;
-  skills?: string[];
-  goals?: string[];
-  availability?: string | null;
-  portfolio?: string | null;
-  externalLinks?: string[];
-  openToWork?: boolean;
-  isMentor?: boolean;
-}
-
-export interface Experience {
-  id: string;
-  title: string;
-  company: string;
-  location: string | null;
-  description: string | null;
-  currentlyHere: boolean;
-  startDate: string | null;
-  endDate: string | null;
-}
-
-export interface ExperienceInput {
-  title: string;
-  company: string;
-  location?: string | null;
-  description?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-}
-
-export interface Education {
-  id: string;
-  school: string;
-  degree: string;
-  field: string;
-  description: string | null;
-  currentlyHere: boolean;
-  startDate: string | null;
-  endDate: string | null;
-}
-
-export interface EducationInput {
-  school: string;
-  degree: string;
-  field: string;
-  description?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-}
-
-export interface Certification {
-  id: string;
-  name: string;
-  issuer: string;
-  description: string | null;
-  issueDate: string | null;
-  expirationDate: string | null;
-  credentialUrl: string | null;
-}
-
-export interface CertificationInput {
-  name: string;
-  issuer: string;
-  description?: string | null;
-  issueDate?: string | null;
-  expirationDate?: string | null;
-  credentialUrl?: string | null;
-}
+export type { Certification } from "@/types/application/profile/certification";
+export type { CertificationInput } from "@/types/application/profile/certification-input";
+export type { Education } from "@/types/application/profile/education";
+export type { EducationInput } from "@/types/application/profile/education-input";
+export type { Experience } from "@/types/application/profile/experience";
+export type { ExperienceInput } from "@/types/application/profile/experience-input";
+export type { Profile } from "@/types/application/profile/profile";
+export type { UpdateProfileInput } from "@/types/application/profile/update-profile-input";
 
 export const profileApi = {
   getCurrent: () => api.get<Profile>("/me"),

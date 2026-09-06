@@ -2,11 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 
 import crypto from "node:crypto";
 
-export interface ImageKitAuth {
-  signature: string;
-  token: string;
-  expire: number;
-}
+import type { ImageKitAuth } from "@/types/application/imagekit/image-kit-auth";
 
 export const getImageKitAuth = createServerFn({ method: "GET" }).handler(async () => {
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;

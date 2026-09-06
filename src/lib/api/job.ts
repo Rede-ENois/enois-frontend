@@ -1,33 +1,11 @@
+import type { Job } from "@/types/application/job/job";
+import type { ListJobsOptions } from "@/types/application/job/list-jobs-options";
+import type { PageResponse } from "@/types/application/pagination/page-response";
+
 import { api, buildQuery } from "../api-client";
 
-export interface Job {
-  id: string;
-  title: string;
-  company: string;
-  logo: string | null;
-  location: string;
-  type: string;
-  level: string;
-  salary: string | null;
-  skills: string[];
-  postedAt: string;
-  matchScore: number | null;
-}
-
-export interface ListJobsOptions {
-  query?: string;
-  type?: string;
-  level?: string;
-  location?: string;
-  skills?: string;
-  cursor?: string | null;
-  limit?: number;
-}
-
-export interface PageResponse<T> {
-  items: T[];
-  nextCursor: string | null;
-}
+export type { Job } from "@/types/application/job/job";
+export type { ListJobsOptions } from "@/types/application/job/list-jobs-options";
 
 export const jobApi = {
   list: (options?: ListJobsOptions) =>

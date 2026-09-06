@@ -1,18 +1,10 @@
+import type { SearchResponse } from "@/types/application/search/search-response";
+import type { SearchResult } from "@/types/application/search/search-result";
+
 import { api, buildQuery } from "../api-client";
 
-export interface SearchResult {
-  id: string;
-  type: "users" | "communities" | "jobs" | "events";
-  title: string;
-  subtitle: string;
-  image: string | null;
-  href: string;
-}
-
-export interface SearchResponse {
-  items: SearchResult[];
-  nextCursor: string | null;
-}
+export type { SearchResponse } from "@/types/application/search/search-response";
+export type { SearchResult } from "@/types/application/search/search-result";
 
 export const searchApi = {
   search: (query: string, types?: string[], limit = 10) =>

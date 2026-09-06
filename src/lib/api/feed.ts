@@ -1,66 +1,17 @@
+import type { BulkDeleteInput } from "@/types/application/feed/bulk-delete-input";
+import type { BulkDeleteResult } from "@/types/application/feed/bulk-delete-result";
+import type { CreatePostInput } from "@/types/application/feed/create-post-input";
+import type { DeleteResult } from "@/types/application/feed/delete-result";
+import type { PostView } from "@/types/application/feed/post-view";
+import type { ReactionsResponse } from "@/types/application/feed/reactions-response";
+import type { PageResponse } from "@/types/application/pagination/page-response";
+
 import { api, buildQuery } from "../api-client";
 
-export interface PostView {
-  id: string;
-  authorId: string;
-  authorUsername: string;
-  authorName: string;
-  authorAvatar: string | null;
-  type: "INSIGHT" | "ARTICLE" | "QUESTION" | "PROJECT" | "OPPORTUNITY";
-  content: string;
-  tags: string[];
-  mediaIds: string[];
-  createdAt: string;
-  visibility: "PUBLIC" | "CONNECTIONS" | "MENTORS";
-  counters: {
-    reactions: number;
-    comments: number;
-    saves: number;
-    shares: number;
-  };
-  status: "ACTIVE" | "DELETED";
-  currentUserReaction?: string | null;
-}
-
-export interface ReactionUser {
-  userId: string;
-  type: string;
-  createdAt: string;
-}
-
-export interface ReactionsResponse {
-  postId: string;
-  reactions: ReactionUser[];
-}
-
-export interface PageResponse<T> {
-  items: T[];
-  nextCursor: string | null;
-}
-
-export interface CreatePostInput {
-  type: PostView["type"];
-  content: string;
-  tags?: string[];
-  mediaIds?: string[];
-  mentionedUserIds?: string[];
-  communityId?: string;
-}
-
-export interface DeleteResult {
-  postId: string;
-  status: string;
-}
-
-export interface BulkDeleteInput {
-  postIds: string[];
-  reason: string;
-}
-
-export interface BulkDeleteResult {
-  status: string;
-  results: DeleteResult[];
-}
+export type { CreatePostInput } from "@/types/application/feed/create-post-input";
+export type { PostView } from "@/types/application/feed/post-view";
+export type { ReactionUser } from "@/types/application/feed/reaction-user";
+export type { PageResponse } from "@/types/application/pagination/page-response";
 
 export const feedApi = {
   list: (cursor?: string | null, limit = 20, tab?: string) =>

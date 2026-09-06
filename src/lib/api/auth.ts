@@ -1,37 +1,17 @@
+import type { AuthResponse } from "@/types/application/auth/auth-response";
+import type { AuthUser } from "@/types/application/auth/auth-user";
+import type { OAuthProvider } from "@/types/application/auth/oauth-provider";
+import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+import type { SignInInput } from "@/types/application/auth/sign-in-input";
+import type { SignUpInput } from "@/types/application/auth/sign-up-input";
+
 import { api } from "../api-client";
 
-export interface SignUpInput {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface SignInInput {
-  email: string;
-  password: string;
-}
-
-export interface AuthUser {
-  id: string;
-  username: string;
-  name: string;
-  headline: string;
-  email: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  refreshToken: string;
-  expiresAt: string;
-  refreshExpiresAt: string;
-  user: AuthUser;
-}
-
-export interface OAuthStartResponse {
-  provider: "GOOGLE" | "APPLE";
-  state: string;
-  authorizationUrl: string;
-}
+export type { AuthResponse } from "@/types/application/auth/auth-response";
+export type { AuthUser } from "@/types/application/auth/auth-user";
+export type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+export type { SignInInput } from "@/types/application/auth/sign-in-input";
+export type { SignUpInput } from "@/types/application/auth/sign-up-input";
 
 export const authApi = {
   signUp: (input: SignUpInput) => api.post<AuthResponse>("/auth/signup", input),
@@ -51,7 +31,7 @@ export const authApi = {
   resetPassword: (token: string, password: string) =>
     api.post<{ status: string }>("/auth/password/reset", { token, password }),
 
-  startOAuth: (provider: "GOOGLE" | "APPLE") =>
+  startOAuth: (provider: OAuthProvider) =>
     api.get<OAuthStartResponse>(`/auth/oauth/${provider.toLowerCase()}/start`),
 
   completeOAuth: (provider: string, code: string, state: string) =>

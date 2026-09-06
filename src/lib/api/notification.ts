@@ -1,23 +1,9 @@
+import type { Notification } from "@/types/application/notification/notification";
+import type { PageResponse } from "@/types/application/pagination/page-response";
+
 import { api, buildQuery } from "../api-client";
 
-export interface Notification {
-  id: string;
-  kind: string;
-  actorId: string | null;
-  actorName: string | null;
-  actorAvatar: string | null;
-  title: string;
-  body: string;
-  createdAt: string;
-  read: boolean;
-  href: string;
-  ctaLabel: string;
-}
-
-export interface PageResponse<T> {
-  items: T[];
-  nextCursor: string | null;
-}
+export type { Notification } from "@/types/application/notification/notification";
 
 export const notificationApi = {
   list: (cursor?: string | null, limit = 20) =>

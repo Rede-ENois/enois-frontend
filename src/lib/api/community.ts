@@ -1,37 +1,14 @@
+import type { Community } from "@/types/application/community/community";
+import type { CommunityMember } from "@/types/application/community/community-member";
+import type { CreateCommunityInput } from "@/types/application/community/create-community-input";
+import type { PostView } from "@/types/application/feed/post-view";
+import type { PageResponse } from "@/types/application/pagination/page-response";
+
 import { api, buildQuery } from "../api-client";
-import type { PostView } from "./feed";
 
-export interface Community {
-  id: string;
-  name: string;
-  description: string;
-  topic: string;
-  members: number;
-  joined: boolean;
-  cover: string | null;
-  avatar: string | null;
-}
-
-export interface CommunityMember {
-  userId: string;
-  username: string;
-  name: string;
-  avatar: string | null;
-  role: "ADMIN" | "MEMBER";
-}
-
-export interface CreateCommunityInput {
-  name: string;
-  description: string;
-  topic: string;
-  cover?: string | null;
-  avatar?: string | null;
-}
-
-export interface PageResponse<T> {
-  items: T[];
-  nextCursor: string | null;
-}
+export type { Community } from "@/types/application/community/community";
+export type { CommunityMember } from "@/types/application/community/community-member";
+export type { CreateCommunityInput } from "@/types/application/community/create-community-input";
 
 export const communityApi = {
   list: (topic?: string, cursor?: string | null, limit = 20) =>

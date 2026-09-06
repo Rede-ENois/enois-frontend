@@ -1,24 +1,11 @@
+import type { MediaAsset } from "@/types/application/media/media-asset";
+import type { MediaUploadResponse } from "@/types/application/media/media-upload-response";
+
 import { api } from "../api-client";
 import { getImageKitAuth } from "./imagekit-auth";
 
-export interface MediaUploadResponse {
-  id: string;
-  uploadUrl: string;
-  cdnUrl: string;
-  status: "PENDING" | "UPLOADED" | "FAILED";
-}
-
-export interface MediaAsset {
-  id: string;
-  fileName: string;
-  mimeType: string;
-  size: number;
-  purpose: string;
-  status: string;
-  uploadUrl: string | null;
-  cdnUrl: string | null;
-  createdAt: string;
-}
+export type { MediaAsset } from "@/types/application/media/media-asset";
+export type { MediaUploadResponse } from "@/types/application/media/media-upload-response";
 
 const IMAGEKIT_PUBLIC_KEY =
   import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY ?? "public_0Y+bnNURFVY+XZuqyCWQGafHo/0=";
