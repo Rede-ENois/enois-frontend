@@ -4,8 +4,8 @@ import { profileApi } from "@/lib/api";
 import type { Experience, ExperienceInput } from "@/lib/api";
 import { texts } from "@/texts";
 
-import { ProfileSubList } from "../sub-list/profile-sub-list";
-import { experienceFields } from "./profile-sub-fields";
+import { ProfileEntryList } from "../entry-list/profile-entry-list";
+import { experienceFields } from "./profile-entry-fields";
 
 export function ProfileExperienceEditor() {
   const { data: experiences = [] } = useQuery({
@@ -14,16 +14,16 @@ export function ProfileExperienceEditor() {
   });
 
   return (
-    <ProfileSubList<Experience, ExperienceInput>
-      items={experiences}
+    <ProfileEntryList<Experience, ExperienceInput>
+      entries={experiences}
       fields={experienceFields}
       currentlyHereKey="currentlyHere"
-      createApi={profileApi.experiences.create}
-      updateApi={profileApi.experiences.update}
-      removeApi={profileApi.experiences.remove}
+      createEntry={profileApi.experiences.create}
+      updateEntry={profileApi.experiences.update}
+      removeEntry={profileApi.experiences.remove}
       queryKey={["me", "experiences"]}
       emptyMessage={texts.profile.edit.emptyExperience}
-      newItem={{ title: "", company: "", location: "", description: "", startDate: "", endDate: "" }}
+      newEntry={{ title: "", company: "", location: "", description: "", startDate: "", endDate: "" }}
     />
   );
 }

@@ -1,8 +1,8 @@
 import { texts } from "@/texts";
 
-import type { ProfileSubField } from "../sub-list/profile-sub-list.types";
+import type { ProfileEntryField } from "../entry-list/profile-entry-list-types";
 
-export const experienceFields: ProfileSubField[] = [
+export const experienceFields: ProfileEntryField[] = [
   { key: "title", label: texts.profile.edit.experienceFields.title, required: true },
   { key: "company", label: texts.profile.edit.experienceFields.company, required: true },
   { key: "location", label: texts.profile.edit.experienceFields.location },
@@ -11,7 +11,7 @@ export const experienceFields: ProfileSubField[] = [
   { key: "endDate", label: texts.profile.edit.experienceFields.endDate, type: "date" },
 ];
 
-export const educationFields: ProfileSubField[] = [
+export const educationFields: ProfileEntryField[] = [
   { key: "school", label: texts.profile.edit.educationFields.school, required: true },
   { key: "degree", label: texts.profile.edit.educationFields.degree, required: true },
   { key: "field", label: texts.profile.edit.educationFields.field },
@@ -20,7 +20,7 @@ export const educationFields: ProfileSubField[] = [
   { key: "endDate", label: texts.profile.edit.educationFields.endDate, type: "date" },
 ];
 
-export const certificationFields: ProfileSubField[] = [
+export const certificationFields: ProfileEntryField[] = [
   { key: "name", label: texts.profile.edit.certificationFields.name, required: true },
   { key: "issuer", label: texts.profile.edit.certificationFields.issuer, required: true },
   { key: "description", label: texts.profile.edit.certificationFields.description, multiline: true },

@@ -4,8 +4,8 @@ import { profileApi } from "@/lib/api";
 import type { Certification, CertificationInput } from "@/lib/api";
 import { texts } from "@/texts";
 
-import { ProfileSubList } from "../sub-list/profile-sub-list";
-import { certificationFields } from "./profile-sub-fields";
+import { ProfileEntryList } from "../entry-list/profile-entry-list";
+import { certificationFields } from "./profile-entry-fields";
 
 export function ProfileCertificationEditor() {
   const { data: certifications = [] } = useQuery({
@@ -14,15 +14,15 @@ export function ProfileCertificationEditor() {
   });
 
   return (
-    <ProfileSubList<Certification, CertificationInput>
-      items={certifications}
+    <ProfileEntryList<Certification, CertificationInput>
+      entries={certifications}
       fields={certificationFields}
-      createApi={profileApi.certifications.create}
-      updateApi={profileApi.certifications.update}
-      removeApi={profileApi.certifications.remove}
+      createEntry={profileApi.certifications.create}
+      updateEntry={profileApi.certifications.update}
+      removeEntry={profileApi.certifications.remove}
       queryKey={["me", "certifications"]}
       emptyMessage={texts.profile.edit.emptyCertification}
-      newItem={{
+      newEntry={{
         name: "",
         issuer: "",
         description: "",

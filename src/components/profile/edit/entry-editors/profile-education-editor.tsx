@@ -4,26 +4,26 @@ import { profileApi } from "@/lib/api";
 import type { Education, EducationInput } from "@/lib/api";
 import { texts } from "@/texts";
 
-import { ProfileSubList } from "../sub-list/profile-sub-list";
-import { educationFields } from "./profile-sub-fields";
+import { ProfileEntryList } from "../entry-list/profile-entry-list";
+import { educationFields } from "./profile-entry-fields";
 
 export function ProfileEducationEditor() {
-  const { data: educationItems = [] } = useQuery({
+  const { data: educationEntries = [] } = useQuery({
     queryKey: ["me", "education"],
     queryFn: () => profileApi.education.list(),
   });
 
   return (
-    <ProfileSubList<Education, EducationInput>
-      items={educationItems}
+    <ProfileEntryList<Education, EducationInput>
+      entries={educationEntries}
       fields={educationFields}
       currentlyHereKey="currentlyHere"
-      createApi={profileApi.education.create}
-      updateApi={profileApi.education.update}
-      removeApi={profileApi.education.remove}
+      createEntry={profileApi.education.create}
+      updateEntry={profileApi.education.update}
+      removeEntry={profileApi.education.remove}
       queryKey={["me", "education"]}
       emptyMessage={texts.profile.edit.emptyEducation}
-      newItem={{
+      newEntry={{
         school: "",
         degree: "",
         field: "",
