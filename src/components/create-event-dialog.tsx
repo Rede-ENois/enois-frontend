@@ -7,21 +7,11 @@ import { Plus } from "lucide-react";
 import { eventsApi } from "@/lib/api/events";
 import { texts } from "@/texts";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
-import type { FieldProps } from "@/types/components/events/field-props";
 
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-function Field({ label, children }: FieldProps) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
-      {children}
-    </div>
-  );
-}
 
 export function CreateEventDialog() {
   const queryClient = useQueryClient();
@@ -57,40 +47,55 @@ export function CreateEventDialog() {
           <DialogTitle>{texts.events.createEvent}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <Field label={texts.events.form.title}>
+          <FormField
+            label={texts.events.form.title}
+            labelClassName="text-xs font-medium text-muted-foreground"
+          >
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               className="h-10 border-transparent bg-muted"
             />
-          </Field>
+          </FormField>
           <div className="grid grid-cols-2 gap-3">
-            <Field label={texts.events.form.date}>
+            <FormField
+              label={texts.events.form.date}
+              labelClassName="text-xs font-medium text-muted-foreground"
+            >
               <Input
                 type="date"
                 value={date}
                 onChange={(event) => setDate(event.target.value)}
                 className="h-10 border-transparent bg-muted"
               />
-            </Field>
-            <Field label={texts.events.form.time}>
+            </FormField>
+            <FormField
+              label={texts.events.form.time}
+              labelClassName="text-xs font-medium text-muted-foreground"
+            >
               <Input
                 type="time"
                 value={time}
                 onChange={(event) => setTime(event.target.value)}
                 className="h-10 border-transparent bg-muted"
               />
-            </Field>
+            </FormField>
           </div>
-          <Field label={texts.events.form.host}>
+          <FormField
+            label={texts.events.form.host}
+            labelClassName="text-xs font-medium text-muted-foreground"
+          >
             <Input
               value={host}
               onChange={(event) => setHost(event.target.value)}
               placeholder={texts.events.form.hostPlaceholder}
               className="h-10 border-transparent bg-muted"
             />
-          </Field>
-          <Field label={texts.events.form.format}>
+          </FormField>
+          <FormField
+            label={texts.events.form.format}
+            labelClassName="text-xs font-medium text-muted-foreground"
+          >
             <select
               value={format}
               onChange={(event) => setFormat(event.target.value as CreateEventRequest["format"])}
@@ -100,7 +105,7 @@ export function CreateEventDialog() {
               <option value="IN_PERSON">{texts.events.formats.IN_PERSON}</option>
               <option value="HYBRID">{texts.events.formats.HYBRID}</option>
             </select>
-          </Field>
+          </FormField>
           <Button
             className="w-full rounded-full"
             disabled={!title.trim() || !date || !host.trim() || createEvent.isPending}

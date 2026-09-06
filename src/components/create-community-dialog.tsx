@@ -8,10 +8,10 @@ import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
 
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function CreateCommunityDialog({
@@ -43,27 +43,31 @@ export function CreateCommunityDialog({
           <DialogTitle>{texts.communities.create.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
+          <FormField
+            label={texts.communities.create.name}
+            labelClassName="text-xs text-muted-foreground"
+          >
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="h-10 border-transparent bg-muted"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">
-              {texts.communities.create.description}
-            </Label>
+          </FormField>
+          <FormField
+            label={texts.communities.create.description}
+            labelClassName="text-xs text-muted-foreground"
+          >
             <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={3}
               className="h-10 border-transparent bg-muted"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.topic}</Label>
+          </FormField>
+          <FormField
+            label={texts.communities.create.topic}
+            labelClassName="text-xs text-muted-foreground"
+          >
             <select
               value={topic}
               onChange={(event) => setTopic(event.target.value as CommunityTopic)}
@@ -75,7 +79,7 @@ export function CreateCommunityDialog({
                 </option>
               ))}
             </select>
-          </div>
+          </FormField>
           <Button
             className="w-full rounded-full"
             disabled={!name.trim() || !description.trim() || create.isPending}

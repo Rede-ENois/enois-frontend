@@ -8,10 +8,10 @@ import { texts } from "@/texts";
 import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
 
 import { ErrorBanner } from "@/components/error-banner";
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialogProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,8 +71,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
         ) : (
           <form onSubmit={submit} className="space-y-4 pb-2 pt-2" noValidate>
             <p className="text-sm text-muted-foreground">{texts.auth.forgot.description}</p>
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">{texts.auth.fields.email}</Label>
+            <FormField label={texts.auth.fields.email} error={errors.email}>
               <Input
                 name="email"
                 type="email"
@@ -81,8 +80,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
                 required
                 maxLength={255}
               />
-              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-            </div>
+            </FormField>
             {formError && <ErrorBanner error={formError} />}
             <Button type="submit" className="w-full gap-2 rounded-full" disabled={loading}>
               {loading ? (

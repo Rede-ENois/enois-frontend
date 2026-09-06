@@ -10,9 +10,9 @@ import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
 
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 
-import { AuthField } from "./auth-field";
 import { AuthPasswordInput } from "./auth-password-input";
 
 const resetSchema = z.object({
@@ -78,7 +78,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       <p className="mt-1 text-sm text-muted-foreground">{texts.auth.reset.description}</p>
 
       <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
-        <AuthField label={texts.auth.fields.newPassword} error={errors.password}>
+        <FormField label={texts.auth.fields.newPassword} error={errors.password}>
           <AuthPasswordInput
             name="password"
             placeholder={texts.auth.placeholders.newPassword}
@@ -86,7 +86,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             required
             maxLength={128}
           />
-        </AuthField>
+        </FormField>
 
         {errors.form && (
           <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">

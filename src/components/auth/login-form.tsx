@@ -9,10 +9,10 @@ import { texts } from "@/texts";
 import type { LoginFormProps } from "@/types/routes/auth/login-form-props";
 
 import { ErrorBanner } from "@/components/error-banner";
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { AuthField } from "./auth-field";
 import { AuthPasswordInput } from "./auth-password-input";
 import { AuthSocialOptions } from "./auth-social-options";
 
@@ -63,7 +63,7 @@ export function LoginForm({ onDone, onForgot }: LoginFormProps) {
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <AuthField label={texts.auth.fields.email} error={errors.email}>
+        <FormField label={texts.auth.fields.email} error={errors.email}>
           <Input
             name="email"
             type="email"
@@ -72,8 +72,8 @@ export function LoginForm({ onDone, onForgot }: LoginFormProps) {
             required
             maxLength={255}
           />
-        </AuthField>
-        <AuthField
+        </FormField>
+        <FormField
           label={texts.auth.fields.password}
           error={errors.password}
           right={
@@ -93,7 +93,7 @@ export function LoginForm({ onDone, onForgot }: LoginFormProps) {
             required
             maxLength={128}
           />
-        </AuthField>
+        </FormField>
 
         {formError && <ErrorBanner error={formError} />}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={loading}>

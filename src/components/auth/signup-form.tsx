@@ -9,10 +9,10 @@ import { texts } from "@/texts";
 import type { AuthFormProps } from "@/types/routes/auth/auth-form-props";
 
 import { ErrorBanner } from "@/components/error-banner";
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { AuthField } from "./auth-field";
 import { AuthPasswordInput } from "./auth-password-input";
 import { AuthSocialOptions } from "./auth-social-options";
 
@@ -64,7 +64,7 @@ export function SignupForm({ onDone }: AuthFormProps) {
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <AuthField label={texts.auth.fields.fullName} error={errors.name}>
+        <FormField label={texts.auth.fields.fullName} error={errors.name}>
           <Input
             name="name"
             placeholder={texts.auth.placeholders.name}
@@ -72,8 +72,8 @@ export function SignupForm({ onDone }: AuthFormProps) {
             required
             maxLength={80}
           />
-        </AuthField>
-        <AuthField label={texts.auth.fields.email} error={errors.email}>
+        </FormField>
+        <FormField label={texts.auth.fields.email} error={errors.email}>
           <Input
             name="email"
             type="email"
@@ -82,8 +82,8 @@ export function SignupForm({ onDone }: AuthFormProps) {
             required
             maxLength={255}
           />
-        </AuthField>
-        <AuthField label={texts.auth.fields.password} error={errors.password}>
+        </FormField>
+        <FormField label={texts.auth.fields.password} error={errors.password}>
           <AuthPasswordInput
             name="password"
             placeholder={texts.auth.placeholders.newPassword}
@@ -91,7 +91,7 @@ export function SignupForm({ onDone }: AuthFormProps) {
             required
             maxLength={128}
           />
-        </AuthField>
+        </FormField>
 
         {formError && <ErrorBanner error={formError} />}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={loading}>

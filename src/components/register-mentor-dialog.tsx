@@ -5,10 +5,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { mentorsApi } from "@/lib/api/mentors";
 import { texts } from "@/texts";
 
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export function RegisterMentorDialog() {
   const queryClient = useQueryClient();
@@ -45,24 +45,28 @@ export function RegisterMentorDialog() {
           <DialogTitle>{texts.mentoring.becomeMentorTitle}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.mentoring.expertise}</Label>
+          <FormField
+            label={texts.mentoring.expertise}
+            labelClassName="text-xs text-muted-foreground"
+          >
             <Input
               value={skillsText}
               onChange={(event) => setSkillsText(event.target.value)}
               placeholder={texts.mentoring.expertisePlaceholder}
               className="h-10 border-transparent bg-muted"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.mentoring.investment}</Label>
+          </FormField>
+          <FormField
+            label={texts.mentoring.investment}
+            labelClassName="text-xs text-muted-foreground"
+          >
             <Input
               value={price}
               onChange={(event) => setPrice(event.target.value)}
               placeholder={texts.mentoring.free}
               className="h-10 border-transparent bg-muted"
             />
-          </div>
+          </FormField>
           <Button
             className="w-full rounded-full"
             disabled={!skillsText.trim() || createMentor.isPending}
