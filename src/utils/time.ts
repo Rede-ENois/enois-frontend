@@ -2,11 +2,7 @@ import { formatDistanceToNow, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { texts } from "@/texts";
-
-type RelativeTimeRule = {
-  matches: (minutes: number) => boolean;
-  format: (minutes: number) => string;
-};
+import type { RelativeTimeRule } from "@/types/application/time/relative-time-rule";
 
 const relativeTimeRules: RelativeTimeRule[] = [
   { matches: (minutes) => minutes < 1, format: () => texts.time.now },
@@ -23,7 +19,6 @@ const relativeTimeRules: RelativeTimeRule[] = [
 
 export function formatRelativeTime(iso: string | null | undefined): string {
   if (!iso) return "";
-
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
 
@@ -34,7 +29,6 @@ export function formatRelativeTime(iso: string | null | undefined): string {
 
 export function formatNotificationTime(iso: string | null | undefined): string {
   if (!iso) return "";
-
   const date = parseISO(iso);
   return isValid(date)
     ? formatDistanceToNow(date, { addSuffix: true, locale: ptBR })
@@ -43,7 +37,6 @@ export function formatNotificationTime(iso: string | null | undefined): string {
 
 export function formatJobPostedAt(iso: string | null | undefined): string {
   if (!iso) return "";
-
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
 
@@ -52,7 +45,6 @@ export function formatJobPostedAt(iso: string | null | undefined): string {
     { matches: days < 1, value: texts.jobs.today },
     { matches: days < 30, value: texts.jobs.daysAgo(days) },
   ];
-
   return rules.find((rule) => rule.matches)?.value ?? date.toLocaleDateString("pt-BR");
 }
 

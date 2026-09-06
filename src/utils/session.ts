@@ -1,3 +1,6 @@
+import type { AuthenticatedSession } from "@/types/application/session/authenticated-session";
+import type { SessionTokens } from "@/types/application/session/session-tokens";
+
 export const sessionKeys = {
   token: "session_token",
   refreshToken: "refresh_token",
@@ -5,17 +8,6 @@ export const sessionKeys = {
   refreshExpiresAt: "refresh_expires_at",
   currentUser: "current_user",
 } as const;
-
-type SessionTokens = {
-  token: string;
-  refreshToken?: string | null;
-  expiresAt?: string | null;
-  refreshExpiresAt?: string | null;
-};
-
-type AuthenticatedSession = SessionTokens & {
-  user: unknown;
-};
 
 export function getSessionToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -27,12 +19,7 @@ export function getRefreshToken(): string | null {
   return window.localStorage.getItem(sessionKeys.refreshToken);
 }
 
-export function storeSessionTokens({
-  token,
-  refreshToken,
-  expiresAt,
-  refreshExpiresAt,
-}: SessionTokens): void {
+export function storeSessionTokens({ token, refreshToken, expiresAt, refreshExpiresAt }: SessionTokens): void {
   window.localStorage.setItem(sessionKeys.token, token);
 
   const optionalValues: Partial<Record<keyof typeof sessionKeys, string | null | undefined>> = {

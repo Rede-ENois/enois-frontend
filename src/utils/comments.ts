@@ -1,11 +1,6 @@
 import type { CommentView } from "@/lib/api";
 import { profileApi } from "@/lib/api";
-
-export type ReplyTarget = {
-  draft: string;
-  mentionedUserIds: string[];
-  replyToId: string;
-};
+import type { ReplyTarget } from "@/types/application/comment/reply-target";
 
 export async function createReplyTarget(comment: CommentView): Promise<ReplyTarget> {
   try {

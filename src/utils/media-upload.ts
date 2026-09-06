@@ -1,10 +1,6 @@
 import { mediaApi } from "@/lib/api/media";
+import type { UploadResult } from "@/types/application/media/upload-result";
 import { createMediaFileName } from "@/utils/files";
-
-export interface UploadResult {
-  mediaId: string;
-  cdnUrl: string;
-}
 
 export async function uploadMediaFile(
   file: File,

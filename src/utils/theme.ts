@@ -1,5 +1,5 @@
-export type Theme = "light" | "dark" | "system";
-export type ResolvedTheme = Exclude<Theme, "system">;
+import type { ResolvedTheme } from "@/types/application/theme/resolved-theme";
+import type { Theme } from "@/types/application/theme/theme";
 
 export const THEME_STORAGE_KEY = "connect-grow-theme";
 
