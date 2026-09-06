@@ -1,7 +1,10 @@
 import { Search } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { GlobalSearchMobileButtonProps } from "@/types/components/global-search/global-search-mobile-button-props";
+
+type GlobalSearchMobileButtonProps = {
+  onOpen: () => void;
+};
 
 export function GlobalSearchMobileButton({ onOpen }: GlobalSearchMobileButtonProps) {
   return (

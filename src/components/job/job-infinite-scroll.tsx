@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import type { JobInfiniteScrollProps } from "@/types/components/job/job-infinite-scroll-props";
+type JobInfiniteScrollProps = {
+  hasMore: boolean;
+  isLoading: boolean;
+  onLoadMore: () => void;
+};
 
 export function JobInfiniteScroll({ hasMore, isLoading, onLoadMore }: JobInfiniteScrollProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);

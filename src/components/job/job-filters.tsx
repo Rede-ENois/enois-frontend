@@ -1,7 +1,7 @@
 import { Briefcase, X } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { JobFiltersProps } from "@/types/components/job/job-filters-props";
+import type { JobFilterValues } from "@/types/components/job/job-filter-values";
 import { formatEnumLabel } from "@/utils/string";
 
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,12 @@ import { JobFilterGroup } from "./job-filter-group";
 
 const JOB_LEVELS = ["JUNIOR", "MID", "SENIOR", "LEAD"] as const;
 const JOB_TYPES = ["CLT", "PJ", "FREELANCE", "INTERN"] as const;
+
+type JobFiltersProps = {
+  values: JobFilterValues;
+  onChange: (field: keyof JobFilterValues, value: string) => void;
+  onClear: () => void;
+};
 
 export function JobFilters({ values, onChange, onClear }: JobFiltersProps) {
   const hasFilters = [values.level, values.location, values.type, values.skills].some(Boolean);

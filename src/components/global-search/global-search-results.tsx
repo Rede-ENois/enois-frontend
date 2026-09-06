@@ -1,7 +1,14 @@
 import { texts } from "@/texts";
-import type { GlobalSearchResultsProps } from "@/types/components/global-search/global-search-results-props";
+import type { SearchResult } from "@/types/application/search/search-result";
 
 import { UserAvatar } from "@/components/user-avatar";
+
+type GlobalSearchResultsProps = {
+  items: SearchResult[];
+  query: string;
+  isSearching: boolean;
+  onSelect: (item: SearchResult) => void;
+};
 
 export function GlobalSearchResults({
   items,

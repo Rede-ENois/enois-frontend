@@ -1,10 +1,27 @@
+import type { RefObject } from "react";
+
 import { Loader2, Search } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { GlobalSearchPanelProps } from "@/types/components/global-search/global-search-panel-props";
+import type { SearchResult } from "@/types/application/search/search-result";
 
 import { Input } from "@/components/ui/input";
 import { GlobalSearchResults } from "./global-search-results";
+
+type GlobalSearchPanelProps = {
+  query: string;
+  debouncedQuery: string;
+  results: SearchResult[];
+  isSearching: boolean;
+  isOpen: boolean;
+  isMobileOpen: boolean;
+  searchRef: RefObject<HTMLDivElement | null>;
+  inputRef: RefObject<HTMLInputElement | null>;
+  onQueryChange: (value: string) => void;
+  onFocus: () => void;
+  onCloseMobile: () => void;
+  onSelect: (item: SearchResult) => void;
+};
 
 export function GlobalSearchPanel({
   query,

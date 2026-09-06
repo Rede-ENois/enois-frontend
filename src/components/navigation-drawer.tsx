@@ -1,9 +1,13 @@
 import { texts } from "@/texts";
-import type { NavigationDrawerProps } from "@/types/components/navigation/navigation-drawer-props";
 
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AppBrand } from "./app-brand";
 import { NavigationLinks } from "./navigation-links";
+
+type NavigationDrawerProps = {
+  open: boolean;
+  onClose: () => void;
+};
 
 export function NavigationDrawer({ open, onClose }: NavigationDrawerProps) {
   return (
