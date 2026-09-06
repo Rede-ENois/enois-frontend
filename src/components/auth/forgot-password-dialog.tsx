@@ -56,10 +56,7 @@ export function ForgotPasswordDialog({
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(nextIsOpen) => (nextIsOpen ? onOpenChange(nextIsOpen) : handleClose())}
-    >
+    <Dialog open={isOpen} onOpenChange={(nextIsOpen) => (nextIsOpen ? onOpenChange(nextIsOpen) : handleClose())}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-semibold tracking-tight">{texts.auth.forgot.title}</DialogTitle>
