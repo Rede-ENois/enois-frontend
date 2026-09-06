@@ -8,14 +8,41 @@ const SESSION_KEYS = [
   "current_user",
 ] as const;
 
+function getStorage() {
+  return typeof window === "undefined" ? null : localStorage;
+}
+
+export function getSessionToken(): string | null {
+  return getStorage()?.getItem("session_token") ?? null;
+}
+
+export function getRefreshToken(): string | null {
+  return getStorage()?.getItem("refresh_token") ?? null;
+}
+
 export function clearAuthSession() {
-  for (const key of SESSION_KEYS) localStorage.removeItem(key);
+  const storage = getStorage();
+  if (!storage) return;
+
+  for (const key of SESSION_KEYS) storage.removeItem(key);
+}
+
+export function persistAuthTokens(
+  session: Pick<AuthResponse, "token" | "refreshToken" | "expiresAt" | "refreshExpiresAt">,
+) {
+  const storage = getStorage();
+  if (!storage) return;
+
+  storage.setItem("session_token", session.token);
+  storage.setItem("refresh_token", session.refreshToken);
+  storage.setItem("session_expires_at", session.expiresAt);
+  storage.setItem("refresh_expires_at", session.refreshExpiresAt);
 }
 
 export function persistAuthSession(session: AuthResponse) {
-  localStorage.setItem("session_token", session.token);
-  localStorage.setItem("refresh_token", session.refreshToken);
-  localStorage.setItem("session_expires_at", session.expiresAt);
-  localStorage.setItem("refresh_expires_at", session.refreshExpiresAt);
-  localStorage.setItem("current_user", JSON.stringify(session.user));
+  const storage = getStorage();
+  if (!storage) return;
+
+  persistAuthTokens(session);
+  storage.setItem("current_user", JSON.stringify(session.user));
 }

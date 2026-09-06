@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import { getSessionToken } from "./api-client";
+import { getSessionToken } from "./auth-session";
 import { useCurrentUser } from "./current-user";
 
 export function isAuthenticated(): boolean {

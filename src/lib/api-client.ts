@@ -1,5 +1,12 @@
 import type { RequestOptions } from "@/types/application/api/request-options";
 
+import {
+  clearAuthSession,
+  getRefreshToken,
+  getSessionToken,
+  persistAuthTokens,
+} from "./auth-session";
+
 const API_BACKEND = import.meta.env.VITE_API_BACKEND ?? "http://localhost:8081/api";
 
 function baseUrl(): string {
@@ -20,13 +27,8 @@ export class ApiError extends Error {
   }
 }
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("session_token");
-}
-
 function authHeaders(): Record<string, string> {
-  const token = getToken();
+  const token = getSessionToken();
   const headers: Record<string, string> = {};
   if (token) headers["X-Session-Token"] = token;
   return headers;
@@ -55,7 +57,7 @@ function idemKey(): Record<string, string> {
 let isRefreshing = false;
 
 async function tryRefreshToken(): Promise<boolean> {
-  const token = localStorage.getItem("refresh_token");
+  const token = getRefreshToken();
   if (!token) return false;
 
   try {
@@ -66,28 +68,17 @@ async function tryRefreshToken(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      clearSession();
+      clearAuthSession();
       return false;
     }
 
     const data = await response.json();
     const body = data?.body ?? data;
-    localStorage.setItem("session_token", body.token);
-    localStorage.setItem("refresh_token", body.refreshToken);
-    localStorage.setItem("session_expires_at", body.expiresAt);
-    localStorage.setItem("refresh_expires_at", body.refreshExpiresAt);
+    persistAuthTokens(body);
     return true;
   } catch {
     return false;
   }
-}
-
-function clearSession() {
-  localStorage.removeItem("session_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("session_expires_at");
-  localStorage.removeItem("refresh_expires_at");
-  localStorage.removeItem("current_user");
 }
 
 async function request<T>(
@@ -132,7 +123,7 @@ async function request<T>(
     isRefreshing = false;
 
     if (refreshed) {
-      headers["X-Session-Token"] = getToken() ?? "";
+      headers["X-Session-Token"] = getSessionToken() ?? "";
       const retry = await fetch(`${baseUrl()}${path}`, {
         method,
         headers,
@@ -149,7 +140,7 @@ async function request<T>(
       }
     }
 
-    clearSession();
+    clearAuthSession();
     if (typeof window !== "undefined") {
       window.location.href = "/entrar?tab=login";
     }
@@ -201,5 +192,3 @@ export function buildQuery(
   const str = search.toString();
   return str ? `?${str}` : "";
 }
-
-export { getToken as getSessionToken };

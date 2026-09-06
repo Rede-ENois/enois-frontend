@@ -16,4 +16,5 @@ export { reportsApi, REPORT_REASONS } from "./reports";
 export { rankingApi } from "./ranking";
 export { usersApi } from "./users";
 export { recommendationsApi } from "./recommendations";
-export { api, ApiError, buildQuery, getSessionToken } from "../api-client";
+export { api, ApiError, buildQuery } from "../api-client";
+export { getSessionToken } from "../auth-session";
