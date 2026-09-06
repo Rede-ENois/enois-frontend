@@ -3,8 +3,12 @@ import { useState } from "react";
 import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { ErrorBannerProps } from "@/types/components/shared/error-banner-props";
 import { describeError, formatErrorDetails, getErrorHint } from "@/utils/errors";
+
+type ErrorBannerProps = {
+  error: unknown;
+  className?: string;
+};
 
 export function ErrorBanner({ error, className }: ErrorBannerProps) {
   const [open, setOpen] = useState(false);

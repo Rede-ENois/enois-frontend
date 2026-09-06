@@ -2,8 +2,11 @@ import { Fragment } from "react";
 
 import { Link } from "@tanstack/react-router";
 
-import type { RichTextProps } from "@/types/components/shared/rich-text-props";
 import { tokenizeRichText } from "@/utils/text";
+
+type RichTextProps = {
+  text: string;
+};
 
 export function RichText({ text }: RichTextProps) {
   return tokenizeRichText(text).map((token, index) => {

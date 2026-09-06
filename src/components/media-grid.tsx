@@ -4,7 +4,10 @@ import { useQueries } from "@tanstack/react-query";
 
 import { mediaApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
-import type { MediaGridProps } from "@/types/components/shared/media-grid-props";
+
+type MediaGridProps = {
+  mediaIds: string[];
+};
 
 export function MediaGrid({ mediaIds }: MediaGridProps) {
   const queryResults = useQueries({

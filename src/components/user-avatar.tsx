@@ -1,9 +1,16 @@
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
-import type { UserAvatarProps } from "@/types/components/shared/user-avatar-props";
 import { getInitials } from "@/utils/user";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+type UserAvatarProps = {
+  src?: string | null;
+  alt?: string | null;
+  className?: string;
+  fallback?: string;
+  fallbackClassName?: string;
+};
 
 export function UserAvatar({ src, alt, className, fallback, fallbackClassName }: UserAvatarProps) {
   const label = alt ?? texts.profile.avatarFallback;

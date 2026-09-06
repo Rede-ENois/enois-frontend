@@ -3,11 +3,18 @@ import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 
 import { texts } from "@/texts";
-import type { ImageCropDialogProps } from "@/types/components/shared/image-crop-dialog-props";
+import type { ControlledDialogProps } from "@/types/components/shared/controlled-dialog-props";
 import { cropImage } from "@/utils/images";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+type ImageCropDialogProps = ControlledDialogProps & {
+  imageSrc: string;
+  aspect: number;
+  title: string;
+  onCropComplete: (croppedImageBlob: Blob) => Promise<void>;
+};
 
 export function ImageCropDialog({ isOpen, onOpenChange, imageSrc, aspect, title, onCropComplete }: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
