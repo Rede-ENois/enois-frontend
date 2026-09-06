@@ -1,18 +1,15 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
 import { GuestAppHeader } from "./guest-app-header";
-import { AppLayout } from "./app-layout";
 
 export function GuestAppContainer({ children }: WithRequiredChildren) {
   return (
-    <AppLayout>
-      <AppLayout.Header>
-        <GuestAppHeader />
-      </AppLayout.Header>
+    <div className="min-h-screen bg-background">
+      <GuestAppHeader />
 
-      <AppLayout.Content>
-        <AppLayout.Main>{children}</AppLayout.Main>
-      </AppLayout.Content>
-    </AppLayout>
+      <div className="mx-auto flex max-w-7xl gap-6 px-3 py-4 sm:px-6 sm:py-6 lg:pb-6">
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
+    </div>
   );
 }

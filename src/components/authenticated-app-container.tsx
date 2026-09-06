@@ -1,31 +1,24 @@
 import { useCurrentUser } from "@/lib/current-user";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
-import { AuthenticatedAppHeader } from "./authenticated-app-header";
 import { AppSidebar } from "./app-sidebar";
+import { AuthenticatedAppHeader } from "./authenticated-app-header";
 import { NavigationDrawer } from "./navigation-drawer";
-import { AppLayout } from "./app-layout";
 
 export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
   useCurrentUser();
 
   return (
-    <AppLayout>
-      <AppLayout.Header>
-        <AuthenticatedAppHeader />
-      </AppLayout.Header>
+    <div className="min-h-screen bg-background">
+      <AuthenticatedAppHeader />
 
-      <AppLayout.Content>
-        <AppLayout.Sidebar>
-          <AppSidebar />
-        </AppLayout.Sidebar>
+      <div className="mx-auto flex max-w-7xl gap-6 px-3 py-4 sm:px-6 sm:py-6 lg:pb-6">
+        <AppSidebar />
 
-        <AppLayout.Main>{children}</AppLayout.Main>
-      </AppLayout.Content>
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
 
-      <AppLayout.Navigation>
-        <NavigationDrawer />
-      </AppLayout.Navigation>
-    </AppLayout>
+      <NavigationDrawer />
+    </div>
   );
 }
