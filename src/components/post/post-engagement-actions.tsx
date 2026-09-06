@@ -1,15 +1,15 @@
 import { Flag, MessageSquare, Share2 } from "lucide-react";
 
-import type { PostView } from "@/lib/api";
 import { texts } from "@/texts";
+import type { PostEngagementActionsProps } from "@/types/components/post/post-engagement-actions-props";
 
-export function PostEngagementActions({ counters, onOpenReactions, onToggleComments, onShare, onReport }: {
-  counters: PostView["counters"];
-  onOpenReactions: () => void;
-  onToggleComments: () => void;
-  onShare: () => void;
-  onReport: () => void;
-}) {
+export function PostEngagementActions({
+  counters,
+  onOpenReactions,
+  onToggleComments,
+  onShare,
+  onReport,
+}: PostEngagementActionsProps) {
   return (
     <>
       <button type="button" onClick={onOpenReactions} className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs tabular-nums text-muted-foreground transition hover:bg-muted hover:text-foreground">

@@ -1,10 +1,6 @@
 import { Bookmark } from "lucide-react";
 
-type PostSaveActionProps = {
-  isSaved: boolean;
-  saves: number;
-  onSave: () => void;
-};
+import type { PostSaveActionProps } from "@/types/components/post/post-save-action-props";
 
 export function PostSaveAction({ isSaved, saves, onSave }: PostSaveActionProps) {
   return (

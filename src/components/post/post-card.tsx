@@ -1,5 +1,5 @@
-import type { PostView } from "@/lib/api";
 import { useAuth } from "@/lib/use-auth";
+import type { PostCardProps } from "@/types/components/post/post-card-props";
 
 import { PostCardView } from "./post-card-view";
 import { PostReportDialog } from "./post-report-dialog";
@@ -7,10 +7,6 @@ import { ReactionsDialog } from "./reactions-dialog";
 import { ReactionsSummary } from "./reactions-summary";
 import { usePostComments } from "./use-post-comments";
 import { usePostInteractions } from "./use-post-interactions";
-
-type PostCardProps = {
-  post: PostView;
-};
 
 export function PostCard({ post }: PostCardProps) {
   const { user: currentUser } = useAuth();

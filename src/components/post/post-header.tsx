@@ -1,9 +1,9 @@
-import type { PostView } from "@/lib/api";
+import type { PostHeaderProps } from "@/types/components/post/post-header-props";
 
 import { PostAuthorInfo } from "./post-author-info";
 import { postTypeMeta } from "./post-type-meta";
 
-export function PostHeader({ post }: { post: PostView }) {
+export function PostHeader({ post }: PostHeaderProps) {
   const meta = postTypeMeta[post.type] ?? postTypeMeta.INSIGHT;
 
   return (

@@ -1,5 +1,5 @@
-import type { CommentView } from "@/lib/api";
 import { texts } from "@/texts";
+import type { PostCommentItemProps } from "@/types/components/post/post-comment-item-props";
 import { formatRelativeTime } from "@/utils/time";
 
 import { RichText } from "@/components/rich-text";
@@ -7,14 +7,6 @@ import { UserAvatar } from "@/components/user-avatar";
 
 import { CommentReactionPicker } from "./comment-reaction-picker";
 import { useCommentReaction } from "./use-comment-reaction";
-
-type PostCommentItemProps = {
-  comment: CommentView;
-  replyingTo?: string;
-  currentUserId?: string;
-  onDelete?: (commentId: string) => void;
-  onReply?: (comment: CommentView) => void;
-};
 
 export function PostCommentItem({
   comment,

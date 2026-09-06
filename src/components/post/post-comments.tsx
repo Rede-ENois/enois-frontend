@@ -1,24 +1,12 @@
-import type { FormEventHandler } from "react";
 import { Send } from "lucide-react";
 
-import type { CommentView, Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { PostCommentsProps } from "@/types/components/post/post-comments-props";
 import { getParentAuthorName, getReplies } from "@/utils/comments";
 import { MentionTextarea } from "@/components/mention-textarea/mention-textarea";
 import { PostCommentItem } from "@/components/post/post-comment-item";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-
-type PostCommentsProps = {
-  currentUser: Profile | null | undefined;
-  comments: CommentView[];
-  rootComments: CommentView[];
-  commentContent: string;
-  onDeleteComment: (commentId: string) => void;
-  onReply: (comment: CommentView) => void;
-  onCommentContentChange: (value: string, mentionedUserIds: string[]) => void;
-  onSubmitComment: FormEventHandler<HTMLFormElement>;
-};
 
 export function PostComments({
   currentUser,

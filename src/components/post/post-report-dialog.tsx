@@ -3,18 +3,13 @@ import { useState } from "react";
 import { REPORT_REASONS, reportApi } from "@/lib/api";
 import type { ReportReason } from "@/lib/api";
 import { texts } from "@/texts";
+import type { PostReportDialogProps } from "@/types/components/post/post-report-dialog-props";
 import { formatEnumLabel } from "@/utils/string";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-type PostReportDialogProps = {
-  postId: string;
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-};
 
 export function PostReportDialog({ postId, isOpen, onOpenChange }: PostReportDialogProps) {
   const [reason, setReason] = useState<ReportReason>("SPAM");

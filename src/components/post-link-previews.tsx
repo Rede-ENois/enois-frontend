@@ -1,3 +1,4 @@
+import type { PostLinkPreviewsProps } from "@/types/components/post-link-previews/post-link-previews-props";
 import {
   extractUniqueUrls,
   extractVideoReference,
@@ -5,10 +6,6 @@ import {
 } from "@/utils/video";
 
 import { VideoEmbedPlayer } from "@/components/post-link-previews/video-embed-player";
-
-type PostLinkPreviewsProps = {
-  content: string;
-};
 
 export function PostLinkPreviews({ content }: PostLinkPreviewsProps) {
   return (

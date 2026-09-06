@@ -2,18 +2,13 @@ import { useState } from "react";
 
 import { PlayIcon } from "@/assets/svgs/play-icon";
 import { texts } from "@/texts";
+import type { VideoEmbedPlayerProps } from "@/types/components/post-link-previews/video-embed-player-props";
 import {
   getVideoEmbedUrl,
   getVideoThumbnail,
   videoPlaceholderIcons,
   videoProviderLabels,
-  type VideoProvider,
 } from "@/utils/video";
-
-type VideoEmbedPlayerProps = {
-  provider: VideoProvider;
-  videoId: string;
-};
 
 export function VideoEmbedPlayer({ provider, videoId }: VideoEmbedPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);

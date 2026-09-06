@@ -1,18 +1,11 @@
 import { REACTION_EMOJIS } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ReactionsDialogProps } from "@/types/components/post/reactions-dialog-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { useReactionsDialog } from "./use-reactions-dialog";
-
-type ReactionsDialogProps = {
-  postId: string;
-  currentUserReaction: string | null;
-  currentUserId?: string;
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-};
 
 export function ReactionsDialog({
   postId,

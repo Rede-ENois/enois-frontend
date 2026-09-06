@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS, reactionApi } from "@/lib/api";
-
-type ReactionsSummaryProps = {
-  postId: string;
-  currentReaction: string | null;
-};
+import type { ReactionsSummaryProps } from "@/types/components/post/reactions-summary-props";
 
 export function ReactionsSummary({ postId, currentReaction }: ReactionsSummaryProps) {
   const { data: reactionsData } = useQuery({

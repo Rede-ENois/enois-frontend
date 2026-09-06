@@ -1,8 +1,9 @@
+import type { PostCardViewProps } from "@/types/components/post/post-card-view-props";
+
 import { PostActions } from "./post-actions";
 import { PostComments } from "./post-comments";
 import { PostContent } from "./post-content";
 import { PostHeader } from "./post-header";
-import type { PostCardViewProps } from "./post-card-view-types";
 
 export function PostCardView(props: PostCardViewProps) {
   return (

@@ -1,13 +1,11 @@
-import type { ReactNode } from "react";
-
-import type { PostView } from "@/lib/api";
+import type { PostContentProps } from "@/types/components/post/post-content-props";
 
 import { MediaGrid } from "@/components/media-grid";
 import { PostLinkPreviews } from "@/components/post-link-previews";
 import { RichText } from "@/components/rich-text";
 import { Badge } from "@/components/ui/badge";
 
-export function PostContent({ post, reactionSummary }: { post: PostView; reactionSummary: ReactNode }) {
+export function PostContent({ post, reactionSummary }: PostContentProps) {
   return (
     <>
       <p className="mt-4 whitespace-pre-line break-words text-[15px] font-light leading-relaxed text-text-strong">

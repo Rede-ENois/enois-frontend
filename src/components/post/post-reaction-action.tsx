@@ -3,13 +3,9 @@ import { Heart } from "lucide-react";
 import { REACTION_EMOJIS } from "@/lib/api";
 import type { ReactionType } from "@/lib/api";
 import { texts } from "@/texts";
+import type { PostReactionActionProps } from "@/types/components/post/post-reaction-action-props";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-type PostReactionActionProps = {
-  currentReaction: string | null;
-  onReaction: (type: ReactionType) => void;
-};
 
 export function PostReactionAction({
   currentReaction,

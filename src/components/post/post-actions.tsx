@@ -1,20 +1,8 @@
-import type { PostView, ReactionType } from "@/lib/api";
+import type { PostActionsProps } from "@/types/components/post/post-actions-props";
 
 import { PostEngagementActions } from "./post-engagement-actions";
 import { PostReactionAction } from "./post-reaction-action";
 import { PostSaveAction } from "./post-save-action";
-
-type PostActionsProps = {
-  counters: PostView["counters"];
-  currentReaction: string | null;
-  isSaved: boolean;
-  onReaction: (type: ReactionType) => void;
-  onOpenReactions: () => void;
-  onToggleComments: () => void;
-  onShare: () => void;
-  onReport: () => void;
-  onSave: () => void;
-};
 
 export function PostActions({
   counters,

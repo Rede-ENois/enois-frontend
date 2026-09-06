@@ -1,14 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { profileApi, reactionApi } from "@/lib/api";
+import type { UseReactionsDialogOptions } from "@/types/components/post/use-reactions-dialog-options";
 import { prependIfMissing, unique } from "@/utils/collections";
-
-type UseReactionsDialogOptions = {
-  postId: string;
-  currentUserReaction: string | null;
-  currentUserId?: string;
-  isOpen: boolean;
-};
 
 export function useReactionsDialog({
   postId,

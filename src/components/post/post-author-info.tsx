@@ -1,15 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
-import { UserAvatar } from "@/components/user-avatar";
+import type { PostAuthorInfoProps } from "@/types/components/post/post-author-info-props";
 import { formatRelativeTime } from "@/utils/time";
 
-type PostAuthorInfoProps = {
-  authorUsername: string;
-  authorName: string;
-  authorAvatar: string | null;
-  createdAt: string;
-  fallbackClassName?: string;
-};
+import { UserAvatar } from "@/components/user-avatar";
 
 export function PostAuthorInfo({
   authorUsername,
