@@ -1,23 +1,11 @@
 import { texts } from "@/texts";
+import type { ProfileEntryFormProps } from "@/types/components/profile/edit/entry-list/profile-entry-form-props";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ProfileEntryFormField } from "./profile-entry-form-field";
-import type { ProfileEntryField } from "./profile-entry-list-types";
-
-type ProfileEntryFormProps = {
-  fields: ProfileEntryField[];
-  formValues: Record<string, string>;
-  currentlyHereKey?: string;
-  isCurrentlyHere: boolean;
-  isPending: boolean;
-  onFieldChange: (key: string, value: string) => void;
-  onCurrentlyHereChange: (value: boolean) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-};
 
 export function ProfileEntryForm({
   fields,

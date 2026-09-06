@@ -1,13 +1,6 @@
 import { Pencil, Trash2 } from "lucide-react";
 
-import type { ProfileEntryField } from "./profile-entry-list-types";
-
-type ProfileEntryItemProps<T extends { id: string }> = {
-  entry: T;
-  fields: ProfileEntryField[];
-  onEdit: (entry: T) => void;
-  onDelete: (entryId: string) => void;
-};
+import type { ProfileEntryItemProps } from "@/types/components/profile/edit/entry-list/profile-entry-item-props";
 
 export function ProfileEntryItem<T extends { id: string }>({
   entry,

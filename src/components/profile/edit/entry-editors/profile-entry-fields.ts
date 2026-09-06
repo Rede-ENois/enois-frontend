@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
-
-import type { ProfileEntryField } from "../entry-list/profile-entry-list-types";
+import type { ProfileEntryField } from "@/types/components/profile/edit/entry-list/profile-entry-field";
 
 export const experienceFields: ProfileEntryField[] = [
   { key: "title", label: texts.profile.edit.experienceFields.title, required: true },

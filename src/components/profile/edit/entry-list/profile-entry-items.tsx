@@ -1,19 +1,10 @@
 import { Plus } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { ProfileEntryItemsProps } from "@/types/components/profile/edit/entry-list/profile-entry-items-props";
 
 import { Button } from "@/components/ui/button";
 import { ProfileEntryItem } from "./profile-entry-item";
-import type { ProfileEntryField } from "./profile-entry-list-types";
-
-type ProfileEntryItemsProps<T extends { id: string }> = {
-  entries: T[];
-  fields: ProfileEntryField[];
-  emptyMessage: string;
-  onEdit: (entry: T) => void;
-  onDelete: (entryId: string) => void;
-  onAdd: () => void;
-};
 
 export function ProfileEntryItems<T extends { id: string }>({
   entries,

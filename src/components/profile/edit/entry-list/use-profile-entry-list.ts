@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { ProfileEntryListProps } from "./profile-entry-list-types";
+import type { ProfileEntryListProps } from "@/types/components/profile/edit/entry-list/profile-entry-list-props";
 
 export function useProfileEntryList<T extends { id: string }, TInput extends object>(
   props: ProfileEntryListProps<T, TInput>,

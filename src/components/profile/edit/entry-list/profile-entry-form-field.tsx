@@ -1,11 +1,6 @@
-import type { ReactNode } from "react";
+import type { ProfileEntryFormFieldProps } from "@/types/components/profile/edit/entry-list/profile-entry-form-field-props";
 
 import { Label } from "@/components/ui/label";
-
-type ProfileEntryFormFieldProps = {
-  label: string;
-  children: ReactNode;
-};
 
 export function ProfileEntryFormField({ label, children }: ProfileEntryFormFieldProps) {
   return (

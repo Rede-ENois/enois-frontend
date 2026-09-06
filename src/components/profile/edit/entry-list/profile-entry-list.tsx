@@ -1,6 +1,7 @@
+import type { ProfileEntryListProps } from "@/types/components/profile/edit/entry-list/profile-entry-list-props";
+
 import { ProfileEntryForm } from "./profile-entry-form";
 import { ProfileEntryItems } from "./profile-entry-items";
-import type { ProfileEntryListProps } from "./profile-entry-list-types";
 import { useProfileEntryList } from "./use-profile-entry-list";
 
 export function ProfileEntryList<T extends { id: string }, TInput extends object>(
