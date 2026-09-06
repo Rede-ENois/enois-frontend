@@ -1,14 +1,11 @@
+import type { ComposerActionProps } from "@/types/components/feed/composer-action-props";
+
 export function ComposerAction({
   icon: Icon,
   label,
   active,
   onClick,
-}: {
-  icon: React.ElementType;
-  label: string;
-  active?: boolean;
-  onClick: () => void;
-}) {
+}: ComposerActionProps) {
   return (
     <button
       type="button"

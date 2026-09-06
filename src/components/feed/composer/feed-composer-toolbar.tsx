@@ -1,22 +1,8 @@
-import type { PostView } from "@/lib/api";
-import type { LocalMediaItem, LocalMediaType } from "@/utils/media";
+import type { FeedComposerToolbarProps } from "@/types/components/feed/feed-composer-toolbar-props";
 
 import { ComposerMediaAction } from "./composer-media-action";
 import { ComposerPostTypeActions } from "./composer-post-type-actions";
 import { ComposerPublishControl } from "./composer-publish-control";
-
-type FeedComposerToolbarProps = {
-  content: string;
-  postType: PostView["type"];
-  media: LocalMediaItem[];
-  mediaType: LocalMediaType | null;
-  publicationError: string | null;
-  isUploading: boolean;
-  uploadProgress: number;
-  isPublishing: boolean;
-  onPostTypeChange: (type: PostView["type"]) => void;
-  onMediaSelect: (files: FileList) => void;
-};
 
 export function FeedComposerToolbar({
   content,

@@ -2,6 +2,7 @@ import { BarChart3, Calendar, FileText, Image } from "lucide-react";
 
 import type { PostView } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ComposerPostTypeActionsProps } from "@/types/components/feed/composer-post-type-actions-props";
 
 import { ComposerAction } from "./composer-action";
 
@@ -16,13 +17,7 @@ const actions: Array<{
   { type: "PROJECT", icon: Calendar, label: texts.feed.composer.types.project },
 ];
 
-export function ComposerPostTypeActions({
-  postType,
-  onChange,
-}: {
-  postType: PostView["type"];
-  onChange: (type: PostView["type"]) => void;
-}) {
+export function ComposerPostTypeActions({ postType, onChange }: ComposerPostTypeActionsProps) {
   return actions.map((action) => (
     <ComposerAction
       key={action.type}

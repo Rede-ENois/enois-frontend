@@ -1,15 +1,6 @@
-export type LocalMediaType = "image" | "video";
-
-export interface LocalMediaItem {
-  type: LocalMediaType;
-  file: File;
-  preview: string;
-}
-
-type MediaRule = {
-  maxItems: number;
-  incompatibleWith: LocalMediaType[];
-};
+import type { LocalMediaItem } from "@/types/components/feed/local-media-item";
+import type { LocalMediaType } from "@/types/components/feed/local-media-type";
+import type { MediaRule } from "@/types/components/feed/media-rule";
 
 const mediaRules: Record<LocalMediaType, MediaRule> = {
   image: { maxItems: 4, incompatibleWith: ["video"] },

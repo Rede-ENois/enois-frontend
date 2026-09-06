@@ -3,19 +3,12 @@ import { useRef } from "react";
 import { Film, Image } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { LocalMediaItem, LocalMediaType } from "@/utils/media";
+import type { ComposerMediaActionProps } from "@/types/components/feed/composer-media-action-props";
+import type { LocalMediaType } from "@/types/components/feed/local-media-type";
 
 import { ComposerAction } from "./composer-action";
 
-export function ComposerMediaAction({
-  media,
-  mediaType,
-  onSelect,
-}: {
-  media: LocalMediaItem[];
-  mediaType: LocalMediaType | null;
-  onSelect: (files: FileList) => void;
-}) {
+export function ComposerMediaAction({ media, mediaType, onSelect }: ComposerMediaActionProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const mediaLabels: Record<LocalMediaType, string> = {
     image: texts.feed.composer.mediaCount(media.length),
