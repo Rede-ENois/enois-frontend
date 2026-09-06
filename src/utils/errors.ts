@@ -1,7 +1,6 @@
 import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
-import type { ErrorDescription } from "@/types/application/error/error-description";
-import type { ErrorKind } from "@/types/application/error/error-kind";
+import type { ErrorDescription, ErrorKind } from "@/types/application/error/error-description";
 
 const errorDescribers: Record<ErrorKind, (error: unknown) => ErrorDescription> = {
   api: (error) => {

@@ -1,5 +1,4 @@
-import type { VideoProvider } from "@/types/application/video/video-provider";
-import type { VideoReference } from "@/types/application/video/video-reference";
+import type { VideoProvider, VideoReference } from "@/types/application/video/video-reference";
 
 const videoPatterns: Array<{ regex: RegExp; type: VideoProvider }> = [
   { regex: /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/, type: "youtube" },

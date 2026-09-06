@@ -8,3 +8,6 @@ export type Experience = {
   startDate: string | null;
   endDate: string | null;
 };
+
+export type ExperienceInput = Pick<Experience, "title" | "company"> &
+  Partial<Pick<Experience, "location" | "description" | "startDate" | "endDate">>;

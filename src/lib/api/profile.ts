@@ -1,20 +1,14 @@
-import type { Certification } from "@/types/application/profile/certification";
-import type { CertificationInput } from "@/types/application/profile/certification-input";
-import type { Education } from "@/types/application/profile/education";
-import type { EducationInput } from "@/types/application/profile/education-input";
-import type { Experience } from "@/types/application/profile/experience";
-import type { ExperienceInput } from "@/types/application/profile/experience-input";
+import type { Certification, CertificationInput } from "@/types/application/profile/certification";
+import type { Education, EducationInput } from "@/types/application/profile/education";
+import type { Experience, ExperienceInput } from "@/types/application/profile/experience";
 import type { Profile } from "@/types/application/profile/profile";
 import type { UpdateProfileInput } from "@/types/application/profile/update-profile-input";
 
 import { api } from "../api-client";
 
-export type { Certification } from "@/types/application/profile/certification";
-export type { CertificationInput } from "@/types/application/profile/certification-input";
-export type { Education } from "@/types/application/profile/education";
-export type { EducationInput } from "@/types/application/profile/education-input";
-export type { Experience } from "@/types/application/profile/experience";
-export type { ExperienceInput } from "@/types/application/profile/experience-input";
+export type { Certification, CertificationInput } from "@/types/application/profile/certification";
+export type { Education, EducationInput } from "@/types/application/profile/education";
+export type { Experience, ExperienceInput } from "@/types/application/profile/experience";
 export type { Profile } from "@/types/application/profile/profile";
 export type { UpdateProfileInput } from "@/types/application/profile/update-profile-input";
 

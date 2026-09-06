@@ -1,6 +1,5 @@
 import type { ConnectionRequest } from "@/types/application/network/connection-request";
-import type { ConnectionStatus } from "@/types/application/network/connection-status";
-import type { ConnectionStatusDetails } from "@/types/application/network/connection-status-details";
+import type { ConnectionStatus, ConnectionStatusDetails } from "@/types/application/network/connection-status";
 import type { NetworkSummary } from "@/types/application/network/network-summary";
 import type { NetworkUser } from "@/types/application/network/network-user";
 import type { PageResponse } from "@/types/application/pagination/page-response";
@@ -8,8 +7,7 @@ import type { PageResponse } from "@/types/application/pagination/page-response"
 import { api, buildQuery } from "../api-client";
 
 export type { ConnectionRequest } from "@/types/application/network/connection-request";
-export type { ConnectionStatus } from "@/types/application/network/connection-status";
-export type { ConnectionStatusDetails } from "@/types/application/network/connection-status-details";
+export type { ConnectionStatus, ConnectionStatusDetails } from "@/types/application/network/connection-status";
 export type { NetworkSummary } from "@/types/application/network/network-summary";
 export type { NetworkUser } from "@/types/application/network/network-user";
 

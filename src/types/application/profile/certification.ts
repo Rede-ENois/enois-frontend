@@ -7,3 +7,6 @@ export type Certification = {
   expirationDate: string | null;
   credentialUrl: string | null;
 };
+
+export type CertificationInput = Pick<Certification, "name" | "issuer"> &
+  Partial<Pick<Certification, "description" | "issueDate" | "expirationDate" | "credentialUrl">>;

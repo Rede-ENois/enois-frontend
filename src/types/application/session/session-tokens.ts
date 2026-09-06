@@ -4,3 +4,7 @@ export type SessionTokens = {
   expiresAt?: string | null;
   refreshExpiresAt?: string | null;
 };
+
+export type AuthenticatedSession = SessionTokens & {
+  user: unknown;
+};

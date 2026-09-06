@@ -4,3 +4,5 @@ export type TimeSlot = {
   endsAt: string;
   available: boolean;
 };
+
+export type CreateTimeSlotInput = Pick<TimeSlot, "startsAt" | "endsAt">;

@@ -1,7 +1,6 @@
 import type { Notification } from "@/lib/api";
 import { texts } from "@/texts";
-import type { NotificationTab } from "@/types/components/notification/notification-tab";
-import type { NotificationTabConfig } from "@/types/components/notification/notification-tab-config";
+import type { NotificationTab, NotificationTabConfig } from "@/types/components/notification/notification-tab";
 
 export const notificationTabs: Record<NotificationTab, NotificationTabConfig> = {
   new: {

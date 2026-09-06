@@ -1,5 +1,4 @@
-import type { AuthenticatedSession } from "@/types/application/session/authenticated-session";
-import type { SessionTokens } from "@/types/application/session/session-tokens";
+import type { AuthenticatedSession, SessionTokens } from "@/types/application/session/session-tokens";
 
 export const sessionKeys = {
   token: "session_token",

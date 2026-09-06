@@ -8,3 +8,6 @@ export type Education = {
   startDate: string | null;
   endDate: string | null;
 };
+
+export type EducationInput = Pick<Education, "school" | "degree" | "field"> &
+  Partial<Pick<Education, "description" | "startDate" | "endDate">>;
