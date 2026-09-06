@@ -97,8 +97,8 @@ function Mentoria() {
           <h2 className="text-lg font-semibold">{texts.mentoring.featured}</h2>
           <p className="text-sm text-muted-foreground">{texts.mentoring.featuredDescription}</p>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {mentors.map((mentor) => (
-              <MentorCard key={mentor.id} mentor={mentor} />
+            {mentors.map((m) => (
+              <MentorCard key={m.id} mentor={m} />
             ))}
           </div>
         </div>
@@ -123,7 +123,7 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.expertise}</Label>
         <Input
           value={skillsText}
-          onChange={(event) => setSkillsText(event.target.value)}
+          onChange={(e) => setSkillsText(e.target.value)}
           placeholder={texts.mentoring.expertisePlaceholder}
           className="h-10 border-transparent bg-muted"
         />
@@ -132,7 +132,7 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.investment}</Label>
         <Input
           value={price}
-          onChange={(event) => setPrice(event.target.value)}
+          onChange={(e) => setPrice(e.target.value)}
           placeholder={texts.mentoring.free}
           className="h-10 border-transparent bg-muted"
         />
@@ -143,7 +143,7 @@ function RegisterMentorForm({
         onClick={() => {
           const expertise = skillsText
             .split(",")
-            .map((skill) => skill.trim())
+            .map((s) => s.trim())
             .filter(Boolean);
           onSave({ expertise, price: price || texts.mentoring.free });
         }}
@@ -177,7 +177,9 @@ function MentorCard({
 
   return (
     <article className="surface-card mx-auto w-full max-w-5xl space-y-4 p-5">
+      {/* Seção superior */}
       <header className="flex flex-wrap">
+        {/* Avatar / imagem de destaque */}
         <div className="md:col-span-3">
           <div className="flex h-full items-start justify-center overflow-hidden">
             <UserAvatar
@@ -188,6 +190,7 @@ function MentorCard({
           </div>
         </div>
 
+        {/* Conteúdo principal */}
         <div className="space-y-4 px-4 md:col-span-6 flex-1 overflow-hidden">
           <Link
             to="/perfil/$username"
@@ -199,6 +202,7 @@ function MentorCard({
           <p className="line-clamp-2 text-xs text-muted-foreground ">{user?.headline ?? ""}</p>
         </div>
 
+        {/* Sidebar de estatísticas */}
         <div className="flex flex-col gap-4 md:col-span-3 text-[13px]">
           {!isOwner && (
             <Button className="shrink-0 self-center rounded-lg bg-mentorship-button py-2 px-[14px]">
@@ -209,17 +213,17 @@ function MentorCard({
       </header>
 
       <section>
-        {mentor.expertise.map((expertise) => (
+        {mentor.expertise.map((e) => (
           <Badge
-            key={expertise}
+            key={e}
             variant="secondary"
             className="rounded-full bg-accent font-normal text-accent-foreground"
           >
-            {expertise}
+            {e}
           </Badge>
         ))}
       </section>
-
+      {/* Seção inferior */}
       <footer className="grid grid-cols-1 gap-8 rounded-2xl">
         <dl className=" grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-3 text-xs">
           <div>
