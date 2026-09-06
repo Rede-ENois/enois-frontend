@@ -2,12 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
-import { LandingCta } from "@/components/landing-cta";
-import { LandingFeatures } from "@/components/landing-features";
-import { LandingFooter } from "@/components/landing-footer";
-import { LandingHeader } from "@/components/landing-header";
-import { LandingHero } from "@/components/landing-hero";
-import { LandingPhilosophy } from "@/components/landing-philosophy";
+import { Landing } from "@/components/pages/landing-page";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,16 +15,3 @@ export const Route = createFileRoute("/")({
   }),
   component: Landing,
 });
-
-function Landing() {
-  return (
-    <div className="min-h-screen bg-background">
-      <LandingHeader />
-      <LandingHero />
-      <LandingPhilosophy />
-      <LandingFeatures />
-      <LandingCta />
-      <LandingFooter />
-    </div>
-  );
-}

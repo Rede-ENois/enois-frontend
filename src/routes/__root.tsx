@@ -1,10 +1,9 @@
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import { createRootRouteWithContext } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { RootRouteContext } from "@/types/routes/root/root-route-context";
 
-import { OAuthCallbackHandler } from "@/components/oauth-callback-handler";
+import { RootComponent } from "@/components/pages/root-component";
 import { RootError } from "@/components/root-error";
 import { RootNotFound } from "@/components/root-not-found";
 import { RootShell } from "@/components/root-shell";
@@ -38,14 +37,3 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
   notFoundComponent: RootNotFound,
   errorComponent: RootError,
 });
-
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <OAuthCallbackHandler />
-      <Outlet />
-    </QueryClientProvider>
-  );
-}

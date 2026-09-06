@@ -4,8 +4,7 @@ import { z } from "zod";
 
 import { texts } from "@/texts";
 
-import { AuthPageLayout } from "@/components/auth/auth-page-layout";
-import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { ResetPassword } from "@/components/pages/reset-password-page";
 
 const searchSchema = z.object({
   token: z.string().optional(),
@@ -21,13 +20,3 @@ export const Route = createFileRoute("/auth/reset")({
   }),
   component: ResetPassword,
 });
-
-function ResetPassword() {
-  const token = Route.useSearch().token ?? "";
-
-  return (
-    <AuthPageLayout>
-      <ResetPasswordForm token={token} />
-    </AuthPageLayout>
-  );
-}

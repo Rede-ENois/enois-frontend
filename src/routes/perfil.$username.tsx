@@ -1,17 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { Target } from "lucide-react";
-
-import { feedApi } from "@/lib/api/feed";
 import { profileApi } from "@/lib/api/profile";
 import { texts } from "@/texts";
 
-import { AppContainer } from "@/components/app-container";
-import { PostCard } from "@/components/post-card";
-import { ProfileHeader } from "@/components/profile-header";
-import { ProfileSection } from "@/components/profile-section";
-import { ProfileSidebar } from "@/components/profile-sidebar";
+import { ProfileError } from "@/components/pages/profile-error";
+import { ProfileNotFound } from "@/components/pages/profile-not-found";
+import { Profile } from "@/components/pages/profile-page";
 
 export const Route = createFileRoute("/perfil/$username")({
   loader: async ({ params }) => {
@@ -31,106 +25,7 @@ export const Route = createFileRoute("/perfil/$username")({
       },
     ],
   }),
-  notFoundComponent: () => (
-    <AppContainer>
-      <div className="rounded-2xl border border-border-soft bg-surface-card p-10 text-center">
-        <p className="text-[16px] font-light text-text-strong">{texts.profile.notFound}</p>
-        <Link
-          to="/"
-          className="mt-2 inline-block text-[13px] font-light text-primary hover:underline"
-        >
-          {texts.profile.backHome}
-        </Link>
-      </div>
-    </AppContainer>
-  ),
-  errorComponent: () => (
-    <AppContainer>
-      <div className="rounded-2xl border border-border-soft bg-surface-card p-10 text-center">
-        <p className="text-[13px] font-light text-text-subtle">{texts.profile.loadError}</p>
-      </div>
-    </AppContainer>
-  ),
+  notFoundComponent: ProfileNotFound,
+  errorComponent: ProfileError,
   component: Profile,
 });
-
-function Profile() {
-  const { user: loaderUser } = Route.useLoaderData();
-
-  const { data: liveProfile } = useQuery({
-    queryKey: ["profile", loaderUser.username],
-    queryFn: () => profileApi.get(loaderUser.username),
-    initialData: loaderUser,
-  });
-
-  const user = liveProfile ?? loaderUser;
-
-  const { data: feedData } = useQuery({
-    queryKey: ["feed", "user", user.id],
-    queryFn: () => feedApi.listByUserId(user.id),
-  });
-
-  const userPosts = feedData?.items ?? [];
-
-  return (
-    <AppContainer>
-      <div className="space-y-6">
-        <ProfileHeader user={user} />
-
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-6">
-            {user.bio && (
-              <ProfileSection title={texts.profile.sections.about}>
-                <p className="break-words text-[13px] font-light leading-relaxed text-text-subtle">
-                  {user.bio}
-                </p>
-              </ProfileSection>
-            )}
-
-            {user.skills.length > 0 && (
-              <ProfileSection title={texts.profile.sections.skills}>
-                <div className="flex flex-wrap gap-1.5">
-                  {user.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="rounded-full bg-surface-2 px-2.5 py-0.5 text-[11px] font-light text-primary"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </ProfileSection>
-            )}
-
-            {user.goals.length > 0 && (
-              <ProfileSection title={texts.profile.sections.goals} icon={Target}>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {user.goals.map((goal) => (
-                    <div key={goal} className="rounded-xl border border-border-soft p-4">
-                      <p className="break-words text-[13px] font-light text-text-strong">{goal}</p>
-                    </div>
-                  ))}
-                </div>
-              </ProfileSection>
-            )}
-
-            <ProfileSection title={texts.profile.sections.recentPosts}>
-              {userPosts.length === 0 ? (
-                <p className="text-[13px] font-light text-text-subtle">{texts.profile.noPosts}</p>
-              ) : (
-                <div className="space-y-4">
-                  {userPosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              )}
-            </ProfileSection>
-          </div>
-
-          <ProfileSidebar user={user} />
-        </div>
-      </div>
-      <div className="h-4 lg:hidden" />
-    </AppContainer>
-  );
-}
