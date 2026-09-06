@@ -29,12 +29,14 @@ export function ImageCropDialog({
   const [saving, setSaving] = useState(false);
 
   const onCropChange = useCallback((location: { x: number; y: number }) => setCrop(location), []);
-  const onZoomChange = useCallback((value: number) => setZoom(value), []);
-  const onCropAreaChange = useCallback((_: Area, pixels: Area) => setCroppedAreaPixels(pixels), []);
+  const onZoomChange = useCallback((z: number) => setZoom(z), []);
+
+  const onCropAreaChange = useCallback((_: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
 
   const handleSave = async () => {
     if (!croppedAreaPixels) return;
-
     setSaving(true);
     try {
       const blob = await cropImage(imageSrc, croppedAreaPixels);
@@ -71,7 +73,7 @@ export function ImageCropDialog({
             max={3}
             step={0.1}
             value={zoom}
-            onChange={(event) => setZoom(Number(event.target.value))}
+            onChange={(e) => setZoom(Number(e.target.value))}
             className="flex-1"
           />
         </div>
