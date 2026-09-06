@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
-import type { MentorListItem } from "@/components/mentoring/mentor-list-item";
+import type { MentorViewModel } from "@/components/mentoring/mentor-view-model";
 import { MentoringHero } from "@/components/mentoring/mentoring-hero";
 import { MentorsList } from "@/components/mentoring/mentors-list";
 import type { RegisterMentorFormValues } from "@/components/mentoring/register-mentor-form";
@@ -38,7 +38,7 @@ function MentoringPage() {
       staleTime: 60_000,
     })),
   });
-  const mentorItems: MentorListItem[] = mentors.map((mentor, index) => ({
+  const mentorViewModels: MentorViewModel[] = mentors.map((mentor, index) => ({
     mentor,
     user: mentorProfileQueries[index]?.data,
     isOwner: currentUser?.id === mentor.userId,
@@ -61,7 +61,7 @@ function MentoringPage() {
           onRegistrationOpenChange={setIsRegistrationOpen}
           onRegister={createMentorMutation.mutate}
         />
-        <MentorsList items={mentorItems} />
+        <MentorsList mentors={mentorViewModels} />
       </div>
     </AppContainer>
   );

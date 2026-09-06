@@ -1,16 +1,20 @@
 import { texts } from "@/texts";
 
 import { MentorCard } from "./mentor-card";
-import type { MentorListItem } from "./mentor-list-item";
+import type { MentorViewModel } from "./mentor-view-model";
 
-export function MentorsList({ items }: { items: MentorListItem[] }) {
+type MentorsListProps = {
+  mentors: MentorViewModel[];
+};
+
+export function MentorsList({ mentors }: MentorsListProps) {
   return (
     <div id="mentores-lista">
       <h2 className="text-lg font-semibold">{texts.mentoring.featured}</h2>
       <p className="text-sm text-muted-foreground">{texts.mentoring.featuredDescription}</p>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        {items.map((item) => (
-          <MentorCard key={item.mentor.id} {...item} />
+        {mentors.map((mentorViewModel) => (
+          <MentorCard key={mentorViewModel.mentor.id} {...mentorViewModel} />
         ))}
       </div>
     </div>
