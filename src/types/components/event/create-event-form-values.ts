@@ -1,7 +1,3 @@
-export type CreateEventFormValues = {
-  title: string;
-  date: string;
-  time: string;
-  format: string;
-  host: string;
-};
+import type { CreateEventInput } from "@/types/application/event/create-event-input";
+
+export type CreateEventFormValues = Omit<CreateEventInput, "cover">;
