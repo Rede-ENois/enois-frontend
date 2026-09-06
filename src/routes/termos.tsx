@@ -13,10 +13,10 @@ export const Route = createFileRoute("/termos")({
       { name: "description", content: texts.legal.terms.seoDescription },
     ],
   }),
-  component: Termos,
+  component: TermsPage,
 });
 
-function Termos() {
+function TermsPage() {
   return (
     <LegalLayout>
       <header className="space-y-2">

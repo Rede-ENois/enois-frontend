@@ -1,6 +1,6 @@
 import type { PostView } from "@/lib/api";
 
-import { AuthorInfo } from "./post-author-info";
+import { PostAuthorInfo } from "./post-author-info";
 import { postTypeMeta } from "./post-type-meta";
 
 export function PostHeader({ post }: { post: PostView }) {
@@ -8,7 +8,7 @@ export function PostHeader({ post }: { post: PostView }) {
 
   return (
     <header className="flex items-start justify-between gap-3">
-      <AuthorInfo
+      <PostAuthorInfo
         authorUsername={post.authorUsername}
         authorName={post.authorName}
         authorAvatar={post.authorAvatar}

@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { UserAvatar } from "@/components/user-avatar";
 import { formatRelativeTime } from "@/utils/time";
 
-type AuthorInfoProps = {
+type PostAuthorInfoProps = {
   authorUsername: string;
   authorName: string;
   authorAvatar: string | null;
@@ -11,13 +11,13 @@ type AuthorInfoProps = {
   fallbackClassName?: string;
 };
 
-export function AuthorInfo({
+export function PostAuthorInfo({
   authorUsername,
   authorName,
   authorAvatar,
   createdAt,
   fallbackClassName,
-}: AuthorInfoProps) {
+}: PostAuthorInfoProps) {
   return (
     <div className="flex items-start gap-3">
       <Link to="/perfil/$username" params={{ username: authorUsername }}>

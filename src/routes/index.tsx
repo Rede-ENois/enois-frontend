@@ -18,10 +18,10 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: texts.landing.seo.ogDescription },
     ],
   }),
-  component: Landing,
+  component: LandingPage,
 });
 
-function Landing() {
+function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />

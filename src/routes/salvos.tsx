@@ -13,12 +13,15 @@ import { PostCard } from "@/components/post/post-card";
 export const Route = createFileRoute("/salvos")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.saved.seoTitle }] }),
-  component: SavedPosts,
+  component: SavedPostsPage,
 });
 
-function SavedPosts() {
-  const { data: savedData } = useQuery({ queryKey: ["saved-posts"], queryFn: () => feedApi.listSaved() });
-  const savedPosts = savedData?.items ?? [];
+function SavedPostsPage() {
+  const { data: savedPostsResponse } = useQuery({
+    queryKey: ["saved-posts"],
+    queryFn: () => feedApi.listSaved(),
+  });
+  const savedPosts = savedPostsResponse?.items ?? [];
 
   return (
     <AppContainer>

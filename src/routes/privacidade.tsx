@@ -13,11 +13,11 @@ export const Route = createFileRoute("/privacidade")({
       { name: "description", content: texts.legal.privacy.seoDescription },
     ],
   }),
-  component: Privacidade,
+  component: PrivacyPage,
 });
 
-function Privacidade() {
-  const { whoWeAre, collectedData, other } = texts.legal.privacy.sections;
+function PrivacyPage() {
+  const { whoWeAre, collectedData, other: additionalSections } = texts.legal.privacy.sections;
 
   return (
     <LegalLayout>
@@ -37,7 +37,7 @@ function Privacidade() {
         <p><strong>{collectedData.technicalLabel}</strong> {collectedData.technicalBody}</p>
       </LegalSection>
 
-      {other.map((section) => (
+      {additionalSections.map((section) => (
         <LegalSection key={section.title} title={section.title}>
           {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
         </LegalSection>
