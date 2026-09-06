@@ -1,17 +1,10 @@
 import { Search } from "lucide-react";
 
-import type { NetworkUser } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ContactSearchProps } from "@/types/components/message/contact-search-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Input } from "@/components/ui/input";
-
-type ContactSearchProps = {
-  searchQuery: string;
-  searchResults: NetworkUser[];
-  onSearchQueryChange: (value: string) => void;
-  onCreateConversation: (userId: string) => void;
-};
 
 export function ContactSearch({
   searchQuery,

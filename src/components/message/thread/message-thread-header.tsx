@@ -2,16 +2,11 @@ import { Link } from "@tanstack/react-router";
 
 import { ArrowLeft } from "lucide-react";
 
-import type { Profile } from "@/lib/api";
+import type { MessageThreadHeaderProps } from "@/types/components/message/message-thread-header-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function MessageThreadHeader({ title, otherUser, otherUserId, onBack }: {
-  title: string;
-  otherUser?: Profile;
-  otherUserId: string;
-  onBack: () => void;
-}) {
+export function MessageThreadHeader({ title, otherUser, otherUserId, onBack }: MessageThreadHeaderProps) {
   return (
     <header className="flex items-center gap-3 border-b border-border p-4">
       <div className="flex min-w-0 items-center gap-3">

@@ -1,17 +1,9 @@
-import type { FormEventHandler } from "react";
-
 import { Send } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { MessageThreadComposerProps } from "@/types/components/message/message-thread-composer-props";
 
 import { Input } from "@/components/ui/input";
-
-type MessageThreadComposerProps = {
-  messageText: string;
-  isSending: boolean;
-  onTextChange: (value: string) => void;
-  onSubmit: FormEventHandler<HTMLFormElement>;
-};
 
 export function MessageThreadComposer({
   messageText,

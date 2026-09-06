@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { Link } from "@tanstack/react-router";
 
-import type { Message, Profile } from "@/lib/api";
+import type { MessageListProps } from "@/types/components/message/message-list-props";
 import { formatRelativeTime } from "@/utils/time";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -19,13 +19,6 @@ const messageStyles = {
     time: "text-muted-foreground",
   },
 } as const;
-
-type MessageListProps = {
-  messages: Message[];
-  currentUserId: string;
-  otherUser?: Profile;
-  otherUserId: string;
-};
 
 export function MessageList({ messages, currentUserId, otherUser, otherUserId }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);

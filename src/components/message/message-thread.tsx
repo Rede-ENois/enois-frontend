@@ -1,24 +1,10 @@
-import type { FormEventHandler } from "react";
-
-import type { Conversation, Message, Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { MessageThreadProps } from "@/types/components/message/message-thread-props";
 import { getOtherParticipantId } from "@/utils/messages";
 
 import { MessageThreadBody } from "./thread/message-thread-body";
 import { MessageThreadComposer } from "./thread/message-thread-composer";
 import { MessageThreadHeader } from "./thread/message-thread-header";
-
-type MessageThreadProps = {
-  conversation: Conversation | null;
-  otherUser?: Profile;
-  currentUserId: string;
-  messages: Message[];
-  messageText: string;
-  isSending: boolean;
-  onBack: () => void;
-  onTextChange: (value: string) => void;
-  onSubmit: FormEventHandler<HTMLFormElement>;
-};
 
 export function MessageThread({
   conversation,

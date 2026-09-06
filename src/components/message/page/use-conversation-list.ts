@@ -5,9 +5,8 @@ import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/rea
 import { messageApi, networkApi, profileApi } from "@/lib/api";
 import type { Conversation } from "@/lib/api";
 import { useAuth } from "@/lib/use-auth";
+import type { ConversationViewModel } from "@/types/components/message/conversation-view-model";
 import { getOtherParticipantId } from "@/utils/messages";
-
-import type { ConversationViewModel } from "../conversation-view-model";
 
 export function useConversationList() {
   const { user: currentUser } = useAuth();

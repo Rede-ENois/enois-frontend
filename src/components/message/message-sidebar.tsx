@@ -1,26 +1,12 @@
 import { Search } from "lucide-react";
 
-import type { Conversation, NetworkUser } from "@/lib/api";
 import { texts } from "@/texts";
+import type { MessageSidebarProps } from "@/types/components/message/message-sidebar-props";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContactSearch } from "./contact-search";
 import { ConversationList } from "./conversation-list";
-import type { ConversationViewModel } from "./conversation-view-model";
-
-type MessageSidebarProps = {
-  conversations: ConversationViewModel[];
-  activeConversationId: string | null;
-  currentUserId: string;
-  isContactSearchVisible: boolean;
-  searchQuery: string;
-  searchResults: NetworkUser[];
-  onToggleSearch: () => void;
-  onSearchQueryChange: (value: string) => void;
-  onCreateConversation: (userId: string) => void;
-  onSelectConversation: (conversation: Conversation) => void;
-};
 
 export function MessageSidebar({
   conversations,

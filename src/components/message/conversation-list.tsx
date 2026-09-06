@@ -1,19 +1,11 @@
 import { Link } from "@tanstack/react-router";
 
-import type { Conversation } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ConversationListProps } from "@/types/components/message/conversation-list-props";
 import { getOtherParticipantId } from "@/utils/messages";
 import { formatRelativeTime } from "@/utils/time";
 
 import { UserAvatar } from "@/components/user-avatar";
-import type { ConversationViewModel } from "./conversation-view-model";
-
-type ConversationListProps = {
-  conversations: ConversationViewModel[];
-  activeConversationId: string | null;
-  currentUserId: string;
-  onSelectConversation: (conversation: Conversation) => void;
-};
 
 export function ConversationList({
   conversations,
