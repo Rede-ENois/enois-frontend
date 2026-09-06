@@ -1,9 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 
+import { navigationItems } from "@/constants/navigation-items";
 import { cn } from "@/lib/utils";
 import type { NavigationLinksProps } from "@/types/components/navigation/navigation-links-props";
-
-import { navigationItems } from "./navigation-items";
 
 export function NavigationLinks({
   collapsed = false,
