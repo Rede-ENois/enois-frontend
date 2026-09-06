@@ -10,9 +10,9 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { PostView } from "@/types/application/feed/post-view";
-import type { ComposerActionProps } from "@/types/components/feed/composer-action-props";
 import type { MediaItem } from "@/types/components/feed/media-item";
 
+import { ComposerAction } from "@/components/composer-action";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
@@ -240,22 +240,5 @@ export function FeedComposer() {
         </div>
       </div>
     </form>
-  );
-}
-
-function ComposerAction({ icon: Icon, label, active, onClick }: ComposerActionProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-light transition ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-      }`}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      <>{label}</>
-    </button>
   );
 }

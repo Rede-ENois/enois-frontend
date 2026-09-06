@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { networkApi } from "@/lib/api/network";
 import { texts } from "@/texts";
-import type { StatProps } from "@/types/components/network/stat-props";
+
+import { Stat } from "@/components/network-stat";
 
 export function NetworkSummary() {
   const { data: summary } = useQuery({
@@ -31,19 +32,6 @@ export function NetworkSummary() {
         />
         <Stat label={texts.network.stats.suggestions} value={String(suggestionCount)} />
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value, highlight }: StatProps) {
-  return (
-    <div
-      className={`rounded-xl border p-4 ${
-        highlight ? "border-primary/30 bg-primary-soft" : "border-border bg-muted/40"
-      }`}
-    >
-      <p className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}>{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }

@@ -5,20 +5,11 @@ import { MapPin, Sparkles } from "lucide-react";
 import { jobsApi } from "@/lib/api/jobs";
 import { texts } from "@/texts";
 import type { JobCardProps } from "@/types/components/jobs/job-card-props";
+import { formatPostedAt } from "@/utils/format-posted-at";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-function formatPostedAt(dateStr: string | null | undefined): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  const diffD = Math.floor((Date.now() - date.getTime()) / 86400000);
-  if (diffD < 1) return texts.jobs.today;
-  if (diffD < 30) return texts.jobs.daysAgo(diffD);
-  return date.toLocaleDateString("pt-BR");
-}
 
 export function JobCard({ job }: JobCardProps) {
   const queryClient = useQueryClient();

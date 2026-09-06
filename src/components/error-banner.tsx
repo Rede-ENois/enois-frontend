@@ -5,24 +5,7 @@ import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
 import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { ErrorBannerProps } from "@/types/components/error-banner/error-banner-props";
-import type { ErrorDescription } from "@/types/components/error-banner/error-description";
-
-function describe(err: unknown): ErrorDescription {
-  if (err instanceof ApiError) {
-    const details: string[] = [];
-    if (err.status) details.push(texts.errors.details.http(err.status));
-    if (err.code) details.push(err.code);
-    if (err.path) details.push(texts.errors.details.postPath(err.path));
-    return { message: err.message, details };
-  }
-  if (err instanceof Error) {
-    return {
-      message: err.message,
-      details: import.meta.env.DEV ? [err.stack ?? err.name] : [],
-    };
-  }
-  return { message: texts.errors.unexpected, details: [] };
-}
+import { describeError } from "@/utils/describe-error";
 
 const KNOWN_CODES: Record<string, string> = texts.errors.knownCodes;
 
@@ -31,13 +14,13 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
   const [copied, setCopied] = useState(false);
 
   if (!error) return null;
-  const { message, details } = describe(error);
+  const { message, details } = describeError(error);
   const hint = error instanceof ApiError && error.code ? KNOWN_CODES[error.code] : undefined;
 
   const copy = () => {
     const text = [
       texts.errors.details.error(message),
-      ...details.map((d) => `  ${d}`),
+      ...details.map((detail) => `  ${detail}`),
       hint ? texts.errors.details.suggestion(hint) : "",
     ]
       .filter(Boolean)
@@ -59,7 +42,7 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
         </p>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen((value) => !value)}
           className="shrink-0 p-0.5 text-destructive/70 transition hover:text-destructive"
           aria-label={open ? texts.errors.details.hide : texts.errors.details.show}
         >
@@ -70,9 +53,9 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
       {open && (
         <div className="space-y-2 rounded-lg bg-background/40 p-3 text-xs">
           <ul className="list-inside list-disc space-y-0.5 text-destructive/90">
-            {details.map((d) => (
-              <li key={d} className="break-all font-mono">
-                {d}
+            {details.map((detail) => (
+              <li key={detail} className="break-all font-mono">
+                {detail}
               </li>
             ))}
           </ul>
