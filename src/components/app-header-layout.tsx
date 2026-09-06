@@ -1,8 +1,4 @@
-import type { ReactNode } from "react";
-
-type AppHeaderLayoutProps = {
-  children: ReactNode;
-};
+import type { AppHeaderLayoutProps } from "@/types/components/app/app-header-layout-props";
 
 export function AppHeaderLayout({ children }: AppHeaderLayoutProps) {
   return (

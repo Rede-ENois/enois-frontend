@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
+import type { AppLayoutSlotProps } from "@/types/components/app/app-layout-slot-props";
 
-export function AppLayoutSidebar({ children }: { children: ReactNode }) {
+export function AppLayoutSidebar({ children }: AppLayoutSlotProps) {
   return <>{children}</>;
 }

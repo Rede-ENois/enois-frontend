@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
+import type { AppLayoutSlotProps } from "@/types/components/app/app-layout-slot-props";
 
-export function AppLayoutHeader({ children }: { children: ReactNode }) {
+export function AppLayoutHeader({ children }: AppLayoutSlotProps) {
   return <>{children}</>;
 }

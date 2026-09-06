@@ -3,10 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
 
 import { texts } from "@/texts";
-
-type AppBrandProps = {
-  onClick?: () => void;
-};
+import type { AppBrandProps } from "@/types/components/app/app-brand-props";
 
 export function AppBrand({ onClick }: AppBrandProps) {
   return (
