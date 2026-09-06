@@ -11,8 +11,8 @@ import { UserAvatar } from "@/components/user-avatar";
 
 import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
-import { GlobalSearch } from "./global-search";
 import { NotificationsPopover } from "./notifications-popover";
+import { GlobalSearch } from "./global-search";
 
 type AuthenticatedAppHeaderProps = {
   onOpenMobileMenu: () => void;
@@ -47,9 +47,7 @@ export function AuthenticatedAppHeader({ onOpenMobileMenu }: AuthenticatedAppHea
             className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-surface-2"
           >
             <UserAvatar src={profile.avatar} alt={profile.name} className="h-8 w-8" />
-            <span className="hidden text-[13px] font-light text-text-strong sm:inline">
-              {texts.common.profile}
-            </span>
+            <span className="hidden text-[13px] font-light text-text-strong sm:inline">{texts.common.profile}</span>
           </Link>
         )}
       </div>
