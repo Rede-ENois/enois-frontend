@@ -10,14 +10,11 @@ export function ErrorBanner({ error, className }: { error: unknown; className?: 
   const [copied, setCopied] = useState(false);
 
   if (!error) return null;
-
   const { message, details } = describeError(error);
   const hint = getErrorHint(error);
 
   const copy = () => {
-    navigator.clipboard
-      ?.writeText(formatErrorDetails(message, details, hint))
-      .catch(() => undefined);
+    navigator.clipboard?.writeText(formatErrorDetails(message, details, hint)).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -34,7 +31,7 @@ export function ErrorBanner({ error, className }: { error: unknown; className?: 
         </p>
         <button
           type="button"
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => setOpen((v) => !v)}
           className="shrink-0 p-0.5 text-destructive/70 transition hover:text-destructive"
           aria-label={open ? texts.errors.details.hide : texts.errors.details.show}
         >
@@ -45,9 +42,9 @@ export function ErrorBanner({ error, className }: { error: unknown; className?: 
       {open && (
         <div className="space-y-2 rounded-lg bg-background/40 p-3 text-xs">
           <ul className="list-inside list-disc space-y-0.5 text-destructive/90">
-            {details.map((detail) => (
-              <li key={detail} className="break-all font-mono">
-                {detail}
+            {details.map((d) => (
+              <li key={d} className="break-all font-mono">
+                {d}
               </li>
             ))}
           </ul>
