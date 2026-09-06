@@ -2,14 +2,14 @@ import { Camera } from "lucide-react";
 
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
-import type { ProfileBannerProps } from "@/types/components/profile/header/profile-banner-props";
+import type { ProfileImageProps } from "@/types/components/profile/header/profile-image-props";
 
 export function ProfileBanner({
   user,
   isEditable,
   isUploading,
   onSelect,
-}: ProfileBannerProps) {
+}: ProfileImageProps) {
   return (
     <div className="group relative">
       {user.banner ? (

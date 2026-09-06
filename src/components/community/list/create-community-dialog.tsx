@@ -6,13 +6,13 @@ import { Plus } from "lucide-react";
 import { communityApi } from "@/lib/api";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/components/community/community-topic";
-import type { CreateCommunityDialogProps } from "@/types/components/community/create-community-dialog-props";
+import type { ControlledDialogProps } from "@/types/components/shared/controlled-dialog-props";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateCommunityForm } from "./create-community-form";
 
-export function CreateCommunityDialog({ isOpen, onOpenChange }: CreateCommunityDialogProps) {
+export function CreateCommunityDialog({ isOpen, onOpenChange }: ControlledDialogProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

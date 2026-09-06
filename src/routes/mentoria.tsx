@@ -7,8 +7,8 @@ import { mentorApi, profileApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
+import type { CreateMentorInput } from "@/types/application/mentor/create-mentor-input";
 import type { MentorViewModel } from "@/types/components/mentoring/mentor-view-model";
-import type { RegisterMentorFormValues } from "@/types/components/mentoring/register-mentor-form-values";
 
 import { AppContainer } from "@/components/app-container";
 import { MentoringHero } from "@/components/mentoring/mentoring-hero";
@@ -45,7 +45,7 @@ function MentoringPage() {
   }));
 
   const createMentorMutation = useMutation({
-    mutationFn: (values: RegisterMentorFormValues) => mentorApi.create(values),
+    mutationFn: (values: CreateMentorInput) => mentorApi.create(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mentors"] });
       setIsRegistrationOpen(false);

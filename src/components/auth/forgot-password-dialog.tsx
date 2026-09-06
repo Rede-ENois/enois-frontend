@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { authApi } from "@/lib/api";
 import { texts } from "@/texts";
-import type { ForgotPasswordDialogProps } from "@/types/components/auth/forgot-password-dialog-props";
+import type { ControlledDialogProps } from "@/types/components/shared/controlled-dialog-props";
 
 import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 export function ForgotPasswordDialog({
   isOpen,
   onOpenChange,
-}: ForgotPasswordDialogProps) {
+}: ControlledDialogProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<unknown>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,6 +1,6 @@
-import type { RegisterMentorFormValues } from "./register-mentor-form-values";
+import type { CreateMentorInput } from "@/types/application/mentor/create-mentor-input";
 
 export type RegisterMentorFormProps = {
-  onSave: (values: RegisterMentorFormValues) => void;
+  onSave: (values: CreateMentorInput) => void;
   isPending: boolean;
 };

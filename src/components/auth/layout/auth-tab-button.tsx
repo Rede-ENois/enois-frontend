@@ -1,10 +1,10 @@
-import type { AuthTabButtonProps } from "@/types/components/auth/auth-tab-button-props";
+import type { SelectableButtonProps } from "@/types/components/shared/selectable-button-props";
 
 export function AuthTabButton({
   isActive,
   children,
   onClick,
-}: AuthTabButtonProps) {
+}: SelectableButtonProps) {
   return (
     <button
       type="button"

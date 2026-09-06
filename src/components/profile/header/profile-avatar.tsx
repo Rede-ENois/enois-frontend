@@ -1,7 +1,7 @@
 import { Camera } from "lucide-react";
 
 import { resolveCdnUrl } from "@/lib/api/media";
-import type { ProfileAvatarProps } from "@/types/components/profile/header/profile-avatar-props";
+import type { ProfileImageProps } from "@/types/components/profile/header/profile-image-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -10,7 +10,7 @@ export function ProfileAvatar({
   isEditable,
   isUploading,
   onSelect,
-}: ProfileAvatarProps) {
+}: ProfileImageProps) {
   return (
     <div className="group relative">
       <UserAvatar src={resolveCdnUrl(user.avatar)} alt={user.name} className="h-24 w-24 ring-4 ring-surface-card sm:h-28 sm:w-28" />

@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/use-auth";
-import type { PostCardProps } from "@/types/components/post/post-card-props";
+import type { PostProps } from "@/types/components/post/post-props";
 
 import { PostCardView } from "./post-card-view";
 import { PostReportDialog } from "./post-report-dialog";
@@ -8,7 +8,7 @@ import { ReactionsSummary } from "./reactions-summary";
 import { usePostComments } from "./use-post-comments";
 import { usePostInteractions } from "./use-post-interactions";
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post }: PostProps) {
   const { user: currentUser } = useAuth();
   const interactions = usePostInteractions(post);
   const comments = usePostComments(post.id, interactions.handleCommentCountChange);

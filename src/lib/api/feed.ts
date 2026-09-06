@@ -10,7 +10,6 @@ import { api, buildQuery } from "../api-client";
 
 export type { CreatePostInput } from "@/types/application/feed/create-post-input";
 export type { PostView } from "@/types/application/feed/post-view";
-export type { ReactionUser } from "@/types/application/feed/reaction-user";
 export type { PageResponse } from "@/types/application/pagination/page-response";
 
 export const feedApi = {

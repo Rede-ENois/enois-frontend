@@ -1,6 +1,6 @@
-import type { ReactionUser } from "./reaction-user";
+import type { ReactionItem } from "../reaction/reaction-item";
 
 export type ReactionsResponse = {
   postId: string;
-  reactions: ReactionUser[];
+  reactions: ReactionItem[];
 };

@@ -1,14 +1,14 @@
 import { REACTION_EMOJIS } from "@/lib/api";
 import type { ReactionType } from "@/lib/api";
 import { texts } from "@/texts";
-import type { CommentReactionPickerProps } from "@/types/components/post/comment-reaction-picker-props";
+import type { ReactionActionProps } from "@/types/components/post/reaction-action-props";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export function CommentReactionPicker({
   currentReaction,
   onReaction,
-}: CommentReactionPickerProps) {
+}: ReactionActionProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>

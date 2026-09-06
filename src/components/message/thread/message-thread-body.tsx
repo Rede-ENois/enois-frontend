@@ -1,9 +1,9 @@
 import { texts } from "@/texts";
-import type { MessageThreadBodyProps } from "@/types/components/message/message-thread-body-props";
+import type { MessageListProps } from "@/types/components/message/message-list-props";
 
 import { MessageList } from "./message-list";
 
-export function MessageThreadBody({ messages, currentUserId, otherUser, otherUserId }: MessageThreadBodyProps) {
+export function MessageThreadBody({ messages, currentUserId, otherUser, otherUserId }: MessageListProps) {
   return (
     <div className="flex-1 overflow-y-auto bg-muted/30 p-5">
       {messages.length === 0 ? (

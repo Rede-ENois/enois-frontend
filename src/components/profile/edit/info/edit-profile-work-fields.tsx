@@ -1,10 +1,10 @@
 import { texts } from "@/texts";
-import type { EditProfileWorkFieldsProps } from "@/types/components/profile/edit/edit-profile-work-fields-props";
+import type { EditProfileInfoSectionProps } from "@/types/components/profile/edit/edit-profile-info-section-props";
 
 import { Input } from "@/components/ui/input";
 import { EditProfileField } from "./edit-profile-field";
 
-export function EditProfileWorkFields({ values, onChange }: EditProfileWorkFieldsProps) {
+export function EditProfileWorkFields({ values, onChange }: EditProfileInfoSectionProps) {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
