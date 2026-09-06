@@ -33,8 +33,10 @@ export function AuthenticatedAppHeader({ onOpenMobileMenu }: AuthenticatedAppHea
       >
         <Menu className="h-5 w-5" />
       </button>
+
       <AppBrand />
       <GlobalSearch />
+
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
         <NotificationsPopover />
