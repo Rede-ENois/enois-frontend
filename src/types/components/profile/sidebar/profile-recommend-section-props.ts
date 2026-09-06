@@ -1,11 +1,10 @@
 import type { Profile } from "@/lib/api";
+import type { ControlledDialogProps } from "@/types/components/shared/controlled-dialog-props";
 
-export type ProfileRecommendSectionProps = {
+export type ProfileRecommendSectionProps = ControlledDialogProps & {
   user: Profile;
-  isOpen: boolean;
   comment: string;
   isPending: boolean;
-  onOpenChange: (isOpen: boolean) => void;
   onCommentChange: (value: string) => void;
   onSubmit: () => void;
 };

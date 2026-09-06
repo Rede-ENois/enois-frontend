@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 
-import type { PostView } from "@/lib/api";
+import type { PostProps } from "./post-props";
 
-export type PostContentProps = {
-  post: PostView;
+export type PostContentProps = PostProps & {
   reactionSummary: ReactNode;
 };

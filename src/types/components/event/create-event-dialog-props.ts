@@ -1,8 +1,8 @@
+import type { ControlledDialogProps } from "@/types/components/shared/controlled-dialog-props";
+
 import type { CreateEventFormValues } from "./create-event-form-values";
 
-export type CreateEventDialogProps = {
-  isOpen: boolean;
+export type CreateEventDialogProps = ControlledDialogProps & {
   isCreating: boolean;
-  onOpenChange: (isOpen: boolean) => void;
   onCreate: (values: CreateEventFormValues) => void;
 };

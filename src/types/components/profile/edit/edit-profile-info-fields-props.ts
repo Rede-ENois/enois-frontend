@@ -1,8 +1,5 @@
-import type { EditProfileInfoChange } from "./edit-profile-info-change";
-import type { EditProfileInfoValues } from "./edit-profile-info-values";
+import type { EditProfileInfoSectionProps } from "./edit-profile-info-section-props";
 
-export type EditProfileInfoFieldsProps = {
-  values: EditProfileInfoValues;
+export type EditProfileInfoFieldsProps = EditProfileInfoSectionProps & {
   usernameError: string;
-  onChange: EditProfileInfoChange;
 };

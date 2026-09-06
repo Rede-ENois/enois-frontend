@@ -1,6 +1,6 @@
-export type ImageCropDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+import type { ControlledDialogProps } from "./controlled-dialog-props";
+
+export type ImageCropDialogProps = ControlledDialogProps & {
   imageSrc: string;
   aspect: number;
   title: string;
