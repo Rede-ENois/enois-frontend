@@ -5,49 +5,17 @@ import { Link, Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-ro
 
 import { Loader2, Plus, Users } from "lucide-react";
 
-import { communitiesApi } from "@/lib/api";
+import { TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
+import { communitiesApi } from "@/lib/api/communities";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
-import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { Community } from "@/types/application/community/community";
-import type { CreateCommunityDialogProps } from "@/types/routes/communities/create-community-dialog-props";
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import type { CommunityTopic } from "@/types/application/community/community-topic";
 
 import { AppContainer } from "@/components/app-container";
-
-const TOPICS = [
-  "Todas",
-  "TECNOLOGIA",
-  "ENGENHARIA",
-  "DESIGN",
-  "PRODUTO",
-  "LIDERANCA",
-  "CARREIRA",
-  "FREELANCE",
-] as const;
-
-const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
-  Todas: texts.communities.topics.all,
-  TECNOLOGIA: texts.communities.topics.TECNOLOGIA,
-  ENGENHARIA: texts.communities.topics.ENGENHARIA,
-  DESIGN: texts.communities.topics.DESIGN,
-  PRODUTO: texts.communities.topics.PRODUTO,
-  LIDERANCA: texts.communities.topics.LIDERANCA,
-  CARREIRA: texts.communities.topics.CARREIRA,
-  FREELANCE: texts.communities.topics.FREELANCE,
-};
+import { CreateCommunityDialog } from "@/components/create-community-dialog";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/comunidades")({
   beforeLoad: requireAuth,
@@ -76,24 +44,22 @@ function Comunidades() {
 
   useEffect(() => {
     if (!communitiesData?.items) return;
-    setAllItems((prev) => {
+    setAllItems((previous) => {
       if (cursorRef.current) {
-        const existing = new Set(prev.map((c) => c.id));
-        const newItems = communitiesData.items.filter((c) => !existing.has(c.id));
-        return newItems.length > 0 ? [...prev, ...newItems] : prev;
+        const existing = new Set(previous.map((community) => community.id));
+        const newItems = communitiesData.items.filter((community) => !existing.has(community.id));
+        return newItems.length > 0 ? [...previous, ...newItems] : previous;
       }
       return communitiesData.items;
     });
   }, [communitiesData]);
 
   const loadMore = () => {
-    if (nextCursor && !isFetching) {
-      setCursor(nextCursor);
-    }
+    if (nextCursor && !isFetching) setCursor(nextCursor);
   };
 
-  const handleTopicChange = (t: (typeof TOPICS)[number]) => {
-    setTopic(t === "Todas" ? undefined : t);
+  const handleTopicChange = (nextTopic: (typeof TOPICS)[number]) => {
+    setTopic(nextTopic === "Todas" ? undefined : nextTopic);
     setCursor(undefined);
     setAllItems([]);
   };
@@ -108,9 +74,7 @@ function Comunidades() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["communities"] }),
   });
 
-  if (isDetail) {
-    return <Outlet />;
-  }
+  if (isDetail) return <Outlet />;
 
   return (
     <AppContainer>
@@ -118,9 +82,7 @@ function Comunidades() {
         <div className="surface-card flex flex-wrap items-center justify-between gap-3 p-4 sm:gap-4 sm:p-6">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{texts.communities.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {texts.communities.description}
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{texts.communities.description}</p>
           </div>
           <CreateCommunityDialog open={open} onOpenChange={setOpen}>
             <Button className="rounded-full gap-1.5">
@@ -130,69 +92,74 @@ function Comunidades() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {TOPICS.map((t) => (
+          {TOPICS.map((item) => (
             <button
-              key={t}
-              onClick={() => handleTopicChange(t)}
+              key={item}
+              onClick={() => handleTopicChange(item)}
               className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                (t === "Todas" && !topic) || t === topic
+                (item === "Todas" && !topic) || item === topic
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {TOPIC_LABELS[t]}
+              {TOPIC_LABELS[item]}
             </button>
           ))}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {allItems.map((c) => (
-            <Link key={c.id} to="/comunidades/$communityId" params={{ communityId: c.id }}>
+          {allItems.map((community) => (
+            <Link
+              key={community.id}
+              to="/comunidades/$communityId"
+              params={{ communityId: community.id }}
+            >
               <article className="surface-card overflow-hidden cursor-pointer transition hover:shadow-[var(--shadow-card)]">
-                {c.cover ? (
-                  <img src={resolveCdnUrl(c.cover)} alt="" className="h-32 w-full object-cover" />
+                {community.cover ? (
+                  <img
+                    src={resolveCdnUrl(community.cover)}
+                    alt=""
+                    className="h-32 w-full object-cover"
+                  />
                 ) : (
                   <div className="h-32 w-full bg-gradient-to-br from-primary/20 to-primary/5" />
                 )}
                 <div className="p-5">
                   <div className="flex items-center gap-3 mb-3">
-                    {c.avatar && (
+                    {community.avatar && (
                       <img
-                        src={resolveCdnUrl(c.avatar)}
+                        src={resolveCdnUrl(community.avatar)}
                         alt=""
                         className="h-10 w-10 rounded-full object-cover ring-2 ring-border"
                       />
                     )}
                     <div className="min-w-0">
                       <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                        {c.topic}
+                        {community.topic}
                       </p>
-                      <h3 className="font-semibold truncate">{c.name}</h3>
+                      <h3 className="truncate font-semibold">{community.name}</h3>
                     </div>
                   </div>
                   <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
-                    {c.description}
+                    {community.description}
                   </p>
                   <div className="mt-4 flex items-center justify-between">
                     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
-                      <>{texts.communities.members(c.members ?? 0)}</>
+                      <>{texts.communities.members(community.members ?? 0)}</>
                     </span>
                     <Button
                       size="sm"
-                      variant={c.joined ? "secondary" : "default"}
+                      variant={community.joined ? "secondary" : "default"}
                       className="rounded-full"
                       disabled={join.isPending || leave.isPending}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (c.joined) {
-                          leave.mutate(c.id);
-                        } else {
-                          join.mutate(c.id);
-                        }
+                      onClick={(event) => {
+                        event.preventDefault();
+                        if (community.joined) leave.mutate(community.id);
+                        else join.mutate(community.id);
                       }}
                     >
-                      {c.joined ? texts.communities.participating : texts.communities.enter}
+                      {community.joined ? texts.communities.participating : texts.communities.enter}
                     </Button>
                   </div>
                 </div>
@@ -215,78 +182,5 @@ function Comunidades() {
         )}
       </div>
     </AppContainer>
-  );
-}
-
-function CreateCommunityDialog({
-  children,
-  open,
-  onOpenChange,
-}: CreateCommunityDialogProps) {
-  const queryClient = useQueryClient();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [topic, setTopic] = useState<CommunityTopic>("TECNOLOGIA");
-
-  const create = useMutation({
-    mutationFn: () => communitiesApi.create({ name, description, topic }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["communities"] });
-      onOpenChange(false);
-      setName("");
-      setDescription("");
-      setTopic("TECNOLOGIA");
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{texts.communities.create.title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-10 border-transparent bg-muted"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.description}</Label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="h-10 border-transparent bg-muted"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">{texts.communities.create.topic}</Label>
-            <select
-              value={topic}
-              onChange={(e) => setTopic(e.target.value as CommunityTopic)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10 border-transparent bg-muted"
-            >
-              {TOPICS.filter((t) => t !== "Todas").map((t) => (
-                <option key={t} value={t}>
-                  {TOPIC_LABELS[t]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button
-            className="w-full rounded-full"
-            disabled={!name.trim() || !description.trim() || create.isPending}
-            onClick={() => create.mutate()}
-          >
-            {create.isPending ? texts.common.creating : texts.common.create}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
