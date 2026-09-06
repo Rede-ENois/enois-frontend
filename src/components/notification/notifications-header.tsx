@@ -1,13 +1,7 @@
 import { CheckCheck } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { NotificationTab } from "@/utils/notifications";
-
-type NotificationsHeaderProps = {
-  unreadCount: number;
-  notificationTab: NotificationTab;
-  onMarkAllRead: () => void;
-};
+import type { NotificationsHeaderProps } from "@/types/components/notification/notifications-header-props";
 
 export function NotificationsHeader({
   unreadCount,

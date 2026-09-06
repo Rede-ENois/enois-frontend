@@ -1,11 +1,7 @@
 import { cn } from "@/lib/utils";
-import { notificationTabs, type NotificationTab } from "@/utils/notifications";
-
-type NotificationsTabsProps = {
-  activeTab: NotificationTab;
-  unreadCount: number;
-  onChange: (tab: NotificationTab) => void;
-};
+import type { NotificationTab } from "@/types/components/notification/notification-tab";
+import type { NotificationsTabsProps } from "@/types/components/notification/notifications-tabs-props";
+import { notificationTabs } from "@/utils/notifications";
 
 export function NotificationsTabs({ activeTab, unreadCount, onChange }: NotificationsTabsProps) {
   return (

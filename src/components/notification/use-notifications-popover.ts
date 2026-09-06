@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { networkApi, notificationApi } from "@/lib/api";
-import { getUnreadCount, notificationTabs, type NotificationTab } from "@/utils/notifications";
+import type { NotificationTab } from "@/types/components/notification/notification-tab";
+import { getUnreadCount, notificationTabs } from "@/utils/notifications";
 
 export function useNotificationsPopover() {
   const queryClient = useQueryClient();
