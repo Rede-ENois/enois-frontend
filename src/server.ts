@@ -1,7 +1,10 @@
 import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import type { ServerEntry } from "./types/application/server/server-entry";
+
+type ServerEntry = {
+  fetch: (request: Request, env: unknown, context: unknown) => Promise<Response> | Response;
+};
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 

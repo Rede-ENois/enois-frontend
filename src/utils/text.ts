@@ -1,4 +1,7 @@
-import type { RichTextToken } from "@/types/application/text/rich-text-token";
+type RichTextToken =
+  | { type: "text"; value: string }
+  | { type: "mention"; value: string; username: string }
+  | { type: "url"; value: string };
 
 export function tokenizeRichText(text: string): RichTextToken[] {
   const tokens: RichTextToken[] = [];

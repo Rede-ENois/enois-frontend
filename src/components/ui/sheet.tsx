@@ -3,12 +3,11 @@
 import * as React from "react";
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
-import type { SheetContentProps } from "@/types/components/ui/sheet/sheet-content-props";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -51,6 +50,11 @@ const sheetVariants = cva(
     },
   },
 );
+
+export type SheetContentProps = React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content> &
+  VariantProps<typeof sheetVariants> & {
+    overlayClassName?: string;
+  };
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,

@@ -1,10 +1,10 @@
-import type { SelectableButtonProps } from "@/types/components/shared/selectable-button-props";
+import type { PropsWithChildren } from "react";
 
 export function AuthTabButton({
   isActive,
   children,
   onClick,
-}: SelectableButtonProps) {
+}: PropsWithChildren<{ isActive: boolean; onClick: () => void }>) {
   return (
     <button
       type="button"

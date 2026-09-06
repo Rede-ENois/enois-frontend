@@ -5,12 +5,12 @@ import { Plus } from "lucide-react";
 
 import { communityApi } from "@/lib/api";
 import { texts } from "@/texts";
-import type { CommunityTopic } from "@/types/components/community/community-topic";
 import type { ControlledDialogProps } from "@/types/components/shared/controlled-dialog-props";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateCommunityForm } from "./create-community-form";
+import type { CommunityTopic } from "./community-topics";
 
 export function CreateCommunityDialog({ isOpen, onOpenChange }: ControlledDialogProps) {
   const queryClient = useQueryClient();

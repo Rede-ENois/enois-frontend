@@ -2,9 +2,11 @@ import { formatDistanceToNow, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { texts } from "@/texts";
-import type { RelativeTimeRule } from "@/types/application/time/relative-time-rule";
 
-const relativeTimeRules: RelativeTimeRule[] = [
+const relativeTimeRules: Array<{
+  matches: (minutes: number) => boolean;
+  format: (minutes: number) => string;
+}> = [
   { matches: (minutes) => minutes < 1, format: () => texts.time.now },
   { matches: (minutes) => minutes < 60, format: (minutes) => texts.time.minutesAgo(minutes) },
   {

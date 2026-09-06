@@ -1,8 +1,7 @@
 import type { CommentView } from "@/lib/api";
 import { profileApi } from "@/lib/api";
-import type { ReplyTarget } from "@/types/application/comment/reply-target";
 
-export async function createReplyTarget(comment: CommentView): Promise<ReplyTarget> {
+export async function createReplyTarget(comment: CommentView) {
   try {
     const profile = await profileApi.getById(comment.authorId);
     if (profile?.username) {
@@ -18,7 +17,7 @@ export async function createReplyTarget(comment: CommentView): Promise<ReplyTarg
 
   return {
     draft: `${comment.authorName} `,
-    mentionedUserIds: [],
+    mentionedUserIds: [] as string[],
     replyToId: comment.id,
   };
 }
