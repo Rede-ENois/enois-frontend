@@ -16,15 +16,15 @@ import { AuthField } from "./controls/auth-field";
 import { AuthSocialButtons } from "./controls/auth-social-buttons";
 import { PasswordVisibilityButton } from "./controls/password-visibility-button";
 
-type SignInFormProps = {
-  onAuthenticated: () => void;
-  onForgotPassword: () => void;
-};
-
 const signInSchema = z.object({
   email: z.string().trim().email(texts.auth.validation.invalidEmail).max(255),
   password: z.string().min(6, texts.auth.validation.loginPasswordMin).max(128),
 });
+
+type SignInFormProps = {
+  onAuthenticated: () => void;
+  onForgotPassword: () => void;
+};
 
 export function SignInForm({ onAuthenticated, onForgotPassword }: SignInFormProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -35,6 +35,7 @@ export function SignInForm({ onAuthenticated, onForgotPassword }: SignInFormProp
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const parsed = signInSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+
     if (!parsed.success) {
       setValidationErrors(mapValidationErrors(parsed.error.issues));
       return;
@@ -60,17 +61,41 @@ export function SignInForm({ onAuthenticated, onForgotPassword }: SignInFormProp
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">{texts.auth.login.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{texts.auth.login.subtitle}</p>
-      <div className="mt-6"><AuthSocialButtons /><AuthDivider /></div>
+
+      <div className="mt-6">
+        <AuthSocialButtons />
+        <AuthDivider />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <AuthField label={texts.auth.fields.email} error={validationErrors.email}>
           <Input name="email" type="email" placeholder={texts.auth.placeholders.email} autoComplete="email" required maxLength={255} />
         </AuthField>
-        <AuthField label={texts.auth.fields.password} error={validationErrors.password} right={<button type="button" onClick={onForgotPassword} className="text-xs font-medium text-primary hover:underline">{texts.auth.password.forgot}</button>}>
+        <AuthField
+          label={texts.auth.fields.password}
+          error={validationErrors.password}
+          right={
+            <button type="button" onClick={onForgotPassword} className="text-xs font-medium text-primary hover:underline">
+              {texts.auth.password.forgot}
+            </button>
+          }
+        >
           <div className="relative">
-            <Input name="password" type={isPasswordVisible ? "text" : "password"} placeholder={texts.auth.placeholders.password} autoComplete="current-password" required maxLength={128} />
-            <PasswordVisibilityButton isVisible={isPasswordVisible} onToggle={() => setIsPasswordVisible((isVisible) => !isVisible)} />
+            <Input
+              name="password"
+              type={isPasswordVisible ? "text" : "password"}
+              placeholder={texts.auth.placeholders.password}
+              autoComplete="current-password"
+              required
+              maxLength={128}
+            />
+            <PasswordVisibilityButton
+              isVisible={isPasswordVisible}
+              onToggle={() => setIsPasswordVisible((isVisible) => !isVisible)}
+            />
           </div>
         </AuthField>
+
         {formError && <ErrorBanner error={formError} />}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={isSubmitting}>
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{texts.common.enter} <ArrowRight className="h-4 w-4" /></>}
