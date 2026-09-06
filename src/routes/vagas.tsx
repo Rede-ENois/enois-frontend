@@ -7,11 +7,12 @@ import { jobApi } from "@/lib/api";
 import type { Job } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
+import type { JobFilterValues } from "@/types/components/job/job-filter-values";
 import { mergePage } from "@/utils/collections";
 
 import { AppContainer } from "@/components/app-container";
 import { JobEmptyState } from "@/components/job/job-empty-state";
-import { JobFilters, type JobFilterValues } from "@/components/job/job-filters";
+import { JobFilters } from "@/components/job/job-filters";
 import { JobGrid } from "@/components/job/job-grid";
 import { JobInfiniteScroll } from "@/components/job/job-infinite-scroll";
 import { JobLoading } from "@/components/job/job-loading";

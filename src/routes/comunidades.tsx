@@ -7,6 +7,7 @@ import { communityApi } from "@/lib/api";
 import type { Community } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
+import type { CommunityTopic } from "@/types/components/community/community-topic";
 import { mergeUniquePage } from "@/utils/collections";
 
 import { AppContainer } from "@/components/app-container";
@@ -14,7 +15,6 @@ import { CommunitiesGrid } from "@/components/community/list/communities-grid";
 import { CommunitiesHeader } from "@/components/community/list/communities-header";
 import { CommunitiesLoadMore } from "@/components/community/list/communities-load-more";
 import { CommunityTopicFilters } from "@/components/community/list/community-topic-filters";
-import type { CommunityTopic } from "@/components/community/list/community-topics";
 import { CreateCommunityDialog } from "@/components/community/list/create-community-dialog";
 
 export const Route = createFileRoute("/comunidades")({

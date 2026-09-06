@@ -5,11 +5,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { texts } from "@/texts";
+import type { AuthTab } from "@/types/components/auth/auth-tab";
 
 import { ForgotPasswordDialog } from "@/components/auth/forgot-password-dialog";
-import { SignInForm } from "@/components/auth/sign-in-form";
 import { AuthPageLayout } from "@/components/auth/layout/auth-page-layout";
-import type { AuthTab } from "@/components/auth/layout/auth-tab";
+import { SignInForm } from "@/components/auth/sign-in-form";
 import { SignUpForm } from "@/components/auth/sign-up-form";
 
 const searchSchema = z.object({

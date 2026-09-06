@@ -7,9 +7,9 @@ import { useEventsQuery } from "@/hooks/use-feed-queries";
 import { eventApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
+import type { CreateEventFormValues } from "@/types/components/event/create-event-form-values";
 
 import { AppContainer } from "@/components/app-container";
-import type { CreateEventFormValues } from "@/components/event/create-event-form";
 import { EventsGrid } from "@/components/event/events-grid";
 import { EventsHeader } from "@/components/event/events-header";
 

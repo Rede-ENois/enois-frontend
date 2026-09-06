@@ -1,7 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { RootRouteContext } from "@/types/application/router/root-route-context";
 
 import { OAuthCallbackHandler } from "@/components/root/oauth-callback-handler";
 import { RootError } from "@/components/root/root-error";
@@ -9,7 +10,7 @@ import { RootNotFound } from "@/components/root/root-not-found";
 import { RootShell } from "@/components/root/root-shell";
 import appCss from "../styles.css?url";
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<RootRouteContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
