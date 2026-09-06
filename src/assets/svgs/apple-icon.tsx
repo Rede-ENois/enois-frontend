@@ -1,6 +1,6 @@
-import type { AppleIconProps } from "@/types/components/assets/apple-icon-props";
+import type { SVGProps } from "react";
 
-export function AppleIcon(props: AppleIconProps) {
+export function AppleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden {...props}>
       <path

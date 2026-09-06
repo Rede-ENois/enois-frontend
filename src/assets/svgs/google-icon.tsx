@@ -1,6 +1,6 @@
-import type { GoogleIconProps } from "@/types/components/assets/google-icon-props";
+import type { SVGProps } from "react";
 
-export function GoogleIcon(props: GoogleIconProps) {
+export function GoogleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden {...props}>
       <path

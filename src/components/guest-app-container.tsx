@@ -1,9 +1,9 @@
-import type { GuestAppContainerProps } from "@/types/components/app/guest-app-container-props";
+import type { PropsWithChildren } from "react";
 
 import { GuestAppHeader } from "./guest-app-header";
 import { AppLayout } from "./app-layout";
 
-export function GuestAppContainer({ children }: GuestAppContainerProps) {
+export function GuestAppContainer({ children }: PropsWithChildren) {
   return (
     <AppLayout>
       <AppLayout.Header><GuestAppHeader /></AppLayout.Header>

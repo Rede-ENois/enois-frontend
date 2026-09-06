@@ -1,5 +1,5 @@
-import type { AppLayoutSlotProps } from "@/types/components/app/app-layout-slot-props";
+import type { PropsWithChildren } from "react";
 
-export function AppLayoutRoot({ children }: AppLayoutSlotProps) {
+export function AppLayoutRoot({ children }: PropsWithChildren) {
   return <div className="min-h-screen bg-background">{children}</div>;
 }

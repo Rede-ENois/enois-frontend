@@ -1,5 +1,5 @@
-import type { AppLayoutSlotProps } from "@/types/components/app/app-layout-slot-props";
+import type { PropsWithChildren } from "react";
 
-export function AppLayoutMain({ children }: AppLayoutSlotProps) {
+export function AppLayoutMain({ children }: PropsWithChildren) {
   return <main className="min-w-0 flex-1">{children}</main>;
 }

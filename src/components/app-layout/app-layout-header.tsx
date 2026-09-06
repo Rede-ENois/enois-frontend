@@ -1,5 +1,5 @@
-import type { AppLayoutSlotProps } from "@/types/components/app/app-layout-slot-props";
+import type { PropsWithChildren } from "react";
 
-export function AppLayoutHeader({ children }: AppLayoutSlotProps) {
+export function AppLayoutHeader({ children }: PropsWithChildren) {
   return <>{children}</>;
 }

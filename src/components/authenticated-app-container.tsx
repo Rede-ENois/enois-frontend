@@ -1,13 +1,11 @@
-import { useState } from "react";
-
-import type { AuthenticatedAppContainerProps } from "@/types/components/app/authenticated-app-container-props";
+import { type PropsWithChildren, useState } from "react";
 
 import { AuthenticatedAppHeader } from "./authenticated-app-header";
 import { AppSidebar } from "./app-sidebar";
 import { NavigationDrawer } from "./navigation-drawer";
 import { AppLayout } from "./app-layout";
 
-export function AuthenticatedAppContainer({ children }: AuthenticatedAppContainerProps) {
+export function AuthenticatedAppContainer({ children }: PropsWithChildren) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (

@@ -1,8 +1,8 @@
+import type { PropsWithChildren } from "react";
+
 import { HeadContent, Scripts } from "@tanstack/react-router";
 
-import type { RootShellProps } from "@/types/components/root/root-shell-props";
-
-export function RootShell({ children }: RootShellProps) {
+export function RootShell({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <head>
