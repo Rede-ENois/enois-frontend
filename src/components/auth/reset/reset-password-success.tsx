@@ -1,9 +1,10 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { ResetPasswordSuccessProps } from "@/types/components/auth/reset-password-success-props";
 import { Button } from "@/components/ui/button";
 
-export function ResetPasswordSuccess({ onContinue }: { onContinue: () => void }) {
+export function ResetPasswordSuccess({ onContinue }: ResetPasswordSuccessProps) {
   return (
     <div className="text-center">
       <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />

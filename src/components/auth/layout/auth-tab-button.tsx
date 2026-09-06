@@ -1,10 +1,4 @@
-import type { ReactNode } from "react";
-
-type AuthTabButtonProps = {
-  isActive: boolean;
-  children: ReactNode;
-  onClick: () => void;
-};
+import type { AuthTabButtonProps } from "@/types/components/auth/auth-tab-button-props";
 
 export function AuthTabButton({
   isActive,

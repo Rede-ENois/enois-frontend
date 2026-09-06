@@ -5,17 +5,13 @@ import { z } from "zod";
 
 import { authApi } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ForgotPasswordDialogProps } from "@/types/components/auth/forgot-password-dialog-props";
 
 import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-type ForgotPasswordDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-};
 
 export function ForgotPasswordDialog({
   isOpen,
