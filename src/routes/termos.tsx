@@ -2,7 +2,9 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
-import { LegalLastUpdated, LegalLayout, LegalSection } from "@/components/legal-layout";
+import { LegalLastUpdated } from "@/components/legal-last-updated";
+import { LegalLayout } from "@/components/legal-layout";
+import { LegalSection } from "@/components/legal-section";
 
 export const Route = createFileRoute("/termos")({
   head: () => ({

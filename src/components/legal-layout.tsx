@@ -3,8 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { LegalLastUpdatedProps } from "@/types/components/legal/legal-last-updated-props";
-import type { LegalSectionProps } from "@/types/components/legal/legal-section-props";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -47,22 +45,5 @@ export function LegalLayout({ children }: WithRequiredChildren) {
         </div>
       </footer>
     </div>
-  );
-}
-
-export function LegalSection({ title, children }: LegalSectionProps) {
-  return (
-    <section className="space-y-2">
-      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-      <div className="space-y-2 text-[14px] leading-relaxed text-muted-foreground [&_p]:whitespace-pre-line">{children}</div>
-    </section>
-  );
-}
-
-export function LegalLastUpdated({ date }: LegalLastUpdatedProps) {
-  return (
-    <p className="text-xs text-muted-foreground">
-      <>{texts.legal.footer.lastUpdated}</><time dateTime={date}>{date}</time>
-    </p>
   );
 }
