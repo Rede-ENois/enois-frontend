@@ -9,7 +9,12 @@ type AuthFieldProps = {
   children: ReactNode;
 };
 
-export function AuthField({ label, error, right, children }: AuthFieldProps) {
+export function AuthField({
+  label,
+  error,
+  right,
+  children,
+}: AuthFieldProps) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
