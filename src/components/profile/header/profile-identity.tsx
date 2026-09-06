@@ -1,9 +1,9 @@
 import { Briefcase, MapPin } from "lucide-react";
 
-import type { Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfileIdentityProps } from "@/types/components/profile/header/profile-identity-props";
 
-export function ProfileIdentity({ user }: { user: Profile }) {
+export function ProfileIdentity({ user }: ProfileIdentityProps) {
   return (
     <div className="mt-4">
       <div className="flex flex-wrap items-center gap-2">

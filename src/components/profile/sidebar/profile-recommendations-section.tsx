@@ -1,15 +1,12 @@
 import { Star } from "lucide-react";
 
-import type { Profile, Recommendation } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfileRecommendationsSectionProps } from "@/types/components/profile/sidebar/profile-recommendations-section-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { ProfileSection } from "../profile-section";
 
-export function ProfileRecommendationsSection({ recommendations, recommenders }: {
-  recommendations: Recommendation[];
-  recommenders: Record<string, Profile>;
-}) {
+export function ProfileRecommendationsSection({ recommendations, recommenders }: ProfileRecommendationsSectionProps) {
   if (recommendations.length === 0) return null;
 
   return (

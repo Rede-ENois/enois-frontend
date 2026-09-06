@@ -1,10 +1,11 @@
 import { Link as LinkIcon } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { ProfileLinksSectionProps } from "@/types/components/profile/sidebar/profile-links-section-props";
 
 import { ProfileSection } from "../profile-section";
 
-export function ProfileLinksSection({ links }: { links: string[] }) {
+export function ProfileLinksSection({ links }: ProfileLinksSectionProps) {
   if (links.length === 0) return null;
 
   return (

@@ -1,19 +1,10 @@
 import { MessageCircle, Settings } from "lucide-react";
 
-import type { Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfileActionsProps } from "@/types/components/profile/header/profile-actions-props";
 
 import { EditProfileDialog } from "@/components/profile/edit/edit-profile-dialog";
 import { Button } from "@/components/ui/button";
-
-type ProfileActionsProps = {
-  user: Profile;
-  isOwnProfile: boolean;
-  connectionLabel: string;
-  isConnectionDisabled: boolean;
-  onMessage: () => void;
-  onConnect: () => void;
-};
 
 export function ProfileActions({
   user,

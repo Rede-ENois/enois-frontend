@@ -1,24 +1,10 @@
-import type { Profile, RankingUser, Recommendation } from "@/lib/api";
+import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 
 import { ProfileAvailabilitySection } from "./sidebar/profile-availability-section";
 import { ProfileLinksSection } from "./sidebar/profile-links-section";
 import { ProfileRankingSection } from "./sidebar/profile-ranking-section";
 import { ProfileRecommendSection } from "./sidebar/profile-recommend-section";
 import { ProfileRecommendationsSection } from "./sidebar/profile-recommendations-section";
-
-type ProfileSidebarProps = {
-  user: Profile;
-  isOwnProfile: boolean;
-  recommendations: Recommendation[];
-  recommenderByUserId: Record<string, Profile>;
-  ranking: RankingUser[];
-  isRecommendationOpen: boolean;
-  recommendationComment: string;
-  isRecommendationPending: boolean;
-  onRecommendationOpenChange: (isOpen: boolean) => void;
-  onRecommendationCommentChange: (value: string) => void;
-  onRecommendationSubmit: () => void;
-};
 
 export function ProfileSidebar({
   user,

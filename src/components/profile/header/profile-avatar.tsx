@@ -1,18 +1,9 @@
-import type { ChangeEventHandler } from "react";
-
 import { Camera } from "lucide-react";
 
-import type { Profile } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import type { ProfileAvatarProps } from "@/types/components/profile/header/profile-avatar-props";
 
 import { UserAvatar } from "@/components/user-avatar";
-
-type ProfileAvatarProps = {
-  user: Profile;
-  isEditable: boolean;
-  isUploading: boolean;
-  onSelect: ChangeEventHandler<HTMLInputElement>;
-};
 
 export function ProfileAvatar({
   user,

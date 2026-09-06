@@ -1,8 +1,4 @@
-type ProfileSectionProps = {
-  title: string;
-  icon?: React.ElementType;
-  children: React.ReactNode;
-};
+import type { ProfileSectionProps } from "@/types/components/profile/profile-section-props";
 
 export function ProfileSection({ title, icon: Icon, children }: ProfileSectionProps) {
   return (

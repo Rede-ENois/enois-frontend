@@ -1,5 +1,5 @@
-import type { Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfilePageProps } from "@/types/components/profile/page/profile-page-props";
 
 import { AppContainer } from "@/components/app-container";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
@@ -9,10 +9,6 @@ import { ProfileSidebar } from "@/components/profile/profile-sidebar";
 
 import { useProfilePageActions } from "./use-profile-page-actions";
 import { useProfilePageData } from "./use-profile-page-data";
-
-type ProfilePageProps = {
-  loaderUser: Profile;
-};
 
 export function ProfilePage({ loaderUser }: ProfilePageProps) {
   const profileData = useProfilePageData(loaderUser);

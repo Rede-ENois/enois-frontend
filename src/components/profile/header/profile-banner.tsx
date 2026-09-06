@@ -1,17 +1,8 @@
-import type { ChangeEventHandler } from "react";
-
 import { Camera } from "lucide-react";
 
-import type { Profile } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
-
-type ProfileBannerProps = {
-  user: Profile;
-  isEditable: boolean;
-  isUploading: boolean;
-  onSelect: ChangeEventHandler<HTMLInputElement>;
-};
+import type { ProfileBannerProps } from "@/types/components/profile/header/profile-banner-props";
 
 export function ProfileBanner({
   user,

@@ -1,12 +1,10 @@
 import { Target } from "lucide-react";
 
-import type { PostView, Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfileMainContentProps } from "@/types/components/profile/profile-main-content-props";
 
 import { PostCard } from "@/components/post/post-card";
 import { ProfileSection } from "./profile-section";
-
-type ProfileMainContentProps = { user: Profile; posts: PostView[] };
 
 export function ProfileMainContent({ user, posts }: ProfileMainContentProps) {
   return (

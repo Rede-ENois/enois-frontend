@@ -1,24 +1,9 @@
-import type { ChangeEventHandler } from "react";
-
-import type { Profile } from "@/lib/api";
+import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
 
 import { ProfileActions } from "./header/profile-actions";
 import { ProfileAvatar } from "./header/profile-avatar";
 import { ProfileBanner } from "./header/profile-banner";
 import { ProfileIdentity } from "./header/profile-identity";
-
-type ProfileHeaderProps = {
-  user: Profile;
-  isOwnProfile: boolean;
-  isAvatarUploading: boolean;
-  isBannerUploading: boolean;
-  connectionLabel: string;
-  isConnectionDisabled: boolean;
-  onAvatarSelect: ChangeEventHandler<HTMLInputElement>;
-  onBannerSelect: ChangeEventHandler<HTMLInputElement>;
-  onMessage: () => void;
-  onConnect: () => void;
-};
 
 export function ProfileHeader({
   user,

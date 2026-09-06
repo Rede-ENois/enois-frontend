@@ -1,22 +1,12 @@
 import { ThumbsUp } from "lucide-react";
 
-import type { Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfileRecommendSectionProps } from "@/types/components/profile/sidebar/profile-recommend-section-props";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { ProfileSection } from "../profile-section";
-
-type ProfileRecommendSectionProps = {
-  user: Profile;
-  isOpen: boolean;
-  comment: string;
-  isPending: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  onCommentChange: (value: string) => void;
-  onSubmit: () => void;
-};
 
 export function ProfileRecommendSection({
   user,

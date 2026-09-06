@@ -2,13 +2,13 @@ import { Link } from "@tanstack/react-router";
 
 import { Trophy } from "lucide-react";
 
-import type { RankingUser } from "@/lib/api";
 import { texts } from "@/texts";
+import type { ProfileRankingSectionProps } from "@/types/components/profile/sidebar/profile-ranking-section-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { ProfileSection } from "../profile-section";
 
-export function ProfileRankingSection({ ranking }: { ranking: RankingUser[] }) {
+export function ProfileRankingSection({ ranking }: ProfileRankingSectionProps) {
   if (ranking.length === 0) return null;
 
   return (
