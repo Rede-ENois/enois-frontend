@@ -4,8 +4,9 @@ import { useRouter } from "@tanstack/react-router";
 
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { texts } from "@/texts";
+import type { RootErrorProps } from "@/types/components/root/root-error-props";
 
-export function RootError({ error, reset }: { error: Error; reset: () => void }) {
+export function RootError({ error, reset }: RootErrorProps) {
   console.error(error);
   const router = useRouter();
 
