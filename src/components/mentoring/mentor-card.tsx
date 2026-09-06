@@ -2,18 +2,12 @@ import { Link } from "@tanstack/react-router";
 
 import { Calendar, Star } from "lucide-react";
 
-import type { Mentor, Profile } from "@/lib/api";
 import { texts } from "@/texts";
+import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-type MentorCardProps = {
-  mentor: Mentor;
-  user?: Profile;
-  isOwner: boolean;
-};
 
 export function MentorCard({ mentor, user, isOwner }: MentorCardProps) {
   return (

@@ -1,4 +1,5 @@
 import { texts } from "@/texts";
+import type { RegisterMentorDialogProps } from "@/types/components/mentoring/register-mentor-dialog-props";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -8,14 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { RegisterMentorForm, type RegisterMentorFormValues } from "./register-mentor-form";
-
-type RegisterMentorDialogProps = {
-  isOpen: boolean;
-  isPending: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  onRegister: (values: RegisterMentorFormValues) => void;
-};
+import { RegisterMentorForm } from "./register-mentor-form";
 
 export function RegisterMentorDialog({
   isOpen,

@@ -1,11 +1,7 @@
 import { texts } from "@/texts";
+import type { MentorsListProps } from "@/types/components/mentoring/mentors-list-props";
 
 import { MentorCard } from "./mentor-card";
-import type { MentorViewModel } from "./mentor-view-model";
-
-type MentorsListProps = {
-  mentors: MentorViewModel[];
-};
 
 export function MentorsList({ mentors }: MentorsListProps) {
   return (

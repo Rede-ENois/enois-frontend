@@ -7,12 +7,12 @@ import { mentorApi, profileApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
+import type { MentorViewModel } from "@/types/components/mentoring/mentor-view-model";
+import type { RegisterMentorFormValues } from "@/types/components/mentoring/register-mentor-form-values";
 
 import { AppContainer } from "@/components/app-container";
-import type { MentorViewModel } from "@/components/mentoring/mentor-view-model";
 import { MentoringHero } from "@/components/mentoring/mentoring-hero";
 import { MentorsList } from "@/components/mentoring/mentors-list";
-import type { RegisterMentorFormValues } from "@/components/mentoring/register-mentor-form";
 
 export const Route = createFileRoute("/mentoria")({
   beforeLoad: requireAuth,

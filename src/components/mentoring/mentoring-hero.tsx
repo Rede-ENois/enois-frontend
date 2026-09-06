@@ -1,18 +1,11 @@
 import { Sparkles } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { MentoringHeroProps } from "@/types/components/mentoring/mentoring-hero-props";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RegisterMentorDialog } from "./register-mentor-dialog";
-import type { RegisterMentorFormValues } from "./register-mentor-form";
-
-type MentoringHeroProps = {
-  isRegistrationOpen: boolean;
-  isRegistrationPending: boolean;
-  onRegistrationOpenChange: (isOpen: boolean) => void;
-  onRegister: (values: RegisterMentorFormValues) => void;
-};
 
 export function MentoringHero({
   isRegistrationOpen,
