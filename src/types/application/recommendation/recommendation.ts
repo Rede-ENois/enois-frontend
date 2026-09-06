@@ -5,3 +5,5 @@ export type Recommendation = {
   comment: string;
   createdAt: string;
 };
+
+export type CreateRecommendationInput = Pick<Recommendation, "comment">;

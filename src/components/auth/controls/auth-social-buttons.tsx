@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { AppleIcon } from "@/assets/svgs/apple-icon";
 import { GoogleIcon } from "@/assets/svgs/google-icon";
 import { texts } from "@/texts";
-import type { OAuthProvider } from "@/types/application/auth/oauth-provider";
+import type { OAuthProvider } from "@/types/application/auth/oauth-start-response";
 
 const oauthProviders: Record<OAuthProvider, { name: string; label: string; Icon: React.ElementType }> = {
   GOOGLE: { name: "Google", label: texts.auth.social.google, Icon: GoogleIcon },

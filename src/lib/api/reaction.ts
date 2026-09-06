@@ -4,8 +4,7 @@ import type { ReactionsListResponse } from "@/types/application/reaction/reactio
 import { api } from "../api-client";
 
 export type { ActionResponse } from "@/types/application/reaction/action-response";
-export type { ReactionItem } from "@/types/application/reaction/reaction-item";
-export type { ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
+export type { ReactionItem, ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
 
 export const REACTION_EMOJIS = {
   LIKE: "\u{1F44D}",

@@ -1,5 +1,4 @@
-import type { Navigate } from "@/types/application/navigation/navigate";
-import type { RouteDefinition } from "@/types/application/navigation/route-definition";
+import type { Navigate, RouteDefinition } from "@/types/application/navigation/route-definition";
 
 const routeDefinitions = [
   { source: "feed/posts", to: "/feed" },

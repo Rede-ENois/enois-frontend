@@ -1,4 +1,8 @@
-import type { ReactionItem } from "./reaction-item";
+export type ReactionItem = {
+  userId: string;
+  type: string;
+  createdAt: string;
+};
 
 export type ReactionsListResponse = {
   postId?: string;

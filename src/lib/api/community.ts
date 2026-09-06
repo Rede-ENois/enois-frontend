@@ -1,14 +1,12 @@
-import type { Community } from "@/types/application/community/community";
+import type { Community, CreateCommunityInput } from "@/types/application/community/community";
 import type { CommunityMember } from "@/types/application/community/community-member";
-import type { CreateCommunityInput } from "@/types/application/community/create-community-input";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { PageResponse } from "@/types/application/pagination/page-response";
 
 import { api, buildQuery } from "../api-client";
 
-export type { Community } from "@/types/application/community/community";
+export type { Community, CreateCommunityInput } from "@/types/application/community/community";
 export type { CommunityMember } from "@/types/application/community/community-member";
-export type { CreateCommunityInput } from "@/types/application/community/create-community-input";
 
 export const communityApi = {
   list: (topic?: string, cursor?: string | null, limit = 20) =>

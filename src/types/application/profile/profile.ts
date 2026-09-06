@@ -20,3 +20,24 @@ export type Profile = {
   followersCount?: number;
   reputation?: number;
 };
+
+export type UpdateProfileInput = Partial<
+  Pick<
+    Profile,
+    | "username"
+    | "name"
+    | "headline"
+    | "company"
+    | "location"
+    | "avatar"
+    | "banner"
+    | "bio"
+    | "skills"
+    | "goals"
+    | "availability"
+    | "portfolio"
+    | "externalLinks"
+    | "openToWork"
+    | "isMentor"
+  >
+>;

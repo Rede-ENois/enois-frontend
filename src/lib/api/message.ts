@@ -1,12 +1,10 @@
-import type { Conversation } from "@/types/application/message/conversation";
-import type { CreateConversationInput } from "@/types/application/message/create-conversation-input";
+import type { Conversation, CreateConversationInput } from "@/types/application/message/conversation";
 import type { Message } from "@/types/application/message/message";
 import type { PageResponse } from "@/types/application/pagination/page-response";
 
 import { api, buildQuery } from "../api-client";
 
-export type { Conversation } from "@/types/application/message/conversation";
-export type { CreateConversationInput } from "@/types/application/message/create-conversation-input";
+export type { Conversation, CreateConversationInput } from "@/types/application/message/conversation";
 export type { Message } from "@/types/application/message/message";
 
 export const messageApi = {

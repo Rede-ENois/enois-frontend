@@ -8,3 +8,6 @@ export type Community = {
   cover: string | null;
   avatar: string | null;
 };
+
+export type CreateCommunityInput = Pick<Community, "name" | "description" | "topic"> &
+  Partial<Pick<Community, "cover" | "avatar">>;

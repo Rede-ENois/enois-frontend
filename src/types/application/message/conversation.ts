@@ -7,3 +7,7 @@ export type Conversation = {
   time: string | null;
   unread: number;
 };
+
+export type CreateConversationInput = Pick<Conversation, "kind" | "participantIds"> & {
+  title?: Conversation["title"];
+};

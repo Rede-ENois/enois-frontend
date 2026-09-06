@@ -1,17 +1,12 @@
-import type { AuthResponse } from "@/types/application/auth/auth-response";
-import type { AuthUser } from "@/types/application/auth/auth-user";
-import type { OAuthProvider } from "@/types/application/auth/oauth-provider";
-import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
-import type { SignInInput } from "@/types/application/auth/sign-in-input";
-import type { SignUpInput } from "@/types/application/auth/sign-up-input";
+import type { AuthResponse, AuthUser } from "@/types/application/auth/auth-response";
+import type { OAuthProvider, OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+import type { SignInInput, SignUpInput } from "@/types/application/auth/sign-in-input";
 
 import { api } from "../api-client";
 
-export type { AuthResponse } from "@/types/application/auth/auth-response";
-export type { AuthUser } from "@/types/application/auth/auth-user";
-export type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
-export type { SignInInput } from "@/types/application/auth/sign-in-input";
-export type { SignUpInput } from "@/types/application/auth/sign-up-input";
+export type { AuthResponse, AuthUser } from "@/types/application/auth/auth-response";
+export type { OAuthProvider, OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+export type { SignInInput, SignUpInput } from "@/types/application/auth/sign-in-input";
 
 export const authApi = {
   signUp: (input: SignUpInput) => api.post<AuthResponse>("/auth/signup", input),

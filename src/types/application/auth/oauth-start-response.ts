@@ -1,4 +1,4 @@
-import type { OAuthProvider } from "./oauth-provider";
+export type OAuthProvider = "GOOGLE" | "APPLE";
 
 export type OAuthStartResponse = {
   provider: OAuthProvider;

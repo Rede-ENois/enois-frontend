@@ -1,4 +1,10 @@
-import type { AuthUser } from "./auth-user";
+export type AuthUser = {
+  id: string;
+  username: string;
+  name: string;
+  headline: string;
+  email: string;
+};
 
 export type AuthResponse = {
   token: string;
