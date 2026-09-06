@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
-
 import { Sparkles } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { AppBrandProps } from "@/types/components/app/app-brand-props";
+
+type AppBrandProps = {
+  onClick?: () => void;
+};
 
 export function AppBrand({ onClick }: AppBrandProps) {
   return (

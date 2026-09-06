@@ -1,11 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-
 import { Menu } from "lucide-react";
 
 import { profileApi } from "@/lib/api";
 import { texts } from "@/texts";
-import type { AuthenticatedAppHeaderProps } from "@/types/components/app/authenticated-app-header-props";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
@@ -13,6 +11,10 @@ import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
 import { GlobalSearch } from "./global-search/global-search";
 import { NotificationsPopover } from "./notification/notifications-popover";
+
+type AuthenticatedAppHeaderProps = {
+  onOpenMobileMenu: () => void;
+};
 
 export function AuthenticatedAppHeader({ onOpenMobileMenu }: AuthenticatedAppHeaderProps) {
   const { data: profile } = useQuery({ queryKey: ["me"], queryFn: () => profileApi.getCurrent() });

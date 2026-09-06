@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { authApi } from "@/lib/api";
 import { texts } from "@/texts";
-import type { SignUpFormProps } from "@/types/components/auth/sign-up-form-props";
 import { mapValidationErrors } from "@/utils/forms";
 import { clearSession, storeAuthenticatedSession } from "@/utils/session";
 
@@ -16,6 +15,10 @@ import { AuthDivider } from "./controls/auth-divider";
 import { AuthField } from "./controls/auth-field";
 import { AuthSocialButtons } from "./controls/auth-social-buttons";
 import { PasswordVisibilityButton } from "./controls/password-visibility-button";
+
+type SignUpFormProps = {
+  onAuthenticated: () => void;
+};
 
 const signUpSchema = z.object({
   name: z.string().trim().min(2, texts.auth.validation.signupNameMin).max(80),

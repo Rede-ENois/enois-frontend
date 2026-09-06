@@ -1,11 +1,14 @@
 import { useNavigate } from "@tanstack/react-router";
 
 import { AuthHeroPanel } from "@/components/auth/layout/auth-hero-panel";
-import type { ResetPasswordPageProps } from "@/types/components/auth/reset-password-page-props";
 import { ResetMobileHeader } from "./reset-mobile-header";
 import { ResetPasswordForm } from "./reset-password-form";
 import { ResetPasswordSuccess } from "./reset-password-success";
 import { useResetPassword } from "./use-reset-password";
+
+type ResetPasswordPageProps = {
+  token: string;
+};
 
 export function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   const navigate = useNavigate();

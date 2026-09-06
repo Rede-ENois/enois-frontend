@@ -1,5 +1,13 @@
+import type { ReactNode } from "react";
+
 import { Label } from "@/components/ui/label";
-import type { AuthFieldProps } from "@/types/components/auth/auth-field-props";
+
+type AuthFieldProps = {
+  label: string;
+  error?: string;
+  right?: ReactNode;
+  children: ReactNode;
+};
 
 export function AuthField({ label, error, right, children }: AuthFieldProps) {
   return (

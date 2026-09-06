@@ -1,8 +1,11 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { ResetPasswordSuccessProps } from "@/types/components/auth/reset-password-success-props";
 import { Button } from "@/components/ui/button";
+
+type ResetPasswordSuccessProps = {
+  onContinue: () => void;
+};
 
 export function ResetPasswordSuccess({ onContinue }: ResetPasswordSuccessProps) {
   return (

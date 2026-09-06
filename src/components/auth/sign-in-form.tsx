@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { authApi } from "@/lib/api";
 import { texts } from "@/texts";
-import type { SignInFormProps } from "@/types/components/auth/sign-in-form-props";
 import { mapValidationErrors } from "@/utils/forms";
 import { clearSession, storeAuthenticatedSession } from "@/utils/session";
 
@@ -16,6 +15,11 @@ import { AuthDivider } from "./controls/auth-divider";
 import { AuthField } from "./controls/auth-field";
 import { AuthSocialButtons } from "./controls/auth-social-buttons";
 import { PasswordVisibilityButton } from "./controls/password-visibility-button";
+
+type SignInFormProps = {
+  onAuthenticated: () => void;
+  onForgotPassword: () => void;
+};
 
 const signInSchema = z.object({
   email: z.string().trim().email(texts.auth.validation.invalidEmail).max(255),

@@ -1,11 +1,20 @@
+import type { FormEventHandler } from "react";
+
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+type ResetPasswordFormProps = {
+  errors: Record<string, string>;
+  isSubmitting: boolean;
+  isPasswordVisible: boolean;
+  onTogglePassword: () => void;
+  onSubmit: FormEventHandler<HTMLFormElement>;
+};
 
 export function ResetPasswordForm({
   errors,

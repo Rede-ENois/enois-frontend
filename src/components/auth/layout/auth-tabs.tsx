@@ -1,7 +1,12 @@
 import { texts } from "@/texts";
-import type { AuthTabsProps } from "@/types/components/auth/auth-tabs-props";
+import type { AuthTab } from "@/types/components/auth/auth-tab";
 
 import { AuthTabButton } from "./auth-tab-button";
+
+type AuthTabsProps = {
+  tab: AuthTab;
+  onTabChange: (tab: AuthTab) => void;
+};
 
 export function AuthTabs({ tab, onTabChange }: AuthTabsProps) {
   return (

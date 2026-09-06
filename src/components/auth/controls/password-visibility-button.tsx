@@ -1,7 +1,11 @@
 import { Eye, EyeOff } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { PasswordVisibilityButtonProps } from "@/types/components/auth/password-visibility-button-props";
+
+type PasswordVisibilityButtonProps = {
+  isVisible: boolean;
+  onToggle: () => void;
+};
 
 export function PasswordVisibilityButton({
   isVisible,

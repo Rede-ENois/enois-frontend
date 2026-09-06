@@ -1,9 +1,16 @@
-import type { AuthPageLayoutProps } from "@/types/components/auth/auth-page-layout-props";
+import type { PropsWithChildren } from "react";
+
+import type { AuthTab } from "@/types/components/auth/auth-tab";
 
 import { AuthHeroPanel } from "./auth-hero-panel";
 import { AuthMobileHeader } from "./auth-mobile-header";
 import { AuthTabs } from "./auth-tabs";
 import { AuthTerms } from "./auth-terms";
+
+type AuthPageLayoutProps = PropsWithChildren<{
+  tab: AuthTab;
+  onTabChange: (tab: AuthTab) => void;
+}>;
 
 export function AuthPageLayout({ tab, onTabChange, children }: AuthPageLayoutProps) {
   return (
