@@ -9,10 +9,10 @@ import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedSidebarSuggestions({
   suggestions,
-  onConnect,
+  onConnectSuggestion,
 }: {
   suggestions: NetworkUser[];
-  onConnect: (userId: string) => void;
+  onConnectSuggestion: (userId: string) => void;
 }) {
   if (suggestions.length === 0) return null;
 
@@ -42,7 +42,7 @@ export function FeedSidebarSuggestions({
             <button
               type="button"
               className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary"
-              onClick={() => onConnect(user.id)}
+              onClick={() => onConnectSuggestion(user.id)}
             >
               {texts.feed.sidebar.connect}
             </button>

@@ -8,7 +8,7 @@ import {
   type RequestDirection,
 } from "@/utils/network";
 
-import type { NetworkRequestItem } from "@/components/network/network-request-item";
+import type { NetworkRequestViewModel } from "@/components/network/network-types";
 
 export function useNetworkData() {
   const { user: currentUser } = useAuth();
@@ -48,16 +48,16 @@ export function useNetworkData() {
     })),
   });
 
-  const requestGroups: Record<RequestDirection, NetworkRequestItem[]> = {
+  const requestsByDirection: Record<RequestDirection, NetworkRequestViewModel[]> = {
     incoming: [],
     outgoing: [],
   };
   requestMetadata.forEach((requestMetadataItem, index) => {
-    requestGroups[requestMetadataItem.direction].push({
+    requestsByDirection[requestMetadataItem.direction].push({
       ...requestMetadataItem,
       user: requestProfileQueries[index]?.data,
     });
   });
 
-  return { users, summary, requestGroups };
+  return { users, summary, requestsByDirection };
 }

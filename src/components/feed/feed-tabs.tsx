@@ -8,20 +8,19 @@ const feedTabs = [
   { value: "PROJECTS", label: texts.feed.tabs.projects },
 ] as const;
 
-export function FeedTabs({
-  activeTab,
-  onChange,
-}: {
+type FeedTabsProps = {
   activeTab: string | undefined;
-  onChange: (value: string) => void;
-}) {
+  onTabChange: (tab: string) => void;
+};
+
+export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {feedTabs.map((tab) => (
         <button
           key={tab.value}
           type="button"
-          onClick={() => onChange(tab.value)}
+          onClick={() => onTabChange(tab.value)}
           className={`rounded-full border px-3 py-1.5 text-[12px] font-light transition ${
             activeTab === tab.value
               ? "border-primary bg-primary text-primary-foreground"

@@ -5,21 +5,21 @@ import { MentionTextarea } from "@/components/mention-textarea/mention-textarea"
 import { UserAvatar } from "@/components/user-avatar";
 
 type FeedComposerInputProps = {
-  profile: Profile | null | undefined;
+  currentUser: Profile | null | undefined;
   content: string;
   onContentChange: (value: string, mentionedUserIds: string[]) => void;
 };
 
 export function FeedComposerInput({
-  profile,
+  currentUser,
   content,
   onContentChange,
 }: FeedComposerInputProps) {
   return (
     <div className="flex items-center gap-3">
       <UserAvatar
-        src={profile?.avatar}
-        alt={profile?.name ?? texts.feed.you}
+        src={currentUser?.avatar}
+        alt={currentUser?.name ?? texts.feed.you}
         className="h-11 w-11"
       />
       <MentionTextarea

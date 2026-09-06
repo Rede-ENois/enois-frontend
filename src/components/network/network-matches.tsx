@@ -1,18 +1,18 @@
 import { texts } from "@/texts";
 
-import type { NetworkMatchItem } from "./network-match-item";
+import type { NetworkMatchViewModel } from "./network-types";
 import { NetworkUserCard } from "./network-user-card";
 
 type NetworkMatchesProps = {
-  items: NetworkMatchItem[];
-  isPending: boolean;
+  matches: NetworkMatchViewModel[];
+  isConnectionActionPending: boolean;
   onConnect: (userId: string) => void;
   onRemove: (userId: string) => void;
 };
 
 export function NetworkMatches({
-  items,
-  isPending,
+  matches,
+  isConnectionActionPending,
   onConnect,
   onRemove,
 }: NetworkMatchesProps) {
@@ -26,12 +26,12 @@ export function NetworkMatches({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map(({ user, state }) => (
+        {matches.map(({ user, connectionState }) => (
           <NetworkUserCard
             key={user.id}
             user={user}
-            state={state}
-            isPending={isPending}
+            connectionState={connectionState}
+            isConnectionActionPending={isConnectionActionPending}
             onConnect={onConnect}
             onRemove={onRemove}
           />

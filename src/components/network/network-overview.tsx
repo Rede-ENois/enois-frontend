@@ -3,18 +3,21 @@ import { texts } from "@/texts";
 
 import { NetworkStat } from "./network-stat";
 
-export function NetworkOverview({
-  summary,
-  suggestionsCount,
-}: {
+type NetworkOverviewProps = {
   summary: NetworkSummary | undefined;
-  suggestionsCount: number;
-}) {
+  suggestionCount: number;
+};
+
+export function NetworkOverview({ summary, suggestionCount }: NetworkOverviewProps) {
   const stats = [
     { label: texts.network.stats.connections, value: summary?.connections ?? 0 },
     { label: texts.network.stats.following, value: summary?.followers ?? 0 },
-    { label: texts.network.stats.requests, value: summary?.pendingRequests ?? 0, highlight: true },
-    { label: texts.network.stats.suggestions, value: suggestionsCount },
+    {
+      label: texts.network.stats.requests,
+      value: summary?.pendingRequests ?? 0,
+      isHighlighted: true,
+    },
+    { label: texts.network.stats.suggestions, value: suggestionCount },
   ];
 
   return (
@@ -27,7 +30,7 @@ export function NetworkOverview({
             key={stat.label}
             label={stat.label}
             value={String(stat.value)}
-            highlight={stat.highlight}
+            isHighlighted={stat.isHighlighted}
           />
         ))}
       </div>

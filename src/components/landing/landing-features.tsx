@@ -2,13 +2,37 @@ import { GraduationCap, Heart, MessageCircle, ShieldCheck, Sparkles, Users } fro
 
 import { texts } from "@/texts";
 
-const features = [
-  { icon: MessageCircle, title: texts.landing.features.items.discussions.title, desc: texts.landing.features.items.discussions.description },
-  { icon: GraduationCap, title: texts.landing.features.items.mentoring.title, desc: texts.landing.features.items.mentoring.description },
-  { icon: Heart, title: texts.landing.features.items.communities.title, desc: texts.landing.features.items.communities.description },
-  { icon: Users, title: texts.landing.features.items.connections.title, desc: texts.landing.features.items.connections.description },
-  { icon: ShieldCheck, title: texts.landing.features.items.recruiting.title, desc: texts.landing.features.items.recruiting.description },
-  { icon: Sparkles, title: texts.landing.features.items.wellbeing.title, desc: texts.landing.features.items.wellbeing.description },
+const landingFeatures = [
+  {
+    icon: MessageCircle,
+    title: texts.landing.features.items.discussions.title,
+    description: texts.landing.features.items.discussions.description,
+  },
+  {
+    icon: GraduationCap,
+    title: texts.landing.features.items.mentoring.title,
+    description: texts.landing.features.items.mentoring.description,
+  },
+  {
+    icon: Heart,
+    title: texts.landing.features.items.communities.title,
+    description: texts.landing.features.items.communities.description,
+  },
+  {
+    icon: Users,
+    title: texts.landing.features.items.connections.title,
+    description: texts.landing.features.items.connections.description,
+  },
+  {
+    icon: ShieldCheck,
+    title: texts.landing.features.items.recruiting.title,
+    description: texts.landing.features.items.recruiting.description,
+  },
+  {
+    icon: Sparkles,
+    title: texts.landing.features.items.wellbeing.title,
+    description: texts.landing.features.items.wellbeing.description,
+  },
 ];
 
 export function LandingFeatures() {
@@ -24,15 +48,20 @@ export function LandingFeatures() {
         <p className="mt-4 text-muted-foreground">{texts.landing.features.description}</p>
       </div>
       <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {features.map((f) => (
-          <div key={f.title} className="surface-card p-4 sm:p-6">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary">
-              <f.icon className="h-5 w-5" />
+        {landingFeatures.map((feature) => {
+          const { icon: FeatureIcon } = feature;
+          return (
+            <div key={feature.title} className="surface-card p-4 sm:p-6">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary-soft text-primary">
+                <FeatureIcon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-semibold">{feature.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                {feature.description}
+              </p>
             </div>
-            <h3 className="mt-4 font-semibold">{f.title}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

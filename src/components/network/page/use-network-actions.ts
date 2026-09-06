@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { networkApi, type NetworkUser } from "@/lib/api";
 import { getConnectionUiState } from "@/utils/network";
 
-import type { NetworkMatchItem } from "@/components/network/network-match-item";
+import type { NetworkMatchViewModel } from "@/components/network/network-types";
 
 export function useNetworkActions(users: NetworkUser[]) {
   const queryClient = useQueryClient();
@@ -25,16 +25,17 @@ export function useNetworkActions(users: NetworkUser[]) {
     onSuccess: invalidateNetwork,
   });
 
-  const matchItems: NetworkMatchItem[] = users.map((user) => ({
+  const matches: NetworkMatchViewModel[] = users.map((user) => ({
     user,
-    state: getConnectionUiState(user.connected, connectionStatusByUserId[user.id]),
+    connectionState: getConnectionUiState(user.connected, connectionStatusByUserId[user.id]),
   }));
 
   return {
-    matchItems,
-    isPending: sendConnectionRequestMutation.isPending || removeConnectionMutation.isPending,
-    acceptRequest: acceptConnectionRequestMutation.mutate,
-    cancelRequest: removeConnectionMutation.mutate,
+    matches,
+    isConnectionActionPending:
+      sendConnectionRequestMutation.isPending || removeConnectionMutation.isPending,
+    acceptConnectionRequest: acceptConnectionRequestMutation.mutate,
+    cancelConnectionRequest: removeConnectionMutation.mutate,
     connectUser: (userId: string) => {
       sendConnectionRequestMutation.mutate(userId);
       setConnectionStatusByUserId((currentStatus) => ({ ...currentStatus, [userId]: "REQUESTED" }));

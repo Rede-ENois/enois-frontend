@@ -11,20 +11,20 @@ import { Button } from "@/components/ui/button";
 
 type NetworkUserCardProps = {
   user: NetworkUser;
-  state: ConnectionUiState;
-  isPending: boolean;
+  connectionState: ConnectionUiState;
+  isConnectionActionPending: boolean;
   onConnect: (userId: string) => void;
   onRemove: (userId: string) => void;
 };
 
 export function NetworkUserCard({
   user,
-  state,
-  isPending,
+  connectionState,
+  isConnectionActionPending,
   onConnect,
   onRemove,
 }: NetworkUserCardProps) {
-  const actionMeta: Record<
+  const actionsByState: Record<
     ConnectionUiState,
     {
       Icon: React.ElementType;
@@ -56,7 +56,7 @@ export function NetworkUserCard({
       run: () => onConnect(user.id),
     },
   };
-  const action = actionMeta[state];
+  const action = actionsByState[connectionState];
   const ActionIcon = action.Icon;
 
   return (
@@ -85,7 +85,7 @@ export function NetworkUserCard({
         <Button
           className={`mt-4 w-full rounded-full gap-1.5 ${action.className}`}
           variant={action.variant}
-          disabled={isPending}
+          disabled={isConnectionActionPending}
           onClick={action.run}
         >
           <ActionIcon className="h-4 w-4" /> {action.label}

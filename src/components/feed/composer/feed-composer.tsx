@@ -11,7 +11,7 @@ import { FeedComposerInput } from "./feed-composer-input";
 import { FeedComposerToolbar } from "./feed-composer-toolbar";
 
 type FeedComposerProps = {
-  profile: Profile | null | undefined;
+  currentUser: Profile | null | undefined;
   content: string;
   postType: PostView["type"];
   mediaItems: LocalMediaItem[];
@@ -27,7 +27,7 @@ type FeedComposerProps = {
 };
 
 export function FeedComposer({
-  profile,
+  currentUser,
   content,
   postType,
   mediaItems,
@@ -48,7 +48,11 @@ export function FeedComposer({
       onSubmit={onSubmit}
       className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
     >
-      <FeedComposerInput profile={profile} content={content} onContentChange={onContentChange} />
+      <FeedComposerInput
+        currentUser={currentUser}
+        content={content}
+        onContentChange={onContentChange}
+      />
       <ComposerMediaPreview media={mediaItems} mediaType={mediaType} onRemove={onRemoveMedia} />
       <FeedComposerToolbar
         content={content}

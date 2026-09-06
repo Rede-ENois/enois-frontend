@@ -7,23 +7,25 @@ import type { RequestDirection } from "@/utils/network";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import type { NetworkRequestItem } from "./network-request-item";
+import type { NetworkRequestViewModel } from "./network-types";
 
-export function NetworkRequestCard({
-  item,
-  onAccept,
-  onCancel,
-}: {
-  item: NetworkRequestItem;
+type NetworkRequestCardProps = {
+  requestViewModel: NetworkRequestViewModel;
   onAccept: (userId: string) => void;
   onCancel: (userId: string) => void;
-}) {
-  const { request, direction, targetUserId, user } = item;
-  const descriptions: Record<RequestDirection, string> = {
+};
+
+export function NetworkRequestCard({
+  requestViewModel,
+  onAccept,
+  onCancel,
+}: NetworkRequestCardProps) {
+  const { request, direction, targetUserId, user } = requestViewModel;
+  const descriptionsByDirection: Record<RequestDirection, string> = {
     outgoing: texts.network.requestSent,
     incoming: texts.network.wantsToConnect,
   };
-  const actions: Record<RequestDirection, React.ReactNode> = {
+  const actionsByDirection: Record<RequestDirection, React.ReactNode> = {
     outgoing: (
       <Button
         size="sm"
@@ -70,10 +72,10 @@ export function NetworkRequestCard({
           {user?.headline && (
             <p className="truncate text-xs text-muted-foreground">{user.headline}</p>
           )}
-          <p className="text-[11px] text-muted-foreground">{descriptions[direction]}</p>
+          <p className="text-[11px] text-muted-foreground">{descriptionsByDirection[direction]}</p>
         </div>
       </div>
-      {actions[direction]}
+      {actionsByDirection[direction]}
     </div>
   );
 }

@@ -1,32 +1,36 @@
 import { texts } from "@/texts";
 
 import { NetworkRequestCard } from "./network-request-card";
-import type { NetworkRequestItem } from "./network-request-item";
+import type { NetworkRequestViewModel } from "./network-types";
 
-export function PendingRequests({
-  incoming,
-  outgoing,
-  onAccept,
-  onCancel,
-}: {
-  incoming: NetworkRequestItem[];
-  outgoing: NetworkRequestItem[];
+type NetworkPendingRequestsProps = {
+  incomingRequests: NetworkRequestViewModel[];
+  outgoingRequests: NetworkRequestViewModel[];
   onAccept: (userId: string) => void;
   onCancel: (userId: string) => void;
-}) {
-  const groups = [
-    { direction: "incoming" as const, label: texts.network.received, requests: incoming },
-    { direction: "outgoing" as const, label: texts.network.sent, requests: outgoing },
-  ];
-  const total = incoming.length + outgoing.length;
+};
 
-  if (total === 0) return null;
+export function NetworkPendingRequests({
+  incomingRequests,
+  outgoingRequests,
+  onAccept,
+  onCancel,
+}: NetworkPendingRequestsProps) {
+  const groups = [
+    { direction: "incoming" as const, label: texts.network.received, requests: incomingRequests },
+    { direction: "outgoing" as const, label: texts.network.sent, requests: outgoingRequests },
+  ];
+  const totalRequestCount = incomingRequests.length + outgoingRequests.length;
+
+  if (totalRequestCount === 0) return null;
 
   return (
     <section>
       <div className="mb-3">
         <h2 className="text-lg font-semibold">{texts.network.pendingTitle}</h2>
-        <p className="text-sm text-muted-foreground">{texts.network.pendingCount(total)}</p>
+        <p className="text-sm text-muted-foreground">
+          {texts.network.pendingCount(totalRequestCount)}
+        </p>
       </div>
       <div className="space-y-3">
         {groups.map(({ direction, label, requests }) => {
@@ -34,16 +38,16 @@ export function PendingRequests({
           return (
             <div
               key={direction}
-              className={direction === "outgoing" && incoming.length > 0 ? "pt-3" : ""}
+              className={direction === "outgoing" && incomingRequests.length > 0 ? "pt-3" : ""}
             >
               <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {label}
               </p>
               <div className="space-y-3">
-                {requests.map((item) => (
+                {requests.map((requestViewModel) => (
                   <NetworkRequestCard
-                    key={item.request.id}
-                    item={item}
+                    key={requestViewModel.request.id}
+                    requestViewModel={requestViewModel}
                     onAccept={onAccept}
                     onCancel={onCancel}
                   />

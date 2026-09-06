@@ -9,7 +9,7 @@ import { useFeedComposer } from "./use-feed-composer";
 import { useFeedPageState } from "./use-feed-page-state";
 
 export function FeedPage() {
-  const { user: profileUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const composerState = useFeedComposer();
   const pageState = useFeedPageState();
 
@@ -18,7 +18,7 @@ export function FeedPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
           <FeedComposer
-            profile={profileUser}
+            currentUser={currentUser}
             content={composerState.content}
             postType={composerState.postType}
             mediaItems={composerState.mediaItems}
@@ -32,14 +32,14 @@ export function FeedPage() {
             onMediaSelect={composerState.handleAddMedia}
             onRemoveMedia={composerState.handleRemoveMedia}
           />
-          <FeedTabs activeTab={pageState.activeTab} onChange={pageState.setActiveTab} />
+          <FeedTabs activeTab={pageState.activeTab} onTabChange={pageState.setActiveTab} />
           <FeedTimeline posts={pageState.posts} isLoading={pageState.isFeedLoading} />
         </div>
         <FeedSidebar
-          profile={profileUser}
+          currentUser={currentUser}
           suggestions={pageState.suggestions}
           events={pageState.events}
-          onConnect={pageState.handleConnectSuggestion}
+          onConnectSuggestion={pageState.handleConnectSuggestion}
         />
       </div>
     </AppContainer>
