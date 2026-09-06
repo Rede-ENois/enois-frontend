@@ -1,3 +1,5 @@
+import type { CommunityTopic } from "@/types/components/community/community-topic";
+
 export const COMMUNITY_TOPICS = [
   "TECNOLOGIA",
   "ENGENHARIA",
@@ -6,6 +8,4 @@ export const COMMUNITY_TOPICS = [
   "LIDERANCA",
   "CARREIRA",
   "FREELANCE",
-] as const;
-
-export type CommunityTopic = (typeof COMMUNITY_TOPICS)[number];
+] as const satisfies readonly CommunityTopic[];

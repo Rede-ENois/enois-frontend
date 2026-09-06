@@ -1,18 +1,10 @@
-import { communitiesApi } from "@/lib/api";
-
-export type CommunityCropPurpose = "COVER" | "AVATAR";
-
-export type CommunityFormValues = {
-  name: string;
-  description: string;
-  cover: string;
-  avatar: string;
-};
+import type { CreateCommunityInput } from "@/types/application/community/create-community-input";
+import type { CommunityFormValues } from "@/types/components/community/community-form-values";
 
 export function buildCommunityUpdate(
   community: { name: string; description: string },
   values: CommunityFormValues,
-): Parameters<typeof communitiesApi.update>[1] {
+): Partial<CreateCommunityInput> {
   return {
     name: values.name !== community.name ? values.name : undefined,
     description: values.description !== community.description ? values.description : undefined,
