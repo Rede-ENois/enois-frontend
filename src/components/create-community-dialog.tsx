@@ -1,10 +1,7 @@
-import { useState } from "react";
-
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { COMMUNITY_TOPICS } from "@/constants/community-topics";
-import { createCommunity as createCommunityRequest } from "@/lib/api/communities/create-community";
+import { useCreateCommunityDialogController } from "@/lib/use-create-community-dialog-controller";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
@@ -18,22 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [topic, setTopic] = useState<CommunityTopic>("TECNOLOGIA");
-
-  const create = useMutation({
-    mutationFn: () => createCommunityRequest({ name, description, topic }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["communities"] });
-      setOpen(false);
-      setName("");
-      setDescription("");
-      setTopic("TECNOLOGIA");
-    },
-  });
+  const { open, setOpen, form, setField, createPending, createCommunity } =
+    useCreateCommunityDialogController();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -48,8 +31,8 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
             labelClassName="text-xs text-muted-foreground"
           >
             <Input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={form.name}
+              onChange={(event) => setField("name", event.target.value)}
               className="h-10 border-transparent bg-muted"
             />
           </FormField>
@@ -58,8 +41,8 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
             labelClassName="text-xs text-muted-foreground"
           >
             <Textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              value={form.description}
+              onChange={(event) => setField("description", event.target.value)}
               rows={3}
               className="h-10 border-transparent bg-muted"
             />
@@ -69,8 +52,8 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
             labelClassName="text-xs text-muted-foreground"
           >
             <select
-              value={topic}
-              onChange={(event) => setTopic(event.target.value as CommunityTopic)}
+              value={form.topic}
+              onChange={(event) => setField("topic", event.target.value as CommunityTopic)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10 border-transparent bg-muted"
             >
               {COMMUNITY_TOPICS.filter(({ value }) => value !== "Todas").map(({ value, label }) => (
@@ -82,10 +65,10 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
           </FormField>
           <Button
             className="w-full rounded-full"
-            disabled={!name.trim() || !description.trim() || create.isPending}
-            onClick={() => create.mutate()}
+            disabled={!form.name.trim() || !form.description.trim() || createPending}
+            onClick={createCommunity}
           >
-            {create.isPending ? texts.common.creating : texts.common.create}
+            {createPending ? texts.common.creating : texts.common.create}
           </Button>
         </div>
       </DialogContent>

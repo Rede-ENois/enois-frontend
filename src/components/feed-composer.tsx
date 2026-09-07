@@ -1,16 +1,7 @@
-import { type FormEvent, useState } from "react";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 import { BarChart3, Calendar, FileText, Film, Image, Loader2 } from "lucide-react";
 
-import { createPost as createPostRequest } from "@/lib/api/feed/create-post";
-import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
-import { useFeedComposerMedia } from "@/lib/use-feed-composer-media";
-import { useMediaUpload } from "@/lib/use-media-upload";
+import { useFeedComposerController } from "@/lib/use-feed-composer-controller";
 import { texts } from "@/texts";
-import type { CreatePostInput } from "@/types/application/feed/create-post-input";
-import type { PostView } from "@/types/application/feed/post-view";
 
 import { ComposerAction } from "@/components/composer-action";
 import { FeedComposerMediaPreview } from "@/components/feed-composer-media-preview";
@@ -19,54 +10,22 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedComposer() {
-  const queryClient = useQueryClient();
-  const [draft, setDraft] = useState("");
-  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
-  const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
-  const [publishError, setPublishError] = useState<string | null>(null);
-  const upload = useMediaUpload();
   const {
+    profile,
+    draft,
+    postType,
+    setPostType,
+    publishError,
+    upload,
+    createPostPending,
+    publishPost,
+    handleDraftChange,
     media,
     mediaType,
     fileRef,
     handleMediaSelect,
     removeMedia,
-    clearMedia,
-  } = useFeedComposerMedia();
-
-  const { data: profile } = useQuery({
-    queryKey: ["me"],
-    queryFn: getCurrentProfile,
-  });
-
-  const createPost = useMutation({
-    mutationFn: (data: CreatePostInput) => createPostRequest(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-    },
-  });
-
-  const publishPost = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const content = draft.trim();
-    if (!content) return;
-
-    setPublishError(null);
-    try {
-      let mediaIds: string[] = [];
-      if (media.length > 0) {
-        const results = await upload.uploadAll(media.map((item) => ({ file: item.file })));
-        mediaIds = results.map((result) => result.mediaId);
-      }
-      await createPost.mutateAsync({ content, type: postType, mediaIds, mentionedUserIds });
-      setDraft("");
-      setMentionedUserIds([]);
-      setPostType("INSIGHT");
-      clearMedia();
-    } catch (error) {
-      setPublishError(error instanceof Error ? error.message : texts.feed.composer.publishError);
-    }
-  };
+  } = useFeedComposerController();
 
   return (
     <form
@@ -81,10 +40,7 @@ export function FeedComposer() {
         />
         <MentionTextarea
           value={draft}
-          onChange={(value, ids) => {
-            setDraft(value);
-            setMentionedUserIds(ids);
-          }}
+          onChange={handleDraftChange}
           placeholder={texts.feed.composer.placeholder}
           className="min-h-11 flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-[14px] font-light"
           maxLength={600}
@@ -155,9 +111,9 @@ export function FeedComposer() {
           <Button
             size="sm"
             className="rounded-full"
-            disabled={!draft.trim() || createPost.isPending || upload.status === "uploading"}
+            disabled={!draft.trim() || createPostPending || upload.status === "uploading"}
           >
-            {createPost.isPending || upload.status === "uploading" ? (
+            {createPostPending || upload.status === "uploading" ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 <>

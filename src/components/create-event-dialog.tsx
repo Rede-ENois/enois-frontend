@@ -1,11 +1,8 @@
-import { useState } from "react";
-
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Plus } from "lucide-react";
 
-import { createEvent as createEventRequest } from "@/lib/api/events/create-event";
+import { useCreateEventDialogController } from "@/lib/use-create-event-dialog-controller";
 import { texts } from "@/texts";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 
@@ -17,26 +14,8 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 
 export function CreateEventDialog() {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [format, setFormat] = useState<CreateEventRequest["format"]>("ONLINE");
-  const [host, setHost] = useState("");
-
-  const createEvent = useMutation({
-    mutationFn: () => createEventRequest({ title, date, time, format, host }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      setOpen(false);
-      setTitle("");
-      setDate("");
-      setTime("");
-      setFormat("ONLINE");
-      setHost("");
-    },
-  });
+  const { open, setOpen, form, setField, createPending, createEvent } =
+    useCreateEventDialogController();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -55,8 +34,8 @@ export function CreateEventDialog() {
             labelClassName="text-xs font-medium text-muted-foreground"
           >
             <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              value={form.title}
+              onChange={(event) => setField("title", event.target.value)}
               className="h-10 border-transparent bg-muted"
             />
           </FormField>
@@ -67,8 +46,8 @@ export function CreateEventDialog() {
             >
               <Input
                 type="date"
-                value={date}
-                onChange={(event) => setDate(event.target.value)}
+                value={form.date}
+                onChange={(event) => setField("date", event.target.value)}
                 className="h-10 border-transparent bg-muted"
               />
             </FormField>
@@ -78,8 +57,8 @@ export function CreateEventDialog() {
             >
               <Input
                 type="time"
-                value={time}
-                onChange={(event) => setTime(event.target.value)}
+                value={form.time}
+                onChange={(event) => setField("time", event.target.value)}
                 className="h-10 border-transparent bg-muted"
               />
             </FormField>
@@ -89,8 +68,8 @@ export function CreateEventDialog() {
             labelClassName="text-xs font-medium text-muted-foreground"
           >
             <Input
-              value={host}
-              onChange={(event) => setHost(event.target.value)}
+              value={form.host}
+              onChange={(event) => setField("host", event.target.value)}
               placeholder={texts.events.form.hostPlaceholder}
               className="h-10 border-transparent bg-muted"
             />
@@ -100,8 +79,10 @@ export function CreateEventDialog() {
             labelClassName="text-xs font-medium text-muted-foreground"
           >
             <select
-              value={format}
-              onChange={(event) => setFormat(event.target.value as CreateEventRequest["format"])}
+              value={form.format}
+              onChange={(event) =>
+                setField("format", event.target.value as CreateEventRequest["format"])
+              }
               className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
             >
               <option value="ONLINE">{texts.events.formats.ONLINE}</option>
@@ -111,10 +92,10 @@ export function CreateEventDialog() {
           </FormField>
           <Button
             className="w-full rounded-full"
-            disabled={!title.trim() || !date || !host.trim() || createEvent.isPending}
-            onClick={() => createEvent.mutate()}
+            disabled={!form.title.trim() || !form.date || !form.host.trim() || createPending}
+            onClick={createEvent}
           >
-            {createEvent.isPending ? texts.common.creating : texts.events.createEvent}
+            {createPending ? texts.common.creating : texts.events.createEvent}
           </Button>
         </div>
       </DialogContent>
