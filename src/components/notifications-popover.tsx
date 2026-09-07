@@ -1,69 +1,34 @@
-import { useState } from "react";
-
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, CheckCheck } from "lucide-react";
 
-import { acceptConnection } from "@/lib/api/network/accept-connection";
-import { listNotifications } from "@/lib/api/notifications";
-import { markAllNotificationsAsRead } from "@/lib/api/notifications/mark-all-notifications-as-read";
-import { markNotificationAsRead } from "@/lib/api/notifications/mark-notification-as-read";
 import { cn } from "@/lib/utils";
+import { useNotificationsPopover } from "@/lib/use-notifications-popover";
 import { texts } from "@/texts";
-import type { NotificationTab } from "@/types/components/notification/notification-tab";
 
+import { NotificationItem } from "@/components/notification-item";
 import { PopoverContent } from "@/components/ui/popover-content";
 
-import { NotificationItem } from "./notification-item";
-
 export function NotificationsPopover() {
-  const queryClient = useQueryClient();
-  const [notificationTab, setNotificationTab] = useState<NotificationTab>("novas");
-
-  const { data: notificationsData } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => listNotifications(),
-  });
-
-  const markAsRead = useMutation({
-    mutationFn: markNotificationAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    },
-  });
-
-  const markAllAsRead = useMutation({
-    mutationFn: markAllNotificationsAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    },
-  });
-
-  const acceptConnectionMutation = useMutation({
-    mutationFn: acceptConnection,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network"] });
-    },
-  });
-
-  const notificationList = notificationsData?.items ?? [];
-  const unreadCount = notificationList.filter((notification) => !notification.read).length;
-  const displayedNotifications = notificationList.filter((notification) =>
-    notificationTab === "novas" ? !notification.read : notification.read,
-  );
+  const notifications = useNotificationsPopover();
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           className="relative grid h-10 w-10 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-          aria-label={unreadCount > 0 ? texts.notifications.unreadLabel(unreadCount) : texts.notifications.title}
+          aria-label={
+            notifications.unreadCount > 0
+              ? texts.notifications.unreadLabel(notifications.unreadCount)
+              : texts.notifications.title
+          }
         >
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {notifications.unreadCount > 0 && (
             <span className="absolute right-1.5 top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-medium leading-none text-primary-foreground">
-              {unreadCount > 9 ? texts.notifications.overflowCount : unreadCount}
+              {notifications.unreadCount > 9
+                ? texts.notifications.overflowCount
+                : notifications.unreadCount}
             </span>
           )}
         </button>
@@ -75,10 +40,10 @@ export function NotificationsPopover() {
       >
         <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
           <span className="text-[14px] font-light text-text-strong">{texts.notifications.title}</span>
-          {unreadCount > 0 && notificationTab === "novas" && (
+          {notifications.unreadCount > 0 && notifications.notificationTab === "novas" && (
             <button
               type="button"
-              onClick={() => markAllAsRead.mutate()}
+              onClick={notifications.markAllAsRead}
               className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-light text-text-subtle transition hover:text-primary"
             >
               <CheckCheck className="h-3 w-3" />
@@ -90,28 +55,28 @@ export function NotificationsPopover() {
         <div className="flex border-b border-border-soft">
           <button
             type="button"
-            onClick={() => setNotificationTab("novas")}
+            onClick={() => notifications.setNotificationTab("novas")}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[12px] font-light transition",
-              notificationTab === "novas"
+              notifications.notificationTab === "novas"
                 ? "border-b-2 border-primary text-primary"
                 : "text-text-subtle hover:text-text-strong",
             )}
           >
             <>{texts.notifications.tabs.new}</>
-            {unreadCount > 0 && (
+            {notifications.unreadCount > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
-                {unreadCount}
+                {notifications.unreadCount}
               </span>
             )}
           </button>
 
           <button
             type="button"
-            onClick={() => setNotificationTab("historico")}
+            onClick={() => notifications.setNotificationTab("historico")}
             className={cn(
               "flex-1 py-2.5 text-[12px] font-light transition",
-              notificationTab === "historico"
+              notifications.notificationTab === "historico"
                 ? "border-b-2 border-primary text-primary"
                 : "text-text-subtle hover:text-text-strong",
             )}
@@ -121,17 +86,19 @@ export function NotificationsPopover() {
         </div>
 
         <div className="max-h-[28rem] overflow-y-auto">
-          {displayedNotifications.length === 0 ? (
+          {notifications.displayedNotifications.length === 0 ? (
             <p className="px-4 py-8 text-center text-[13px] font-light text-text-subtle">
-              {notificationTab === "novas" ? texts.notifications.emptyNew : texts.notifications.emptyHistory}
+              {notifications.notificationTab === "novas"
+                ? texts.notifications.emptyNew
+                : texts.notifications.emptyHistory}
             </p>
           ) : (
-            displayedNotifications.map((notification) => (
+            notifications.displayedNotifications.map((notification) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
-                onMarkAsRead={(id) => markAsRead.mutate(id)}
-                onAcceptConnection={(actorId) => acceptConnectionMutation.mutate(actorId)}
+                onMarkAsRead={notifications.markAsRead}
+                onAcceptConnection={notifications.acceptConnection}
               />
             ))
           )}
