@@ -1,90 +1,41 @@
-import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react";
-
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
 import type { SearchResult } from "@/types/application/search/search-result";
 import { navigateToHref } from "@/utils/navigation";
 
-import { searchContent } from "@/lib/api/search";
+import { useGlobalSearchInput } from "@/utils/components/search/use-global-search-input";
+import { useGlobalSearchOverlay } from "@/utils/components/search/use-global-search-overlay";
+import { useGlobalSearchResults } from "@/utils/components/search/use-global-search-results";
 
 export function useGlobalSearch() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [open, setOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(query), 250);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (mobileOpen) inputRef.current?.focus();
-  }, [mobileOpen]);
-
-  const { data: results, isFetching } = useQuery({
-    queryKey: ["search", debounced],
-    queryFn: () => searchContent(debounced),
-    enabled: debounced.length >= 2,
-  });
-
-  const closeSearch = () => {
-    setOpen(false);
-    setQuery("");
-  };
-
-  const openMobileSearch = () => {
-    setMobileOpen(true);
-    setOpen(true);
-  };
-
-  const closeMobileSearch = () => {
-    setMobileOpen(false);
-    closeSearch();
-  };
+  const input = useGlobalSearchInput();
+  const overlay = useGlobalSearchOverlay(input.clearQuery);
+  const results = useGlobalSearchResults(input.query);
 
   const handleQueryChange = (value: string) => {
-    setQuery(value);
-    setOpen(true);
+    input.setQuery(value);
+    overlay.openResults();
   };
 
   const handleSelect = (item: SearchResult) => {
-    closeMobileSearch();
+    overlay.closeMobileSearch();
     navigateToHref(item.href, navigate);
   };
 
-  const handleBackdropMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (mobileOpen && event.target === event.currentTarget) closeMobileSearch();
-  };
-
   return {
-    query,
-    debounced,
-    mobileOpen,
-    searchRef,
-    inputRef,
-    items: results?.items ?? [],
-    isFetching,
-    showResults: open && debounced.length >= 2,
-    openMobileSearch,
-    handleBackdropMouseDown,
+    query: input.query,
+    debounced: results.debounced,
+    mobileOpen: overlay.mobileOpen,
+    searchRef: overlay.searchRef,
+    inputRef: overlay.inputRef,
+    items: results.items,
+    isFetching: results.isFetching,
+    showResults: overlay.open && results.debounced.length >= 2,
+    openMobileSearch: overlay.openMobileSearch,
+    handleBackdropMouseDown: overlay.handleBackdropMouseDown,
     handleQueryChange,
-    handleFocus: () => setOpen(true),
+    handleFocus: overlay.openResults,
     handleSelect,
   };
 }
