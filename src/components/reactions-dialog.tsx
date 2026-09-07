@@ -1,11 +1,7 @@
 import { Root as Dialog } from "@radix-ui/react-dialog";
-import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { listReactions } from "@/lib/api/reactions/list-reactions";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { usePostCardStore } from "@/stores/post-card.store";
+import { useReactionsDialogData } from "@/lib/use-reactions-dialog-data";
 import { texts } from "@/texts";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 
@@ -15,46 +11,10 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ReactionsDialog({ postId }: PostIdProps) {
-  const currentUserId = getCurrentUserId();
-  const currentUserReaction = usePostCardStore(
-    (state) => state.cards[postId]?.reactionStatus ?? null,
-  );
-  const open = usePostCardStore((state) => state.cards[postId]?.showReactions ?? false);
-  const setShowReactions = usePostCardStore((state) => state.setShowReactions);
-
-  const { data } = useQuery({
-    queryKey: ["reactions", postId],
-    queryFn: () => listReactions(postId),
-    enabled: open,
-  });
-
-  const apiReactions = data?.reactions ?? [];
-  const reactions =
-    currentUserReaction && currentUserId && !apiReactions.some((reaction) => reaction.userId === currentUserId)
-      ? [
-          {
-            userId: currentUserId,
-            type: currentUserReaction,
-            createdAt: new Date().toISOString(),
-          },
-          ...apiReactions,
-        ]
-      : apiReactions;
-
-  const uniqueUserIds = [...new Set(reactions.map((reaction) => reaction.userId))];
-  const { data: users } = useQuery({
-    queryKey: ["profiles", "by-ids", uniqueUserIds.sort().join(",")],
-    queryFn: async () => {
-      const results = await Promise.all(
-        uniqueUserIds.map((id) => getProfileById(id).catch(() => null)),
-      );
-      return Object.fromEntries(results.filter(Boolean).map((user) => [user!.id, user!]));
-    },
-    enabled: open && uniqueUserIds.length > 0,
-  });
+  const { open, reactions, users, setOpen } = useReactionsDialogData(postId);
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => setShowReactions(postId, nextOpen)}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-light">{texts.posts.reactions.title}</DialogTitle>

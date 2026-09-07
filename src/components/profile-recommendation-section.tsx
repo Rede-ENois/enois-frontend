@@ -1,12 +1,8 @@
-import { useState } from "react";
-
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { ThumbsUp } from "lucide-react";
 
-import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
-import { useAuth } from "@/lib/use-auth";
+import { useProfileRecommendationController } from "@/lib/use-profile-recommendation-controller";
 import { texts } from "@/texts";
 import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 
@@ -18,21 +14,10 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
-  const { user: me } = useAuth();
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [comment, setComment] = useState("");
+  const { visible, open, setOpen, comment, setComment, sending, send } =
+    useProfileRecommendationController(user);
 
-  const recommend = useMutation({
-    mutationFn: () => createRecommendation(user.id, { comment }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommendations", user.id] });
-      setOpen(false);
-      setComment("");
-    },
-  });
-
-  if (me?.id === user.id) return null;
+  if (!visible) return null;
 
   return (
     <ProfileSection title={texts.profile.sections.recommend} icon={ThumbsUp}>
@@ -60,10 +45,10 @@ export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
             <Button
               size="sm"
               className="w-full rounded-full"
-              disabled={!comment.trim() || recommend.isPending}
-              onClick={() => recommend.mutate()}
+              disabled={!comment.trim() || sending}
+              onClick={send}
             >
-              {recommend.isPending ? texts.common.sending : texts.profile.sendRecommendation}
+              {sending ? texts.common.sending : texts.profile.sendRecommendation}
             </Button>
           </div>
         </DialogContent>

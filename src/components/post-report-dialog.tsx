@@ -1,10 +1,7 @@
-import { useState } from "react";
-
 import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { REPORT_REASONS } from "@/constants/report-reasons";
-import { createReport } from "@/lib/api/reports";
-import { usePostCardStore } from "@/stores/post-card.store";
+import { useReportDialogController } from "@/lib/use-report-dialog-controller";
 import { texts } from "@/texts";
 import type { ReportReason } from "@/types/application/report/report-reason";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
@@ -17,28 +14,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ReportDialog({ postId }: PostIdProps) {
-  const open = usePostCardStore((state) => state.cards[postId]?.showReport ?? false);
-  const setShowReport = usePostCardStore((state) => state.setShowReport);
-  const [reason, setReason] = useState<ReportReason>("SPAM");
-  const [description, setDescription] = useState("");
-
-  const submit = async () => {
-    try {
-      await createReport({
-        targetId: postId,
-        targetType: "POST",
-        reason,
-        description: description || undefined,
-      });
-      setShowReport(postId, false);
-      setDescription("");
-    } catch {
-      /* silent */
-    }
-  };
+  const { open, setOpen, reason, setReason, description, setDescription, submit } =
+    useReportDialogController(postId);
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => setShowReport(postId, nextOpen)}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-light">{texts.posts.report.title}</DialogTitle>
