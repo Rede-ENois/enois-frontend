@@ -1,45 +1,48 @@
 import { useCallback, useState } from "react";
 
-import { randomUUID } from "@/lib/api-client";
-import { mediaApi } from "@/lib/api/media";
+import { requestUpload } from "@/lib/api/media/request-upload";
+import { uploadToImageKit } from "@/lib/api/media/upload-to-imagekit";
 import type { UploadInput } from "@/types/media-upload/upload-input";
 import type { UploadResult } from "@/types/media-upload/upload-result";
 import type { UploadState } from "@/types/media-upload/upload-state";
-
-function sanitizeName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9.-]/g, "_");
-}
-
-function genFileName(file: File): string {
-  const key = randomUUID();
-  return `media/${key}/${sanitizeName(file.name)}`;
-}
+import { randomUUID } from "@/utils/random-uuid";
 
 export function useMediaUpload() {
   const [state, setState] = useState<UploadState>({ status: "idle", progress: 0 });
 
-  const upload = useCallback(async (file: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
-    setState({ status: "uploading", progress: 0 });
-
-    try {
-      const fileName = genFileName(file);
-      const { id, cdnUrl } = await mediaApi.requestUpload({
+  const uploadFile = useCallback(
+    async (file: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
+      const key = randomUUID();
+      const fileName = `media/${key}/${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const { id, cdnUrl } = await requestUpload({
         fileName,
         mimeType: file.type,
         size: file.size,
         purpose,
       });
 
-      await mediaApi.uploadToImageKit(cdnUrl, file);
-
-      setState({ status: "done", progress: 100 });
+      await uploadToImageKit(cdnUrl, file);
       return { mediaId: id, cdnUrl };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Upload falhou";
-      setState({ status: "error", progress: 0, error: msg });
-      throw err;
-    }
-  }, []);
+    },
+    [],
+  );
+
+  const upload = useCallback(
+    async (file: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
+      setState({ status: "uploading", progress: 0 });
+
+      try {
+        const result = await uploadFile(file, purpose);
+        setState({ status: "done", progress: 100 });
+        return result;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Upload falhou";
+        setState({ status: "error", progress: 0, error: message });
+        throw error;
+      }
+    },
+    [uploadFile],
+  );
 
   const uploadAll = useCallback(
     async (files: UploadInput[]): Promise<UploadResult[]> => {
@@ -47,30 +50,25 @@ export function useMediaUpload() {
       setState({ status: "uploading", progress: 0 });
 
       const results: UploadResult[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const { file, purpose = "POST_IMAGE" } = files[i];
+      for (let index = 0; index < files.length; index++) {
+        const { file, purpose = "POST_IMAGE" } = files[index];
         try {
-          const fileName = genFileName(file);
-          const { id, cdnUrl } = await mediaApi.requestUpload({
-            fileName,
-            mimeType: file.type,
-            size: file.size,
-            purpose,
-          });
-          await mediaApi.uploadToImageKit(cdnUrl, file);
-          results.push({ mediaId: id, cdnUrl });
-          setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : "Upload falhou";
-          setState({ status: "error", progress: 0, error: msg });
-          throw err;
+          results.push(await uploadFile(file, purpose));
+          setState((current) => ({
+            ...current,
+            progress: Math.round(((index + 1) / files.length) * 100),
+          }));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Upload falhou";
+          setState({ status: "error", progress: 0, error: message });
+          throw error;
         }
       }
 
       setState({ status: "done", progress: 100 });
       return results;
     },
-    [],
+    [uploadFile],
   );
 
   return { ...state, upload, uploadAll };
