@@ -2,7 +2,8 @@ import { type FormEvent, useEffect, useState } from "react";
 
 import { Send } from "lucide-react";
 
-import { commentsApi } from "@/lib/api/comments";
+import { createComment } from "@/lib/api/comments/create-comment";
+import { listComments } from "@/lib/api/comments/list-comments";
 import { getCurrentUser } from "@/lib/current-user";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
@@ -38,8 +39,7 @@ export function PostComments({ postId, visible }: PostCommentsProps) {
     let cancelled = false;
     setLoaded(false);
 
-    commentsApi
-      .list(postId)
+    listComments(postId)
       .then((data) => {
         if (!cancelled) setComments(postId, data.items);
       })
@@ -59,7 +59,7 @@ export function PostComments({ postId, visible }: PostCommentsProps) {
     if (!content) return;
 
     try {
-      const newComment = await commentsApi.create(postId, content, replyToId, commentMentions);
+      const newComment = await createComment(postId, content, replyToId, commentMentions);
       addComment(postId, newComment);
       updateCommentCount(postId, 1);
       setDraft(postId, "");

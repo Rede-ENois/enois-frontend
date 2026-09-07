@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { commentsApi } from "@/lib/api/comments";
+import { deleteComment } from "@/lib/api/comments/delete-comment";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { reactionsApi } from "@/lib/api/reactions";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -43,7 +43,7 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
 
   const handleDelete = async () => {
     try {
-      await commentsApi.remove(postId, comment.id);
+      await deleteComment(postId, comment.id);
       removeComment(postId, comment.id);
       updateCommentCount(postId, -1);
     } catch {
