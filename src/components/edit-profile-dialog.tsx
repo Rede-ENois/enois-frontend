@@ -1,9 +1,11 @@
 import { useState } from "react";
 
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
-import { ApiError, profileApi } from "@/lib/api";
+import { profileApi } from "@/lib/api/profile";
+import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { CertificationRequest } from "@/types/application/profile/certification-request";
 import type { Certification } from "@/types/application/profile/certification";
@@ -13,16 +15,12 @@ import type { ExperienceRequest } from "@/types/application/profile/experience-r
 import type { Experience } from "@/types/application/profile/experience";
 import type { Props } from "@/types/components/profile/edit-profile-dialog/props";
 
-import { Field } from "@/components/edit-profile-field";
 import { SubList } from "@/components/edit-profile-sub-list";
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -128,6 +126,7 @@ export function EditProfileDialog({ profile, children }: Props) {
     { key: "education" as const, label: texts.profile.edit.tabs.education },
     { key: "certifications" as const, label: texts.profile.edit.tabs.certifications },
   ];
+  const fieldLabelClassName = "text-[13px] font-light text-text-subtle";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -167,14 +166,18 @@ export function EditProfileDialog({ profile, children }: Props) {
         <div className="space-y-6 px-6 pb-6 pt-4">
           {tab === "info" && (
             <div className="space-y-5">
-              <Field label={texts.profile.edit.fields.name}>
+              <FormField label={texts.profile.edit.fields.name} labelClassName={fieldLabelClassName}>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.username} error={usernameError}>
+              </FormField>
+              <FormField
+                label={texts.profile.edit.fields.username}
+                error={usernameError}
+                labelClassName={fieldLabelClassName}
+              >
                 <Input
                   value={username}
                   onChange={(e) => {
@@ -184,77 +187,77 @@ export function EditProfileDialog({ profile, children }: Props) {
                   placeholder={texts.profile.edit.placeholders.username}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.headline}>
+              </FormField>
+              <FormField label={texts.profile.edit.fields.headline} labelClassName={fieldLabelClassName}>
                 <Input
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
                   placeholder={texts.profile.edit.placeholders.headline}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.bio}>
+              </FormField>
+              <FormField label={texts.profile.edit.fields.bio} labelClassName={fieldLabelClassName}>
                 <Textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   rows={3}
                   className="h-10 border-border-soft bg-surface-1 pl-9"
                 />
-              </Field>
+              </FormField>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label={texts.profile.edit.fields.company}>
+                <FormField label={texts.profile.edit.fields.company} labelClassName={fieldLabelClassName}>
                   <Input
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     className="h-10 border-border-soft bg-surface-1"
                   />
-                </Field>
-                <Field label={texts.profile.edit.fields.location}>
+                </FormField>
+                <FormField label={texts.profile.edit.fields.location} labelClassName={fieldLabelClassName}>
                   <Input
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     className="h-10 border-border-soft bg-surface-1"
                   />
-                </Field>
+                </FormField>
               </div>
-              <Field label={texts.profile.edit.fields.availability}>
+              <FormField label={texts.profile.edit.fields.availability} labelClassName={fieldLabelClassName}>
                 <Input
                   value={availability}
                   onChange={(e) => setAvailability(e.target.value)}
                   placeholder={texts.profile.edit.placeholders.availability}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.portfolio}>
+              </FormField>
+              <FormField label={texts.profile.edit.fields.portfolio} labelClassName={fieldLabelClassName}>
                 <Input
                   value={portfolio}
                   onChange={(e) => setPortfolio(e.target.value)}
                   placeholder={texts.profile.edit.placeholders.portfolio}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.externalLinks}>
+              </FormField>
+              <FormField label={texts.profile.edit.fields.externalLinks} labelClassName={fieldLabelClassName}>
                 <Textarea
                   value={linksText}
                   onChange={(e) => setLinksText(e.target.value)}
                   rows={3}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.skills}>
+              </FormField>
+              <FormField label={texts.profile.edit.fields.skills} labelClassName={fieldLabelClassName}>
                 <Input
                   value={skillsText}
                   onChange={(e) => setSkillsText(e.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
-              <Field label={texts.profile.edit.fields.goals}>
+              </FormField>
+              <FormField label={texts.profile.edit.fields.goals} labelClassName={fieldLabelClassName}>
                 <Input
                   value={goalsText}
                   onChange={(e) => setGoalsText(e.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
-              </Field>
+              </FormField>
               <div className="flex items-center gap-8">
                 <label className="flex items-center gap-3 text-[13px] font-light text-text-strong">
                   <Switch checked={openToWork} onCheckedChange={setOpenToWork} />
