@@ -1,94 +1,33 @@
-import { type FormEvent, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
-import { usePostCardStore } from "@/stores/post-card.store";
-
-import { listComments } from "@/lib/api/comments";
-import { createComment } from "@/lib/api/comments/create-comment";
 import { getCurrentUser } from "@/lib/get-current-user";
 
+import { createPostCommentThreads } from "@/utils/components/post/create-post-comment-threads";
+import { usePostCommentSubmission } from "@/utils/components/post/use-post-comment-submission";
+import { usePostCommentsLoader } from "@/utils/components/post/use-post-comments-loader";
+import { usePostCommentsStore } from "@/utils/components/post/use-post-comments-store";
+
 export function usePostCommentsController(postId: string, visible: boolean) {
-  const currentUser = getCurrentUser();
-  const card = usePostCardStore((state) => state.cards[postId]);
-  const setDraft = usePostCardStore((state) => state.setDraft);
-  const setCommentMentions = usePostCardStore((state) => state.setCommentMentions);
-  const setReplyToId = usePostCardStore((state) => state.setReplyToId);
-  const setComments = usePostCardStore((state) => state.setComments);
-  const addComment = usePostCardStore((state) => state.addComment);
-  const updateCommentCount = usePostCardStore((state) => state.updateCommentCount);
-  const [loaded, setLoaded] = useState(false);
-
-  const draft = card?.draft ?? "";
-  const commentMentions = card?.commentMentions ?? [];
-  const replyToId = card?.replyToId ?? null;
-  const localComments = card?.localComments ?? [];
-
-  useEffect(() => {
-    if (!visible) {
-      setLoaded(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoaded(false);
-
-    listComments(postId)
-      .then((data) => {
-        if (!cancelled) setComments(postId, data.items);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoaded(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [postId, setComments, visible]);
-
-  const submitComment = async () => {
-    const content = draft.trim();
-    if (!content) return;
-
-    try {
-      const newComment = await createComment(postId, content, replyToId, commentMentions);
-      addComment(postId, newComment);
-      updateCommentCount(postId, 1);
-      setDraft(postId, "");
-      setCommentMentions(postId, []);
-      setReplyToId(postId, null);
-    } catch {
-      // Preserve the existing silent failure behavior.
-    }
-  };
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    void submitComment();
-  };
-
-  const updateDraft = (value: string, mentionedUserIds: string[]) => {
-    setDraft(postId, value);
-    setCommentMentions(postId, mentionedUserIds);
-  };
-
-  const roots = localComments.filter((comment) => !comment.parentCommentId);
-  const threads = roots.map((comment) => ({
-    comment,
-    replies: localComments
-      .filter((reply) => reply.parentCommentId === comment.id)
-      .map((reply) => ({
-        reply,
-        replyingTo: localComments.find((candidate) => candidate.id === reply.parentCommentId)
-          ?.authorName,
-      })),
-  }));
+  const state = usePostCommentsStore(postId);
+  const loaded = usePostCommentsLoader(postId, visible, state.replaceComments);
+  const submitComment = usePostCommentSubmission(
+    postId,
+    state.draft,
+    state.replyToId,
+    state.commentMentions,
+    state.completeSubmission,
+  );
+  const { roots, threads } = createPostCommentThreads(state.comments);
 
   return {
-    currentUser,
-    draft,
-    updateDraft,
-    submit,
-    submitDisabled: !draft.trim(),
+    currentUser: getCurrentUser(),
+    draft: state.draft,
+    updateDraft: state.updateDraft,
+    submit: (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void submitComment();
+    },
+    submitDisabled: !state.draft.trim(),
     showComments: visible && loaded,
     showEmptyState: roots.length === 0,
     threads,

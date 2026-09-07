@@ -1,15 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
-import { texts } from "@/texts";
 
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
+import { createReactionsDialogItems } from "@/utils/components/post/create-reactions-dialog-items";
+import { mergeCurrentUserReaction } from "@/utils/components/post/merge-current-user-reaction";
+import { useReactionProfiles } from "@/utils/components/post/use-reaction-profiles";
+
 export function useReactionsDialogController(postId: string) {
-  const currentUserId = getCurrentUserId();
   const currentUserReaction = usePostCardStore(
     (state) => state.cards[postId]?.reactionStatus ?? null,
   );
@@ -20,44 +20,18 @@ export function useReactionsDialogController(postId: string) {
     queryFn: () => listReactions(postId),
     enabled: open,
   });
-  const apiReactions = data?.reactions ?? [];
-  const reactions =
-    currentUserReaction &&
-    currentUserId &&
-    !apiReactions.some((reaction) => reaction.userId === currentUserId)
-      ? [
-          {
-            userId: currentUserId,
-            type: currentUserReaction,
-            createdAt: new Date().toISOString(),
-          },
-          ...apiReactions,
-        ]
-      : apiReactions;
-  const uniqueUserIds = [...new Set(reactions.map((reaction) => reaction.userId))];
-  const { data: users } = useQuery({
-    queryKey: ["profiles", "by-ids", [...uniqueUserIds].sort().join(",")],
-    queryFn: async () => {
-      const results = await Promise.all(
-        uniqueUserIds.map((id) => getProfileById(id).catch(() => null)),
-      );
-      return Object.fromEntries(results.filter(Boolean).map((user) => [user!.id, user!]));
-    },
-    enabled: open && uniqueUserIds.length > 0,
-  });
+  const reactions = mergeCurrentUserReaction(
+    data?.reactions ?? [],
+    getCurrentUserId(),
+    currentUserReaction,
+  );
+  const userIds = [...new Set(reactions.map((reaction) => reaction.userId))];
+  const users = useReactionProfiles(userIds, open);
 
   return {
     open,
     setOpen: (nextOpen: boolean) => setShowReactions(postId, nextOpen),
     showEmptyState: reactions.length === 0,
-    items: reactions.map((reaction) => {
-      const user = users?.[reaction.userId];
-      return {
-        key: `${reaction.userId}-${reaction.type}`,
-        avatar: user?.avatar,
-        name: user?.name ?? texts.common.loading,
-        emoji: REACTION_EMOJIS[reaction.type] ?? reaction.type,
-      };
-    }),
+    items: createReactionsDialogItems(reactions, users),
   };
 }
