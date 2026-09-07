@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { communitiesApi } from "@/lib/api/communities";
+import { getCommunity } from "@/lib/api/communities/get-community";
 import { requireAuth } from "@/lib/require-auth";
 import { texts } from "@/texts";
 
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/comunidades/$communityId")({
   beforeLoad: requireAuth,
   loader: async ({ params }) => {
     try {
-      return await communitiesApi.get(params.communityId);
+      return await getCommunity(params.communityId);
     } catch {
       throw notFound();
     }

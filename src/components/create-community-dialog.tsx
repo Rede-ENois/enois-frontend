@@ -4,7 +4,7 @@ import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { COMMUNITY_TOPICS } from "@/constants/community-topics";
-import { communitiesApi } from "@/lib/api/communities";
+import { createCommunity as createCommunityRequest } from "@/lib/api/communities/create-community";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
@@ -28,7 +28,7 @@ export function CreateCommunityDialog({
   const [topic, setTopic] = useState<CommunityTopic>("TECNOLOGIA");
 
   const create = useMutation({
-    mutationFn: () => communitiesApi.create({ name, description, topic }),
+    mutationFn: () => createCommunityRequest({ name, description, topic }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communities"] });
       onOpenChange(false);

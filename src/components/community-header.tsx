@@ -6,7 +6,8 @@ import { Link } from "@tanstack/react-router";
 
 import { Settings, Users } from "lucide-react";
 
-import { communitiesApi } from "@/lib/api/communities";
+import { joinCommunity } from "@/lib/api/communities/join-community";
+import { leaveCommunity } from "@/lib/api/communities/leave-community";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
@@ -33,12 +34,12 @@ export function CommunityHeader({ community, members }: CommunityHeaderProps) {
   };
 
   const join = useMutation({
-    mutationFn: () => communitiesApi.join(community.id),
+    mutationFn: () => joinCommunity(community.id),
     onSuccess: invalidate,
   });
 
   const leave = useMutation({
-    mutationFn: () => communitiesApi.leave(community.id),
+    mutationFn: () => leaveCommunity(community.id),
     onSuccess: invalidate,
   });
 

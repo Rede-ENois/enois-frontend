@@ -6,7 +6,9 @@ import { Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { Loader2, Plus, Users } from "lucide-react";
 
 import { COMMUNITY_TOPICS } from "@/constants/community-topics";
-import { communitiesApi } from "@/lib/api/communities";
+import { joinCommunity } from "@/lib/api/communities/join-community";
+import { leaveCommunity } from "@/lib/api/communities/leave-community";
+import { listCommunities } from "@/lib/api/communities/list-communities";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
 import type { Community } from "@/types/application/community/community";
@@ -29,7 +31,7 @@ export function Comunidades() {
 
   const { data: communitiesData, isFetching } = useQuery({
     queryKey: ["communities", topic, cursor],
-    queryFn: () => communitiesApi.list(topic, cursor),
+    queryFn: () => listCommunities(topic, cursor),
     enabled: !isDetail,
   });
 
@@ -58,12 +60,12 @@ export function Comunidades() {
   };
 
   const join = useMutation({
-    mutationFn: (id: string) => communitiesApi.join(id),
+    mutationFn: joinCommunity,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["communities"] }),
   });
 
   const leave = useMutation({
-    mutationFn: (id: string) => communitiesApi.leave(id),
+    mutationFn: leaveCommunity,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["communities"] }),
   });
 

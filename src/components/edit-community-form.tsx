@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Camera } from "lucide-react";
 
-import { communitiesApi } from "@/lib/api/communities";
+import { updateCommunity as updateCommunityRequest } from "@/lib/api/communities/update-community";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
 import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
@@ -61,7 +61,7 @@ export function EditCommunityForm({ community, onClose }: EditCommunityFormProps
 
   const update = useMutation({
     mutationFn: () =>
-      communitiesApi.update(community.id, {
+      updateCommunityRequest(community.id, {
         name: name !== community.name ? name : undefined,
         description: description !== community.description ? description : undefined,
         cover: cover || null,

@@ -3,7 +3,9 @@ import { Link, useLoaderData } from "@tanstack/react-router";
 
 import { ArrowLeft } from "lucide-react";
 
-import { communitiesApi } from "@/lib/api/communities";
+import { getCommunity } from "@/lib/api/communities/get-community";
+import { getCommunityFeed } from "@/lib/api/communities/get-community-feed";
+import { getCommunityMembers } from "@/lib/api/communities/get-community-members";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
@@ -17,18 +19,18 @@ export function CommunityDetail() {
 
   const { data: live } = useQuery({
     queryKey: ["community", community.id],
-    queryFn: () => communitiesApi.get(community.id),
+    queryFn: () => getCommunity(community.id),
     initialData: community,
   });
 
   const { data: membersData } = useQuery({
     queryKey: ["community", community.id, "members"],
-    queryFn: () => communitiesApi.getMembers(community.id),
+    queryFn: () => getCommunityMembers(community.id),
   });
 
   const { data: feedData } = useQuery({
     queryKey: ["community", community.id, "feed"],
-    queryFn: () => communitiesApi.getFeed(community.id),
+    queryFn: () => getCommunityFeed(community.id),
   });
 
   const members = membersData?.items ?? [];
