@@ -5,7 +5,7 @@ import { TrendingUp, UserPlus } from "lucide-react";
 
 import { eventsApi } from "@/lib/api/events";
 import { networkApi } from "@/lib/api/network";
-import { profileApi } from "@/lib/api/profile";
+import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
 import { texts } from "@/texts";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -14,7 +14,7 @@ export function FeedSidebar() {
   const queryClient = useQueryClient();
   const { data: profile } = useQuery({
     queryKey: ["me"],
-    queryFn: () => profileApi.me(),
+    queryFn: getCurrentProfile,
   });
   const { data: suggestions } = useQuery({
     queryKey: ["network", "suggestions"],
