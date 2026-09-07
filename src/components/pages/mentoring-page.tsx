@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Sparkles } from "lucide-react";
 
-import { mentorsApi } from "@/lib/api/mentors";
+import { listMentors } from "@/lib/api/mentors/list-mentors";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 export function Mentoria() {
   const { data: mentorsData } = useQuery({
     queryKey: ["mentors"],
-    queryFn: () => mentorsApi.list(),
+    queryFn: () => listMentors(),
   });
   const mentors = mentorsData?.items ?? [];
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { mentorsApi } from "@/lib/api/mentors";
+import { createMentor as createMentorRequest } from "@/lib/api/mentors/create-mentor";
 import { texts } from "@/texts";
 
 import { FormField } from "@/components/form-field";
@@ -26,7 +26,7 @@ export function RegisterMentorDialog() {
         .map((skill) => skill.trim())
         .filter(Boolean);
 
-      return mentorsApi.create({ expertise, price: price || texts.mentoring.free });
+      return createMentorRequest({ expertise, price: price || texts.mentoring.free });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mentors"] });
