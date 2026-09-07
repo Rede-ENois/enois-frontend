@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Sparkles } from "lucide-react";
 
-import { listMentors } from "@/lib/api/mentors/list-mentors";
+import { listMentors } from "@/lib/api/mentors";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";

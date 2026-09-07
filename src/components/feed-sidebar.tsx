@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { TrendingUp, UserPlus } from "lucide-react";
 
-import { listEvents } from "@/lib/api/events/list-events";
+import { listEvents } from "@/lib/api/events";
 import { connectToUser } from "@/lib/api/network/connect-to-user";
 import { listNetworkSuggestions } from "@/lib/api/network/list-network-suggestions";
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";

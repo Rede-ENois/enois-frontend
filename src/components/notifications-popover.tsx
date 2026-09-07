@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 
 import { acceptConnection } from "@/lib/api/network/accept-connection";
-import { listNotifications } from "@/lib/api/notifications/list-notifications";
+import { listNotifications } from "@/lib/api/notifications";
 import { markAllNotificationsAsRead } from "@/lib/api/notifications/mark-all-notifications-as-read";
 import { markNotificationAsRead } from "@/lib/api/notifications/mark-notification-as-read";
 import { cn } from "@/lib/utils";

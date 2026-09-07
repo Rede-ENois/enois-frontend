@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listEvents } from "@/lib/api/events/list-events";
+import { listEvents } from "@/lib/api/events";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";

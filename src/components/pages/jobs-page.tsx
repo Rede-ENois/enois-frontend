@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Loader2 } from "lucide-react";
 
-import { listJobs } from "@/lib/api/jobs/list-jobs";
+import { listJobs } from "@/lib/api/jobs";
 import { texts } from "@/texts";
 import type { Job } from "@/types/application/job/job";
 
