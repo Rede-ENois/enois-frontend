@@ -1,86 +1,30 @@
-import { useEffect, useState } from "react";
-
-import { useQuery } from "@tanstack/react-query";
-
-import type { Job } from "@/types/application/job/job";
-import type { ListJobsParams } from "@/types/application/job/list-jobs-params";
-
-import { listJobs } from "@/lib/api/jobs";
-
-const initialFilters = {
-  query: "",
-  level: "",
-  location: "",
-  type: "",
-  skills: "",
-};
+import { createJobsFilterProps } from "@/utils/components/jobs/create-jobs-filter-props";
+import { createListJobsParams } from "@/utils/components/jobs/create-list-jobs-params";
+import { useJobsFilterState } from "@/utils/components/jobs/use-jobs-filter-state";
+import { useJobsPagination } from "@/utils/components/jobs/use-jobs-pagination";
 
 export function useJobsPageController() {
-  const [filters, setFilters] = useState(initialFilters);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const filterState = useJobsFilterState();
+  const pagination = useJobsPagination(createListJobsParams(filterState.filters));
 
-  const queryFilters: ListJobsParams = {
-    query: filters.query || undefined,
-    level: filters.level || undefined,
-    location: filters.location || undefined,
-    type: filters.type || undefined,
-    skills: filters.skills || undefined,
+  const setFilter = (field: keyof typeof filterState.filters, value: string) => {
+    filterState.setFilter(field, value);
+    pagination.reset();
   };
-
-  const { data, isFetching } = useQuery({
-    queryKey: ["jobs", queryFilters, cursor],
-    queryFn: () => listJobs({ ...queryFilters, cursor, limit: 10 }),
-  });
-
-  const jobs = data?.items;
-  const nextCursor = data?.nextCursor ?? null;
-
-  useEffect(() => {
-    if (!jobs || jobs.length === 0) return;
-    if (cursor === null) setAllJobs(jobs);
-    else setAllJobs((previous) => [...previous, ...jobs]);
-  }, [jobs, cursor]);
-
-  const setFilter = (field: keyof typeof initialFilters, value: string) => {
-    setFilters((current) => ({ ...current, [field]: value }));
-    setCursor(null);
-    setAllJobs([]);
-  };
-
   const clearFilters = () => {
-    setFilters((current) => ({
-      ...current,
-      level: "",
-      location: "",
-      type: "",
-      skills: "",
-    }));
-    setCursor(null);
-    setAllJobs([]);
-  };
-
-  const loadMore = () => {
-    if (nextCursor) setCursor(nextCursor);
+    filterState.clearNonQueryFilters();
+    pagination.reset();
   };
 
   return {
-    jobs: allJobs,
-    filtersProps: {
-      ...filters,
-      onQueryChange: (value: string) => setFilter("query", value),
-      onLevelChange: (value: string) => setFilter("level", value),
-      onLocationChange: (value: string) => setFilter("location", value),
-      onTypeChange: (value: string) => setFilter("type", value),
-      onSkillsChange: (value: string) => setFilter("skills", value),
-      onClear: clearFilters,
-    },
+    jobs: pagination.jobs,
+    filtersProps: createJobsFilterProps(filterState.filters, setFilter, clearFilters),
     infiniteScrollProps: {
-      hasMore: Boolean(nextCursor),
-      loading: isFetching,
-      onLoadMore: loadMore,
+      hasMore: pagination.hasMore,
+      loading: pagination.isFetching,
+      onLoadMore: pagination.loadMore,
     },
-    showLoadingMore: isFetching && allJobs.length > 0,
-    showEmptyState: !isFetching && allJobs.length === 0,
+    showLoadingMore: pagination.isFetching && pagination.jobs.length > 0,
+    showEmptyState: !pagination.isFetching && pagination.jobs.length === 0,
   };
 }
