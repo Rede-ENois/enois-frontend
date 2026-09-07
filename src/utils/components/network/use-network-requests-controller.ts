@@ -1,41 +1,32 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 
-import { acceptConnection } from "@/lib/api/network/accept-connection";
 import { listConnectionRequests } from "@/lib/api/network/list-connection-requests";
-import { removeConnection } from "@/lib/api/network/remove-connection";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
+import { createNetworkRequestGroups } from "@/utils/components/network/create-network-request-groups";
+import { useNetworkRequestActions } from "@/utils/components/network/use-network-request-actions";
+
 export function useNetworkRequestsController() {
-  const queryClient = useQueryClient();
-  const currentUserId = getCurrentUserId();
   const { data } = useQuery({
     queryKey: ["network", "requests"],
     queryFn: () => listConnectionRequests(),
     refetchInterval: 30_000,
   });
-  const pendingRequests = (data?.items ?? []).filter((request) => request.status === "PENDING");
-  const incomingRequests = pendingRequests.filter(
-    (request) => request.fromUserId !== currentUserId,
-  );
-  const outgoingRequests = pendingRequests.filter(
-    (request) => request.fromUserId === currentUserId,
-  );
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
-  const acceptRequest = useMutation({ mutationFn: acceptConnection, onSuccess: invalidate });
-  const remove = useMutation({ mutationFn: removeConnection, onSuccess: invalidate });
-  const pendingCount = incomingRequests.length + outgoingRequests.length;
+  const { incoming, outgoing } = createNetworkRequestGroups(data?.items ?? [], getCurrentUserId());
+  const actions = useNetworkRequestActions();
+  const pendingCount = incoming.length + outgoing.length;
 
   return {
-    incomingRequests,
-    outgoingRequests,
+    incomingRequests: incoming,
+    outgoingRequests: outgoing,
     hasRequests: pendingCount > 0,
-    hasIncomingRequests: incomingRequests.length > 0,
-    hasOutgoingRequests: outgoingRequests.length > 0,
+    hasIncomingRequests: incoming.length > 0,
+    hasOutgoingRequests: outgoing.length > 0,
     pendingLabel: texts.network.pendingCount(pendingCount),
-    outgoingSectionClassName: incomingRequests.length > 0 ? "pt-3" : "",
-    acceptRequest: (userId: string) => acceptRequest.mutate(userId),
-    cancelRequest: (userId: string) => remove.mutate(userId),
+    outgoingSectionClassName: incoming.length > 0 ? "pt-3" : "",
+    acceptRequest: actions.accept,
+    cancelRequest: actions.cancel,
   };
 }
