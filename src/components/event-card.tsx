@@ -19,6 +19,10 @@ export function EventCard(props: EventCardProps) {
     attend,
     attending,
   } = useEventCardController(props);
+  const metadata = [
+    { key: "date", icon: Calendar, label: dateTimeLabel },
+    { key: "attendees", icon: Users, label: event.attendees ?? 0 },
+  ];
 
   return (
     <article className="surface-card overflow-hidden">
@@ -47,17 +51,13 @@ export function EventCard(props: EventCardProps) {
         <p className="mt-1 text-xs text-muted-foreground">{texts.events.hostedBy(event.host)}</p>
 
         <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5" />
+          {metadata.map((item) => (
+            <span key={item.key} className="inline-flex items-center gap-1.5">
+              <item.icon className="h-3.5 w-3.5" />
 
-            <>{dateTimeLabel}</>
-          </span>
-
-          <span className="inline-flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5" />
-
-            <>{event.attendees ?? 0}</>
-          </span>
+              <>{item.label}</>
+            </span>
+          ))}
         </div>
 
         <Button className="mt-4 w-full rounded-full" disabled={attending} onClick={attend}>

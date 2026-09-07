@@ -6,6 +6,12 @@ import { ArrowRight, Heart, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function LandingHero() {
+  const benefits = [
+    { key: "no-vanity", icon: Heart, label: texts.landing.hero.benefits.noVanity },
+    { key: "safe", icon: ShieldCheck, label: texts.landing.hero.benefits.safe },
+    { key: "free", icon: Sparkles, label: texts.landing.hero.benefits.freeForever },
+  ];
+
   return (
     <section className="relative overflow-hidden">
       <div
@@ -57,23 +63,13 @@ export function LandingHero() {
         </div>
 
         <div className="mt-14 flex flex-wrap justify-center gap-x-8 gap-y-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5 text-primary/60" />
+          {benefits.map((benefit) => (
+            <span key={benefit.key} className="inline-flex items-center gap-1.5">
+              <benefit.icon className="h-3.5 w-3.5 text-primary/60" />
 
-            <>{texts.landing.hero.benefits.noVanity}</>
-          </span>
-
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary/60" />
-
-            <>{texts.landing.hero.benefits.safe}</>
-          </span>
-
-          <span className="inline-flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary/60" />
-
-            <>{texts.landing.hero.benefits.freeForever}</>
-          </span>
+              <>{benefit.label}</>
+            </span>
+          ))}
         </div>
       </div>
     </section>
