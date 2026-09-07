@@ -17,12 +17,9 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export function CreateCommunityDialog({
-  children,
-  open,
-  onOpenChange,
-}: CreateCommunityDialogProps) {
+export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) {
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [topic, setTopic] = useState<CommunityTopic>("TECNOLOGIA");
@@ -31,7 +28,7 @@ export function CreateCommunityDialog({
     mutationFn: () => createCommunityRequest({ name, description, topic }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communities"] });
-      onOpenChange(false);
+      setOpen(false);
       setName("");
       setDescription("");
       setTopic("TECNOLOGIA");
@@ -39,7 +36,7 @@ export function CreateCommunityDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
