@@ -19,10 +19,13 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     return (
       <div className="text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+
         <h1 className="mt-4 text-2xl font-semibold tracking-tight">
           {texts.auth.reset.successTitle}
         </h1>
+
         <p className="mt-2 text-sm text-muted-foreground">{texts.auth.reset.successDescription}</p>
+
         <Button className="mt-6 w-full gap-2 rounded-full" onClick={goToLogin}>
           <>{texts.auth.reset.enterNow}</>
 
@@ -35,6 +38,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">{texts.auth.reset.title}</h1>
+
       <p className="mt-1 text-sm text-muted-foreground">{texts.auth.reset.description}</p>
 
       <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
