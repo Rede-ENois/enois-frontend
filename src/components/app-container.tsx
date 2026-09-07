@@ -1,5 +1,6 @@
-import { useIsAuthenticated } from "@/lib/use-is-authenticated";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
+
+import { useIsAuthenticated } from "@/lib/use-is-authenticated";
 
 import { AuthenticatedAppContainer } from "./authenticated-app-container";
 import { GuestAppContainer } from "./guest-app-container";

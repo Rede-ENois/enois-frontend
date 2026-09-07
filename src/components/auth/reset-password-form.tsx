@@ -1,13 +1,14 @@
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
+import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 
 import { useResetPasswordFormController } from "@/lib/use-reset-password-form-controller";
-import { texts } from "@/texts";
-import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
+
+import { Button } from "@/components/ui/button";
 
 import { FormField } from "@/components/form-field";
-import { Button } from "@/components/ui/button";
 
 import { AuthPasswordInput } from "./auth-password-input";
 
@@ -18,10 +19,14 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     return (
       <div className="text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight">{texts.auth.reset.successTitle}</h1>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+          {texts.auth.reset.successTitle}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">{texts.auth.reset.successDescription}</p>
         <Button className="mt-6 w-full gap-2 rounded-full" onClick={goToLogin}>
-          <>{texts.auth.reset.enterNow}</><ArrowRight className="h-4 w-4" />
+          <>{texts.auth.reset.enterNow}</>
+
+          <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     );
@@ -53,18 +58,19 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>
-              <>{texts.auth.reset.action}</><ArrowRight className="h-4 w-4" />
+              <>{texts.auth.reset.action}</>
+
+              <ArrowRight className="h-4 w-4" />
             </>
           )}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        <>{texts.auth.reset.remembered}</><Link
-          to="/entrar"
-          search={{ tab: "login" }}
-          className="text-primary hover:underline"
-        >
+        <>{texts.auth.reset.remembered}</>
+
+        <Link
+        <Link to="/entrar" search={{ tab: "login" }} className="text-primary hover:underline">
           {texts.common.enter}
         </Link>
       </p>

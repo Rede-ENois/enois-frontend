@@ -1,7 +1,8 @@
-import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
 import type { UserAvatarProps } from "@/types/components/user-avatar/user-avatar-props";
 import { getInitials } from "@/utils/get-initials";
+
+import { resolveCdnUrl } from "@/lib/api/media";
 
 import { Avatar } from "@/components/ui/avatar";
 

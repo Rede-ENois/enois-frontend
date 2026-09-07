@@ -1,8 +1,8 @@
+import { texts } from "@/texts";
+import type { ConversationComposerProps } from "@/types/components/messages/conversation-composer-props";
 import { Send } from "lucide-react";
 
 import { useConversationComposer } from "@/lib/use-conversation-composer";
-import { texts } from "@/texts";
-import type { ConversationComposerProps } from "@/types/components/messages/conversation-composer-props";
 
 import { Input } from "@/components/ui/input";
 
@@ -17,6 +17,7 @@ export function ConversationComposer({ conversationId }: ConversationComposerPro
         placeholder={texts.messages.inputPlaceholder}
         className="h-10 rounded-full bg-muted"
       />
+
       <button
         type="submit"
         disabled={!text.trim() || sending}

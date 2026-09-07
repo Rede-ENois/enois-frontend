@@ -1,8 +1,7 @@
 import { type ComponentProps, useState } from "react";
 
-import { Eye, EyeOff } from "lucide-react";
-
 import { texts } from "@/texts";
+import { Eye, EyeOff } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
@@ -12,6 +11,7 @@ export function AuthPasswordInput(props: ComponentProps<typeof Input>) {
   return (
     <div className="relative">
       <Input {...props} type={show ? "text" : "password"} />
+
       <button
         type="button"
         onClick={() => setShow((value) => !value)}

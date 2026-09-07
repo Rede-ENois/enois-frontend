@@ -1,13 +1,14 @@
 import { useState } from "react";
 
+import { usePostCardStore } from "@/stores/post-card.store";
+import type { CommentView } from "@/types/application/comment/comment-view";
+import type { ReactionType } from "@/types/application/reaction/reaction-type";
+
 import { deleteComment } from "@/lib/api/comments/delete-comment";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { react } from "@/lib/api/reactions";
 import { removeReaction } from "@/lib/api/reactions/remove-reaction";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { usePostCardStore } from "@/stores/post-card.store";
-import type { CommentView } from "@/types/application/comment/comment-view";
-import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 export function useCommentActions(comment: CommentView) {
   const currentUserId = getCurrentUserId();

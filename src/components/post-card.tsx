@@ -1,15 +1,17 @@
 import { typeMeta } from "@/constants/post-type-meta";
-import { usePostCardLifecycle } from "@/lib/use-post-card-lifecycle";
 import { texts } from "@/texts";
 import type { PostCardProps } from "@/types/components/post/post-card-props";
 import { linkifyText } from "@/utils/linkify-text";
 
-import { AuthorInfo } from "@/components/post-author-info";
+import { usePostCardLifecycle } from "@/lib/use-post-card-lifecycle";
+
+import { Badge } from "@/components/ui/badge";
+
 import { PostActions } from "@/components/post-actions";
+import { AuthorInfo } from "@/components/post-author-info";
 import { LinkPreviews } from "@/components/post-link-previews";
 import { MediaGrid } from "@/components/post-media-grid";
 import { ReactionsSummary } from "@/components/reactions-summary";
-import { Badge } from "@/components/ui/badge";
 
 export function PostCard({ post }: PostCardProps) {
   const meta = typeMeta[post.type] ?? typeMeta.INSIGHT;
@@ -25,6 +27,7 @@ export function PostCard({ post }: PostCardProps) {
           createdAt={post.createdAt}
           fallbackClassName={meta.classAvatar}
         />
+
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${meta.className}`}
         >

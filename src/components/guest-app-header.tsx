@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
 import { LogIn } from "lucide-react";
 
-import { texts } from "@/texts";
-
 import { Button } from "@/components/ui/button";
+
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import { AppBrand } from "./app-brand";
@@ -17,9 +17,12 @@ export function GuestAppHeader() {
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
+
         <Button asChild className="rounded-full gap-1.5" size="sm">
           <Link to="/entrar" search={{ tab: "login" }}>
-            <LogIn className="h-4 w-4" /><>{texts.common.enter}</>
+            <LogIn className="h-4 w-4" />
+
+            <>{texts.common.enter}</>
           </Link>
         </Button>
       </div>

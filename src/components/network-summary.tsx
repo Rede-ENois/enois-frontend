@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+
 import { listNetworkUsers } from "@/lib/api/network";
 import { getNetworkSummary } from "@/lib/api/network/get-network-summary";
-import { texts } from "@/texts";
 
 import { Stat } from "@/components/network-stat";
 
@@ -22,7 +23,9 @@ export function NetworkSummary() {
   return (
     <div className="surface-card p-4 sm:p-6">
       <h1 className="text-2xl font-semibold tracking-tight">{texts.network.title}</h1>
+
       <p className="mt-1 text-sm text-muted-foreground">{texts.network.description}</p>
+
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label={texts.network.stats.connections} value={String(summary?.connections ?? 0)} />
         <Stat label={texts.network.stats.following} value={String(summary?.followers ?? 0)} />

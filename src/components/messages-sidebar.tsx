@@ -2,17 +2,18 @@ import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+import type { MessagesSidebarProps } from "@/types/components/messages/messages-sidebar-props";
 import { Search } from "lucide-react";
 
 import { listConversations } from "@/lib/api/messages";
 import { markConversationAsRead } from "@/lib/api/messages/mark-conversation-as-read";
-import { texts } from "@/texts";
-import type { MessagesSidebarProps } from "@/types/components/messages/messages-sidebar-props";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import { ConversationItem } from "@/components/conversation-item";
 import { NewConversationSearch } from "@/components/new-conversation-search";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
   const queryClient = useQueryClient();
@@ -36,6 +37,7 @@ export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
       <div className="border-b border-border p-4">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-lg font-semibold">{texts.messages.title}</h1>
+
           <Button
             size="sm"
             variant="outline"
@@ -46,10 +48,7 @@ export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
           </Button>
         </div>
         {showSearch ? (
-          <NewConversationSearch
-            onSelect={onSelect}
-            onClose={() => setShowSearch(false)}
-          />
+          <NewConversationSearch onSelect={onSelect} onClose={() => setShowSearch(false)} />
         ) : (
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

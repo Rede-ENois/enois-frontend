@@ -1,12 +1,11 @@
-import { cn } from "@/lib/utils";
 import type { FormFieldProps } from "@/types/components/form-field-props";
+
+import { cn } from "@/lib/utils";
 
 import { Label } from "@/components/ui/label";
 
 export function FormField({ label, error, right, labelClassName, children }: FormFieldProps) {
-  const labelElement = (
-    <Label className={cn("text-sm font-medium", labelClassName)}>{label}</Label>
-  );
+  const labelElement = <Label className={cn("text-sm font-medium", labelClassName)}>{label}</Label>;
 
   return (
     <div className="space-y-1.5">

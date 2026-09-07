@@ -1,7 +1,7 @@
+import { texts } from "@/texts";
 import { z } from "zod";
 
 import { emailSchema } from "@/lib/validation/email-schema";
-import { texts } from "@/texts";
 
 export const signupSchema = z.object({
   name: z.string().trim().min(2, texts.auth.validation.signupNameMin).max(80),

@@ -2,9 +2,10 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { Profile } from "@/types/application/profile/profile";
+
 import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
 import { useAuth } from "@/lib/use-auth";
-import type { Profile } from "@/types/application/profile/profile";
 
 export function useProfileRecommendationController(user: Profile) {
   const { user: me } = useAuth();

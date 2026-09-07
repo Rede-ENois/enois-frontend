@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
+
+import { listReactions } from "@/lib/api/reactions/list-reactions";
 
 export function ReactionsSummary({ postId }: PostIdProps) {
   const reactionStatus = usePostCardStore((state) => state.cards[postId]?.reactionStatus ?? null);
@@ -34,7 +35,9 @@ export function ReactionsSummary({ postId }: PostIdProps) {
               : "border border-border-soft text-text-subtle"
           }`}
         >
-          <>{REACTION_EMOJIS[type]} {count}</>
+          <>
+            {REACTION_EMOJIS[type]} {count}
+          </>
         </span>
       ))}
     </div>

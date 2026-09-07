@@ -1,9 +1,10 @@
 import { type FormEvent, useState } from "react";
 
-import { forgotPassword } from "@/lib/api/auth/forgot-password";
-import { emailSchema } from "@/lib/validation/email-schema";
 import { texts } from "@/texts";
 import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
+
+import { forgotPassword } from "@/lib/api/auth/forgot-password";
+import { emailSchema } from "@/lib/validation/email-schema";
 
 export function useForgotPasswordDialogController(
   onOpenChange: ForgotPasswordDialogProps["onOpenChange"],

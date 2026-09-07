@@ -1,7 +1,7 @@
+import { texts } from "@/texts";
 import { z } from "zod";
 
 import { emailSchema } from "@/lib/validation/email-schema";
-import { texts } from "@/texts";
 
 export const loginSchema = z.object({
   email: emailSchema.max(255),

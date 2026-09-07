@@ -1,18 +1,19 @@
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { COMMUNITY_TOPICS } from "@/constants/community-topics";
-import { useCreateCommunityDialogController } from "@/lib/use-create-community-dialog-controller";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
-import { FormField } from "@/components/form-field";
+import { useCreateCommunityDialogController } from "@/lib/use-create-community-dialog-controller";
+
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";
 import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+import { FormField } from "@/components/form-field";
 
 export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) {
   const { open, setOpen, form, setField, createPending, createCommunity } =
@@ -21,10 +22,12 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{texts.communities.create.title}</DialogTitle>
         </DialogHeader>
+
         <div className="space-y-4">
           <FormField
             label={texts.communities.create.name}
@@ -36,6 +39,7 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
               className="h-10 border-transparent bg-muted"
             />
           </FormField>
+
           <FormField
             label={texts.communities.create.description}
             labelClassName="text-xs text-muted-foreground"
@@ -47,6 +51,7 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
               className="h-10 border-transparent bg-muted"
             />
           </FormField>
+
           <FormField
             label={texts.communities.create.topic}
             labelClassName="text-xs text-muted-foreground"
@@ -63,6 +68,7 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
               ))}
             </select>
           </FormField>
+
           <Button
             className="w-full rounded-full"
             disabled={!form.name.trim() || !form.description.trim() || createPending}

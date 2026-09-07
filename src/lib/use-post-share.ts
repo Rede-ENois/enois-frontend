@@ -1,5 +1,6 @@
-import { share } from "@/lib/api/reactions/share";
 import { usePostCardStore } from "@/stores/post-card.store";
+
+import { share } from "@/lib/api/reactions/share";
 
 export function usePostShare(postId: string) {
   const setPostCounters = usePostCardStore((state) => state.setPostCounters);

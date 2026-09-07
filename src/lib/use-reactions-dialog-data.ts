@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { usePostCardStore } from "@/stores/post-card.store";
+
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { usePostCardStore } from "@/stores/post-card.store";
 
 export function useReactionsDialogData(postId: string) {
   const currentUserId = getCurrentUserId();

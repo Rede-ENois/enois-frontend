@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
 import { Trophy } from "lucide-react";
 
 import { listRanking } from "@/lib/api/ranking";
-import { texts } from "@/texts";
 
 import { ProfileSection } from "@/components/profile-section";
 import { UserAvatar } from "@/components/user-avatar";
@@ -29,6 +29,7 @@ export function ProfileRankingSection() {
             >
               {texts.profile.rankingPosition(index + 1)}
             </span>
+
             <Link to="/perfil/$username" params={{ username: rankedUser.username }}>
               <UserAvatar
                 src={rankedUser.avatar}
@@ -36,6 +37,7 @@ export function ProfileRankingSection() {
                 className="h-8 w-8 shrink-0"
               />
             </Link>
+
             <div className="min-w-0 flex-1">
               <Link
                 to="/perfil/$username"
@@ -45,6 +47,7 @@ export function ProfileRankingSection() {
                 {rankedUser.name}
               </Link>
             </div>
+
             <span className="text-[11px] font-light text-opportunity-foreground">
               {rankedUser.reputation}
             </span>

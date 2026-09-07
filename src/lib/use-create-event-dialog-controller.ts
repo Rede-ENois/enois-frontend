@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createEvent as createEventRequest } from "@/lib/api/events/create-event";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
+
+import { createEvent as createEventRequest } from "@/lib/api/events/create-event";
 
 export function useCreateEventDialogController() {
   const queryClient = useQueryClient();

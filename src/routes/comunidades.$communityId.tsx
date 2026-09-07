@@ -1,8 +1,9 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
+
 import { getCommunity } from "@/lib/api/communities/get-community";
 import { requireAuth } from "@/lib/require-auth";
-import { texts } from "@/texts";
 
 import { CommunityDetail } from "@/components/pages/community-detail-page";
 

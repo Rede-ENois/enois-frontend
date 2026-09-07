@@ -1,8 +1,9 @@
-import { react } from "@/lib/api/reactions";
-import { removeReaction } from "@/lib/api/reactions/remove-reaction";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
+
+import { react } from "@/lib/api/reactions";
+import { removeReaction } from "@/lib/api/reactions/remove-reaction";
 
 export function usePostReaction(post: PostView) {
   const card = usePostCardStore((state) => state.cards[post.id]);

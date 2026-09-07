@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listEvents } from "@/lib/api/events";
 import { texts } from "@/texts";
+
+import { listEvents } from "@/lib/api/events";
 
 import { AppContainer } from "@/components/app-container";
 import { CreateEventDialog } from "@/components/create-event-dialog";
@@ -20,8 +21,10 @@ export function Eventos() {
         <div className="surface-card flex flex-wrap items-center justify-between gap-3 p-4 sm:gap-4 sm:p-6">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{texts.events.title}</h1>
+
             <p className="mt-1 text-sm text-muted-foreground">{texts.events.description}</p>
           </div>
+
           <CreateEventDialog />
         </div>
 

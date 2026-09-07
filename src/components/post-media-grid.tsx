@@ -2,9 +2,10 @@ import { useState } from "react";
 
 import { useQueries } from "@tanstack/react-query";
 
+import type { PostView } from "@/types/application/feed/post-view";
+
 import { resolveCdnUrl } from "@/lib/api/media";
 import { getMedia } from "@/lib/api/media/get-media";
-import type { PostView } from "@/types/application/feed/post-view";
 
 export function MediaGrid({ mediaIds }: Pick<PostView, "mediaIds">) {
   const queryResults = useQueries({

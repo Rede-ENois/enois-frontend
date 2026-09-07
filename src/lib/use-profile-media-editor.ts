@@ -2,12 +2,13 @@ import { useCallback, useRef } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
-import { useImageCropUpload } from "@/lib/use-image-crop-upload";
-import { useMediaUpload } from "@/lib/use-media-upload";
 import type { Profile } from "@/types/application/profile/profile";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 import type { ProfileCropPurpose } from "@/types/components/profile/profile-crop-purpose";
+
+import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
+import { useImageCropUpload } from "@/lib/use-image-crop-upload";
+import { useMediaUpload } from "@/lib/use-media-upload";
 
 export function useProfileMediaEditor(user: Profile) {
   const queryClient = useQueryClient();
@@ -17,7 +18,8 @@ export function useProfileMediaEditor(user: Profile) {
   const bannerRef = useRef<HTMLInputElement>(null);
 
   const updateProfile = useMutation({
-    mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => updateProfileRequest(data),
+    mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) =>
+      updateProfileRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", user.username] });

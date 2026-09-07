@@ -2,12 +2,13 @@ import { type FormEvent, useState } from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 
-import { resetPassword } from "@/lib/api/auth/reset-password";
-import { ApiError } from "@/lib/api-client";
-import { resetPasswordSchema } from "@/lib/validation/reset-password-schema";
 import { texts } from "@/texts";
 import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
 import { getZodFieldErrors } from "@/utils/get-zod-field-errors";
+
+import { ApiError } from "@/lib/api-client";
+import { resetPassword } from "@/lib/api/auth/reset-password";
+import { resetPasswordSchema } from "@/lib/validation/reset-password-schema";
 
 export function useResetPasswordFormController(token: ResetPasswordFormProps["token"]) {
   const navigate = useNavigate();
@@ -17,7 +18,9 @@ export function useResetPasswordFormController(token: ResetPasswordFormProps["to
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = resetPasswordSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
+    const parsed = resetPasswordSchema.safeParse(
+      Object.fromEntries(new FormData(event.currentTarget)),
+    );
     if (!parsed.success) {
       setErrors(getZodFieldErrors(parsed.error));
       return;

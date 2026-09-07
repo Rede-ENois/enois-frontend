@@ -2,11 +2,12 @@ import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { NotificationTab } from "@/types/components/notification/notification-tab";
+
 import { acceptConnection } from "@/lib/api/network/accept-connection";
 import { listNotifications } from "@/lib/api/notifications";
 import { markAllNotificationsAsRead } from "@/lib/api/notifications/mark-all-notifications-as-read";
 import { markNotificationAsRead } from "@/lib/api/notifications/mark-notification-as-read";
-import type { NotificationTab } from "@/types/components/notification/notification-tab";
 
 export function useNotificationsPopover() {
   const queryClient = useQueryClient();

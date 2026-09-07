@@ -22,6 +22,7 @@ export function Auth() {
         <TabButton variant="auth" active={tab === "signup"} onClick={() => setTab("signup")}>
           {texts.common.createAccount}
         </TabButton>
+
         <TabButton variant="auth" active={tab === "login"} onClick={() => setTab("login")}>
           {texts.common.enter}
         </TabButton>
@@ -41,11 +42,19 @@ export function Auth() {
       <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} />
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        <>{texts.auth.terms.prefix}</><Link to="/termos" className="text-primary hover:underline">
+        <>{texts.auth.terms.prefix}</>
+
+        <Link to="/termos" className="text-primary hover:underline">
           {texts.auth.terms.terms}
-        </Link><>{texts.auth.terms.conjunction}</><Link to="/privacidade" className="text-primary hover:underline">
+        </Link>
+
+        <>{texts.auth.terms.conjunction}</>
+
+        <Link to="/privacidade" className="text-primary hover:underline">
           {texts.auth.terms.privacy}
-        </Link><>{texts.auth.terms.end}</>
+        </Link>
+
+        <>{texts.auth.terms.end}</>
       </p>
     </AuthPageLayout>
   );

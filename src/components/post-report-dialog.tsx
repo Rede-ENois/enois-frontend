@@ -1,10 +1,10 @@
-import { Root as Dialog } from "@radix-ui/react-dialog";
-
 import { REPORT_REASONS } from "@/constants/report-reasons";
-import { useReportDialogController } from "@/lib/use-report-dialog-controller";
 import { texts } from "@/texts";
 import type { ReportReason } from "@/types/application/report/report-reason";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
+import { Root as Dialog } from "@radix-ui/react-dialog";
+
+import { useReportDialogController } from "@/lib/use-report-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -23,9 +23,13 @@ export function ReportDialog({ postId }: PostIdProps) {
         <DialogHeader>
           <DialogTitle className="font-light">{texts.posts.report.title}</DialogTitle>
         </DialogHeader>
+
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-light text-text-subtle">{texts.posts.report.reason}</Label>
+            <Label className="text-[11px] font-light text-text-subtle">
+              {texts.posts.report.reason}
+            </Label>
+
             <select
               value={reason}
               onChange={(event) => setReason(event.target.value as ReportReason)}
@@ -42,10 +46,12 @@ export function ReportDialog({ postId }: PostIdProps) {
               ))}
             </select>
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-[11px] font-light text-text-subtle">
               {texts.posts.report.description}
             </Label>
+
             <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -53,6 +59,7 @@ export function ReportDialog({ postId }: PostIdProps) {
               className="border-border-soft bg-surface-1 text-[13px] font-light h-10 border-transparent bg-muted"
             />
           </div>
+
           <Button className="w-full rounded-full" onClick={submit}>
             {texts.posts.report.action}
           </Button>

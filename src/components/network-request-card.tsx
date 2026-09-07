@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
+import type { RequestCardProps } from "@/types/components/network/request-card-props";
 import { Check, X } from "lucide-react";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { texts } from "@/texts";
-import type { RequestCardProps } from "@/types/components/network/request-card-props";
 
 import { Button } from "@/components/ui/button";
+
 import { UserAvatar } from "@/components/user-avatar";
 
 export function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
@@ -25,6 +26,7 @@ export function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
     <div className="surface-card flex items-center justify-between gap-4 p-4">
       <div className="flex min-w-0 items-center gap-3">
         <UserAvatar src={user?.avatar} alt={user?.name} className="h-12 w-12 shrink-0" />
+
         <div className="min-w-0">
           <Link
             to="/perfil/$username"
@@ -49,7 +51,9 @@ export function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
           className="shrink-0 rounded-full gap-1.5"
           onClick={() => onCancel(request.toUserId)}
         >
-          <X className="h-4 w-4" /><>{texts.network.cancel}</>
+          <X className="h-4 w-4" />
+
+          <>{texts.network.cancel}</>
         </Button>
       ) : (
         <div className="flex shrink-0 gap-2">
@@ -59,14 +63,19 @@ export function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
             className="rounded-full gap-1.5"
             onClick={() => onCancel(request.fromUserId)}
           >
-            <X className="h-4 w-4" /><>{texts.network.reject}</>
+            <X className="h-4 w-4" />
+
+            <>{texts.network.reject}</>
           </Button>
+
           <Button
             size="sm"
             className="rounded-full gap-1.5"
             onClick={() => onAccept(request.fromUserId)}
           >
-            <Check className="h-4 w-4" /><>{texts.network.accept}</>
+            <Check className="h-4 w-4" />
+
+            <>{texts.network.accept}</>
           </Button>
         </div>
       )}

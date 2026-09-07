@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+import type { Education } from "@/types/application/profile/education";
+import type { EducationRequest } from "@/types/application/profile/education-request";
+
 import { createEducation } from "@/lib/api/profile/education/create-education";
 import { deleteEducation } from "@/lib/api/profile/education/delete-education";
 import { listEducation } from "@/lib/api/profile/education/list-education";
 import { updateEducation } from "@/lib/api/profile/education/update-education";
-import { texts } from "@/texts";
-import type { EducationRequest } from "@/types/application/profile/education-request";
-import type { Education } from "@/types/application/profile/education";
 
 import { SubList } from "@/components/edit-profile-sub-list";
 

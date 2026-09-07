@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
-import { listFeedPosts } from "@/lib/api/feed";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
+
+import { listFeedPosts } from "@/lib/api/feed";
 
 export function useFeedPageController() {
   const [tab, setTab] = useState<FeedTab>("FOR_YOU");

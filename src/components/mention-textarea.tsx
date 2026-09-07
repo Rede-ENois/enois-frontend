@@ -1,6 +1,7 @@
-import { useMentionTextarea } from "@/lib/use-mention-textarea";
 import { texts } from "@/texts";
 import type { Props } from "@/types/components/mention-textarea/props";
+
+import { useMentionTextarea } from "@/lib/use-mention-textarea";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -51,8 +52,10 @@ export function MentionTextarea({
               }`}
             >
               <UserAvatar src={user.avatar} alt={user.name} className="h-8 w-8 shrink-0" />
+
               <div className="min-w-0">
                 <p className="truncate font-medium">{user.name}</p>
+
                 <p className="truncate text-xs text-muted-foreground">
                   {texts.mentions.username(user.username)}
                 </p>

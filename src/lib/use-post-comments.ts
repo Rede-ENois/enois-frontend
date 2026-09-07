@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
+import { usePostCardStore } from "@/stores/post-card.store";
+
 import { listComments } from "@/lib/api/comments";
 import { createComment } from "@/lib/api/comments/create-comment";
 import { getCurrentUser } from "@/lib/get-current-user";
-import { usePostCardStore } from "@/stores/post-card.store";
 
 export function usePostComments(postId: string, visible: boolean) {
   const currentUser = getCurrentUser();

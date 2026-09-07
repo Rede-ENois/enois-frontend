@@ -1,9 +1,8 @@
 import { useState } from "react";
 
-import { Loader2 } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+import { Loader2 } from "lucide-react";
 
 import { AppleIcon } from "./apple-icon";
 import { GoogleIcon } from "./google-icon";
@@ -33,6 +32,7 @@ export function AuthSocialOptions() {
           {loading === "GOOGLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
           <>{texts.auth.social.google}</>
         </button>
+
         <button
           type="button"
           onClick={() => startOAuth("APPLE")}
@@ -49,7 +49,9 @@ export function AuthSocialOptions() {
 
       <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
         <div className="h-px flex-1 bg-border" />
+
         <>{texts.auth.social.divider}</>
+
         <div className="h-px flex-1 bg-border" />
       </div>
     </>

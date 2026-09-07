@@ -1,10 +1,11 @@
 import { texts } from "@/texts";
 import type { EditProfileInfoFormProps } from "@/types/components/profile/edit-profile-info-form-props";
 
-import { FormField } from "@/components/form-field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+
+import { FormField } from "@/components/form-field";
 
 const fieldLabelClassName = "text-[13px] font-light text-text-subtle";
 
@@ -66,6 +67,7 @@ export function EditProfileInfoForm({
             className="h-10 border-border-soft bg-surface-1"
           />
         </FormField>
+
         <FormField label={texts.profile.edit.fields.location} labelClassName={fieldLabelClassName}>
           <Input
             value={values.location}
@@ -75,7 +77,10 @@ export function EditProfileInfoForm({
         </FormField>
       </div>
 
-      <FormField label={texts.profile.edit.fields.availability} labelClassName={fieldLabelClassName}>
+      <FormField
+        label={texts.profile.edit.fields.availability}
+        labelClassName={fieldLabelClassName}
+      >
         <Input
           value={values.availability}
           onChange={(event) => setField("availability", event.target.value)}
@@ -93,7 +98,10 @@ export function EditProfileInfoForm({
         />
       </FormField>
 
-      <FormField label={texts.profile.edit.fields.externalLinks} labelClassName={fieldLabelClassName}>
+      <FormField
+        label={texts.profile.edit.fields.externalLinks}
+        labelClassName={fieldLabelClassName}
+      >
         <Textarea
           value={values.linksText}
           onChange={(event) => setField("linksText", event.target.value)}
@@ -124,13 +132,16 @@ export function EditProfileInfoForm({
             checked={values.openToWork}
             onCheckedChange={(checked) => setField("openToWork", checked)}
           />
+
           <>{texts.profile.edit.openToWork}</>
         </label>
+
         <label className="flex items-center gap-3 text-[13px] font-light text-text-strong">
           <Switch
             checked={values.isMentor}
             onCheckedChange={(checked) => setField("isMentor", checked)}
           />
+
           <>{texts.profile.edit.mentorAvailable}</>
         </label>
       </div>

@@ -5,9 +5,7 @@ const routes = [...routeDefinitions].sort((a, b) => b.source.length - a.source.l
 
 export function navigateToHref(href: string, navigate: Navigate) {
   const path = href.replace(/^\/api\//, "").replace(/^\/+|\/+$/g, "");
-  const route = routes.find(
-    ({ source }) => path === source || path.startsWith(`${source}/`),
-  );
+  const route = routes.find(({ source }) => path === source || path.startsWith(`${source}/`));
 
   if (!route) return;
 

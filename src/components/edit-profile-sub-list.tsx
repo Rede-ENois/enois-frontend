@@ -1,14 +1,15 @@
+import { texts } from "@/texts";
+import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { useSubListEditor } from "@/lib/use-sub-list-editor";
-import { texts } from "@/texts";
-import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 
-import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+
+import { FormField } from "@/components/form-field";
 
 export function SubList<
   T extends Record<"id", string>,
@@ -47,6 +48,7 @@ export function SubList<
           {currentlyHereKey && (
             <label className="flex items-center gap-2 text-[13px] font-light text-text-strong">
               <Switch checked={editor.currentlyHere} onCheckedChange={editor.setCurrentlyHere} />
+
               <>{texts.profile.edit.currentlyHere}</>
             </label>
           )}
@@ -54,6 +56,7 @@ export function SubList<
             <Button size="sm" onClick={editor.submit} disabled={editor.isPending}>
               {editor.isPending ? texts.common.saving : texts.common.save}
             </Button>
+
             <Button size="sm" variant="outline" onClick={editor.cancel}>
               {texts.common.cancel}
             </Button>
@@ -73,10 +76,12 @@ export function SubList<
                     <p className="break-words text-text-strong">
                       {String((item as Record<string, unknown>)[fields[0].key] ?? "")}
                     </p>
+
                     <p className="break-words text-text-subtle">
                       {String((item as Record<string, unknown>)[fields[1]?.key] ?? "")}
                     </p>
                   </div>
+
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => editor.startEdit(item)}
@@ -84,6 +89,7 @@ export function SubList<
                     >
                       <Pencil className="h-4 w-4 text-text-subtle" />
                     </button>
+
                     <button
                       onClick={() => editor.remove(item.id)}
                       className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-2 hover:text-destructive"
@@ -95,8 +101,15 @@ export function SubList<
               </div>
             ))
           )}
-          <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={editor.startCreate}>
-            <Plus className="h-4 w-4" /><>{texts.common.add}</>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full gap-1.5"
+            onClick={editor.startCreate}
+          >
+            <Plus className="h-4 w-4" />
+
+            <>{texts.common.add}</>
           </Button>
         </>
       )}

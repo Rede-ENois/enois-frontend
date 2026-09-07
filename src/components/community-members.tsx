@@ -4,6 +4,7 @@ import { texts } from "@/texts";
 import type { CommunityMembersProps } from "@/types/components/communities/community-members-props";
 
 import { Badge } from "@/components/ui/badge";
+
 import { UserAvatar } from "@/components/user-avatar";
 
 export function CommunityMembers({ members }: CommunityMembersProps) {
@@ -13,12 +14,14 @@ export function CommunityMembers({ members }: CommunityMembersProps) {
         <h3 className="mb-3 text-sm font-semibold">
           {texts.communities.detail.membersTitle(members.length)}
         </h3>
+
         <div className="space-y-3">
           {members.map((member) => (
             <div key={member.userId} className="flex items-center gap-3">
               <Link to="/perfil/$username" params={{ username: member.username }}>
                 <UserAvatar src={member.avatar} alt={member.name} className="h-9 w-9 shrink-0" />
               </Link>
+
               <div className="min-w-0 flex-1">
                 <Link
                   to="/perfil/$username"

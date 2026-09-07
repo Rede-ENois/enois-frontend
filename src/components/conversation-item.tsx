@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { texts } from "@/texts";
 import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
 import { formatRelativeTime } from "@/utils/format-relative-time";
+
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -31,13 +32,16 @@ export function ConversationItem({ conversation, isActive, onSelect }: Conversat
         <Link to="/perfil/$username" params={{ username: otherUser?.username ?? otherId ?? "" }}>
           <UserAvatar src={otherUser?.avatar} alt={title} className="h-11 w-11 shrink-0" />
         </Link>
+
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <span className="truncate text-sm font-medium">{title}</span>
+
             <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
               {conversation.time ? formatRelativeTime(conversation.time) : ""}
             </span>
           </div>
+
           <div className="flex items-center justify-between gap-2">
             <p className="truncate text-xs text-muted-foreground">
               {conversation.lastMessage ?? ""}

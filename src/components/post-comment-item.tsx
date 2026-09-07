@@ -1,24 +1,20 @@
-import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
-
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { useCommentActions } from "@/lib/use-comment-actions";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
 import { formatRelativeTime } from "@/utils/format-relative-time";
 import { linkifyText } from "@/utils/linkify-text";
+import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
+
+import { useCommentActions } from "@/lib/use-comment-actions";
 
 import { PopoverContent } from "@/components/ui/popover-content";
+
 import { UserAvatar } from "@/components/user-avatar";
 
 export function CommentItem({ comment, replyingTo }: CommentItemProps) {
-  const {
-    isOwner,
-    commentReaction,
-    handleReply,
-    handleDelete,
-    handleReaction,
-  } = useCommentActions(comment);
+  const { isOwner, commentReaction, handleReply, handleDelete, handleReaction } =
+    useCommentActions(comment);
 
   return (
     <div className="flex gap-2.5">
@@ -27,6 +23,7 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
         alt={comment.authorName}
         className="h-8 w-8 shrink-0"
       />
+
       <div className="min-w-0 flex-1">
         <div className="rounded-xl bg-surface-1 px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -40,20 +37,24 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
               {formatRelativeTime(comment.createdAt)}
             </span>
           </div>
+
           <p className="mt-0.5 break-words text-[13px] font-light leading-relaxed text-text-strong">
             {linkifyText(comment.content)}
           </p>
         </div>
+
         <div className="mt-1 flex items-center gap-3 px-3 text-[11px] font-light text-text-subtle">
           <button onClick={handleReply} className="transition-colors hover:text-primary">
             {texts.posts.comments.reply}
           </button>
+
           <Popover>
             <PopoverTrigger asChild>
               <button className="transition-colors hover:text-primary">
                 {commentReaction ? REACTION_EMOJIS[commentReaction] : texts.posts.reactions.react}
               </button>
             </PopoverTrigger>
+
             <PopoverContent
               align="start"
               side="top"

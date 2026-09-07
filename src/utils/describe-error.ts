@@ -1,6 +1,7 @@
-import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { ErrorDescription } from "@/types/components/error-banner/error-description";
+
+import { ApiError } from "@/lib/api-client";
 
 export function describeError(error: unknown): ErrorDescription {
   if (error instanceof ApiError) {

@@ -1,15 +1,10 @@
-import {
-  type FormEvent,
-  type KeyboardEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
-import { searchUsers } from "@/lib/api/users";
 import type { UserSearchResult } from "@/types/application/user/user-search-result";
+
+import { searchUsers } from "@/lib/api/users";
 
 export function useMentionTextarea(
   value: string,

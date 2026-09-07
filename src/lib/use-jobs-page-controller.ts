@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
-import { listJobs } from "@/lib/api/jobs";
 import type { Job } from "@/types/application/job/job";
 import type { ListJobsParams } from "@/types/application/job/list-jobs-params";
+
+import { listJobs } from "@/lib/api/jobs";
 
 const initialFilters = {
   query: "",

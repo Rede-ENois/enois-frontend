@@ -1,28 +1,24 @@
 import { useState } from "react";
 
+import { texts } from "@/texts";
+import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
 import { Briefcase, Camera, MapPin, MessageCircle, Settings } from "lucide-react";
 
 import { resolveCdnUrl } from "@/lib/api/media";
 import { useProfileHeaderActions } from "@/lib/use-profile-header-actions";
 import { useProfileMediaEditor } from "@/lib/use-profile-media-editor";
-import { texts } from "@/texts";
-import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
+
+import { Button } from "@/components/ui/button";
 
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
-import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
   const [hoveringAvatar, setHoveringAvatar] = useState(false);
   const [hoveringBanner, setHoveringBanner] = useState(false);
-  const {
-    isOwnProfile,
-    connectionStatus,
-    connectionPending,
-    handleMessage,
-    handleConnect,
-  } = useProfileHeaderActions(user);
+  const { isOwnProfile, connectionStatus, connectionPending, handleMessage, handleConnect } =
+    useProfileHeaderActions(user);
   const {
     avatarRef,
     bannerRef,
@@ -45,9 +41,16 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
           onMouseLeave={() => setHoveringBanner(false)}
         >
           {user.banner ? (
-            <img src={resolveCdnUrl(user.banner)} alt="" className="h-40 w-full object-cover sm:h-52" />
+            <img
+              src={resolveCdnUrl(user.banner)}
+              alt=""
+              className="h-40 w-full object-cover sm:h-52"
+            />
           ) : (
-            <div className="h-40 w-full sm:h-52" style={{ background: "var(--gradient-primary)" }} />
+            <div
+              className="h-40 w-full sm:h-52"
+              style={{ background: "var(--gradient-primary)" }}
+            />
           )}
           {isOwnProfile && hoveringBanner && (
             <button
@@ -56,7 +59,11 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               className="absolute inset-0 flex items-center justify-center bg-black/30 text-white transition"
               disabled={bannerUpload.status === "uploading"}
             >
-              {bannerUpload.status === "uploading" ? texts.common.sending : <Camera className="h-6 w-6" />}
+              {bannerUpload.status === "uploading" ? (
+                texts.common.sending
+              ) : (
+                <Camera className="h-6 w-6" />
+              )}
             </button>
           )}
           <input
@@ -107,7 +114,9 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               {isOwnProfile ? (
                 <EditProfileDialog profile={user}>
                   <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                    <Settings className="h-4 w-4" /><>{texts.profile.editProfile}</>
+                    <Settings className="h-4 w-4" />
+
+                    <>{texts.profile.editProfile}</>
                   </Button>
                 </EditProfileDialog>
               ) : (
@@ -118,8 +127,11 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                     className="rounded-full gap-1.5"
                     onClick={handleMessage}
                   >
-                    <MessageCircle className="h-4 w-4" /><>{texts.profile.message}</>
+                    <MessageCircle className="h-4 w-4" />
+
+                    <>{texts.profile.message}</>
                   </Button>
+
                   <Button
                     size="sm"
                     className="rounded-full gap-1.5"
@@ -157,16 +169,22 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                 </span>
               )}
             </div>
+
             <p className="mt-1 break-words text-[14px] font-light text-primary">{user.headline}</p>
+
             <p className="mt-3 flex flex-wrap items-center gap-4 text-[13px] font-light text-text-subtle">
               {user.company && (
                 <span className="inline-flex items-center gap-1.5">
-                  <Briefcase className="h-4 w-4" /><>{user.company}</>
+                  <Briefcase className="h-4 w-4" />
+
+                  <>{user.company}</>
                 </span>
               )}
               {user.location && (
                 <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" /><>{user.location}</>
+                  <MapPin className="h-4 w-4" />
+
+                  <>{user.location}</>
                 </span>
               )}
               <span>{texts.profile.connectionsMeta(user.connectionsCount ?? 0)}</span>

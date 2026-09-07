@@ -18,8 +18,7 @@ export default {
     },
     schema: [],
     messages: {
-      reexport:
-        "Do not re-export declarations. Import directly from the canonical source instead.",
+      reexport: "Do not re-export declarations. Import directly from the canonical source instead.",
     },
   },
 

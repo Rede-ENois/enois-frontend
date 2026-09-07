@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
-
-import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { ErrorBannerProps } from "@/types/components/error-banner/error-banner-props";
 import { describeError } from "@/utils/describe-error";
+import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
+
+import { ApiError } from "@/lib/api-client";
 
 const KNOWN_CODES: Record<string, string> = texts.errors.knownCodes;
 
@@ -38,8 +38,10 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
       <div className="flex items-start justify-between gap-3">
         <p className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+
           <span>{message}</span>
         </p>
+
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
@@ -66,7 +68,9 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
               onClick={copy}
               className="inline-flex items-center gap-1 font-medium text-destructive transition hover:underline"
             >
-              <Copy className="h-3 w-3" /><>{copied ? texts.errors.details.copied : texts.errors.details.copy}</>
+              <Copy className="h-3 w-3" />
+
+              <>{copied ? texts.errors.details.copied : texts.errors.details.copy}</>
             </button>
           )}
         </div>

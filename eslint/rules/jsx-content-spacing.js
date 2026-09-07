@@ -21,9 +21,7 @@ function hasMeaningfulContent(node) {
     }
 
     return (
-      child.type === "JSXElement" ||
-      child.type === "JSXFragment" ||
-      child.type === "JSXSpreadChild"
+      child.type === "JSXElement" || child.type === "JSXFragment" || child.type === "JSXSpreadChild"
     );
   });
 }

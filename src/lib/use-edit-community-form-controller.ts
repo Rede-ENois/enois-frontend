@@ -2,11 +2,12 @@ import { useCallback, useRef, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
+import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
+
 import { updateCommunity as updateCommunityRequest } from "@/lib/api/communities/update-community";
 import { useImageCropUpload } from "@/lib/use-image-crop-upload";
 import { useMediaUpload } from "@/lib/use-media-upload";
-import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
-import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
 
 export function useEditCommunityFormController({ community, onClose }: EditCommunityFormProps) {
   const queryClient = useQueryClient();

@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 
 import { navigationItems } from "@/constants/navigation-items";
-import { cn } from "@/lib/utils";
 import type { NavigationLinksProps } from "@/types/components/navigation/navigation-links-props";
+
+import { cn } from "@/lib/utils";
 
 export function NavigationLinks({
   collapsed = false,
@@ -40,6 +41,7 @@ export function NavigationLinks({
                 active && "text-primary",
               )}
             />
+
             <span className="whitespace-nowrap transition-all duration-300 group-data-[collapsed=true]/navigation:w-0 group-data-[collapsed=true]/navigation:overflow-hidden group-data-[collapsed=true]/navigation:opacity-0">
               {item.label}
             </span>

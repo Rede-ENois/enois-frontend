@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils";
 import type { BadgeProps } from "@/types/components/ui/badge-props";
+
+import { cn } from "@/lib/utils";
 
 import { badgeVariants } from "./badge-variants";
 

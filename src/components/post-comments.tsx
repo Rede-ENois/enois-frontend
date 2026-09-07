@@ -1,25 +1,22 @@
 import { type FormEvent } from "react";
 
+import { texts } from "@/texts";
+import type { PostCommentsProps } from "@/types/components/post/post-comments-props";
 import { Send } from "lucide-react";
 
 import { usePostComments } from "@/lib/use-post-comments";
-import { texts } from "@/texts";
-import type { PostCommentsProps } from "@/types/components/post/post-comments-props";
+
+import { Button } from "@/components/ui/button";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 import { CommentItem } from "@/components/post-comment-item";
-import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function PostComments({ postId, visible }: PostCommentsProps) {
-  const {
-    currentUser,
-    draft,
-    localComments,
-    loaded,
-    submitComment,
-    updateDraft,
-  } = usePostComments(postId, visible);
+  const { currentUser, draft, localComments, loaded, submitComment, updateDraft } = usePostComments(
+    postId,
+    visible,
+  );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,9 +41,7 @@ export function PostComments({ postId, visible }: PostCommentsProps) {
                     const parentAuthor = localComments.find(
                       (candidate) => candidate.id === reply.parentCommentId,
                     )?.authorName;
-                    return (
-                      <CommentItem key={reply.id} comment={reply} replyingTo={parentAuthor} />
-                    );
+                    return <CommentItem key={reply.id} comment={reply} replyingTo={parentAuthor} />;
                   })}
                 </div>
               )}
@@ -66,6 +61,7 @@ export function PostComments({ postId, visible }: PostCommentsProps) {
           alt={currentUser?.name}
           className="h-8 w-8 shrink-0"
         />
+
         <div className="flex flex-1 items-center gap-2 rounded-full border border-border-soft bg-surface-1 py-1.5 pl-4 pr-1.5">
           <MentionTextarea
             value={draft}
@@ -74,6 +70,7 @@ export function PostComments({ postId, visible }: PostCommentsProps) {
             className="h-6 min-h-6 flex-1 resize-none border-0 bg-transparent p-0 text-[13px] font-light outline-none"
             maxLength={280}
           />
+
           <Button
             type="submit"
             size="icon"

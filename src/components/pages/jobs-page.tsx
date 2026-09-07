@@ -1,7 +1,7 @@
+import { texts } from "@/texts";
 import { Loader2 } from "lucide-react";
 
 import { useJobsPageController } from "@/lib/use-jobs-page-controller";
-import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
 import { InfiniteScroll } from "@/components/infinite-scroll";
@@ -9,15 +9,8 @@ import { JobCard } from "@/components/job-card";
 import { JobsFilters } from "@/components/jobs-filters";
 
 export function Vagas() {
-  const {
-    filters,
-    allJobs,
-    isFetching,
-    nextCursor,
-    setFilter,
-    clearFilters,
-    loadMore,
-  } = useJobsPageController();
+  const { filters, allJobs, isFetching, nextCursor, setFilter, clearFilters, loadMore } =
+    useJobsPageController();
 
   return (
     <AppContainer>

@@ -2,10 +2,10 @@
 
 import type { ElementType } from "react";
 
+import type { AvatarProps } from "@/types/components/ui/avatar-props";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
-import type { AvatarProps } from "@/types/components/ui/avatar-props";
 
 const avatarPrimitives = {
   root: AvatarPrimitive.Root,

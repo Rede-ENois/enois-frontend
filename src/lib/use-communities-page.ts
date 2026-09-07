@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { Community } from "@/types/application/community/community";
+import type { CommunityTopic } from "@/types/application/community/community-topic";
+
 import { listCommunities } from "@/lib/api/communities";
 import { joinCommunity } from "@/lib/api/communities/join-community";
 import { leaveCommunity } from "@/lib/api/communities/leave-community";
-import type { Community } from "@/types/application/community/community";
-import type { CommunityTopic } from "@/types/application/community/community-topic";
 
 export function useCommunitiesPage(isDetail: boolean) {
   const queryClient = useQueryClient();

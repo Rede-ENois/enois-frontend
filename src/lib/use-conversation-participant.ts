@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import type { Conversation } from "@/types/application/message/conversation";
+
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 
 export function useConversationParticipant(
   conversation: Conversation | null,

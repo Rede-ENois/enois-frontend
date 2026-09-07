@@ -19,20 +19,23 @@ export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLa
           aria-hidden
           className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl"
         />
-
         <AppBrand variant="auth-desktop" />
 
         <div className="relative max-w-md">
           <p className="text-sm font-medium uppercase tracking-wider text-primary-foreground/80">
             {texts.auth.hero.eyebrow}
           </p>
+
           <h2 className="mt-3 text-4xl font-semibold leading-tight tracking-tight">
             {texts.auth.hero.quote}
           </h2>
+
           <div className="mt-6 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary-foreground/25" />
+
             <div>
               <p className="font-medium">{texts.auth.hero.person}</p>
+
               <p className="text-sm text-primary-foreground/75">{texts.auth.hero.role}</p>
             </div>
           </div>
@@ -42,6 +45,7 @@ export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLa
           {texts.auth.hero.stats.map((stat) => (
             <div key={stat.label}>
               <p className="text-2xl font-semibold">{stat.value}</p>
+
               <p className="text-primary-foreground/75">{stat.label}</p>
             </div>
           ))}

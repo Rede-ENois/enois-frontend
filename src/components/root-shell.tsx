@@ -8,6 +8,7 @@ export function RootShell({ children }: WithRequiredChildren) {
       <head>
         <HeadContent />
       </head>
+
       <body>
         {children}
         <Scripts />

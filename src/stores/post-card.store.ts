@@ -1,7 +1,6 @@
-import { create } from "zustand";
-
 import type { PostCardState } from "@/types/stores/post-card-state";
 import type { PostCardStore } from "@/types/stores/post-card-store";
+import { create } from "zustand";
 
 const pendingDisposals = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -73,9 +72,13 @@ export const usePostCardStore = create<PostCardStore>()((set) => {
         cards: updateCard(state.cards, postId, (card) => ({ ...card, commentMentions })),
       })),
     setReplyToId: (postId, replyToId) =>
-      set((state) => ({ cards: updateCard(state.cards, postId, (card) => ({ ...card, replyToId })) })),
+      set((state) => ({
+        cards: updateCard(state.cards, postId, (card) => ({ ...card, replyToId })),
+      })),
     setComments: (postId, localComments) =>
-      set((state) => ({ cards: updateCard(state.cards, postId, (card) => ({ ...card, localComments })) })),
+      set((state) => ({
+        cards: updateCard(state.cards, postId, (card) => ({ ...card, localComments })),
+      })),
     addComment: (postId, comment) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({

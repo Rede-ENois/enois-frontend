@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createMentor as createMentorRequest } from "@/lib/api/mentors/create-mentor";
 import { texts } from "@/texts";
+
+import { createMentor as createMentorRequest } from "@/lib/api/mentors/create-mentor";
 
 export function useRegisterMentorDialogController() {
   const queryClient = useQueryClient();

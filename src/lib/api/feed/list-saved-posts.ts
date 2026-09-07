@@ -5,8 +5,5 @@ import { buildQuery } from "@/utils/build-query";
 import { apiRequest } from "@/lib/api-request";
 
 export function listSavedPosts(cursor?: string | null, limit = 20) {
-  return apiRequest<PageResponse<PostView>>(
-    "GET",
-    `/feed/saved${buildQuery({ cursor, limit })}`,
-  );
+  return apiRequest<PageResponse<PostView>>("GET", `/feed/saved${buildQuery({ cursor, limit })}`);
 }

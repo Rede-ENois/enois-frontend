@@ -3,11 +3,12 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
-import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
-import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { Profile } from "@/types/application/profile/profile";
 import type { EditProfileValues } from "@/types/components/profile/edit-profile-values";
+
+import { ApiError } from "@/lib/api-client";
+import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
 
 export function useEditProfileInfo(profile: Profile, onSaved: () => void) {
   const queryClient = useQueryClient();

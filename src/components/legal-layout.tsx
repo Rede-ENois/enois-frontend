@@ -23,10 +23,12 @@ export function LegalLayout({ children }: WithRequiredChildren) {
       <footer className="border-t border-border py-6">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 text-xs text-muted-foreground sm:px-6">
           <p>{texts.legal.footer.copyright(new Date().getFullYear())}</p>
+
           <nav className="flex items-center gap-4">
             <Link to="/termos" className="transition-colors hover:text-foreground">
               {texts.legal.footer.terms}
             </Link>
+
             <Link to="/privacidade" className="transition-colors hover:text-foreground">
               {texts.legal.footer.privacy}
             </Link>

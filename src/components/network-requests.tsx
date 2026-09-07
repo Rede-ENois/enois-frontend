@@ -1,5 +1,6 @@
-import { useNetworkRequestsController } from "@/lib/use-network-requests-controller";
 import { texts } from "@/texts";
+
+import { useNetworkRequestsController } from "@/lib/use-network-requests-controller";
 
 import { RequestCard } from "@/components/network-request-card";
 
@@ -13,6 +14,7 @@ export function NetworkRequests() {
     <section>
       <div className="mb-3">
         <h2 className="text-lg font-semibold">{texts.network.pendingTitle}</h2>
+
         <p className="text-sm text-muted-foreground">
           {texts.network.pendingCount(incomingRequests.length + outgoingRequests.length)}
         </p>

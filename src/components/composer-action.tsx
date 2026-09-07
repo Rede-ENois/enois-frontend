@@ -12,6 +12,7 @@ export function ComposerAction({ icon: Icon, label, active, onClick }: ComposerA
       }`}
     >
       <Icon className="h-3.5 w-3.5" />
+
       <>{label}</>
     </button>
   );

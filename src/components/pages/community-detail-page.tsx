@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
 import { ArrowLeft } from "lucide-react";
 
 import { useCommunityDetailData } from "@/lib/use-community-detail-data";
-import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
 import { CommunityComposer } from "@/components/community-composer";
@@ -21,7 +21,9 @@ export function CommunityDetail() {
           to="/comunidades"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /><>{texts.communities.title}</>
+          <ArrowLeft className="h-4 w-4" />
+
+          <>{texts.communities.title}</>
         </Link>
 
         <CommunityHeader community={community} members={members} />

@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
-
-import { cn } from "@/lib/utils";
 import { hydratePreferences } from "@/stores/hydrate-preferences";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 import { NavigationLinks } from "./navigation-links";
 
@@ -29,7 +29,9 @@ export function AppSidebar() {
         <button
           onClick={toggleSidebar}
           className="mb-1 grid h-8 w-8 place-items-center self-end rounded-lg text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-          aria-label={sidebarCollapsed ? texts.navigation.expandMenu : texts.navigation.collapseMenu}
+          aria-label={
+            sidebarCollapsed ? texts.navigation.expandMenu : texts.navigation.collapseMenu
+          }
           title={sidebarCollapsed ? texts.navigation.expandMenu : texts.navigation.collapseMenu}
         >
           {sidebarCollapsed ? (

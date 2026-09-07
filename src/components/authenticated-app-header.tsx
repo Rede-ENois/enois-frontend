@@ -1,18 +1,18 @@
 import { Link } from "@tanstack/react-router";
 
+import { useAppShellStore } from "@/stores/app-shell.store";
+import { texts } from "@/texts";
 import { Menu } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/get-current-user";
-import { useAppShellStore } from "@/stores/app-shell.store";
-import { texts } from "@/texts";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 
 import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
-import { NotificationsPopover } from "./notifications-popover";
 import { GlobalSearch } from "./global-search";
+import { NotificationsPopover } from "./notifications-popover";
 
 export function AuthenticatedAppHeader() {
   const openMobileNavigation = useAppShellStore((state) => state.openMobileNavigation);
@@ -41,7 +41,10 @@ export function AuthenticatedAppHeader() {
             className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-surface-2"
           >
             <UserAvatar src={profile.avatar} alt={profile.name} className="h-8 w-8" />
-            <span className="hidden text-[13px] font-light text-text-strong sm:inline">{texts.common.profile}</span>
+
+            <span className="hidden text-[13px] font-light text-text-strong sm:inline">
+              {texts.common.profile}
+            </span>
           </Link>
         )}
       </div>

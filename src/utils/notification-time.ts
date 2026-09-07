@@ -6,7 +6,5 @@ export function formatNotificationTime(iso: string | null | undefined): string {
 
   const date = parseISO(iso);
 
-  return isValid(date)
-    ? formatDistanceToNow(date, { addSuffix: true, locale: ptBR })
-    : "";
+  return isValid(date) ? formatDistanceToNow(date, { addSuffix: true, locale: ptBR }) : "";
 }

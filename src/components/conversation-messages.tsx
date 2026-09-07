@@ -55,6 +55,7 @@ export function ConversationMessages({
                   }`}
                 >
                   <p className="break-words">{message.text}</p>
+
                   <p
                     className={`mt-1 text-[10px] ${
                       isMe ? "text-primary-foreground/70" : "text-muted-foreground"

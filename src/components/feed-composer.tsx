@@ -1,12 +1,13 @@
+import { texts } from "@/texts";
 import { BarChart3, Calendar, FileText, Film, Image, Loader2 } from "lucide-react";
 
 import { useFeedComposerController } from "@/lib/use-feed-composer-controller";
-import { texts } from "@/texts";
+
+import { Button } from "@/components/ui/button";
 
 import { ComposerAction } from "@/components/composer-action";
 import { FeedComposerMediaPreview } from "@/components/feed-composer-media-preview";
 import { MentionTextarea } from "@/components/mention-textarea";
-import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedComposer() {
@@ -48,7 +49,6 @@ export function FeedComposer() {
       </div>
 
       <FeedComposerMediaPreview media={media} onRemove={removeMedia} />
-
       <input
         ref={fileRef}
         type="file"
@@ -97,6 +97,7 @@ export function FeedComposer() {
             onClick={() => fileRef.current?.click()}
           />
         </div>
+
         <div className="flex items-center gap-2">
           {publishError && (
             <p className="max-w-[200px] truncate text-[12px] font-light text-destructive">
@@ -116,6 +117,7 @@ export function FeedComposer() {
             {createPostPending || upload.status === "uploading" ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
+
                 <>
                   {upload.status === "uploading" ? texts.common.sending : texts.common.publishing}
                 </>

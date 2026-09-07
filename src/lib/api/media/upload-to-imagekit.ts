@@ -1,5 +1,5 @@
-import { resolveCdnUrl } from "@/lib/api/media";
 import { getImageKitAuth } from "@/lib/api/imagekit-auth.fn";
+import { resolveCdnUrl } from "@/lib/api/media";
 
 const IMAGEKIT_PUBLIC_KEY =
   import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY ?? "public_0Y+bnNURFVY+XZuqyCWQGafHo/0=";

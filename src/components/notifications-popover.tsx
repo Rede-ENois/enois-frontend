@@ -1,13 +1,13 @@
+import { texts } from "@/texts";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
-
 import { Bell, CheckCheck } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { useNotificationsPopover } from "@/lib/use-notifications-popover";
-import { texts } from "@/texts";
+import { cn } from "@/lib/utils";
+
+import { PopoverContent } from "@/components/ui/popover-content";
 
 import { NotificationItem } from "@/components/notification-item";
-import { PopoverContent } from "@/components/ui/popover-content";
 
 export function NotificationsPopover() {
   const notifications = useNotificationsPopover();
@@ -39,7 +39,9 @@ export function NotificationsPopover() {
         className="w-[min(calc(100vw-2rem),24rem)] overflow-hidden rounded-2xl border-border-soft bg-surface-card p-0 shadow-card"
       >
         <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
-          <span className="text-[14px] font-light text-text-strong">{texts.notifications.title}</span>
+          <span className="text-[14px] font-light text-text-strong">
+            {texts.notifications.title}
+          </span>
           {notifications.unreadCount > 0 && notifications.notificationTab === "novas" && (
             <button
               type="button"
@@ -47,6 +49,7 @@ export function NotificationsPopover() {
               className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-light text-text-subtle transition hover:text-primary"
             >
               <CheckCheck className="h-3 w-3" />
+
               <>{texts.notifications.markAllRead}</>
             </button>
           )}

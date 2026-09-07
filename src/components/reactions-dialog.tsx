@@ -1,13 +1,14 @@
-import { Root as Dialog } from "@radix-ui/react-dialog";
-
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { useReactionsDialogData } from "@/lib/use-reactions-dialog-data";
 import { texts } from "@/texts";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
+import { Root as Dialog } from "@radix-ui/react-dialog";
+
+import { useReactionsDialogData } from "@/lib/use-reactions-dialog-data";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";
 import { DialogTitle } from "@/components/ui/dialog-title";
+
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ReactionsDialog({ postId }: PostIdProps) {
@@ -33,11 +34,13 @@ export function ReactionsDialog({ postId }: PostIdProps) {
                   className="flex items-center gap-3 rounded-xl bg-surface-1 p-3"
                 >
                   <UserAvatar src={user?.avatar} alt={user?.name} className="h-9 w-9 shrink-0" />
+
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-light text-text-strong">
                       {user?.name ?? texts.common.loading}
                     </p>
                   </div>
+
                   <span className="text-xl">{REACTION_EMOJIS[reaction.type] ?? reaction.type}</span>
                 </div>
               );

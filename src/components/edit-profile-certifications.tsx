@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+import type { Certification } from "@/types/application/profile/certification";
+import type { CertificationRequest } from "@/types/application/profile/certification-request";
+
 import { createCertification } from "@/lib/api/profile/certifications/create-certification";
 import { deleteCertification } from "@/lib/api/profile/certifications/delete-certification";
 import { listCertifications } from "@/lib/api/profile/certifications/list-certifications";
 import { updateCertification } from "@/lib/api/profile/certifications/update-certification";
-import { texts } from "@/texts";
-import type { CertificationRequest } from "@/types/application/profile/certification-request";
-import type { Certification } from "@/types/application/profile/certification";
 
 import { SubList } from "@/components/edit-profile-sub-list";
 

@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import { searchContent } from "@/lib/api/search";
 import type { SearchResult } from "@/types/application/search/search-result";
 import { navigateToHref } from "@/utils/navigation";
+
+import { searchContent } from "@/lib/api/search";
 
 export function useGlobalSearch() {
   const navigate = useNavigate();

@@ -1,13 +1,14 @@
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
+import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
 import { Calendar, Star } from "lucide-react";
 
 import { useMentorCardProfile } from "@/lib/use-mentor-card-profile";
-import { texts } from "@/texts";
-import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
 import { UserAvatar } from "@/components/user-avatar";
 
 export function MentorCard({ mentor }: MentorCardProps) {
@@ -34,6 +35,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
           >
             {user?.name ?? texts.mentoring.mentorFallback}
           </Link>
+
           <p className="line-clamp-2 text-xs text-muted-foreground">{user?.headline ?? ""}</p>
         </div>
 
@@ -62,22 +64,33 @@ export function MentorCard({ mentor }: MentorCardProps) {
         <dl className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-3 text-xs">
           <div>
             <dt className="text-muted-foreground">{texts.mentoring.rating}</dt>
+
             <dd className="mt-0.5 inline-flex items-center gap-1 font-semibold">
-              <Star className="h-3.5 w-3.5 fill-opportunity text-opportunity" /><>{mentor.rating}</>
+              <Star className="h-3.5 w-3.5 fill-opportunity text-opportunity" />
+
+              <>{mentor.rating}</>
             </dd>
           </div>
+
           <div>
             <dt className="text-muted-foreground">{texts.mentoring.sessions}</dt>
+
             <dd className="mt-0.5 font-semibold">{mentor.sessions}</dd>
           </div>
+
           <div>
             <dt className="text-muted-foreground">{texts.mentoring.investment}</dt>
+
             <dd className="mt-0.5 font-medium">{mentor.price}</dd>
           </div>
+
           <div>
             <dt className="text-muted-foreground">{texts.mentoring.nextSlot}</dt>
+
             <dd className="mt-0.5 inline-flex items-center gap-1 font-medium">
-              <Calendar className="h-3.5 w-3.5" /><>{mentor.nextSlot}</>
+              <Calendar className="h-3.5 w-3.5" />
+
+              <>{mentor.nextSlot}</>
             </dd>
           </div>
         </dl>

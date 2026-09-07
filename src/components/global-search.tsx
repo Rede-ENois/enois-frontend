@@ -1,10 +1,11 @@
+import { texts } from "@/texts";
 import { Loader2, Search } from "lucide-react";
 
 import { useGlobalSearch } from "@/lib/use-global-search";
-import { texts } from "@/texts";
+
+import { Input } from "@/components/ui/input";
 
 import { GlobalSearchResults } from "@/components/global-search-results";
-import { Input } from "@/components/ui/input";
 
 export function GlobalSearch() {
   const {

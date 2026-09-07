@@ -1,7 +1,6 @@
-import { Target } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
+import { Target } from "lucide-react";
 
 import { ProfileSection } from "@/components/profile-section";
 

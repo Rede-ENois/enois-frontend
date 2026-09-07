@@ -9,15 +9,14 @@ export function useImageCropUpload<TPurpose extends string>(
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [cropPurpose, setCropPurpose] = useState<TPurpose | null>(null);
 
-  const handleFileSelect =
-    (purpose: TPurpose) => (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const handleFileSelect = (purpose: TPurpose) => (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      setCropPurpose(purpose);
-      setCropImageSrc(URL.createObjectURL(file));
-      event.target.value = "";
-    };
+    setCropPurpose(purpose);
+    setCropImageSrc(URL.createObjectURL(file));
+    event.target.value = "";
+  };
 
   const clearCrop = useCallback(() => {
     if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);

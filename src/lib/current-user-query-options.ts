@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { CURRENT_USER_QUERY_KEY } from "@/constants/current-user-query-key";
+
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
 
 export function currentUserQueryOptions() {

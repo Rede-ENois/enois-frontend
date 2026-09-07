@@ -6,12 +6,18 @@ import { TabButton } from "@/components/tab-button";
 export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <TabButton variant="feed" active={activeTab === "FOR_YOU"} onClick={() => onTabChange("FOR_YOU")}>
+      <TabButton
+        variant="feed"
+        active={activeTab === "FOR_YOU"}
+        onClick={() => onTabChange("FOR_YOU")}
+      >
         {texts.feed.tabs.forYou}
       </TabButton>
+
       <TabButton variant="feed" active={activeTab === "ALL"} onClick={() => onTabChange("ALL")}>
         {texts.feed.tabs.all}
       </TabButton>
+
       <TabButton
         variant="feed"
         active={activeTab === "FOLLOWING"}
@@ -19,9 +25,15 @@ export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
       >
         {texts.feed.tabs.following}
       </TabButton>
-      <TabButton variant="feed" active={activeTab === "RECENT"} onClick={() => onTabChange("RECENT")}>
+
+      <TabButton
+        variant="feed"
+        active={activeTab === "RECENT"}
+        onClick={() => onTabChange("RECENT")}
+      >
         {texts.feed.tabs.discussions}
       </TabButton>
+
       <TabButton
         variant="feed"
         active={activeTab === "PROJECTS"}

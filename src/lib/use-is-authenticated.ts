@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 
-import { isAuthenticated } from "@/lib/is-authenticated";
 import { subscribeAuthSessionChange } from "@/lib/auth-session/subscribe-auth-session-change";
+import { isAuthenticated } from "@/lib/is-authenticated";
 
 const getServerSnapshot = () => false;
 

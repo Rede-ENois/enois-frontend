@@ -1,3 +1,4 @@
+import { texts } from "@/texts";
 import {
   Bookmark,
   Briefcase,
@@ -8,8 +9,6 @@ import {
   MessageCircle,
   Users,
 } from "lucide-react";
-
-import { texts } from "@/texts";
 
 export const navigationItems = [
   { to: "/feed", label: texts.navigation.items.feed, icon: Home },

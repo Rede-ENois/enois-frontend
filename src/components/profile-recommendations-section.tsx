@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 import { Star } from "lucide-react";
 
 import { listReceivedRecommendations } from "@/lib/api/recommendations";
-import { texts } from "@/texts";
-import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 
 import { ProfileRecommendationItem } from "@/components/profile-recommendation-item";
 import { ProfileSection } from "@/components/profile-section";

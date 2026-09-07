@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
+import type { ConversationHeaderProps } from "@/types/components/messages/conversation-header-props";
 import { ArrowLeft } from "lucide-react";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { texts } from "@/texts";
-import type { ConversationHeaderProps } from "@/types/components/messages/conversation-header-props";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -35,6 +35,7 @@ export function ConversationHeader({ conversation, onBack }: ConversationHeaderP
         <Link to="/perfil/$username" params={{ username: otherUser?.username ?? otherId ?? "" }}>
           <UserAvatar src={otherUser?.avatar} alt={title} className="h-10 w-10 shrink-0" />
         </Link>
+
         <div className="min-w-0">
           <p className="truncate font-semibold">{title}</p>
           {otherUser?.headline && (

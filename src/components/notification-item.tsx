@@ -1,10 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
 import type { NotificationItemProps } from "@/types/components/notification/notification-item-props";
-import { formatNotificationTime } from "@/utils/notification-time";
 import { navigateToHref } from "@/utils/navigation";
+import { formatNotificationTime } from "@/utils/notification-time";
+
+import { cn } from "@/lib/utils";
 
 import { notificationMeta } from "./notification-meta";
 
@@ -67,7 +68,9 @@ export function NotificationItem({
               {notification.actorName && <span>{notification.actorName} </span>}
               <span className="text-text-subtle">{notification.title.toLowerCase()}</span>
             </p>
-            {!notification.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
+            {!notification.read && (
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+            )}
           </div>
 
           <p className="mt-1 break-words text-[13px] font-light leading-snug text-text-subtle">

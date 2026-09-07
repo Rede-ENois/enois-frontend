@@ -2,11 +2,12 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { Community } from "@/types/application/community/community";
+import type { CommunityMember } from "@/types/application/community/community-member";
+
 import { joinCommunity } from "@/lib/api/communities/join-community";
 import { leaveCommunity } from "@/lib/api/communities/leave-community";
 import { useAuth } from "@/lib/use-auth";
-import type { CommunityMember } from "@/types/application/community/community-member";
-import type { Community } from "@/types/application/community/community";
 
 export function useCommunityHeaderController(community: Community, members: CommunityMember[]) {
   const queryClient = useQueryClient();

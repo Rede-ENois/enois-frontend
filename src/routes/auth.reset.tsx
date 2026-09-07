@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { z } from "zod";
-
 import { texts } from "@/texts";
+import { z } from "zod";
 
 import { ResetPassword } from "@/components/pages/reset-password-page";
 

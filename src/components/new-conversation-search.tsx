@@ -2,15 +2,16 @@ import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+import type { NewConversationSearchProps } from "@/types/components/messages/new-conversation-search-props";
 import { Search } from "lucide-react";
 
 import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
 import { listNetworkUsers } from "@/lib/api/network";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { texts } from "@/texts";
-import type { NewConversationSearchProps } from "@/types/components/messages/new-conversation-search-props";
 
 import { Input } from "@/components/ui/input";
+
 import { UserAvatar } from "@/components/user-avatar";
 
 export function NewConversationSearch({ onSelect, onClose }: NewConversationSearchProps) {
@@ -63,8 +64,10 @@ export function NewConversationSearch({ onSelect, onClose }: NewConversationSear
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-muted"
               >
                 <UserAvatar src={user.avatar} alt={user.name} className="h-10 w-10" />
+
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{user.name}</p>
+
                   <p className="truncate text-xs text-muted-foreground">{user.headline}</p>
                 </div>
               </button>

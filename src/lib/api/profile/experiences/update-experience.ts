@@ -1,5 +1,5 @@
-import type { ExperienceRequest } from "@/types/application/profile/experience-request";
 import type { Experience } from "@/types/application/profile/experience";
+import type { ExperienceRequest } from "@/types/application/profile/experience-request";
 
 import { apiRequest } from "@/lib/api-request";
 

@@ -33,8 +33,10 @@ export function LinkPreviews({ content }: Pick<PostView, "content">) {
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-xs font-bold text-primary">
               {link.initials}
             </div>
+
             <div className="min-w-0">
               <p className="truncate font-normal text-text-strong">{link.hostname}</p>
+
               <p className="truncate text-[11px] font-light text-text-subtle">{url}</p>
             </div>
           </a>

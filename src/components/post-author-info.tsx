@@ -23,6 +23,7 @@ export function AuthorInfo({
           className="h-11 w-11"
         />
       </Link>
+
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <Link
@@ -32,6 +33,7 @@ export function AuthorInfo({
           >
             {authorName}
           </Link>
+
           <span className="text-[12px] font-light text-text-date">
             {texts.posts.authorTime(formatRelativeTime(createdAt))}
           </span>

@@ -1,19 +1,15 @@
-import { useActiveConversation } from "@/lib/use-active-conversation";
 import { texts } from "@/texts";
 import type { ActiveConversationProps } from "@/types/components/messages/active-conversation-props";
+
+import { useActiveConversation } from "@/lib/use-active-conversation";
 
 import { ConversationComposer } from "@/components/conversation-composer";
 import { ConversationHeader } from "@/components/conversation-header";
 import { ConversationMessages } from "@/components/conversation-messages";
 
 export function ActiveConversation({ conversationId, onBack }: ActiveConversationProps) {
-  const {
-    currentUserId,
-    activeConversation,
-    activeMessages,
-    otherParticipantId,
-    otherUser,
-  } = useActiveConversation(conversationId);
+  const { currentUserId, activeConversation, activeMessages, otherParticipantId, otherUser } =
+    useActiveConversation(conversationId);
 
   return (
     <div className={`flex min-h-0 flex-col ${!activeConversation ? "hidden md:flex" : "flex"}`}>

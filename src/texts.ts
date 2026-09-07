@@ -232,7 +232,8 @@ export const texts = {
         },
         collaboration: {
           title: "Colaboração",
-          description: "Um ambiente onde o sucesso é construído em conjunto, não às custas de outros.",
+          description:
+            "Um ambiente onde o sucesso é construído em conjunto, não às custas de outros.",
         },
         learning: {
           title: "Aprendizado",
@@ -561,7 +562,21 @@ export const texts = {
       IN_PERSON: "Presencial",
       HYBRID: "Híbrido",
     },
-    months: ["", "JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"],
+    months: [
+      "",
+      "JAN",
+      "FEV",
+      "MAR",
+      "ABR",
+      "MAI",
+      "JUN",
+      "JUL",
+      "AGO",
+      "SET",
+      "OUT",
+      "NOV",
+      "DEZ",
+    ],
     hostedBy: (host: string) => `por ${host}`,
     dateTime: (date: string, time: string) => `${date} · ${time}`,
     attend: "Confirmar presença",
@@ -618,7 +633,8 @@ export const texts = {
     nextSlot: "Próxima vaga",
     editTitle: "Editar mentoria",
     deleteTitle: "Excluir mentoria",
-    deleteDescription: "Tem certeza que deseja excluir sua mentoria? Esta ação não pode ser desfeita.",
+    deleteDescription:
+      "Tem certeza que deseja excluir sua mentoria? Esta ação não pode ser desfeita.",
     deleting: "Excluindo...",
     delete: "Excluir",
   },
@@ -671,7 +687,8 @@ export const texts = {
     seoTitle: "Posts salvos · Énóis",
     back: "Voltar",
     title: "Posts salvos",
-    count: (count: number) => `${count} post${count === 1 ? "" : "s"} salvo${count === 1 ? "" : "s"}`,
+    count: (count: number) =>
+      `${count} post${count === 1 ? "" : "s"} salvo${count === 1 ? "" : "s"}`,
     empty: "Nenhum post salvo ainda. Salve posts para encontrá-los facilmente depois.",
   },
 

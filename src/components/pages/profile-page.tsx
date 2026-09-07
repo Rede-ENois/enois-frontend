@@ -27,6 +27,7 @@ export function Profile() {
           <ProfileSidebar user={user} />
         </div>
       </div>
+
       <div className="h-4 lg:hidden" />
     </AppContainer>
   );

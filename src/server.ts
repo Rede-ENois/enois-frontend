@@ -1,6 +1,6 @@
+import { renderErrorPage } from "@/lib/error-page";
 import { getServerEntry } from "@/lib/get-server-entry";
 import { normalizeCatastrophicSsrResponse } from "@/lib/normalize-catastrophic-ssr-response";
-import { renderErrorPage } from "@/lib/error-page";
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {

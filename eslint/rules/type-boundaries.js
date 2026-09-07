@@ -18,8 +18,7 @@ export default {
     },
     schema: [],
     messages: {
-      declarationOutsideTypes:
-        "Move this {{kind}} declaration to its own file under src/types/**.",
+      declarationOutsideTypes: "Move this {{kind}} declaration to its own file under src/types/**.",
       multipleDeclarations:
         "Keep exactly one type/interface declaration per file under src/types/**.",
     },

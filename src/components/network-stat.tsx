@@ -8,6 +8,7 @@ export function Stat({ label, value, highlight }: StatProps) {
       }`}
     >
       <p className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}>{value}</p>
+
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );

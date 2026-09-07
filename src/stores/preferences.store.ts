@@ -1,8 +1,8 @@
+import type { PreferencesStore } from "@/types/stores/preferences-store";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { createPreferencesStorage } from "@/lib/create-preferences-storage";
-import type { PreferencesStore } from "@/types/stores/preferences-store";
 
 const PREFERENCES_STORAGE_KEY = "connect-grow-preferences";
 

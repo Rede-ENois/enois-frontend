@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
+import type { Profile } from "@/types/application/profile/profile";
+
+import { ApiError } from "@/lib/api-client";
 import { connectToUser } from "@/lib/api/network/connect-to-user";
 import { getConnectionStatus } from "@/lib/api/network/get-connection-status";
-import { ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/use-auth";
-import type { Profile } from "@/types/application/profile/profile";
 
 export function useProfileHeaderActions(user: Profile) {
   const { user: me, requireAuth } = useAuth();

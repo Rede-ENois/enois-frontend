@@ -29,6 +29,7 @@ export function EmbedPlayer({ type, id }: EmbedPlayerProps) {
                     ? texts.posts.video.icons.television
                     : texts.posts.video.icons.play}
               </p>
+
               <p className="mt-1 text-[12px] font-light text-text-subtle">
                 {texts.posts.video.watchOn(type === "youtube" ? "YouTube" : type)}
               </p>

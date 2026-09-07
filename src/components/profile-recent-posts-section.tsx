@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listPostsByUserId } from "@/lib/api/feed/list-posts-by-user-id";
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
+
+import { listPostsByUserId } from "@/lib/api/feed/list-posts-by-user-id";
 
 import { PostCard } from "@/components/post-card";
 import { ProfileSection } from "@/components/profile-section";

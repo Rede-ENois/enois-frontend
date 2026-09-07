@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createCommunity as createCommunityRequest } from "@/lib/api/communities/create-community";
 import type { CreateCommunityInput } from "@/types/application/community/create-community-input";
+
+import { createCommunity as createCommunityRequest } from "@/lib/api/communities/create-community";
 
 export function useCreateCommunityDialogController() {
   const queryClient = useQueryClient();

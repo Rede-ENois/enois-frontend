@@ -1,6 +1,5 @@
-import { GraduationCap, Heart, ShieldCheck, Users } from "lucide-react";
-
 import { texts } from "@/texts";
+import { GraduationCap, Heart, ShieldCheck, Users } from "lucide-react";
 
 const values = [
   {
@@ -33,25 +32,35 @@ export function LandingPhilosophy() {
           <p className="text-xs font-medium uppercase tracking-widest text-primary">
             {texts.landing.philosophy.eyebrow}
           </p>
+
           <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            <>{texts.landing.philosophy.titlePrefix}</><span className="gradient-text">{texts.landing.philosophy.titleAccent}</span>
+            <>{texts.landing.philosophy.titlePrefix}</>
+
+            <span className="gradient-text">{texts.landing.philosophy.titleAccent}</span>
           </h2>
+
           <p className="mt-4 text-muted-foreground">{texts.landing.philosophy.description}</p>
         </div>
+
         <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {values.map((value) => (
             <div key={value.title} className="surface-card p-6 text-center">
               <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary">
                 <value.icon className="h-5 w-5" />
               </div>
+
               <h3 className="mt-4 font-semibold">{value.title}</h3>
+
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{value.desc}</p>
             </div>
           ))}
         </div>
+
         <div className="mt-12 text-center">
           <p className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-sm font-medium text-primary">
-            <ShieldCheck className="h-4 w-4" /><>{texts.landing.philosophy.alwaysFree}</>
+            <ShieldCheck className="h-4 w-4" />
+
+            <>{texts.landing.philosophy.alwaysFree}</>
           </p>
         </div>
       </div>

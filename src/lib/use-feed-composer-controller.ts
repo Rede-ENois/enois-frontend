@@ -2,13 +2,14 @@ import { type FormEvent, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+import type { CreatePostInput } from "@/types/application/feed/create-post-input";
+import type { PostView } from "@/types/application/feed/post-view";
+
 import { createPost as createPostRequest } from "@/lib/api/feed/create-post";
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
 import { useFeedComposerMedia } from "@/lib/use-feed-composer-media";
 import { useMediaUpload } from "@/lib/use-media-upload";
-import { texts } from "@/texts";
-import type { CreatePostInput } from "@/types/application/feed/create-post-input";
-import type { PostView } from "@/types/application/feed/post-view";
 
 export function useFeedComposerController() {
   const queryClient = useQueryClient();
