@@ -1,5 +1,5 @@
 import { consumeCapturedError } from "@/lib/error-capture";
-import { renderErrorPage } from "@/lib/error-page";
+import { createErrorPageResponse } from "@/lib/create-error-page-response";
 
 export async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
@@ -13,8 +13,5 @@ export async function normalizeCatastrophicSsrResponse(response: Response): Prom
   }
 
   console.error(consumeCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
-  return new Response(renderErrorPage(), {
-    status: 500,
-    headers: { "content-type": "text/html; charset=utf-8" },
-  });
+  return createErrorPageResponse();
 }

@@ -1,27 +1,14 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { texts } from "@/texts";
-
-import { getCommunity } from "@/lib/api/communities/get-community";
 import { requireAuth } from "@/lib/require-auth";
+import { createCommunityRouteHead } from "@/utils/routes/create-community-route-head";
+import { loadCommunityRoute } from "@/utils/routes/load-community-route";
 
 import { CommunityDetail } from "@/components/pages/community-detail-page";
 
 export const Route = createFileRoute("/comunidades/$communityId")({
   beforeLoad: requireAuth,
-  loader: async ({ params }) => {
-    try {
-      return await getCommunity(params.communityId);
-    } catch {
-      throw notFound();
-    }
-  },
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: `${loaderData?.name ?? texts.communities.detail.seoFallback} · ${texts.brand.name}`,
-      },
-    ],
-  }),
+  loader: ({ params }) => loadCommunityRoute(params.communityId),
+  head: ({ loaderData }) => createCommunityRouteHead(loaderData),
   component: CommunityDetail,
 });

@@ -1,4 +1,4 @@
-import { renderErrorPage } from "@/lib/error-page";
+import { createErrorPageResponse } from "@/lib/create-error-page-response";
 import { getServerEntry } from "@/lib/get-server-entry";
 import { normalizeCatastrophicSsrResponse } from "@/lib/normalize-catastrophic-ssr-response";
 
@@ -10,10 +10,7 @@ export default {
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      return createErrorPageResponse();
     }
   },
 };
