@@ -1,11 +1,6 @@
-import { type FormEvent, useState } from "react";
-
 import { ArrowRight, Loader2 } from "lucide-react";
-import { z } from "zod";
 
-import { login } from "@/lib/api/auth";
-import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
-import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
+import { useLoginFormController } from "@/lib/use-login-form-controller";
 import { texts } from "@/texts";
 import type { LoginFormProps } from "@/types/routes/auth/login-form-props";
 
@@ -17,42 +12,8 @@ import { Input } from "@/components/ui/input";
 import { AuthPasswordInput } from "./auth-password-input";
 import { AuthSocialOptions } from "./auth-social-options";
 
-const loginSchema = z.object({
-  email: z.string().trim().email(texts.auth.validation.invalidEmail).max(255),
-  password: z.string().min(6, texts.auth.validation.loginPasswordMin).max(128),
-});
-
 export function LoginForm({ onDone, onForgot }: LoginFormProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const parsed = loginSchema.safeParse(Object.fromEntries(formData));
-    if (!parsed.success) {
-      const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) next[issue.path[0] as string] = issue.message;
-      setErrors(next);
-      return;
-    }
-
-    setErrors({});
-    setFormError(null);
-    setLoading(true);
-    clearAuthSession();
-
-    try {
-      const result = await login(parsed.data);
-      persistAuthSession(result);
-      onDone();
-    } catch (error) {
-      setFormError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { errors, formError, loading, submit } = useLoginFormController(onDone);
 
   return (
     <div>

@@ -1,11 +1,6 @@
-import { type FormEvent, useState } from "react";
-
 import { ArrowRight, Loader2 } from "lucide-react";
-import { z } from "zod";
 
-import { signup } from "@/lib/api/auth/signup";
-import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
-import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
+import { useSignupFormController } from "@/lib/use-signup-form-controller";
 import { texts } from "@/texts";
 import type { AuthFormProps } from "@/types/routes/auth/auth-form-props";
 
@@ -17,43 +12,8 @@ import { Input } from "@/components/ui/input";
 import { AuthPasswordInput } from "./auth-password-input";
 import { AuthSocialOptions } from "./auth-social-options";
 
-const signupSchema = z.object({
-  name: z.string().trim().min(2, texts.auth.validation.signupNameMin).max(80),
-  email: z.string().trim().email(texts.auth.validation.invalidEmail).max(255),
-  password: z.string().min(8, texts.auth.validation.passwordMin).max(128),
-});
-
 export function SignupForm({ onDone }: AuthFormProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const parsed = signupSchema.safeParse(Object.fromEntries(formData));
-    if (!parsed.success) {
-      const next: Record<string, string> = {};
-      for (const issue of parsed.error.issues) next[issue.path[0] as string] = issue.message;
-      setErrors(next);
-      return;
-    }
-
-    setErrors({});
-    setFormError(null);
-    setLoading(true);
-    clearAuthSession();
-
-    try {
-      const result = await signup(parsed.data);
-      persistAuthSession(result);
-      onDone();
-    } catch (error) {
-      setFormError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { errors, formError, loading, submit } = useSignupFormController(onDone);
 
   return (
     <div>

@@ -1,10 +1,7 @@
-import { type FormEvent, useState } from "react";
-
 import { Root as Dialog } from "@radix-ui/react-dialog";
 import { ArrowRight, Loader2, MailCheck } from "lucide-react";
-import { z } from "zod";
 
-import { forgotPassword } from "@/lib/api/auth/forgot-password";
+import { useForgotPasswordDialogController } from "@/lib/use-forgot-password-dialog-controller";
 import { texts } from "@/texts";
 import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
 
@@ -17,41 +14,11 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 
 export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialogProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
-    if (!z.string().email().safeParse(email).success) {
-      setErrors({ email: texts.auth.validation.invalidEmail });
-      return;
-    }
-
-    setErrors({});
-    setFormError(null);
-    setLoading(true);
-    try {
-      await forgotPassword(email);
-      setSent(true);
-    } catch (error) {
-      setFormError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const close = () => {
-    setSent(false);
-    setErrors({});
-    onOpenChange(false);
-  };
+  const { errors, formError, loading, sent, submit, close, handleOpenChange } =
+    useForgotPasswordDialogController(onOpenChange);
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(nextOpen) : close())}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-semibold tracking-tight">{texts.auth.forgot.title}</DialogTitle>
