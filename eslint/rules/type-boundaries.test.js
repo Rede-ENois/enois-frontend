@@ -42,15 +42,5 @@ ruleTester.run("type-boundaries", typeBoundaries, {
       code: "export type User = { id: string }; export type UserId = string;",
       errors: [{ messageId: "multipleDeclarations" }],
     },
-    {
-      filename: "/repo/src/types/application/user/index.ts",
-      code: 'export type { User } from "./user";',
-      errors: [{ messageId: "typeReexport" }],
-    },
-    {
-      filename: "/repo/src/lib/api.ts",
-      code: 'export { type User } from "../types/application/user/user";',
-      errors: [{ messageId: "typeReexport" }],
-    },
   ],
 });

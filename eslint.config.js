@@ -6,6 +6,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 import jsxContentSpacing from "./eslint/rules/jsx-content-spacing.js";
+import noReexports from "./eslint/rules/no-reexports.js";
 import typeBoundaries from "./eslint/rules/type-boundaries.js";
 
 export default tseslint.config(
@@ -23,6 +24,7 @@ export default tseslint.config(
       local: {
         rules: {
           "jsx-content-spacing": jsxContentSpacing,
+          "no-reexports": noReexports,
           "type-boundaries": typeBoundaries,
         },
       },
@@ -44,6 +46,7 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
       "local/jsx-content-spacing": "error",
+      "local/no-reexports": "error",
       "local/type-boundaries": "error",
     },
   },

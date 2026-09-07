@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test:eslint-rules": "node eslint/rules/jsx-content-spacing.test.js && node eslint/rules/type-boundaries.test.js",
+    "test:eslint-rules": "node eslint/rules/jsx-content-spacing.test.js && node eslint/rules/type-boundaries.test.js && node eslint/rules/no-reexports.test.js",
     "format": "prettier --write ."
   },
   "dependencies": {
