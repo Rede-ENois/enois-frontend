@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import { Menu } from "lucide-react";
 
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentUser } from "@/lib/get-current-user";
 import { useAppShellStore } from "@/stores/app-shell.store";
 import { texts } from "@/texts";
 
