@@ -3,7 +3,7 @@ import { type FormEvent, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { z } from "zod";
 
-import { authApi } from "@/lib/api/auth";
+import { login } from "@/lib/api/auth/login";
 import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
 import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
 import { texts } from "@/texts";
@@ -44,7 +44,7 @@ export function LoginForm({ onDone, onForgot }: LoginFormProps) {
     clearAuthSession();
 
     try {
-      const result = await authApi.login(parsed.data);
+      const result = await login(parsed.data);
       persistAuthSession(result);
       onDone();
     } catch (error) {

@@ -4,7 +4,7 @@ import { Root as Dialog } from "@radix-ui/react-dialog";
 import { ArrowRight, Loader2, MailCheck } from "lucide-react";
 import { z } from "zod";
 
-import { authApi } from "@/lib/api/auth";
+import { forgotPassword } from "@/lib/api/auth/forgot-password";
 import { texts } from "@/texts";
 import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
 
@@ -35,7 +35,7 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
     setFormError(null);
     setLoading(true);
     try {
-      await authApi.forgotPassword(email);
+      await forgotPassword(email);
       setSent(true);
     } catch (error) {
       setFormError(error);

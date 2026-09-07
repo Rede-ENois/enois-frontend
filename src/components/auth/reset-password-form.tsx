@@ -5,7 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { z } from "zod";
 
-import { authApi } from "@/lib/api/auth";
+import { resetPassword } from "@/lib/api/auth/reset-password";
 import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
@@ -43,7 +43,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     setErrors({});
     setLoading(true);
     try {
-      await authApi.resetPassword(token, parsed.data.password);
+      await resetPassword(token, parsed.data.password);
       setDone(true);
     } catch (error) {
       if (error instanceof ApiError) {
