@@ -7,37 +7,29 @@ import type { Experience } from "@/types/application/profile/experience";
 import type { Profile } from "@/types/application/profile/profile";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 
-import { api } from "../api-client";
+import { apiRequest } from "../api-request";
 
 export const profileApi = {
-  me: () => api.get<Profile>("/me"),
-
-  get: (username: string) => api.get<Profile>(`/users/${username}`),
-
-  getById: (id: string) => api.get<Profile>(`/users/by-id/${id}`),
-
-  update: (data: UpdateProfileRequest) => api.patch<Profile>("/me/profile", data),
-
+  me: () => apiRequest<Profile>("GET", "/me"),
+  get: (username: string) => apiRequest<Profile>("GET", `/users/${username}`),
+  getById: (id: string) => apiRequest<Profile>("GET", `/users/by-id/${id}`),
+  update: (data: UpdateProfileRequest) => apiRequest<Profile>("PATCH", "/me/profile", data, { idempotent: true }),
   experiences: {
-    list: () => api.get<Experience[]>("/me/experiences"),
-    create: (data: ExperienceRequest) => api.post<Experience>("/me/experiences", data),
-    update: (id: string, data: ExperienceRequest) =>
-      api.put<Experience>(`/me/experiences/${id}`, data),
-    delete: (id: string) => api.delete<void>(`/me/experiences/${id}`),
+    list: () => apiRequest<Experience[]>("GET", "/me/experiences"),
+    create: (data: ExperienceRequest) => apiRequest<Experience>("POST", "/me/experiences", data, { idempotent: true }),
+    update: (id: string, data: ExperienceRequest) => apiRequest<Experience>("PUT", `/me/experiences/${id}`, data, { idempotent: true }),
+    delete: (id: string) => apiRequest<void>("DELETE", `/me/experiences/${id}`, null, { idempotent: true }),
   },
-
   education: {
-    list: () => api.get<Education[]>("/me/education"),
-    create: (data: EducationRequest) => api.post<Education>("/me/education", data),
-    update: (id: string, data: EducationRequest) => api.put<Education>(`/me/education/${id}`, data),
-    delete: (id: string) => api.delete<void>(`/me/education/${id}`),
+    list: () => apiRequest<Education[]>("GET", "/me/education"),
+    create: (data: EducationRequest) => apiRequest<Education>("POST", "/me/education", data, { idempotent: true }),
+    update: (id: string, data: EducationRequest) => apiRequest<Education>("PUT", `/me/education/${id}`, data, { idempotent: true }),
+    delete: (id: string) => apiRequest<void>("DELETE", `/me/education/${id}`, null, { idempotent: true }),
   },
-
   certifications: {
-    list: () => api.get<Certification[]>("/me/certifications"),
-    create: (data: CertificationRequest) => api.post<Certification>("/me/certifications", data),
-    update: (id: string, data: CertificationRequest) =>
-      api.put<Certification>(`/me/certifications/${id}`, data),
-    delete: (id: string) => api.delete<void>(`/me/certifications/${id}`),
+    list: () => apiRequest<Certification[]>("GET", "/me/certifications"),
+    create: (data: CertificationRequest) => apiRequest<Certification>("POST", "/me/certifications", data, { idempotent: true }),
+    update: (id: string, data: CertificationRequest) => apiRequest<Certification>("PUT", `/me/certifications/${id}`, data, { idempotent: true }),
+    delete: (id: string) => apiRequest<void>("DELETE", `/me/certifications/${id}`, null, { idempotent: true }),
   },
 };

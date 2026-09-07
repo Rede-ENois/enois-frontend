@@ -1,15 +1,9 @@
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { SearchResult } from "@/types/application/search/search-result";
+import { buildQuery } from "@/utils/build-query";
 
-import { api, buildQuery } from "../api-client";
+import { apiRequest } from "../api-request";
 
 export const searchApi = {
-  search: (q: string, types?: SearchResult["type"][], limit = 10) =>
-    api.get<PageResponse<SearchResult>>(
-      `/search${buildQuery({
-        q,
-        types: types?.join(","),
-        limit,
-      })}`,
-    ),
+  search: (q: string, types?: SearchResult["type"][], limit = 10) => apiRequest<PageResponse<SearchResult>>("GET", `/search${buildQuery({ q, types: types?.join(","), limit })}`),
 };

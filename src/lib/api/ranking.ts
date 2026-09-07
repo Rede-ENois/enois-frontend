@@ -1,7 +1,8 @@
 import type { RankingUser } from "@/types/application/ranking/ranking-user";
+import { buildQuery } from "@/utils/build-query";
 
-import { api, buildQuery } from "../api-client";
+import { apiRequest } from "../api-request";
 
 export const rankingApi = {
-  list: (limit = 20) => api.get<RankingUser[]>(`/profile/ranking${buildQuery({ limit })}`),
+  list: (limit = 20) => apiRequest<RankingUser[]>("GET", `/profile/ranking${buildQuery({ limit })}`),
 };

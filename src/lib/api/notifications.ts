@@ -1,13 +1,11 @@
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { Notification } from "@/types/application/notification/notification";
+import { buildQuery } from "@/utils/build-query";
 
-import { api, buildQuery } from "../api-client";
+import { apiRequest } from "../api-request";
 
 export const notificationsApi = {
-  list: (cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<Notification>>(`/notifications${buildQuery({ cursor, limit })}`),
-
-  markAsRead: (notificationId: string) => api.post<void>(`/notifications/${notificationId}/read`),
-
-  markAllAsRead: () => api.post<void>("/notifications/read-all"),
+  list: (cursor?: string | null, limit = 20) => apiRequest<PageResponse<Notification>>("GET", `/notifications${buildQuery({ cursor, limit })}`),
+  markAsRead: (notificationId: string) => apiRequest<void>("POST", `/notifications/${notificationId}/read`, undefined, { idempotent: true }),
+  markAllAsRead: () => apiRequest<void>("POST", "/notifications/read-all", undefined, { idempotent: true }),
 };

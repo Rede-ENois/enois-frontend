@@ -6,28 +6,17 @@ import type { DeleteResult } from "@/types/application/feed/delete-result";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { ReactionsResponse } from "@/types/application/feed/reactions-response";
+import { buildQuery } from "@/utils/build-query";
 
-import { api, buildQuery } from "../api-client";
+import { apiRequest } from "../api-request";
 
 export const feedApi = {
-  list: (cursor?: string | null, limit = 20, tab?: FeedTab) =>
-    api.get<PageResponse<PostView>>(`/feed${buildQuery({ cursor, limit, tab })}`),
-
-  create: (data: CreatePostInput) => api.post<PostView>("/feed/posts", data),
-
-  listByUser: (username: string, cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<PostView>>(`/users/${username}/posts${buildQuery({ cursor, limit })}`),
-
-  listByUserId: (userId: string, cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<PostView>>(`/users/${userId}/posts${buildQuery({ cursor, limit })}`),
-
-  delete: (postId: string) => api.delete<DeleteResult>(`/feed/posts/${postId}`),
-
-  listSaved: (cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<PostView>>(`/feed/saved${buildQuery({ cursor, limit })}`),
-
-  listReactions: (postId: string) => api.get<ReactionsResponse>(`/feed/posts/${postId}/reactions`),
-
-  bulkDelete: (data: BulkDeleteInput) =>
-    api.post<BulkDeleteResult>("/feed/posts/bulk-delete", data),
+  list: (cursor?: string | null, limit = 20, tab?: FeedTab) => apiRequest<PageResponse<PostView>>("GET", `/feed${buildQuery({ cursor, limit, tab })}`),
+  create: (data: CreatePostInput) => apiRequest<PostView>("POST", "/feed/posts", data, { idempotent: true }),
+  listByUser: (username: string, cursor?: string | null, limit = 20) => apiRequest<PageResponse<PostView>>("GET", `/users/${username}/posts${buildQuery({ cursor, limit })}`),
+  listByUserId: (userId: string, cursor?: string | null, limit = 20) => apiRequest<PageResponse<PostView>>("GET", `/users/${userId}/posts${buildQuery({ cursor, limit })}`),
+  delete: (postId: string) => apiRequest<DeleteResult>("DELETE", `/feed/posts/${postId}`, null, { idempotent: true }),
+  listSaved: (cursor?: string | null, limit = 20) => apiRequest<PageResponse<PostView>>("GET", `/feed/saved${buildQuery({ cursor, limit })}`),
+  listReactions: (postId: string) => apiRequest<ReactionsResponse>("GET", `/feed/posts/${postId}/reactions`),
+  bulkDelete: (data: BulkDeleteInput) => apiRequest<BulkDeleteResult>("POST", "/feed/posts/bulk-delete", data, { idempotent: true }),
 };

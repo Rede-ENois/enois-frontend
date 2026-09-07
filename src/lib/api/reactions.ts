@@ -2,35 +2,22 @@ import type { ActionResponse } from "@/types/application/reaction/action-respons
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
 
-import { api } from "../api-client";
+import { apiRequest } from "../api-request";
 
 export const reactionsApi = (() => {
-  const postReaction = (path: string, type: ReactionType) =>
-    api.post<Partial<ActionResponse>>(path, { type });
-  const removeReaction = (path: string) => api.delete<Partial<ActionResponse>>(path);
-  const listReactions = (path: string) => api.get<ReactionsListResponse>(path);
+  const postReaction = (path: string, type: ReactionType) => apiRequest<Partial<ActionResponse>>("POST", path, { type }, { idempotent: true });
+  const removeReaction = (path: string) => apiRequest<Partial<ActionResponse>>("DELETE", path, null, { idempotent: true });
+  const listReactions = (path: string) => apiRequest<ReactionsListResponse>("GET", path);
 
   return {
-    react: (postId: string, type: ReactionType) =>
-      postReaction(`/feed/posts/${postId}/reactions`, type),
-
+    react: (postId: string, type: ReactionType) => postReaction(`/feed/posts/${postId}/reactions`, type),
     removeReaction: (postId: string) => removeReaction(`/feed/posts/${postId}/reactions`),
-
     listReactions: (postId: string) => listReactions(`/feed/posts/${postId}/reactions`),
-
-    reactComment: (postId: string, commentId: string, type: ReactionType) =>
-      postReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`, type),
-
-    removeCommentReaction: (postId: string, commentId: string) =>
-      removeReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`),
-
-    listCommentReactions: (postId: string, commentId: string) =>
-      listReactions(`/feed/posts/${postId}/comments/${commentId}/reactions`),
-
-    save: (postId: string) => api.post<ActionResponse>(`/feed/posts/${postId}/saves`),
-
-    removeSave: (postId: string) => api.delete<ActionResponse>(`/feed/posts/${postId}/saves`),
-
-    share: (postId: string) => api.post<ActionResponse>(`/feed/posts/${postId}/shares`),
+    reactComment: (postId: string, commentId: string, type: ReactionType) => postReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`, type),
+    removeCommentReaction: (postId: string, commentId: string) => removeReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`),
+    listCommentReactions: (postId: string, commentId: string) => listReactions(`/feed/posts/${postId}/comments/${commentId}/reactions`),
+    save: (postId: string) => apiRequest<ActionResponse>("POST", `/feed/posts/${postId}/saves`, undefined, { idempotent: true }),
+    removeSave: (postId: string) => apiRequest<ActionResponse>("DELETE", `/feed/posts/${postId}/saves`, null, { idempotent: true }),
+    share: (postId: string) => apiRequest<ActionResponse>("POST", `/feed/posts/${postId}/shares`, undefined, { idempotent: true }),
   };
 })();
