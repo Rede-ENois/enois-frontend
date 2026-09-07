@@ -69,7 +69,6 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       <p className="mt-6 text-center text-xs text-muted-foreground">
         <>{texts.auth.reset.remembered}</>
 
-        <Link
         <Link to="/entrar" search={{ tab: "login" }} className="text-primary hover:underline">
           {texts.common.enter}
         </Link>
