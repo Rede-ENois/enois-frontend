@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { Loader2, Search } from "lucide-react";
 
-import { searchContent } from "@/lib/api/search/search-content";
+import { searchContent } from "@/lib/api/search";
 import { texts } from "@/texts";
 import type { SearchResult } from "@/types/application/search/search-result";
 import { navigateToHref } from "@/utils/navigation";

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { REPORT_REASONS } from "@/constants/report-reasons";
-import { createReport } from "@/lib/api/reports/create-report";
+import { createReport } from "@/lib/api/reports";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReportReason } from "@/types/application/report/report-reason";
