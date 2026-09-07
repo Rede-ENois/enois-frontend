@@ -1,0 +1,28 @@
+export const networkTexts = {
+  seoTitle: "Rede · Énóis",
+  title: "Sua rede",
+  description: "Construa relacionamentos por afinidade, não por volume.",
+  stats: {
+    connections: "Conexões",
+    following: "Seguindo",
+    requests: "Solicitações",
+    suggestions: "Sugestões",
+  },
+  pendingTitle: "Solicitações pendentes",
+  pendingCount: (count: number) =>
+    `${count} ${count === 1 ? "solicitação pendente" : "solicitações pendentes"}`,
+  received: "Recebidas",
+  sent: "Enviadas por você",
+  matchesTitle: "Pessoas que combinam com você",
+  matchesDescription: "Com base em habilidades, objetivos e comunidades em comum.",
+  connected: "Conectado",
+  commonInterests: "3 interesses em comum",
+  remove: "Remover",
+  requested: "Solicitado",
+  connect: "Conectar",
+  requestSent: "Você enviou a solicitação",
+  wantsToConnect: "Quer se conectar com você",
+  cancel: "Cancelar",
+  reject: "Rejeitar",
+  accept: "Aceitar",
+} as const;

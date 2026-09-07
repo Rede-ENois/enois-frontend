@@ -1,0 +1,20 @@
+export const jobsTexts = {
+  seoTitle: "Vagas · Énóis",
+  title: "Oportunidades",
+  description: "Vagas filtradas por nível, localização, tipo e habilidades.",
+  clearFilters: "Limpar filtros",
+  filters: {
+    level: "Nível:",
+    location: "Local:",
+    type: "Tipo:",
+    locations: ["Remoto", "Híbrido", "Presencial"],
+  },
+  searchPlaceholder: "Buscar por título ou empresa...",
+  skillsPlaceholder: "Habilidades (ex.: Java, Spring)",
+  today: "Hoje",
+  daysAgo: (days: number) => `Há ${days} ${days === 1 ? "dia" : "dias"}`,
+  match: (score: number) => `${score}% match`,
+  details: "Ver detalhes",
+  apply: "Candidatar-se",
+  empty: "Nenhuma vaga encontrada com os filtros selecionados.",
+} as const;

@@ -1,0 +1,51 @@
+export const postsTexts = {
+  types: {
+    insight: "Insight",
+    question: "Pergunta",
+    project: "Projeto",
+    opportunity: "Oportunidade",
+    article: "Artigo",
+  },
+  tag: (tag: string) => `#${tag}`,
+  authorTime: (time: string) => `· ${time}`,
+  reactions: {
+    title: "Reações",
+    empty: "Nenhuma reação ainda",
+    react: "Reagir",
+    reactedWith: (emoji: string) => `Reagiu com ${emoji}`,
+    emojis: {
+      LIKE: "👍",
+      LOVE: "❤️",
+      LAUGH: "😂",
+      WOW: "😮",
+      SAD: "😢",
+      CELEBRATE: "🎉",
+      SUPPORT: "💪",
+      INSIGHTFUL: "💡",
+    },
+  },
+  report: {
+    title: "Denunciar post",
+    reason: "Motivo",
+    description: "Descrição (opcional)",
+    action: "Denunciar",
+  },
+  share: "Compartilhar",
+  comments: {
+    empty: "Nenhum comentário ainda. Seja o primeiro a comentar.",
+    placeholder: "Comente com contexto, dúvida ou referência...",
+    send: "Enviar comentário",
+    reply: "Responder",
+    replyingTo: (name: string) => `respondendo a ${name}`,
+    delete: "Excluir",
+  },
+  video: {
+    watchOn: (provider: string) => `Clique para assistir no ${provider}`,
+    icons: {
+      cinema: "🎬",
+      television: "📺",
+      play: "▶️",
+      web: "🌐",
+    },
+  },
+} as const;

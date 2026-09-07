@@ -1,0 +1,27 @@
+export const mentoringTexts = {
+  seoTitle: "Mentoria · Énóis",
+  badge: "Mentoria nativa",
+  title: "Aprenda com quem já passou por onde você quer chegar.",
+  description:
+    "Sessões reais com mentores verificados — sem performance, sem ruído. Avaliações honestas, trilhas de aprendizado e agendamento em um clique.",
+  findMentor: "Encontrar mentor",
+  becomeMentor: "Tornar-me mentor",
+  becomeMentorTitle: "Tornar-se mentor",
+  featured: "Mentores em destaque",
+  featuredDescription: "Avaliados pela comunidade nas últimas 8 semanas.",
+  expertise: "Especialidades (separadas por vírgula)",
+  expertisePlaceholder: "Java, Spring, React",
+  investment: "Investimento",
+  free: "Gratuito",
+  mentorFallback: "Mentor",
+  schedule: "Agendar",
+  rating: "Avaliação",
+  sessions: "Sessões",
+  nextSlot: "Próxima vaga",
+  editTitle: "Editar mentoria",
+  deleteTitle: "Excluir mentoria",
+  deleteDescription:
+    "Tem certeza que deseja excluir sua mentoria? Esta ação não pode ser desfeita.",
+  deleting: "Excluindo...",
+  delete: "Excluir",
+} as const;
