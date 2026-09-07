@@ -8,7 +8,7 @@ import { createConversation as createConversationRequest } from "@/lib/api/messa
 import { listConversations } from "@/lib/api/messages/list-conversations";
 import { markConversationAsRead } from "@/lib/api/messages/mark-conversation-as-read";
 import { listNetworkUsers } from "@/lib/api/network/list-network-users";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { texts } from "@/texts";
 import type { MessagesSidebarProps } from "@/types/components/messages/messages-sidebar-props";
 

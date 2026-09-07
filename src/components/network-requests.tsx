@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptConnection } from "@/lib/api/network/accept-connection";
 import { listConnectionRequests } from "@/lib/api/network/list-connection-requests";
 import { removeConnection } from "@/lib/api/network/remove-connection";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { texts } from "@/texts";
 
 import { RequestCard } from "@/components/network-request-card";

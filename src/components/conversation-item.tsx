@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { texts } from "@/texts";
 import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
 import { formatRelativeTime } from "@/utils/format-relative-time";

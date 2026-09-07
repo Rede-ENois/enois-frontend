@@ -6,7 +6,7 @@ import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { deleteComment } from "@/lib/api/comments/delete-comment";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { reactionsApi } from "@/lib/api/reactions";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";

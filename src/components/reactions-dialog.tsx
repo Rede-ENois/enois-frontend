@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { reactionsApi } from "@/lib/api/reactions";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostIdProps } from "@/types/components/post/post-id-props";

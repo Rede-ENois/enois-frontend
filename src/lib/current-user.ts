@@ -1,5 +1,13 @@
-import { getCurrentUser } from "./get-current-user";
+import { useQuery } from "@tanstack/react-query";
 
-export function getCurrentUserId() {
-  return getCurrentUser()?.id ?? null;
+import { getSessionToken } from "./auth-session/get-session-token";
+import { currentUserQueryOptions } from "./current-user-query-options";
+
+export function useCurrentUser() {
+  const token = getSessionToken();
+
+  return useQuery({
+    ...currentUserQueryOptions(),
+    enabled: !!token,
+  });
 }

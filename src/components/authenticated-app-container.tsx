@@ -1,4 +1,4 @@
-import { useCurrentUser } from "@/lib/use-current-user";
+import { useCurrentUser } from "@/lib/current-user";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
 import { AppSidebar } from "./app-sidebar";

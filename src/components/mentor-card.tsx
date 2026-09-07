@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Calendar, Star } from "lucide-react";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { getCurrentUserId } from "@/lib/current-user";
+import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { texts } from "@/texts";
 import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
 
