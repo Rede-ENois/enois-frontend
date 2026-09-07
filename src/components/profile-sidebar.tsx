@@ -6,8 +6,9 @@ import { Link } from "@tanstack/react-router";
 
 import { Clock, Link as LinkIcon, Star, ThumbsUp, Trophy } from "lucide-react";
 
-import { rankingApi } from "@/lib/api/ranking";
-import { recommendationsApi } from "@/lib/api/recommendations";
+import { listRanking } from "@/lib/api/ranking/list-ranking";
+import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
+import { listReceivedRecommendations } from "@/lib/api/recommendations/list-received-recommendations";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
 import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
@@ -30,16 +31,16 @@ export function ProfileSidebar({ user }: ProfileSidebarProps) {
 
   const { data: rankingData } = useQuery({
     queryKey: ["ranking"],
-    queryFn: () => rankingApi.list(10),
+    queryFn: () => listRanking(10),
   });
 
   const { data: recommendationsData } = useQuery({
     queryKey: ["recommendations", user.id],
-    queryFn: () => recommendationsApi.listReceived(user.id),
+    queryFn: () => listReceivedRecommendations(user.id),
   });
 
   const recommend = useMutation({
-    mutationFn: () => recommendationsApi.create(user.id, { comment: recommendComment }),
+    mutationFn: () => createRecommendation(user.id, { comment: recommendComment }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recommendations", user.id] });
       setRecommendOpen(false);

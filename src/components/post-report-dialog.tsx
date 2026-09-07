@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { REPORT_REASONS } from "@/constants/report-reasons";
-import { reportsApi } from "@/lib/api/reports";
+import { createReport } from "@/lib/api/reports/create-report";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReportReason } from "@/types/application/report/report-reason";
@@ -24,7 +24,7 @@ export function ReportDialog({ postId }: PostIdProps) {
 
   const submit = async () => {
     try {
-      await reportsApi.create({
+      await createReport({
         targetId: postId,
         targetType: "POST",
         reason,

@@ -2,7 +2,7 @@ import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 
 
 import { useQuery } from "@tanstack/react-query";
 
-import { usersApi } from "@/lib/api/users";
+import { searchUsers } from "@/lib/api/users/search-users";
 import { texts } from "@/texts";
 import type { UserSearchResult } from "@/types/application/user/user-search-result";
 import type { Props } from "@/types/components/mention-textarea/props";
@@ -25,7 +25,7 @@ export function MentionTextarea({
 
   const { data: results = [] } = useQuery({
     queryKey: ["users", "search", mentionQuery],
-    queryFn: () => usersApi.search(mentionQuery),
+    queryFn: () => searchUsers(mentionQuery),
     enabled: mentionQuery.length >= 2,
   });
 

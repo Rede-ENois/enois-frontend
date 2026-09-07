@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { MapPin, Sparkles } from "lucide-react";
 
-import { jobsApi } from "@/lib/api/jobs";
+import { applyToJob } from "@/lib/api/jobs/apply-to-job";
 import { texts } from "@/texts";
 import type { JobCardProps } from "@/types/components/jobs/job-card-props";
 import { formatPostedAt } from "@/utils/format-posted-at";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 export function JobCard({ job }: JobCardProps) {
   const queryClient = useQueryClient();
   const apply = useMutation({
-    mutationFn: () => jobsApi.apply(job.id),
+    mutationFn: () => applyToJob(job.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
   });
 

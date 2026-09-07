@@ -6,7 +6,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 
 import { networkApi } from "@/lib/api/network";
-import { notificationsApi } from "@/lib/api/notifications";
+import { listNotifications } from "@/lib/api/notifications/list-notifications";
+import { markAllNotificationsAsRead } from "@/lib/api/notifications/mark-all-notifications-as-read";
+import { markNotificationAsRead } from "@/lib/api/notifications/mark-notification-as-read";
 import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
 import type { NotificationTab } from "@/types/components/notification/notification-tab";
@@ -21,18 +23,18 @@ export function NotificationsPopover() {
 
   const { data: notificationsData } = useQuery({
     queryKey: ["notifications"],
-    queryFn: () => notificationsApi.list(),
+    queryFn: () => listNotifications(),
   });
 
   const markAsRead = useMutation({
-    mutationFn: (id: string) => notificationsApi.markAsRead(id),
+    mutationFn: markNotificationAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 
   const markAllAsRead = useMutation({
-    mutationFn: () => notificationsApi.markAllAsRead(),
+    mutationFn: markAllNotificationsAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },

@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { Loader2, Search } from "lucide-react";
 
-import { searchApi } from "@/lib/api/search";
+import { searchContent } from "@/lib/api/search/search-content";
 import { texts } from "@/texts";
 import type { SearchResult } from "@/types/application/search/search-result";
 import { navigateToHref } from "@/utils/navigation";
@@ -45,7 +45,7 @@ export function GlobalSearch() {
 
   const { data: results, isFetching } = useQuery({
     queryKey: ["search", debounced],
-    queryFn: () => searchApi.search(debounced),
+    queryFn: () => searchContent(debounced),
     enabled: debounced.length >= 2,
   });
 

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Loader2 } from "lucide-react";
 
-import { jobsApi } from "@/lib/api/jobs";
+import { listJobs } from "@/lib/api/jobs/list-jobs";
 import { texts } from "@/texts";
 import type { Job } from "@/types/application/job/job";
 
@@ -32,7 +32,7 @@ export function Vagas() {
 
   const { data: jobsData, isFetching } = useQuery({
     queryKey: ["jobs", filters, cursor],
-    queryFn: () => jobsApi.list({ ...filters, cursor, limit: 10 }),
+    queryFn: () => listJobs({ ...filters, cursor, limit: 10 }),
   });
 
   const jobs = jobsData?.items ?? [];
