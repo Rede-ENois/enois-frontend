@@ -1,13 +1,11 @@
 import { create } from "zustand";
 
-import type { CommentView } from "@/types/application/comment/comment-view";
-import type { PostView } from "@/types/application/feed/post-view";
-import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { PostCardState } from "@/types/stores/post-card-state";
+import type { PostCardStore } from "@/types/stores/post-card-store";
 
 const pendingDisposals = new Map<string, ReturnType<typeof setTimeout>>();
 
-export const usePostCardStore = create((set) => {
+export const usePostCardStore = create<PostCardStore>()((set) => {
   const updateCard = (
     cards: Record<string, PostCardState>,
     postId: string,
@@ -23,9 +21,9 @@ export const usePostCardStore = create((set) => {
   };
 
   return {
-    cards: {} as Record<string, PostCardState>,
+    cards: {},
 
-    initializePostCard: (post: PostView) => {
+    initializePostCard: (post) => {
       const pendingDisposal = pendingDisposals.get(post.id);
       if (pendingDisposal) {
         clearTimeout(pendingDisposal);
@@ -52,7 +50,7 @@ export const usePostCardStore = create((set) => {
         };
       });
     },
-    disposePostCard: (postId: string) => {
+    disposePostCard: (postId) => {
       const pendingDisposal = pendingDisposals.get(postId);
       if (pendingDisposal) clearTimeout(pendingDisposal);
 
@@ -68,31 +66,31 @@ export const usePostCardStore = create((set) => {
         }, 0),
       );
     },
-    setDraft: (postId: string, draft: string) =>
+    setDraft: (postId, draft) =>
       set((state) => ({ cards: updateCard(state.cards, postId, (card) => ({ ...card, draft })) })),
-    setCommentMentions: (postId: string, commentMentions: string[]) =>
+    setCommentMentions: (postId, commentMentions) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({ ...card, commentMentions })),
       })),
-    setReplyToId: (postId: string, replyToId: string | null) =>
+    setReplyToId: (postId, replyToId) =>
       set((state) => ({ cards: updateCard(state.cards, postId, (card) => ({ ...card, replyToId })) })),
-    setComments: (postId: string, localComments: CommentView[]) =>
+    setComments: (postId, localComments) =>
       set((state) => ({ cards: updateCard(state.cards, postId, (card) => ({ ...card, localComments })) })),
-    addComment: (postId: string, comment: CommentView) =>
+    addComment: (postId, comment) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({
           ...card,
           localComments: [...card.localComments, comment],
         })),
       })),
-    removeComment: (postId: string, commentId: string) =>
+    removeComment: (postId, commentId) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({
           ...card,
           localComments: card.localComments.filter((comment) => comment.id !== commentId),
         })),
       })),
-    updateCommentCount: (postId: string, delta: number) =>
+    updateCommentCount: (postId, delta) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({
           ...card,
@@ -102,19 +100,19 @@ export const usePostCardStore = create((set) => {
           },
         })),
       })),
-    setPostCounters: (postId: string, postCounters: PostView["counters"]) =>
+    setPostCounters: (postId, postCounters) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({ ...card, postCounters })),
       })),
-    setReactionStatus: (postId: string, reactionStatus: ReactionType | null) =>
+    setReactionStatus: (postId, reactionStatus) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({ ...card, reactionStatus })),
       })),
-    setShowReactions: (postId: string, showReactions: boolean) =>
+    setShowReactions: (postId, showReactions) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({ ...card, showReactions })),
       })),
-    setShowReport: (postId: string, showReport: boolean) =>
+    setShowReport: (postId, showReport) =>
       set((state) => ({
         cards: updateCard(state.cards, postId, (card) => ({ ...card, showReport })),
       })),
