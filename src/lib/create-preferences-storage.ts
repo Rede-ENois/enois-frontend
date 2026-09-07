@@ -1,43 +1,18 @@
-import type { PreferencesStorageValue } from "@/types/stores/preferences-storage-value";
-
-const LEGACY_THEME_STORAGE_KEY = "connect-grow-theme";
-const LEGACY_SIDEBAR_STORAGE_KEY = "sidebar-collapsed";
+import { clearLegacyPreferencesStorage } from "@/lib/clear-legacy-preferences-storage";
+import { getLegacyPreferencesStorageValue } from "@/lib/get-legacy-preferences-storage-value";
+import { normalizePreferencesStorageValue } from "@/lib/normalize-preferences-storage-value";
 
 export function createPreferencesStorage() {
   return {
     getItem: (name: string) => {
       const stored = localStorage.getItem(name);
-      if (stored !== null) {
-        try {
-          const parsed = JSON.parse(stored) as PreferencesStorageValue;
-
-          if (parsed.state) {
-            parsed.state.theme = parsed.state.theme === "dark" ? "dark" : "light";
-          }
-
-          return JSON.stringify(parsed);
-        } catch {
-          return stored;
-        }
-      }
-
-      const legacyTheme = localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
-      const legacySidebarCollapsed = localStorage.getItem(LEGACY_SIDEBAR_STORAGE_KEY);
-
-      if (legacyTheme === null && legacySidebarCollapsed === null) return null;
-
-      return JSON.stringify({
-        state: {
-          theme: legacyTheme === "dark" ? "dark" : "light",
-          sidebarCollapsed: legacySidebarCollapsed === "true",
-        },
-        version: 0,
-      });
+      return stored === null
+        ? getLegacyPreferencesStorageValue()
+        : normalizePreferencesStorageValue(stored);
     },
     setItem: (name: string, value: string) => {
       localStorage.setItem(name, value);
-      localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
-      localStorage.removeItem(LEGACY_SIDEBAR_STORAGE_KEY);
+      clearLegacyPreferencesStorage();
     },
     removeItem: (name: string) => {
       localStorage.removeItem(name);
