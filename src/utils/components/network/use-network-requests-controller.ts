@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+
 import { acceptConnection } from "@/lib/api/network/accept-connection";
 import { listConnectionRequests } from "@/lib/api/network/list-connection-requests";
 import { removeConnection } from "@/lib/api/network/remove-connection";
@@ -23,11 +25,17 @@ export function useNetworkRequestsController() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
   const acceptRequest = useMutation({ mutationFn: acceptConnection, onSuccess: invalidate });
   const remove = useMutation({ mutationFn: removeConnection, onSuccess: invalidate });
+  const pendingCount = incomingRequests.length + outgoingRequests.length;
 
   return {
     incomingRequests,
     outgoingRequests,
-    acceptRequest: acceptRequest.mutate,
-    cancelRequest: remove.mutate,
+    hasRequests: pendingCount > 0,
+    hasIncomingRequests: incomingRequests.length > 0,
+    hasOutgoingRequests: outgoingRequests.length > 0,
+    pendingLabel: texts.network.pendingCount(pendingCount),
+    outgoingSectionClassName: incomingRequests.length > 0 ? "pt-3" : "",
+    acceptRequest: (userId: string) => acceptRequest.mutate(userId),
+    cancelRequest: (userId: string) => remove.mutate(userId),
   };
 }

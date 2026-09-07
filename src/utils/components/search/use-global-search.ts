@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -68,17 +68,21 @@ export function useGlobalSearch() {
     navigateToHref(item.href, navigate);
   };
 
+  const handleBackdropMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (mobileOpen && event.target === event.currentTarget) closeMobileSearch();
+  };
+
   return {
     query,
     debounced,
-    open,
     mobileOpen,
     searchRef,
     inputRef,
     items: results?.items ?? [],
     isFetching,
+    showResults: open && debounced.length >= 2,
     openMobileSearch,
-    closeMobileSearch,
+    handleBackdropMouseDown,
     handleQueryChange,
     handleFocus: () => setOpen(true),
     handleSelect,

@@ -1,27 +1,34 @@
 import { texts } from "@/texts";
 
-import { useNetworkRequestsController } from "@/lib/use-network-requests-controller";
+import { useNetworkRequestsController } from "@/utils/components/network/use-network-requests-controller";
 
 import { RequestCard } from "@/components/network-request-card";
 
 export function NetworkRequests() {
-  const { incomingRequests, outgoingRequests, acceptRequest, cancelRequest } =
-    useNetworkRequestsController();
+  const {
+    incomingRequests,
+    outgoingRequests,
+    hasRequests,
+    hasIncomingRequests,
+    hasOutgoingRequests,
+    pendingLabel,
+    outgoingSectionClassName,
+    acceptRequest,
+    cancelRequest,
+  } = useNetworkRequestsController();
 
-  if (incomingRequests.length === 0 && outgoingRequests.length === 0) return null;
+  if (!hasRequests) return null;
 
   return (
     <section>
       <div className="mb-3">
         <h2 className="text-lg font-semibold">{texts.network.pendingTitle}</h2>
 
-        <p className="text-sm text-muted-foreground">
-          {texts.network.pendingCount(incomingRequests.length + outgoingRequests.length)}
-        </p>
+        <p className="text-sm text-muted-foreground">{pendingLabel}</p>
       </div>
 
       <div className="space-y-3">
-        {incomingRequests.length > 0 && (
+        {hasIncomingRequests && (
           <>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {texts.network.received}
@@ -37,9 +44,9 @@ export function NetworkRequests() {
           </>
         )}
 
-        {outgoingRequests.length > 0 && (
+        {hasOutgoingRequests && (
           <>
-            <div className={incomingRequests.length > 0 ? "pt-3" : ""}>
+            <div className={outgoingSectionClassName}>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {texts.network.sent}
               </p>

@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { Loader2, Search } from "lucide-react";
 
-import { useGlobalSearch } from "@/lib/use-global-search";
+import { useGlobalSearch } from "@/utils/components/search/use-global-search";
 
 import { Input } from "@/components/ui/input";
 
@@ -11,14 +11,14 @@ export function GlobalSearch() {
   const {
     query,
     debounced,
-    open,
     mobileOpen,
     searchRef,
     inputRef,
     items,
     isFetching,
+    showResults,
     openMobileSearch,
-    closeMobileSearch,
+    handleBackdropMouseDown,
     handleQueryChange,
     handleFocus,
     handleSelect,
@@ -39,9 +39,7 @@ export function GlobalSearch() {
         className={`fixed inset-0 z-50 flex items-start justify-center bg-background/80 pt-4 backdrop-blur-sm transition-opacity ${
           mobileOpen ? "visible opacity-100" : "invisible pointer-events-none opacity-0"
         } md:visible md:static md:z-auto md:ml-2 md:block md:flex-1 md:max-w-md md:bg-transparent md:p-0 md:opacity-100 md:backdrop-blur-none md:pointer-events-auto`}
-        onMouseDown={(event) => {
-          if (mobileOpen && event.target === event.currentTarget) closeMobileSearch();
-        }}
+        onMouseDown={handleBackdropMouseDown}
       >
         <div className="relative w-full max-w-md px-4 md:max-w-none md:px-0">
           <Search className="pointer-events-none absolute left-7 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-text-subtle md:left-3" />
@@ -56,7 +54,7 @@ export function GlobalSearch() {
           {isFetching && (
             <Loader2 className="absolute right-7 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-text-subtle md:right-3" />
           )}
-          {open && debounced.length >= 2 && (
+          {showResults && (
             <div className="absolute left-4 right-4 top-full mt-2 overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-card md:left-0 md:right-0">
               <GlobalSearchResults
                 items={items}

@@ -2,7 +2,8 @@ import { texts } from "@/texts";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 import { Bell, CheckCheck } from "lucide-react";
 
-import { useNotificationsPopover } from "@/lib/use-notifications-popover";
+import { useNotificationsPopover } from "@/utils/components/notifications/use-notifications-popover";
+
 import { cn } from "@/lib/utils";
 
 import { PopoverContent } from "@/components/ui/popover-content";
@@ -17,18 +18,12 @@ export function NotificationsPopover() {
       <PopoverTrigger asChild>
         <button
           className="relative grid h-10 w-10 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-          aria-label={
-            notifications.unreadCount > 0
-              ? texts.notifications.unreadLabel(notifications.unreadCount)
-              : texts.notifications.title
-          }
+          aria-label={notifications.triggerLabel}
         >
           <Bell className="h-5 w-5" />
-          {notifications.unreadCount > 0 && (
+          {notifications.unreadBadgeLabel !== null && (
             <span className="absolute right-1.5 top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-medium leading-none text-primary-foreground">
-              {notifications.unreadCount > 9
-                ? texts.notifications.overflowCount
-                : notifications.unreadCount}
+              {notifications.unreadBadgeLabel}
             </span>
           )}
         </button>
@@ -42,7 +37,7 @@ export function NotificationsPopover() {
           <span className="text-[14px] font-light text-text-strong">
             {texts.notifications.title}
           </span>
-          {notifications.unreadCount > 0 && notifications.notificationTab === "novas" && (
+          {notifications.showMarkAllAsRead && (
             <button
               type="button"
               onClick={notifications.markAllAsRead}
@@ -58,28 +53,28 @@ export function NotificationsPopover() {
         <div className="flex border-b border-border-soft">
           <button
             type="button"
-            onClick={() => notifications.setNotificationTab("novas")}
+            onClick={notifications.openNewTab}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[12px] font-light transition",
-              notifications.notificationTab === "novas"
+              notifications.newTabSelected
                 ? "border-b-2 border-primary text-primary"
                 : "text-text-subtle hover:text-text-strong",
             )}
           >
             <>{texts.notifications.tabs.new}</>
-            {notifications.unreadCount > 0 && (
+            {notifications.newTabCount !== null && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
-                {notifications.unreadCount}
+                {notifications.newTabCount}
               </span>
             )}
           </button>
 
           <button
             type="button"
-            onClick={() => notifications.setNotificationTab("historico")}
+            onClick={notifications.openHistoryTab}
             className={cn(
               "flex-1 py-2.5 text-[12px] font-light transition",
-              notifications.notificationTab === "historico"
+              notifications.historyTabSelected
                 ? "border-b-2 border-primary text-primary"
                 : "text-text-subtle hover:text-text-strong",
             )}
@@ -89,11 +84,9 @@ export function NotificationsPopover() {
         </div>
 
         <div className="max-h-[28rem] overflow-y-auto">
-          {notifications.displayedNotifications.length === 0 ? (
+          {notifications.showEmptyState ? (
             <p className="px-4 py-8 text-center text-[13px] font-light text-text-subtle">
-              {notifications.notificationTab === "novas"
-                ? texts.notifications.emptyNew
-                : texts.notifications.emptyHistory}
+              {notifications.emptyMessage}
             </p>
           ) : (
             notifications.displayedNotifications.map((notification) => (

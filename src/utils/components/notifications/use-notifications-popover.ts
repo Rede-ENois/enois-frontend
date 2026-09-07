@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { NotificationTab } from "@/types/components/notification/notification-tab";
 
 import { acceptConnection } from "@/lib/api/network/accept-connection";
@@ -41,12 +42,29 @@ export function useNotificationsPopover() {
   const displayedNotifications = notificationList.filter((notification) =>
     notificationTab === "novas" ? !notification.read : notification.read,
   );
+  const hasUnread = unreadCount > 0;
+  const showingNew = notificationTab === "novas";
 
   return {
     notificationTab,
-    setNotificationTab,
     unreadCount,
     displayedNotifications,
+    triggerLabel: hasUnread
+      ? texts.notifications.unreadLabel(unreadCount)
+      : texts.notifications.title,
+    unreadBadgeLabel: hasUnread
+      ? unreadCount > 9
+        ? texts.notifications.overflowCount
+        : unreadCount
+      : null,
+    showMarkAllAsRead: hasUnread && showingNew,
+    newTabSelected: showingNew,
+    historyTabSelected: notificationTab === "historico",
+    newTabCount: hasUnread ? unreadCount : null,
+    emptyMessage: showingNew ? texts.notifications.emptyNew : texts.notifications.emptyHistory,
+    showEmptyState: displayedNotifications.length === 0,
+    openNewTab: () => setNotificationTab("novas"),
+    openHistoryTab: () => setNotificationTab("historico"),
     markAsRead: (id: string) => markAsRead.mutate(id),
     markAllAsRead: () => markAllAsRead.mutate(),
     acceptConnection: (actorId: string) => acceptConnectionMutation.mutate(actorId),
