@@ -1,14 +1,7 @@
-import { useState } from "react";
-
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { deleteComment } from "@/lib/api/comments/delete-comment";
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { react } from "@/lib/api/reactions";
-import { removeReaction } from "@/lib/api/reactions/remove-reaction";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { usePostCardStore } from "@/stores/post-card.store";
+import { useCommentActions } from "@/lib/use-comment-actions";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
@@ -19,52 +12,13 @@ import { PopoverContent } from "@/components/ui/popover-content";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function CommentItem({ comment, replyingTo }: CommentItemProps) {
-  const currentUserId = getCurrentUserId();
-  const postId = comment.postId;
-  const setDraft = usePostCardStore((state) => state.setDraft);
-  const setCommentMentions = usePostCardStore((state) => state.setCommentMentions);
-  const setReplyToId = usePostCardStore((state) => state.setReplyToId);
-  const removeComment = usePostCardStore((state) => state.removeComment);
-  const updateCommentCount = usePostCardStore((state) => state.updateCommentCount);
-  const isOwner = currentUserId === comment.authorId;
-  const [commentReaction, setCommentReaction] = useState<string | null>(null);
-
-  const handleReply = async () => {
-    try {
-      const profile = await getProfileById(comment.authorId);
-      if (profile?.username) {
-        setDraft(postId, `@${profile.username} `);
-        setCommentMentions(postId, [comment.authorId]);
-      }
-    } catch {
-      setDraft(postId, `${comment.authorName} `);
-    }
-    setReplyToId(postId, comment.id);
-  };
-
-  const handleDelete = async () => {
-    try {
-      await deleteComment(postId, comment.id);
-      removeComment(postId, comment.id);
-      updateCommentCount(postId, -1);
-    } catch {
-      // silently fail
-    }
-  };
-
-  const handleCommentReaction = async (type: ReactionType) => {
-    try {
-      if (commentReaction === type) {
-        await removeReaction(comment.postId, comment.id);
-        setCommentReaction(null);
-      } else {
-        await react(comment.postId, type, comment.id);
-        setCommentReaction(type);
-      }
-    } catch {
-      /* ignore */
-    }
-  };
+  const {
+    isOwner,
+    commentReaction,
+    handleReply,
+    handleDelete,
+    handleReaction,
+  } = useCommentActions(comment);
 
   return (
     <div className="flex gap-2.5">
@@ -110,7 +64,7 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
                   ([type, emoji]) => (
                     <button
                       key={type}
-                      onClick={() => handleCommentReaction(type)}
+                      onClick={() => handleReaction(type)}
                       className={`rounded-lg px-2 py-1 text-lg transition hover:bg-surface-2 ${
                         commentReaction === type ? "bg-surface-2 ring-1 ring-primary" : ""
                       }`}
