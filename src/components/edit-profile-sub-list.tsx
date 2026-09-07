@@ -4,7 +4,7 @@ import { useSubListEditor } from "@/lib/use-sub-list-editor";
 import { texts } from "@/texts";
 import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 
-import { Field } from "@/components/edit-profile-field";
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -22,7 +22,11 @@ export function SubList<
       {editor.showForm ? (
         <div className="space-y-3 rounded-xl border border-border-soft p-4">
           {fields.map((field) => (
-            <Field key={field.key} label={field.label}>
+            <FormField
+              key={field.key}
+              label={field.label}
+              labelClassName="text-[13px] font-light text-text-subtle"
+            >
               {field.multiline ? (
                 <Textarea
                   value={editor.form[field.key] ?? ""}
@@ -38,7 +42,7 @@ export function SubList<
                   className="h-10 border-border-soft bg-surface-1"
                 />
               )}
-            </Field>
+            </FormField>
           ))}
           {currentlyHereKey && (
             <label className="flex items-center gap-2 text-[13px] font-light text-text-strong">
