@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useNavigate } from "@tanstack/react-router";
 
-import { persistOAuthTokens } from "@/lib/auth-session";
+import { persistAuthTokens } from "@/lib/auth-session/persist-auth-tokens";
 
 export function OAuthCallbackHandler() {
   const navigate = useNavigate();
@@ -14,12 +14,12 @@ export function OAuthCallbackHandler() {
     const token = params.get("token");
     if (!token) return;
 
-    persistOAuthTokens(
+    persistAuthTokens({
       token,
-      params.get("refreshToken"),
-      params.get("expiresAt"),
-      params.get("refreshExpiresAt"),
-    );
+      refreshToken: params.get("refreshToken"),
+      expiresAt: params.get("expiresAt"),
+      refreshExpiresAt: params.get("refreshExpiresAt"),
+    });
     navigate({ to: "/feed", replace: true });
   }, [navigate]);
 

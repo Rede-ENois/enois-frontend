@@ -1,11 +1,9 @@
 import type { RequestOptions } from "@/types/application/api/request-options";
 
-import {
-  clearAuthSession,
-  getRefreshToken,
-  getSessionToken,
-  persistAuthTokens,
-} from "./auth-session";
+import { clearAuthSession } from "./auth-session/clear-auth-session";
+import { getRefreshToken } from "./auth-session/get-refresh-token";
+import { getSessionToken } from "./auth-session/get-session-token";
+import { persistAuthTokens } from "./auth-session/persist-auth-tokens";
 
 const API_BACKEND = import.meta.env.VITE_API_BACKEND ?? "http://localhost:8081/api";
 

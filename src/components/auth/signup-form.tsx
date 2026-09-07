@@ -4,7 +4,8 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { authApi } from "@/lib/api/auth";
-import { clearAuthSession, persistAuthSession } from "@/lib/auth-session";
+import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
+import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
 import { texts } from "@/texts";
 import type { AuthFormProps } from "@/types/routes/auth/auth-form-props";
 

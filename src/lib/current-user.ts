@@ -3,7 +3,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import type { Profile } from "@/types/application/profile/profile";
 
 import { profileApi } from "./api/profile";
-import { getSessionToken } from "./auth-session";
+import { getSessionToken } from "./auth-session/get-session-token";
 import { getBrowserQueryClient } from "./query-client";
 
 const CURRENT_USER_QUERY_KEY = ["me"] as const;
