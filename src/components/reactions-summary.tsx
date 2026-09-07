@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { usePostCardStore } from "@/stores/post-card.store";
+import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 
 export function ReactionsSummary({ postId }: PostIdProps) {
@@ -17,7 +18,9 @@ export function ReactionsSummary({ postId }: PostIdProps) {
   const summary = data?.summary;
   if (!summary) return null;
 
-  const entries = (Object.entries(summary) as [string, number][]).filter(([, count]) => count > 0);
+  const entries = (Object.entries(summary) as [ReactionType, number][]).filter(
+    ([, count]) => count > 0,
+  );
   if (entries.length === 0) return null;
 
   return (
@@ -31,7 +34,7 @@ export function ReactionsSummary({ postId }: PostIdProps) {
               : "border border-border-soft text-text-subtle"
           }`}
         >
-          <>{REACTION_EMOJIS[type] ?? type} {count}</>
+          <>{REACTION_EMOJIS[type]} {count}</>
         </span>
       ))}
     </div>
