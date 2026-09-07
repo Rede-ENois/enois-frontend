@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, CheckCheck } from "lucide-react";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { texts } from "@/texts";
 import type { NotificationTab } from "@/types/components/notification/notification-tab";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PopoverContent } from "@/components/ui/popover-content";
 
 import { NotificationItem } from "./notification-item";
 

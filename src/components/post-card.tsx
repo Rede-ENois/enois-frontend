@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 import { useQuery } from "@tanstack/react-query";
 
 import { Bookmark, Flag, Heart, MessageSquare, Share2 } from "lucide-react";
@@ -22,7 +23,7 @@ import { ReactionsDialog } from "@/components/reactions-dialog";
 import { ReactionsSummary } from "@/components/reactions-summary";
 import { ReportDialog } from "@/components/post-report-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PopoverContent } from "@/components/ui/popover-content";
 
 export function PostCard({ post }: PostCardProps) {
   const meta = typeMeta[post.type] ?? typeMeta.INSIGHT;
