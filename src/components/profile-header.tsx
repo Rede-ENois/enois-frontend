@@ -5,9 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { Briefcase, Camera, MapPin, MessageCircle, Settings } from "lucide-react";
 
-import { networkApi } from "@/lib/api/network";
-import { profileApi } from "@/lib/api/profile";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { networkApi } from "@/lib/api/network";
+import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
 import { ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -45,7 +45,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   const connectionStatus = connectionData?.status ?? null;
 
   const updateProfile = useMutation({
-    mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => profileApi.update(data),
+    mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => updateProfileRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
