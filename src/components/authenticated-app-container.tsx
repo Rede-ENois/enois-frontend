@@ -1,13 +1,13 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
-import { useCurrentUser } from "@/lib/current-user";
+import { useAuthenticatedAppContainerController } from "@/utils/components/app/use-authenticated-app-container-controller";
 
 import { AppSidebar } from "./app-sidebar";
 import { AuthenticatedAppHeader } from "./authenticated-app-header";
 import { NavigationDrawer } from "./navigation-drawer";
 
 export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
-  useCurrentUser();
+  useAuthenticatedAppContainerController();
 
   return (
     <div className="min-h-screen bg-background">

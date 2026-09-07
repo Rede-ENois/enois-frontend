@@ -1,29 +1,28 @@
 import type { FeedComposerMediaPreviewProps } from "@/types/components/feed/feed-composer-media-preview-props";
 import { X } from "lucide-react";
 
-export function FeedComposerMediaPreview({ media, onRemove }: FeedComposerMediaPreviewProps) {
-  if (media.length === 0) return null;
+import { createFeedComposerMediaPreviewViewModel } from "@/utils/components/feed/create-feed-composer-media-preview-view-model";
 
-  const mediaType = media[0].type;
+export function FeedComposerMediaPreview(props: FeedComposerMediaPreviewProps) {
+  const { visible, showImages, imageGridClassName, imageItems, videoItem } =
+    createFeedComposerMediaPreviewViewModel(props);
+
+  if (!visible) return null;
 
   return (
     <div className="relative mt-3">
-      {mediaType === "image" ? (
-        <div
-          className={`grid gap-2 ${
-            media.length === 1 ? "grid-cols-1" : media.length === 2 ? "grid-cols-2" : "grid-cols-2"
-          }`}
-        >
-          {media.map((item, index) => (
+      {showImages ? (
+        <div className={`grid gap-2 ${imageGridClassName}`}>
+          {imageItems.map(({ key, item, remove }) => (
             <div
-              key={index}
+              key={key}
               className="relative overflow-hidden rounded-xl border border-border-soft"
             >
               <img src={item.preview} alt="" className="h-48 w-full object-cover bg-surface-1" />
 
               <button
                 type="button"
-                onClick={() => onRemove(index)}
+                onClick={remove}
                 className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
               >
                 <X className="h-4 w-4" />
@@ -32,17 +31,19 @@ export function FeedComposerMediaPreview({ media, onRemove }: FeedComposerMediaP
           ))}
         </div>
       ) : (
-        <div className="relative overflow-hidden rounded-xl border border-border-soft">
-          <video src={media[0].preview} controls className="max-h-64 w-full bg-surface-1" />
+        videoItem && (
+          <div className="relative overflow-hidden rounded-xl border border-border-soft">
+            <video src={videoItem.item.preview} controls className="max-h-64 w-full bg-surface-1" />
 
-          <button
-            type="button"
-            onClick={() => onRemove(0)}
-            className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={videoItem.remove}
+              className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )
       )}
     </div>
   );

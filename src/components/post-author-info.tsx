@@ -1,18 +1,15 @@
 import { Link } from "@tanstack/react-router";
 
-import { texts } from "@/texts";
 import type { AuthorInfoProps } from "@/types/components/post/author-info-props";
-import { formatRelativeTime } from "@/utils/format-relative-time";
+
+import { createAuthorInfoViewModel } from "@/utils/components/post/create-author-info-view-model";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function AuthorInfo({
-  authorUsername,
-  authorName,
-  authorAvatar,
-  createdAt,
-  fallbackClassName,
-}: AuthorInfoProps) {
+export function AuthorInfo(props: AuthorInfoProps) {
+  const { authorUsername, authorName, authorAvatar, fallbackClassName } = props;
+  const { timeLabel } = createAuthorInfoViewModel(props);
+
   return (
     <div className="flex items-start gap-3">
       <Link to="/perfil/$username" params={{ username: authorUsername }}>
@@ -34,9 +31,7 @@ export function AuthorInfo({
             {authorName}
           </Link>
 
-          <span className="text-[12px] font-light text-text-date">
-            {texts.posts.authorTime(formatRelativeTime(createdAt))}
-          </span>
+          <span className="text-[12px] font-light text-text-date">{timeLabel}</span>
         </div>
       </div>
     </div>
