@@ -1,23 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
-import type { Education } from "@/types/application/profile/education";
-import type { EducationRequest } from "@/types/application/profile/education-request";
-import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 
 import { createEducation } from "@/lib/api/profile/education/create-education";
 import { deleteEducation } from "@/lib/api/profile/education/delete-education";
 import { listEducation } from "@/lib/api/profile/education/list-education";
 import { updateEducation } from "@/lib/api/profile/education/update-education";
+import { useProfileSubListController } from "@/utils/components/profile/use-profile-sub-list-controller";
 
 export function useEditProfileEducationController() {
-  const { data: items = [] } = useQuery({
-    queryKey: ["me", "education"],
-    queryFn: listEducation,
-  });
-
-  const props: SubListProps<Education, EducationRequest> = {
-    items,
+  return useProfileSubListController(["me", "education"], listEducation, {
     fields: [
       { key: "school", label: texts.profile.edit.educationFields.school, required: true },
       { key: "degree", label: texts.profile.edit.educationFields.degree, required: true },
@@ -34,7 +24,6 @@ export function useEditProfileEducationController() {
     createApi: createEducation,
     updateApi: updateEducation,
     deleteApi: deleteEducation,
-    queryKey: ["me", "education"],
     emptyMessage: texts.profile.edit.emptyEducation,
     newItem: {
       school: "",
@@ -44,7 +33,5 @@ export function useEditProfileEducationController() {
       startDate: "",
       endDate: "",
     },
-  };
-
-  return props;
+  });
 }
