@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { Moon, Sun } from "lucide-react";
 
+import { hydratePreferences } from "@/stores/hydrate-preferences";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { Theme } from "@/types/preferences/theme";
@@ -11,7 +12,7 @@ export function ThemeToggle() {
   const setTheme = usePreferencesStore((state) => state.setTheme);
 
   useEffect(() => {
-    usePreferencesStore.hydrate();
+    hydratePreferences();
   }, []);
 
   useEffect(() => {
