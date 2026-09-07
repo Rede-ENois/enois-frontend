@@ -1,10 +1,7 @@
-import { Link } from "@tanstack/react-router";
-
-import { Sparkles } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { AuthPageLayoutProps } from "@/types/components/auth/auth-page-layout-props";
 
+import { AppBrand } from "@/components/app-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLayoutProps) {
@@ -23,7 +20,7 @@ export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLa
           className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl"
         />
 
-        <AuthBrand variant="desktop" />
+        <AppBrand variant="auth-desktop" />
 
         <div className="relative max-w-md">
           <p className="text-sm font-medium uppercase tracking-wider text-primary-foreground/80">
@@ -53,7 +50,7 @@ export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLa
 
       <section className="flex flex-col px-6 py-10 sm:px-12">
         <div className="flex items-center justify-between lg:hidden">
-          <AuthBrand variant="mobile" />
+          <AppBrand variant="auth-mobile" />
           {showThemeToggle && <ThemeToggle />}
         </div>
 
@@ -62,27 +59,5 @@ export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLa
         </div>
       </section>
     </div>
-  );
-}
-
-function AuthBrand({ variant }: { variant: "desktop" | "mobile" }) {
-  const desktop = variant === "desktop";
-
-  return (
-    <Link to="/" className={desktop ? "relative flex items-center gap-2" : "flex items-center gap-2"}>
-      <div
-        className={
-          desktop
-            ? "grid h-9 w-9 place-items-center rounded-xl bg-primary-foreground/20 backdrop-blur"
-            : "grid h-9 w-9 place-items-center rounded-xl text-primary-foreground"
-        }
-        style={desktop ? undefined : { background: "var(--gradient-primary)" }}
-      >
-        <Sparkles className="h-4 w-4" />
-      </div>
-      <span className={desktop ? "text-lg font-semibold tracking-tight" : "font-semibold tracking-tight"}>
-        <>{texts.brand.prefix}</><span className="gradient-text">{texts.brand.accent}</span>
-      </span>
-    </Link>
   );
 }
