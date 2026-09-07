@@ -1,10 +1,11 @@
-import { type ChangeEvent, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Camera } from "lucide-react";
 
 import { updateCommunity as updateCommunityRequest } from "@/lib/api/communities/update-community";
+import { useImageCropUpload } from "@/lib/use-image-crop-upload";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
 import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
@@ -26,38 +27,19 @@ export function EditCommunityForm({ community, onClose }: EditCommunityFormProps
   const avatarUpload = useMediaUpload();
   const coverRef = useRef<HTMLInputElement>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
-  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-  const [cropPurpose, setCropPurpose] = useState<CommunityCropPurpose | null>(null);
 
-  const handleCropComplete = useCallback(
-    async (blob: Blob) => {
-      const upload = cropPurpose === "COVER" ? coverUpload : avatarUpload;
-      const result = await upload.upload(
-        new File([blob], "crop.jpg", { type: "image/jpeg" }),
-        cropPurpose!,
-      );
-      if (cropPurpose === "COVER") setCover(result.cdnUrl);
-      else setAvatar(result.cdnUrl);
-      if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
-      setCropImageSrc(null);
-      setCropPurpose(null);
-    },
-    [avatarUpload, coverUpload, cropImageSrc, cropPurpose],
+  const uploadCrop = useCallback(
+    (purpose: CommunityCropPurpose, file: File) =>
+      (purpose === "COVER" ? coverUpload : avatarUpload).upload(file, purpose),
+    [avatarUpload, coverUpload],
   );
 
-  const handleCropCancel = useCallback(() => {
-    if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
-    setCropImageSrc(null);
-    setCropPurpose(null);
-  }, [cropImageSrc]);
+  const applyUpload = useCallback((purpose: CommunityCropPurpose, cdnUrl: string) => {
+    if (purpose === "COVER") setCover(cdnUrl);
+    else setAvatar(cdnUrl);
+  }, []);
 
-  const handleFileSelect =
-    (field: CommunityCropPurpose) => (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      setCropPurpose(field);
-      setCropImageSrc(URL.createObjectURL(file));
-    };
+  const crop = useImageCropUpload(uploadCrop, applyUpload);
 
   const update = useMutation({
     mutationFn: () =>
@@ -130,7 +112,7 @@ export function EditCommunityForm({ community, onClose }: EditCommunityFormProps
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={handleFileSelect("COVER")}
+          onChange={crop.handleFileSelect("COVER")}
         />
       </div>
       <div className="space-y-1.5">
@@ -178,7 +160,7 @@ export function EditCommunityForm({ community, onClose }: EditCommunityFormProps
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={handleFileSelect("AVATAR")}
+          onChange={crop.handleFileSelect("AVATAR")}
         />
       </div>
       <Button
@@ -189,20 +171,20 @@ export function EditCommunityForm({ community, onClose }: EditCommunityFormProps
         {update.isPending ? texts.common.saving : texts.common.save}
       </Button>
 
-      {cropImageSrc && cropPurpose && (
+      {crop.cropImageSrc && crop.cropPurpose && (
         <ImageCropDialog
-          open={!!cropImageSrc}
+          open={!!crop.cropImageSrc}
           onOpenChange={(open) => {
-            if (!open) handleCropCancel();
+            if (!open) crop.handleCropCancel();
           }}
-          imageSrc={cropImageSrc}
-          aspect={cropPurpose === "COVER" ? 3 : 1}
+          imageSrc={crop.cropImageSrc}
+          aspect={crop.cropPurpose === "COVER" ? 3 : 1}
           title={
-            cropPurpose === "COVER"
+            crop.cropPurpose === "COVER"
               ? texts.communities.detail.cropCover
               : texts.communities.detail.cropAvatar
           }
-          onCropComplete={handleCropComplete}
+          onCropComplete={crop.handleCropComplete}
         />
       )}
     </div>
