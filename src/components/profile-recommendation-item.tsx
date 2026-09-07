@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { texts } from "@/texts";
 import type { RecommendationItemProps } from "@/types/components/profile/recommendation-item-props";
 
@@ -9,7 +9,7 @@ import { UserAvatar } from "@/components/user-avatar";
 export function ProfileRecommendationItem({ recommendation }: RecommendationItemProps) {
   const { data: recommender } = useQuery({
     queryKey: ["profile", "by-id", recommendation.recommenderId],
-    queryFn: () => profileApi.getById(recommendation.recommenderId),
+    queryFn: () => getProfileById(recommendation.recommenderId),
   });
 
   return (

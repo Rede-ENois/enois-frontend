@@ -6,7 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { Send } from "lucide-react";
 
 import { messagesApi } from "@/lib/api/messages";
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 import type { ActiveConversationProps } from "@/types/components/messages/active-conversation-props";
@@ -49,7 +49,7 @@ export function ActiveConversation({ conversationId, onBack }: ActiveConversatio
   const otherParticipantId = activeConversation?.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
     queryKey: ["profile", "by-id", otherParticipantId],
-    queryFn: () => profileApi.getById(otherParticipantId ?? ""),
+    queryFn: () => getProfileById(otherParticipantId ?? ""),
     enabled: !!otherParticipantId,
   });
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
@@ -14,7 +14,7 @@ export function ConversationItem({ conversation, isActive, onSelect }: Conversat
   const otherId = conversation.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
     queryKey: ["profile", "by-id", otherId],
-    queryFn: () => profileApi.getById(otherId ?? ""),
+    queryFn: () => getProfileById(otherId ?? ""),
     enabled: !!otherId,
   });
 

@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { ArrowLeft } from "lucide-react";
 
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 import type { ConversationHeaderProps } from "@/types/components/messages/conversation-header-props";
@@ -15,7 +15,7 @@ export function ConversationHeader({ conversation, onBack }: ConversationHeaderP
   const otherId = conversation.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
     queryKey: ["profile", "by-id", otherId],
-    queryFn: () => profileApi.getById(otherId ?? ""),
+    queryFn: () => getProfileById(otherId ?? ""),
     enabled: !!otherId,
   });
 

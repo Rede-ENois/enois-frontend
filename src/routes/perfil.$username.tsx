@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { profileApi } from "@/lib/api/profile";
+import { getProfile } from "@/lib/api/profile/get-profile";
 import { texts } from "@/texts";
 
 import { ProfileError } from "@/components/pages/profile-error";
@@ -10,7 +10,7 @@ import { Profile } from "@/components/pages/profile-page";
 export const Route = createFileRoute("/perfil/$username")({
   loader: async ({ params }) => {
     try {
-      const user = await profileApi.get(params.username);
+      const user = await getProfile(params.username);
       return { user };
     } catch {
       throw notFound();

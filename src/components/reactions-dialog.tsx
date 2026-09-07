@@ -2,7 +2,7 @@ import { Root as Dialog } from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { reactionsApi } from "@/lib/api/reactions";
 import { getCurrentUserId } from "@/lib/current-user";
 import { usePostCardStore } from "@/stores/post-card.store";
@@ -46,7 +46,7 @@ export function ReactionsDialog({ postId }: PostIdProps) {
     queryKey: ["profiles", "by-ids", uniqueUserIds.sort().join(",")],
     queryFn: async () => {
       const results = await Promise.all(
-        uniqueUserIds.map((id) => profileApi.getById(id).catch(() => null)),
+        uniqueUserIds.map((id) => getProfileById(id).catch(() => null)),
       );
       return Object.fromEntries(results.filter(Boolean).map((user) => [user!.id, user!]));
     },

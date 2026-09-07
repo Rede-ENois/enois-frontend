@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { Calendar, Star } from "lucide-react";
 
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
@@ -18,7 +18,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
 
   const { data: user } = useQuery({
     queryKey: ["profile", mentor.userId],
-    queryFn: () => profileApi.getById(mentor.userId),
+    queryFn: () => getProfileById(mentor.userId),
   });
 
   return (

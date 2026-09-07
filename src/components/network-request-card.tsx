@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { Check, X } from "lucide-react";
 
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 import type { RequestCardProps } from "@/types/components/network/request-card-props";
@@ -18,7 +18,7 @@ export function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
 
   const { data: user } = useQuery({
     queryKey: ["profile", "by-id", targetUserId],
-    queryFn: () => profileApi.getById(targetUserId),
+    queryFn: () => getProfileById(targetUserId),
   });
 
   return (
