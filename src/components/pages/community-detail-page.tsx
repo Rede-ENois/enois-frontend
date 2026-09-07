@@ -1,11 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, useLoaderData } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
 import { ArrowLeft } from "lucide-react";
 
-import { getCommunity } from "@/lib/api/communities/get-community";
-import { getCommunityFeed } from "@/lib/api/communities/get-community-feed";
-import { getCommunityMembers } from "@/lib/api/communities/get-community-members";
+import { useCommunityDetailData } from "@/lib/use-community-detail-data";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
@@ -15,26 +12,7 @@ import { CommunityMembers } from "@/components/community-members";
 import { PostCard } from "@/components/post-card";
 
 export function CommunityDetail() {
-  const community = useLoaderData({ from: "/comunidades/$communityId" });
-
-  const { data: live } = useQuery({
-    queryKey: ["community", community.id],
-    queryFn: () => getCommunity(community.id),
-    initialData: community,
-  });
-
-  const { data: membersData } = useQuery({
-    queryKey: ["community", community.id, "members"],
-    queryFn: () => getCommunityMembers(community.id),
-  });
-
-  const { data: feedData } = useQuery({
-    queryKey: ["community", community.id, "feed"],
-    queryFn: () => getCommunityFeed(community.id),
-  });
-
-  const members = membersData?.items ?? [];
-  const posts = feedData?.items ?? [];
+  const { community, members, posts } = useCommunityDetailData();
 
   return (
     <AppContainer>
@@ -46,16 +24,16 @@ export function CommunityDetail() {
           <ArrowLeft className="h-4 w-4" /><>{texts.communities.title}</>
         </Link>
 
-        <CommunityHeader community={live} members={members} />
+        <CommunityHeader community={community} members={members} />
 
-        {live.joined && <CommunityComposer communityId={live.id} />}
+        {community.joined && <CommunityComposer communityId={community.id} />}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">{texts.communities.detail.feed}</h2>
             {posts.length === 0 ? (
               <p className="surface-card p-8 text-center text-sm text-muted-foreground">
-                {live.joined
+                {community.joined
                   ? texts.communities.detail.emptyMember
                   : texts.communities.detail.emptyGuest}
               </p>
