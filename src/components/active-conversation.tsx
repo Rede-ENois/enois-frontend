@@ -5,7 +5,9 @@ import { Link } from "@tanstack/react-router";
 
 import { Send } from "lucide-react";
 
-import { messagesApi } from "@/lib/api/messages";
+import { listConversations } from "@/lib/api/messages/list-conversations";
+import { listMessages } from "@/lib/api/messages/list-messages";
+import { sendMessage as sendMessageRequest } from "@/lib/api/messages/send-message";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
@@ -25,7 +27,7 @@ export function ActiveConversation({ conversationId, onBack }: ActiveConversatio
 
   const { data: conversationsData } = useQuery({
     queryKey: ["conversations"],
-    queryFn: () => messagesApi.listConversations(),
+    queryFn: () => listConversations(),
     refetchInterval: 15_000,
   });
 
@@ -36,7 +38,7 @@ export function ActiveConversation({ conversationId, onBack }: ActiveConversatio
 
   const { data: messagesData } = useQuery({
     queryKey: ["messages", activeConversation?.id],
-    queryFn: () => messagesApi.listMessages(activeConversation!.id),
+    queryFn: () => listMessages(activeConversation!.id),
     enabled: !!activeConversation,
     refetchInterval: 10_000,
   });
@@ -55,7 +57,7 @@ export function ActiveConversation({ conversationId, onBack }: ActiveConversatio
 
   const sendMessage = useMutation({
     mutationFn: ({ conversationId, text }: SendMessageInput) =>
-      messagesApi.sendMessage(conversationId, text),
+      sendMessageRequest(conversationId, text),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", activeConversation?.id] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });

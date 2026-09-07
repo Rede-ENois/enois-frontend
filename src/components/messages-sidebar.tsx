@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Search } from "lucide-react";
 
-import { messagesApi } from "@/lib/api/messages";
+import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
+import { listConversations } from "@/lib/api/messages/list-conversations";
+import { markConversationAsRead } from "@/lib/api/messages/mark-conversation-as-read";
 import { listNetworkUsers } from "@/lib/api/network/list-network-users";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
@@ -23,7 +25,7 @@ export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
 
   const { data: conversationsData } = useQuery({
     queryKey: ["conversations"],
-    queryFn: () => messagesApi.listConversations(),
+    queryFn: () => listConversations(),
     refetchInterval: 15_000,
   });
 
@@ -39,7 +41,7 @@ export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
 
   const createConversation = useMutation({
     mutationFn: (participantId: string) =>
-      messagesApi.createConversation({ kind: "DIRECT", participantIds: [participantId] }),
+      createConversationRequest({ kind: "DIRECT", participantIds: [participantId] }),
     onSuccess: (conversation) => {
       onSelect(conversation.id);
       setShowSearch(false);
@@ -49,7 +51,7 @@ export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
   });
 
   const markAsRead = useMutation({
-    mutationFn: (conversationId: string) => messagesApi.markAsRead(conversationId),
+    mutationFn: markConversationAsRead,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["conversations"] }),
   });
 
