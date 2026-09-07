@@ -1,15 +1,9 @@
 import { useState } from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-
 import { Briefcase, Camera, MapPin, MessageCircle, Settings } from "lucide-react";
 
 import { resolveCdnUrl } from "@/lib/api/media";
-import { connectToUser } from "@/lib/api/network/connect-to-user";
-import { getConnectionStatus } from "@/lib/api/network/get-connection-status";
-import { ApiError } from "@/lib/api-client";
-import { useAuth } from "@/lib/use-auth";
+import { useProfileHeaderActions } from "@/lib/use-profile-header-actions";
 import { useProfileMediaEditor } from "@/lib/use-profile-media-editor";
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
@@ -20,11 +14,15 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const { user: me, requireAuth } = useAuth();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [hoveringAvatar, setHoveringAvatar] = useState(false);
   const [hoveringBanner, setHoveringBanner] = useState(false);
+  const {
+    isOwnProfile,
+    connectionStatus,
+    connectionPending,
+    handleMessage,
+    handleConnect,
+  } = useProfileHeaderActions(user);
   const {
     avatarRef,
     bannerRef,
@@ -37,28 +35,6 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
     handleCropComplete,
     handleCropCancel,
   } = useProfileMediaEditor(user);
-
-  const isOwnProfile = me?.id === user.id;
-
-  const { data: connectionData } = useQuery({
-    queryKey: ["connection-status", user.id],
-    queryFn: () => getConnectionStatus(user.id),
-    enabled: !isOwnProfile && !!me,
-  });
-
-  const connectionStatus = connectionData?.status ?? null;
-
-  const connect = useMutation({
-    mutationFn: () => connectToUser(user.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
-    },
-    onError: (error: unknown) => {
-      if (error instanceof ApiError && error.code === "CONNECTION_ALREADY_REQUESTED") {
-        queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
-      }
-    },
-  });
 
   return (
     <>
@@ -140,22 +116,16 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                     variant="outline"
                     size="sm"
                     className="rounded-full gap-1.5"
-                    onClick={() => {
-                      if (!requireAuth()) return;
-                      navigate({ to: "/mensagens" });
-                    }}
+                    onClick={handleMessage}
                   >
                     <MessageCircle className="h-4 w-4" /><>{texts.profile.message}</>
                   </Button>
                   <Button
                     size="sm"
                     className="rounded-full gap-1.5"
-                    onClick={() => {
-                      if (!requireAuth()) return;
-                      connect.mutate();
-                    }}
+                    onClick={handleConnect}
                     disabled={
-                      connect.isPending ||
+                      connectionPending ||
                       connectionStatus === "ACCEPTED" ||
                       connectionStatus === "PENDING"
                     }

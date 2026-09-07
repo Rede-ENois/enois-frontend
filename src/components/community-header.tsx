@@ -1,15 +1,10 @@
-import { useState } from "react";
-
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { Settings, Users } from "lucide-react";
 
-import { joinCommunity } from "@/lib/api/communities/join-community";
-import { leaveCommunity } from "@/lib/api/communities/leave-community";
 import { resolveCdnUrl } from "@/lib/api/media";
-import { useAuth } from "@/lib/use-auth";
+import { useCommunityHeaderController } from "@/lib/use-community-header-controller";
 import { texts } from "@/texts";
 import type { CommunityHeaderProps } from "@/types/components/communities/community-header-props";
 
@@ -21,27 +16,14 @@ import { DialogHeader } from "@/components/ui/dialog-header";
 import { DialogTitle } from "@/components/ui/dialog-title";
 
 export function CommunityHeader({ community, members }: CommunityHeaderProps) {
-  const queryClient = useQueryClient();
-  const { user: currentUser } = useAuth();
-  const [editOpen, setEditOpen] = useState(false);
-  const admins = members.filter((member) => member.role === "ADMIN");
-  const isAdmin = currentUser
-    ? admins.some((admin) => admin.userId === currentUser.id)
-    : false;
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["community", community.id] });
-  };
-
-  const join = useMutation({
-    mutationFn: () => joinCommunity(community.id),
-    onSuccess: invalidate,
-  });
-
-  const leave = useMutation({
-    mutationFn: () => leaveCommunity(community.id),
-    onSuccess: invalidate,
-  });
+  const {
+    editOpen,
+    setEditOpen,
+    isAdmin,
+    primaryAdmin,
+    membershipPending,
+    toggleMembership,
+  } = useCommunityHeaderController(community, members);
 
   return (
     <div className="surface-card overflow-hidden">
@@ -76,14 +58,14 @@ export function CommunityHeader({ community, members }: CommunityHeaderProps) {
                 <span className="inline-flex items-center gap-1.5">
                   <Users className="h-4 w-4" /><>{texts.communities.memberCount(community.members)}</>
                 </span>
-                {admins.length > 0 && (
+                {primaryAdmin && (
                   <span>
                     <>{texts.communities.detail.createdBy}</><Link
                       to="/perfil/$username"
-                      params={{ username: admins[0].username }}
+                      params={{ username: primaryAdmin.username }}
                       className="font-medium text-foreground hover:underline"
                     >
-                      {admins[0].name}
+                      {primaryAdmin.name}
                     </Link>
                   </span>
                 )}
@@ -110,8 +92,8 @@ export function CommunityHeader({ community, members }: CommunityHeaderProps) {
             <Button
               className="shrink-0 rounded-full"
               variant={community.joined ? "secondary" : "default"}
-              disabled={join.isPending || leave.isPending}
-              onClick={() => (community.joined ? leave.mutate() : join.mutate())}
+              disabled={membershipPending}
+              onClick={toggleMembership}
             >
               {community.joined ? texts.communities.participating : texts.communities.enter}
             </Button>

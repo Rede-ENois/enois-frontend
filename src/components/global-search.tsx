@@ -1,74 +1,32 @@
-import { useEffect, useRef, useState } from "react";
-
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-
 import { Loader2, Search } from "lucide-react";
 
-import { searchContent } from "@/lib/api/search";
+import { useGlobalSearch } from "@/lib/use-global-search";
 import { texts } from "@/texts";
-import type { SearchResult } from "@/types/application/search/search-result";
-import { navigateToHref } from "@/utils/navigation";
 
+import { GlobalSearchResults } from "@/components/global-search-results";
 import { Input } from "@/components/ui/input";
 
-import { GlobalSearchResults } from "./global-search-results";
-
 export function GlobalSearch() {
-  const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [open, setOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(query), 250);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (mobileOpen) inputRef.current?.focus();
-  }, [mobileOpen]);
-
-  const { data: results, isFetching } = useQuery({
-    queryKey: ["search", debounced],
-    queryFn: () => searchContent(debounced),
-    enabled: debounced.length >= 2,
-  });
-
-  const items = results?.items ?? [];
-
-  const closeSearch = () => {
-    setOpen(false);
-    setQuery("");
-  };
-
-  const handleSelect = (item: SearchResult) => {
-    closeSearch();
-    setMobileOpen(false);
-    navigateToHref(item.href, navigate);
-  };
+  const {
+    query,
+    debounced,
+    open,
+    mobileOpen,
+    searchRef,
+    inputRef,
+    items,
+    isFetching,
+    openMobileSearch,
+    closeMobileSearch,
+    handleQueryChange,
+    handleFocus,
+    handleSelect,
+  } = useGlobalSearch();
 
   return (
     <>
       <button
-        onClick={() => {
-          setMobileOpen(true);
-          setOpen(true);
-        }}
+        onClick={openMobileSearch}
         className="ml-auto grid h-9 w-9 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary md:hidden"
         aria-label={texts.search.action}
       >
@@ -81,10 +39,7 @@ export function GlobalSearch() {
           mobileOpen ? "visible opacity-100" : "invisible pointer-events-none opacity-0"
         } md:visible md:static md:z-auto md:ml-2 md:block md:flex-1 md:max-w-md md:bg-transparent md:p-0 md:opacity-100 md:backdrop-blur-none md:pointer-events-auto`}
         onMouseDown={(event) => {
-          if (mobileOpen && event.target === event.currentTarget) {
-            setMobileOpen(false);
-            closeSearch();
-          }
+          if (mobileOpen && event.target === event.currentTarget) closeMobileSearch();
         }}
       >
         <div className="relative w-full max-w-md px-4 md:max-w-none md:px-0">
@@ -92,11 +47,8 @@ export function GlobalSearch() {
           <Input
             ref={inputRef}
             value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setOpen(true);
-            }}
-            onFocus={() => setOpen(true)}
+            onChange={(event) => handleQueryChange(event.target.value)}
+            onFocus={handleFocus}
             placeholder={texts.search.placeholder}
             className="h-12 rounded-full border-border-soft bg-surface-card pl-10 pr-4 focus-visible:border-primary md:h-10 md:bg-surface-1 md:pl-9"
           />
