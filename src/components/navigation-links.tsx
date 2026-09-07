@@ -1,7 +1,8 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
-import { navigationItems } from "@/constants/navigation-items";
 import type { NavigationLinksProps } from "@/types/components/navigation/navigation-links-props";
+
+import { useNavigationLinksController } from "@/utils/components/navigation/use-navigation-links-controller";
 
 import { cn } from "@/lib/utils";
 
@@ -10,15 +11,14 @@ export function NavigationLinks({
   onNavigate,
   className,
 }: NavigationLinksProps) {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { items } = useNavigationLinksController({ collapsed, onNavigate, className });
 
   return (
     <nav
       data-collapsed={collapsed}
       className={cn("group/navigation flex flex-col gap-1", className)}
     >
-      {navigationItems.map((item) => {
-        const active = pathname === item.to || pathname.startsWith(`${item.to}/`);
+      {items.map((item) => {
         const Icon = item.icon;
 
         return (
@@ -26,11 +26,11 @@ export function NavigationLinks({
             key={item.to}
             to={item.to}
             onClick={onNavigate}
-            title={collapsed ? item.label : undefined}
+            title={item.title}
             className={cn(
               "flex items-center gap-3 rounded-xl border-l-2 px-3 py-3 text-[14px] font-light transition",
               "group-data-[collapsed=true]/navigation:justify-center group-data-[collapsed=true]/navigation:gap-0 group-data-[collapsed=true]/navigation:px-0",
-              active
+              item.active
                 ? "border-primary bg-surface-2 text-primary"
                 : "border-transparent text-text-subtle hover:bg-surface-3 hover:text-text-strong",
             )}
@@ -38,7 +38,7 @@ export function NavigationLinks({
             <Icon
               className={cn(
                 "h-5 w-5 shrink-0 transition-colors lg:h-4 lg:w-4",
-                active && "text-primary",
+                item.active && "text-primary",
               )}
             />
 

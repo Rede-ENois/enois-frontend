@@ -1,27 +1,7 @@
-import { useEffect } from "react";
-
-import { useNavigate } from "@tanstack/react-router";
-
-import { persistAuthTokens } from "@/lib/auth-session/persist-auth-tokens";
+import { useOAuthCallbackController } from "@/utils/components/auth/use-oauth-callback-controller";
 
 export function OAuthCallbackHandler() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    if (!token) return;
-
-    persistAuthTokens({
-      token,
-      refreshToken: params.get("refreshToken"),
-      expiresAt: params.get("expiresAt"),
-      refreshExpiresAt: params.get("refreshExpiresAt"),
-    });
-    navigate({ to: "/feed", replace: true });
-  }, [navigate]);
+  useOAuthCallbackController();
 
   return null;
 }

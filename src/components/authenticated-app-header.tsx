@@ -1,10 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
-import { useAppShellStore } from "@/stores/app-shell.store";
 import { texts } from "@/texts";
 import { Menu } from "lucide-react";
 
-import { getCurrentUser } from "@/lib/get-current-user";
+import { useAuthenticatedAppHeaderController } from "@/utils/components/app/use-authenticated-app-header-controller";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
@@ -15,8 +14,7 @@ import { GlobalSearch } from "./global-search";
 import { NotificationsPopover } from "./notifications-popover";
 
 export function AuthenticatedAppHeader() {
-  const openMobileNavigation = useAppShellStore((state) => state.openMobileNavigation);
-  const profile = getCurrentUser();
+  const { openMobileNavigation, profile, showProfile } = useAuthenticatedAppHeaderController();
 
   return (
     <AppHeaderLayout>
@@ -34,7 +32,7 @@ export function AuthenticatedAppHeader() {
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
         <NotificationsPopover />
-        {profile && (
+        {showProfile && profile && (
           <Link
             to="/perfil/$username"
             params={{ username: profile.username }}

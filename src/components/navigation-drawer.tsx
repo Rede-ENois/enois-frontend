@@ -1,22 +1,17 @@
-import { useAppShellStore } from "@/stores/app-shell.store";
 import { texts } from "@/texts";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+
+import { useNavigationDrawerController } from "@/utils/components/navigation/use-navigation-drawer-controller";
 
 import { AppBrand } from "./app-brand";
 import { NavigationLinks } from "./navigation-links";
 
 export function NavigationDrawer() {
-  const mobileNavigationOpen = useAppShellStore((state) => state.mobileNavigationOpen);
-  const closeMobileNavigation = useAppShellStore((state) => state.closeMobileNavigation);
+  const { open, close, handleOpenChange } = useNavigationDrawerController();
 
   return (
-    <DialogPrimitive.Root
-      open={mobileNavigationOpen}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) closeMobileNavigation();
-      }}
-    >
+    <DialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
 
@@ -26,10 +21,10 @@ export function NavigationDrawer() {
           </DialogPrimitive.Title>
 
           <div className="flex h-14 items-center border-b border-border-soft px-3 sm:h-16">
-            <AppBrand onClick={closeMobileNavigation} />
+            <AppBrand onClick={close} />
           </div>
 
-          <NavigationLinks onNavigate={closeMobileNavigation} className="overflow-y-auto p-3" />
+          <NavigationLinks onNavigate={close} className="overflow-y-auto p-3" />
 
           <DialogPrimitive.Close className="absolute right-3 top-2.5 grid h-9 w-9 place-items-center rounded-full text-text-subtle opacity-100 transition hover:bg-surface-2 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none sm:top-3.5">
             <X className="h-4 w-4" />

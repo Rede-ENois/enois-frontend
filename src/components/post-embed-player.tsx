@@ -1,20 +1,16 @@
-import { useState } from "react";
-
-import { texts } from "@/texts";
 import type { EmbedPlayerProps } from "@/types/components/post/embed-player-props";
 
-export function EmbedPlayer({ type, id }: EmbedPlayerProps) {
-  const [playing, setPlaying] = useState(false);
+import { useEmbedPlayerController } from "@/utils/components/post/use-embed-player-controller";
+
+export function EmbedPlayer(props: EmbedPlayerProps) {
+  const { playing, startPlaying, thumbnail, fallbackIcon, watchLabel, src } =
+    useEmbedPlayerController(props);
 
   if (!playing) {
-    let thumbnail = "";
-    if (type === "youtube") thumbnail = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
-    if (type === "dailymotion") thumbnail = `https://www.dailymotion.com/thumbnail/video/${id}`;
-
     return (
       <button
         type="button"
-        onClick={() => setPlaying(true)}
+        onClick={startPlaying}
         className="relative mt-3 block w-full overflow-hidden rounded-xl border border-border-soft text-left transition hover:opacity-90"
       >
         {thumbnail ? (
@@ -22,17 +18,9 @@ export function EmbedPlayer({ type, id }: EmbedPlayerProps) {
         ) : (
           <div className="flex aspect-video w-full items-center justify-center bg-surface-1">
             <div className="text-center">
-              <p className="text-2xl">
-                {type === "vimeo"
-                  ? texts.posts.video.icons.cinema
-                  : type === "twitch"
-                    ? texts.posts.video.icons.television
-                    : texts.posts.video.icons.play}
-              </p>
+              <p className="text-2xl">{fallbackIcon}</p>
 
-              <p className="mt-1 text-[12px] font-light text-text-subtle">
-                {texts.posts.video.watchOn(type === "youtube" ? "YouTube" : type)}
-              </p>
+              <p className="mt-1 text-[12px] font-light text-text-subtle">{watchLabel}</p>
             </div>
           </div>
         )}
@@ -47,17 +35,10 @@ export function EmbedPlayer({ type, id }: EmbedPlayerProps) {
     );
   }
 
-  const srcs: Record<string, string> = {
-    youtube: `https://www.youtube.com/embed/${id}?autoplay=1`,
-    vimeo: `https://player.vimeo.com/video/${id}?autoplay=1`,
-    dailymotion: `https://www.dailymotion.com/embed/video/${id}?autoplay=1`,
-    twitch: `https://player.twitch.tv/?video=${id}&parent=${typeof window !== "undefined" ? window.location.hostname : ""}&autoplay=true`,
-  };
-
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-border-soft bg-surface-1">
       <iframe
-        src={srcs[type] ?? ""}
+        src={src}
         className="aspect-video w-full"
         allow="autoplay; fullscreen; encrypted-media"
         allowFullScreen
