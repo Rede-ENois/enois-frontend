@@ -4,7 +4,19 @@ import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
-import { profileApi } from "@/lib/api/profile";
+import { createCertification } from "@/lib/api/profile/certifications/create-certification";
+import { deleteCertification } from "@/lib/api/profile/certifications/delete-certification";
+import { listCertifications } from "@/lib/api/profile/certifications/list-certifications";
+import { updateCertification } from "@/lib/api/profile/certifications/update-certification";
+import { createEducation } from "@/lib/api/profile/education/create-education";
+import { deleteEducation } from "@/lib/api/profile/education/delete-education";
+import { listEducation } from "@/lib/api/profile/education/list-education";
+import { updateEducation } from "@/lib/api/profile/education/update-education";
+import { createExperience } from "@/lib/api/profile/experiences/create-experience";
+import { deleteExperience } from "@/lib/api/profile/experiences/delete-experience";
+import { listExperiences } from "@/lib/api/profile/experiences/list-experiences";
+import { updateExperience } from "@/lib/api/profile/experiences/update-experience";
+import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
 import { ApiError } from "@/lib/api-client";
 import { texts } from "@/texts";
 import type { CertificationRequest } from "@/types/application/profile/certification-request";
@@ -47,7 +59,7 @@ export function EditProfileDialog({ profile, children }: Props) {
   const [usernameError, setUsernameError] = useState("");
 
   const updateProfile = useMutation({
-    mutationFn: (data: Parameters<typeof profileApi.update>[0]) => profileApi.update(data),
+    mutationFn: updateProfileRequest,
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", profile.username] });
@@ -70,19 +82,19 @@ export function EditProfileDialog({ profile, children }: Props) {
 
   const { data: experiences = [] } = useQuery({
     queryKey: ["me", "experiences"],
-    queryFn: () => profileApi.experiences.list(),
+    queryFn: listExperiences,
     enabled: open && tab === "experiences",
   });
 
   const { data: education = [] } = useQuery({
     queryKey: ["me", "education"],
-    queryFn: () => profileApi.education.list(),
+    queryFn: listEducation,
     enabled: open && tab === "education",
   });
 
   const { data: certifications = [] } = useQuery({
     queryKey: ["me", "certifications"],
-    queryFn: () => profileApi.certifications.list(),
+    queryFn: listCertifications,
     enabled: open && tab === "certifications",
   });
 
@@ -283,9 +295,9 @@ export function EditProfileDialog({ profile, children }: Props) {
                 { key: "endDate", label: texts.profile.edit.experienceFields.endDate, type: "date" },
               ]}
               currentlyHereKey="currentlyHere"
-              createApi={(data) => profileApi.experiences.create(data)}
-              updateApi={(id, data) => profileApi.experiences.update(id, data)}
-              deleteApi={(id) => profileApi.experiences.delete(id)}
+              createApi={createExperience}
+              updateApi={updateExperience}
+              deleteApi={deleteExperience}
               queryKey={["me", "experiences"]}
               emptyMessage={texts.profile.edit.emptyExperience}
               newItem={{
@@ -311,9 +323,9 @@ export function EditProfileDialog({ profile, children }: Props) {
                 { key: "endDate", label: texts.profile.edit.educationFields.endDate, type: "date" },
               ]}
               currentlyHereKey="currentlyHere"
-              createApi={(data) => profileApi.education.create(data)}
-              updateApi={(id, data) => profileApi.education.update(id, data)}
-              deleteApi={(id) => profileApi.education.delete(id)}
+              createApi={createEducation}
+              updateApi={updateEducation}
+              deleteApi={deleteEducation}
               queryKey={["me", "education"]}
               emptyMessage={texts.profile.edit.emptyEducation}
               newItem={{
@@ -338,9 +350,9 @@ export function EditProfileDialog({ profile, children }: Props) {
                 { key: "expirationDate", label: texts.profile.edit.certificationFields.expirationDate, type: "date" },
                 { key: "credentialUrl", label: texts.profile.edit.certificationFields.credentialUrl },
               ]}
-              createApi={(data) => profileApi.certifications.create(data)}
-              updateApi={(id, data) => profileApi.certifications.update(id, data)}
-              deleteApi={(id) => profileApi.certifications.delete(id)}
+              createApi={createCertification}
+              updateApi={updateCertification}
+              deleteApi={deleteCertification}
               queryKey={["me", "certifications"]}
               emptyMessage={texts.profile.edit.emptyCertification}
               newItem={{
