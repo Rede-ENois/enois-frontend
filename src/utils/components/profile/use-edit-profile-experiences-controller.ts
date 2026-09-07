@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import type { Experience } from "@/types/application/profile/experience";
+import type { ExperienceRequest } from "@/types/application/profile/experience-request";
+import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 
 import { createExperience } from "@/lib/api/profile/experiences/create-experience";
 import { deleteExperience } from "@/lib/api/profile/experiences/delete-experience";
@@ -13,7 +16,7 @@ export function useEditProfileExperiencesController() {
     queryFn: listExperiences,
   });
 
-  return {
+  const props: SubListProps<Experience, ExperienceRequest> = {
     items,
     fields: [
       { key: "title", label: texts.profile.edit.experienceFields.title, required: true },
@@ -41,5 +44,7 @@ export function useEditProfileExperiencesController() {
       startDate: "",
       endDate: "",
     },
-  } as const;
+  };
+
+  return props;
 }

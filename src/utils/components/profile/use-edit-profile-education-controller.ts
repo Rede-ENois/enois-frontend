@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import type { Education } from "@/types/application/profile/education";
+import type { EducationRequest } from "@/types/application/profile/education-request";
+import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 
 import { createEducation } from "@/lib/api/profile/education/create-education";
 import { deleteEducation } from "@/lib/api/profile/education/delete-education";
@@ -13,7 +16,7 @@ export function useEditProfileEducationController() {
     queryFn: listEducation,
   });
 
-  return {
+  const props: SubListProps<Education, EducationRequest> = {
     items,
     fields: [
       { key: "school", label: texts.profile.edit.educationFields.school, required: true },
@@ -41,5 +44,7 @@ export function useEditProfileEducationController() {
       startDate: "",
       endDate: "",
     },
-  } as const;
+  };
+
+  return props;
 }

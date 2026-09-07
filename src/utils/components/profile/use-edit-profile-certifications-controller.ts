@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import type { Certification } from "@/types/application/profile/certification";
+import type { CertificationRequest } from "@/types/application/profile/certification-request";
+import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 
 import { createCertification } from "@/lib/api/profile/certifications/create-certification";
 import { deleteCertification } from "@/lib/api/profile/certifications/delete-certification";
@@ -13,7 +16,7 @@ export function useEditProfileCertificationsController() {
     queryFn: listCertifications,
   });
 
-  return {
+  const props: SubListProps<Certification, CertificationRequest> = {
     items,
     fields: [
       { key: "name", label: texts.profile.edit.certificationFields.name, required: true },
@@ -44,5 +47,7 @@ export function useEditProfileCertificationsController() {
       expirationDate: "",
       credentialUrl: "",
     },
-  } as const;
+  };
+
+  return props;
 }
