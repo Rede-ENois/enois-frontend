@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { networkApi } from "@/lib/api/network";
+import { getNetworkSummary } from "@/lib/api/network/get-network-summary";
+import { listNetworkUsers } from "@/lib/api/network/list-network-users";
 import { texts } from "@/texts";
 
 import { Stat } from "@/components/network-stat";
@@ -8,12 +9,12 @@ import { Stat } from "@/components/network-stat";
 export function NetworkSummary() {
   const { data: summary } = useQuery({
     queryKey: ["network", "summary"],
-    queryFn: () => networkApi.summary(),
+    queryFn: getNetworkSummary,
   });
 
   const { data: usersData } = useQuery({
     queryKey: ["network", "users"],
-    queryFn: () => networkApi.list(),
+    queryFn: () => listNetworkUsers(),
   });
 
   const suggestionCount = usersData?.items.length ?? 0;

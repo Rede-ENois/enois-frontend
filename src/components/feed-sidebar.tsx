@@ -4,7 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { TrendingUp, UserPlus } from "lucide-react";
 
 import { listEvents } from "@/lib/api/events/list-events";
-import { networkApi } from "@/lib/api/network";
+import { connectToUser } from "@/lib/api/network/connect-to-user";
+import { listNetworkSuggestions } from "@/lib/api/network/list-network-suggestions";
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
 import { texts } from "@/texts";
 
@@ -18,7 +19,7 @@ export function FeedSidebar() {
   });
   const { data: suggestions } = useQuery({
     queryKey: ["network", "suggestions"],
-    queryFn: () => networkApi.suggestions(4),
+    queryFn: () => listNetworkSuggestions(4),
   });
   const { data: eventsData } = useQuery({
     queryKey: ["events"],
@@ -90,11 +91,9 @@ export function FeedSidebar() {
                   type="button"
                   className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary"
                   onClick={() => {
-                    networkApi
-                      .connect(user.id)
-                      .then(() =>
-                        queryClient.invalidateQueries({ queryKey: ["network", "suggestions"] }),
-                      );
+                    connectToUser(user.id).then(() =>
+                      queryClient.invalidateQueries({ queryKey: ["network", "suggestions"] }),
+                    );
                   }}
                 >
                   {texts.feed.sidebar.connect}

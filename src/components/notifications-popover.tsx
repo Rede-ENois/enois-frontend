@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Bell, CheckCheck } from "lucide-react";
 
-import { networkApi } from "@/lib/api/network";
+import { acceptConnection } from "@/lib/api/network/accept-connection";
 import { listNotifications } from "@/lib/api/notifications/list-notifications";
 import { markAllNotificationsAsRead } from "@/lib/api/notifications/mark-all-notifications-as-read";
 import { markNotificationAsRead } from "@/lib/api/notifications/mark-notification-as-read";
@@ -40,8 +40,8 @@ export function NotificationsPopover() {
     },
   });
 
-  const acceptConnection = useMutation({
-    mutationFn: (actorId: string) => networkApi.accept(actorId),
+  const acceptConnectionMutation = useMutation({
+    mutationFn: acceptConnection,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["network"] });
     },
@@ -131,7 +131,7 @@ export function NotificationsPopover() {
                 key={notification.id}
                 notification={notification}
                 onMarkAsRead={(id) => markAsRead.mutate(id)}
-                onAcceptConnection={(actorId) => acceptConnection.mutate(actorId)}
+                onAcceptConnection={(actorId) => acceptConnectionMutation.mutate(actorId)}
               />
             ))
           )}

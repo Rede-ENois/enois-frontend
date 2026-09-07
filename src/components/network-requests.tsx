@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { networkApi } from "@/lib/api/network";
+import { acceptConnection } from "@/lib/api/network/accept-connection";
+import { listConnectionRequests } from "@/lib/api/network/list-connection-requests";
+import { removeConnection } from "@/lib/api/network/remove-connection";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 
@@ -12,7 +14,7 @@ export function NetworkRequests() {
 
   const { data: requestsData } = useQuery({
     queryKey: ["network", "requests"],
-    queryFn: () => networkApi.requests(),
+    queryFn: () => listConnectionRequests(),
     refetchInterval: 30_000,
   });
 
@@ -29,12 +31,12 @@ export function NetworkRequests() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
 
   const acceptRequest = useMutation({
-    mutationFn: (id: string) => networkApi.accept(id),
+    mutationFn: acceptConnection,
     onSuccess: invalidate,
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => networkApi.remove(id),
+    mutationFn: removeConnection,
     onSuccess: invalidate,
   });
 

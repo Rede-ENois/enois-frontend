@@ -5,7 +5,9 @@ import { Link } from "@tanstack/react-router";
 
 import { Check, Send, UserMinus, UserPlus } from "lucide-react";
 
-import { networkApi } from "@/lib/api/network";
+import { connectToUser } from "@/lib/api/network/connect-to-user";
+import { listNetworkUsers } from "@/lib/api/network/list-network-users";
+import { removeConnection } from "@/lib/api/network/remove-connection";
 import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
@@ -17,19 +19,19 @@ export function NetworkMatches() {
 
   const { data: usersData } = useQuery({
     queryKey: ["network", "users"],
-    queryFn: () => networkApi.list(),
+    queryFn: () => listNetworkUsers(),
   });
 
   const users = usersData?.items ?? [];
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
 
   const connect = useMutation({
-    mutationFn: (id: string) => networkApi.connect(id),
+    mutationFn: connectToUser,
     onSuccess: invalidate,
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => networkApi.remove(id),
+    mutationFn: removeConnection,
     onSuccess: invalidate,
   });
 

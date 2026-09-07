@@ -6,7 +6,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Briefcase, Camera, MapPin, MessageCircle, Settings } from "lucide-react";
 
 import { resolveCdnUrl } from "@/lib/api/media";
-import { networkApi } from "@/lib/api/network";
+import { connectToUser } from "@/lib/api/network/connect-to-user";
+import { getConnectionStatus } from "@/lib/api/network/get-connection-status";
 import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
 import { ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/use-auth";
@@ -38,7 +39,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
 
   const { data: connectionData } = useQuery({
     queryKey: ["connection-status", user.id],
-    queryFn: () => networkApi.status(user.id),
+    queryFn: () => getConnectionStatus(user.id),
     enabled: !isOwnProfile && !!me,
   });
 
@@ -53,7 +54,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   });
 
   const connect = useMutation({
-    mutationFn: () => networkApi.connect(user.id),
+    mutationFn: () => connectToUser(user.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
     },

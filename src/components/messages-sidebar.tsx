@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 
 import { messagesApi } from "@/lib/api/messages";
-import { networkApi } from "@/lib/api/network";
+import { listNetworkUsers } from "@/lib/api/network/list-network-users";
 import { getCurrentUserId } from "@/lib/current-user";
 import { texts } from "@/texts";
 import type { MessagesSidebarProps } from "@/types/components/messages/messages-sidebar-props";
@@ -31,7 +31,7 @@ export function MessagesSidebar({ activeId, onSelect }: MessagesSidebarProps) {
 
   const { data: searchResults } = useQuery({
     queryKey: ["network", "users", searchQuery],
-    queryFn: () => networkApi.list(searchQuery),
+    queryFn: () => listNetworkUsers(searchQuery),
     enabled: searchQuery.length > 0,
   });
 
