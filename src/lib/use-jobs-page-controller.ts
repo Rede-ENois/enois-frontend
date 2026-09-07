@@ -33,11 +33,11 @@ export function useJobsPageController() {
     queryFn: () => listJobs({ ...queryFilters, cursor, limit: 10 }),
   });
 
-  const jobs = data?.items ?? [];
+  const jobs = data?.items;
   const nextCursor = data?.nextCursor ?? null;
 
   useEffect(() => {
-    if (jobs.length === 0) return;
+    if (!jobs || jobs.length === 0) return;
     if (cursor === null) setAllJobs(jobs);
     else setAllJobs((previous) => [...previous, ...jobs]);
   }, [jobs, cursor]);
