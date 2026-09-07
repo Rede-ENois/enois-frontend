@@ -9,16 +9,14 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 import { useProfileMediaUpdater } from "@/utils/components/profile/use-profile-media-updater";
 
 export function useProfileMediaEditor(user: Profile) {
-  const avatarUpload = useMediaUpload();
-  const bannerUpload = useMediaUpload();
+  const upload = useMediaUpload();
   const avatarRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
   const updateProfileMedia = useProfileMediaUpdater(user);
 
   const uploadCrop = useCallback(
-    (purpose: ProfileCropPurpose, file: File) =>
-      (purpose === "AVATAR" ? avatarUpload : bannerUpload).upload(file, purpose),
-    [avatarUpload, bannerUpload],
+    (purpose: ProfileCropPurpose, file: File) => upload.upload(file, purpose),
+    [upload],
   );
   const applyUpload = useCallback(
     async (purpose: ProfileCropPurpose, cdnUrl: string) => {
@@ -32,8 +30,7 @@ export function useProfileMediaEditor(user: Profile) {
   return {
     avatarRef,
     bannerRef,
-    avatarUpload,
-    bannerUpload,
+    uploadStatus: upload.status,
     cropImageSrc: crop.cropImageSrc,
     cropPurpose: crop.cropPurpose,
     handleAvatarUpload: crop.handleFileSelect("AVATAR"),

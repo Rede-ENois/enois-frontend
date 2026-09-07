@@ -14,6 +14,8 @@ export function useProfileHeaderController(user: Profile) {
   const hover = useProfileHeaderHover();
   const actions = useProfileHeaderActions(user);
   const media = useProfileMediaEditor(user);
+  const avatarUploading = media.cropPurpose === "AVATAR" && media.uploadStatus === "uploading";
+  const bannerUploading = media.cropPurpose === "BANNER" && media.uploadStatus === "uploading";
 
   return {
     bannerUrl: user.banner ? resolveCdnUrl(user.banner) : null,
@@ -25,14 +27,14 @@ export function useProfileHeaderController(user: Profile) {
     bannerOverlay: createProfileMediaOverlay(
       actions.isOwnProfile,
       hover.hoveringBanner,
-      media.bannerUpload.status === "uploading",
+      bannerUploading,
       texts.common.sending,
       () => media.bannerRef.current?.click(),
     ),
     avatarOverlay: createProfileMediaOverlay(
       actions.isOwnProfile,
       hover.hoveringAvatar,
-      media.avatarUpload.status === "uploading",
+      avatarUploading,
       texts.profile.uploadingIndicator,
       () => media.avatarRef.current?.click(),
     ),
