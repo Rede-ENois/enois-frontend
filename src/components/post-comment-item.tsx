@@ -5,7 +5,8 @@ import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popo
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { deleteComment } from "@/lib/api/comments/delete-comment";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { reactionsApi } from "@/lib/api/reactions";
+import { react } from "@/lib/api/reactions";
+import { removeReaction } from "@/lib/api/reactions/remove-reaction";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
@@ -54,10 +55,10 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
   const handleCommentReaction = async (type: ReactionType) => {
     try {
       if (commentReaction === type) {
-        await reactionsApi.removeCommentReaction(comment.postId, comment.id);
+        await removeReaction(comment.postId, comment.id);
         setCommentReaction(null);
       } else {
-        await reactionsApi.reactComment(comment.postId, comment.id, type);
+        await react(comment.postId, type, comment.id);
         setCommentReaction(type);
       }
     } catch {

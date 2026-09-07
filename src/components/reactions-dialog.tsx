@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { reactionsApi } from "@/lib/api/reactions";
+import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
@@ -24,7 +24,7 @@ export function ReactionsDialog({ postId }: PostIdProps) {
 
   const { data } = useQuery({
     queryKey: ["reactions", postId],
-    queryFn: () => reactionsApi.listReactions(postId),
+    queryFn: () => listReactions(postId),
     enabled: open,
   });
 

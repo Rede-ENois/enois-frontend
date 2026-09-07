@@ -8,7 +8,11 @@ import { Bookmark, Flag, Heart, MessageSquare, Share2 } from "lucide-react";
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { typeMeta } from "@/constants/post-type-meta";
 import { listSavedPosts } from "@/lib/api/feed/list-saved-posts";
-import { reactionsApi } from "@/lib/api/reactions";
+import { react } from "@/lib/api/reactions";
+import { removeReaction } from "@/lib/api/reactions/remove-reaction";
+import { removeSave } from "@/lib/api/reactions/remove-save";
+import { save } from "@/lib/api/reactions/save";
+import { share } from "@/lib/api/reactions/share";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
@@ -64,11 +68,11 @@ export function PostCard({ post }: PostCardProps) {
   const handleReaction = async (type: ReactionType) => {
     try {
       if (reactionStatus === type) {
-        const result = await reactionsApi.removeReaction(post.id);
+        const result = await removeReaction(post.id);
         setReactionStatus(post.id, null);
         if ("counters" in result) setPostCounters(post.id, result.counters!);
       } else {
-        const result = await reactionsApi.react(post.id, type);
+        const result = await react(post.id, type);
         setReactionStatus(post.id, type);
         if ("counters" in result) setPostCounters(post.id, result.counters!);
       }
@@ -79,9 +83,7 @@ export function PostCard({ post }: PostCardProps) {
 
   const handleSave = async () => {
     try {
-      const result = saved
-        ? await reactionsApi.removeSave(post.id)
-        : await reactionsApi.save(post.id);
+      const result = saved ? await removeSave(post.id) : await save(post.id);
       setSaved(!saved);
       setPostCounters(post.id, result.counters);
     } catch {
@@ -91,7 +93,7 @@ export function PostCard({ post }: PostCardProps) {
 
   const handleShare = async () => {
     try {
-      const result = await reactionsApi.share(post.id);
+      const result = await share(post.id);
       setPostCounters(post.id, result.counters);
       const url = `${window.location.origin}/feed/${post.id}`;
       if (navigator.share) {

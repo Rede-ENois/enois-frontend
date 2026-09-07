@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { reactionsApi } from "@/lib/api/reactions";
+import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 
@@ -10,7 +10,7 @@ export function ReactionsSummary({ postId }: PostIdProps) {
 
   const { data } = useQuery({
     queryKey: ["reactions-summary", postId],
-    queryFn: () => reactionsApi.listReactions(postId),
+    queryFn: () => listReactions(postId),
     staleTime: 30_000,
   });
 
