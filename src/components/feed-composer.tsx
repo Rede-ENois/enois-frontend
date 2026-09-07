@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, Calendar, FileText, Film, Image, Loader2, X } from "lucide-react";
 
 import { feedApi } from "@/lib/api/feed";
-import { profileApi } from "@/lib/api/profile";
+import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
@@ -29,7 +29,7 @@ export function FeedComposer() {
 
   const { data: profile } = useQuery({
     queryKey: ["me"],
-    queryFn: () => profileApi.me(),
+    queryFn: getCurrentProfile,
   });
 
   const createPost = useMutation({
