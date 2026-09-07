@@ -1,10 +1,8 @@
-import { REPORT_REASONS } from "@/constants/report-reasons";
 import { texts } from "@/texts";
-import type { ReportReason } from "@/types/application/report/report-reason";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 import { Root as Dialog } from "@radix-ui/react-dialog";
 
-import { useReportDialogController } from "@/lib/use-report-dialog-controller";
+import { useReportDialogController } from "@/utils/components/post/use-report-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -14,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ReportDialog({ postId }: PostIdProps) {
-  const { open, setOpen, reason, setReason, description, setDescription, submit } =
+  const { open, setOpen, reason, reasonOptions, setReason, description, setDescription, submit } =
     useReportDialogController(postId);
 
   return (
@@ -32,16 +30,16 @@ export function ReportDialog({ postId }: PostIdProps) {
 
             <select
               value={reason}
-              onChange={(event) => setReason(event.target.value as ReportReason)}
+              onChange={(event) => setReason(event.target.value)}
               className="flex h-10 w-full rounded-md border border-border-soft bg-background px-3 py-2 text-[13px] font-light text-text-strong border-transparent bg-muted"
             >
-              {REPORT_REASONS.map((reportReason) => (
+              {reasonOptions.map((option) => (
                 <option
-                  key={reportReason}
-                  value={reportReason}
+                  key={option.value}
+                  value={option.value}
                   className="h-10 border-transparent bg-muted"
                 >
-                  {reportReason.replace(/_/g, " ").toLowerCase()}
+                  {option.label}
                 </option>
               ))}
             </select>

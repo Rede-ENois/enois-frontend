@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
-import { useRegisterMentorDialogController } from "@/lib/use-register-mentor-dialog-controller";
+import { useRegisterMentorDialogController } from "@/utils/components/mentoring/use-register-mentor-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/form-field";
 
 export function RegisterMentorDialog() {
-  const { open, setOpen, skillsText, setSkillsText, price, setPrice, saving, save } =
+  const { open, setOpen, skillsText, setSkillsText, price, setPrice, saving, saveDisabled, save } =
     useRegisterMentorDialogController();
 
   return (
@@ -53,11 +53,7 @@ export function RegisterMentorDialog() {
             />
           </FormField>
 
-          <Button
-            className="w-full rounded-full"
-            disabled={!skillsText.trim() || saving}
-            onClick={save}
-          >
+          <Button className="w-full rounded-full" disabled={saveDisabled} onClick={save}>
             {saving ? texts.common.saving : texts.common.save}
           </Button>
         </div>

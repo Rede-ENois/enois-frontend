@@ -4,7 +4,7 @@ import { texts } from "@/texts";
 import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
 import { Calendar, Star } from "lucide-react";
 
-import { useMentorCardProfile } from "@/lib/use-mentor-card-profile";
+import { useMentorCardProfile } from "@/utils/components/mentoring/use-mentor-card-profile";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

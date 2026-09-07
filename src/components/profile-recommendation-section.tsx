@@ -3,7 +3,7 @@ import type { ProfileSidebarProps } from "@/types/components/profile/profile-sid
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { ThumbsUp } from "lucide-react";
 
-import { useProfileRecommendationController } from "@/lib/use-profile-recommendation-controller";
+import { useProfileRecommendationController } from "@/utils/components/profile/use-profile-recommendation-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ProfileSection } from "@/components/profile-section";
 
 export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
-  const { visible, open, setOpen, comment, setComment, sending, send } =
+  const { visible, open, setOpen, comment, setComment, sending, sendDisabled, send } =
     useProfileRecommendationController(user);
 
   if (!visible) return null;
@@ -53,7 +53,7 @@ export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
             <Button
               size="sm"
               className="w-full rounded-full"
-              disabled={!comment.trim() || sending}
+              disabled={sendDisabled}
               onClick={send}
             >
               {sending ? texts.common.sending : texts.profile.sendRecommendation}

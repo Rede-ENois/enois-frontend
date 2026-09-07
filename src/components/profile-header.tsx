@@ -1,12 +1,8 @@
-import { useState } from "react";
-
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
 import { Briefcase, Camera, MapPin, MessageCircle, Settings } from "lucide-react";
 
-import { resolveCdnUrl } from "@/lib/api/media";
-import { useProfileHeaderActions } from "@/lib/use-profile-header-actions";
-import { useProfileMediaEditor } from "@/lib/use-profile-media-editor";
+import { useProfileHeaderController } from "@/utils/components/profile/use-profile-header-controller";
 
 import { Button } from "@/components/ui/button";
 
@@ -15,103 +11,82 @@ import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const [hoveringAvatar, setHoveringAvatar] = useState(false);
-  const [hoveringBanner, setHoveringBanner] = useState(false);
-  const { isOwnProfile, connectionStatus, connectionPending, handleMessage, handleConnect } =
-    useProfileHeaderActions(user);
   const {
-    avatarRef,
-    bannerRef,
-    avatarUpload,
-    bannerUpload,
-    cropImageSrc,
-    cropPurpose,
-    handleAvatarUpload,
-    handleBannerUpload,
-    handleCropComplete,
-    handleCropCancel,
-  } = useProfileMediaEditor(user);
+    bannerUrl,
+    avatarUrl,
+    showEditAction,
+    showExternalActions,
+    bannerArea,
+    avatarArea,
+    bannerOverlay,
+    avatarOverlay,
+    bannerInput,
+    avatarInput,
+    message,
+    connectionAction,
+    cropDialog,
+  } = useProfileHeaderController(user);
 
   return (
     <>
       <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
-        <div
-          className="relative"
-          onMouseEnter={() => setHoveringBanner(true)}
-          onMouseLeave={() => setHoveringBanner(false)}
-        >
-          {user.banner ? (
-            <img
-              src={resolveCdnUrl(user.banner)}
-              alt=""
-              className="h-40 w-full object-cover sm:h-52"
-            />
+        <div className="relative" {...bannerArea}>
+          {bannerUrl ? (
+            <img src={bannerUrl} alt="" className="h-40 w-full object-cover sm:h-52" />
           ) : (
             <div
               className="h-40 w-full sm:h-52"
               style={{ background: "var(--gradient-primary)" }}
             />
           )}
-          {isOwnProfile && hoveringBanner && (
+          {bannerOverlay.visible && (
             <button
               type="button"
-              onClick={() => bannerRef.current?.click()}
+              onClick={bannerOverlay.openFilePicker}
               className="absolute inset-0 flex items-center justify-center bg-black/30 text-white transition"
-              disabled={bannerUpload.status === "uploading"}
+              disabled={bannerOverlay.disabled}
             >
-              {bannerUpload.status === "uploading" ? (
-                texts.common.sending
-              ) : (
-                <Camera className="h-6 w-6" />
-              )}
+              {bannerOverlay.label ?? <Camera className="h-6 w-6" />}
             </button>
           )}
           <input
-            ref={bannerRef}
+            ref={bannerInput.ref}
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={handleBannerUpload}
+            onChange={bannerInput.onChange}
           />
         </div>
 
         <div className="px-4 pb-5 sm:px-6 sm:pb-6">
           <div className="-mt-12 flex flex-wrap items-end justify-between gap-3 sm:-mt-14 sm:gap-4">
-            <div
-              className="relative"
-              onMouseEnter={() => setHoveringAvatar(true)}
-              onMouseLeave={() => setHoveringAvatar(false)}
-            >
+            <div className="relative" {...avatarArea}>
               <UserAvatar
-                src={resolveCdnUrl(user.avatar)}
+                src={avatarUrl}
                 alt={user.name}
                 className="h-24 w-24 ring-4 ring-surface-card sm:h-28 sm:w-28"
               />
-              {isOwnProfile && hoveringAvatar && (
+              {avatarOverlay.visible && (
                 <button
                   type="button"
-                  onClick={() => avatarRef.current?.click()}
+                  onClick={avatarOverlay.openFilePicker}
                   className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 text-white transition"
-                  disabled={avatarUpload.status === "uploading"}
+                  disabled={avatarOverlay.disabled}
                 >
-                  {avatarUpload.status === "uploading" ? (
-                    texts.profile.uploadingIndicator
-                  ) : (
-                    <Camera className="h-5 w-5" />
-                  )}
+                  {avatarOverlay.label ?? <Camera className="h-5 w-5" />}
                 </button>
               )}
               <input
-                ref={avatarRef}
+                ref={avatarInput.ref}
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handleAvatarUpload}
+                onChange={avatarInput.onChange}
               />
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {isOwnProfile ? (
+              {showEditAction && (
                 <EditProfileDialog profile={user}>
                   <Button variant="outline" size="sm" className="rounded-full gap-1.5">
                     <Settings className="h-4 w-4" />
@@ -119,13 +94,14 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                     <>{texts.profile.editProfile}</>
                   </Button>
                 </EditProfileDialog>
-              ) : (
+              )}
+              {showExternalActions && (
                 <>
                   <Button
                     variant="outline"
                     size="sm"
                     className="rounded-full gap-1.5"
-                    onClick={handleMessage}
+                    onClick={message}
                   >
                     <MessageCircle className="h-4 w-4" />
 
@@ -135,18 +111,10 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                   <Button
                     size="sm"
                     className="rounded-full gap-1.5"
-                    onClick={handleConnect}
-                    disabled={
-                      connectionPending ||
-                      connectionStatus === "ACCEPTED" ||
-                      connectionStatus === "PENDING"
-                    }
+                    onClick={connectionAction.run}
+                    disabled={connectionAction.disabled}
                   >
-                    {connectionStatus === "PENDING"
-                      ? texts.profile.waitingResponse
-                      : connectionStatus === "ACCEPTED"
-                        ? texts.profile.connected
-                        : texts.profile.connect}
+                    {connectionAction.label}
                   </Button>
                 </>
               )}
@@ -198,18 +166,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
         </div>
       </div>
 
-      {cropImageSrc && cropPurpose && (
-        <ImageCropDialog
-          open={!!cropImageSrc}
-          onOpenChange={(open) => {
-            if (!open) handleCropCancel();
-          }}
-          imageSrc={cropImageSrc}
-          aspect={cropPurpose === "AVATAR" ? 1 : 3}
-          title={cropPurpose === "AVATAR" ? texts.profile.cropAvatar : texts.profile.cropCover}
-          onCropComplete={handleCropComplete}
-        />
-      )}
+      {cropDialog && <ImageCropDialog {...cropDialog} />}
     </>
   );
 }

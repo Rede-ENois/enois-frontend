@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import type { Props } from "@/types/components/mention-textarea/props";
 
-import { useMentionTextarea } from "@/lib/use-mention-textarea";
+import { useMentionTextarea } from "@/utils/components/mentions/use-mention-textarea";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -13,16 +13,10 @@ export function MentionTextarea({
   maxLength,
   rows,
 }: Props) {
-  const {
-    textareaRef,
-    mentionQuery,
-    results,
-    selectedIdx,
-    setSelectedIdx,
-    handleInput,
-    handleKey,
-    pick,
-  } = useMentionTextarea(value, onChange);
+  const { textareaRef, handleInput, handleKey, showSuggestions, suggestions } = useMentionTextarea(
+    value,
+    onChange,
+  );
 
   return (
     <div className="relative min-w-0 flex-1">
@@ -36,19 +30,16 @@ export function MentionTextarea({
         maxLength={maxLength}
         rows={rows}
       />
-      {mentionQuery.length >= 2 && results.length > 0 && (
+      {showSuggestions && (
         <div className="absolute bottom-full left-0 right-0 z-50 mb-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-popover shadow-lg">
-          {results.map((user, index) => (
+          {suggestions.map(({ user, selected, onMouseDown, onMouseEnter }) => (
             <button
               key={user.id}
               type="button"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                pick(user);
-              }}
-              onMouseEnter={() => setSelectedIdx(index)}
+              onMouseDown={onMouseDown}
+              onMouseEnter={onMouseEnter}
               className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition ${
-                index === selectedIdx ? "bg-muted" : "hover:bg-muted"
+                selected ? "bg-muted" : "hover:bg-muted"
               }`}
             >
               <UserAvatar src={user.avatar} alt={user.name} className="h-8 w-8 shrink-0" />
