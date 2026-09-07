@@ -1,43 +1,20 @@
-import { useState } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { texts } from "@/texts";
-
-import { createMentor as createMentorRequest } from "@/lib/api/mentors/create-mentor";
+import { createMentorInput } from "@/utils/components/mentoring/create-mentor-input";
+import { useCreateMentor } from "@/utils/components/mentoring/use-create-mentor";
+import { useRegisterMentorFormState } from "@/utils/components/mentoring/use-register-mentor-form-state";
 
 export function useRegisterMentorDialogController() {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [skillsText, setSkillsText] = useState("");
-  const [price, setPrice] = useState<string>(texts.mentoring.free);
-
-  const createMentor = useMutation({
-    mutationFn: () =>
-      createMentorRequest({
-        expertise: skillsText
-          .split(",")
-          .map((skill) => skill.trim())
-          .filter(Boolean),
-        price: price || texts.mentoring.free,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mentors"] });
-      setOpen(false);
-      setSkillsText("");
-      setPrice(texts.mentoring.free);
-    },
-  });
+  const form = useRegisterMentorFormState();
+  const create = useCreateMentor(createMentorInput(form.skillsText, form.price), form.reset);
 
   return {
-    open,
-    setOpen,
-    skillsText,
-    setSkillsText,
-    price,
-    setPrice,
-    saving: createMentor.isPending,
-    saveDisabled: !skillsText.trim() || createMentor.isPending,
-    save: () => createMentor.mutate(),
+    open: form.open,
+    setOpen: form.setOpen,
+    skillsText: form.skillsText,
+    setSkillsText: form.setSkillsText,
+    price: form.price,
+    setPrice: form.setPrice,
+    saving: create.saving,
+    saveDisabled: !form.skillsText.trim() || create.saving,
+    save: create.save,
   };
 }
