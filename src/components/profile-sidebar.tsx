@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
@@ -14,7 +15,9 @@ import type { ProfileSidebarProps } from "@/types/components/profile/profile-sid
 import { ProfileRecommendationItem } from "@/components/profile-recommendation-item";
 import { ProfileSection } from "@/components/profile-section";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 

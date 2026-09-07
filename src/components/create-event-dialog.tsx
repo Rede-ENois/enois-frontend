@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Plus } from "lucide-react";
@@ -10,7 +11,9 @@ import type { CreateEventRequest } from "@/types/application/event/create-event-
 
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 
 export function CreateEventDialog() {
