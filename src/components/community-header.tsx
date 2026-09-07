@@ -5,8 +5,7 @@ import type { CommunityHeaderProps } from "@/types/components/communities/commun
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { Settings, Users } from "lucide-react";
 
-import { resolveCdnUrl } from "@/lib/api/media";
-import { useCommunityHeaderController } from "@/lib/use-community-header-controller";
+import { useCommunityHeaderController } from "@/utils/components/communities/use-community-header-controller";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,22 +16,33 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { EditCommunityForm } from "@/components/edit-community-form";
 
 export function CommunityHeader({ community, members }: CommunityHeaderProps) {
-  const { editOpen, setEditOpen, isAdmin, primaryAdmin, membershipPending, toggleMembership } =
-    useCommunityHeaderController(community, members);
+  const {
+    editOpen,
+    setEditOpen,
+    closeEdit,
+    isAdmin,
+    primaryAdmin,
+    coverUrl,
+    avatarUrl,
+    membershipPending,
+    membershipVariant,
+    membershipLabel,
+    toggleMembership,
+  } = useCommunityHeaderController(community, members);
 
   return (
     <div className="surface-card overflow-hidden">
-      {community.cover ? (
-        <img src={resolveCdnUrl(community.cover)} alt="" className="h-48 w-full object-cover" />
+      {coverUrl ? (
+        <img src={coverUrl} alt="" className="h-48 w-full object-cover" />
       ) : (
         <div className="h-48 w-full bg-gradient-to-br from-primary/20 to-primary/5" />
       )}
       <div className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
-            {community.avatar && (
+            {avatarUrl && (
               <img
-                src={resolveCdnUrl(community.avatar)}
+                src={avatarUrl}
                 alt=""
                 className="h-16 w-16 shrink-0 rounded-full object-cover ring-4 ring-card"
               />
@@ -87,17 +97,17 @@ export function CommunityHeader({ community, members }: CommunityHeaderProps) {
                     <DialogTitle>{texts.communities.detail.editTitle}</DialogTitle>
                   </DialogHeader>
 
-                  <EditCommunityForm community={community} onClose={() => setEditOpen(false)} />
+                  <EditCommunityForm community={community} onClose={closeEdit} />
                 </DialogContent>
               </Dialog>
             )}
             <Button
               className="shrink-0 rounded-full"
-              variant={community.joined ? "secondary" : "default"}
+              variant={membershipVariant}
               disabled={membershipPending}
               onClick={toggleMembership}
             >
-              {community.joined ? texts.communities.participating : texts.communities.enter}
+              {membershipLabel}
             </Button>
           </div>
         </div>

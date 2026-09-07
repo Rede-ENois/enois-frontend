@@ -3,7 +3,7 @@ import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-passw
 import { Root as Dialog } from "@radix-ui/react-dialog";
 import { ArrowRight, Loader2, MailCheck } from "lucide-react";
 
-import { useForgotPasswordDialogController } from "@/lib/use-forgot-password-dialog-controller";
+import { useForgotPasswordDialogController } from "@/utils/components/auth/use-forgot-password-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";

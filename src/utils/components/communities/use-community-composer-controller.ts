@@ -22,5 +22,11 @@ export function useCommunityComposerController(communityId: string) {
     if (content) createPostMutation.mutate(content);
   };
 
-  return { draft, setDraft, submit, publishing: createPostMutation.isPending };
+  return {
+    draft,
+    setDraft,
+    submit,
+    publishing: createPostMutation.isPending,
+    publishDisabled: !draft.trim() || createPostMutation.isPending,
+  };
 }

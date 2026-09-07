@@ -4,7 +4,7 @@ import { texts } from "@/texts";
 import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 
-import { useResetPasswordFormController } from "@/lib/use-reset-password-form-controller";
+import { useResetPasswordFormController } from "@/utils/components/auth/use-reset-password-form-controller";
 
 import { Button } from "@/components/ui/button";
 

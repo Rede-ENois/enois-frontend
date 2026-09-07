@@ -2,7 +2,7 @@ import { texts } from "@/texts";
 import type { LoginFormProps } from "@/types/routes/auth/login-form-props";
 import { ArrowRight, Loader2 } from "lucide-react";
 
-import { useLoginFormController } from "@/lib/use-login-form-controller";
+import { useLoginFormController } from "@/utils/components/auth/use-login-form-controller";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
