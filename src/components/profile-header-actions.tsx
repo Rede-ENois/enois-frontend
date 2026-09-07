@@ -14,6 +14,25 @@ export function ProfileHeaderActions({
   message,
   connectionAction,
 }: ProfileHeaderActionsProps) {
+  const externalActions = [
+    {
+      key: "message",
+      label: texts.profile.message,
+      icon: MessageCircle,
+      variant: "outline" as const,
+      onClick: message,
+      disabled: false,
+    },
+    {
+      key: "connection",
+      label: connectionAction.label,
+      icon: null,
+      variant: "default" as const,
+      onClick: connectionAction.run,
+      disabled: connectionAction.disabled,
+    },
+  ];
+
   return (
     <div className="flex flex-wrap gap-2">
       {showEditAction && (
@@ -26,29 +45,21 @@ export function ProfileHeaderActions({
         </EditProfileDialog>
       )}
 
-      {showExternalActions && (
-        <>
+      {showExternalActions &&
+        externalActions.map((action) => (
           <Button
-            variant="outline"
+            key={action.key}
+            variant={action.variant}
             size="sm"
             className="rounded-full gap-1.5"
-            onClick={message}
+            onClick={action.onClick}
+            disabled={action.disabled}
           >
-            <MessageCircle className="h-4 w-4" />
+            {action.icon && <action.icon className="h-4 w-4" />}
 
-            <>{texts.profile.message}</>
+            <>{action.label}</>
           </Button>
-
-          <Button
-            size="sm"
-            className="rounded-full gap-1.5"
-            onClick={connectionAction.run}
-            disabled={connectionAction.disabled}
-          >
-            {connectionAction.label}
-          </Button>
-        </>
-      )}
+        ))}
     </div>
   );
 }

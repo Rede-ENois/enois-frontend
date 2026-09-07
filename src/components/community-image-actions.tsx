@@ -8,29 +8,41 @@ export function CommunityImageActions({
   inputRef,
   onRemove,
 }: Pick<CommunityImageFieldProps, "inputRef" | "onRemove">) {
+  const actions = [
+    {
+      key: "change",
+      variant: "outline" as const,
+      className: "rounded-full gap-1.5",
+      onClick: () => inputRef.current?.click(),
+      icon: Camera,
+      label: texts.communities.detail.change,
+    },
+    {
+      key: "remove",
+      variant: "destructive" as const,
+      className: "rounded-full",
+      onClick: onRemove,
+      icon: null,
+      label: texts.communities.detail.remove,
+    },
+  ];
+
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="rounded-full gap-1.5"
-        onClick={() => inputRef.current?.click()}
-      >
-        <Camera className="h-4 w-4" />
+      {actions.map((action) => (
+        <Button
+          key={action.key}
+          type="button"
+          variant={action.variant}
+          size="sm"
+          className={action.className}
+          onClick={action.onClick}
+        >
+          {action.icon && <action.icon className="h-4 w-4" />}
 
-        <>{texts.communities.detail.change}</>
-      </Button>
-
-      <Button
-        type="button"
-        variant="destructive"
-        size="sm"
-        className="rounded-full"
-        onClick={onRemove}
-      >
-        {texts.communities.detail.remove}
-      </Button>
+          <>{action.label}</>
+        </Button>
+      ))}
     </>
   );
 }

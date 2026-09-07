@@ -22,29 +22,44 @@ export function EditCommunityForm(props: EditCommunityFormProps) {
     saveDisabled,
     save,
   } = useEditCommunityFormController(props);
-
-  return (
-    <div className="space-y-4 pt-2">
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
-
+  const fields = [
+    {
+      key: "name",
+      label: texts.communities.create.name,
+      control: (
         <Input value={form.name} onChange={(event) => setField("name", event.target.value)} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
-          {texts.communities.create.description}
-        </Label>
-
+      ),
+    },
+    {
+      key: "description",
+      label: texts.communities.create.description,
+      control: (
         <Textarea
           value={form.description}
           onChange={(event) => setField("description", event.target.value)}
           rows={3}
         />
-      </div>
+      ),
+    },
+  ];
+  const imageFields = [
+    { key: "cover", props: coverField },
+    { key: "avatar", props: avatarField },
+  ];
 
-      <CommunityImageField {...coverField} />
-      <CommunityImageField {...avatarField} />
+  return (
+    <div className="space-y-4 pt-2">
+      {fields.map((field) => (
+        <div key={field.key} className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">{field.label}</Label>
+
+          {field.control}
+        </div>
+      ))}
+
+      {imageFields.map((field) => (
+        <CommunityImageField key={field.key} {...field.props} />
+      ))}
 
       <Button className="w-full rounded-full" disabled={saveDisabled} onClick={save}>
         {savePending ? texts.common.saving : texts.common.save}

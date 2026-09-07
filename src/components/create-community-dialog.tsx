@@ -25,6 +25,31 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
     createDisabled,
     createCommunity,
   } = useCreateCommunityDialogController();
+  const fields = [
+    {
+      key: "name",
+      label: texts.communities.create.name,
+      control: (
+        <Input
+          value={form.name}
+          onChange={(event) => setField("name", event.target.value)}
+          className="h-10 border-transparent bg-muted"
+        />
+      ),
+    },
+    {
+      key: "description",
+      label: texts.communities.create.description,
+      control: (
+        <Textarea
+          value={form.description}
+          onChange={(event) => setField("description", event.target.value)}
+          rows={3}
+          className="h-10 border-transparent bg-muted"
+        />
+      ),
+    },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -36,28 +61,15 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
         </DialogHeader>
 
         <div className="space-y-4">
-          <FormField
-            label={texts.communities.create.name}
-            labelClassName="text-xs text-muted-foreground"
-          >
-            <Input
-              value={form.name}
-              onChange={(event) => setField("name", event.target.value)}
-              className="h-10 border-transparent bg-muted"
-            />
-          </FormField>
-
-          <FormField
-            label={texts.communities.create.description}
-            labelClassName="text-xs text-muted-foreground"
-          >
-            <Textarea
-              value={form.description}
-              onChange={(event) => setField("description", event.target.value)}
-              rows={3}
-              className="h-10 border-transparent bg-muted"
-            />
-          </FormField>
+          {fields.map((field) => (
+            <FormField
+              key={field.key}
+              label={field.label}
+              labelClassName="text-xs text-muted-foreground"
+            >
+              {field.control}
+            </FormField>
+          ))}
 
           <FormField
             label={texts.communities.create.topic}
