@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Loader2 } from "lucide-react";
 
-import { listFeedPosts } from "@/lib/api/feed/list-feed-posts";
+import { listFeedPosts } from "@/lib/api/feed";
 import { texts } from "@/texts";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 

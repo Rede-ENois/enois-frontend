@@ -6,9 +6,9 @@ import { Link, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { Loader2, Plus, Users } from "lucide-react";
 
 import { COMMUNITY_TOPICS } from "@/constants/community-topics";
+import { listCommunities } from "@/lib/api/communities";
 import { joinCommunity } from "@/lib/api/communities/join-community";
 import { leaveCommunity } from "@/lib/api/communities/leave-community";
-import { listCommunities } from "@/lib/api/communities/list-communities";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
 import type { Community } from "@/types/application/community/community";

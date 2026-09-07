@@ -7,8 +7,8 @@ import { Link } from "@tanstack/react-router";
 import { Clock, Link as LinkIcon, Star, ThumbsUp, Trophy } from "lucide-react";
 
 import { listRanking } from "@/lib/api/ranking";
+import { listReceivedRecommendations } from "@/lib/api/recommendations";
 import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
-import { listReceivedRecommendations } from "@/lib/api/recommendations/list-received-recommendations";
 import { useAuth } from "@/lib/use-auth";
 import { texts } from "@/texts";
 import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";

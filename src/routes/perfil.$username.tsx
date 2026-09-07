@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { getProfile } from "@/lib/api/profile/get-profile";
+import { getProfile } from "@/lib/api/profile";
 import { texts } from "@/texts";
 
 import { ProfileError } from "@/components/pages/profile-error";

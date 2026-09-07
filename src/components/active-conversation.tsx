@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 
 import { Send } from "lucide-react";
 
-import { listConversations } from "@/lib/api/messages/list-conversations";
+import { listConversations } from "@/lib/api/messages";
 import { listMessages } from "@/lib/api/messages/list-messages";
 import { sendMessage as sendMessageRequest } from "@/lib/api/messages/send-message";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";

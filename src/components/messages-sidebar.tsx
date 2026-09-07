@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Search } from "lucide-react";
 
+import { listConversations } from "@/lib/api/messages";
 import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
-import { listConversations } from "@/lib/api/messages/list-conversations";
 import { markConversationAsRead } from "@/lib/api/messages/mark-conversation-as-read";
 import { listNetworkUsers } from "@/lib/api/network/list-network-users";
 import { getCurrentUserId } from "@/lib/get-current-user-id";

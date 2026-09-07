@@ -2,9 +2,9 @@ import { type FormEvent, useEffect, useState } from "react";
 
 import { Send } from "lucide-react";
 
+import { listComments } from "@/lib/api/comments";
 import { createComment } from "@/lib/api/comments/create-comment";
-import { listComments } from "@/lib/api/comments/list-comments";
-import { getCurrentUser } from "@/lib/current-user";
+import { getCurrentUser } from "@/lib/get-current-user";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostCommentsProps } from "@/types/components/post/post-comments-props";

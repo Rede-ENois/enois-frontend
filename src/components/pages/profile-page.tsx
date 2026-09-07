@@ -4,7 +4,7 @@ import { useLoaderData } from "@tanstack/react-router";
 import { Target } from "lucide-react";
 
 import { listPostsByUserId } from "@/lib/api/feed/list-posts-by-user-id";
-import { getProfile } from "@/lib/api/profile/get-profile";
+import { getProfile } from "@/lib/api/profile";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
