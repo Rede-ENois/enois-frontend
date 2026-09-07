@@ -4,7 +4,7 @@ import { useLoaderData } from "@tanstack/react-router";
 import { Target } from "lucide-react";
 
 import { feedApi } from "@/lib/api/feed";
-import { profileApi } from "@/lib/api/profile";
+import { getProfile } from "@/lib/api/profile/get-profile";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
@@ -18,7 +18,7 @@ export function Profile() {
 
   const { data: liveProfile } = useQuery({
     queryKey: ["profile", loaderUser.username],
-    queryFn: () => profileApi.get(loaderUser.username),
+    queryFn: () => getProfile(loaderUser.username),
     initialData: loaderUser,
   });
 
