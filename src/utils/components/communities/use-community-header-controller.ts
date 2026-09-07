@@ -1,40 +1,28 @@
-import { useState } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { texts } from "@/texts";
 import type { Community } from "@/types/application/community/community";
 import type { CommunityMember } from "@/types/application/community/community-member";
 
-import { joinCommunity } from "@/lib/api/communities/join-community";
-import { leaveCommunity } from "@/lib/api/communities/leave-community";
-import { resolveCdnUrl } from "@/lib/api/media";
-import { useAuth } from "@/lib/use-auth";
+import { createCommunityHeaderMedia } from "@/utils/components/communities/create-community-header-media";
+import { useCommunityHeaderAccess } from "@/utils/components/communities/use-community-header-access";
+import { useCommunityHeaderEditState } from "@/utils/components/communities/use-community-header-edit-state";
+import { useCommunityMembership } from "@/utils/components/communities/use-community-membership";
 
 export function useCommunityHeaderController(community: Community, members: CommunityMember[]) {
-  const queryClient = useQueryClient();
-  const { user: currentUser } = useAuth();
-  const [editOpen, setEditOpen] = useState(false);
-  const admins = members.filter((member) => member.role === "ADMIN");
-  const isAdmin = currentUser ? admins.some((admin) => admin.userId === currentUser.id) : false;
-
-  const membership = useMutation({
-    mutationFn: () =>
-      community.joined ? leaveCommunity(community.id) : joinCommunity(community.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["community", community.id] }),
-  });
+  const access = useCommunityHeaderAccess(members);
+  const edit = useCommunityHeaderEditState();
+  const membership = useCommunityMembership(community);
+  const media = createCommunityHeaderMedia(community);
 
   return {
-    editOpen,
-    setEditOpen,
-    closeEdit: () => setEditOpen(false),
-    isAdmin,
-    primaryAdmin: admins[0] ?? null,
-    coverUrl: community.cover ? resolveCdnUrl(community.cover) : null,
-    avatarUrl: community.avatar ? resolveCdnUrl(community.avatar) : null,
-    membershipPending: membership.isPending,
-    membershipVariant: community.joined ? ("secondary" as const) : ("default" as const),
-    membershipLabel: community.joined ? texts.communities.participating : texts.communities.enter,
-    toggleMembership: () => membership.mutate(),
+    editOpen: edit.open,
+    setEditOpen: edit.setOpen,
+    closeEdit: edit.close,
+    isAdmin: access.isAdmin,
+    primaryAdmin: access.primaryAdmin,
+    coverUrl: media.coverUrl,
+    avatarUrl: media.avatarUrl,
+    membershipPending: membership.pending,
+    membershipVariant: membership.variant,
+    membershipLabel: membership.label,
+    toggleMembership: membership.toggle,
   };
 }
