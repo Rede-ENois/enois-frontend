@@ -1,16 +1,9 @@
-import { useState } from "react";
-
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
-import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
-import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { PostCardProps } from "@/types/components/post/post-card-props";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 import { Bookmark, Flag, Heart, MessageSquare, Share2 } from "lucide-react";
 
-import { usePostReaction } from "@/lib/use-post-reaction";
-import { usePostSave } from "@/lib/use-post-save";
-import { usePostShare } from "@/lib/use-post-share";
+import { usePostActionsController } from "@/utils/components/post/use-post-actions-controller";
 
 import { PopoverContent } from "@/components/ui/popover-content";
 
@@ -19,14 +12,20 @@ import { ReportDialog } from "@/components/post-report-dialog";
 import { ReactionsDialog } from "@/components/reactions-dialog";
 
 export function PostActions({ post }: PostCardProps) {
-  const [showComments, setShowComments] = useState(false);
-  const card = usePostCardStore((state) => state.cards[post.id]);
-  const setShowReactions = usePostCardStore((state) => state.setShowReactions);
-  const setShowReport = usePostCardStore((state) => state.setShowReport);
-  const postCounters = card?.postCounters ?? post.counters;
-  const { reactionStatus, reactToPost } = usePostReaction(post);
-  const { saved, toggleSave } = usePostSave(post.id);
-  const sharePost = usePostShare(post.id);
+  const {
+    postCounters,
+    reactionActive,
+    reactionEmoji,
+    reactionTitle,
+    reactionOptions,
+    openReactions,
+    showComments,
+    toggleComments,
+    sharePost,
+    openReport,
+    saved,
+    toggleSave,
+  } = usePostActionsController({ post });
 
   return (
     <>
@@ -36,16 +35,12 @@ export function PostActions({ post }: PostCardProps) {
             <PopoverTrigger asChild>
               <button
                 className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground ${
-                  reactionStatus ? "text-primary" : ""
+                  reactionActive ? "text-primary" : ""
                 }`}
-                title={
-                  reactionStatus
-                    ? texts.posts.reactions.reactedWith(REACTION_EMOJIS[reactionStatus])
-                    : texts.posts.reactions.react
-                }
+                title={reactionTitle}
               >
-                {reactionStatus ? (
-                  <span className="text-base leading-none">{REACTION_EMOJIS[reactionStatus]}</span>
+                {reactionEmoji ? (
+                  <span className="text-base leading-none">{reactionEmoji}</span>
                 ) : (
                   <Heart className="h-4 w-4" />
                 )}
@@ -58,33 +53,31 @@ export function PostActions({ post }: PostCardProps) {
               className="w-fit rounded-2xl border-border p-1.5"
             >
               <div className="flex gap-1">
-                {(Object.entries(REACTION_EMOJIS) as [ReactionType, string][]).map(
-                  ([type, emoji]) => (
-                    <button
-                      key={type}
-                      onClick={() => reactToPost(type)}
-                      className={`rounded-lg px-2 py-1 text-xl transition hover:bg-muted ${
-                        reactionStatus === type ? "bg-muted ring-1 ring-primary" : ""
-                      }`}
-                      title={type.toLowerCase()}
-                    >
-                      {emoji}
-                    </button>
-                  ),
-                )}
+                {reactionOptions.map((option) => (
+                  <button
+                    key={option.type}
+                    onClick={option.react}
+                    className={`rounded-lg px-2 py-1 text-xl transition hover:bg-muted ${
+                      option.selected ? "bg-muted ring-1 ring-primary" : ""
+                    }`}
+                    title={option.title}
+                  >
+                    {option.emoji}
+                  </button>
+                ))}
               </div>
             </PopoverContent>
           </Popover>
 
           <button
-            onClick={() => setShowReactions(post.id, true)}
+            onClick={openReactions}
             className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs tabular-nums transition hover:bg-muted hover:text-foreground text-muted-foreground"
           >
             {postCounters.reactions}
           </button>
 
           <button
-            onClick={() => setShowComments((visible) => !visible)}
+            onClick={toggleComments}
             className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground"
           >
             <MessageSquare className="h-4 w-4" />
@@ -102,7 +95,7 @@ export function PostActions({ post }: PostCardProps) {
           </button>
 
           <button
-            onClick={() => setShowReport(post.id, true)}
+            onClick={openReport}
             className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground text-muted-foreground"
           >
             <Flag className="h-4 w-4" />

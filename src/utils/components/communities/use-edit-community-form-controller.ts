@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
 import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
 
@@ -53,13 +54,45 @@ export function useEditCommunityFormController({ community, onClose }: EditCommu
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const coverField = {
+    purpose: "COVER" as const,
+    value: form.cover,
+    inputRef: coverRef,
+    onChange: crop.handleFileSelect("COVER"),
+    onRemove: () => setField("cover", ""),
+  };
+  const avatarField = {
+    purpose: "AVATAR" as const,
+    value: form.avatar,
+    inputRef: avatarRef,
+    onChange: crop.handleFileSelect("AVATAR"),
+    onRemove: () => setField("avatar", ""),
+  };
+  const cropDialog =
+    crop.cropImageSrc && crop.cropPurpose
+      ? {
+          open: true,
+          onOpenChange: (open: boolean) => {
+            if (!open) crop.handleCropCancel();
+          },
+          imageSrc: crop.cropImageSrc,
+          aspect: crop.cropPurpose === "COVER" ? 3 : 1,
+          title:
+            crop.cropPurpose === "COVER"
+              ? texts.communities.detail.cropCover
+              : texts.communities.detail.cropAvatar,
+          onCropComplete: crop.handleCropComplete,
+        }
+      : null;
+
   return {
     form,
     setField,
-    coverRef,
-    avatarRef,
-    crop,
+    coverField,
+    avatarField,
+    cropDialog,
     savePending: update.isPending,
+    saveDisabled: !form.name.trim() || update.isPending,
     save: () => update.mutate(),
   };
 }

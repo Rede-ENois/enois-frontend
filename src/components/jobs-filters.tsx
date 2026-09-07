@@ -1,25 +1,16 @@
-import { JOB_FILTERS } from "@/constants/job-filters";
 import { texts } from "@/texts";
 import type { JobsFiltersProps } from "@/types/components/jobs/jobs-filters-props";
 import { Briefcase, X } from "lucide-react";
 
+import { createJobsFiltersViewModel } from "@/utils/components/jobs/create-jobs-filters-view-model";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function JobsFilters({
-  query,
-  level,
-  location,
-  type,
-  skills,
-  onQueryChange,
-  onLevelChange,
-  onLocationChange,
-  onTypeChange,
-  onSkillsChange,
-  onClear,
-}: JobsFiltersProps) {
-  const hasFilters = Boolean(level || location || type || skills);
+export function JobsFilters(props: JobsFiltersProps) {
+  const { query, skills, onQueryChange, onSkillsChange, onClear } = props;
+  const { hasFilters, levelOptions, locationOptions, typeOptions } =
+    createJobsFiltersViewModel(props);
 
   return (
     <div className="surface-card p-4 sm:p-6">
@@ -48,17 +39,17 @@ export function JobsFilters({
           <span className="mr-1 text-xs font-medium text-muted-foreground">
             {texts.jobs.filters.level}
           </span>
-          {JOB_FILTERS.levels.map((item) => (
+          {levelOptions.map((option) => (
             <button
-              key={item}
-              onClick={() => onLevelChange(level === item ? "" : item)}
+              key={option.value}
+              onClick={option.onSelect}
               className={`rounded-full border px-3 py-1 text-xs transition ${
-                level === item
+                option.selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {item.charAt(0) + item.slice(1).toLowerCase()}
+              {option.label}
             </button>
           ))}
         </div>
@@ -69,17 +60,17 @@ export function JobsFilters({
           <span className="mr-1 text-xs font-medium text-muted-foreground">
             {texts.jobs.filters.location}
           </span>
-          {JOB_FILTERS.locations.map((item, index) => (
+          {locationOptions.map((option) => (
             <button
-              key={item}
-              onClick={() => onLocationChange(location === item ? "" : item)}
+              key={option.value}
+              onClick={option.onSelect}
               className={`rounded-full border px-3 py-1 text-xs transition ${
-                location === item
+                option.selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {texts.jobs.filters.locations[index]}
+              {option.label}
             </button>
           ))}
         </div>
@@ -90,17 +81,17 @@ export function JobsFilters({
           <span className="mr-1 text-xs font-medium text-muted-foreground">
             {texts.jobs.filters.type}
           </span>
-          {JOB_FILTERS.types.map((item) => (
+          {typeOptions.map((option) => (
             <button
-              key={item}
-              onClick={() => onTypeChange(type === item ? "" : item)}
+              key={option.value}
+              onClick={option.onSelect}
               className={`rounded-full border px-3 py-1 text-xs transition ${
-                type === item
+                option.selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {item}
+              {option.label}
             </button>
           ))}
         </div>

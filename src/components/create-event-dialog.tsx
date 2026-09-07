@@ -1,9 +1,8 @@
 import { texts } from "@/texts";
-import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { Plus } from "lucide-react";
 
-import { useCreateEventDialogController } from "@/lib/use-create-event-dialog-controller";
+import { useCreateEventDialogController } from "@/utils/components/events/use-create-event-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -14,8 +13,17 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/form-field";
 
 export function CreateEventDialog() {
-  const { open, setOpen, form, setField, createPending, createEvent } =
-    useCreateEventDialogController();
+  const {
+    open,
+    setOpen,
+    form,
+    setField,
+    setFormat,
+    formatOptions,
+    createPending,
+    createDisabled,
+    createEvent,
+  } = useCreateEventDialogController();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -88,22 +96,20 @@ export function CreateEventDialog() {
           >
             <select
               value={form.format}
-              onChange={(event) =>
-                setField("format", event.target.value as CreateEventRequest["format"])
-              }
+              onChange={(event) => setFormat(event.target.value)}
               className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm"
             >
-              <option value="ONLINE">{texts.events.formats.ONLINE}</option>
-
-              <option value="IN_PERSON">{texts.events.formats.IN_PERSON}</option>
-
-              <option value="HYBRID">{texts.events.formats.HYBRID}</option>
+              {formatOptions.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </FormField>
 
           <Button
             className="w-full rounded-full"
-            disabled={!form.title.trim() || !form.date || !form.host.trim() || createPending}
+            disabled={createDisabled}
             onClick={createEvent}
           >
             {createPending ? texts.common.creating : texts.events.createEvent}
