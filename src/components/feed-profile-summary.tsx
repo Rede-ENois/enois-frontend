@@ -11,6 +11,11 @@ export function FeedProfileSummary() {
 
   if (!visible || !profile) return null;
 
+  const stats = [
+    { key: "connections", value: profile.connectionsCount, label: texts.feed.sidebar.connections },
+    { key: "followers", value: profile.followersCount, label: texts.feed.sidebar.followers },
+  ];
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
       <div className="h-14" style={{ background: "var(--gradient-primary)" }} />
@@ -33,17 +38,13 @@ export function FeedProfileSummary() {
         <p className="line-clamp-2 text-[12px] font-light text-text-subtle">{profile.headline}</p>
 
         <div className="mt-3 grid grid-cols-2 gap-1 border-t border-border-soft pt-3 text-[12px]">
-          <div>
-            <p className="font-light text-text-strong">{profile.connectionsCount}</p>
+          {stats.map((stat) => (
+            <div key={stat.key}>
+              <p className="font-light text-text-strong">{stat.value}</p>
 
-            <p className="text-text-subtle">{texts.feed.sidebar.connections}</p>
-          </div>
-
-          <div>
-            <p className="font-light text-text-strong">{profile.followersCount}</p>
-
-            <p className="text-text-subtle">{texts.feed.sidebar.followers}</p>
-          </div>
+              <p className="text-text-subtle">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
