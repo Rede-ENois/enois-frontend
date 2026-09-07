@@ -1,42 +1,16 @@
-import { useState } from "react";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
 import type { NewConversationSearchProps } from "@/types/components/messages/new-conversation-search-props";
 import { Search } from "lucide-react";
 
-import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
-import { listNetworkUsers } from "@/lib/api/network";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
+import { useNewConversationSearchController } from "@/utils/components/messages/use-new-conversation-search-controller";
 
 import { Input } from "@/components/ui/input";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function NewConversationSearch({ onSelect, onClose }: NewConversationSearchProps) {
-  const currentUserId = getCurrentUserId();
-  const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const { data: searchResults } = useQuery({
-    queryKey: ["network", "users", searchQuery],
-    queryFn: () => listNetworkUsers(searchQuery),
-    enabled: searchQuery.length > 0,
-  });
-
-  const filteredUsers = (searchResults?.items ?? []).filter((user) => user.id !== currentUserId);
-
-  const createConversation = useMutation({
-    mutationFn: (participantId: string) =>
-      createConversationRequest({ kind: "DIRECT", participantIds: [participantId] }),
-    onSuccess: (conversation) => {
-      onSelect(conversation.id);
-      onClose();
-      setSearchQuery("");
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    },
-  });
+export function NewConversationSearch(props: NewConversationSearchProps) {
+  const { searchQuery, setSearchQuery, showResults, showEmptyState, users } =
+    useNewConversationSearchController(props);
 
   return (
     <div className="space-y-3">
@@ -50,17 +24,17 @@ export function NewConversationSearch({ onSelect, onClose }: NewConversationSear
           autoFocus
         />
       </div>
-      {searchQuery && (
+      {showResults && (
         <div className="space-y-1">
-          {filteredUsers.length === 0 ? (
+          {showEmptyState ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
               {texts.messages.noContact}
             </p>
           ) : (
-            filteredUsers.map((user) => (
+            users.map((user) => (
               <button
                 key={user.id}
-                onClick={() => createConversation.mutate(user.id)}
+                onClick={user.select}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-muted"
               >
                 <UserAvatar src={user.avatar} alt={user.name} className="h-10 w-10" />

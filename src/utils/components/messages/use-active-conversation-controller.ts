@@ -3,7 +3,7 @@ import { useConversationMessages } from "@/lib/use-conversation-messages";
 import { useConversationParticipant } from "@/lib/use-conversation-participant";
 import { useConversationSelection } from "@/lib/use-conversation-selection";
 
-export function useActiveConversation(conversationId?: string | null) {
+export function useActiveConversationController(conversationId?: string | null) {
   const currentUserId = getCurrentUserId();
   const activeConversation = useConversationSelection(conversationId);
   const activeMessages = useConversationMessages(activeConversation?.id);
@@ -18,5 +18,6 @@ export function useActiveConversation(conversationId?: string | null) {
     activeMessages,
     otherParticipantId,
     otherUser,
+    showConversation: Boolean(activeConversation),
   };
 }

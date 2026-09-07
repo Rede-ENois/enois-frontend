@@ -1,25 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
-import { texts } from "@/texts";
 import type { ConversationHeaderProps } from "@/types/components/messages/conversation-header-props";
 import { ArrowLeft } from "lucide-react";
 
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
+import { useConversationHeaderController } from "@/utils/components/messages/use-conversation-header-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function ConversationHeader({ conversation, onBack }: ConversationHeaderProps) {
-  const currentUserId = getCurrentUserId();
-  const otherId = conversation.participantIds.find((id) => id !== currentUserId);
-  const { data: otherUser } = useQuery({
-    queryKey: ["profile", "by-id", otherId],
-    queryFn: () => getProfileById(otherId ?? ""),
-    enabled: !!otherId,
-  });
-
-  const title = conversation.title ?? otherUser?.name ?? texts.messages.conversationFallback;
+export function ConversationHeader(props: ConversationHeaderProps) {
+  const { onBack } = props;
+  const { otherUser, title, profileUsername } = useConversationHeaderController(props);
 
   return (
     <header className="flex items-center gap-3 border-b border-border p-4">
@@ -32,7 +22,7 @@ export function ConversationHeader({ conversation, onBack }: ConversationHeaderP
             <ArrowLeft className="h-4 w-4" />
           </button>
         )}
-        <Link to="/perfil/$username" params={{ username: otherUser?.username ?? otherId ?? "" }}>
+        <Link to="/perfil/$username" params={{ username: profileUsername }}>
           <UserAvatar src={otherUser?.avatar} alt={title} className="h-10 w-10 shrink-0" />
         </Link>
 
