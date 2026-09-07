@@ -1,12 +1,8 @@
-import { useState } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
+import { useSubListEditor } from "@/lib/use-sub-list-editor";
 import { texts } from "@/texts";
 import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
-import type { SubListUpdate } from "@/types/components/profile/edit-profile-dialog/sub-list-update";
 
 import { Field } from "@/components/edit-profile-field";
 import { Button } from "@/components/ui/button";
@@ -17,93 +13,28 @@ import { Textarea } from "@/components/ui/textarea";
 export function SubList<
   T extends Record<"id", string>,
   TData extends Record<string, unknown> = Record<string, string>,
->({
-  items,
-  fields,
-  currentlyHereKey,
-  createApi,
-  updateApi,
-  deleteApi,
-  queryKey,
-  emptyMessage,
-  newItem,
-}: SubListProps<T, TData>) {
-  const queryClient = useQueryClient();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<Record<string, string>>({ ...newItem });
-  const [currentlyHere, setCurrentlyHere] = useState(false);
-
-  const create = useMutation({
-    mutationFn: (data: TData) => createApi(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      setForm({ ...newItem });
-      setCurrentlyHere(false);
-      setEditingId(null);
-    },
-  });
-
-  const update = useMutation({
-    mutationFn: ({ id, data }: SubListUpdate<TData>) => updateApi(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      setEditingId(null);
-      setForm({ ...newItem });
-      setCurrentlyHere(false);
-    },
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteApi(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
-  });
-
-  const startEdit = (item: T) => {
-    setEditingId(item.id);
-    const values: Record<string, string> = {};
-    for (const f of fields) {
-      values[f.key] = String((item as Record<string, unknown>)[f.key] ?? "");
-    }
-    setForm(values);
-    if (currentlyHereKey) {
-      setCurrentlyHere(Boolean((item as Record<string, unknown>)[currentlyHereKey]));
-    }
-  };
-
-  const handleSubmit = async () => {
-    const data: Record<string, unknown> = { ...form };
-    if (currentlyHereKey) {
-      data[currentlyHereKey] = currentlyHere;
-      if (currentlyHere) data.endDate = null;
-    }
-    if (editingId && editingId !== "__new__") {
-      await update.mutateAsync({ id: editingId, data: data as TData });
-    } else {
-      await create.mutateAsync(data as TData);
-    }
-  };
-
-  const isPending = create.isPending || update.isPending;
-  const showForm = editingId !== null;
+>(props: SubListProps<T, TData>) {
+  const { items, fields, currentlyHereKey, emptyMessage } = props;
+  const editor = useSubListEditor(props);
 
   return (
     <div className="space-y-4">
-      {showForm ? (
+      {editor.showForm ? (
         <div className="space-y-3 rounded-xl border border-border-soft p-4">
-          {fields.map((f) => (
-            <Field key={f.key} label={f.label}>
-              {f.multiline ? (
+          {fields.map((field) => (
+            <Field key={field.key} label={field.label}>
+              {field.multiline ? (
                 <Textarea
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                  value={editor.form[field.key] ?? ""}
+                  onChange={(event) => editor.setFormField(field.key, event.target.value)}
                   rows={2}
                   className="h-10 border-border-soft bg-surface-1"
                 />
               ) : (
                 <Input
-                  type={f.type ?? "text"}
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
+                  type={field.type ?? "text"}
+                  value={editor.form[field.key] ?? ""}
+                  onChange={(event) => editor.setFormField(field.key, event.target.value)}
                   className="h-10 border-border-soft bg-surface-1"
                 />
               )}
@@ -111,23 +42,15 @@ export function SubList<
           ))}
           {currentlyHereKey && (
             <label className="flex items-center gap-2 text-[13px] font-light text-text-strong">
-              <Switch checked={currentlyHere} onCheckedChange={setCurrentlyHere} />
+              <Switch checked={editor.currentlyHere} onCheckedChange={editor.setCurrentlyHere} />
               <>{texts.profile.edit.currentlyHere}</>
             </label>
           )}
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleSubmit} disabled={isPending}>
-              {isPending ? texts.common.saving : texts.common.save}
+            <Button size="sm" onClick={editor.submit} disabled={editor.isPending}>
+              {editor.isPending ? texts.common.saving : texts.common.save}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setEditingId(null);
-                setForm({ ...newItem });
-                setCurrentlyHere(false);
-              }}
-            >
+            <Button size="sm" variant="outline" onClick={editor.cancel}>
               {texts.common.cancel}
             </Button>
           </div>
@@ -152,13 +75,13 @@ export function SubList<
                   </div>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => startEdit(item)}
+                      onClick={() => editor.startEdit(item)}
                       className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-2"
                     >
                       <Pencil className="h-4 w-4 text-text-subtle" />
                     </button>
                     <button
-                      onClick={() => remove.mutate(item.id)}
+                      onClick={() => editor.remove(item.id)}
                       className="grid h-8 w-8 place-items-center rounded-lg hover:bg-surface-2 hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -168,16 +91,7 @@ export function SubList<
               </div>
             ))
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full gap-1.5"
-            onClick={() => {
-              setEditingId("__new__");
-              setForm({ ...newItem });
-              setCurrentlyHere(false);
-            }}
-          >
+          <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={editor.startCreate}>
             <Plus className="h-4 w-4" /><>{texts.common.add}</>
           </Button>
         </>
