@@ -15,132 +15,190 @@ export function EditProfileInfoForm({
   setField,
   setUsername,
 }: EditProfileInfoFormProps) {
+  const fieldRows = [
+    [
+      {
+        key: "name",
+        label: texts.profile.edit.fields.name,
+        value: values.name,
+        placeholder: undefined,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("name", value),
+      },
+    ],
+    [
+      {
+        key: "username",
+        label: texts.profile.edit.fields.username,
+        value: values.username,
+        placeholder: texts.profile.edit.placeholders.username,
+        error: usernameError,
+        control: "input",
+        onChange: setUsername,
+      },
+    ],
+    [
+      {
+        key: "headline",
+        label: texts.profile.edit.fields.headline,
+        value: values.headline,
+        placeholder: texts.profile.edit.placeholders.headline,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("headline", value),
+      },
+    ],
+    [
+      {
+        key: "bio",
+        label: texts.profile.edit.fields.bio,
+        value: values.bio,
+        placeholder: undefined,
+        error: undefined,
+        control: "textarea",
+        onChange: (value: string) => setField("bio", value),
+      },
+    ],
+    [
+      {
+        key: "company",
+        label: texts.profile.edit.fields.company,
+        value: values.company,
+        placeholder: undefined,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("company", value),
+      },
+      {
+        key: "location",
+        label: texts.profile.edit.fields.location,
+        value: values.location,
+        placeholder: undefined,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("location", value),
+      },
+    ],
+    [
+      {
+        key: "availability",
+        label: texts.profile.edit.fields.availability,
+        value: values.availability,
+        placeholder: texts.profile.edit.placeholders.availability,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("availability", value),
+      },
+    ],
+    [
+      {
+        key: "portfolio",
+        label: texts.profile.edit.fields.portfolio,
+        value: values.portfolio,
+        placeholder: texts.profile.edit.placeholders.portfolio,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("portfolio", value),
+      },
+    ],
+    [
+      {
+        key: "external-links",
+        label: texts.profile.edit.fields.externalLinks,
+        value: values.linksText,
+        placeholder: undefined,
+        error: undefined,
+        control: "textarea",
+        onChange: (value: string) => setField("linksText", value),
+      },
+    ],
+    [
+      {
+        key: "skills",
+        label: texts.profile.edit.fields.skills,
+        value: values.skillsText,
+        placeholder: undefined,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("skillsText", value),
+      },
+    ],
+    [
+      {
+        key: "goals",
+        label: texts.profile.edit.fields.goals,
+        value: values.goalsText,
+        placeholder: undefined,
+        error: undefined,
+        control: "input",
+        onChange: (value: string) => setField("goalsText", value),
+      },
+    ],
+  ];
+  const switches = [
+    {
+      key: "open-to-work",
+      label: texts.profile.edit.openToWork,
+      checked: values.openToWork,
+      onChange: (checked: boolean) => setField("openToWork", checked),
+    },
+    {
+      key: "mentor",
+      label: texts.profile.edit.mentorAvailable,
+      checked: values.isMentor,
+      onChange: (checked: boolean) => setField("isMentor", checked),
+    },
+  ];
+
+  const renderField = (field: (typeof fieldRows)[number][number]) => (
+    <FormField
+      key={field.key}
+      label={field.label}
+      error={field.error}
+      labelClassName={fieldLabelClassName}
+    >
+      {field.control === "textarea" ? (
+        <Textarea
+          value={field.value}
+          onChange={(event) => field.onChange(event.target.value)}
+          rows={3}
+          className={`h-10 border-border-soft bg-surface-1${field.key === "bio" ? " pl-9" : ""}`}
+        />
+      ) : (
+        <Input
+          value={field.value}
+          onChange={(event) => field.onChange(event.target.value)}
+          placeholder={field.placeholder}
+          className="h-10 border-border-soft bg-surface-1"
+        />
+      )}
+    </FormField>
+  );
+
   return (
     <div className="space-y-5">
-      <FormField label={texts.profile.edit.fields.name} labelClassName={fieldLabelClassName}>
-        <Input
-          value={values.name}
-          onChange={(event) => setField("name", event.target.value)}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField
-        label={texts.profile.edit.fields.username}
-        error={usernameError}
-        labelClassName={fieldLabelClassName}
-      >
-        <Input
-          value={values.username}
-          onChange={(event) => setUsername(event.target.value)}
-          placeholder={texts.profile.edit.placeholders.username}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField label={texts.profile.edit.fields.headline} labelClassName={fieldLabelClassName}>
-        <Input
-          value={values.headline}
-          onChange={(event) => setField("headline", event.target.value)}
-          placeholder={texts.profile.edit.placeholders.headline}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField label={texts.profile.edit.fields.bio} labelClassName={fieldLabelClassName}>
-        <Textarea
-          value={values.bio}
-          onChange={(event) => setField("bio", event.target.value)}
-          rows={3}
-          className="h-10 border-border-soft bg-surface-1 pl-9"
-        />
-      </FormField>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={texts.profile.edit.fields.company} labelClassName={fieldLabelClassName}>
-          <Input
-            value={values.company}
-            onChange={(event) => setField("company", event.target.value)}
-            className="h-10 border-border-soft bg-surface-1"
-          />
-        </FormField>
-
-        <FormField label={texts.profile.edit.fields.location} labelClassName={fieldLabelClassName}>
-          <Input
-            value={values.location}
-            onChange={(event) => setField("location", event.target.value)}
-            className="h-10 border-border-soft bg-surface-1"
-          />
-        </FormField>
-      </div>
-
-      <FormField
-        label={texts.profile.edit.fields.availability}
-        labelClassName={fieldLabelClassName}
-      >
-        <Input
-          value={values.availability}
-          onChange={(event) => setField("availability", event.target.value)}
-          placeholder={texts.profile.edit.placeholders.availability}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField label={texts.profile.edit.fields.portfolio} labelClassName={fieldLabelClassName}>
-        <Input
-          value={values.portfolio}
-          onChange={(event) => setField("portfolio", event.target.value)}
-          placeholder={texts.profile.edit.placeholders.portfolio}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField
-        label={texts.profile.edit.fields.externalLinks}
-        labelClassName={fieldLabelClassName}
-      >
-        <Textarea
-          value={values.linksText}
-          onChange={(event) => setField("linksText", event.target.value)}
-          rows={3}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField label={texts.profile.edit.fields.skills} labelClassName={fieldLabelClassName}>
-        <Input
-          value={values.skillsText}
-          onChange={(event) => setField("skillsText", event.target.value)}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
-
-      <FormField label={texts.profile.edit.fields.goals} labelClassName={fieldLabelClassName}>
-        <Input
-          value={values.goalsText}
-          onChange={(event) => setField("goalsText", event.target.value)}
-          className="h-10 border-border-soft bg-surface-1"
-        />
-      </FormField>
+      {fieldRows.map((row) =>
+        row.length === 1 ? (
+          row.map(renderField)
+        ) : (
+          <div key={row.map((field) => field.key).join("-")} className="grid gap-4 sm:grid-cols-2">
+            {row.map(renderField)}
+          </div>
+        ),
+      )}
 
       <div className="flex items-center gap-8">
-        <label className="flex items-center gap-3 text-[13px] font-light text-text-strong">
-          <Switch
-            checked={values.openToWork}
-            onCheckedChange={(checked) => setField("openToWork", checked)}
-          />
+        {switches.map((item) => (
+          <label
+            key={item.key}
+            className="flex items-center gap-3 text-[13px] font-light text-text-strong"
+          >
+            <Switch checked={item.checked} onCheckedChange={item.onChange} />
 
-          <>{texts.profile.edit.openToWork}</>
-        </label>
-
-        <label className="flex items-center gap-3 text-[13px] font-light text-text-strong">
-          <Switch
-            checked={values.isMentor}
-            onCheckedChange={(checked) => setField("isMentor", checked)}
-          />
-
-          <>{texts.profile.edit.mentorAvailable}</>
-        </label>
+            <>{item.label}</>
+          </label>
+        ))}
       </div>
     </div>
   );

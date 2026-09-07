@@ -14,6 +14,22 @@ import { FormField } from "@/components/form-field";
 export function RegisterMentorDialog() {
   const { open, setOpen, skillsText, setSkillsText, price, setPrice, saving, saveDisabled, save } =
     useRegisterMentorDialogController();
+  const fields = [
+    {
+      key: "skills",
+      label: texts.mentoring.expertise,
+      value: skillsText,
+      onChange: setSkillsText,
+      placeholder: texts.mentoring.expertisePlaceholder,
+    },
+    {
+      key: "price",
+      label: texts.mentoring.investment,
+      value: price,
+      onChange: setPrice,
+      placeholder: texts.mentoring.free,
+    },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -29,29 +45,20 @@ export function RegisterMentorDialog() {
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          <FormField
-            label={texts.mentoring.expertise}
-            labelClassName="text-xs text-muted-foreground"
-          >
-            <Input
-              value={skillsText}
-              onChange={(event) => setSkillsText(event.target.value)}
-              placeholder={texts.mentoring.expertisePlaceholder}
-              className="h-10 border-transparent bg-muted"
-            />
-          </FormField>
-
-          <FormField
-            label={texts.mentoring.investment}
-            labelClassName="text-xs text-muted-foreground"
-          >
-            <Input
-              value={price}
-              onChange={(event) => setPrice(event.target.value)}
-              placeholder={texts.mentoring.free}
-              className="h-10 border-transparent bg-muted"
-            />
-          </FormField>
+          {fields.map((field) => (
+            <FormField
+              key={field.key}
+              label={field.label}
+              labelClassName="text-xs text-muted-foreground"
+            >
+              <Input
+                value={field.value}
+                onChange={(event) => field.onChange(event.target.value)}
+                placeholder={field.placeholder}
+                className="h-10 border-transparent bg-muted"
+              />
+            </FormField>
+          ))}
 
           <Button className="w-full rounded-full" disabled={saveDisabled} onClick={save}>
             {saving ? texts.common.saving : texts.common.save}

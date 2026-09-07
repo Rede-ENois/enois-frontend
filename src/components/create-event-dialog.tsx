@@ -24,6 +24,62 @@ export function CreateEventDialog() {
     createDisabled,
     createEvent,
   } = useCreateEventDialogController();
+  const fieldRows = [
+    [
+      {
+        key: "title",
+        label: texts.events.form.title,
+        type: "text",
+        value: form.title,
+        placeholder: undefined,
+        onChange: (value: string) => setField("title", value),
+      },
+    ],
+    [
+      {
+        key: "date",
+        label: texts.events.form.date,
+        type: "date",
+        value: form.date,
+        placeholder: undefined,
+        onChange: (value: string) => setField("date", value),
+      },
+      {
+        key: "time",
+        label: texts.events.form.time,
+        type: "time",
+        value: form.time,
+        placeholder: undefined,
+        onChange: (value: string) => setField("time", value),
+      },
+    ],
+    [
+      {
+        key: "host",
+        label: texts.events.form.host,
+        type: "text",
+        value: form.host,
+        placeholder: texts.events.form.hostPlaceholder,
+        onChange: (value: string) => setField("host", value),
+      },
+    ],
+  ];
+
+  const renderField = (field: (typeof fieldRows)[number][number]) => (
+    <FormField
+      key={field.key}
+      label={field.label}
+      labelClassName="text-xs font-medium text-muted-foreground"
+    >
+      <Input
+        type={field.type}
+        value={field.value}
+        onChange={(event) => field.onChange(event.target.value)}
+        placeholder={field.placeholder}
+        className="h-10 border-transparent bg-muted"
+      />
+    </FormField>
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -41,54 +97,15 @@ export function CreateEventDialog() {
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          <FormField
-            label={texts.events.form.title}
-            labelClassName="text-xs font-medium text-muted-foreground"
-          >
-            <Input
-              value={form.title}
-              onChange={(event) => setField("title", event.target.value)}
-              className="h-10 border-transparent bg-muted"
-            />
-          </FormField>
-
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              label={texts.events.form.date}
-              labelClassName="text-xs font-medium text-muted-foreground"
-            >
-              <Input
-                type="date"
-                value={form.date}
-                onChange={(event) => setField("date", event.target.value)}
-                className="h-10 border-transparent bg-muted"
-              />
-            </FormField>
-
-            <FormField
-              label={texts.events.form.time}
-              labelClassName="text-xs font-medium text-muted-foreground"
-            >
-              <Input
-                type="time"
-                value={form.time}
-                onChange={(event) => setField("time", event.target.value)}
-                className="h-10 border-transparent bg-muted"
-              />
-            </FormField>
-          </div>
-
-          <FormField
-            label={texts.events.form.host}
-            labelClassName="text-xs font-medium text-muted-foreground"
-          >
-            <Input
-              value={form.host}
-              onChange={(event) => setField("host", event.target.value)}
-              placeholder={texts.events.form.hostPlaceholder}
-              className="h-10 border-transparent bg-muted"
-            />
-          </FormField>
+          {fieldRows.map((row) =>
+            row.length === 1 ? (
+              row.map(renderField)
+            ) : (
+              <div key={row.map((field) => field.key).join("-")} className="grid grid-cols-2 gap-3">
+                {row.map(renderField)}
+              </div>
+            ),
+          )}
 
           <FormField
             label={texts.events.form.format}
