@@ -1,4 +1,4 @@
-import { useProfilePageProfile } from "@/lib/use-profile-page-profile";
+import { useProfilePageController } from "@/utils/components/profile/use-profile-page-controller";
 
 import { AppContainer } from "@/components/app-container";
 import { ProfileAboutSection } from "@/components/profile-about-section";
@@ -9,7 +9,7 @@ import { ProfileSidebar } from "@/components/profile-sidebar";
 import { ProfileSkillsSection } from "@/components/profile-skills-section";
 
 export function Profile() {
-  const user = useProfilePageProfile();
+  const { user } = useProfilePageController();
 
   return (
     <AppContainer>

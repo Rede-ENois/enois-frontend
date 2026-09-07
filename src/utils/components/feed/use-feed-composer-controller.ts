@@ -9,8 +9,9 @@ import type { PostView } from "@/types/application/feed/post-view";
 
 import { createPost as createPostRequest } from "@/lib/api/feed/create-post";
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
-import { useFeedComposerMedia } from "@/lib/use-feed-composer-media";
 import { useMediaUpload } from "@/lib/use-media-upload";
+
+import { useFeedComposerMedia } from "@/utils/components/feed/use-feed-composer-media";
 
 export function useFeedComposerController() {
   const queryClient = useQueryClient();

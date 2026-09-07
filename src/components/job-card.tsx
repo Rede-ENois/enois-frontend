@@ -1,16 +1,17 @@
 import { texts } from "@/texts";
 import type { JobCardProps } from "@/types/components/jobs/job-card-props";
-import { formatPostedAt } from "@/utils/format-posted-at";
 import { MapPin, Sparkles } from "lucide-react";
 
-import { useJobApplication } from "@/lib/use-job-application";
+import { useJobCardController } from "@/utils/components/jobs/use-job-card-controller";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-export function JobCard({ job }: JobCardProps) {
-  const { apply, applying } = useJobApplication(job.id);
+export function JobCard(props: JobCardProps) {
+  const { job } = props;
+  const { companyInitial, postedAtLabel, matchLabel, showSalary, apply, applying } =
+    useJobCardController(props);
 
   return (
     <article className="surface-card flex flex-col p-5">
@@ -20,7 +21,7 @@ export function JobCard({ job }: JobCardProps) {
             <Avatar type="image" src={job.logo} alt={job.company} className="rounded-xl" />
           )}
           <Avatar type="fallback" className="rounded-xl">
-            {job.company[0]}
+            {companyInitial}
           </Avatar>
         </Avatar>
 
@@ -38,17 +39,17 @@ export function JobCard({ job }: JobCardProps) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        {job.matchScore && (
+        {matchLabel && (
           <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 font-medium text-primary">
             <Sparkles className="h-3 w-3" />
 
-            <>{texts.jobs.match(job.matchScore)}</>
+            <>{matchLabel}</>
           </span>
         )}
         <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">{job.type}</span>
 
         <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">{job.level}</span>
-        {job.salary && (
+        {showSalary && (
           <span className="rounded-full bg-growth/15 px-2.5 py-1 font-medium text-growth">
             {job.salary}
           </span>
@@ -68,7 +69,7 @@ export function JobCard({ job }: JobCardProps) {
       </div>
 
       <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">
-        <span>{formatPostedAt(job.postedAt)}</span>
+        <span>{postedAtLabel}</span>
 
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="rounded-full">

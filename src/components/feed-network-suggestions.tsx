@@ -1,23 +1,16 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { UserPlus } from "lucide-react";
 
-import { connectToUser } from "@/lib/api/network/connect-to-user";
-import { listNetworkSuggestions } from "@/lib/api/network/list-network-suggestions";
+import { useFeedNetworkSuggestionsController } from "@/utils/components/feed/use-feed-network-suggestions-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedNetworkSuggestions() {
-  const queryClient = useQueryClient();
-  const { data: suggestions } = useQuery({
-    queryKey: ["network", "suggestions"],
-    queryFn: () => listNetworkSuggestions(4),
-  });
+  const { visible, items } = useFeedNetworkSuggestionsController();
 
-  const suggestionList = suggestions ?? [];
-  if (suggestionList.length === 0) return null;
+  if (!visible) return null;
 
   return (
     <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
@@ -34,7 +27,7 @@ export function FeedNetworkSuggestions() {
       </p>
 
       <ul className="mt-4 space-y-3">
-        {suggestionList.map((user) => (
+        {items.map(({ user, connect, connecting }) => (
           <li key={user.id} className="flex items-center gap-3">
             <UserAvatar src={user.avatar} alt={user.name} className="h-10 w-10" />
 
@@ -52,12 +45,9 @@ export function FeedNetworkSuggestions() {
 
             <button
               type="button"
-              className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary"
-              onClick={() => {
-                connectToUser(user.id).then(() =>
-                  queryClient.invalidateQueries({ queryKey: ["network", "suggestions"] }),
-                );
-              }}
+              className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary disabled:opacity-50"
+              onClick={connect}
+              disabled={connecting}
             >
               {texts.feed.sidebar.connect}
             </button>

@@ -1,9 +1,8 @@
-import { typeMeta } from "@/constants/post-type-meta";
 import { texts } from "@/texts";
 import type { PostCardProps } from "@/types/components/post/post-card-props";
 import { linkifyText } from "@/utils/linkify-text";
 
-import { usePostCardLifecycle } from "@/lib/use-post-card-lifecycle";
+import { usePostCardController } from "@/utils/components/post/use-post-card-controller";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -13,9 +12,9 @@ import { LinkPreviews } from "@/components/post-link-previews";
 import { MediaGrid } from "@/components/post-media-grid";
 import { ReactionsSummary } from "@/components/reactions-summary";
 
-export function PostCard({ post }: PostCardProps) {
-  const meta = typeMeta[post.type] ?? typeMeta.INSIGHT;
-  usePostCardLifecycle(post);
+export function PostCard(props: PostCardProps) {
+  const { post } = props;
+  const { meta, showMedia, showTags } = usePostCardController(props);
 
   return (
     <article className="min-w-0 rounded-2xl border border-border-soft bg-surface-card p-4 transition sm:p-5">
@@ -39,7 +38,7 @@ export function PostCard({ post }: PostCardProps) {
         {linkifyText(post.content)}
       </p>
 
-      {post.mediaIds.length > 0 && (
+      {showMedia && (
         <div className="mt-4">
           <MediaGrid mediaIds={post.mediaIds} />
         </div>
@@ -48,7 +47,7 @@ export function PostCard({ post }: PostCardProps) {
       <ReactionsSummary postId={post.id} />
       <LinkPreviews content={post.content} />
 
-      {post.tags.length > 0 && (
+      {showTags && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {post.tags.map((tag) => (
             <Badge

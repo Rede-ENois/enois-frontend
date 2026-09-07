@@ -1,10 +1,9 @@
 import { Outlet, useMatchRoute } from "@tanstack/react-router";
 
-import { COMMUNITY_TOPICS } from "@/constants/community-topics";
 import { texts } from "@/texts";
 import { Loader2, Plus } from "lucide-react";
 
-import { useCommunitiesPage } from "@/lib/use-communities-page";
+import { useCommunitiesPageController } from "@/utils/components/communities/use-communities-page-controller";
 
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +14,7 @@ import { CreateCommunityDialog } from "@/components/create-community-dialog";
 export function Comunidades() {
   const matchRoute = useMatchRoute();
   const isDetail = Boolean(matchRoute({ to: "/comunidades/$communityId" }));
-  const communities = useCommunitiesPage(isDetail);
+  const communities = useCommunitiesPageController(isDetail);
 
   if (isDetail) return <Outlet />;
 
@@ -39,17 +38,17 @@ export function Comunidades() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {COMMUNITY_TOPICS.map(({ value, label }) => (
+          {communities.topicOptions.map((option) => (
             <button
-              key={value}
-              onClick={() => communities.changeTopic(value === "Todas" ? undefined : value)}
+              key={option.value}
+              onClick={option.select}
               className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
-                (value === "Todas" && !communities.topic) || value === communities.topic
+                option.selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
-              {label}
+              {option.label}
             </button>
           ))}
         </div>
@@ -65,13 +64,13 @@ export function Comunidades() {
           ))}
         </div>
 
-        {communities.nextCursor && (
+        {communities.showLoadMore && (
           <div className="flex justify-center pb-8">
             <Button
               variant="outline"
               className="rounded-full"
               onClick={communities.loadMore}
-              disabled={communities.isFetching}
+              disabled={communities.loadMoreDisabled}
             >
               {communities.isFetching ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

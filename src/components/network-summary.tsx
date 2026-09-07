@@ -1,24 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
 
-import { listNetworkUsers } from "@/lib/api/network";
-import { getNetworkSummary } from "@/lib/api/network/get-network-summary";
+import { useNetworkSummaryController } from "@/utils/components/network/use-network-summary-controller";
 
 import { Stat } from "@/components/network-stat";
 
 export function NetworkSummary() {
-  const { data: summary } = useQuery({
-    queryKey: ["network", "summary"],
-    queryFn: getNetworkSummary,
-  });
-
-  const { data: usersData } = useQuery({
-    queryKey: ["network", "users"],
-    queryFn: () => listNetworkUsers(),
-  });
-
-  const suggestionCount = usersData?.items.length ?? 0;
+  const { stats } = useNetworkSummaryController();
 
   return (
     <div className="surface-card p-4 sm:p-6">
@@ -27,14 +14,9 @@ export function NetworkSummary() {
       <p className="mt-1 text-sm text-muted-foreground">{texts.network.description}</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label={texts.network.stats.connections} value={String(summary?.connections ?? 0)} />
-        <Stat label={texts.network.stats.following} value={String(summary?.followers ?? 0)} />
-        <Stat
-          label={texts.network.stats.requests}
-          value={String(summary?.pendingRequests ?? 0)}
-          highlight
-        />
-        <Stat label={texts.network.stats.suggestions} value={String(suggestionCount)} />
+        {stats.map(({ key, ...stat }) => (
+          <Stat key={key} {...stat} />
+        ))}
       </div>
     </div>
   );

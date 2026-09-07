@@ -3,7 +3,7 @@ import { useLoaderData } from "@tanstack/react-router";
 
 import { getProfile } from "@/lib/api/profile";
 
-export function useProfilePageProfile() {
+export function useProfilePageController() {
   const { user: loaderUser } = useLoaderData({ from: "/perfil/$username" });
   const { data } = useQuery({
     queryKey: ["profile", loaderUser.username],
@@ -11,5 +11,5 @@ export function useProfilePageProfile() {
     initialData: loaderUser,
   });
 
-  return data ?? loaderUser;
+  return { user: data ?? loaderUser };
 }

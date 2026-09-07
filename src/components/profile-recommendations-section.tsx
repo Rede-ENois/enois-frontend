@@ -1,21 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
 import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 import { Star } from "lucide-react";
 
-import { listReceivedRecommendations } from "@/lib/api/recommendations";
+import { useProfileRecommendationsController } from "@/utils/components/profile/use-profile-recommendations-controller";
 
 import { ProfileRecommendationItem } from "@/components/profile-recommendation-item";
 import { ProfileSection } from "@/components/profile-section";
 
-export function ProfileRecommendationsSection({ user }: ProfileSidebarProps) {
-  const { data: recommendations = [] } = useQuery({
-    queryKey: ["recommendations", user.id],
-    queryFn: () => listReceivedRecommendations(user.id),
-  });
+export function ProfileRecommendationsSection(props: ProfileSidebarProps) {
+  const { visible, recommendations } = useProfileRecommendationsController(props);
 
-  if (recommendations.length === 0) return null;
+  if (!visible) return null;
 
   return (
     <ProfileSection title={texts.profile.sections.recommendations} icon={Star}>

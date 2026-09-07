@@ -4,28 +4,27 @@ import { texts } from "@/texts";
 import type { CommunityCardProps } from "@/types/components/communities/community-card-props";
 import { Users } from "lucide-react";
 
-import { resolveCdnUrl } from "@/lib/api/media";
+import { createCommunityCardViewModel } from "@/utils/components/communities/create-community-card-view-model";
 
 import { Button } from "@/components/ui/button";
 
-export function CommunityCard({
-  community,
-  membershipPending,
-  onToggleMembership,
-}: CommunityCardProps) {
+export function CommunityCard(props: CommunityCardProps) {
+  const { community } = props;
+  const { coverUrl, avatarUrl, membershipAction } = createCommunityCardViewModel(props);
+
   return (
     <Link to="/comunidades/$communityId" params={{ communityId: community.id }}>
       <article className="surface-card overflow-hidden cursor-pointer transition hover:shadow-[var(--shadow-card)]">
-        {community.cover ? (
-          <img src={resolveCdnUrl(community.cover)} alt="" className="h-32 w-full object-cover" />
+        {coverUrl ? (
+          <img src={coverUrl} alt="" className="h-32 w-full object-cover" />
         ) : (
           <div className="h-32 w-full bg-gradient-to-br from-primary/20 to-primary/5" />
         )}
         <div className="p-5">
           <div className="flex items-center gap-3 mb-3">
-            {community.avatar && (
+            {avatarUrl && (
               <img
-                src={resolveCdnUrl(community.avatar)}
+                src={avatarUrl}
                 alt=""
                 className="h-10 w-10 rounded-full object-cover ring-2 ring-border"
               />
@@ -52,15 +51,12 @@ export function CommunityCard({
 
             <Button
               size="sm"
-              variant={community.joined ? "secondary" : "default"}
+              variant={membershipAction.variant}
               className="rounded-full"
-              disabled={membershipPending}
-              onClick={(event) => {
-                event.preventDefault();
-                onToggleMembership(community.id, community.joined);
-              }}
+              disabled={membershipAction.disabled}
+              onClick={membershipAction.run}
             >
-              {community.joined ? texts.communities.participating : texts.communities.enter}
+              {membershipAction.label}
             </Button>
           </div>
         </div>

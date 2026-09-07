@@ -1,19 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
-import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
+import { useFeedProfileSummaryController } from "@/utils/components/feed/use-feed-profile-summary-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedProfileSummary() {
-  const { data: profile } = useQuery({
-    queryKey: ["me"],
-    queryFn: getCurrentProfile,
-  });
+  const { visible, profile } = useFeedProfileSummaryController();
 
-  if (!profile) return null;
+  if (!visible || !profile) return null;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">

@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import { ArrowLeft } from "lucide-react";
 
-import { useCommunityDetailData } from "@/lib/use-community-detail-data";
+import { useCommunityDetailPageController } from "@/utils/components/communities/use-community-detail-page-controller";
 
 import { AppContainer } from "@/components/app-container";
 import { CommunityComposer } from "@/components/community-composer";
@@ -12,7 +12,8 @@ import { CommunityMembers } from "@/components/community-members";
 import { PostCard } from "@/components/post-card";
 
 export function CommunityDetail() {
-  const { community, members, posts } = useCommunityDetailData();
+  const { community, members, posts, showComposer, showEmptyState, emptyMessage } =
+    useCommunityDetailPageController();
 
   return (
     <AppContainer>
@@ -28,16 +29,14 @@ export function CommunityDetail() {
 
         <CommunityHeader community={community} members={members} />
 
-        {community.joined && <CommunityComposer communityId={community.id} />}
+        {showComposer && <CommunityComposer communityId={community.id} />}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">{texts.communities.detail.feed}</h2>
-            {posts.length === 0 ? (
+            {showEmptyState ? (
               <p className="surface-card p-8 text-center text-sm text-muted-foreground">
-                {community.joined
-                  ? texts.communities.detail.emptyMember
-                  : texts.communities.detail.emptyGuest}
+                {emptyMessage}
               </p>
             ) : (
               posts.map((post) => <PostCard key={post.id} post={post} />)

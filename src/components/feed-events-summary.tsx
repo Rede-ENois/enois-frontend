@@ -1,18 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
 import { TrendingUp } from "lucide-react";
 
-import { listEvents } from "@/lib/api/events";
+import { useFeedEventsSummaryController } from "@/utils/components/feed/use-feed-events-summary-controller";
 
 export function FeedEventsSummary() {
-  const { data: eventsData } = useQuery({
-    queryKey: ["events"],
-    queryFn: () => listEvents(),
-  });
+  const { visible, items } = useFeedEventsSummaryController();
 
-  const eventList = eventsData?.items ?? [];
-  if (eventList.length === 0) return null;
+  if (!visible) return null;
 
   return (
     <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
@@ -25,17 +19,11 @@ export function FeedEventsSummary() {
       </div>
 
       <ul className="mt-3 space-y-3">
-        {eventList.slice(0, 3).map((event) => (
+        {items.map(({ event, meta }) => (
           <li key={event.id}>
             <p className="text-[13px] font-light text-text-strong">{event.title}</p>
 
-            <p className="text-[11px] font-light text-text-subtle">
-              {texts.feed.sidebar.eventMeta(
-                event.date,
-                event.format,
-                texts.feed.sidebar.confirmed(event.attendees),
-              )}
-            </p>
+            <p className="text-[11px] font-light text-text-subtle">{meta}</p>
           </li>
         ))}
       </ul>

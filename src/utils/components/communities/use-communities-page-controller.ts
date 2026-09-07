@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { COMMUNITY_TOPICS } from "@/constants/community-topics";
 import type { Community } from "@/types/application/community/community";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 
@@ -9,7 +10,7 @@ import { listCommunities } from "@/lib/api/communities";
 import { joinCommunity } from "@/lib/api/communities/join-community";
 import { leaveCommunity } from "@/lib/api/communities/leave-community";
 
-export function useCommunitiesPage(isDetail: boolean) {
+export function useCommunitiesPageController(isDetail: boolean) {
   const queryClient = useQueryClient();
   const [topic, setTopic] = useState<CommunityTopic | undefined>(undefined);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -39,16 +40,8 @@ export function useCommunitiesPage(isDetail: boolean) {
   }, [communitiesData]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["communities"] });
-
-  const join = useMutation({
-    mutationFn: joinCommunity,
-    onSuccess: invalidate,
-  });
-
-  const leave = useMutation({
-    mutationFn: leaveCommunity,
-    onSuccess: invalidate,
-  });
+  const join = useMutation({ mutationFn: joinCommunity, onSuccess: invalidate });
+  const leave = useMutation({ mutationFn: leaveCommunity, onSuccess: invalidate });
 
   const changeTopic = (nextTopic: CommunityTopic | undefined) => {
     setTopic(nextTopic);
@@ -66,13 +59,18 @@ export function useCommunitiesPage(isDetail: boolean) {
   };
 
   return {
-    topic,
     communities: allItems,
-    nextCursor,
-    isFetching,
+    topicOptions: COMMUNITY_TOPICS.map(({ value, label }) => ({
+      value,
+      label,
+      selected: (value === "Todas" && !topic) || value === topic,
+      select: () => changeTopic(value === "Todas" ? undefined : value),
+    })),
     membershipPending: join.isPending || leave.isPending,
-    changeTopic,
-    loadMore,
     toggleMembership,
+    showLoadMore: Boolean(nextCursor),
+    loadMore,
+    loadMoreDisabled: isFetching,
+    isFetching,
   };
 }

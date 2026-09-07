@@ -1,33 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { Trophy } from "lucide-react";
 
-import { listRanking } from "@/lib/api/ranking";
+import { useProfileRankingController } from "@/utils/components/profile/use-profile-ranking-controller";
 
 import { ProfileSection } from "@/components/profile-section";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ProfileRankingSection() {
-  const { data: ranking = [] } = useQuery({
-    queryKey: ["ranking"],
-    queryFn: () => listRanking(10),
-  });
+  const { visible, items } = useProfileRankingController();
 
-  if (ranking.length === 0) return null;
+  if (!visible) return null;
 
   return (
     <ProfileSection title={texts.profile.sections.ranking} icon={Trophy}>
       <div className="space-y-2">
-        {ranking.slice(0, 5).map((rankedUser, index) => (
+        {items.map(({ rankedUser, positionLabel, highlighted }) => (
           <div key={rankedUser.id} className="flex items-center gap-3">
             <span
               className={`w-5 text-center text-[13px] font-light ${
-                index < 3 ? "text-opportunity" : "text-text-subtle"
+                highlighted ? "text-opportunity" : "text-text-subtle"
               }`}
             >
-              {texts.profile.rankingPosition(index + 1)}
+              {positionLabel}
             </span>
 
             <Link to="/perfil/$username" params={{ username: rankedUser.username }}>
