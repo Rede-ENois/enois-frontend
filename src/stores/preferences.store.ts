@@ -2,17 +2,17 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { createPreferencesStorage } from "@/lib/create-preferences-storage";
-import type { Theme } from "@/types/preferences/theme";
+import type { PreferencesStore } from "@/types/stores/preferences-store";
 
 const PREFERENCES_STORAGE_KEY = "connect-grow-preferences";
 
-export const usePreferencesStore = create()(
+export const usePreferencesStore = create<PreferencesStore>()(
   persist(
     (set) => ({
-      theme: "light" as Theme,
+      theme: "light",
       sidebarCollapsed: false,
 
-      setTheme: (theme: Theme) => set({ theme }),
+      setTheme: (theme) => set({ theme }),
       toggleSidebar: () =>
         set((state) => ({
           sidebarCollapsed: !state.sidebarCollapsed,
