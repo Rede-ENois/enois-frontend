@@ -2,38 +2,24 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { texts } from "@/texts";
+import { EVENT_FORMAT_OPTIONS } from "@/constants/event-format-options";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 
 import { createEvent as createEventRequest } from "@/lib/api/events/create-event";
 
-const EVENT_FORMAT_OPTIONS = [
-  { value: "ONLINE", label: texts.events.formats.ONLINE },
-  { value: "IN_PERSON", label: texts.events.formats.IN_PERSON },
-  { value: "HYBRID", label: texts.events.formats.HYBRID },
-] as const satisfies ReadonlyArray<{ value: CreateEventRequest["format"]; label: string }>;
-
-function createInitialForm(): CreateEventRequest {
-  return {
-    title: "",
-    date: "",
-    time: "",
-    format: "ONLINE",
-    host: "",
-  };
-}
+import { createInitialEventForm } from "@/utils/components/events/create-initial-event-form";
 
 export function useCreateEventDialogController() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<CreateEventRequest>(createInitialForm);
+  const [form, setForm] = useState<CreateEventRequest>(createInitialEventForm);
 
   const createEvent = useMutation({
     mutationFn: () => createEventRequest(form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       setOpen(false);
-      setForm(createInitialForm());
+      setForm(createInitialEventForm());
     },
   });
 
