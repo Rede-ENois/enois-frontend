@@ -9,7 +9,7 @@ export function useRegisterMentorDialogController() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [skillsText, setSkillsText] = useState("");
-  const [price, setPrice] = useState(texts.mentoring.free);
+  const [price, setPrice] = useState<string>(texts.mentoring.free);
 
   const createMentor = useMutation({
     mutationFn: () =>
