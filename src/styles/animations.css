@@ -1,0 +1,27 @@
+@keyframes chama {
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1);
+    filter: drop-shadow(0 0 14px rgba(124, 58, 237, 0.35));
+  }
+
+  20% {
+    transform: translateY(-8px) scaleX(0.96);
+    filter: drop-shadow(0 0 22px rgba(124, 58, 237, 0.55));
+  }
+
+  45% {
+    transform: translateY(-14px) scaleX(1.03);
+    filter: drop-shadow(0 0 30px rgba(124, 58, 237, 0.45));
+  }
+
+  70% {
+    transform: translateY(-6px) scaleX(0.98);
+    filter: drop-shadow(0 0 18px rgba(124, 58, 237, 0.5));
+  }
+}
+
+.animate-chama {
+  animation: chama 3.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
