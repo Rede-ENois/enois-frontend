@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { hydratePreferences, usePreferencesStore } from "@/stores/preferences.store";
+import { hydratePreferences } from "@/stores/hydrate-preferences";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 
 import { NavigationLinks } from "./navigation-links";
