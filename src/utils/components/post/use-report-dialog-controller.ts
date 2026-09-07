@@ -1,48 +1,22 @@
-import { useState } from "react";
-
-import { REPORT_REASONS } from "@/constants/report-reasons";
-import { usePostCardStore } from "@/stores/post-card.store";
-import type { ReportReason } from "@/types/application/report/report-reason";
-
-import { createReport } from "@/lib/api/reports";
+import { createReportReasonOptions } from "@/utils/components/post/create-report-reason-options";
+import { createSubmitPostReport } from "@/utils/components/post/create-submit-post-report";
+import { useReportDialogState } from "@/utils/components/post/use-report-dialog-state";
 
 export function useReportDialogController(postId: string) {
-  const open = usePostCardStore((state) => state.cards[postId]?.showReport ?? false);
-  const setShowReport = usePostCardStore((state) => state.setShowReport);
-  const [reason, setReason] = useState<ReportReason>("SPAM");
-  const [description, setDescription] = useState("");
-
-  const submit = async () => {
-    try {
-      await createReport({
-        targetId: postId,
-        targetType: "POST",
-        reason,
-        description: description || undefined,
-      });
-      setShowReport(postId, false);
-      setDescription("");
-    } catch {
-      // Preserve the existing silent failure behavior.
-    }
-  };
-
-  const setReasonFromValue = (value: string) => {
-    const nextReason = REPORT_REASONS.find((item) => item === value);
-    if (nextReason) setReason(nextReason);
-  };
+  const dialog = useReportDialogState(postId);
+  const submit = createSubmitPostReport(postId, dialog.reason, dialog.description, () => {
+    dialog.setOpen(false);
+    dialog.clearDescription();
+  });
 
   return {
-    open,
-    setOpen: (nextOpen: boolean) => setShowReport(postId, nextOpen),
-    reason,
-    reasonOptions: REPORT_REASONS.map((value) => ({
-      value,
-      label: value.replace(/_/g, " ").toLowerCase(),
-    })),
-    setReason: setReasonFromValue,
-    description,
-    setDescription,
+    open: dialog.open,
+    setOpen: dialog.setOpen,
+    reason: dialog.reason,
+    reasonOptions: createReportReasonOptions(),
+    setReason: dialog.setReason,
+    description: dialog.description,
+    setDescription: dialog.setDescription,
     submit,
   };
 }

@@ -1,26 +1,17 @@
 import { useState } from "react";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { EVENT_FORMAT_OPTIONS } from "@/constants/event-format-options";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 
-import { createEvent as createEventRequest } from "@/lib/api/events/create-event";
-
 import { createInitialEventForm } from "@/utils/components/events/create-initial-event-form";
+import { useCreateEvent } from "@/utils/components/events/use-create-event";
 
 export function useCreateEventDialogController() {
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CreateEventRequest>(createInitialEventForm);
-
-  const createEvent = useMutation({
-    mutationFn: () => createEventRequest(form),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      setOpen(false);
-      setForm(createInitialEventForm());
-    },
+  const create = useCreateEvent(form, () => {
+    setOpen(false);
+    setForm(createInitialEventForm());
   });
 
   const setField = <K extends keyof CreateEventRequest>(
@@ -42,9 +33,8 @@ export function useCreateEventDialogController() {
     setField,
     setFormat,
     formatOptions: EVENT_FORMAT_OPTIONS,
-    createPending: createEvent.isPending,
-    createDisabled:
-      !form.title.trim() || !form.date || !form.host.trim() || createEvent.isPending,
-    createEvent: () => createEvent.mutate(),
+    createPending: create.createPending,
+    createDisabled: !form.title.trim() || !form.date || !form.host.trim() || create.createPending,
+    createEvent: create.createEvent,
   };
 }
