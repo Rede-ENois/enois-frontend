@@ -169,7 +169,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                   <MapPin className="h-4 w-4" /><>{user.location}</>
                 </span>
               )}
-              <span>{texts.profile.connectionsMeta(user.connectionsCount)}</span>
+              <span>{texts.profile.connectionsMeta(user.connectionsCount ?? 0)}</span>
               {(user.reputation ?? 0) > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-opportunity/15 px-2 py-0.5 text-[11px] font-light text-opportunity-foreground">
                   {texts.profile.reputationMeta(user.reputation ?? 0)}
