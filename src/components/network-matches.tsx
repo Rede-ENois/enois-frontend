@@ -1,39 +1,15 @@
-import { useState } from "react";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { Check, Send, UserMinus, UserPlus } from "lucide-react";
 
-import { listNetworkUsers } from "@/lib/api/network";
-import { connectToUser } from "@/lib/api/network/connect-to-user";
-import { removeConnection } from "@/lib/api/network/remove-connection";
+import { useNetworkMatchesController } from "@/lib/use-network-matches-controller";
 import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function NetworkMatches() {
-  const queryClient = useQueryClient();
-  const [localStatus, setLocalStatus] = useState<Record<string, string>>({});
-
-  const { data: usersData } = useQuery({
-    queryKey: ["network", "users"],
-    queryFn: () => listNetworkUsers(),
-  });
-
-  const users = usersData?.items ?? [];
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
-
-  const connect = useMutation({
-    mutationFn: connectToUser,
-    onSuccess: invalidate,
-  });
-
-  const remove = useMutation({
-    mutationFn: removeConnection,
-    onSuccess: invalidate,
-  });
+  const { users, localStatus, pending, toggleConnection } = useNetworkMatchesController();
 
   return (
     <section>
@@ -73,16 +49,8 @@ export function NetworkMatches() {
                   user.connected ? "text-destructive hover:text-destructive" : ""
                 }`}
                 variant={user.connected ? "outline" : "default"}
-                disabled={connect.isPending || remove.isPending}
-                onClick={() => {
-                  if (user.connected) {
-                    remove.mutate(user.id);
-                    setLocalStatus((status) => ({ ...status, [user.id]: "REMOVED" }));
-                  } else {
-                    connect.mutate(user.id);
-                    setLocalStatus((status) => ({ ...status, [user.id]: "REQUESTED" }));
-                  }
-                }}
+                disabled={pending}
+                onClick={() => toggleConnection(user.id, user.connected)}
               >
                 {user.connected ? (
                   <>

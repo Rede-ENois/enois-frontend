@@ -1,8 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { MapPin, Sparkles } from "lucide-react";
 
-import { applyToJob } from "@/lib/api/jobs/apply-to-job";
+import { useJobApplication } from "@/lib/use-job-application";
 import { texts } from "@/texts";
 import type { JobCardProps } from "@/types/components/jobs/job-card-props";
 import { formatPostedAt } from "@/utils/format-posted-at";
@@ -12,11 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export function JobCard({ job }: JobCardProps) {
-  const queryClient = useQueryClient();
-  const apply = useMutation({
-    mutationFn: () => applyToJob(job.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
-  });
+  const { apply, applying } = useJobApplication(job.id);
 
   return (
     <article className="surface-card flex flex-col p-5">
@@ -71,12 +65,7 @@ export function JobCard({ job }: JobCardProps) {
           <Button size="sm" variant="outline" className="rounded-full">
             {texts.jobs.details}
           </Button>
-          <Button
-            size="sm"
-            className="rounded-full"
-            disabled={apply.isPending}
-            onClick={() => apply.mutate()}
-          >
+          <Button size="sm" className="rounded-full" disabled={applying} onClick={apply}>
             {texts.jobs.apply}
           </Button>
         </div>

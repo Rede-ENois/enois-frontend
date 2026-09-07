@@ -1,10 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { Calendar, Star } from "lucide-react";
 
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
+import { useMentorCardProfile } from "@/lib/use-mentor-card-profile";
 import { texts } from "@/texts";
 import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
 
@@ -13,13 +11,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function MentorCard({ mentor }: MentorCardProps) {
-  const currentUserId = getCurrentUserId();
-  const isOwner = currentUserId === mentor.userId;
-
-  const { data: user } = useQuery({
-    queryKey: ["profile", mentor.userId],
-    queryFn: () => getProfileById(mentor.userId),
-  });
+  const { user, isOwner } = useMentorCardProfile(mentor.userId);
 
   return (
     <article className="surface-card mx-auto w-full max-w-5xl space-y-4 p-5">

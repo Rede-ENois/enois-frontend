@@ -1,10 +1,6 @@
-import { type FormEvent, useState } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Send } from "lucide-react";
 
-import { createPost } from "@/lib/api/feed/create-post";
+import { useCommunityComposerController } from "@/lib/use-community-composer-controller";
 import { texts } from "@/texts";
 import type { CommunityComposerProps } from "@/types/components/communities/community-composer-props";
 
@@ -12,27 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function CommunityComposer({ communityId }: CommunityComposerProps) {
-  const queryClient = useQueryClient();
-  const [draft, setDraft] = useState("");
-
-  const createPostMutation = useMutation({
-    mutationFn: (content: string) => createPost({ type: "INSIGHT", content, communityId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community", communityId, "feed"] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      setDraft("");
-    },
-  });
-
-  const handlePost = (event: FormEvent) => {
-    event.preventDefault();
-    const content = draft.trim();
-    if (!content) return;
-    createPostMutation.mutate(content);
-  };
+  const { draft, setDraft, submit, publishing } = useCommunityComposerController(communityId);
 
   return (
-    <form onSubmit={handlePost} className="surface-card p-5">
+    <form onSubmit={submit} className="surface-card p-5">
       <Textarea
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
@@ -41,13 +20,9 @@ export function CommunityComposer({ communityId }: CommunityComposerProps) {
         maxLength={1024}
       />
       <div className="mt-3 flex justify-end">
-        <Button
-          size="sm"
-          className="rounded-full gap-1.5"
-          disabled={!draft.trim() || createPostMutation.isPending}
-        >
+        <Button size="sm" className="rounded-full gap-1.5" disabled={!draft.trim() || publishing}>
           <Send className="h-4 w-4" />
-          <>{createPostMutation.isPending ? texts.common.publishing : texts.common.publish}</>
+          <>{publishing ? texts.common.publishing : texts.common.publish}</>
         </Button>
       </div>
     </form>

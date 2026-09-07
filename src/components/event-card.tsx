@@ -1,9 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Calendar, MapPin, Users, Video } from "lucide-react";
 
-import { attendEvent } from "@/lib/api/events/attend-event";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { useEventAttendance } from "@/lib/use-event-attendance";
 import { texts } from "@/texts";
 import type { EventCardProps } from "@/types/components/events/event-card-props";
 
@@ -11,11 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export function EventCard({ event }: EventCardProps) {
-  const queryClient = useQueryClient();
-  const attend = useMutation({
-    mutationFn: () => attendEvent(event.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
-  });
+  const { attend, attending } = useEventAttendance(event.id);
   const formatLabel = texts.events.formats[event.format] ?? event.format;
   const Icon = event.format === "ONLINE" ? Video : MapPin;
   const [, month, day] = (event.date ?? "").split("-");
@@ -50,11 +44,7 @@ export function EventCard({ event }: EventCardProps) {
             <Users className="h-3.5 w-3.5" /><>{event.attendees ?? 0}</>
           </span>
         </div>
-        <Button
-          className="mt-4 w-full rounded-full"
-          disabled={attend.isPending}
-          onClick={() => attend.mutate()}
-        >
+        <Button className="mt-4 w-full rounded-full" disabled={attending} onClick={attend}>
           {texts.events.attend}
         </Button>
       </div>

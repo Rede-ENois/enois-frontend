@@ -1,9 +1,6 @@
-import { useState } from "react";
-
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createMentor as createMentorRequest } from "@/lib/api/mentors/create-mentor";
+import { useRegisterMentorDialogController } from "@/lib/use-register-mentor-dialog-controller";
 import { texts } from "@/texts";
 
 import { FormField } from "@/components/form-field";
@@ -14,27 +11,8 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 
 export function RegisterMentorDialog() {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [skillsText, setSkillsText] = useState("");
-  const [price, setPrice] = useState(texts.mentoring.free);
-
-  const createMentor = useMutation({
-    mutationFn: () => {
-      const expertise = skillsText
-        .split(",")
-        .map((skill) => skill.trim())
-        .filter(Boolean);
-
-      return createMentorRequest({ expertise, price: price || texts.mentoring.free });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["mentors"] });
-      setOpen(false);
-      setSkillsText("");
-      setPrice(texts.mentoring.free);
-    },
-  });
+  const { open, setOpen, skillsText, setSkillsText, price, setPrice, saving, save } =
+    useRegisterMentorDialogController();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -70,12 +48,8 @@ export function RegisterMentorDialog() {
               className="h-10 border-transparent bg-muted"
             />
           </FormField>
-          <Button
-            className="w-full rounded-full"
-            disabled={!skillsText.trim() || createMentor.isPending}
-            onClick={() => createMentor.mutate()}
-          >
-            {createMentor.isPending ? texts.common.saving : texts.common.save}
+          <Button className="w-full rounded-full" disabled={!skillsText.trim() || saving} onClick={save}>
+            {saving ? texts.common.saving : texts.common.save}
           </Button>
         </div>
       </DialogContent>
