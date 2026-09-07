@@ -1,45 +1,34 @@
-import { useState } from "react";
-
 import { texts } from "@/texts";
-import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
 import { Loader2 } from "lucide-react";
+
+import { useAuthSocialOptionsController } from "@/utils/components/auth/use-auth-social-options-controller";
 
 import { AppleIcon } from "./apple-icon";
 import { GoogleIcon } from "./google-icon";
 
 export function AuthSocialOptions() {
-  const [loading, setLoading] = useState<OAuthStartResponse["provider"] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const startOAuth = async (provider: OAuthStartResponse["provider"]) => {
-    setLoading(provider);
-    setError(null);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const providerName = provider === "GOOGLE" ? "Google" : "Apple";
-    setError(texts.auth.social.unavailable(providerName));
-    setLoading(null);
-  };
+  const { error, disabled, google, apple } = useAuthSocialOptionsController();
 
   return (
     <>
       <div className="grid gap-2">
         <button
           type="button"
-          onClick={() => startOAuth("GOOGLE")}
-          disabled={loading !== null}
+          onClick={google.start}
+          disabled={disabled}
           className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
         >
-          {loading === "GOOGLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+          {google.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
           <>{texts.auth.social.google}</>
         </button>
 
         <button
           type="button"
-          onClick={() => startOAuth("APPLE")}
-          disabled={loading !== null}
+          onClick={apple.start}
+          disabled={disabled}
           className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
         >
-          {loading === "APPLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleIcon />}
+          {apple.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleIcon />}
           <>{texts.auth.social.apple}</>
         </button>
         {error && (

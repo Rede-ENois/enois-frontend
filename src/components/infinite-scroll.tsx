@@ -1,26 +1,11 @@
-import { useEffect, useRef } from "react";
-
 import type { InfiniteScrollProps } from "@/types/components/infinite-scroll-props";
 
-export function InfiniteScroll({ hasMore, loading, onLoadMore }: InfiniteScrollProps) {
-  const sentinelRef = useRef<HTMLDivElement>(null);
+import { useInfiniteScrollController } from "@/utils/components/infinite-scroll/use-infinite-scroll-controller";
 
-  useEffect(() => {
-    const element = sentinelRef.current;
-    if (!element || !hasMore) return;
+export function InfiniteScroll(props: InfiniteScrollProps) {
+  const { visible, sentinelRef } = useInfiniteScrollController(props);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !loading) onLoadMore();
-      },
-      { rootMargin: "300px" },
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [hasMore, loading, onLoadMore]);
-
-  if (!hasMore) return null;
+  if (!visible) return null;
 
   return <div ref={sentinelRef} className="h-4" />;
 }

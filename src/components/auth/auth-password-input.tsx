@@ -1,24 +1,23 @@
-import { type ComponentProps, useState } from "react";
+import type { ComponentProps } from "react";
 
-import { texts } from "@/texts";
-import { Eye, EyeOff } from "lucide-react";
+import { useAuthPasswordInputController } from "@/utils/components/auth/use-auth-password-input-controller";
 
 import { Input } from "@/components/ui/input";
 
 export function AuthPasswordInput(props: ComponentProps<typeof Input>) {
-  const [show, setShow] = useState(false);
+  const { inputType, Icon, label, toggle } = useAuthPasswordInputController();
 
   return (
     <div className="relative">
-      <Input {...props} type={show ? "text" : "password"} />
+      <Input {...props} type={inputType} />
 
       <button
         type="button"
-        onClick={() => setShow((value) => !value)}
+        onClick={toggle}
         className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground"
-        aria-label={show ? texts.auth.password.hide : texts.auth.password.show}
+        aria-label={label}
       >
-        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        <Icon className="h-4 w-4" />
       </button>
     </div>
   );
