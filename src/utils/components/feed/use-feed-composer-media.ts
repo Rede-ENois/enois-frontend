@@ -2,6 +2,9 @@ import { type ChangeEvent, useRef, useState } from "react";
 
 import type { MediaItem } from "@/types/components/feed/media-item";
 
+import { appendFeedComposerMedia } from "@/utils/components/feed/append-feed-composer-media";
+import { revokeFeedComposerMedia } from "@/utils/components/feed/revoke-feed-composer-media";
+
 export function useFeedComposerMedia() {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -10,37 +13,28 @@ export function useFeedComposerMedia() {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    for (const file of Array.from(files)) {
-      const isVideo = file.type.startsWith("video/");
-      const isImage = file.type.startsWith("image/");
-      if (!isVideo && !isImage) continue;
-
-      const hasExistingImages = media.some((item) => item.type === "image");
-      const hasExistingVideo = media.some((item) => item.type === "video");
-
-      if (isVideo && (hasExistingImages || hasExistingVideo || media.length >= 1)) break;
-      if (isImage && hasExistingVideo) break;
-      if (isImage && media.length >= 4) break;
-
-      const preview = URL.createObjectURL(file);
-      setMedia((previous) => [...previous, { type: isVideo ? "video" : "image", file, preview }]);
-    }
+    setMedia((current) => appendFeedComposerMedia(current, Array.from(files)));
     event.target.value = "";
   };
 
   const removeMedia = (index: number) => {
-    setMedia((previous) => {
-      URL.revokeObjectURL(previous[index].preview);
-      return previous.filter((_, itemIndex) => itemIndex !== index);
+    setMedia((current) => {
+      const removed = current[index];
+      if (removed) URL.revokeObjectURL(removed.preview);
+      return current.filter((_, itemIndex) => itemIndex !== index);
     });
   };
 
-  const clearMedia = () => setMedia([]);
-  const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
+  const clearMedia = () => {
+    setMedia((current) => {
+      revokeFeedComposerMedia(current);
+      return [];
+    });
+  };
 
   return {
     media,
-    mediaType,
+    mediaType: media[0]?.type ?? null,
     fileRef,
     handleMediaSelect,
     removeMedia,
