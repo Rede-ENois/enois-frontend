@@ -27,7 +27,7 @@ export function FeedNetworkSuggestions() {
       </p>
 
       <ul className="mt-4 space-y-3">
-        {items.map(({ user, connect, connecting }) => (
+        {items.map(({ user, connect }) => (
           <li key={user.id} className="flex items-center gap-3">
             <UserAvatar src={user.avatar} alt={user.name} className="h-10 w-10" />
 
@@ -45,9 +45,8 @@ export function FeedNetworkSuggestions() {
 
             <button
               type="button"
-              className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary disabled:opacity-50"
+              className="shrink-0 rounded-full border border-border-soft px-3 py-1 text-[12px] font-light text-text-subtle transition hover:border-primary hover:text-primary"
               onClick={connect}
-              disabled={connecting}
             >
               {texts.feed.sidebar.connect}
             </button>

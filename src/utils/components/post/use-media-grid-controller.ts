@@ -19,7 +19,8 @@ export function useMediaGridController(mediaIds: PostView["mediaIds"]) {
   const items = queryResults
     .filter((query) => query.data?.cdnUrl)
     .map((query) => query.data!)
-    .map((item) => ({ ...item, url: resolveCdnUrl(item.cdnUrl) }));
+    .map((item) => ({ ...item, url: resolveCdnUrl(item.cdnUrl) }))
+    .filter((item): item is typeof item & { url: string } => Boolean(item.url));
   const video = items.find((item) => item.mimeType.startsWith("video/"));
 
   return {

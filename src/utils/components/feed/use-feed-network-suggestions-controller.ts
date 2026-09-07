@@ -20,7 +20,6 @@ export function useFeedNetworkSuggestionsController() {
     items: items.map((user) => ({
       user,
       connect: () => connect.mutate(user.id),
-      connecting: connect.isPending,
     })),
   };
 }
