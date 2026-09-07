@@ -10,7 +10,7 @@ export function useConversationMessages(conversationId?: string) {
     refetchInterval: 10_000,
   });
 
-  return (data?.items ?? []).sort(
+  return [...(data?.items ?? [])].sort(
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
 }
