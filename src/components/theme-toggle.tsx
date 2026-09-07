@@ -2,24 +2,20 @@ import { useEffect } from "react";
 
 import { Moon, Sun } from "lucide-react";
 
-import { hydratePreferences, usePreferencesStore } from "@/stores/preferences.store";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { Theme } from "@/types/preferences/theme";
-
-function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-}
 
 export function ThemeToggle() {
   const theme = usePreferencesStore((state) => state.theme);
   const setTheme = usePreferencesStore((state) => state.setTheme);
 
   useEffect(() => {
-    hydratePreferences();
+    usePreferencesStore.hydrate();
   }, []);
 
   useEffect(() => {
-    applyTheme(theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   const cycleTheme = () => {

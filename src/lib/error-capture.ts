@@ -1,29 +1,32 @@
 import type { CapturedError } from "@/types/lib/captured-error";
 
-// Captures the original Error out-of-band so server.ts can recover the stack
-// when h3 has already swallowed the throw into a generic 500 Response.
-
-let lastCapturedError: CapturedError | undefined;
 const TTL_MS = 5_000;
 
-function record(error: unknown) {
-  lastCapturedError = { error, at: Date.now() };
-}
+export const errorCapture = (() => {
+  let lastCapturedError: CapturedError | undefined;
 
-if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
-}
+  const record = (error: unknown) => {
+    lastCapturedError = { error, at: Date.now() };
+  };
 
-export function consumeLastCapturedError(): unknown {
-  if (!lastCapturedError) return undefined;
-  if (Date.now() - lastCapturedError.at > TTL_MS) {
-    lastCapturedError = undefined;
-    return undefined;
+  if (typeof globalThis.addEventListener === "function") {
+    globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
+    globalThis.addEventListener("unhandledrejection", (event) =>
+      record((event as PromiseRejectionEvent).reason),
+    );
   }
-  const { error } = lastCapturedError;
-  lastCapturedError = undefined;
-  return error;
-}
+
+  return {
+    consume: (): unknown => {
+      if (!lastCapturedError) return undefined;
+      if (Date.now() - lastCapturedError.at > TTL_MS) {
+        lastCapturedError = undefined;
+        return undefined;
+      }
+
+      const { error } = lastCapturedError;
+      lastCapturedError = undefined;
+      return error;
+    },
+  };
+})();

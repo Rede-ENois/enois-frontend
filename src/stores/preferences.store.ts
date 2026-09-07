@@ -48,34 +48,37 @@ const preferencesStorage = {
   },
 };
 
-export const usePreferencesStore = create()(
-  persist(
-    (set) => ({
-      theme: "light" as Theme,
-      sidebarCollapsed: false,
-
-      setTheme: (theme: Theme) => set({ theme }),
-      toggleSidebar: () =>
-        set((state) => ({
-          sidebarCollapsed: !state.sidebarCollapsed,
-        })),
-    }),
-    {
-      name: PREFERENCES_STORAGE_KEY,
-      storage: createJSONStorage(() => preferencesStorage),
-      partialize: (state) => ({
-        theme: state.theme,
-        sidebarCollapsed: state.sidebarCollapsed,
-      }),
-      skipHydration: true,
-    },
-  ),
-);
-
 let hydrationStarted = false;
 
-export function hydratePreferences() {
-  if (hydrationStarted) return;
-  hydrationStarted = true;
-  void usePreferencesStore.persist.rehydrate();
-}
+export const usePreferencesStore = Object.assign(
+  create()(
+    persist(
+      (set) => ({
+        theme: "light" as Theme,
+        sidebarCollapsed: false,
+
+        setTheme: (theme: Theme) => set({ theme }),
+        toggleSidebar: () =>
+          set((state) => ({
+            sidebarCollapsed: !state.sidebarCollapsed,
+          })),
+      }),
+      {
+        name: PREFERENCES_STORAGE_KEY,
+        storage: createJSONStorage(() => preferencesStorage),
+        partialize: (state) => ({
+          theme: state.theme,
+          sidebarCollapsed: state.sidebarCollapsed,
+        }),
+        skipHydration: true,
+      },
+    ),
+  ),
+  {
+    hydrate: () => {
+      if (hydrationStarted) return;
+      hydrationStarted = true;
+      void usePreferencesStore.persist.rehydrate();
+    },
+  },
+);
