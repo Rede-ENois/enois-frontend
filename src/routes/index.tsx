@@ -1,17 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { texts } from "@/texts";
+import { createLandingRouteHead } from "@/utils/routes/create-landing-route-head";
 
 import { Landing } from "@/components/pages/landing-page";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: texts.landing.seo.title },
-      { name: "description", content: texts.landing.seo.description },
-      { property: "og:title", content: texts.landing.seo.title },
-      { property: "og:description", content: texts.landing.seo.ogDescription },
-    ],
-  }),
+  head: createLandingRouteHead,
   component: Landing,
 });
