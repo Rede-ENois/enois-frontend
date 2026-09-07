@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import { Root as Dialog } from "@radix-ui/react-dialog";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 
 import { texts } from "@/texts";
@@ -7,7 +8,9 @@ import type { ImageCropDialogProps } from "@/types/components/image-crop-dialog/
 import { getCroppedImg } from "@/utils/crop-image";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 
 export function ImageCropDialog({
   open,

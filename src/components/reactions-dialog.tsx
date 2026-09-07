@@ -1,3 +1,4 @@
+import { Root as Dialog } from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
@@ -8,7 +9,9 @@ import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ReactionsDialog({ postId }: PostIdProps) {

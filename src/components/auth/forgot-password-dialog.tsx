@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 
+import { Root as Dialog } from "@radix-ui/react-dialog";
 import { ArrowRight, Loader2, MailCheck } from "lucide-react";
 import { z } from "zod";
 
@@ -10,7 +11,9 @@ import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-passw
 import { ErrorBanner } from "@/components/error-banner";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 import { Input } from "@/components/ui/input";
 
 export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialogProps) {

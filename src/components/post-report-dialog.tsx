@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { Root as Dialog } from "@radix-ui/react-dialog";
+
 import { REPORT_REASONS } from "@/constants/report-reasons";
 import { reportsApi } from "@/lib/api/reports";
 import { usePostCardStore } from "@/stores/post-card.store";
@@ -8,7 +10,9 @@ import type { ReportReason } from "@/types/application/report/report-reason";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog-content";
+import { DialogHeader } from "@/components/ui/dialog-header";
+import { DialogTitle } from "@/components/ui/dialog-title";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
