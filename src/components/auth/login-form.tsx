@@ -57,7 +57,7 @@ export function LoginForm({ onDone, onForgot }: LoginFormProps) {
           />
         </FormField>
 
-        {formError && <ErrorBanner error={formError} />}
+        {formError !== null && <ErrorBanner error={formError} />}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={loading}>
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
