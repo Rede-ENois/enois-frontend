@@ -1,11 +1,8 @@
-import { useState } from "react";
-
-import { EDIT_PROFILE_TABS } from "@/constants/edit-profile-tabs";
 import { texts } from "@/texts";
 import type { Props } from "@/types/components/profile/edit-profile-dialog/props";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
-import { useEditProfileInfo } from "@/lib/use-edit-profile-info";
+import { useEditProfileDialogController } from "@/utils/components/profile/use-edit-profile-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -18,9 +15,8 @@ import { EditProfileExperiences } from "@/components/edit-profile-experiences";
 import { EditProfileInfoForm } from "@/components/edit-profile-info-form";
 
 export function EditProfileDialog({ profile, children }: Props) {
-  const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<(typeof EDIT_PROFILE_TABS)[number]["key"]>("info");
-  const profileInfo = useEditProfileInfo(profile, () => setOpen(false));
+  const { open, setOpen, close, activeTab, tabs, profileInfo } =
+    useEditProfileDialogController(profile);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -34,7 +30,7 @@ export function EditProfileDialog({ profile, children }: Props) {
             </DialogTitle>
 
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => setOpen(false)}>
+              <Button size="sm" variant="outline" onClick={close}>
                 {texts.common.cancel}
               </Button>
 
@@ -45,12 +41,12 @@ export function EditProfileDialog({ profile, children }: Props) {
           </div>
 
           <div className="mt-4 flex gap-1 overflow-x-auto text-sm">
-            {EDIT_PROFILE_TABS.map((item) => (
+            {tabs.map((item) => (
               <button
                 key={item.key}
-                onClick={() => setTab(item.key)}
+                onClick={item.select}
                 className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-light transition ${
-                  tab === item.key
+                  item.selected
                     ? "bg-surface-2 text-primary"
                     : "text-text-subtle hover:bg-surface-3 hover:text-text-strong"
                 }`}
@@ -62,17 +58,17 @@ export function EditProfileDialog({ profile, children }: Props) {
         </DialogHeader>
 
         <div className="space-y-6 px-6 pb-6 pt-4">
-          {tab === "info" && (
+          {activeTab === "info" && (
             <EditProfileInfoForm
               values={profileInfo.values}
               usernameError={profileInfo.usernameError}
               setField={profileInfo.setField}
-              clearUsernameError={profileInfo.clearUsernameError}
+              setUsername={profileInfo.setUsername}
             />
           )}
-          {tab === "experiences" && <EditProfileExperiences />}
-          {tab === "education" && <EditProfileEducation />}
-          {tab === "certifications" && <EditProfileCertifications />}
+          {activeTab === "experiences" && <EditProfileExperiences />}
+          {activeTab === "education" && <EditProfileEducation />}
+          {activeTab === "certifications" && <EditProfileCertifications />}
         </div>
       </DialogContent>
     </Dialog>

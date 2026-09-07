@@ -13,7 +13,7 @@ export function EditProfileInfoForm({
   values,
   usernameError,
   setField,
-  clearUsernameError,
+  setUsername,
 }: EditProfileInfoFormProps) {
   return (
     <div className="space-y-5">
@@ -32,10 +32,7 @@ export function EditProfileInfoForm({
       >
         <Input
           value={values.username}
-          onChange={(event) => {
-            setField("username", event.target.value);
-            clearUsernameError();
-          }}
+          onChange={(event) => setUsername(event.target.value)}
           placeholder={texts.profile.edit.placeholders.username}
           className="h-10 border-border-soft bg-surface-1"
         />

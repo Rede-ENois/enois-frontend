@@ -56,6 +56,11 @@ export function useEditProfileInfo(profile: Profile, onSaved: () => void) {
     setValues((current) => ({ ...current, [key]: value }));
   };
 
+  const setUsername = (value: string) => {
+    setField("username", value);
+    setUsernameError("");
+  };
+
   const save = async () => {
     setUsernameError("");
     await updateProfile.mutateAsync({
@@ -94,7 +99,7 @@ export function useEditProfileInfo(profile: Profile, onSaved: () => void) {
     values,
     usernameError,
     setField,
-    clearUsernameError: () => setUsernameError(""),
+    setUsername,
     save,
     isSaving: updateProfile.isPending,
   };

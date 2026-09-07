@@ -2,7 +2,7 @@ import { texts } from "@/texts";
 import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { useSubListEditor } from "@/lib/use-sub-list-editor";
+import { useSubListEditor } from "@/utils/components/profile/use-sub-list-editor";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

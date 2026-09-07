@@ -4,5 +4,5 @@ export type EditProfileInfoFormProps = {
   values: EditProfileValues;
   usernameError: string;
   setField: <K extends keyof EditProfileValues>(key: K, value: EditProfileValues[K]) => void;
-  clearUsernameError: () => void;
+  setUsername: (value: string) => void;
 };
