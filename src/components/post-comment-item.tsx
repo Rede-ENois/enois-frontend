@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
+
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { commentsApi } from "@/lib/api/comments";
-import { profileApi } from "@/lib/api/profile";
+import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { reactionsApi } from "@/lib/api/reactions";
 import { getCurrentUserId } from "@/lib/current-user";
 import { usePostCardStore } from "@/stores/post-card.store";
@@ -12,7 +14,7 @@ import type { CommentItemProps } from "@/types/components/post/comment-item-prop
 import { formatRelativeTime } from "@/utils/format-relative-time";
 import { linkifyText } from "@/utils/linkify-text";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PopoverContent } from "@/components/ui/popover-content";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function CommentItem({ comment, replyingTo }: CommentItemProps) {
@@ -28,7 +30,7 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
 
   const handleReply = async () => {
     try {
-      const profile = await profileApi.getById(comment.authorId);
+      const profile = await getProfileById(comment.authorId);
       if (profile?.username) {
         setDraft(postId, `@${profile.username} `);
         setCommentMentions(postId, [comment.authorId]);
