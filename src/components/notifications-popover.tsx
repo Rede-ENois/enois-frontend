@@ -1,14 +1,13 @@
-import { texts } from "@/texts";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
-import { Bell, CheckCheck } from "lucide-react";
 
 import { useNotificationsPopover } from "@/utils/components/notifications/use-notifications-popover";
 
-import { cn } from "@/lib/utils";
-
 import { PopoverContent } from "@/components/ui/popover-content";
 
-import { NotificationItem } from "@/components/notification-item";
+import { NotificationsPopoverHeader } from "@/components/notifications-popover-header";
+import { NotificationsPopoverList } from "@/components/notifications-popover-list";
+import { NotificationsPopoverTabs } from "@/components/notifications-popover-tabs";
+import { NotificationsPopoverTrigger } from "@/components/notifications-popover-trigger";
 
 export function NotificationsPopover() {
   const notifications = useNotificationsPopover();
@@ -16,89 +15,34 @@ export function NotificationsPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          className="relative grid h-10 w-10 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-          aria-label={notifications.triggerLabel}
-        >
-          <Bell className="h-5 w-5" />
-          {notifications.unreadBadgeLabel !== null && (
-            <span className="absolute right-1.5 top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-medium leading-none text-primary-foreground">
-              {notifications.unreadBadgeLabel}
-            </span>
-          )}
-        </button>
+        <NotificationsPopoverTrigger
+          label={notifications.triggerLabel}
+          unreadBadgeLabel={notifications.unreadBadgeLabel}
+        />
       </PopoverTrigger>
 
       <PopoverContent
         align="end"
         className="w-[min(calc(100vw-2rem),24rem)] overflow-hidden rounded-2xl border-border-soft bg-surface-card p-0 shadow-card"
       >
-        <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-3">
-          <span className="text-[14px] font-light text-text-strong">
-            {texts.notifications.title}
-          </span>
-          {notifications.showMarkAllAsRead && (
-            <button
-              type="button"
-              onClick={notifications.markAllAsRead}
-              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-light text-text-subtle transition hover:text-primary"
-            >
-              <CheckCheck className="h-3 w-3" />
-
-              <>{texts.notifications.markAllRead}</>
-            </button>
-          )}
-        </div>
-
-        <div className="flex border-b border-border-soft">
-          <button
-            type="button"
-            onClick={notifications.openNewTab}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[12px] font-light transition",
-              notifications.newTabSelected
-                ? "border-b-2 border-primary text-primary"
-                : "text-text-subtle hover:text-text-strong",
-            )}
-          >
-            <>{texts.notifications.tabs.new}</>
-            {notifications.newTabCount !== null && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
-                {notifications.newTabCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={notifications.openHistoryTab}
-            className={cn(
-              "flex-1 py-2.5 text-[12px] font-light transition",
-              notifications.historyTabSelected
-                ? "border-b-2 border-primary text-primary"
-                : "text-text-subtle hover:text-text-strong",
-            )}
-          >
-            {texts.notifications.tabs.history}
-          </button>
-        </div>
-
-        <div className="max-h-[28rem] overflow-y-auto">
-          {notifications.showEmptyState ? (
-            <p className="px-4 py-8 text-center text-[13px] font-light text-text-subtle">
-              {notifications.emptyMessage}
-            </p>
-          ) : (
-            notifications.displayedNotifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={notifications.markAsRead}
-                onAcceptConnection={notifications.acceptConnection}
-              />
-            ))
-          )}
-        </div>
+        <NotificationsPopoverHeader
+          showMarkAllAsRead={notifications.showMarkAllAsRead}
+          onMarkAllAsRead={notifications.markAllAsRead}
+        />
+        <NotificationsPopoverTabs
+          newSelected={notifications.newTabSelected}
+          historySelected={notifications.historyTabSelected}
+          newCount={notifications.newTabCount}
+          onOpenNew={notifications.openNewTab}
+          onOpenHistory={notifications.openHistoryTab}
+        />
+        <NotificationsPopoverList
+          notifications={notifications.displayedNotifications}
+          showEmptyState={notifications.showEmptyState}
+          emptyMessage={notifications.emptyMessage}
+          onMarkAsRead={notifications.markAsRead}
+          onAcceptConnection={notifications.acceptConnection}
+        />
       </PopoverContent>
     </Popover>
   );
