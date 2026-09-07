@@ -4,6 +4,6 @@ export type PostReactionOption = {
   type: ReactionType;
   emoji: string;
   selected: boolean;
-  title: string;
+  title?: string;
   react: () => void;
 };
