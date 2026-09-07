@@ -5,7 +5,8 @@ import { Loader2 } from "lucide-react";
 import { texts } from "@/texts";
 import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
 
-import { SocialProviderIcon } from "./social-provider-icon";
+import { AppleIcon } from "./apple-icon";
+import { GoogleIcon } from "./google-icon";
 
 export function AuthSocialOptions() {
   const [loading, setLoading] = useState<OAuthStartResponse["provider"] | null>(null);
@@ -29,11 +30,7 @@ export function AuthSocialOptions() {
           disabled={loading !== null}
           className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
         >
-          {loading === "GOOGLE" ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <SocialProviderIcon provider="GOOGLE" />
-          )}
+          {loading === "GOOGLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
           <>{texts.auth.social.google}</>
         </button>
         <button
@@ -42,11 +39,7 @@ export function AuthSocialOptions() {
           disabled={loading !== null}
           className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
         >
-          {loading === "APPLE" ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <SocialProviderIcon provider="APPLE" />
-          )}
+          {loading === "APPLE" ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleIcon />}
           <>{texts.auth.social.apple}</>
         </button>
         {error && (
