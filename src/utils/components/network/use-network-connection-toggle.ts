@@ -1,27 +1,20 @@
-import { useState } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { connectToUser } from "@/lib/api/network/connect-to-user";
-import { removeConnection } from "@/lib/api/network/remove-connection";
+import { useNetworkConnectionMutations } from "@/utils/components/network/use-network-connection-mutations";
+import { useNetworkLocalConnectionStatus } from "@/utils/components/network/use-network-local-connection-status";
 
 export function useNetworkConnectionToggle() {
-  const queryClient = useQueryClient();
-  const [localStatus, setLocalStatus] = useState<Record<string, string>>({});
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["network"] });
-  const connect = useMutation({ mutationFn: connectToUser, onSuccess: invalidate });
-  const remove = useMutation({ mutationFn: removeConnection, onSuccess: invalidate });
+  const mutations = useNetworkConnectionMutations();
+  const status = useNetworkLocalConnectionStatus();
 
   return {
-    localStatus,
-    pending: connect.isPending || remove.isPending,
+    localStatus: status.localStatus,
+    pending: mutations.pending,
     toggle: (userId: string, connected: boolean) => {
       if (connected) {
-        remove.mutate(userId);
-        setLocalStatus((status) => ({ ...status, [userId]: "REMOVED" }));
+        mutations.remove(userId);
+        status.markRemoved(userId);
       } else {
-        connect.mutate(userId);
-        setLocalStatus((status) => ({ ...status, [userId]: "REQUESTED" }));
+        mutations.connect(userId);
+        status.markRequested(userId);
       }
     },
   };
