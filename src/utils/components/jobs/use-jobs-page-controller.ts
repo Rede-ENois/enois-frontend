@@ -60,15 +60,27 @@ export function useJobsPageController() {
     setAllJobs([]);
   };
 
+  const loadMore = () => {
+    if (nextCursor) setCursor(nextCursor);
+  };
+
   return {
-    filters,
-    allJobs,
-    isFetching,
-    nextCursor,
-    setFilter,
-    clearFilters,
-    loadMore: () => {
-      if (nextCursor) setCursor(nextCursor);
+    jobs: allJobs,
+    filtersProps: {
+      ...filters,
+      onQueryChange: (value: string) => setFilter("query", value),
+      onLevelChange: (value: string) => setFilter("level", value),
+      onLocationChange: (value: string) => setFilter("location", value),
+      onTypeChange: (value: string) => setFilter("type", value),
+      onSkillsChange: (value: string) => setFilter("skills", value),
+      onClear: clearFilters,
     },
+    infiniteScrollProps: {
+      hasMore: Boolean(nextCursor),
+      loading: isFetching,
+      onLoadMore: loadMore,
+    },
+    showLoadingMore: isFetching && allJobs.length > 0,
+    showEmptyState: !isFetching && allJobs.length === 0,
   };
 }

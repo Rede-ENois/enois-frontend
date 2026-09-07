@@ -14,9 +14,12 @@ export function useFeedPageController() {
   });
 
   return {
-    tab,
-    setTab,
+    tabsProps: {
+      activeTab: tab,
+      onTabChange: setTab,
+    },
     posts: data?.items ?? [],
-    loading: isFetching,
+    showLoading: isFetching,
+    showPosts: !isFetching,
   };
 }
