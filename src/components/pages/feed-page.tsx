@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { Loader2 } from "lucide-react";
 
-import { feedApi } from "@/lib/api/feed";
+import { listFeedPosts } from "@/lib/api/feed/list-feed-posts";
 import { texts } from "@/texts";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 
@@ -18,7 +18,7 @@ export function Home() {
   const [tab, setTab] = useState<FeedTab>("FOR_YOU");
   const { data: feedData, isFetching: feedLoading } = useQuery({
     queryKey: ["feed", tab],
-    queryFn: () => feedApi.list(null, 20, tab),
+    queryFn: () => listFeedPosts(null, 20, tab),
   });
   const feedPosts = feedData?.items ?? [];
 

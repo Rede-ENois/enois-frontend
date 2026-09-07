@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Send } from "lucide-react";
 
-import { feedApi } from "@/lib/api/feed";
+import { createPost } from "@/lib/api/feed/create-post";
 import { texts } from "@/texts";
 import type { CommunityComposerProps } from "@/types/components/communities/community-composer-props";
 
@@ -15,9 +15,8 @@ export function CommunityComposer({ communityId }: CommunityComposerProps) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
 
-  const createPost = useMutation({
-    mutationFn: (content: string) =>
-      feedApi.create({ type: "INSIGHT", content, communityId }),
+  const createPostMutation = useMutation({
+    mutationFn: (content: string) => createPost({ type: "INSIGHT", content, communityId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community", communityId, "feed"] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
@@ -29,7 +28,7 @@ export function CommunityComposer({ communityId }: CommunityComposerProps) {
     event.preventDefault();
     const content = draft.trim();
     if (!content) return;
-    createPost.mutate(content);
+    createPostMutation.mutate(content);
   };
 
   return (
@@ -45,10 +44,10 @@ export function CommunityComposer({ communityId }: CommunityComposerProps) {
         <Button
           size="sm"
           className="rounded-full gap-1.5"
-          disabled={!draft.trim() || createPost.isPending}
+          disabled={!draft.trim() || createPostMutation.isPending}
         >
           <Send className="h-4 w-4" />
-          <>{createPost.isPending ? texts.common.publishing : texts.common.publish}</>
+          <>{createPostMutation.isPending ? texts.common.publishing : texts.common.publish}</>
         </Button>
       </div>
     </form>

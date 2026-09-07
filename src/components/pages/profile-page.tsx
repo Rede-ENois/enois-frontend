@@ -3,7 +3,7 @@ import { useLoaderData } from "@tanstack/react-router";
 
 import { Target } from "lucide-react";
 
-import { feedApi } from "@/lib/api/feed";
+import { listPostsByUserId } from "@/lib/api/feed/list-posts-by-user-id";
 import { getProfile } from "@/lib/api/profile/get-profile";
 import { texts } from "@/texts";
 
@@ -26,7 +26,7 @@ export function Profile() {
 
   const { data: feedData } = useQuery({
     queryKey: ["feed", "user", user.id],
-    queryFn: () => feedApi.listByUserId(user.id),
+    queryFn: () => listPostsByUserId(user.id),
   });
 
   const userPosts = feedData?.items ?? [];

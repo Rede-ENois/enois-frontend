@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { ArrowLeft, Bookmark } from "lucide-react";
 
-import { feedApi } from "@/lib/api/feed";
+import { listSavedPosts } from "@/lib/api/feed/list-saved-posts";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
@@ -12,7 +12,7 @@ import { PostCard } from "@/components/post-card";
 export function SavedPosts() {
   const { data: savedData } = useQuery({
     queryKey: ["saved-posts"],
-    queryFn: () => feedApi.listSaved(),
+    queryFn: () => listSavedPosts(),
   });
   const savedPosts = savedData?.items ?? [];
 

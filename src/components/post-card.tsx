@@ -7,7 +7,7 @@ import { Bookmark, Flag, Heart, MessageSquare, Share2 } from "lucide-react";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { typeMeta } from "@/constants/post-type-meta";
-import { feedApi } from "@/lib/api/feed";
+import { listSavedPosts } from "@/lib/api/feed/list-saved-posts";
 import { reactionsApi } from "@/lib/api/reactions";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
@@ -51,7 +51,7 @@ export function PostCard({ post }: PostCardProps) {
 
   const { data: savedData } = useQuery({
     queryKey: ["saved-posts"],
-    queryFn: () => feedApi.listSaved(),
+    queryFn: () => listSavedPosts(),
     staleTime: 30_000,
   });
 
