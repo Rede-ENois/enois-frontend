@@ -11,6 +11,23 @@ export function EditProfileDialogHeader({
   onSave,
   isSaving,
 }: EditProfileDialogHeaderProps) {
+  const actions = [
+    {
+      key: "cancel",
+      label: texts.common.cancel,
+      variant: "outline" as const,
+      onClick: onCancel,
+      disabled: false,
+    },
+    {
+      key: "save",
+      label: isSaving ? texts.common.saving : texts.common.save,
+      variant: "default" as const,
+      onClick: onSave,
+      disabled: isSaving,
+    },
+  ];
+
   return (
     <DialogHeader className="sticky top-0 z-10 border-b border-border-soft bg-surface-card px-6 pb-4 pt-6">
       <div className="flex items-center justify-between">
@@ -19,13 +36,17 @@ export function EditProfileDialogHeader({
         </DialogTitle>
 
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={onCancel}>
-            {texts.common.cancel}
-          </Button>
-
-          <Button size="sm" onClick={onSave} disabled={isSaving}>
-            {isSaving ? texts.common.saving : texts.common.save}
-          </Button>
+          {actions.map((action) => (
+            <Button
+              key={action.key}
+              size="sm"
+              variant={action.variant}
+              onClick={action.onClick}
+              disabled={action.disabled}
+            >
+              {action.label}
+            </Button>
+          ))}
         </div>
       </div>
 
