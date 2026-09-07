@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 import { TrendingUp, UserPlus } from "lucide-react";
 
-import { eventsApi } from "@/lib/api/events";
+import { listEvents } from "@/lib/api/events/list-events";
 import { networkApi } from "@/lib/api/network";
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
 import { texts } from "@/texts";
@@ -22,7 +22,7 @@ export function FeedSidebar() {
   });
   const { data: eventsData } = useQuery({
     queryKey: ["events"],
-    queryFn: () => eventsApi.list(),
+    queryFn: () => listEvents(),
   });
 
   const suggestionList = suggestions ?? [];

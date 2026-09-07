@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { eventsApi } from "@/lib/api/events";
+import { listEvents } from "@/lib/api/events/list-events";
 import { texts } from "@/texts";
 
 import { AppContainer } from "@/components/app-container";
@@ -10,7 +10,7 @@ import { EventCard } from "@/components/event-card";
 export function Eventos() {
   const { data: eventsData } = useQuery({
     queryKey: ["events"],
-    queryFn: () => eventsApi.list(),
+    queryFn: () => listEvents(),
   });
   const events = eventsData?.items ?? [];
 

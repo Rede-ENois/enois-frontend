@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Calendar, MapPin, Users, Video } from "lucide-react";
 
-import { eventsApi } from "@/lib/api/events";
+import { attendEvent } from "@/lib/api/events/attend-event";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { texts } from "@/texts";
 import type { EventCardProps } from "@/types/components/events/event-card-props";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 export function EventCard({ event }: EventCardProps) {
   const queryClient = useQueryClient();
   const attend = useMutation({
-    mutationFn: () => eventsApi.attend(event.id),
+    mutationFn: () => attendEvent(event.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   });
   const formatLabel = texts.events.formats[event.format] ?? event.format;

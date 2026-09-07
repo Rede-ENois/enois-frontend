@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Plus } from "lucide-react";
 
-import { eventsApi } from "@/lib/api/events";
+import { createEvent as createEventRequest } from "@/lib/api/events/create-event";
 import { texts } from "@/texts";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 
@@ -26,7 +26,7 @@ export function CreateEventDialog() {
   const [host, setHost] = useState("");
 
   const createEvent = useMutation({
-    mutationFn: () => eventsApi.create({ title, date, time, format, host }),
+    mutationFn: () => createEventRequest({ title, date, time, format, host }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       setOpen(false);
