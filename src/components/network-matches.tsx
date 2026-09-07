@@ -5,8 +5,8 @@ import { Link } from "@tanstack/react-router";
 
 import { Check, Send, UserMinus, UserPlus } from "lucide-react";
 
+import { listNetworkUsers } from "@/lib/api/network";
 import { connectToUser } from "@/lib/api/network/connect-to-user";
-import { listNetworkUsers } from "@/lib/api/network/list-network-users";
 import { removeConnection } from "@/lib/api/network/remove-connection";
 import { texts } from "@/texts";
 

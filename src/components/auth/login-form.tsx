@@ -3,7 +3,7 @@ import { type FormEvent, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { z } from "zod";
 
-import { login } from "@/lib/api/auth/login";
+import { login } from "@/lib/api/auth";
 import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
 import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
 import { texts } from "@/texts";
