@@ -1,9 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
 import { Sparkles } from "lucide-react";
 
-import { listMentors } from "@/lib/api/mentors";
+import { useMentoringPageController } from "@/utils/components/mentoring/use-mentoring-page-controller";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,11 +11,7 @@ import { MentorCard } from "@/components/mentor-card";
 import { RegisterMentorDialog } from "@/components/register-mentor-dialog";
 
 export function Mentoria() {
-  const { data: mentorsData } = useQuery({
-    queryKey: ["mentors"],
-    queryFn: () => listMentors(),
-  });
-  const mentors = mentorsData?.items ?? [];
+  const { mentors, scrollToMentors } = useMentoringPageController();
 
   return (
     <AppContainer>
@@ -38,12 +32,7 @@ export function Mentoria() {
             <p className="mt-2 text-muted-foreground">{texts.mentoring.description}</p>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button
-                className="rounded-full"
-                onClick={() => {
-                  document.getElementById("mentores-lista")?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
+              <Button className="rounded-full" onClick={scrollToMentors}>
                 {texts.mentoring.findMentor}
               </Button>
 

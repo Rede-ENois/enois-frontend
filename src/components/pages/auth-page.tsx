@@ -1,8 +1,8 @@
-import { useState } from "react";
-
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+
+import { useAuthPageController } from "@/utils/components/auth/use-auth-page-controller";
 
 import { AuthPageLayout } from "@/components/auth/auth-page-layout";
 import { ForgotPasswordDialog } from "@/components/auth/forgot-password-dialog";
@@ -11,31 +11,35 @@ import { SignupForm } from "@/components/auth/signup-form";
 import { TabButton } from "@/components/tab-button";
 
 export function Auth() {
-  const initial = useSearch({ from: "/entrar" }).tab;
-  const navigate = useNavigate();
-  const [tab, setTab] = useState(initial);
-  const [forgotOpen, setForgotOpen] = useState(false);
+  const {
+    signupTabActive,
+    loginTabActive,
+    showSignup,
+    selectSignup,
+    selectLogin,
+    forgotOpen,
+    setForgotOpen,
+    openForgot,
+    finishAuth,
+  } = useAuthPageController();
 
   return (
     <AuthPageLayout showThemeToggle>
       <div className="flex items-center gap-1 rounded-full border border-border bg-card p-1">
-        <TabButton variant="auth" active={tab === "signup"} onClick={() => setTab("signup")}>
+        <TabButton variant="auth" active={signupTabActive} onClick={selectSignup}>
           {texts.common.createAccount}
         </TabButton>
 
-        <TabButton variant="auth" active={tab === "login"} onClick={() => setTab("login")}>
+        <TabButton variant="auth" active={loginTabActive} onClick={selectLogin}>
           {texts.common.enter}
         </TabButton>
       </div>
 
       <div className="mt-8">
-        {tab === "signup" ? (
-          <SignupForm onDone={() => navigate({ to: "/feed" })} />
+        {showSignup ? (
+          <SignupForm onDone={finishAuth} />
         ) : (
-          <LoginForm
-            onDone={() => navigate({ to: "/feed" })}
-            onForgot={() => setForgotOpen(true)}
-          />
+          <LoginForm onDone={finishAuth} onForgot={openForgot} />
         )}
       </div>
 
