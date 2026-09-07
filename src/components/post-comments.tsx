@@ -1,10 +1,8 @@
-import { type FormEvent } from "react";
-
 import { texts } from "@/texts";
 import type { PostCommentsProps } from "@/types/components/post/post-comments-props";
 import { Send } from "lucide-react";
 
-import { usePostComments } from "@/lib/use-post-comments";
+import { usePostCommentsController } from "@/utils/components/post/use-post-comments-controller";
 
 import { Button } from "@/components/ui/button";
 
@@ -13,49 +11,42 @@ import { CommentItem } from "@/components/post-comment-item";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function PostComments({ postId, visible }: PostCommentsProps) {
-  const { currentUser, draft, localComments, loaded, submitComment, updateDraft } = usePostComments(
-    postId,
-    visible,
-  );
+  const {
+    currentUser,
+    draft,
+    updateDraft,
+    submit,
+    submitDisabled,
+    showComments,
+    showEmptyState,
+    threads,
+  } = usePostCommentsController(postId, visible);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    void submitComment();
-  };
-
-  if (!visible || !loaded) return null;
-
-  const rootComments = localComments.filter((comment) => !comment.parentCommentId);
+  if (!showComments) return null;
 
   return (
     <section className="mt-4 border-t border-border-soft pt-4">
       <div className="space-y-3">
-        {rootComments.map((comment) => {
-          const replies = localComments.filter((reply) => reply.parentCommentId === comment.id);
-          return (
-            <div key={comment.id}>
-              <CommentItem comment={comment} />
-              {replies.length > 0 && (
-                <div className="ml-10 mt-2 space-y-2 border-l-2 border-border-soft pl-4">
-                  {replies.map((reply) => {
-                    const parentAuthor = localComments.find(
-                      (candidate) => candidate.id === reply.parentCommentId,
-                    )?.authorName;
-                    return <CommentItem key={reply.id} comment={reply} replyingTo={parentAuthor} />;
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-        {rootComments.length === 0 && (
+        {threads.map((thread) => (
+          <div key={thread.comment.id}>
+            <CommentItem comment={thread.comment} />
+            {thread.replies.length > 0 && (
+              <div className="ml-10 mt-2 space-y-2 border-l-2 border-border-soft pl-4">
+                {thread.replies.map(({ reply, replyingTo }) => (
+                  <CommentItem key={reply.id} comment={reply} replyingTo={replyingTo} />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        {showEmptyState && (
           <p className="py-4 text-center text-[13px] font-light text-text-subtle">
             {texts.posts.comments.empty}
           </p>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 flex items-center gap-2.5">
+      <form onSubmit={submit} className="mt-4 flex items-center gap-2.5">
         <UserAvatar
           src={currentUser?.avatar}
           alt={currentUser?.name}
@@ -75,7 +66,7 @@ export function PostComments({ postId, visible }: PostCommentsProps) {
             type="submit"
             size="icon"
             className="h-7 w-7 shrink-0 rounded-full"
-            disabled={!draft.trim()}
+            disabled={submitDisabled}
             aria-label={texts.posts.comments.send}
           >
             <Send className="h-3.5 w-3.5" />

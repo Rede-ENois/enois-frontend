@@ -1,16 +1,19 @@
 import { useState } from "react";
 
-import { usePostCardStore } from "@/stores/post-card.store";
-import type { CommentView } from "@/types/application/comment/comment-view";
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
+import type { CommentItemProps } from "@/types/components/post/comment-item-props";
+import { formatRelativeTime } from "@/utils/format-relative-time";
 
+import { usePostCardStore } from "@/stores/post-card.store";
 import { deleteComment } from "@/lib/api/comments/delete-comment";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { react } from "@/lib/api/reactions";
 import { removeReaction } from "@/lib/api/reactions/remove-reaction";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
-export function useCommentActions(comment: CommentView) {
+export function useCommentItemController({ comment }: CommentItemProps) {
   const currentUserId = getCurrentUserId();
   const postId = comment.postId;
   const setDraft = usePostCardStore((state) => state.setDraft);
@@ -20,7 +23,7 @@ export function useCommentActions(comment: CommentView) {
   const updateCommentCount = usePostCardStore((state) => state.updateCommentCount);
   const [commentReaction, setCommentReaction] = useState<ReactionType | null>(null);
 
-  const handleReply = async () => {
+  const reply = async () => {
     try {
       const profile = await getProfileById(comment.authorId);
       if (profile?.username) {
@@ -33,17 +36,17 @@ export function useCommentActions(comment: CommentView) {
     setReplyToId(postId, comment.id);
   };
 
-  const handleDelete = async () => {
+  const remove = async () => {
     try {
       await deleteComment(postId, comment.id);
       removeComment(postId, comment.id);
       updateCommentCount(postId, -1);
     } catch {
-      // silently fail
+      // Preserve the existing silent failure behavior.
     }
   };
 
-  const handleReaction = async (type: ReactionType) => {
+  const reactToComment = async (type: ReactionType) => {
     try {
       if (commentReaction === type) {
         await removeReaction(comment.postId, comment.id);
@@ -53,15 +56,25 @@ export function useCommentActions(comment: CommentView) {
         setCommentReaction(type);
       }
     } catch {
-      // silently fail
+      // Preserve the existing silent failure behavior.
     }
   };
 
   return {
-    isOwner: currentUserId === comment.authorId,
-    commentReaction,
-    handleReply,
-    handleDelete,
-    handleReaction,
+    timeLabel: formatRelativeTime(comment.createdAt),
+    showDelete: currentUserId === comment.authorId,
+    reply,
+    remove,
+    reactionLabel: commentReaction
+      ? REACTION_EMOJIS[commentReaction]
+      : texts.posts.reactions.react,
+    reactionOptions: (Object.entries(REACTION_EMOJIS) as [ReactionType, string][]).map(
+      ([type, emoji]) => ({
+        type,
+        emoji,
+        selected: commentReaction === type,
+        react: () => reactToComment(type),
+      }),
+    ),
   };
 }

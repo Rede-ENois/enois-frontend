@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
+import { texts } from "@/texts";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { listReactions } from "@/lib/api/reactions/list-reactions";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
-export function useReactionsDialogData(postId: string) {
+export function useReactionsDialogController(postId: string) {
   const currentUserId = getCurrentUserId();
   const currentUserReaction = usePostCardStore(
     (state) => state.cards[postId]?.reactionStatus ?? null,
@@ -46,8 +48,16 @@ export function useReactionsDialogData(postId: string) {
 
   return {
     open,
-    reactions,
-    users,
     setOpen: (nextOpen: boolean) => setShowReactions(postId, nextOpen),
+    showEmptyState: reactions.length === 0,
+    items: reactions.map((reaction) => {
+      const user = users?.[reaction.userId];
+      return {
+        key: `${reaction.userId}-${reaction.type}`,
+        avatar: user?.avatar,
+        name: user?.name ?? texts.common.loading,
+        emoji: REACTION_EMOJIS[reaction.type] ?? reaction.type,
+      };
+    }),
   };
 }

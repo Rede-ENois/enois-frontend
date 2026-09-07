@@ -1,52 +1,36 @@
-import { useNavigate } from "@tanstack/react-router";
-
 import { texts } from "@/texts";
 import type { NotificationItemProps } from "@/types/components/notification/notification-item-props";
-import { navigateToHref } from "@/utils/navigation";
-import { formatNotificationTime } from "@/utils/notification-time";
+
+import { useNotificationItemController } from "@/utils/components/notifications/use-notification-item-controller";
 
 import { cn } from "@/lib/utils";
 
-import { notificationMeta } from "./notification-meta";
-
-export function NotificationItem({
-  notification,
-  onMarkAsRead,
-  onAcceptConnection,
-}: NotificationItemProps) {
-  const navigate = useNavigate();
-  const kind = notification.kind.toLowerCase();
-  const meta = notificationMeta[kind] ?? notificationMeta.connection;
-  const Icon = meta.icon;
-  const canAcceptConnection = kind === "connection_request" && Boolean(notification.actorId);
-
-  const markAsRead = () => {
-    if (!notification.read) onMarkAsRead(notification.id);
-  };
-
-  const handleNavigate = () => {
-    markAsRead();
-    navigateToHref(notification.href, navigate);
-  };
-
-  const handleAcceptConnection = () => {
-    if (!notification.actorId) return;
-
-    markAsRead();
-    onAcceptConnection(notification.actorId);
-  };
+export function NotificationItem(props: NotificationItemProps) {
+  const { notification } = props;
+  const {
+    meta,
+    Icon,
+    backgroundClassName,
+    title,
+    timeLabel,
+    showUnread,
+    showMarkAsRead,
+    markAsRead,
+    navigate,
+    cta,
+  } = useNotificationItemController(props);
 
   return (
     <div
       className={cn(
         "border-b border-border-soft px-4 py-3 last:border-b-0",
-        notification.read ? "bg-surface-card" : "bg-surface-3",
+        backgroundClassName,
       )}
     >
       <div className="flex items-start gap-3">
         <button
           type="button"
-          onClick={handleNavigate}
+          onClick={navigate}
           className="shrink-0 rounded-full transition hover:opacity-80"
         >
           {notification.actorAvatar ? (
@@ -66,11 +50,9 @@ export function NotificationItem({
           <div className="flex items-start justify-between gap-2">
             <p className="text-[13px] font-light leading-tight text-text-strong">
               {notification.actorName && <span>{notification.actorName} </span>}
-              <span className="text-text-subtle">{notification.title.toLowerCase()}</span>
+              <span className="text-text-subtle">{title}</span>
             </p>
-            {!notification.read && (
-              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-            )}
+            {showUnread && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />}
           </div>
 
           <p className="mt-1 break-words text-[13px] font-light leading-snug text-text-subtle">
@@ -78,12 +60,10 @@ export function NotificationItem({
           </p>
 
           <div className="mt-3 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-light text-text-subtle">
-              {formatNotificationTime(notification.createdAt)}
-            </span>
+            <span className="text-[11px] font-light text-text-subtle">{timeLabel}</span>
 
             <div className="flex items-center gap-2">
-              {!notification.read && (
+              {showMarkAsRead && (
                 <button
                   type="button"
                   onClick={markAsRead}
@@ -93,23 +73,15 @@ export function NotificationItem({
                 </button>
               )}
 
-              {canAcceptConnection ? (
+              {cta && (
                 <button
                   type="button"
-                  onClick={handleAcceptConnection}
+                  onClick={cta.run}
                   className="rounded-full bg-primary px-3 py-1 text-[11px] font-light text-primary-foreground transition hover:bg-primary/90"
                 >
-                  {notification.ctaLabel || texts.notifications.accept}
+                  {cta.label}
                 </button>
-              ) : notification.ctaLabel ? (
-                <button
-                  type="button"
-                  onClick={handleNavigate}
-                  className="rounded-full bg-primary px-3 py-1 text-[11px] font-light text-primary-foreground transition hover:bg-primary/90"
-                >
-                  {notification.ctaLabel}
-                </button>
-              ) : null}
+              )}
             </div>
           </div>
         </div>

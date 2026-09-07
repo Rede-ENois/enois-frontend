@@ -1,20 +1,18 @@
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
-import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
-import { formatRelativeTime } from "@/utils/format-relative-time";
 import { linkifyText } from "@/utils/linkify-text";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 
-import { useCommentActions } from "@/lib/use-comment-actions";
+import { useCommentItemController } from "@/utils/components/post/use-comment-item-controller";
 
 import { PopoverContent } from "@/components/ui/popover-content";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function CommentItem({ comment, replyingTo }: CommentItemProps) {
-  const { isOwner, commentReaction, handleReply, handleDelete, handleReaction } =
-    useCommentActions(comment);
+export function CommentItem(props: CommentItemProps) {
+  const { comment, replyingTo } = props;
+  const { timeLabel, showDelete, reply, remove, reactionLabel, reactionOptions } =
+    useCommentItemController(props);
 
   return (
     <div className="flex gap-2.5">
@@ -33,9 +31,7 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
                 {texts.posts.comments.replyingTo(replyingTo)}
               </span>
             )}
-            <span className="text-[11px] font-light text-text-subtle">
-              {formatRelativeTime(comment.createdAt)}
-            </span>
+            <span className="text-[11px] font-light text-text-subtle">{timeLabel}</span>
           </div>
 
           <p className="mt-0.5 break-words text-[13px] font-light leading-relaxed text-text-strong">
@@ -44,15 +40,13 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
         </div>
 
         <div className="mt-1 flex items-center gap-3 px-3 text-[11px] font-light text-text-subtle">
-          <button onClick={handleReply} className="transition-colors hover:text-primary">
+          <button onClick={reply} className="transition-colors hover:text-primary">
             {texts.posts.comments.reply}
           </button>
 
           <Popover>
             <PopoverTrigger asChild>
-              <button className="transition-colors hover:text-primary">
-                {commentReaction ? REACTION_EMOJIS[commentReaction] : texts.posts.reactions.react}
-              </button>
+              <button className="transition-colors hover:text-primary">{reactionLabel}</button>
             </PopoverTrigger>
 
             <PopoverContent
@@ -61,25 +55,23 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
               className="w-fit rounded-2xl border-border-soft bg-surface-card p-1.5"
             >
               <div className="flex gap-1">
-                {(Object.entries(REACTION_EMOJIS) as [ReactionType, string][]).map(
-                  ([type, emoji]) => (
-                    <button
-                      key={type}
-                      onClick={() => handleReaction(type)}
-                      className={`rounded-lg px-2 py-1 text-lg transition hover:bg-surface-2 ${
-                        commentReaction === type ? "bg-surface-2 ring-1 ring-primary" : ""
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ),
-                )}
+                {reactionOptions.map((option) => (
+                  <button
+                    key={option.type}
+                    onClick={option.react}
+                    className={`rounded-lg px-2 py-1 text-lg transition hover:bg-surface-2 ${
+                      option.selected ? "bg-surface-2 ring-1 ring-primary" : ""
+                    }`}
+                  >
+                    {option.emoji}
+                  </button>
+                ))}
               </div>
             </PopoverContent>
           </Popover>
-          {isOwner && (
+          {showDelete && (
             <button
-              onClick={handleDelete}
+              onClick={remove}
               className="text-destructive transition-colors hover:text-destructive/80"
             >
               {texts.posts.comments.delete}

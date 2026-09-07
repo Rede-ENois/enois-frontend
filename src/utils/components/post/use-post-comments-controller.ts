@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { usePostCardStore } from "@/stores/post-card.store";
 
@@ -6,7 +6,7 @@ import { listComments } from "@/lib/api/comments";
 import { createComment } from "@/lib/api/comments/create-comment";
 import { getCurrentUser } from "@/lib/get-current-user";
 
-export function usePostComments(postId: string, visible: boolean) {
+export function usePostCommentsController(postId: string, visible: boolean) {
   const currentUser = getCurrentUser();
   const card = usePostCardStore((state) => state.cards[postId]);
   const setDraft = usePostCardStore((state) => state.setDraft);
@@ -57,8 +57,13 @@ export function usePostComments(postId: string, visible: boolean) {
       setCommentMentions(postId, []);
       setReplyToId(postId, null);
     } catch {
-      // silently fail
+      // Preserve the existing silent failure behavior.
     }
+  };
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void submitComment();
   };
 
   const updateDraft = (value: string, mentionedUserIds: string[]) => {
@@ -66,12 +71,26 @@ export function usePostComments(postId: string, visible: boolean) {
     setCommentMentions(postId, mentionedUserIds);
   };
 
+  const roots = localComments.filter((comment) => !comment.parentCommentId);
+  const threads = roots.map((comment) => ({
+    comment,
+    replies: localComments
+      .filter((reply) => reply.parentCommentId === comment.id)
+      .map((reply) => ({
+        reply,
+        replyingTo: localComments.find((candidate) => candidate.id === reply.parentCommentId)
+          ?.authorName,
+      })),
+  }));
+
   return {
     currentUser,
     draft,
-    localComments,
-    loaded,
-    submitComment,
     updateDraft,
+    submit,
+    submitDisabled: !draft.trim(),
+    showComments: visible && loaded,
+    showEmptyState: roots.length === 0,
+    threads,
   };
 }
