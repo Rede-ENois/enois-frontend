@@ -1,18 +1,19 @@
-import { type ChangeEvent, type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { BarChart3, Calendar, FileText, Film, Image, Loader2, X } from "lucide-react";
+import { BarChart3, Calendar, FileText, Film, Image, Loader2 } from "lucide-react";
 
 import { createPost as createPostRequest } from "@/lib/api/feed/create-post";
 import { getCurrentProfile } from "@/lib/api/profile/get-current-profile";
+import { useFeedComposerMedia } from "@/lib/use-feed-composer-media";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { texts } from "@/texts";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { PostView } from "@/types/application/feed/post-view";
-import type { MediaItem } from "@/types/components/feed/media-item";
 
 import { ComposerAction } from "@/components/composer-action";
+import { FeedComposerMediaPreview } from "@/components/feed-composer-media-preview";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
@@ -22,10 +23,16 @@ export function FeedComposer() {
   const [draft, setDraft] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
-  const [media, setMedia] = useState<MediaItem[]>([]);
   const [publishError, setPublishError] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
+  const {
+    media,
+    mediaType,
+    fileRef,
+    handleMediaSelect,
+    removeMedia,
+    clearMedia,
+  } = useFeedComposerMedia();
 
   const { data: profile } = useQuery({
     queryKey: ["me"],
@@ -55,42 +62,11 @@ export function FeedComposer() {
       setDraft("");
       setMentionedUserIds([]);
       setPostType("INSIGHT");
-      setMedia([]);
+      clearMedia();
     } catch (error) {
       setPublishError(error instanceof Error ? error.message : texts.feed.composer.publishError);
     }
   };
-
-  const handleMediaSelect = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    for (const file of Array.from(files)) {
-      const isVideo = file.type.startsWith("video/");
-      const isImage = file.type.startsWith("image/");
-      if (!isVideo && !isImage) continue;
-
-      const hasExistingImages = media.some((item) => item.type === "image");
-      const hasExistingVideo = media.some((item) => item.type === "video");
-
-      if (isVideo && (hasExistingImages || hasExistingVideo || media.length >= 1)) break;
-      if (isImage && hasExistingVideo) break;
-      if (isImage && media.length >= 4) break;
-
-      const preview = URL.createObjectURL(file);
-      setMedia((previous) => [...previous, { type: isVideo ? "video" : "image", file, preview }]);
-    }
-    event.target.value = "";
-  };
-
-  const removeMedia = (index: number) => {
-    setMedia((previous) => {
-      URL.revokeObjectURL(previous[index].preview);
-      return previous.filter((_, itemIndex) => itemIndex !== index);
-    });
-  };
-
-  const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
 
   return (
     <form
@@ -115,52 +91,7 @@ export function FeedComposer() {
         />
       </div>
 
-      {media.length > 0 && (
-        <div className="relative mt-3">
-          {mediaType === "image" ? (
-            <div
-              className={`grid gap-2 ${
-                media.length === 1
-                  ? "grid-cols-1"
-                  : media.length === 2
-                    ? "grid-cols-2"
-                    : "grid-cols-2"
-              }`}
-            >
-              {media.map((item, index) => (
-                <div
-                  key={index}
-                  className="relative overflow-hidden rounded-xl border border-border-soft"
-                >
-                  <img
-                    src={item.preview}
-                    alt=""
-                    className="h-48 w-full object-cover bg-surface-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeMedia(index)}
-                    className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="relative overflow-hidden rounded-xl border border-border-soft">
-              <video src={media[0].preview} controls className="max-h-64 w-full bg-surface-1" />
-              <button
-                type="button"
-                onClick={() => removeMedia(0)}
-                className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <FeedComposerMediaPreview media={media} onRemove={removeMedia} />
 
       <input
         ref={fileRef}

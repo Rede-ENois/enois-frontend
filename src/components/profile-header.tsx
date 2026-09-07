@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useRef, useState } from "react";
+import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -8,13 +8,10 @@ import { Briefcase, Camera, MapPin, MessageCircle, Settings } from "lucide-react
 import { resolveCdnUrl } from "@/lib/api/media";
 import { connectToUser } from "@/lib/api/network/connect-to-user";
 import { getConnectionStatus } from "@/lib/api/network/get-connection-status";
-import { updateProfile as updateProfileRequest } from "@/lib/api/profile/update-profile";
 import { ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/use-auth";
-import { useMediaUpload } from "@/lib/use-media-upload";
+import { useProfileMediaEditor } from "@/lib/use-profile-media-editor";
 import { texts } from "@/texts";
-import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
-import type { ProfileCropPurpose } from "@/types/components/profile/profile-crop-purpose";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
 
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
@@ -26,14 +23,20 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   const { user: me, requireAuth } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const avatarUpload = useMediaUpload();
-  const bannerUpload = useMediaUpload();
-  const avatarRef = useRef<HTMLInputElement>(null);
-  const bannerRef = useRef<HTMLInputElement>(null);
   const [hoveringAvatar, setHoveringAvatar] = useState(false);
   const [hoveringBanner, setHoveringBanner] = useState(false);
-  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-  const [cropPurpose, setCropPurpose] = useState<ProfileCropPurpose | null>(null);
+  const {
+    avatarRef,
+    bannerRef,
+    avatarUpload,
+    bannerUpload,
+    cropImageSrc,
+    cropPurpose,
+    handleAvatarUpload,
+    handleBannerUpload,
+    handleCropComplete,
+    handleCropCancel,
+  } = useProfileMediaEditor(user);
 
   const isOwnProfile = me?.id === user.id;
 
@@ -44,14 +47,6 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   });
 
   const connectionStatus = connectionData?.status ?? null;
-
-  const updateProfile = useMutation({
-    mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => updateProfileRequest(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-      queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
-    },
-  });
 
   const connect = useMutation({
     mutationFn: () => connectToUser(user.id),
@@ -64,42 +59,6 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
       }
     },
   });
-
-  const handleAvatarUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setCropImageSrc(URL.createObjectURL(file));
-    setCropPurpose("AVATAR");
-  };
-
-  const handleBannerUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setCropImageSrc(URL.createObjectURL(file));
-    setCropPurpose("BANNER");
-  };
-
-  const handleCropComplete = useCallback(
-    async (blob: Blob) => {
-      const upload = cropPurpose === "AVATAR" ? avatarUpload : bannerUpload;
-      const result = await upload.upload(
-        new File([blob], "crop.jpg", { type: "image/jpeg" }),
-        cropPurpose!,
-      );
-      const field = cropPurpose === "AVATAR" ? "avatar" : "banner";
-      await updateProfile.mutateAsync({ [field]: result.cdnUrl });
-      if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
-      setCropImageSrc(null);
-      setCropPurpose(null);
-    },
-    [avatarUpload, bannerUpload, cropImageSrc, cropPurpose, updateProfile],
-  );
-
-  const handleCropCancel = useCallback(() => {
-    if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
-    setCropImageSrc(null);
-    setCropPurpose(null);
-  }, [cropImageSrc]);
 
   return (
     <>

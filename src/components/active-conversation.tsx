@@ -1,18 +1,12 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { Send } from "lucide-react";
 
-import { listConversations } from "@/lib/api/messages";
-import { listMessages } from "@/lib/api/messages/list-messages";
-import { sendMessage as sendMessageRequest } from "@/lib/api/messages/send-message";
-import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
-import { getCurrentUserId } from "@/lib/get-current-user-id";
+import { useActiveConversation } from "@/lib/use-active-conversation";
 import { texts } from "@/texts";
 import type { ActiveConversationProps } from "@/types/components/messages/active-conversation-props";
-import type { SendMessageInput } from "@/types/components/messages/send-message-input";
 import { formatRelativeTime } from "@/utils/format-relative-time";
 
 import { ConversationHeader } from "@/components/conversation-header";
@@ -20,56 +14,26 @@ import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ActiveConversation({ conversationId, onBack }: ActiveConversationProps) {
-  const currentUserId = getCurrentUserId();
-  const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const { data: conversationsData } = useQuery({
-    queryKey: ["conversations"],
-    queryFn: () => listConversations(),
-    refetchInterval: 15_000,
-  });
-
-  const conversations = conversationsData?.items ?? [];
-  const activeConversation = conversationId
-    ? conversations.find((conversation) => conversation.id === conversationId)
-    : null;
-
-  const { data: messagesData } = useQuery({
-    queryKey: ["messages", activeConversation?.id],
-    queryFn: () => listMessages(activeConversation!.id),
-    enabled: !!activeConversation,
-    refetchInterval: 10_000,
-  });
-
-  const messages = (messagesData?.items ?? []).sort(
-    (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
-  );
-  const activeMessages = activeConversation ? messages : [];
-
-  const otherParticipantId = activeConversation?.participantIds.find((id) => id !== currentUserId);
-  const { data: otherUser } = useQuery({
-    queryKey: ["profile", "by-id", otherParticipantId],
-    queryFn: () => getProfileById(otherParticipantId ?? ""),
-    enabled: !!otherParticipantId,
-  });
-
-  const sendMessage = useMutation({
-    mutationFn: ({ conversationId, text }: SendMessageInput) =>
-      sendMessageRequest(conversationId, text),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", activeConversation?.id] });
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      setText("");
-    },
-  });
+  const {
+    currentUserId,
+    activeConversation,
+    activeMessages,
+    otherParticipantId,
+    otherUser,
+    sendMessage,
+  } = useActiveConversation(conversationId);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const content = text.trim();
     if (!content || !activeConversation) return;
-    sendMessage.mutate({ conversationId: activeConversation.id, text: content });
+
+    sendMessage.mutate(
+      { conversationId: activeConversation.id, text: content },
+      { onSuccess: () => setText("") },
+    );
   };
 
   useEffect(() => {
