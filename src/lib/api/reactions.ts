@@ -1,44 +1,36 @@
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import type { ActionResponse } from "@/types/application/reaction/action-response";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
 
 import { api } from "../api-client";
 
-export { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+export const reactionsApi = (() => {
+  const postReaction = (path: string, type: ReactionType) =>
+    api.post<Partial<ActionResponse>>(path, { type });
+  const removeReaction = (path: string) => api.delete<Partial<ActionResponse>>(path);
+  const listReactions = (path: string) => api.get<ReactionsListResponse>(path);
 
-function postReaction(path: string, type: ReactionType) {
-  return api.post<Partial<ActionResponse>>(path, { type });
-}
+  return {
+    react: (postId: string, type: ReactionType) =>
+      postReaction(`/feed/posts/${postId}/reactions`, type),
 
-function removeReaction(path: string) {
-  return api.delete<Partial<ActionResponse>>(path);
-}
+    removeReaction: (postId: string) => removeReaction(`/feed/posts/${postId}/reactions`),
 
-function listReactions(path: string) {
-  return api.get<ReactionsListResponse>(path);
-}
+    listReactions: (postId: string) => listReactions(`/feed/posts/${postId}/reactions`),
 
-export const reactionsApi = {
-  react: (postId: string, type: ReactionType) =>
-    postReaction(`/feed/posts/${postId}/reactions`, type),
+    reactComment: (postId: string, commentId: string, type: ReactionType) =>
+      postReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`, type),
 
-  removeReaction: (postId: string) => removeReaction(`/feed/posts/${postId}/reactions`),
+    removeCommentReaction: (postId: string, commentId: string) =>
+      removeReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`),
 
-  listReactions: (postId: string) => listReactions(`/feed/posts/${postId}/reactions`),
+    listCommentReactions: (postId: string, commentId: string) =>
+      listReactions(`/feed/posts/${postId}/comments/${commentId}/reactions`),
 
-  reactComment: (postId: string, commentId: string, type: ReactionType) =>
-    postReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`, type),
+    save: (postId: string) => api.post<ActionResponse>(`/feed/posts/${postId}/saves`),
 
-  removeCommentReaction: (postId: string, commentId: string) =>
-    removeReaction(`/feed/posts/${postId}/comments/${commentId}/reactions`),
+    removeSave: (postId: string) => api.delete<ActionResponse>(`/feed/posts/${postId}/saves`),
 
-  listCommentReactions: (postId: string, commentId: string) =>
-    listReactions(`/feed/posts/${postId}/comments/${commentId}/reactions`),
-
-  save: (postId: string) => api.post<ActionResponse>(`/feed/posts/${postId}/saves`),
-
-  removeSave: (postId: string) => api.delete<ActionResponse>(`/feed/posts/${postId}/saves`),
-
-  share: (postId: string) => api.post<ActionResponse>(`/feed/posts/${postId}/shares`),
-};
+    share: (postId: string) => api.post<ActionResponse>(`/feed/posts/${postId}/shares`),
+  };
+})();
