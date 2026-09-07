@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { listMessages } from "@/lib/api/messages/list-messages";
+import { sortConversationMessages } from "@/utils/messages/sort-conversation-messages";
 
 export function useConversationMessages(conversationId?: string) {
   const { data } = useQuery({
@@ -10,7 +11,5 @@ export function useConversationMessages(conversationId?: string) {
     refetchInterval: 10_000,
   });
 
-  return [...(data?.items ?? [])].sort(
-    (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
-  );
+  return sortConversationMessages(data?.items ?? []);
 }

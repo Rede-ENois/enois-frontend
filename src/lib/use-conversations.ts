@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { listConversations } from "@/lib/api/messages";
 
-export function useConversationsQuery() {
+export function useConversations() {
   const { data } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => listConversations(),

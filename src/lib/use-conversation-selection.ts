@@ -1,14 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { listConversations } from "@/lib/api/messages";
+import { useConversations } from "@/lib/use-conversations";
 
 export function useConversationSelection(conversationId?: string | null) {
-  const { data } = useQuery({
-    queryKey: ["conversations"],
-    queryFn: () => listConversations(),
-    refetchInterval: 15_000,
-  });
+  const conversations = useConversations();
 
   if (!conversationId) return null;
-  return (data?.items ?? []).find((conversation) => conversation.id === conversationId) ?? null;
+  return conversations.find((conversation) => conversation.id === conversationId) ?? null;
 }
