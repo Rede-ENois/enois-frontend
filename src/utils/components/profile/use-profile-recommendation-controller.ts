@@ -1,35 +1,23 @@
-import { useState } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import type { Profile } from "@/types/application/profile/profile";
 
-import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
 import { useAuth } from "@/lib/use-auth";
+
+import { useCreateProfileRecommendation } from "@/utils/components/profile/use-create-profile-recommendation";
+import { useProfileRecommendationFormState } from "@/utils/components/profile/use-profile-recommendation-form-state";
 
 export function useProfileRecommendationController(user: Profile) {
   const { user: me } = useAuth();
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [comment, setComment] = useState("");
-
-  const recommend = useMutation({
-    mutationFn: () => createRecommendation(user.id, { comment }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recommendations", user.id] });
-      setOpen(false);
-      setComment("");
-    },
-  });
+  const form = useProfileRecommendationFormState();
+  const recommendation = useCreateProfileRecommendation(user.id, form.comment, form.reset);
 
   return {
     visible: me?.id !== user.id,
-    open,
-    setOpen,
-    comment,
-    setComment,
-    sending: recommend.isPending,
-    sendDisabled: !comment.trim() || recommend.isPending,
-    send: () => recommend.mutate(),
+    open: form.open,
+    setOpen: form.setOpen,
+    comment: form.comment,
+    setComment: form.setComment,
+    sending: recommendation.sending,
+    sendDisabled: !form.comment.trim() || recommendation.sending,
+    send: recommendation.send,
   };
 }

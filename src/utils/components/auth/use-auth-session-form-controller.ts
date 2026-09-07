@@ -5,8 +5,7 @@ import type { ZodType } from "zod";
 import type { AuthResponse } from "@/types/application/auth/auth-response";
 import { getZodFieldErrors } from "@/utils/get-zod-field-errors";
 
-import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
-import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
+import { useAuthSessionSubmission } from "@/utils/components/auth/use-auth-session-submission";
 
 export function useAuthSessionFormController<TInput>(
   schema: ZodType<TInput>,
@@ -14,8 +13,7 @@ export function useAuthSessionFormController<TInput>(
   onDone: () => void,
 ) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
+  const submission = useAuthSessionSubmission(authenticate, onDone);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -26,20 +24,13 @@ export function useAuthSessionFormController<TInput>(
     }
 
     setErrors({});
-    setFormError(null);
-    setLoading(true);
-    clearAuthSession();
-
-    try {
-      const result = await authenticate(parsed.data);
-      persistAuthSession(result);
-      onDone();
-    } catch (error) {
-      setFormError(error);
-    } finally {
-      setLoading(false);
-    }
+    await submission.submit(parsed.data);
   };
 
-  return { errors, formError, loading, submit };
+  return {
+    errors,
+    formError: submission.formError,
+    loading: submission.loading,
+    submit,
+  };
 }
