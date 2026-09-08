@@ -1,9 +1,7 @@
 import type { ListJobsParams } from "@/types/application/job/list-jobs-params";
-import type { JobsFiltersProps } from "@/types/components/jobs/jobs-filters-props";
+import type { JobsFilterValues } from "@/types/components/jobs/jobs-filter-values";
 
-export function createListJobsParams(
-  filters: Pick<JobsFiltersProps, "query" | "level" | "location" | "type" | "skills">,
-): ListJobsParams {
+export function createListJobsParams(filters: JobsFilterValues): ListJobsParams {
   return {
     query: filters.query || undefined,
     level: filters.level || undefined,

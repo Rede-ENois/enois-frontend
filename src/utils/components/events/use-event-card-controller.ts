@@ -16,7 +16,7 @@ export function useEventCardController(event: Event) {
   const [, month, day] = (event.date ?? "").split("-");
 
   return {
-    coverUrl: event.cover ? resolveCdnUrl(event.cover) : null,
+    coverUrl: resolveCdnUrl(event.cover) ?? null,
     FormatIcon: event.format === "ONLINE" ? Video : MapPin,
     formatLabel: texts.events.formats[event.format] ?? event.format,
     monthLabel: texts.events.months[Number(month)] ?? month,

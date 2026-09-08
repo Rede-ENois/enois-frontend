@@ -1,6 +1,8 @@
-import type { PostReactionControlsProps } from "@/types/components/post/post-reaction-controls-props";
+import type { PostReactionOption } from "@/types/components/post/post-reaction-option";
 
-export type PostReactionPickerProps = Pick<
-  PostReactionControlsProps,
-  "active" | "emoji" | "title" | "options"
->;
+export type PostReactionPickerProps = {
+  active: boolean;
+  emoji: string | null;
+  title: string;
+  options: PostReactionOption[];
+};
