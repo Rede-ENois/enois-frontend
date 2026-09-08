@@ -1,17 +1,14 @@
-import type { NotificationItemActorProps } from "@/types/components/notification/notification-item-actor-props";
+import { useNotificationItemContext } from "@/utils/components/notifications/use-notification-item-context";
 
 import { cn } from "@/lib/utils";
 
-export function NotificationItemActor({
-  notification,
-  Icon,
-  iconClassName,
-  onNavigate,
-}: NotificationItemActorProps) {
+export function NotificationItemActor() {
+  const { notification, Icon, iconClassName, navigate } = useNotificationItemContext();
+
   return (
     <button
       type="button"
-      onClick={onNavigate}
+      onClick={navigate}
       className="shrink-0 rounded-full transition hover:opacity-80"
     >
       {notification.actorAvatar ? (

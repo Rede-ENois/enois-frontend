@@ -25,8 +25,8 @@ export function createNotificationItemViewModel(
       : null;
 
   return {
-    meta,
     Icon: meta.icon,
+    iconClassName: meta.className,
     backgroundClassName: notification.read ? "bg-surface-card" : "bg-surface-3",
     title: notification.title.toLowerCase(),
     timeLabel: formatNotificationTime(notification.createdAt),

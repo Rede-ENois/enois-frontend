@@ -1,9 +1,9 @@
-import type { NotificationItemProps } from "@/types/components/notification/notification-item-props";
+import type { Notification } from "@/types/application/notification/notification";
 
 import { createNotificationItemViewModel } from "@/utils/components/notifications/create-notification-item-view-model";
 import { useNotificationItemActions } from "@/utils/components/notifications/use-notification-item-actions";
 
-export function useNotificationItemController({ notification }: NotificationItemProps) {
+export function useNotificationItemController(notification: Notification) {
   const actions = useNotificationItemActions(notification);
 
   return createNotificationItemViewModel(

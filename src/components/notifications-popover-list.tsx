@@ -1,6 +1,6 @@
-import { NotificationItem } from "@/components/notification-item";
-
 import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
+
+import { NotificationItemProvider } from "@/components/notification-item-provider";
 
 export function NotificationsPopoverList() {
   const { displayedNotifications, showEmptyState, emptyMessage } = useNotificationsPopoverView();
@@ -13,7 +13,7 @@ export function NotificationsPopoverList() {
         </p>
       ) : (
         displayedNotifications.map((notification) => (
-          <NotificationItem key={notification.id} notification={notification} />
+          <NotificationItemProvider key={notification.id} notification={notification} />
         ))
       )}
     </div>

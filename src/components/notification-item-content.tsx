@@ -1,15 +1,17 @@
 import { texts } from "@/texts";
-import type { NotificationItemContentProps } from "@/types/components/notification/notification-item-content-props";
+import { useNotificationItemContext } from "@/utils/components/notifications/use-notification-item-context";
 
-export function NotificationItemContent({
-  notification,
-  title,
-  timeLabel,
-  showUnread,
-  showMarkAsRead,
-  onMarkAsRead,
-  cta,
-}: NotificationItemContentProps) {
+export function NotificationItemContent() {
+  const {
+    notification,
+    title,
+    timeLabel,
+    showUnread,
+    showMarkAsRead,
+    markAsRead,
+    cta,
+  } = useNotificationItemContext();
+
   return (
     <div className="min-w-0 flex-1">
       <div className="flex items-start justify-between gap-2">
@@ -32,7 +34,7 @@ export function NotificationItemContent({
           {showMarkAsRead && (
             <button
               type="button"
-              onClick={onMarkAsRead}
+              onClick={markAsRead}
               className="rounded-full px-2 py-1 text-[11px] font-light text-text-subtle transition hover:bg-surface-2 hover:text-text-strong"
             >
               {texts.notifications.markRead}
