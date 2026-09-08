@@ -1,19 +1,13 @@
 import { create } from "zustand";
 
+import { FORGOT_PASSWORD_INITIAL_STATE } from "@/consts/components/auth/forgot-password-initial-state";
 import { forgotPassword } from "@/lib/api/auth/forgot-password";
 import type { ForgotPasswordStore } from "@/types/stores/forgot-password-store";
 
-const INITIAL_STATE = {
-  open: false,
-  sent: false,
-  loading: false,
-  formError: null,
-};
-
 export const useForgotPasswordStore = create<ForgotPasswordStore>()((set) => ({
-  ...INITIAL_STATE,
-  setOpen: (open) => set(open ? { open: true } : INITIAL_STATE),
-  close: () => set(INITIAL_STATE),
+  ...FORGOT_PASSWORD_INITIAL_STATE,
+  setOpen: (open) => set(open ? { open: true } : FORGOT_PASSWORD_INITIAL_STATE),
+  close: () => set(FORGOT_PASSWORD_INITIAL_STATE),
   submit: async (email) => {
     set({ formError: null, loading: true });
 
