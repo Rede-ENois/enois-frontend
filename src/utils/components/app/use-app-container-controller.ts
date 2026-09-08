@@ -1,4 +1,4 @@
-import { useIsAuthenticated } from "@/lib/use-is-authenticated";
+import { useIsAuthenticated } from "@/lib/auth/use-is-authenticated";
 
 export function useAppContainerController() {
   return {

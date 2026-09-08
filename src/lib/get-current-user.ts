@@ -1,4 +1,4 @@
-import { CURRENT_USER_QUERY_KEY } from "@/constants/current-user-query-key";
+import { CURRENT_USER_QUERY_KEY } from "@/constants/auth/current-user-query-key";
 import type { Profile } from "@/types/application/profile/profile";
 
 import { getSessionToken } from "./auth/session/get-session-token";

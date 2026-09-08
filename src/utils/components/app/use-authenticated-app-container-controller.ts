@@ -1,4 +1,4 @@
-import { useCurrentUser } from "@/lib/current-user";
+import { useCurrentUser } from "@/lib/auth/current-user";
 
 export function useAuthenticatedAppContainerController() {
   useCurrentUser();
