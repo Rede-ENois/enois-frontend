@@ -1,21 +1,20 @@
 import { Loader2 } from "lucide-react";
 
 import { texts } from "@/texts";
-import { useJobsPageController } from "@/utils/components/jobs/use-jobs-page-controller";
+import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
 
 import { AppContainer } from "@/components/app-container";
-import { InfiniteScroll } from "@/components/infinite-scroll";
 import { JobCardProvider } from "@/components/job-card-provider";
 import { JobsFilters } from "@/components/jobs-filters";
+import { JobsInfiniteScroll } from "@/components/jobs-infinite-scroll";
 
 export function Vagas() {
-  const { jobs, filtersProps, infiniteScrollProps, showLoadingMore, showEmptyState } =
-    useJobsPageController();
+  const { jobs, showLoadingMore, showEmptyState } = useJobsPageContext();
 
   return (
     <AppContainer>
       <div className="space-y-6">
-        <JobsFilters {...filtersProps} />
+        <JobsFilters />
 
         <div className="grid gap-4 md:grid-cols-2">
           {jobs.map((job) => (
@@ -29,7 +28,7 @@ export function Vagas() {
           </div>
         )}
 
-        <InfiniteScroll {...infiniteScrollProps} />
+        <JobsInfiniteScroll />
 
         {showEmptyState && (
           <p className="py-12 text-center text-sm text-muted-foreground">{texts.jobs.empty}</p>

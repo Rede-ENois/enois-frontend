@@ -1,20 +1,17 @@
-import { texts } from "@/texts";
-import type { JobsFiltersInputsProps } from "@/types/components/jobs/jobs-filters-inputs-props";
 import { Briefcase } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
 
 import { Input } from "@/components/ui/input";
 
-export function JobsFiltersInputs({
-  query,
-  skills,
-  onQueryChange,
-  onSkillsChange,
-}: JobsFiltersInputsProps) {
+export function JobsFiltersInputs() {
+  const { query, skills, changeQuery, changeSkills } = useJobsPageContext();
   const fields = [
     {
       key: "query",
       value: query,
-      onChange: onQueryChange,
+      onChange: changeQuery,
       placeholder: texts.jobs.searchPlaceholder,
       className: "h-9 rounded-full bg-muted pl-9",
       wrapperClassName: "relative max-w-sm flex-1",
@@ -23,7 +20,7 @@ export function JobsFiltersInputs({
     {
       key: "skills",
       value: skills,
-      onChange: onSkillsChange,
+      onChange: changeSkills,
       placeholder: texts.jobs.skillsPlaceholder,
       className: "h-9 max-w-xs rounded-full bg-muted",
       wrapperClassName: null,

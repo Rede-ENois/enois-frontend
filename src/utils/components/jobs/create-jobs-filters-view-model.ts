@@ -1,33 +1,29 @@
 import { JOB_FILTERS } from "@/constants/job-filters";
 import { texts } from "@/texts";
-import type { JobsFiltersProps } from "@/types/components/jobs/jobs-filters-props";
+import type { JobsFilterValues } from "@/types/components/jobs/jobs-filter-values";
 
-export function createJobsFiltersViewModel({
-  level,
-  location,
-  type,
-  skills,
-  onLevelChange,
-  onLocationChange,
-  onTypeChange,
-}: JobsFiltersProps) {
+export function createJobsFiltersViewModel(
+  filters: JobsFilterValues,
+  setFilter: (field: keyof JobsFilterValues, value: string) => void,
+) {
+  const { level, location, type, skills } = filters;
   const levelOptions = JOB_FILTERS.levels.map((value) => ({
     value,
     label: value.charAt(0) + value.slice(1).toLowerCase(),
     selected: level === value,
-    onSelect: () => onLevelChange(level === value ? "" : value),
+    onSelect: () => setFilter("level", level === value ? "" : value),
   }));
   const locationOptions = JOB_FILTERS.locations.map((value, index) => ({
     value,
     label: texts.jobs.filters.locations[index],
     selected: location === value,
-    onSelect: () => onLocationChange(location === value ? "" : value),
+    onSelect: () => setFilter("location", location === value ? "" : value),
   }));
   const typeOptions = JOB_FILTERS.types.map((value) => ({
     value,
     label: value,
     selected: type === value,
-    onSelect: () => onTypeChange(type === value ? "" : value),
+    onSelect: () => setFilter("type", type === value ? "" : value),
   }));
 
   return {

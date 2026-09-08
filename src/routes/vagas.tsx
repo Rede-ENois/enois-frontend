@@ -5,10 +5,10 @@ import { createStaticRouteHead } from "@/utils/routes/create-static-route-head";
 
 import { requireAuth } from "@/lib/require-auth";
 
-import { Vagas } from "@/components/pages/jobs-page";
+import { JobsPageProvider } from "@/components/jobs-page-provider";
 
 export const Route = createFileRoute("/vagas")({
   beforeLoad: requireAuth,
   head: () => createStaticRouteHead(texts.jobs.seoTitle),
-  component: Vagas,
+  component: JobsPageProvider,
 });

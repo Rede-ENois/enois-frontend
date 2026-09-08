@@ -1,10 +1,13 @@
-import { texts } from "@/texts";
-import type { JobsFiltersHeaderProps } from "@/types/components/jobs/jobs-filters-header-props";
 import { X } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
 
 import { Button } from "@/components/ui/button";
 
-export function JobsFiltersHeader({ hasFilters, onClear }: JobsFiltersHeaderProps) {
+export function JobsFiltersHeader() {
+  const { hasFilters, clearFilters } = useJobsPageContext();
+
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
@@ -18,7 +21,7 @@ export function JobsFiltersHeader({ hasFilters, onClear }: JobsFiltersHeaderProp
           size="sm"
           variant="secondary"
           className="rounded-full gap-1.5 text-muted-foreground"
-          onClick={onClear}
+          onClick={clearFilters}
         >
           <X className="h-4 w-4" />
 
