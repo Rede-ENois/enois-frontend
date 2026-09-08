@@ -1,42 +1,33 @@
-import { NOTIFICATION_TABS } from "@/constants/components/notifications/notification-tabs";
-import { useNotificationsStore } from "@/stores/notifications.store";
-import { useNotificationsPopoverContext } from "@/utils/components/notifications/use-notifications-popover-context";
+import { useNotificationsPopoverTabsController } from "@/utils/components/notifications/use-notifications-popover-tabs-controller";
 
 import { cn } from "@/lib/utils";
 
 export function NotificationsPopoverTabs() {
-  const tab = useNotificationsStore((state) => state.tab);
-  const openTab = useNotificationsStore((state) => state.openTab);
-  const { newTabCount } = useNotificationsPopoverContext();
+  const tabs = useNotificationsPopoverTabsController();
 
   return (
     <div className="flex border-b border-border-soft">
-      {NOTIFICATION_TABS.map((item) => {
-        const selected = tab === item.key;
-        const count = item.key === "novas" ? newTabCount : null;
+      {tabs.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          onClick={item.open}
+          className={cn(
+            item.className,
+            item.selected
+              ? "border-b-2 border-primary text-primary"
+              : "text-text-subtle hover:text-text-strong",
+          )}
+        >
+          <>{item.label}</>
 
-        return (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => openTab(item.key)}
-            className={cn(
-              item.className,
-              selected
-                ? "border-b-2 border-primary text-primary"
-                : "text-text-subtle hover:text-text-strong",
-            )}
-          >
-            <>{item.label}</>
-
-            {count !== null && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
-                {count}
-              </span>
-            )}
-          </button>
-        );
-      })}
+          {item.count !== null && (
+            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
+              {item.count}
+            </span>
+          )}
+        </button>
+      ))}
     </div>
   );
 }

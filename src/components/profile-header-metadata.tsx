@@ -1,21 +1,19 @@
-import { PROFILE_HEADER_METADATA_ITEMS } from "@/constants/profile-header-metadata-items";
-import { texts } from "@/texts";
-import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
+import { useProfileHeaderMetadataController } from "@/utils/components/profile/use-profile-header-metadata-controller";
 
 import { ProfileMetadataItem } from "@/components/profile-metadata-item";
 import { ProfileReputationBadge } from "@/components/profile-reputation-badge";
 
 export function ProfileHeaderMetadata() {
-  const { user } = useProfilePageContext();
+  const { items, connectionsLabel, reputation, showReputation } =
+    useProfileHeaderMetadataController();
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px] font-light text-text-subtle">
-      {PROFILE_HEADER_METADATA_ITEMS.map((item) => {
-        const value = user[item.field];
-        return value ? <ProfileMetadataItem key={item.key} icon={item.icon} value={value} /> : null;
-      })}
-      <span>{texts.profile.connectionsMeta(user.connectionsCount ?? 0)}</span>
-      {(user.reputation ?? 0) > 0 && <ProfileReputationBadge reputation={user.reputation ?? 0} />}
+      {items.map((item) => (
+        <ProfileMetadataItem key={item.key} icon={item.icon} value={item.value} />
+      ))}
+      <span>{connectionsLabel}</span>
+      {showReputation && <ProfileReputationBadge reputation={reputation} />}
     </div>
   );
 }
