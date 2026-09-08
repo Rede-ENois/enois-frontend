@@ -1,40 +1,39 @@
-import type { ProfileHeaderMediaProps } from "@/types/components/profile/profile-header-media-props";
 import { Camera } from "lucide-react";
+
+import { useProfileHeaderContext } from "@/utils/components/profile/use-profile-header-context";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function ProfileHeaderAvatar({
-  imageUrl,
-  alt,
-  area,
-  overlay,
-  input,
-}: ProfileHeaderMediaProps) {
+export function ProfileHeaderAvatar() {
+  const { user } = useProfilePageContext();
+  const { avatarUrl, avatarArea, avatarOverlay, avatarInput } = useProfileHeaderContext();
+
   return (
-    <div className="relative" {...area}>
+    <div className="relative" {...avatarArea}>
       <UserAvatar
-        src={imageUrl}
-        alt={alt}
+        src={avatarUrl}
+        alt={user.name}
         className="h-24 w-24 ring-4 ring-surface-card sm:h-28 sm:w-28"
       />
 
-      {overlay.visible && (
+      {avatarOverlay.visible && (
         <button
           type="button"
-          onClick={overlay.openFilePicker}
+          onClick={avatarOverlay.openFilePicker}
           className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 text-white transition"
-          disabled={overlay.disabled}
+          disabled={avatarOverlay.disabled}
         >
-          {overlay.label ?? <Camera className="h-5 w-5" />}
+          {avatarOverlay.label ?? <Camera className="h-5 w-5" />}
         </button>
       )}
 
       <input
-        ref={input.ref}
+        ref={avatarInput.ref}
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={input.onChange}
+        onChange={avatarInput.onChange}
       />
     </div>
   );
