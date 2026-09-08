@@ -38,6 +38,7 @@ export function useRegisterMentorFormController(onCreated: () => void) {
       },
     ],
     saving: create.saving,
+    saveLabel: create.saving ? texts.common.saving : texts.common.save,
     saveDisabled: !form.skillsText.trim() || create.saving,
     save: create.save,
   };

@@ -1,4 +1,3 @@
-import { texts } from "@/texts";
 import { useRegisterMentorFormContext } from "@/utils/components/mentoring/use-register-mentor-form-context";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ export function RegisterMentorForm() {
         disabled={controller.saveDisabled}
         onClick={controller.save}
       >
-        {controller.saving ? texts.common.saving : texts.common.save}
+        {controller.saveLabel}
       </Button>
     </div>
   );
