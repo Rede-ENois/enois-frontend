@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { useNewConversationSearchResultsController } from "@/utils/components/messages/use-new-conversation-search-results-controller";
 
-import { NewConversationSearchResultItem } from "@/components/new-conversation-search-result-item";
+import { NewConversationSearchResultItem } from "@/components/messages/new-conversation-search-result-item";
 
 export function NewConversationSearchResults() {
   const { visible, users, showEmptyState } = useNewConversationSearchResultsController();

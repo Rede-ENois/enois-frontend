@@ -1,5 +1,5 @@
-import { ConversationHeaderBackButton } from "@/components/conversation-header-back-button";
-import { ConversationHeaderIdentity } from "@/components/conversation-header-identity";
+import { ConversationHeaderBackButton } from "@/components/messages/conversation-header-back-button";
+import { ConversationHeaderIdentity } from "@/components/messages/conversation-header-identity";
 
 export function ConversationHeader() {
   return (

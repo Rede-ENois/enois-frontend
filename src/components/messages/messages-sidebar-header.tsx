@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { NewConversationSearch } from "@/components/new-conversation-search";
+import { NewConversationSearch } from "@/components/messages/new-conversation-search";
 
 export function MessagesSidebarHeader() {
   const { showSearch, toggleSearch, searchToggleLabel } = useMessagesSidebarHeaderController();

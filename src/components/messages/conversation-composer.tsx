@@ -1,7 +1,7 @@
 import { useConversationComposerContext } from "@/utils/components/messages/use-conversation-composer-context";
 
-import { ConversationComposerField } from "@/components/conversation-composer-field";
-import { ConversationComposerSubmit } from "@/components/conversation-composer-submit";
+import { ConversationComposerField } from "@/components/messages/conversation-composer-field";
+import { ConversationComposerSubmit } from "@/components/messages/conversation-composer-submit";
 
 export function ConversationComposer() {
   const { submit } = useConversationComposerContext();

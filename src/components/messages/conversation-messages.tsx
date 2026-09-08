@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { useConversationMessagesContext } from "@/utils/components/messages/use-conversation-messages-context";
 
-import { ConversationMessageItem } from "@/components/conversation-message-item";
+import { ConversationMessageItem } from "@/components/messages/conversation-message-item";
 
 export function ConversationMessages() {
   const { items, showEmptyState, messagesEndRef } = useConversationMessagesContext();

@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { useMessagesSidebarListController } from "@/utils/components/messages/use-messages-sidebar-list-controller";
 
-import { ConversationItem } from "@/components/conversation-item";
+import { ConversationItem } from "@/components/messages/conversation-item";
 
 export function MessagesSidebarList() {
   const { conversations, showEmptyState } = useMessagesSidebarListController();

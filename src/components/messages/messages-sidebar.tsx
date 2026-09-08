@@ -1,7 +1,7 @@
 import { useMessagesSidebarController } from "@/utils/components/messages/use-messages-sidebar-controller";
 
-import { MessagesSidebarHeader } from "@/components/messages-sidebar-header";
-import { MessagesSidebarList } from "@/components/messages-sidebar-list";
+import { MessagesSidebarHeader } from "@/components/messages/messages-sidebar-header";
+import { MessagesSidebarList } from "@/components/messages/messages-sidebar-list";
 
 export function MessagesSidebar() {
   const { sidebarClassName } = useMessagesSidebarController();
