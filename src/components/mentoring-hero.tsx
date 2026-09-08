@@ -6,7 +6,7 @@ import { useMentoringPageContext } from "@/utils/components/mentoring/use-mentor
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { RegisterMentorDialog } from "@/components/register-mentor-dialog";
+import { RegisterMentorDialogProvider } from "@/components/register-mentor-dialog-provider";
 
 export function MentoringHero() {
   const { scrollToMentors } = useMentoringPageContext();
@@ -32,7 +32,7 @@ export function MentoringHero() {
             {texts.mentoring.findMentor}
           </Button>
 
-          <RegisterMentorDialog />
+          <RegisterMentorDialogProvider />
         </div>
       </div>
     </section>

@@ -1,14 +1,13 @@
 import { texts } from "@/texts";
-import type { CreateEventFormProps } from "@/types/components/events/create-event-form-props";
-import { useCreateEventFormController } from "@/utils/components/events/use-create-event-form-controller";
+import { useCreateEventFormContext } from "@/utils/components/events/use-create-event-form-context";
 
 import { Button } from "@/components/ui/button";
 
 import { CreateEventFormFields } from "@/components/create-event-form-fields";
 import { CreateEventFormatField } from "@/components/create-event-format-field";
 
-export function CreateEventForm({ onCreated }: CreateEventFormProps) {
-  const controller = useCreateEventFormController(onCreated);
+export function CreateEventForm() {
+  const controller = useCreateEventFormContext();
 
   return (
     <div className="space-y-4 pt-2">

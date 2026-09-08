@@ -1,14 +1,13 @@
 import { texts } from "@/texts";
-import type { RegisterMentorFormProps } from "@/types/components/mentoring/register-mentor-form-props";
-import { useRegisterMentorFormController } from "@/utils/components/mentoring/use-register-mentor-form-controller";
+import { useRegisterMentorFormContext } from "@/utils/components/mentoring/use-register-mentor-form-context";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { FormField } from "@/components/form-field";
 
-export function RegisterMentorForm({ onCreated }: RegisterMentorFormProps) {
-  const controller = useRegisterMentorFormController(onCreated);
+export function RegisterMentorForm() {
+  const controller = useRegisterMentorFormContext();
 
   return (
     <div className="space-y-4 pt-2">

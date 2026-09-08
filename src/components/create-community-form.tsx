@@ -1,14 +1,13 @@
 import { texts } from "@/texts";
-import type { CreateCommunityFormProps } from "@/types/components/communities/create-community-form-props";
-import { useCreateCommunityFormController } from "@/utils/components/communities/use-create-community-form-controller";
+import { useCreateCommunityFormContext } from "@/utils/components/communities/use-create-community-form-context";
 
 import { Button } from "@/components/ui/button";
 
 import { CreateCommunityFields } from "@/components/create-community-fields";
 import { CreateCommunityTopicField } from "@/components/create-community-topic-field";
 
-export function CreateCommunityForm({ onCreated }: CreateCommunityFormProps) {
-  const controller = useCreateCommunityFormController(onCreated);
+export function CreateCommunityForm() {
+  const controller = useCreateCommunityFormContext();
 
   return (
     <div className="space-y-4">

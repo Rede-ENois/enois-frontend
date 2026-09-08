@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useRegisterMentorDialogController } from "@/utils/components/mentoring/use-register-mentor-dialog-controller";
+import { useRegisterMentorDialogContext } from "@/utils/components/mentoring/use-register-mentor-dialog-context";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -10,10 +10,10 @@ import { RegisterMentorForm } from "@/components/register-mentor-form";
 import { RegisterMentorTrigger } from "@/components/register-mentor-trigger";
 
 export function RegisterMentorDialog() {
-  const controller = useRegisterMentorDialogController();
+  const { open, setOpen } = useRegisterMentorDialogContext();
 
   return (
-    <Dialog open={controller.open} onOpenChange={controller.setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <RegisterMentorTrigger />
       </DialogTrigger>
@@ -23,7 +23,7 @@ export function RegisterMentorDialog() {
           <DialogTitle>{texts.mentoring.becomeMentorTitle}</DialogTitle>
         </DialogHeader>
 
-        <RegisterMentorForm onCreated={controller.close} />
+        <RegisterMentorForm />
       </DialogContent>
     </Dialog>
   );

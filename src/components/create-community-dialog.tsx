@@ -1,6 +1,6 @@
 import { texts } from "@/texts";
 import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
-import { useCreateCommunityDialogController } from "@/utils/components/communities/use-create-community-dialog-controller";
+import { useCreateCommunityDialogContext } from "@/utils/components/communities/use-create-community-dialog-context";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -10,10 +10,10 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { CreateCommunityForm } from "@/components/create-community-form";
 
 export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) {
-  const controller = useCreateCommunityDialogController();
+  const { open, setOpen } = useCreateCommunityDialogContext();
 
   return (
-    <Dialog open={controller.open} onOpenChange={controller.setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent>
@@ -21,7 +21,7 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
           <DialogTitle>{texts.communities.create.title}</DialogTitle>
         </DialogHeader>
 
-        <CreateCommunityForm onCreated={controller.close} />
+        <CreateCommunityForm />
       </DialogContent>
     </Dialog>
   );

@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import { CreateCommunityDialog } from "@/components/create-community-dialog";
+import { CreateCommunityDialogProvider } from "@/components/create-community-dialog-provider";
 
 export function CommunitiesPageHeader() {
   return (
@@ -14,13 +14,13 @@ export function CommunitiesPageHeader() {
         <p className="mt-1 text-sm text-muted-foreground">{texts.communities.description}</p>
       </div>
 
-      <CreateCommunityDialog>
+      <CreateCommunityDialogProvider>
         <Button className="rounded-full gap-1.5">
           <Plus className="h-4 w-4" />
 
           <>{texts.communities.createCommunity}</>
         </Button>
-      </CreateCommunityDialog>
+      </CreateCommunityDialogProvider>
     </header>
   );
 }

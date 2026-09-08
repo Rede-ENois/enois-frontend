@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useCreateEventDialogController } from "@/utils/components/events/use-create-event-dialog-controller";
+import { useCreateEventDialogContext } from "@/utils/components/events/use-create-event-dialog-context";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -10,10 +10,10 @@ import { CreateEventForm } from "@/components/create-event-form";
 import { CreateEventTrigger } from "@/components/create-event-trigger";
 
 export function CreateEventDialog() {
-  const controller = useCreateEventDialogController();
+  const { open, setOpen } = useCreateEventDialogContext();
 
   return (
-    <Dialog open={controller.open} onOpenChange={controller.setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <CreateEventTrigger />
       </DialogTrigger>
@@ -23,7 +23,7 @@ export function CreateEventDialog() {
           <DialogTitle>{texts.events.createEvent}</DialogTitle>
         </DialogHeader>
 
-        <CreateEventForm onCreated={controller.close} />
+        <CreateEventForm />
       </DialogContent>
     </Dialog>
   );

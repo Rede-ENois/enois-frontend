@@ -2,7 +2,7 @@ import { texts } from "@/texts";
 import { useEventsPageController } from "@/utils/components/events/use-events-page-controller";
 
 import { AppContainer } from "@/components/app-container";
-import { CreateEventDialog } from "@/components/create-event-dialog";
+import { CreateEventDialogProvider } from "@/components/create-event-dialog-provider";
 import { EventCardProvider } from "@/components/event-card-provider";
 
 export function Eventos() {
@@ -18,7 +18,7 @@ export function Eventos() {
             <p className="mt-1 text-sm text-muted-foreground">{texts.events.description}</p>
           </div>
 
-          <CreateEventDialog />
+          <CreateEventDialogProvider />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
