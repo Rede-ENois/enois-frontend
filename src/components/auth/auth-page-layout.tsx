@@ -1,7 +1,7 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
 import { AppBrand } from "@/components/app-brand";
-import { AuthBackgroundBlobs } from "@/components/auth-background-blobs";
+import { AuthBackgroundBlobs } from "@/components/auth/auth-background-blobs";
 import { AuthHeroContent } from "@/components/auth/auth-hero-content";
 import { AuthHeroStats } from "@/components/auth/auth-hero-stats";
 import { AuthMobileHeader } from "@/components/auth/auth-mobile-header";

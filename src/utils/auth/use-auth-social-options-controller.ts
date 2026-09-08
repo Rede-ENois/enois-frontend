@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { AUTH_SOCIAL_PROVIDERS } from "@/constants/auth-social-providers";
+import { AUTH_SOCIAL_PROVIDERS } from "@/constants/auth/auth-social-providers";
 import { texts } from "@/texts";
 import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
 

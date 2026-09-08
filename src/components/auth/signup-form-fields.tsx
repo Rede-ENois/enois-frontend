@@ -1,4 +1,4 @@
-import { AUTH_SIGNUP_FIELDS } from "@/constants/auth-signup-fields";
+import { AUTH_SIGNUP_FIELDS } from "@/constants/auth/auth-signup-fields";
 import { useSignupFormContext } from "@/utils/auth/use-signup-form-context";
 
 import { Input } from "@/components/ui/input";

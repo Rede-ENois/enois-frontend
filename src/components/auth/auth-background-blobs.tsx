@@ -1,4 +1,4 @@
-import { AUTH_BACKGROUND_BLOB_POSITIONS } from "@/constants/auth-background-blob-positions";
+import { AUTH_BACKGROUND_BLOB_POSITIONS } from "@/constants/auth/auth-background-blob-positions";
 
 export function AuthBackgroundBlobs() {
   return (
