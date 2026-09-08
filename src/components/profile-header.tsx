@@ -29,13 +29,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               overlay={controller.avatarOverlay}
               input={controller.avatarInput}
             />
-            <ProfileHeaderActions
-              profile={user}
-              showEditAction={controller.showEditAction}
-              showExternalActions={controller.showExternalActions}
-              message={controller.message}
-              connectionAction={controller.connectionAction}
-            />
+            <ProfileHeaderActions profile={user} />
           </div>
 
           <ProfileHeaderIdentity user={user} />
