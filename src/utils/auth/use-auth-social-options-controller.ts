@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { AUTH_SOCIAL_PROVIDERS } from "@/constants/auth/auth-social-providers";
 import { texts } from "@/texts";
-import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+import type { OAuthStartResponse } from "@/types/auth/oauth-start-response";
 
 export function useAuthSocialOptionsController() {
   const [loading, setLoading] = useState<OAuthStartResponse["provider"] | null>(null);

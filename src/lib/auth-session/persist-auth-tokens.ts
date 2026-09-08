@@ -1,4 +1,4 @@
-import type { AuthTokenSession } from "@/types/application/auth/auth-token-session";
+import type { AuthTokenSession } from "@/types/auth/auth-token-session";
 
 import { getAuthStorage } from "./get-auth-storage";
 import { notifyAuthSessionChange } from "./notify-auth-session-change";

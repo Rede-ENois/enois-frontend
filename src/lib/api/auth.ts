@@ -1,5 +1,5 @@
-import type { AuthResponse } from "@/types/application/auth/auth-response";
-import type { LoginInput } from "@/types/application/auth/login-input";
+import type { AuthResponse } from "@/types/auth/auth-response";
+import type { LoginInput } from "@/types/auth/login-input";
 
 import { apiRequest } from "@/lib/api-request";
 

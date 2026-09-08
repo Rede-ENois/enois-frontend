@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 
-import type { AuthResponse } from "@/types/application/auth/auth-response";
+import type { AuthResponse } from "@/types/auth/auth-response";
 import { useAuthSessionSubmission } from "@/utils/auth/use-auth-session-submission";
 import { getZodFieldErrors } from "@/utils/get-zod-field-errors";
 import type { ZodType } from "zod";

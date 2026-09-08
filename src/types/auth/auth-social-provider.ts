@@ -1,4 +1,4 @@
-import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+import type { OAuthStartResponse } from "@/types/auth/oauth-start-response";
 
 export type AuthSocialProvider = {
   key: string;

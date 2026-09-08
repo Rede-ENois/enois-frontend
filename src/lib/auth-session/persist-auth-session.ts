@@ -1,4 +1,4 @@
-import type { AuthResponse } from "@/types/application/auth/auth-response";
+import type { AuthResponse } from "@/types/auth/auth-response";
 
 import { getAuthStorage } from "./get-auth-storage";
 import { persistAuthTokens } from "./persist-auth-tokens";
