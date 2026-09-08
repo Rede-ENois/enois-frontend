@@ -6,8 +6,17 @@ import { useConversationItemController } from "@/utils/components/messages/use-c
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ConversationItem({ conversation }: ConversationItemProps) {
-  const { isActive, otherUser, title, profileUsername, timeLabel, showUnread, select } =
-    useConversationItemController(conversation);
+  const {
+    isActive,
+    otherUser,
+    title,
+    profileUsername,
+    timeLabel,
+    lastMessage,
+    unreadCount,
+    showUnread,
+    select,
+  } = useConversationItemController(conversation);
 
   return (
     <li>
@@ -29,12 +38,10 @@ export function ConversationItem({ conversation }: ConversationItemProps) {
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-xs text-muted-foreground">
-              {conversation.lastMessage ?? ""}
-            </p>
+            <p className="truncate text-xs text-muted-foreground">{lastMessage}</p>
             {showUnread && (
               <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
-                {conversation.unread}
+                {unreadCount}
               </span>
             )}
           </div>

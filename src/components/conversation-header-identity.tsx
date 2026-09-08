@@ -1,15 +1,12 @@
 import { Link } from "@tanstack/react-router";
 
-import type { ConversationHeaderIdentityProps } from "@/types/components/messages/conversation-header-identity-props";
+import { useConversationHeaderContext } from "@/utils/components/messages/use-conversation-header-context";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function ConversationHeaderIdentity({
-  profileUsername,
-  avatar,
-  title,
-  headline,
-}: ConversationHeaderIdentityProps) {
+export function ConversationHeaderIdentity() {
+  const { profileUsername, avatar, title, headline } = useConversationHeaderContext();
+
   return (
     <>
       <Link to="/perfil/$username" params={{ username: profileUsername }}>

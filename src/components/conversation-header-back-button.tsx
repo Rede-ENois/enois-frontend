@@ -1,8 +1,9 @@
-import { useMessagesStore } from "@/stores/messages.store";
 import { ArrowLeft } from "lucide-react";
 
+import { useConversationHeaderBackButtonController } from "@/utils/components/messages/use-conversation-header-back-button-controller";
+
 export function ConversationHeaderBackButton() {
-  const clearConversation = useMessagesStore((state) => state.clearConversation);
+  const { clearConversation } = useConversationHeaderBackButtonController();
 
   return (
     <button

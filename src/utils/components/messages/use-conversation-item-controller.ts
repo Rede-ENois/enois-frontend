@@ -16,6 +16,8 @@ export function useConversationItemController(
     ...counterpart,
     isActive: conversation.id === activeConversationId,
     timeLabel: conversation.time ? formatRelativeTime(conversation.time) : "",
+    lastMessage: conversation.lastMessage ?? "",
+    unreadCount: conversation.unread,
     showUnread: conversation.unread > 0,
     select: () => {
       selectConversation(conversation.id);

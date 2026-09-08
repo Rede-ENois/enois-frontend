@@ -1,4 +1,4 @@
-export type ConversationHeaderIdentityProps = {
+export type ConversationHeaderContextValue = {
   profileUsername: string;
   avatar?: string | null;
   title: string;

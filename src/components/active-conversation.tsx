@@ -2,7 +2,7 @@ import { useActiveConversationController } from "@/utils/components/messages/use
 
 import { ActiveConversationEmptyState } from "@/components/active-conversation-empty-state";
 import { ConversationComposerProvider } from "@/components/conversation-composer-provider";
-import { ConversationHeader } from "@/components/conversation-header";
+import { ConversationHeaderProvider } from "@/components/conversation-header-provider";
 import { ConversationMessagesProvider } from "@/components/conversation-messages-provider";
 
 export function ActiveConversation() {
@@ -14,7 +14,7 @@ export function ActiveConversation() {
     >
       {controller.showConversation ? (
         <>
-          <ConversationHeader />
+          <ConversationHeaderProvider />
           <ConversationMessagesProvider />
           <ConversationComposerProvider />
         </>
