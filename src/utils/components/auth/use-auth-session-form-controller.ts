@@ -10,10 +10,9 @@ import { useAuthSessionSubmission } from "@/utils/components/auth/use-auth-sessi
 export function useAuthSessionFormController<TInput>(
   schema: ZodType<TInput>,
   authenticate: (data: TInput) => Promise<AuthResponse>,
-  onDone: () => void,
 ) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const submission = useAuthSessionSubmission(authenticate, onDone);
+  const submission = useAuthSessionSubmission(authenticate);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

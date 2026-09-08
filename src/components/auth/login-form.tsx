@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-import type { LoginFormProps } from "@/types/routes/auth/login-form-props";
 
 import { useLoginFormController } from "@/utils/components/auth/use-login-form-controller";
 
@@ -10,8 +9,8 @@ import { AuthSocialOptions } from "./auth-social-options";
 import { AuthSubmitButton } from "./auth-submit-button";
 import { LoginFormFields } from "./login-form-fields";
 
-export function LoginForm({ onDone, onForgot }: LoginFormProps) {
-  const { errors, formError, loading, submit } = useLoginFormController(onDone);
+export function LoginForm() {
+  const { errors, formError, loading, submit } = useLoginFormController();
 
   return (
     <div>
@@ -22,7 +21,7 @@ export function LoginForm({ onDone, onForgot }: LoginFormProps) {
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <LoginFormFields errors={errors} onForgot={onForgot} />
+        <LoginFormFields errors={errors} />
         {formError !== null && <ErrorBanner error={formError} />}
         <AuthSubmitButton loading={loading} label={texts.common.enter} />
       </form>

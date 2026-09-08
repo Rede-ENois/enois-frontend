@@ -1,24 +1,21 @@
 import { texts } from "@/texts";
 import type { AuthModeTab } from "@/types/components/auth/auth-mode-tab";
-import type { AuthModeTabsProps } from "@/types/components/auth/auth-mode-tabs-props";
 
-export function createAuthModeTabs({
-  signupActive,
-  loginActive,
-  onSelectSignup,
-  onSelectLogin,
-}: AuthModeTabsProps): AuthModeTab[] {
+export function createAuthModeTabs(
+  activeTab: "signup" | "login",
+  selectTab: (tab: "signup" | "login") => void,
+): AuthModeTab[] {
   return [
     {
       key: "signup",
-      active: signupActive,
-      onClick: onSelectSignup,
+      active: activeTab === "signup",
+      onClick: () => selectTab("signup"),
       label: texts.common.createAccount,
     },
     {
       key: "login",
-      active: loginActive,
-      onClick: onSelectLogin,
+      active: activeTab === "login",
+      onClick: () => selectTab("login"),
       label: texts.common.enter,
     },
   ];

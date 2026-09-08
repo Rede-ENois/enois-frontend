@@ -1,6 +1,6 @@
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
+
 import { texts } from "@/texts";
-import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
-import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { useForgotPasswordDialogController } from "@/utils/components/auth/use-forgot-password-dialog-controller";
 
@@ -11,11 +11,17 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { ForgotPasswordForm } from "./forgot-password-form";
 import { ForgotPasswordSuccess } from "./forgot-password-success";
 
-export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialogProps) {
-  const controller = useForgotPasswordDialogController(onOpenChange);
+export function ForgotPasswordDialog() {
+  const controller = useForgotPasswordDialogController();
 
   return (
-    <Dialog open={open} onOpenChange={controller.handleOpenChange}>
+    <Dialog open={controller.open} onOpenChange={controller.handleOpenChange}>
+      <DialogTrigger asChild>
+        <button type="button" className="text-xs font-medium text-primary hover:underline">
+          {texts.auth.password.forgot}
+        </button>
+      </DialogTrigger>
+
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-semibold tracking-tight">

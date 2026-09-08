@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/form-field";
 
 import { AuthPasswordInput } from "./auth-password-input";
+import { ForgotPasswordDialog } from "./forgot-password-dialog";
 
-export function LoginFormFields({ errors, onForgot }: LoginFormFieldsProps) {
+export function LoginFormFields({ errors }: LoginFormFieldsProps) {
   const fields = [
     {
       key: "email",
@@ -29,15 +30,7 @@ export function LoginFormFields({ errors, onForgot }: LoginFormFieldsProps) {
       key: "password",
       label: texts.auth.fields.password,
       error: errors.password,
-      right: (
-        <button
-          type="button"
-          onClick={onForgot}
-          className="text-xs font-medium text-primary hover:underline"
-        >
-          {texts.auth.password.forgot}
-        </button>
-      ),
+      right: <ForgotPasswordDialog />,
       control: (
         <AuthPasswordInput
           name="password"

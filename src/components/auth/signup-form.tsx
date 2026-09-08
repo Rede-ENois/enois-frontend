@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-import type { AuthFormProps } from "@/types/routes/auth/auth-form-props";
 
 import { useSignupFormController } from "@/utils/components/auth/use-signup-form-controller";
 
@@ -10,8 +9,8 @@ import { AuthSocialOptions } from "./auth-social-options";
 import { AuthSubmitButton } from "./auth-submit-button";
 import { SignupFormFields } from "./signup-form-fields";
 
-export function SignupForm({ onDone }: AuthFormProps) {
-  const { errors, formError, loading, submit } = useSignupFormController(onDone);
+export function SignupForm() {
+  const { errors, formError, loading, submit } = useSignupFormController();
 
   return (
     <div>

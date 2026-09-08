@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import type { AuthResponse } from "@/types/application/auth/auth-response";
 
 import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
@@ -7,8 +9,8 @@ import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
 
 export function useAuthSessionSubmission<TInput>(
   authenticate: (data: TInput) => Promise<AuthResponse>,
-  onDone: () => void,
 ) {
+  const navigate = useNavigate();
   const [formError, setFormError] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +22,7 @@ export function useAuthSessionSubmission<TInput>(
     try {
       const result = await authenticate(data);
       persistAuthSession(result);
-      onDone();
+      void navigate({ to: "/feed" });
     } catch (error) {
       setFormError(error);
     } finally {

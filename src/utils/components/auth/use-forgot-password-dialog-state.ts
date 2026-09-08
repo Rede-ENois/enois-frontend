@@ -1,18 +1,18 @@
-import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
+import { useState } from "react";
 
-export function useForgotPasswordDialogState(
-  onOpenChange: ForgotPasswordDialogProps["onOpenChange"],
-  reset: () => void,
-) {
+export function useForgotPasswordDialogState(reset: () => void) {
+  const [open, setOpen] = useState(false);
+
   const close = () => {
     reset();
-    onOpenChange(false);
+    setOpen(false);
   };
 
   return {
+    open,
     close,
-    handleOpenChange: (open: boolean) => {
-      if (open) onOpenChange(true);
+    handleOpenChange: (nextOpen: boolean) => {
+      if (nextOpen) setOpen(true);
       else close();
     },
   };
