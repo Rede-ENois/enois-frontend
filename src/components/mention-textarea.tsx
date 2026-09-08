@@ -1,4 +1,3 @@
-import { texts } from "@/texts";
 import type { Props } from "@/types/components/mention-textarea/props";
 import { useMentionTextarea } from "@/utils/components/mentions/use-mention-textarea";
 
@@ -31,7 +30,7 @@ export function MentionTextarea({
       />
       {showSuggestions && (
         <div className="absolute bottom-full left-0 right-0 z-50 mb-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-popover shadow-lg">
-          {suggestions.map(({ user, selected, onMouseDown, onMouseEnter }) => (
+          {suggestions.map(({ user, usernameLabel, selected, onMouseDown, onMouseEnter }) => (
             <button
               key={user.id}
               type="button"
@@ -46,9 +45,7 @@ export function MentionTextarea({
               <div className="min-w-0">
                 <p className="truncate font-medium">{user.name}</p>
 
-                <p className="truncate text-xs text-muted-foreground">
-                  {texts.mentions.username(user.username)}
-                </p>
+                <p className="truncate text-xs text-muted-foreground">{usernameLabel}</p>
               </div>
             </button>
           ))}
