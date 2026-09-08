@@ -1,5 +1,5 @@
 import { CREATE_COMMUNITY_FIELDS } from "@/constants/create-community-fields";
-import { useCreateCommunityFormContext } from "@/utils/components/communities/use-create-community-form-context";
+import { useCreateCommunityFormContext } from "@/utils/communities/use-create-community-form-context";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

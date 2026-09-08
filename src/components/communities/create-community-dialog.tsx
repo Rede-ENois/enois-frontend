@@ -1,13 +1,13 @@
 import { texts } from "@/texts";
-import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
-import { useCreateCommunityDialogContext } from "@/utils/components/communities/use-create-community-dialog-context";
+import type { CreateCommunityDialogProps } from "@/types/communities/create-community-dialog-props";
+import { useCreateCommunityDialogContext } from "@/utils/communities/use-create-community-dialog-context";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";
 import { DialogTitle } from "@/components/ui/dialog-title";
 
-import { CreateCommunityForm } from "@/components/create-community-form";
+import { CreateCommunityForm } from "@/components/communities/create-community-form";
 
 export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) {
   const { open, setOpen } = useCreateCommunityDialogContext();

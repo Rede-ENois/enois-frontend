@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useCreateCommunityFormContext } from "@/utils/components/communities/use-create-community-form-context";
+import { useCreateCommunityFormContext } from "@/utils/communities/use-create-community-form-context";
 
 import { FormField } from "@/components/form-field";
 
