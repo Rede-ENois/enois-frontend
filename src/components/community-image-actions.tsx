@@ -1,31 +1,12 @@
-import { texts } from "@/texts";
 import type { CommunityImageFieldProps } from "@/types/components/communities/community-image-field-props";
-import { Camera } from "lucide-react";
+import { createCommunityImageActions } from "@/utils/components/communities/create-community-image-actions";
 
 import { Button } from "@/components/ui/button";
 
-export function CommunityImageActions({
-  inputRef,
-  onRemove,
-}: Pick<CommunityImageFieldProps, "inputRef" | "onRemove">) {
-  const actions = [
-    {
-      key: "change",
-      variant: "outline" as const,
-      className: "rounded-full gap-1.5",
-      onClick: () => inputRef.current?.click(),
-      icon: Camera,
-      label: texts.communities.detail.change,
-    },
-    {
-      key: "remove",
-      variant: "destructive" as const,
-      className: "rounded-full",
-      onClick: onRemove,
-      icon: null,
-      label: texts.communities.detail.remove,
-    },
-  ];
+export function CommunityImageActions(
+  props: Pick<CommunityImageFieldProps, "inputRef" | "onRemove">,
+) {
+  const actions = createCommunityImageActions(props);
 
   return (
     <>

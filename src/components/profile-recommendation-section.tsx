@@ -1,18 +1,15 @@
 import { ThumbsUp } from "lucide-react";
 
 import { texts } from "@/texts";
-import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
-
-import { useAuth } from "@/lib/use-auth";
+import { useProfileRecommendationSectionController } from "@/utils/components/profile/use-profile-recommendation-section-controller";
 
 import { ProfileRecommendationDialog } from "@/components/profile-recommendation-dialog";
 import { ProfileSection } from "@/components/profile-section";
 
 export function ProfileRecommendationSection() {
-  const { user } = useProfilePageContext();
-  const { user: me } = useAuth();
+  const { visible } = useProfileRecommendationSectionController();
 
-  if (me?.id === user.id) return null;
+  if (!visible) return null;
 
   return (
     <ProfileSection title={texts.profile.sections.recommend} icon={ThumbsUp}>
