@@ -1,14 +1,10 @@
-import { useProfileHeaderContext } from "@/utils/components/profile/use-profile-header-context";
-
-import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { ProfileHeaderActions } from "@/components/profile-header-actions";
 import { ProfileHeaderAvatar } from "@/components/profile-header-avatar";
 import { ProfileHeaderBanner } from "@/components/profile-header-banner";
+import { ProfileHeaderCropDialog } from "@/components/profile-header-crop-dialog";
 import { ProfileHeaderIdentity } from "@/components/profile-header-identity";
 
 export function ProfileHeader() {
-  const { cropDialog } = useProfileHeaderContext();
-
   return (
     <>
       <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
@@ -24,7 +20,7 @@ export function ProfileHeader() {
         </div>
       </div>
 
-      {cropDialog && <ImageCropDialog {...cropDialog} />}
+      <ProfileHeaderCropDialog />
     </>
   );
 }
