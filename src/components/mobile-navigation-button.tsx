@@ -1,11 +1,14 @@
-import { texts } from "@/texts";
-import type { MobileNavigationButtonProps } from "@/types/components/app/mobile-navigation-button-props";
 import { Menu } from "lucide-react";
 
-export function MobileNavigationButton({ onClick }: MobileNavigationButtonProps) {
+import { texts } from "@/texts";
+import { useMobileNavigationButtonController } from "@/utils/components/app/use-mobile-navigation-button-controller";
+
+export function MobileNavigationButton() {
+  const { openMobileNavigation } = useMobileNavigationButtonController();
+
   return (
     <button
-      onClick={onClick}
+      onClick={openMobileNavigation}
       className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary md:hidden"
       aria-label={texts.navigation.openMenu}
     >

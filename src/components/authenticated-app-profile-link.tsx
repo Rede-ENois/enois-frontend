@@ -1,11 +1,15 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import type { AuthenticatedAppProfileLinkProps } from "@/types/components/app/authenticated-app-profile-link-props";
+import { useAuthenticatedAppProfileLinkController } from "@/utils/components/app/use-authenticated-app-profile-link-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function AuthenticatedAppProfileLink({ profile }: AuthenticatedAppProfileLinkProps) {
+export function AuthenticatedAppProfileLink() {
+  const { profile } = useAuthenticatedAppProfileLinkController();
+
+  if (!profile) return null;
+
   return (
     <Link
       to="/perfil/$username"
