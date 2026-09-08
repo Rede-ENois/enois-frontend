@@ -1,5 +1,4 @@
 import { useNotificationsStore } from "@/stores/notifications.store";
-
 import { createNotificationsPopoverViewModel } from "@/utils/components/notifications/create-notifications-popover-view-model";
 import { useNotificationsQuery } from "@/utils/components/notifications/use-notifications-query";
 

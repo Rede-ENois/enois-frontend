@@ -1,10 +1,9 @@
-import { MessageCircle } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { ProfileHeaderAction } from "@/types/components/profile/profile-header-action";
 import { createProfileConnectionAction } from "@/utils/components/profile/create-profile-connection-action";
 import { useProfileHeaderActions } from "@/utils/components/profile/use-profile-header-actions";
 import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
+import { MessageCircle } from "lucide-react";
 
 export function useProfileHeaderActionsController() {
   const { user } = useProfilePageContext();

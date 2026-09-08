@@ -6,7 +6,9 @@ export function useFeedProfileSummaryContext() {
   const context = useContext(FeedProfileSummaryContext);
 
   if (!context) {
-    throw new Error("Feed profile summary components must be rendered inside FeedProfileSummaryProvider");
+    throw new Error(
+      "Feed profile summary components must be rendered inside FeedProfileSummaryProvider",
+    );
   }
 
   return context;

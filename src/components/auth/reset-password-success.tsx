@@ -1,7 +1,6 @@
-import { ArrowRight, CheckCircle2 } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useResetPasswordFormContext } from "@/utils/components/auth/use-reset-password-form-context";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

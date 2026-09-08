@@ -1,6 +1,5 @@
-import { Users } from "lucide-react";
-
 import { useCommunityCardContext } from "@/utils/components/communities/use-community-card-context";
+import { Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

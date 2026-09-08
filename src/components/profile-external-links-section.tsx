@@ -1,8 +1,7 @@
-import { Link as LinkIcon } from "lucide-react";
-
 import { texts } from "@/texts";
 import { createProfileExternalLinksSectionViewModel } from "@/utils/components/profile/create-profile-external-links-section-view-model";
 import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
+import { Link as LinkIcon } from "lucide-react";
 
 import { ProfileSection } from "@/components/profile-section";
 

@@ -1,8 +1,7 @@
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { Settings } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useCommunityHeaderEditActionController } from "@/utils/components/communities/use-community-header-edit-action-controller";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
+import { Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";

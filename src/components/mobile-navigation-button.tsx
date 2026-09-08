@@ -1,7 +1,6 @@
-import { Menu } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useMobileNavigationButtonController } from "@/utils/components/app/use-mobile-navigation-button-controller";
+import { Menu } from "lucide-react";
 
 export function MobileNavigationButton() {
   const { openMobileNavigation } = useMobileNavigationButtonController();

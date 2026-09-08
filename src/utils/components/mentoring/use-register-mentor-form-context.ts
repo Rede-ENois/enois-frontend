@@ -6,7 +6,9 @@ export function useRegisterMentorFormContext() {
   const context = useContext(RegisterMentorFormContext);
 
   if (!context) {
-    throw new Error("Register mentor form components must be rendered inside RegisterMentorDialogProvider");
+    throw new Error(
+      "Register mentor form components must be rendered inside RegisterMentorDialogProvider",
+    );
   }
 
   return context;

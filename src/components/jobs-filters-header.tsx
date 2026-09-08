@@ -1,7 +1,6 @@
-import { X } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
+import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

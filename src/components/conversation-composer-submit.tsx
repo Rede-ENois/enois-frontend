@@ -1,6 +1,5 @@
-import { Send } from "lucide-react";
-
 import { useConversationComposerContext } from "@/utils/components/messages/use-conversation-composer-context";
+import { Send } from "lucide-react";
 
 export function ConversationComposerSubmit() {
   const { submitDisabled } = useConversationComposerContext();

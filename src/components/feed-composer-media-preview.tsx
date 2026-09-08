@@ -1,7 +1,6 @@
-import { X } from "lucide-react";
-
 import { createFeedComposerMediaPreviewViewModel } from "@/utils/components/feed/create-feed-composer-media-preview-view-model";
 import { useFeedComposerContext } from "@/utils/components/feed/use-feed-composer-context";
+import { X } from "lucide-react";
 
 export function FeedComposerMediaPreview() {
   const { media, removeMedia } = useFeedComposerContext();

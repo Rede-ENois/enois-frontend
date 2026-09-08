@@ -1,7 +1,6 @@
-import { ThumbsUp } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useProfileRecommendationSectionController } from "@/utils/components/profile/use-profile-recommendation-section-controller";
+import { ThumbsUp } from "lucide-react";
 
 import { ProfileRecommendationDialog } from "@/components/profile-recommendation-dialog";
 import { ProfileSection } from "@/components/profile-section";

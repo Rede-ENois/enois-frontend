@@ -6,7 +6,9 @@ export function useCreateEventDialogContext() {
   const context = useContext(CreateEventDialogContext);
 
   if (!context) {
-    throw new Error("Create event dialog components must be rendered inside CreateEventDialogProvider");
+    throw new Error(
+      "Create event dialog components must be rendered inside CreateEventDialogProvider",
+    );
   }
 
   return context;

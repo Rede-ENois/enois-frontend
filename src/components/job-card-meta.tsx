@@ -1,7 +1,6 @@
-import { Sparkles } from "lucide-react";
-
 import { createJobCardAttributes } from "@/utils/components/jobs/create-job-card-attributes";
 import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
+import { Sparkles } from "lucide-react";
 
 export function JobCardMeta() {
   const { job, matchLabel, showSalary } = useJobCardContext();

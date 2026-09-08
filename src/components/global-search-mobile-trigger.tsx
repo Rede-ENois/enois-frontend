@@ -1,7 +1,6 @@
-import { Search } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useGlobalSearchContext } from "@/utils/components/search/use-global-search-context";
+import { Search } from "lucide-react";
 
 export function GlobalSearchMobileTrigger() {
   const { openMobileSearch } = useGlobalSearchContext();

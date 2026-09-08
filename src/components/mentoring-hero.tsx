@@ -1,7 +1,6 @@
-import { Sparkles } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useMentoringPageContext } from "@/utils/components/mentoring/use-mentoring-page-context";
+import { Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

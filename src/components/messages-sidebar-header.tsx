@@ -1,7 +1,6 @@
-import { Search } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useMessagesSidebarHeaderController } from "@/utils/components/messages/use-messages-sidebar-header-controller";
+import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

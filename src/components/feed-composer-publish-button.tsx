@@ -1,6 +1,5 @@
-import { Loader2 } from "lucide-react";
-
 import { useFeedComposerContext } from "@/utils/components/feed/use-feed-composer-context";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

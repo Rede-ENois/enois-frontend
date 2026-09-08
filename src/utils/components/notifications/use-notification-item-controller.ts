@@ -1,5 +1,4 @@
 import type { Notification } from "@/types/application/notification/notification";
-
 import { createNotificationItemViewModel } from "@/utils/components/notifications/create-notification-item-view-model";
 import { useNotificationItemActions } from "@/utils/components/notifications/use-notification-item-actions";
 

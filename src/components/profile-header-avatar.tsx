@@ -15,7 +15,6 @@ export function ProfileHeaderAvatar() {
         alt={user.name}
         className="h-24 w-24 ring-4 ring-surface-card sm:h-28 sm:w-28"
       />
-
       <ProfileHeaderMediaEditControls
         overlay={avatarOverlay}
         input={avatarInput}

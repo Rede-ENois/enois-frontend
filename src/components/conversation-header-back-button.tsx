@@ -1,6 +1,5 @@
-import { ArrowLeft } from "lucide-react";
-
 import { useConversationHeaderBackButtonController } from "@/utils/components/messages/use-conversation-header-back-button-controller";
+import { ArrowLeft } from "lucide-react";
 
 export function ConversationHeaderBackButton() {
   const { clearConversation } = useConversationHeaderBackButtonController();

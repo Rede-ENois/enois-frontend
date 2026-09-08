@@ -6,7 +6,9 @@ export function useNotificationItemContext() {
   const context = useContext(NotificationItemContext);
 
   if (!context) {
-    throw new Error("Notification item components must be rendered inside NotificationItemProvider");
+    throw new Error(
+      "Notification item components must be rendered inside NotificationItemProvider",
+    );
   }
 
   return context;

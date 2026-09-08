@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
 
 import { APP_BRAND_VARIANTS } from "@/constants/app-brand-variants";
 import { texts } from "@/texts";
 import type { AppBrandProps } from "@/types/components/app-brand-props";
 import { useAppBrandController } from "@/utils/components/app/use-app-brand-controller";
+import { Sparkles } from "lucide-react";
 
 export function AppBrand({ variant = "app" }: AppBrandProps) {
   const config = APP_BRAND_VARIANTS[variant];

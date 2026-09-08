@@ -1,6 +1,5 @@
-import { Camera } from "lucide-react";
-
 import type { ProfileHeaderMediaEditControlsProps } from "@/types/components/profile/profile-header-media-edit-controls-props";
+import { Camera } from "lucide-react";
 
 export function ProfileHeaderMediaEditControls({
   overlay,

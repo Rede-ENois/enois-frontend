@@ -1,8 +1,7 @@
-import { Target } from "lucide-react";
-
 import { texts } from "@/texts";
 import { createProfileGoalsSectionViewModel } from "@/utils/components/profile/create-profile-goals-section-view-model";
 import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
+import { Target } from "lucide-react";
 
 import { ProfileSection } from "@/components/profile-section";
 

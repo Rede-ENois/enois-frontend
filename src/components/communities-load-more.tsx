@@ -1,7 +1,6 @@
-import { Loader2 } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useCommunitiesPageContext } from "@/utils/components/communities/use-communities-page-context";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

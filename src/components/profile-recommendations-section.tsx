@@ -1,7 +1,6 @@
-import { Star } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useProfileRecommendationsController } from "@/utils/components/profile/use-profile-recommendations-controller";
+import { Star } from "lucide-react";
 
 import { ProfileRecommendationItem } from "@/components/profile-recommendation-item";
 import { ProfileSection } from "@/components/profile-section";

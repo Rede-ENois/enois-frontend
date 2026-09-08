@@ -1,6 +1,5 @@
-import { Settings } from "lucide-react";
-
 import { texts } from "@/texts";
+import { Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

@@ -10,10 +10,7 @@ export function NotificationItem() {
 
   return (
     <div
-      className={cn(
-        "border-b border-border-soft px-4 py-3 last:border-b-0",
-        backgroundClassName,
-      )}
+      className={cn("border-b border-border-soft px-4 py-3 last:border-b-0", backgroundClassName)}
     >
       <div className="flex items-start gap-3">
         <NotificationItemActor />

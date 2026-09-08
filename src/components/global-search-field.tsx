@@ -1,13 +1,11 @@
-import { Loader2, Search } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useGlobalSearchContext } from "@/utils/components/search/use-global-search-context";
+import { Loader2, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
 export function GlobalSearchField() {
-  const { inputRef, query, isFetching, handleQueryChange, handleFocus } =
-    useGlobalSearchContext();
+  const { inputRef, query, isFetching, handleQueryChange, handleFocus } = useGlobalSearchContext();
 
   return (
     <>

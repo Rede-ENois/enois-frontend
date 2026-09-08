@@ -1,6 +1,5 @@
-import { MapPin } from "lucide-react";
-
 import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
+import { MapPin } from "lucide-react";
 
 import { Avatar } from "@/components/ui/avatar";
 

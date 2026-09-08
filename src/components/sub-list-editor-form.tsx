@@ -4,11 +4,7 @@ import { SubListCurrentlyHereToggle } from "@/components/sub-list-currently-here
 import { SubListEditorActions } from "@/components/sub-list-editor-actions";
 import { SubListEditorField } from "@/components/sub-list-editor-field";
 
-export function SubListEditorForm({
-  fields,
-  currentlyHere,
-  actions,
-}: SubListEditorFormProps) {
+export function SubListEditorForm({ fields, currentlyHere, actions }: SubListEditorFormProps) {
   return (
     <div className="space-y-3 rounded-xl border border-border-soft p-4">
       {fields.map((field) => (

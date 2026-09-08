@@ -1,8 +1,7 @@
-import { Send } from "lucide-react";
-
 import { texts } from "@/texts";
 import { usePostCommentComposerController } from "@/utils/components/post/use-post-comment-composer-controller";
 import { usePostCommentsContext } from "@/utils/components/post/use-post-comments-context";
+import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

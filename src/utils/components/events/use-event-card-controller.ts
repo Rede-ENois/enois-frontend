@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Video } from "lucide-react";
 
 import { texts } from "@/texts";
 import type { Event } from "@/types/application/event/event";
+import { MapPin, Video } from "lucide-react";
 
 import { attendEvent } from "@/lib/api/events/attend-event";
 import { resolveCdnUrl } from "@/lib/api/media";

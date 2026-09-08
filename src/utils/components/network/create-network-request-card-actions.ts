@@ -1,8 +1,7 @@
-import { Check, X } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { ConnectionRequest } from "@/types/application/network/connection-request";
 import type { NetworkRequestActions } from "@/types/components/network/network-request-actions";
+import { Check, X } from "lucide-react";
 
 export function createNetworkRequestCardActions(
   request: ConnectionRequest,

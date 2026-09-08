@@ -1,8 +1,7 @@
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { texts } from "@/texts";
 import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 import { useProfileRecommendationDialogController } from "@/utils/components/profile/use-profile-recommendation-dialog-controller";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";

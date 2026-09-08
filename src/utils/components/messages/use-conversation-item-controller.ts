@@ -4,9 +4,7 @@ import { useConversationCounterpart } from "@/utils/components/messages/use-conv
 import { useConversationReadAction } from "@/utils/components/messages/use-conversation-read-action";
 import { formatRelativeTime } from "@/utils/format-relative-time";
 
-export function useConversationItemController(
-  conversation: ConversationItemProps["conversation"],
-) {
+export function useConversationItemController(conversation: ConversationItemProps["conversation"]) {
   const counterpart = useConversationCounterpart(conversation);
   const activeConversationId = useMessagesStore((state) => state.activeConversationId);
   const selectConversation = useMessagesStore((state) => state.selectConversation);

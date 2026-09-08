@@ -1,6 +1,5 @@
-import { Loader2 } from "lucide-react";
-
 import { useFeedPageContext } from "@/utils/components/feed/use-feed-page-context";
+import { Loader2 } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
 import { FeedComposerProvider } from "@/components/feed-composer-provider";
@@ -24,8 +23,7 @@ export function Home() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             )}
-            {showPosts &&
-              posts.map((post) => <PostCardProvider key={post.id} post={post} />)}
+            {showPosts && posts.map((post) => <PostCardProvider key={post.id} post={post} />)}
           </div>
         </div>
 

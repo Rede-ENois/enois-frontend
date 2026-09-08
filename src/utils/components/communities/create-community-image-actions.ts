@@ -1,7 +1,6 @@
-import { Camera } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { CommunityImageFieldProps } from "@/types/components/communities/community-image-field-props";
+import { Camera } from "lucide-react";
 
 export function createCommunityImageActions({
   inputRef,

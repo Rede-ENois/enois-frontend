@@ -1,7 +1,6 @@
-import { Briefcase } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
+import { Briefcase } from "lucide-react";
 
 export function useJobsFiltersInputsController() {
   const { query, skills, changeQuery, changeSkills } = useJobsPageContext();

@@ -1,7 +1,6 @@
-import { Loader2 } from "lucide-react";
-
 import { texts } from "@/texts";
 import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
+import { Loader2 } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
 import { JobCardProvider } from "@/components/job-card-provider";

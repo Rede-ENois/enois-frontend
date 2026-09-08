@@ -2,15 +2,8 @@ import { texts } from "@/texts";
 import { useNotificationItemContext } from "@/utils/components/notifications/use-notification-item-context";
 
 export function NotificationItemContent() {
-  const {
-    notification,
-    title,
-    timeLabel,
-    showUnread,
-    showMarkAsRead,
-    markAsRead,
-    cta,
-  } = useNotificationItemContext();
+  const { notification, title, timeLabel, showUnread, showMarkAsRead, markAsRead, cta } =
+    useNotificationItemContext();
 
   return (
     <div className="min-w-0 flex-1">

@@ -18,7 +18,10 @@ export function NetworkRequests() {
 
       <div className="space-y-3">
         {controller.hasIncomingRequests && (
-          <NetworkRequestSection label={texts.network.received} requests={controller.incomingRequests} />
+          <NetworkRequestSection
+            label={texts.network.received}
+            requests={controller.incomingRequests}
+          />
         )}
         {controller.hasOutgoingRequests && (
           <NetworkRequestSection

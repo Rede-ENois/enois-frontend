@@ -6,7 +6,9 @@ export function useConversationHeaderContext() {
   const context = useContext(ConversationHeaderContext);
 
   if (!context) {
-    throw new Error("Conversation header components must be rendered inside ConversationHeaderProvider");
+    throw new Error(
+      "Conversation header components must be rendered inside ConversationHeaderProvider",
+    );
   }
 
   return context;

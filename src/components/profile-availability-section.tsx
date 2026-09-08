@@ -1,8 +1,7 @@
-import { Clock } from "lucide-react";
-
 import { texts } from "@/texts";
 import { createProfileAvailabilitySectionViewModel } from "@/utils/components/profile/create-profile-availability-section-view-model";
 import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
+import { Clock } from "lucide-react";
 
 import { ProfileSection } from "@/components/profile-section";
 

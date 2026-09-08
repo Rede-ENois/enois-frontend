@@ -12,10 +12,7 @@ export function useConversationMessagesController() {
   const currentUserId = getCurrentUserId();
   const conversation = useConversationSelection(conversationId);
   const messages = useConversationMessages(conversation?.id);
-  const { otherParticipantId, otherUser } = useConversationParticipant(
-    conversation,
-    currentUserId,
-  );
+  const { otherParticipantId, otherUser } = useConversationParticipant(conversation, currentUserId);
 
   return {
     messagesEndRef: useConversationScrollAnchor(messages.length),
