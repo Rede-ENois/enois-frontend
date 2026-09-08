@@ -27,7 +27,11 @@ export function RegisterMentorForm({ onCreated }: RegisterMentorFormProps) {
         </FormField>
       ))}
 
-      <Button className="w-full rounded-full" disabled={controller.saveDisabled} onClick={controller.save}>
+      <Button
+        className="w-full rounded-full"
+        disabled={controller.saveDisabled}
+        onClick={controller.save}
+      >
         {controller.saving ? texts.common.saving : texts.common.save}
       </Button>
     </div>

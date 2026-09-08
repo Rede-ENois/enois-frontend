@@ -7,13 +7,7 @@ import { JobsFiltersInputs } from "@/components/jobs-filters-inputs";
 
 export function JobsFilters(props: JobsFiltersProps) {
   const { query, skills, onQueryChange, onSkillsChange, onClear } = props;
-  const { hasFilters, levelOptions, locationOptions, typeOptions } =
-    createJobsFiltersViewModel(props);
-  const groups = [
-    { label: "level" as const, options: levelOptions },
-    { label: "location" as const, options: locationOptions },
-    { label: "type" as const, options: typeOptions },
-  ];
+  const { hasFilters, groups } = createJobsFiltersViewModel(props);
 
   return (
     <div className="surface-card p-4 sm:p-6">

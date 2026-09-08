@@ -11,25 +11,31 @@ export function createJobsFiltersViewModel({
   onLocationChange,
   onTypeChange,
 }: JobsFiltersProps) {
+  const levelOptions = JOB_FILTERS.levels.map((value) => ({
+    value,
+    label: value.charAt(0) + value.slice(1).toLowerCase(),
+    selected: level === value,
+    onSelect: () => onLevelChange(level === value ? "" : value),
+  }));
+  const locationOptions = JOB_FILTERS.locations.map((value, index) => ({
+    value,
+    label: texts.jobs.filters.locations[index],
+    selected: location === value,
+    onSelect: () => onLocationChange(location === value ? "" : value),
+  }));
+  const typeOptions = JOB_FILTERS.types.map((value) => ({
+    value,
+    label: value,
+    selected: type === value,
+    onSelect: () => onTypeChange(type === value ? "" : value),
+  }));
+
   return {
     hasFilters: Boolean(level || location || type || skills),
-    levelOptions: JOB_FILTERS.levels.map((value) => ({
-      value,
-      label: value.charAt(0) + value.slice(1).toLowerCase(),
-      selected: level === value,
-      onSelect: () => onLevelChange(level === value ? "" : value),
-    })),
-    locationOptions: JOB_FILTERS.locations.map((value, index) => ({
-      value,
-      label: texts.jobs.filters.locations[index],
-      selected: location === value,
-      onSelect: () => onLocationChange(location === value ? "" : value),
-    })),
-    typeOptions: JOB_FILTERS.types.map((value) => ({
-      value,
-      label: value,
-      selected: type === value,
-      onSelect: () => onTypeChange(type === value ? "" : value),
-    })),
+    groups: [
+      { label: "level" as const, options: levelOptions },
+      { label: "location" as const, options: locationOptions },
+      { label: "type" as const, options: typeOptions },
+    ],
   };
 }
