@@ -1,15 +1,14 @@
 import { CREATE_COMMUNITY_FIELDS } from "@/constants/create-community-fields";
-import type { CreateCommunityFormProps } from "@/types/components/communities/create-community-form-props";
+import { useCreateCommunityFormContext } from "@/utils/components/communities/use-create-community-form-context";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { FormField } from "@/components/form-field";
 
-export function CreateCommunityFields({
-  form,
-  setField,
-}: Pick<CreateCommunityFormProps, "form" | "setField">) {
+export function CreateCommunityFields() {
+  const { form, setField } = useCreateCommunityFormContext();
+
   return (
     <>
       {CREATE_COMMUNITY_FIELDS.map((field) => (

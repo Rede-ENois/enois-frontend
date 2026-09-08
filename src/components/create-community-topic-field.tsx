@@ -1,13 +1,11 @@
 import { texts } from "@/texts";
-import type { CreateCommunityFormProps } from "@/types/components/communities/create-community-form-props";
+import { useCreateCommunityFormContext } from "@/utils/components/communities/use-create-community-form-context";
 
 import { FormField } from "@/components/form-field";
 
-export function CreateCommunityTopicField({
-  form,
-  setTopic,
-  topicOptions,
-}: Pick<CreateCommunityFormProps, "form" | "setTopic" | "topicOptions">) {
+export function CreateCommunityTopicField() {
+  const { form, setTopic, topicOptions } = useCreateCommunityFormContext();
+
   return (
     <FormField
       label={texts.communities.create.topic}

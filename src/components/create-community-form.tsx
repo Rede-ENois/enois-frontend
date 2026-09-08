@@ -7,23 +7,15 @@ import { CreateCommunityFields } from "@/components/create-community-fields";
 import { CreateCommunityTopicField } from "@/components/create-community-topic-field";
 
 export function CreateCommunityForm() {
-  const controller = useCreateCommunityFormContext();
+  const { createDisabled, createCommunity, createPending } = useCreateCommunityFormContext();
 
   return (
     <div className="space-y-4">
-      <CreateCommunityFields form={controller.form} setField={controller.setField} />
-      <CreateCommunityTopicField
-        form={controller.form}
-        setTopic={controller.setTopic}
-        topicOptions={controller.topicOptions}
-      />
+      <CreateCommunityFields />
+      <CreateCommunityTopicField />
 
-      <Button
-        className="w-full rounded-full"
-        disabled={controller.createDisabled}
-        onClick={controller.createCommunity}
-      >
-        {controller.createPending ? texts.common.creating : texts.common.create}
+      <Button className="w-full rounded-full" disabled={createDisabled} onClick={createCommunity}>
+        {createPending ? texts.common.creating : texts.common.create}
       </Button>
     </div>
   );

@@ -1,14 +1,13 @@
 import { CREATE_EVENT_FIELD_ROWS } from "@/constants/create-event-field-rows";
-import type { CreateEventFormProps } from "@/types/components/events/create-event-form-props";
+import { useCreateEventFormContext } from "@/utils/components/events/use-create-event-form-context";
 
 import { Input } from "@/components/ui/input";
 
 import { FormField } from "@/components/form-field";
 
-export function CreateEventFormFields({
-  form,
-  setField,
-}: Pick<CreateEventFormProps, "form" | "setField">) {
+export function CreateEventFormFields() {
+  const { form, setField } = useCreateEventFormContext();
+
   const renderField = (field: (typeof CREATE_EVENT_FIELD_ROWS)[number][number]) => (
     <FormField
       key={field.key}

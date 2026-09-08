@@ -7,23 +7,15 @@ import { CreateEventFormFields } from "@/components/create-event-form-fields";
 import { CreateEventFormatField } from "@/components/create-event-format-field";
 
 export function CreateEventForm() {
-  const controller = useCreateEventFormContext();
+  const { createDisabled, createEvent, createPending } = useCreateEventFormContext();
 
   return (
     <div className="space-y-4 pt-2">
-      <CreateEventFormFields form={controller.form} setField={controller.setField} />
-      <CreateEventFormatField
-        form={controller.form}
-        setFormat={controller.setFormat}
-        formatOptions={controller.formatOptions}
-      />
+      <CreateEventFormFields />
+      <CreateEventFormatField />
 
-      <Button
-        className="w-full rounded-full"
-        disabled={controller.createDisabled}
-        onClick={controller.createEvent}
-      >
-        {controller.createPending ? texts.common.creating : texts.events.createEvent}
+      <Button className="w-full rounded-full" disabled={createDisabled} onClick={createEvent}>
+        {createPending ? texts.common.creating : texts.events.createEvent}
       </Button>
     </div>
   );

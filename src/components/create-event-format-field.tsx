@@ -1,13 +1,11 @@
 import { texts } from "@/texts";
-import type { CreateEventFormProps } from "@/types/components/events/create-event-form-props";
+import { useCreateEventFormContext } from "@/utils/components/events/use-create-event-form-context";
 
 import { FormField } from "@/components/form-field";
 
-export function CreateEventFormatField({
-  form,
-  setFormat,
-  formatOptions,
-}: Pick<CreateEventFormProps, "form" | "setFormat" | "formatOptions">) {
+export function CreateEventFormatField() {
+  const { form, setFormat, formatOptions } = useCreateEventFormContext();
+
   return (
     <FormField
       label={texts.events.form.format}
