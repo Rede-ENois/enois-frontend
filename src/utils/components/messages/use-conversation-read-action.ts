@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { markConversationAsRead } from "@/lib/api/messages/mark-conversation-as-read";
+import { markConversationAsRead } from "@/lib/messages/api/mark-conversation-as-read";
 
 export function useConversationReadAction() {
   const queryClient = useQueryClient();

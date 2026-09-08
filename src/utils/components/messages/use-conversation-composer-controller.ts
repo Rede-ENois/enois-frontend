@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useMessagesStore } from "@/stores/messages.store";
 
-import { sendMessage } from "@/lib/api/messages/send-message";
+import { sendMessage } from "@/lib/messages/api/send-message";
 
 export function useConversationComposerController() {
   const queryClient = useQueryClient();

@@ -1,4 +1,4 @@
-import { useConversations } from "@/lib/use-conversations";
+import { useConversations } from "@/lib/messages/use-conversations";
 
 export function useMessagesSidebarListController() {
   const conversations = useConversations();

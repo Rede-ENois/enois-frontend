@@ -3,9 +3,9 @@ import { createConversationMessageItems } from "@/utils/components/messages/crea
 import { useConversationScrollAnchor } from "@/utils/components/messages/use-conversation-scroll-anchor";
 
 import { getCurrentUserId } from "@/lib/get-current-user-id";
-import { useConversationMessages } from "@/lib/use-conversation-messages";
-import { useConversationParticipant } from "@/lib/use-conversation-participant";
-import { useConversationSelection } from "@/lib/use-conversation-selection";
+import { useConversationMessages } from "@/lib/messages/use-conversation-messages";
+import { useConversationParticipant } from "@/lib/messages/use-conversation-participant";
+import { useConversationSelection } from "@/lib/messages/use-conversation-selection";
 
 export function useConversationMessagesController() {
   const conversationId = useMessagesStore((state) => state.activeConversationId);
