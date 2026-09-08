@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 
-import type { FeedProfileSectionProps } from "@/types/components/feed/feed-profile-section-props";
+import { useFeedProfileSummaryContext } from "@/utils/components/feed/use-feed-profile-summary-context";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function FeedProfileIdentity({ profile }: FeedProfileSectionProps) {
+export function FeedProfileIdentity() {
+  const { profile } = useFeedProfileSummaryContext();
+
   return (
     <>
       <UserAvatar

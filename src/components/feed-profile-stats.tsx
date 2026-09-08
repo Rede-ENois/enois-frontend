@@ -1,7 +1,9 @@
 import { FEED_PROFILE_STATS } from "@/constants/feed-profile-stats";
-import type { FeedProfileSectionProps } from "@/types/components/feed/feed-profile-section-props";
+import { useFeedProfileSummaryContext } from "@/utils/components/feed/use-feed-profile-summary-context";
 
-export function FeedProfileStats({ profile }: FeedProfileSectionProps) {
+export function FeedProfileStats() {
+  const { profile } = useFeedProfileSummaryContext();
+
   return (
     <div className="mt-3 grid grid-cols-2 gap-1 border-t border-border-soft pt-3 text-[12px]">
       {FEED_PROFILE_STATS.map((stat) => (
