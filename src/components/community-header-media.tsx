@@ -1,6 +1,8 @@
-import type { CommunityHeaderMediaProps } from "@/types/components/communities/community-header-media-props";
+import { useCommunityHeaderContext } from "@/utils/components/communities/use-community-header-context";
 
-export function CommunityHeaderMedia({ coverUrl }: CommunityHeaderMediaProps) {
+export function CommunityHeaderMedia() {
+  const { coverUrl } = useCommunityHeaderContext();
+
   return coverUrl ? (
     <img src={coverUrl} alt="" className="h-48 w-full object-cover" />
   ) : (

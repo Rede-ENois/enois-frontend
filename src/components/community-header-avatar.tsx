@@ -1,6 +1,8 @@
-import type { CommunityHeaderAvatarProps } from "@/types/components/communities/community-header-avatar-props";
+import { useCommunityHeaderContext } from "@/utils/components/communities/use-community-header-context";
 
-export function CommunityHeaderAvatar({ avatarUrl }: CommunityHeaderAvatarProps) {
+export function CommunityHeaderAvatar() {
+  const { avatarUrl } = useCommunityHeaderContext();
+
   if (!avatarUrl) return null;
 
   return (

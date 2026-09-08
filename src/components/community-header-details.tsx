@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { useCommunityHeaderController } from "@/utils/components/communities/use-community-header-controller";
+import { useCommunityHeaderContext } from "@/utils/components/communities/use-community-header-context";
 import { Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 
 export function CommunityHeaderDetails() {
-  const { community, primaryAdmin } = useCommunityHeaderController();
+  const { community, primaryAdmin } = useCommunityHeaderContext();
 
   return (
     <div className="min-w-0">
