@@ -1,6 +1,7 @@
 import type { PostCardHeaderProps } from "@/types/components/post/post-card-header-props";
 
 import { AuthorInfo } from "@/components/post-author-info";
+import { PostTypeBadge } from "@/components/post-type-badge";
 
 export function PostCardHeader({ post, meta }: PostCardHeaderProps) {
   return (
@@ -12,12 +13,7 @@ export function PostCardHeader({ post, meta }: PostCardHeaderProps) {
         createdAt={post.createdAt}
         fallbackClassName={meta.classAvatar}
       />
-
-      <span
-        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${meta.className}`}
-      >
-        {meta.label}
-      </span>
+      <PostTypeBadge meta={meta} />
     </header>
   );
 }
