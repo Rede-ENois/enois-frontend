@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useConversationComposerContext } from "@/utils/components/messages/use-conversation-composer-context";
+import { useConversationComposerContext } from "@/utils/messages/use-conversation-composer-context";
 
 import { Input } from "@/components/ui/input";
 

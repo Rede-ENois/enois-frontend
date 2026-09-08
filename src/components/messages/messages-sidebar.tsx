@@ -1,4 +1,4 @@
-import { useMessagesSidebarController } from "@/utils/components/messages/use-messages-sidebar-controller";
+import { useMessagesSidebarController } from "@/utils/messages/use-messages-sidebar-controller";
 
 import { MessagesSidebarHeader } from "@/components/messages/messages-sidebar-header";
 import { MessagesSidebarList } from "@/components/messages/messages-sidebar-list";

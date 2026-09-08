@@ -1,5 +1,5 @@
 import { useMessagesStore } from "@/stores/messages.store";
-import { useConversationSearchResults } from "@/utils/components/messages/use-conversation-search-results";
+import { useConversationSearchResults } from "@/utils/messages/use-conversation-search-results";
 
 export function useNewConversationSearchResultsController() {
   const query = useMessagesStore((state) => state.newConversationSearchQuery);

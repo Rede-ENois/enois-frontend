@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import { useConversationHeaderContext } from "@/utils/components/messages/use-conversation-header-context";
+import { useConversationHeaderContext } from "@/utils/messages/use-conversation-header-context";
 
 import { UserAvatar } from "@/components/user-avatar";
 

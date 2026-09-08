@@ -1,7 +1,7 @@
 import { useMessagesStore } from "@/stores/messages.store";
 import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
-import { useConversationCounterpart } from "@/utils/components/messages/use-conversation-counterpart";
-import { useConversationReadAction } from "@/utils/components/messages/use-conversation-read-action";
+import { useConversationCounterpart } from "@/utils/messages/use-conversation-counterpart";
+import { useConversationReadAction } from "@/utils/messages/use-conversation-read-action";
 import { formatRelativeTime } from "@/utils/format-relative-time";
 
 export function useConversationItemController(conversation: ConversationItemProps["conversation"]) {

@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { ConversationMessagesContext } from "@/utils/components/messages/conversation-messages-context";
+import { ConversationMessagesContext } from "@/utils/messages/conversation-messages-context";
 
 export function useConversationMessagesContext() {
   const context = useContext(ConversationMessagesContext);

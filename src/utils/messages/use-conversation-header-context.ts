@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { ConversationHeaderContext } from "@/utils/components/messages/conversation-header-context";
+import { ConversationHeaderContext } from "@/utils/messages/conversation-header-context";
 
 export function useConversationHeaderContext() {
   const context = useContext(ConversationHeaderContext);

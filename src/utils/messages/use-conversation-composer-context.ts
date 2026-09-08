@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { ConversationComposerContext } from "@/utils/components/messages/conversation-composer-context";
+import { ConversationComposerContext } from "@/utils/messages/conversation-composer-context";
 
 export function useConversationComposerContext() {
   const context = useContext(ConversationComposerContext);

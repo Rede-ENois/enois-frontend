@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useNewConversationSearchInputController } from "@/utils/components/messages/use-new-conversation-search-input-controller";
+import { useNewConversationSearchInputController } from "@/utils/messages/use-new-conversation-search-input-controller";
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";

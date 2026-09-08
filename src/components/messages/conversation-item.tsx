@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
-import { useConversationItemController } from "@/utils/components/messages/use-conversation-item-controller";
+import { useConversationItemController } from "@/utils/messages/use-conversation-item-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
 

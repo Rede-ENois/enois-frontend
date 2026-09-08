@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useNewConversationSearchResultsController } from "@/utils/components/messages/use-new-conversation-search-results-controller";
+import { useNewConversationSearchResultsController } from "@/utils/messages/use-new-conversation-search-results-controller";
 
 import { NewConversationSearchResultItem } from "@/components/messages/new-conversation-search-result-item";
 

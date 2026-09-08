@@ -1,4 +1,4 @@
-import { useActiveConversationController } from "@/utils/components/messages/use-active-conversation-controller";
+import { useActiveConversationController } from "@/utils/messages/use-active-conversation-controller";
 
 import { ActiveConversationEmptyState } from "@/components/messages/active-conversation-empty-state";
 import { ConversationComposerProvider } from "@/components/messages/conversation-composer-provider";

@@ -1,4 +1,4 @@
-import { useConversationHeaderBackButtonController } from "@/utils/components/messages/use-conversation-header-back-button-controller";
+import { useConversationHeaderBackButtonController } from "@/utils/messages/use-conversation-header-back-button-controller";
 import { ArrowLeft } from "lucide-react";
 
 export function ConversationHeaderBackButton() {

@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useConversationMessagesContext } from "@/utils/components/messages/use-conversation-messages-context";
+import { useConversationMessagesContext } from "@/utils/messages/use-conversation-messages-context";
 
 import { ConversationMessageItem } from "@/components/messages/conversation-message-item";
 

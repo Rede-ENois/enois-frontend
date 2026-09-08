@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useMessagesSidebarListController } from "@/utils/components/messages/use-messages-sidebar-list-controller";
+import { useMessagesSidebarListController } from "@/utils/messages/use-messages-sidebar-list-controller";
 
 import { ConversationItem } from "@/components/messages/conversation-item";
 

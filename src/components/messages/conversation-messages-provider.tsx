@@ -1,5 +1,5 @@
-import { ConversationMessagesContext } from "@/utils/components/messages/conversation-messages-context";
-import { useConversationMessagesController } from "@/utils/components/messages/use-conversation-messages-controller";
+import { ConversationMessagesContext } from "@/utils/messages/conversation-messages-context";
+import { useConversationMessagesController } from "@/utils/messages/use-conversation-messages-controller";
 
 import { ConversationMessages } from "@/components/messages/conversation-messages";
 

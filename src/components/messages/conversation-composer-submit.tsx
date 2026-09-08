@@ -1,4 +1,4 @@
-import { useConversationComposerContext } from "@/utils/components/messages/use-conversation-composer-context";
+import { useConversationComposerContext } from "@/utils/messages/use-conversation-composer-context";
 import { Send } from "lucide-react";
 
 export function ConversationComposerSubmit() {
