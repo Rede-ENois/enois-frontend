@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
-import type { PostIdProps } from "@/types/components/post/post-id-props";
-import { useReportDialogController } from "@/utils/components/post/use-report-dialog-controller";
+import { useReportDialogContext } from "@/utils/components/post/use-report-dialog-context";
 import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -9,24 +8,17 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 
 import { ReportDialogBody } from "@/components/report-dialog-body";
 
-export function ReportDialog({ postId }: PostIdProps) {
-  const controller = useReportDialogController(postId);
+export function ReportDialog() {
+  const { open, setOpen } = useReportDialogContext();
 
   return (
-    <Dialog open={controller.open} onOpenChange={controller.setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-light">{texts.posts.report.title}</DialogTitle>
         </DialogHeader>
 
-        <ReportDialogBody
-          reason={controller.reason}
-          reasonOptions={controller.reasonOptions}
-          setReason={controller.setReason}
-          description={controller.description}
-          setDescription={controller.setDescription}
-          submit={controller.submit}
-        />
+        <ReportDialogBody />
       </DialogContent>
     </Dialog>
   );

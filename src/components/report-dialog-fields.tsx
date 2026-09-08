@@ -1,16 +1,11 @@
 import { texts } from "@/texts";
-import type { ReportDialogFieldsProps } from "@/types/components/post/report-dialog-fields-props";
+import { useReportDialogContext } from "@/utils/components/post/use-report-dialog-context";
 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export function ReportDialogFields({
-  reason,
-  reasonOptions,
-  setReason,
-  description,
-  setDescription,
-}: ReportDialogFieldsProps) {
+export function ReportDialogFields() {
+  const { reason, reasonOptions, setReason, description, setDescription } = useReportDialogContext();
   const fields = [
     {
       key: "reason",
