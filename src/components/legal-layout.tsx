@@ -2,11 +2,14 @@ import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
+import { getLegalFooterCopyright } from "@/utils/components/legal/get-legal-footer-copyright";
 
 import { AppBrand } from "@/components/app-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function LegalLayout({ children }: WithRequiredChildren) {
+  const copyright = getLegalFooterCopyright();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-lg">
@@ -22,7 +25,7 @@ export function LegalLayout({ children }: WithRequiredChildren) {
 
       <footer className="border-t border-border py-6">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 text-xs text-muted-foreground sm:px-6">
-          <p>{texts.legal.footer.copyright(new Date().getFullYear())}</p>
+          <p>{copyright}</p>
 
           <nav className="flex items-center gap-4">
             <Link to="/termos" className="transition-colors hover:text-foreground">
