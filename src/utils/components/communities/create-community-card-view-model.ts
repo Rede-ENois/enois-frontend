@@ -13,6 +13,7 @@ export function createCommunityCardViewModel(
   return {
     coverUrl: community.cover ? resolveCdnUrl(community.cover) : null,
     avatarUrl: community.avatar ? resolveCdnUrl(community.avatar) : null,
+    membersLabel: texts.communities.members(community.members ?? 0),
     membershipAction: {
       variant: community.joined ? ("secondary" as const) : ("default" as const),
       label: community.joined ? texts.communities.participating : texts.communities.enter,

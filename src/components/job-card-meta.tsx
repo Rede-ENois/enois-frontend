@@ -1,10 +1,11 @@
 import { Sparkles } from "lucide-react";
 
-import { JOB_CARD_ATTRIBUTES } from "@/constants/job-card-attributes";
+import { createJobCardAttributes } from "@/utils/components/jobs/create-job-card-attributes";
 import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
 
 export function JobCardMeta() {
   const { job, matchLabel, showSalary } = useJobCardContext();
+  const attributes = createJobCardAttributes(job);
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
@@ -16,12 +17,12 @@ export function JobCardMeta() {
         </span>
       )}
 
-      {JOB_CARD_ATTRIBUTES.map((attribute) => (
+      {attributes.map((attribute) => (
         <span
           key={attribute.key}
           className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground"
         >
-          {job[attribute.field]}
+          {attribute.value}
         </span>
       ))}
 
