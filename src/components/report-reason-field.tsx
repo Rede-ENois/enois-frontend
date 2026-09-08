@@ -4,7 +4,7 @@ import { useReportDialogContext } from "@/utils/components/post/use-report-dialo
 import { Label } from "@/components/ui/label";
 
 export function ReportReasonField() {
-  const { reason, reasonOptions, setReason } = useReportDialogContext();
+  const { reason, reasonOptions, handleReasonChange } = useReportDialogContext();
 
   return (
     <div className="space-y-1.5">
@@ -12,7 +12,7 @@ export function ReportReasonField() {
 
       <select
         value={reason}
-        onChange={(event) => setReason(event.target.value)}
+        onChange={handleReasonChange}
         className="flex h-10 w-full rounded-md border border-border-soft bg-background px-3 py-2 text-[13px] font-light text-text-strong border-transparent bg-muted"
       >
         {reasonOptions.map((option) => (

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ReportDescriptionField() {
-  const { description, setDescription } = useReportDialogContext();
+  const { description, handleDescriptionChange } = useReportDialogContext();
 
   return (
     <div className="space-y-1.5">
@@ -15,7 +15,7 @@ export function ReportDescriptionField() {
 
       <Textarea
         value={description}
-        onChange={(event) => setDescription(event.target.value)}
+        onChange={handleDescriptionChange}
         rows={3}
         className="border-border-soft bg-surface-1 text-[13px] font-light h-10 border-transparent bg-muted"
       />
