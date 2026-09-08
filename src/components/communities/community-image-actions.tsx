@@ -1,5 +1,5 @@
-import type { CommunityImageFieldProps } from "@/types/components/communities/community-image-field-props";
-import { createCommunityImageActions } from "@/utils/components/communities/create-community-image-actions";
+import type { CommunityImageFieldProps } from "@/types/communities/community-image-field-props";
+import { createCommunityImageActions } from "@/utils/communities/create-community-image-actions";
 
 import { Button } from "@/components/ui/button";
 

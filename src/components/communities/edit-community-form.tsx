@@ -1,13 +1,13 @@
 import { EDIT_COMMUNITY_FIELDS } from "@/constants/edit-community-fields";
 import { texts } from "@/texts";
-import { useEditCommunityFormController } from "@/utils/components/communities/use-edit-community-form-controller";
+import { useEditCommunityFormController } from "@/utils/communities/use-edit-community-form-controller";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { CommunityImageField } from "@/components/community-image-field";
+import { CommunityImageField } from "@/components/communities/community-image-field";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
 
 export function EditCommunityForm() {

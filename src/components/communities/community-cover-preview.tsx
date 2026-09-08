@@ -1,6 +1,6 @@
-import type { CommunityImagePreviewProps } from "@/types/components/communities/community-image-preview-props";
+import type { CommunityImagePreviewProps } from "@/types/communities/community-image-preview-props";
 
-import { CommunityImageActions } from "@/components/community-image-actions";
+import { CommunityImageActions } from "@/components/communities/community-image-actions";
 
 export function CommunityCoverPreview({ value, inputRef, onRemove }: CommunityImagePreviewProps) {
   return (

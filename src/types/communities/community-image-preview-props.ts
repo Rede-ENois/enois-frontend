@@ -1,4 +1,4 @@
-import type { CommunityImageFieldProps } from "@/types/components/communities/community-image-field-props";
+import type { CommunityImageFieldProps } from "@/types/communities/community-image-field-props";
 
 export type CommunityImagePreviewProps = Pick<
   CommunityImageFieldProps,

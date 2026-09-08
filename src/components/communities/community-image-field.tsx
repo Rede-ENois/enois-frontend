@@ -1,12 +1,12 @@
-import type { CommunityImageFieldProps } from "@/types/components/communities/community-image-field-props";
-import { createCommunityImageFieldViewModel } from "@/utils/components/communities/create-community-image-field-view-model";
+import type { CommunityImageFieldProps } from "@/types/communities/community-image-field-props";
+import { createCommunityImageFieldViewModel } from "@/utils/communities/create-community-image-field-view-model";
 
 import { Label } from "@/components/ui/label";
 
-import { CommunityAvatarPreview } from "@/components/community-avatar-preview";
-import { CommunityCoverPreview } from "@/components/community-cover-preview";
-import { CommunityImageAddAction } from "@/components/community-image-add-action";
-import { CommunityImageInput } from "@/components/community-image-input";
+import { CommunityAvatarPreview } from "@/components/communities/community-avatar-preview";
+import { CommunityCoverPreview } from "@/components/communities/community-cover-preview";
+import { CommunityImageAddAction } from "@/components/communities/community-image-add-action";
+import { CommunityImageInput } from "@/components/communities/community-image-input";
 
 export function CommunityImageField(props: CommunityImageFieldProps) {
   const { value, inputRef, onChange, onRemove } = props;

@@ -8,7 +8,7 @@ import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";
 import { DialogTitle } from "@/components/ui/dialog-title";
 
-import { EditCommunityForm } from "@/components/edit-community-form";
+import { EditCommunityForm } from "@/components/communities/edit-community-form";
 
 export function CommunityHeaderEditAction() {
   const { open, setOpen } = useCommunityHeaderEditActionController();

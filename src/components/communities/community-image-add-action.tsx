@@ -1,4 +1,4 @@
-import type { CommunityImageAddActionProps } from "@/types/components/communities/community-image-add-action-props";
+import type { CommunityImageAddActionProps } from "@/types/communities/community-image-add-action-props";
 import { Camera } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

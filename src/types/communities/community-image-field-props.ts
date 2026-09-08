@@ -1,6 +1,6 @@
 import type { ChangeEventHandler, RefObject } from "react";
 
-import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
+import type { CommunityCropPurpose } from "@/types/communities/community-crop-purpose";
 
 export type CommunityImageFieldProps = {
   purpose: CommunityCropPurpose;
