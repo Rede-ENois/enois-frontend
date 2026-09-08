@@ -5,7 +5,7 @@ import { createStaticRouteHead } from "@/utils/routes/create-static-route-head";
 
 import { requireAuth } from "@/lib/require-auth";
 
-import { CommunitiesPageProvider } from "@/components/communities-page-provider";
+import { CommunitiesPageProvider } from "@/components/communities/communities-page-provider";
 
 export const Route = createFileRoute("/comunidades")({
   beforeLoad: requireAuth,
