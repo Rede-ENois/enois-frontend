@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
-import type { PostIdProps } from "@/types/components/post/post-id-props";
-import { useReactionsDialogController } from "@/utils/components/post/use-reactions-dialog-controller";
+import { useReactionsDialogContext } from "@/utils/components/post/use-reactions-dialog-context";
 import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -9,8 +8,8 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 
 import { ReactionsDialogList } from "@/components/reactions-dialog-list";
 
-export function ReactionsDialog({ postId }: PostIdProps) {
-  const { open, setOpen, showEmptyState, items } = useReactionsDialogController(postId);
+export function ReactionsDialog() {
+  const { open, setOpen } = useReactionsDialogContext();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -19,7 +18,7 @@ export function ReactionsDialog({ postId }: PostIdProps) {
           <DialogTitle className="font-light">{texts.posts.reactions.title}</DialogTitle>
         </DialogHeader>
 
-        <ReactionsDialogList items={items} showEmptyState={showEmptyState} />
+        <ReactionsDialogList />
       </DialogContent>
     </Dialog>
   );

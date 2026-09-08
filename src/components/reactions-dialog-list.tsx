@@ -1,9 +1,11 @@
 import { texts } from "@/texts";
-import type { ReactionsDialogListProps } from "@/types/components/post/reactions-dialog-list-props";
+import { useReactionsDialogContext } from "@/utils/components/post/use-reactions-dialog-context";
 
 import { ReactionsDialogListItem } from "@/components/reactions-dialog-list-item";
 
-export function ReactionsDialogList({ items, showEmptyState }: ReactionsDialogListProps) {
+export function ReactionsDialogList() {
+  const { items, showEmptyState } = useReactionsDialogContext();
+
   if (showEmptyState) {
     return (
       <p className="py-8 text-center text-[13px] font-light text-text-subtle">

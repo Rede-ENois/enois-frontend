@@ -13,7 +13,7 @@ export function PostCardContent() {
     <>
       <PostContentText content={post.content} />
       {showMedia && <PostContentMedia mediaIds={post.mediaIds} />}
-      <ReactionsSummary postId={post.id} />
+      <ReactionsSummary />
       <LinkPreviews content={post.content} />
       {showTags && <PostContentTags tags={post.tags} />}
     </>

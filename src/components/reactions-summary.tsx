@@ -1,8 +1,9 @@
-import type { PostIdProps } from "@/types/components/post/post-id-props";
+import { usePostCardContext } from "@/utils/components/post/use-post-card-context";
 import { useReactionsSummaryController } from "@/utils/components/post/use-reactions-summary-controller";
 
-export function ReactionsSummary({ postId }: PostIdProps) {
-  const { visible, entries } = useReactionsSummaryController(postId);
+export function ReactionsSummary() {
+  const { post } = usePostCardContext();
+  const { visible, entries } = useReactionsSummaryController(post.id);
 
   if (!visible) return null;
 
