@@ -1,9 +1,11 @@
-import type { CommunityTopicFiltersProps } from "@/types/components/communities/community-topic-filters-props";
+import { useCommunitiesPageContext } from "@/utils/components/communities/use-communities-page-context";
 
-export function CommunityTopicFilters({ options }: CommunityTopicFiltersProps) {
+export function CommunityTopicFilters() {
+  const { topicOptions } = useCommunitiesPageContext();
+
   return (
     <div className="flex flex-wrap gap-2">
-      {options.map((option) => (
+      {topicOptions.map((option) => (
         <button
           key={option.value}
           onClick={option.select}

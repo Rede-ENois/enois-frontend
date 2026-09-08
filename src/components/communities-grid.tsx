@@ -1,21 +1,14 @@
-import type { CommunitiesGridProps } from "@/types/components/communities/communities-grid-props";
+import { useCommunitiesPageContext } from "@/utils/components/communities/use-communities-page-context";
 
-import { CommunityCard } from "@/components/community-card";
+import { CommunityCardProvider } from "@/components/community-card-provider";
 
-export function CommunitiesGrid({
-  communities,
-  membershipPending,
-  onToggleMembership,
-}: CommunitiesGridProps) {
+export function CommunitiesGrid() {
+  const { communities } = useCommunitiesPageContext();
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {communities.map((community) => (
-        <CommunityCard
-          key={community.id}
-          community={community}
-          membershipPending={membershipPending}
-          onToggleMembership={onToggleMembership}
-        />
+        <CommunityCardProvider key={community.id} community={community} />
       ))}
     </div>
   );

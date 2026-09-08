@@ -1,6 +1,8 @@
-import type { CommunityCardIdentityProps } from "@/types/components/communities/community-card-identity-props";
+import { useCommunityCardContext } from "@/utils/components/communities/use-community-card-context";
 
-export function CommunityCardIdentity({ community, avatarUrl }: CommunityCardIdentityProps) {
+export function CommunityCardIdentity() {
+  const { community, avatarUrl } = useCommunityCardContext();
+
   return (
     <div className="mb-3 flex items-center gap-3">
       {avatarUrl && (

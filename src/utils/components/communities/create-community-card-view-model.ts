@@ -1,15 +1,15 @@
 import type { MouseEvent } from "react";
 
 import { texts } from "@/texts";
-import type { CommunityCardProps } from "@/types/components/communities/community-card-props";
+import type { Community } from "@/types/application/community/community";
 
 import { resolveCdnUrl } from "@/lib/api/media";
 
-export function createCommunityCardViewModel({
-  community,
-  membershipPending,
-  onToggleMembership,
-}: CommunityCardProps) {
+export function createCommunityCardViewModel(
+  community: Community,
+  membershipPending: boolean,
+  onToggleMembership: (communityId: string, joined: boolean) => void,
+) {
   return {
     coverUrl: community.cover ? resolveCdnUrl(community.cover) : null,
     avatarUrl: community.avatar ? resolveCdnUrl(community.avatar) : null,
