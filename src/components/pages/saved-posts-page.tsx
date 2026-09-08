@@ -8,7 +8,7 @@ import { AppContainer } from "@/components/app-container";
 import { PostCardProvider } from "@/components/post-card-provider";
 
 export function SavedPosts() {
-  const { savedPosts } = useSavedPostsPageController();
+  const { savedPosts, countLabel, showEmptyState } = useSavedPostsPageController();
 
   return (
     <AppContainer>
@@ -31,12 +31,10 @@ export function SavedPosts() {
             <h1 className="text-2xl font-semibold tracking-tight">{texts.saved.title}</h1>
           </div>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            {texts.saved.count(savedPosts.length)}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{countLabel}</p>
         </div>
 
-        {savedPosts.length === 0 ? (
+        {showEmptyState ? (
           <div className="surface-card p-8 text-center">
             <Bookmark className="mx-auto h-8 w-8 text-muted-foreground" />
 

@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
+
 import { listSavedPosts } from "@/lib/api/feed/list-saved-posts";
 
 export function useSavedPostsPageController() {
@@ -7,8 +9,11 @@ export function useSavedPostsPageController() {
     queryKey: ["saved-posts"],
     queryFn: () => listSavedPosts(),
   });
+  const savedPosts = data?.items ?? [];
 
   return {
-    savedPosts: data?.items ?? [],
+    savedPosts,
+    countLabel: texts.saved.count(savedPosts.length),
+    showEmptyState: savedPosts.length === 0,
   };
 }
