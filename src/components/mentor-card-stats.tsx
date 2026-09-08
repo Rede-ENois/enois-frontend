@@ -1,10 +1,13 @@
 import { Calendar, Star } from "lucide-react";
 
 import { texts } from "@/texts";
+import type { MentorCardStat } from "@/types/components/mentoring/mentor-card-stat";
 import type { MentorCardStatsProps } from "@/types/components/mentoring/mentor-card-stats-props";
 
+import { MentorCardStatItem } from "@/components/mentor-card-stat-item";
+
 export function MentorCardStats({ mentor }: MentorCardStatsProps) {
-  const stats = [
+  const stats: MentorCardStat[] = [
     {
       key: "rating",
       label: texts.mentoring.rating,
@@ -43,17 +46,7 @@ export function MentorCardStats({ mentor }: MentorCardStatsProps) {
     <footer className="grid grid-cols-1 gap-8 rounded-2xl">
       <dl className="grid grid-cols-2 gap-2 rounded-xl bg-muted/50 p-3 text-xs">
         {stats.map((stat) => (
-          <div key={stat.key}>
-            <dt className="text-muted-foreground">{stat.label}</dt>
-
-            <dd
-              className={`mt-0.5 ${stat.icon ? "inline-flex items-center gap-1 " : ""}${stat.valueClassName}`}
-            >
-              {stat.icon && <stat.icon className={`h-3.5 w-3.5 ${stat.iconClassName}`} />}
-
-              <>{stat.value}</>
-            </dd>
-          </div>
+          <MentorCardStatItem key={stat.key} stat={stat} />
         ))}
       </dl>
     </footer>
