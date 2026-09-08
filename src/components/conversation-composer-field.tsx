@@ -1,13 +1,15 @@
 import { texts } from "@/texts";
-import type { ConversationComposerFieldProps } from "@/types/components/messages/conversation-composer-field-props";
+import { useConversationComposerContext } from "@/utils/components/messages/use-conversation-composer-context";
 
 import { Input } from "@/components/ui/input";
 
-export function ConversationComposerField({ text, onTextChange }: ConversationComposerFieldProps) {
+export function ConversationComposerField() {
+  const { text, setText } = useConversationComposerContext();
+
   return (
     <Input
       value={text}
-      onChange={(event) => onTextChange(event.target.value)}
+      onChange={(event) => setText(event.target.value)}
       placeholder={texts.messages.inputPlaceholder}
       className="h-10 rounded-full bg-muted"
     />

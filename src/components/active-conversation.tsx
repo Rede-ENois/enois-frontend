@@ -1,9 +1,9 @@
 import { useActiveConversationController } from "@/utils/components/messages/use-active-conversation-controller";
 
 import { ActiveConversationEmptyState } from "@/components/active-conversation-empty-state";
-import { ConversationComposer } from "@/components/conversation-composer";
+import { ConversationComposerProvider } from "@/components/conversation-composer-provider";
 import { ConversationHeader } from "@/components/conversation-header";
-import { ConversationMessages } from "@/components/conversation-messages";
+import { ConversationMessagesProvider } from "@/components/conversation-messages-provider";
 
 export function ActiveConversation() {
   const controller = useActiveConversationController();
@@ -15,8 +15,8 @@ export function ActiveConversation() {
       {controller.showConversation ? (
         <>
           <ConversationHeader />
-          <ConversationMessages />
-          <ConversationComposer />
+          <ConversationMessagesProvider />
+          <ConversationComposerProvider />
         </>
       ) : (
         <ActiveConversationEmptyState />

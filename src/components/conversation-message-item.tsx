@@ -1,15 +1,13 @@
 import { Link } from "@tanstack/react-router";
 
 import type { ConversationMessageItemProps } from "@/types/components/messages/conversation-message-item-props";
+import { useConversationMessagesContext } from "@/utils/components/messages/use-conversation-messages-context";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function ConversationMessageItem({
-  item,
-  otherProfileUsername,
-  otherAvatar,
-  otherName,
-}: ConversationMessageItemProps) {
+export function ConversationMessageItem({ item }: ConversationMessageItemProps) {
+  const { otherProfileUsername, otherAvatar, otherName } = useConversationMessagesContext();
+
   return (
     <div className={`flex items-end gap-2 ${item.rowClassName}`}>
       {item.showAvatar && (
