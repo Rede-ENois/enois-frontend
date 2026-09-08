@@ -4,6 +4,4 @@ export type NetworkRequestSectionProps = {
   label: string;
   labelClassName?: string;
   requests: ConnectionRequest[];
-  onAccept: (id: string) => void;
-  onCancel: (id: string) => void;
 };

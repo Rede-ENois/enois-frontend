@@ -6,8 +6,6 @@ export function NetworkRequestSection({
   label,
   labelClassName = "",
   requests,
-  onAccept,
-  onCancel,
 }: NetworkRequestSectionProps) {
   return (
     <>
@@ -18,7 +16,7 @@ export function NetworkRequestSection({
       </div>
 
       {requests.map((request) => (
-        <RequestCard key={request.id} request={request} onAccept={onAccept} onCancel={onCancel} />
+        <RequestCard key={request.id} request={request} />
       ))}
     </>
   );

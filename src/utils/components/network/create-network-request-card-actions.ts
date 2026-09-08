@@ -1,10 +1,17 @@
-import { texts } from "@/texts";
-import type { RequestCardProps } from "@/types/components/network/request-card-props";
 import { Check, X } from "lucide-react";
 
+import { texts } from "@/texts";
+import type { ConnectionRequest } from "@/types/application/network/connection-request";
+
+type NetworkRequestActions = {
+  accept: (id: string) => void;
+  cancel: (id: string) => void;
+};
+
 export function createNetworkRequestCardActions(
-  { request, onAccept, onCancel }: RequestCardProps,
+  request: ConnectionRequest,
   isOutgoing: boolean,
+  actions: NetworkRequestActions,
 ) {
   if (isOutgoing) {
     return [
@@ -13,7 +20,7 @@ export function createNetworkRequestCardActions(
         icon: X,
         label: texts.network.cancel,
         variant: "outline" as const,
-        run: () => onCancel(request.toUserId),
+        run: () => actions.cancel(request.toUserId),
       },
     ];
   }
@@ -24,14 +31,14 @@ export function createNetworkRequestCardActions(
       icon: X,
       label: texts.network.reject,
       variant: "outline" as const,
-      run: () => onCancel(request.fromUserId),
+      run: () => actions.cancel(request.fromUserId),
     },
     {
       key: "accept",
       icon: Check,
       label: texts.network.accept,
       variant: "default" as const,
-      run: () => onAccept(request.fromUserId),
+      run: () => actions.accept(request.fromUserId),
     },
   ];
 }

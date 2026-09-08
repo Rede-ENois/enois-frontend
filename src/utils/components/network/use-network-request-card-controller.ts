@@ -1,15 +1,17 @@
 import { texts } from "@/texts";
-import type { RequestCardProps } from "@/types/components/network/request-card-props";
+import type { ConnectionRequest } from "@/types/application/network/connection-request";
 import { createNetworkRequestCardActions } from "@/utils/components/network/create-network-request-card-actions";
+import { useNetworkRequestActions } from "@/utils/components/network/use-network-request-actions";
 import { useNetworkRequestProfile } from "@/utils/components/network/use-network-request-profile";
 
-export function useNetworkRequestCardController(props: RequestCardProps) {
-  const { user, isOutgoing, targetUserId } = useNetworkRequestProfile(props.request);
+export function useNetworkRequestCardController(request: ConnectionRequest) {
+  const { user, isOutgoing, targetUserId } = useNetworkRequestProfile(request);
+  const requestActions = useNetworkRequestActions();
 
   return {
     user,
     profileUsername: user?.username ?? targetUserId,
     statusLabel: isOutgoing ? texts.network.requestSent : texts.network.wantsToConnect,
-    actions: createNetworkRequestCardActions(props, isOutgoing),
+    actions: createNetworkRequestCardActions(request, isOutgoing, requestActions),
   };
 }

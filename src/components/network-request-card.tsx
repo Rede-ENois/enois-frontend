@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function RequestCard(props: RequestCardProps) {
-  const { user, profileUsername, statusLabel, actions } = useNetworkRequestCardController(props);
+export function RequestCard({ request }: RequestCardProps) {
+  const { user, profileUsername, statusLabel, actions } = useNetworkRequestCardController(request);
 
   return (
     <div className="surface-card flex items-center justify-between gap-4 p-4">

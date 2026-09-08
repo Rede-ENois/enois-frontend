@@ -18,20 +18,13 @@ export function NetworkRequests() {
 
       <div className="space-y-3">
         {controller.hasIncomingRequests && (
-          <NetworkRequestSection
-            label={texts.network.received}
-            requests={controller.incomingRequests}
-            onAccept={controller.acceptRequest}
-            onCancel={controller.cancelRequest}
-          />
+          <NetworkRequestSection label={texts.network.received} requests={controller.incomingRequests} />
         )}
         {controller.hasOutgoingRequests && (
           <NetworkRequestSection
             label={texts.network.sent}
             labelClassName={controller.outgoingSectionClassName}
             requests={controller.outgoingRequests}
-            onAccept={controller.acceptRequest}
-            onCancel={controller.cancelRequest}
           />
         )}
       </div>
