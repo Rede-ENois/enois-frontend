@@ -1,5 +1,5 @@
-import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
 import { useProfileHeaderController } from "@/utils/components/profile/use-profile-header-controller";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { ProfileHeaderActions } from "@/components/profile-header-actions";
@@ -7,8 +7,9 @@ import { ProfileHeaderAvatar } from "@/components/profile-header-avatar";
 import { ProfileHeaderBanner } from "@/components/profile-header-banner";
 import { ProfileHeaderIdentity } from "@/components/profile-header-identity";
 
-export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const controller = useProfileHeaderController(user);
+export function ProfileHeader() {
+  const { user } = useProfilePageContext();
+  const controller = useProfileHeaderController();
 
   return (
     <>
@@ -29,10 +30,10 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               overlay={controller.avatarOverlay}
               input={controller.avatarInput}
             />
-            <ProfileHeaderActions profile={user} />
+            <ProfileHeaderActions />
           </div>
 
-          <ProfileHeaderIdentity user={user} />
+          <ProfileHeaderIdentity />
         </div>
       </div>
 

@@ -1,12 +1,14 @@
-import { texts } from "@/texts";
-import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
-import { createProfileGoalsSectionViewModel } from "@/utils/components/profile/create-profile-goals-section-view-model";
 import { Target } from "lucide-react";
+
+import { texts } from "@/texts";
+import { createProfileGoalsSectionViewModel } from "@/utils/components/profile/create-profile-goals-section-view-model";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { ProfileSection } from "@/components/profile-section";
 
-export function ProfileGoalsSection(props: ProfileHeaderProps) {
-  const { visible, goals } = createProfileGoalsSectionViewModel(props);
+export function ProfileGoalsSection() {
+  const { user } = useProfilePageContext();
+  const { visible, goals } = createProfileGoalsSectionViewModel(user);
 
   if (!visible) return null;
 

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { listPostsByUserId } from "@/lib/api/feed/list-posts-by-user-id";
 
-export function useProfileRecentPostsController({ user }: ProfileHeaderProps) {
+export function useProfileRecentPostsController() {
+  const { user } = useProfilePageContext();
   const { data } = useQuery({
     queryKey: ["feed", "user", user.id],
     queryFn: () => listPostsByUserId(user.id),

@@ -1,13 +1,13 @@
-import { texts } from "@/texts";
-import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
-import { useProfileRecommendationsController } from "@/utils/components/profile/use-profile-recommendations-controller";
 import { Star } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useProfileRecommendationsController } from "@/utils/components/profile/use-profile-recommendations-controller";
 
 import { ProfileRecommendationItem } from "@/components/profile-recommendation-item";
 import { ProfileSection } from "@/components/profile-section";
 
-export function ProfileRecommendationsSection(props: ProfileSidebarProps) {
-  const { visible, recommendations } = useProfileRecommendationsController(props);
+export function ProfileRecommendationsSection() {
+  const { visible, recommendations } = useProfileRecommendationsController();
 
   if (!visible) return null;
 

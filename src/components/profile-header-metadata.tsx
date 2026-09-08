@@ -1,11 +1,13 @@
 import { PROFILE_HEADER_METADATA_ITEMS } from "@/constants/profile-header-metadata-items";
 import { texts } from "@/texts";
-import type { ProfileHeaderMetadataProps } from "@/types/components/profile/profile-header-metadata-props";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { ProfileMetadataItem } from "@/components/profile-metadata-item";
 import { ProfileReputationBadge } from "@/components/profile-reputation-badge";
 
-export function ProfileHeaderMetadata({ user }: ProfileHeaderMetadataProps) {
+export function ProfileHeaderMetadata() {
+  const { user } = useProfilePageContext();
+
   return (
     <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px] font-light text-text-subtle">
       {PROFILE_HEADER_METADATA_ITEMS.map((item) => {

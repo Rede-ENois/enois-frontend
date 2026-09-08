@@ -1,12 +1,14 @@
-import { texts } from "@/texts";
-import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
-import { createProfileExternalLinksSectionViewModel } from "@/utils/components/profile/create-profile-external-links-section-view-model";
 import { Link as LinkIcon } from "lucide-react";
+
+import { texts } from "@/texts";
+import { createProfileExternalLinksSectionViewModel } from "@/utils/components/profile/create-profile-external-links-section-view-model";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { ProfileSection } from "@/components/profile-section";
 
-export function ProfileExternalLinksSection(props: ProfileSidebarProps) {
-  const { visible, links } = createProfileExternalLinksSectionViewModel(props);
+export function ProfileExternalLinksSection() {
+  const { user } = useProfilePageContext();
+  const { visible, links } = createProfileExternalLinksSectionViewModel(user);
 
   if (!visible) return null;
 

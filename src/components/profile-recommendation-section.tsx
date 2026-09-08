@@ -1,13 +1,15 @@
-import { texts } from "@/texts";
-import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 import { ThumbsUp } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useProfilePageContext } from "@/utils/components/profile/use-profile-page-context";
 
 import { useAuth } from "@/lib/use-auth";
 
 import { ProfileRecommendationDialog } from "@/components/profile-recommendation-dialog";
 import { ProfileSection } from "@/components/profile-section";
 
-export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
+export function ProfileRecommendationSection() {
+  const { user } = useProfilePageContext();
   const { user: me } = useAuth();
 
   if (me?.id === user.id) return null;
@@ -18,7 +20,7 @@ export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
         {texts.profile.recommendDescription}
       </p>
 
-      <ProfileRecommendationDialog user={user} />
+      <ProfileRecommendationDialog />
     </ProfileSection>
   );
 }
