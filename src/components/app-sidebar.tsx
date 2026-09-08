@@ -22,7 +22,7 @@ export function AppSidebar() {
           <ToggleIcon className="h-4 w-4" />
         </button>
 
-        <NavigationLinks collapsed={collapsed} />
+        <NavigationLinks variant="sidebar" />
       </div>
     </aside>
   );

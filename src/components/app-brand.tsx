@@ -1,15 +1,17 @@
 import { Link } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
 
 import { APP_BRAND_VARIANTS } from "@/constants/app-brand-variants";
 import { texts } from "@/texts";
 import type { AppBrandProps } from "@/types/components/app-brand-props";
-import { Sparkles } from "lucide-react";
+import { useAppBrandController } from "@/utils/components/app/use-app-brand-controller";
 
-export function AppBrand({ onClick, variant = "app" }: AppBrandProps) {
+export function AppBrand({ variant = "app" }: AppBrandProps) {
   const config = APP_BRAND_VARIANTS[variant];
+  const { closeMobileNavigation } = useAppBrandController();
 
   return (
-    <Link to={config.to} onClick={onClick} className={config.rootClassName}>
+    <Link to={config.to} onClick={closeMobileNavigation} className={config.rootClassName}>
       <div className={config.iconClassName} style={config.style}>
         <Sparkles className={config.glyphClassName} />
       </div>

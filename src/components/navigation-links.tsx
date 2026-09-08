@@ -5,12 +5,8 @@ import { useNavigationLinksController } from "@/utils/components/navigation/use-
 
 import { cn } from "@/lib/utils";
 
-export function NavigationLinks({
-  collapsed = false,
-  onNavigate,
-  className,
-}: NavigationLinksProps) {
-  const { items } = useNavigationLinksController({ collapsed, onNavigate, className });
+export function NavigationLinks({ variant, className }: NavigationLinksProps) {
+  const { collapsed, items, handleNavigate } = useNavigationLinksController(variant);
 
   return (
     <nav
@@ -24,7 +20,7 @@ export function NavigationLinks({
           <Link
             key={item.to}
             to={item.to}
-            onClick={onNavigate}
+            onClick={handleNavigate}
             title={item.title}
             className={cn(
               "flex items-center gap-3 rounded-xl border-l-2 px-3 py-3 text-[14px] font-light transition",

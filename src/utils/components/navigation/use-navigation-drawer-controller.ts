@@ -6,7 +6,6 @@ export function useNavigationDrawerController() {
 
   return {
     open,
-    close,
     handleOpenChange: (nextOpen: boolean) => {
       if (!nextOpen) close();
     },

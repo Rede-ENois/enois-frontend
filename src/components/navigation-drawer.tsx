@@ -1,13 +1,14 @@
-import { texts } from "@/texts";
-import { useNavigationDrawerController } from "@/utils/components/navigation/use-navigation-drawer-controller";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useNavigationDrawerController } from "@/utils/components/navigation/use-navigation-drawer-controller";
 
 import { AppBrand } from "./app-brand";
 import { NavigationLinks } from "./navigation-links";
 
 export function NavigationDrawer() {
-  const { open, close, handleOpenChange } = useNavigationDrawerController();
+  const { open, handleOpenChange } = useNavigationDrawerController();
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
@@ -20,10 +21,10 @@ export function NavigationDrawer() {
           </DialogPrimitive.Title>
 
           <div className="flex h-14 items-center border-b border-border-soft px-3 sm:h-16">
-            <AppBrand onClick={close} />
+            <AppBrand />
           </div>
 
-          <NavigationLinks onNavigate={close} className="overflow-y-auto p-3" />
+          <NavigationLinks variant="drawer" className="overflow-y-auto p-3" />
 
           <DialogPrimitive.Close className="absolute right-3 top-2.5 grid h-9 w-9 place-items-center rounded-full text-text-subtle opacity-100 transition hover:bg-surface-2 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none sm:top-3.5">
             <X className="h-4 w-4" />
