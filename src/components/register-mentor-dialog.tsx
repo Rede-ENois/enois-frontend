@@ -23,15 +23,7 @@ export function RegisterMentorDialog() {
           <DialogTitle>{texts.mentoring.becomeMentorTitle}</DialogTitle>
         </DialogHeader>
 
-        <RegisterMentorForm
-          skillsText={controller.skillsText}
-          setSkillsText={controller.setSkillsText}
-          price={controller.price}
-          setPrice={controller.setPrice}
-          saving={controller.saving}
-          saveDisabled={controller.saveDisabled}
-          save={controller.save}
-        />
+        <RegisterMentorForm onCreated={controller.close} />
       </DialogContent>
     </Dialog>
   );

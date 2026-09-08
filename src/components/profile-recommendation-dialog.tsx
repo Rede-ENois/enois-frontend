@@ -1,6 +1,6 @@
-import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
 import { texts } from "@/texts";
 import type { ProfileRecommendationDialogProps } from "@/types/components/profile/profile-recommendation-dialog-props";
+import { useProfileRecommendationDialogController } from "@/utils/components/profile/use-profile-recommendation-dialog-controller";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -11,14 +11,10 @@ import { ProfileRecommendationForm } from "@/components/profile-recommendation-f
 import { ProfileRecommendationTrigger } from "@/components/profile-recommendation-trigger";
 
 export function ProfileRecommendationDialog({ user }: ProfileRecommendationDialogProps) {
-  const open = useProfileRecommendationStore(
-    (state) => state.open && state.targetUserId === user.id,
-  );
-  const openForUser = useProfileRecommendationStore((state) => state.openForUser);
-  const close = useProfileRecommendationStore((state) => state.close);
+  const controller = useProfileRecommendationDialogController(user.id);
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? openForUser(user.id) : close())}>
+    <Dialog open={controller.open} onOpenChange={controller.handleOpenChange}>
       <DialogTrigger asChild>
         <ProfileRecommendationTrigger />
       </DialogTrigger>

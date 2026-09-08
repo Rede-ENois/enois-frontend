@@ -1,27 +1,30 @@
 import { texts } from "@/texts";
 import type { CreateEventFormProps } from "@/types/components/events/create-event-form-props";
+import { useCreateEventFormController } from "@/utils/components/events/use-create-event-form-controller";
 
 import { Button } from "@/components/ui/button";
 
 import { CreateEventFormFields } from "@/components/create-event-form-fields";
 import { CreateEventFormatField } from "@/components/create-event-format-field";
 
-export function CreateEventForm(props: CreateEventFormProps) {
+export function CreateEventForm({ onCreated }: CreateEventFormProps) {
+  const controller = useCreateEventFormController(onCreated);
+
   return (
     <div className="space-y-4 pt-2">
-      <CreateEventFormFields form={props.form} setField={props.setField} />
+      <CreateEventFormFields form={controller.form} setField={controller.setField} />
       <CreateEventFormatField
-        form={props.form}
-        setFormat={props.setFormat}
-        formatOptions={props.formatOptions}
+        form={controller.form}
+        setFormat={controller.setFormat}
+        formatOptions={controller.formatOptions}
       />
 
       <Button
         className="w-full rounded-full"
-        disabled={props.createDisabled}
-        onClick={props.createEvent}
+        disabled={controller.createDisabled}
+        onClick={controller.createEvent}
       >
-        {props.createPending ? texts.common.creating : texts.events.createEvent}
+        {controller.createPending ? texts.common.creating : texts.events.createEvent}
       </Button>
     </div>
   );

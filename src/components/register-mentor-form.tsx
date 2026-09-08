@@ -1,40 +1,18 @@
 import { texts } from "@/texts";
 import type { RegisterMentorFormProps } from "@/types/components/mentoring/register-mentor-form-props";
+import { useRegisterMentorFormController } from "@/utils/components/mentoring/use-register-mentor-form-controller";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { FormField } from "@/components/form-field";
 
-export function RegisterMentorForm({
-  skillsText,
-  setSkillsText,
-  price,
-  setPrice,
-  saving,
-  saveDisabled,
-  save,
-}: RegisterMentorFormProps) {
-  const fields = [
-    {
-      key: "skills",
-      label: texts.mentoring.expertise,
-      value: skillsText,
-      onChange: setSkillsText,
-      placeholder: texts.mentoring.expertisePlaceholder,
-    },
-    {
-      key: "price",
-      label: texts.mentoring.investment,
-      value: price,
-      onChange: setPrice,
-      placeholder: texts.mentoring.free,
-    },
-  ];
+export function RegisterMentorForm({ onCreated }: RegisterMentorFormProps) {
+  const controller = useRegisterMentorFormController(onCreated);
 
   return (
     <div className="space-y-4 pt-2">
-      {fields.map((field) => (
+      {controller.fields.map((field) => (
         <FormField
           key={field.key}
           label={field.label}
@@ -42,15 +20,15 @@ export function RegisterMentorForm({
         >
           <Input
             value={field.value}
-            onChange={(event) => field.onChange(event.target.value)}
+            onChange={field.onChange}
             placeholder={field.placeholder}
             className="h-10 border-transparent bg-muted"
           />
         </FormField>
       ))}
 
-      <Button className="w-full rounded-full" disabled={saveDisabled} onClick={save}>
-        {saving ? texts.common.saving : texts.common.save}
+      <Button className="w-full rounded-full" disabled={controller.saveDisabled} onClick={controller.save}>
+        {controller.saving ? texts.common.saving : texts.common.save}
       </Button>
     </div>
   );

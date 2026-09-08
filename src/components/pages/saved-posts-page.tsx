@@ -1,20 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import { useSavedPostsPageController } from "@/utils/components/feed/use-saved-posts-page-controller";
 import { ArrowLeft, Bookmark } from "lucide-react";
-
-import { listSavedPosts } from "@/lib/api/feed/list-saved-posts";
 
 import { AppContainer } from "@/components/app-container";
 import { PostCard } from "@/components/post-card";
 
 export function SavedPosts() {
-  const { data: savedData } = useQuery({
-    queryKey: ["saved-posts"],
-    queryFn: () => listSavedPosts(),
-  });
-  const savedPosts = savedData?.items ?? [];
+  const { savedPosts } = useSavedPostsPageController();
 
   return (
     <AppContainer>

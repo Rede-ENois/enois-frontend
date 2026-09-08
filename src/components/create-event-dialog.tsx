@@ -23,15 +23,7 @@ export function CreateEventDialog() {
           <DialogTitle>{texts.events.createEvent}</DialogTitle>
         </DialogHeader>
 
-        <CreateEventForm
-          form={controller.form}
-          setField={controller.setField}
-          setFormat={controller.setFormat}
-          formatOptions={controller.formatOptions}
-          createPending={controller.createPending}
-          createDisabled={controller.createDisabled}
-          createEvent={controller.createEvent}
-        />
+        <CreateEventForm onCreated={controller.close} />
       </DialogContent>
     </Dialog>
   );

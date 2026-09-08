@@ -21,15 +21,7 @@ export function CreateCommunityDialog({ children }: CreateCommunityDialogProps) 
           <DialogTitle>{texts.communities.create.title}</DialogTitle>
         </DialogHeader>
 
-        <CreateCommunityForm
-          form={controller.form}
-          setField={controller.setField}
-          setTopic={controller.setTopic}
-          topicOptions={controller.topicOptions}
-          createPending={controller.createPending}
-          createDisabled={controller.createDisabled}
-          createCommunity={controller.createCommunity}
-        />
+        <CreateCommunityForm onCreated={controller.close} />
       </DialogContent>
     </Dialog>
   );

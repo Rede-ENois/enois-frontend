@@ -1,20 +1,17 @@
-import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
 import { texts } from "@/texts";
-import { useCreateProfileRecommendation } from "@/utils/components/profile/use-create-profile-recommendation";
+import { useProfileRecommendationFormController } from "@/utils/components/profile/use-profile-recommendation-form-controller";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function ProfileRecommendationForm() {
-  const comment = useProfileRecommendationStore((state) => state.comment);
-  const setComment = useProfileRecommendationStore((state) => state.setComment);
-  const recommendation = useCreateProfileRecommendation();
+  const controller = useProfileRecommendationFormController();
 
   return (
     <div className="space-y-4 pt-2">
       <Textarea
-        value={comment}
-        onChange={(event) => setComment(event.target.value)}
+        value={controller.comment}
+        onChange={controller.handleCommentChange}
         placeholder={texts.profile.recommendPlaceholder}
         rows={3}
         className="border-border-soft bg-surface-1 text-[13px] font-light"
@@ -23,10 +20,10 @@ export function ProfileRecommendationForm() {
       <Button
         size="sm"
         className="w-full rounded-full"
-        disabled={recommendation.sendDisabled}
-        onClick={recommendation.send}
+        disabled={controller.sendDisabled}
+        onClick={controller.send}
       >
-        {recommendation.sending ? texts.common.sending : texts.profile.sendRecommendation}
+        {controller.sending ? texts.common.sending : texts.profile.sendRecommendation}
       </Button>
     </div>
   );
