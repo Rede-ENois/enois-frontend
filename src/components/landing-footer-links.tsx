@@ -1,16 +1,12 @@
 import { Link } from "@tanstack/react-router";
 
+import { LANDING_FOOTER_LINKS } from "@/constants/landing-footer-links";
 import { texts } from "@/texts";
 
 export function LandingFooterLinks() {
-  const links = [
-    { to: "/privacidade" as const, label: texts.landing.footer.privacy },
-    { to: "/termos" as const, label: texts.landing.footer.terms },
-  ];
-
   return (
     <div className="flex gap-5">
-      {links.map((item) => (
+      {LANDING_FOOTER_LINKS.map((item) => (
         <Link key={item.to} to={item.to} className="transition-colors hover:text-foreground">
           {item.label}
         </Link>

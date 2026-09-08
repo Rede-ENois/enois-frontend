@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { AUTH_SOCIAL_PROVIDERS } from "@/constants/auth-social-providers";
 import { texts } from "@/texts";
 import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
 
@@ -19,13 +20,10 @@ export function useAuthSocialOptionsController() {
   return {
     error,
     disabled: loading !== null,
-    google: {
-      loading: loading === "GOOGLE",
-      start: () => void startOAuth("GOOGLE"),
-    },
-    apple: {
-      loading: loading === "APPLE",
-      start: () => void startOAuth("APPLE"),
-    },
+    providers: AUTH_SOCIAL_PROVIDERS.map((provider) => ({
+      ...provider,
+      loading: loading === provider.provider,
+      action: () => void startOAuth(provider.provider),
+    })),
   };
 }

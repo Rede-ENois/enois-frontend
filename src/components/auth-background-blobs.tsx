@@ -1,9 +1,9 @@
-export function AuthBackgroundBlobs() {
-  const positions = ["-right-20 -top-20", "-bottom-32 -left-20"];
+import { AUTH_BACKGROUND_BLOB_POSITIONS } from "@/constants/auth-background-blob-positions";
 
+export function AuthBackgroundBlobs() {
   return (
     <>
-      {positions.map((position) => (
+      {AUTH_BACKGROUND_BLOB_POSITIONS.map((position) => (
         <div
           key={position}
           aria-hidden
