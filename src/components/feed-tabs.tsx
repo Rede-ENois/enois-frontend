@@ -1,9 +1,11 @@
 import { texts } from "@/texts";
-import type { FeedTabsProps } from "@/types/components/feed/feed-tabs-props";
+import { useFeedPageContext } from "@/utils/components/feed/use-feed-page-context";
 
 import { TabButton } from "@/components/tab-button";
 
-export function FeedTabs({ activeTab, onTabChange }: FeedTabsProps) {
+export function FeedTabs() {
+  const { activeTab, onTabChange } = useFeedPageContext();
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <TabButton
