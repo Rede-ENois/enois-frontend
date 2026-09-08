@@ -1,12 +1,12 @@
 import { EDIT_PROFILE_INFO_SWITCHES } from "@/constants/edit-profile-info-switches";
-import type { EditProfileInfoFormProps } from "@/types/components/profile/edit-profile-info-form-props";
+import { useEditProfileDialogContext } from "@/utils/components/profile/use-edit-profile-dialog-context";
 
 import { Switch } from "@/components/ui/switch";
 
-export function EditProfileInfoSwitches({
-  values,
-  setField,
-}: Pick<EditProfileInfoFormProps, "values" | "setField">) {
+export function EditProfileInfoSwitches() {
+  const { profileInfo } = useEditProfileDialogContext();
+  const { values, setField } = profileInfo;
+
   return (
     <div className="flex items-center gap-8">
       {EDIT_PROFILE_INFO_SWITCHES.map((item) => (
