@@ -5,7 +5,7 @@ import { loadCommunityRoute } from "@/utils/routes/load-community-route";
 
 import { requireAuth } from "@/lib/require-auth";
 
-import { CommunityDetailProvider } from "@/components/community-detail-provider";
+import { CommunityDetailProvider } from "@/components/communities/community-detail-provider";
 
 export const Route = createFileRoute("/comunidades/$communityId")({
   beforeLoad: requireAuth,
