@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { SignupFormContext } from "@/utils/components/auth/signup-form-context";
+import { SignupFormContext } from "@/utils/auth/signup-form-context";
 
 export function useSignupFormContext() {
   const context = useContext(SignupFormContext);
