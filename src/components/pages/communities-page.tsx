@@ -1,11 +1,11 @@
 import { Outlet } from "@tanstack/react-router";
 
-import { useCommunitiesPageContext } from "@/utils/components/communities/use-communities-page-context";
+import { useCommunitiesPageContext } from "@/utils/communities/use-communities-page-context";
 
 import { AppContainer } from "@/components/app-container";
-import { CommunitiesGrid } from "@/components/communities-grid";
-import { CommunitiesLoadMore } from "@/components/communities-load-more";
-import { CommunitiesPageHeader } from "@/components/communities-page-header";
+import { CommunitiesGrid } from "@/components/communities/communities-grid";
+import { CommunitiesLoadMore } from "@/components/communities/communities-load-more";
+import { CommunitiesPageHeader } from "@/components/communities/communities-page-header";
 import { CommunityTopicFilters } from "@/components/community-topic-filters";
 
 export function Comunidades() {
