@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import type { Community } from "@/types/application/community/community";
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 
 import { joinCommunity } from "@/lib/api/communities/join-community";
 import { leaveCommunity } from "@/lib/api/communities/leave-community";
 
-export function useCommunityMembership(community: Community) {
+export function useCommunityMembership() {
+  const { community } = useCommunityDetailContext();
   const queryClient = useQueryClient();
   const membership = useMutation({
     mutationFn: () =>

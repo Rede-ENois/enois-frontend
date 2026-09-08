@@ -1,6 +1,5 @@
 import { EDIT_COMMUNITY_FIELDS } from "@/constants/edit-community-fields";
 import { texts } from "@/texts";
-import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
 import { useEditCommunityFormController } from "@/utils/components/communities/use-edit-community-form-controller";
 
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { CommunityImageField } from "@/components/community-image-field";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
 
-export function EditCommunityForm(props: EditCommunityFormProps) {
-  const controller = useEditCommunityFormController(props);
+export function EditCommunityForm() {
+  const controller = useEditCommunityFormController();
 
   return (
     <div className="space-y-4 pt-2">

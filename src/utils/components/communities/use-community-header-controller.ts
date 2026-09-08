@@ -1,13 +1,15 @@
-import type { Community } from "@/types/application/community/community";
-import type { CommunityMember } from "@/types/application/community/community-member";
 import { createCommunityHeaderMedia } from "@/utils/components/communities/create-community-header-media";
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 import { useCommunityHeaderAccess } from "@/utils/components/communities/use-community-header-access";
 
-export function useCommunityHeaderController(community: Community, members: CommunityMember[]) {
+export function useCommunityHeaderController() {
+  const { community, members } = useCommunityDetailContext();
   const access = useCommunityHeaderAccess(members);
   const media = createCommunityHeaderMedia(community);
 
   return {
+    community,
+    isAdmin: access.isAdmin,
     primaryAdmin: access.primaryAdmin,
     coverUrl: media.coverUrl,
     avatarUrl: media.avatarUrl,

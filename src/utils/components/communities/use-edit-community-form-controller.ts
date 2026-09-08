@@ -1,9 +1,10 @@
-import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 import { useEditCommunityFormState } from "@/utils/components/communities/use-edit-community-form-state";
 import { useEditCommunityImages } from "@/utils/components/communities/use-edit-community-images";
 import { useUpdateCommunityController } from "@/utils/components/communities/use-update-community-controller";
 
-export function useEditCommunityFormController({ community }: EditCommunityFormProps) {
+export function useEditCommunityFormController() {
+  const { community } = useCommunityDetailContext();
   const formState = useEditCommunityFormState(community);
   const images = useEditCommunityImages(formState.form, formState.setField);
   const update = useUpdateCommunityController(community, formState.form);

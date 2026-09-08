@@ -1,10 +1,11 @@
-import type { CommunityMembersProps } from "@/types/components/communities/community-members-props";
 import { createCommunityMembersViewModel } from "@/utils/components/communities/create-community-members-view-model";
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 
 import { CommunityMemberItem } from "@/components/community-member-item";
 
-export function CommunityMembers(props: CommunityMembersProps) {
-  const { title, members } = createCommunityMembersViewModel(props);
+export function CommunityMembers() {
+  const { members: communityMembers } = useCommunityDetailContext();
+  const { title, members } = createCommunityMembersViewModel(communityMembers);
 
   return (
     <aside className="space-y-4">

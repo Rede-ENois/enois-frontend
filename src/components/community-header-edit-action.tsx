@@ -1,8 +1,8 @@
-import { useCommunityEditDialogStore } from "@/stores/community-edit-dialog.store";
-import { texts } from "@/texts";
-import type { CommunityHeaderEditActionProps } from "@/types/components/communities/community-header-edit-action-props";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { Settings } from "lucide-react";
+
+import { useCommunityEditDialogStore } from "@/stores/community-edit-dialog.store";
+import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -11,7 +11,7 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 
 import { EditCommunityForm } from "@/components/edit-community-form";
 
-export function CommunityHeaderEditAction({ community }: CommunityHeaderEditActionProps) {
+export function CommunityHeaderEditAction() {
   const open = useCommunityEditDialogStore((state) => state.open);
   const setOpen = useCommunityEditDialogStore((state) => state.setOpen);
 
@@ -30,7 +30,7 @@ export function CommunityHeaderEditAction({ community }: CommunityHeaderEditActi
           <DialogTitle>{texts.communities.detail.editTitle}</DialogTitle>
         </DialogHeader>
 
-        <EditCommunityForm community={community} />
+        <EditCommunityForm />
       </DialogContent>
     </Dialog>
   );

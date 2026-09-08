@@ -1,25 +1,20 @@
-import type { CommunityHeaderProps } from "@/types/components/communities/community-header-props";
 import { useCommunityHeaderController } from "@/utils/components/communities/use-community-header-controller";
 
 import { CommunityHeaderActions } from "@/components/community-header-actions";
 import { CommunityHeaderIdentity } from "@/components/community-header-identity";
 import { CommunityHeaderMedia } from "@/components/community-header-media";
 
-export function CommunityHeader({ community, members }: CommunityHeaderProps) {
-  const controller = useCommunityHeaderController(community, members);
+export function CommunityHeader() {
+  const { coverUrl } = useCommunityHeaderController();
 
   return (
     <div className="surface-card overflow-hidden">
-      <CommunityHeaderMedia coverUrl={controller.coverUrl} />
+      <CommunityHeaderMedia coverUrl={coverUrl} />
 
       <div className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <CommunityHeaderIdentity
-            community={community}
-            primaryAdmin={controller.primaryAdmin}
-            avatarUrl={controller.avatarUrl}
-          />
-          <CommunityHeaderActions community={community} members={members} />
+          <CommunityHeaderIdentity />
+          <CommunityHeaderActions />
         </div>
       </div>
     </div>

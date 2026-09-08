@@ -1,18 +1,21 @@
-import { texts } from "@/texts";
-import type { CommunityFeedProps } from "@/types/components/communities/community-feed-props";
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 
 import { PostCard } from "@/components/post-card";
 
-export function CommunityFeed({ posts, showEmptyState, emptyMessage }: CommunityFeedProps) {
+export function CommunityFeed() {
+  const { posts, showEmptyState, emptyMessage } = useCommunityDetailContext();
+
   return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-semibold">{texts.communities.detail.feed}</h2>
+    <div className="flex-1 space-y-6 overflow-visible px-0 pb-3 pt-0">
+      {posts.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
 
       {showEmptyState ? (
-        <p className="surface-card p-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
-      ) : (
-        posts.map((post) => <PostCard key={post.id} post={post} />)
-      )}
-    </section>
+        <div className="rounded-xl border border-border/60 bg-card p-6 text-sm text-muted-foreground shadow-sm">
+          {emptyMessage}
+        </div>
+      ) : null}
+    </div>
   );
 }

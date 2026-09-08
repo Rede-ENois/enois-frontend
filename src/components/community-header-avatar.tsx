@@ -1,8 +1,6 @@
-import type { CommunityHeaderIdentityProps } from "@/types/components/communities/community-header-identity-props";
+import type { CommunityHeaderAvatarProps } from "@/types/components/communities/community-header-avatar-props";
 
-export function CommunityHeaderAvatar({
-  avatarUrl,
-}: Pick<CommunityHeaderIdentityProps, "avatarUrl">) {
+export function CommunityHeaderAvatar({ avatarUrl }: CommunityHeaderAvatarProps) {
   if (!avatarUrl) return null;
 
   return (

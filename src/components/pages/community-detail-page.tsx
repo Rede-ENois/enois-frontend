@@ -1,4 +1,4 @@
-import { useCommunityDetailPageController } from "@/utils/components/communities/use-community-detail-page-controller";
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 
 import { AppContainer } from "@/components/app-container";
 import { CommunityComposer } from "@/components/community-composer";
@@ -8,23 +8,18 @@ import { CommunityHeader } from "@/components/community-header";
 import { CommunityMembers } from "@/components/community-members";
 
 export function CommunityDetail() {
-  const { community, members, posts, showComposer, showEmptyState, emptyMessage } =
-    useCommunityDetailPageController();
+  const { showComposer } = useCommunityDetailContext();
 
   return (
     <AppContainer>
       <div className="space-y-6">
         <CommunityDetailBackLink />
-        <CommunityHeader community={community} members={members} />
-        {showComposer && <CommunityComposer communityId={community.id} />}
+        <CommunityHeader />
+        {showComposer && <CommunityComposer />}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-          <CommunityFeed
-            posts={posts}
-            showEmptyState={showEmptyState}
-            emptyMessage={emptyMessage}
-          />
-          <CommunityMembers members={members} />
+          <CommunityFeed />
+          <CommunityMembers />
         </div>
       </div>
     </AppContainer>

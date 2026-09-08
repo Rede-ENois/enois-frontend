@@ -2,9 +2,13 @@ import { type FormEvent, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
+
 import { createPost } from "@/lib/api/feed/create-post";
 
-export function useCommunityComposerController(communityId: string) {
+export function useCommunityComposerController() {
+  const { community } = useCommunityDetailContext();
+  const communityId = community.id;
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
   const createPostMutation = useMutation({

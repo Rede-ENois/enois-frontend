@@ -1,15 +1,14 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import type { CommunityHeaderIdentityProps } from "@/types/components/communities/community-header-identity-props";
+import { useCommunityHeaderController } from "@/utils/components/communities/use-community-header-controller";
 import { Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 
-export function CommunityHeaderDetails({
-  community,
-  primaryAdmin,
-}: Pick<CommunityHeaderIdentityProps, "community" | "primaryAdmin">) {
+export function CommunityHeaderDetails() {
+  const { community, primaryAdmin } = useCommunityHeaderController();
+
   return (
     <div className="min-w-0">
       <Badge className="rounded-full bg-primary-soft text-primary hover:bg-primary-soft">
