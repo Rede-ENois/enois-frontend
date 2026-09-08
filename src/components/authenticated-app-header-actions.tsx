@@ -1,5 +1,5 @@
 import { AuthenticatedAppProfileLink } from "@/components/authenticated-app-profile-link";
-import { NotificationsPopoverProvider } from "@/components/notifications-popover-provider";
+import { NotificationsPopoverProvider } from "@/components/notifications/notifications-popover-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AuthenticatedAppHeaderActions() {
