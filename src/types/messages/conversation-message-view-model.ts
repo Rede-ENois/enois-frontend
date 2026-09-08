@@ -1,4 +1,4 @@
-import type { Message } from "@/types/application/message/message";
+import type { Message } from "@/types/messages/message";
 
 export type ConversationMessageViewModel = {
   message: Message;

@@ -1,5 +1,5 @@
 import type { PageResponse } from "@/types/application/api/page-response";
-import type { Conversation } from "@/types/application/message/conversation";
+import type { Conversation } from "@/types/messages/conversation";
 import { buildQuery } from "@/utils/build-query";
 
 import { apiRequest } from "@/lib/api-request";

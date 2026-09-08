@@ -1,4 +1,4 @@
-import type { Message } from "@/types/application/message/message";
+import type { Message } from "@/types/messages/message";
 import { formatRelativeTime } from "@/utils/format-relative-time";
 
 export function createConversationMessageItems(messages: Message[], currentUserId: string | null) {

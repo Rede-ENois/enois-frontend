@@ -1,4 +1,4 @@
-import { useMessagesStore } from "@/stores/messages.store";
+import { useMessagesStore } from "@/stores/messages/messages.store";
 
 export function useMessagesSidebarController() {
   const activeConversationId = useMessagesStore((state) => state.activeConversationId);

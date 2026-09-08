@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useMessagesStore } from "@/stores/messages.store";
+import { useMessagesStore } from "@/stores/messages/messages.store";
 
 import { createConversation as createConversationRequest } from "@/lib/messages/api/create-conversation";
 

@@ -1,4 +1,4 @@
-import { useMessagesStore } from "@/stores/messages.store";
+import { useMessagesStore } from "@/stores/messages/messages.store";
 import { createConversationMessageItems } from "@/utils/messages/create-conversation-message-items";
 import { useConversationScrollAnchor } from "@/utils/messages/use-conversation-scroll-anchor";
 

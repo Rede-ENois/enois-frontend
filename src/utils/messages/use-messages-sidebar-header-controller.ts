@@ -1,4 +1,4 @@
-import { useMessagesStore } from "@/stores/messages.store";
+import { useMessagesStore } from "@/stores/messages/messages.store";
 import { texts } from "@/texts";
 
 export function useMessagesSidebarHeaderController() {

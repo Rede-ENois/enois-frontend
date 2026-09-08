@@ -1,4 +1,4 @@
-import type { Conversation } from "@/types/application/message/conversation";
+import type { Conversation } from "@/types/messages/conversation";
 
 export function getConversationCounterpartId(
   conversation: Conversation | null,

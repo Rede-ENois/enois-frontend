@@ -1,4 +1,4 @@
-import { useMessagesStore } from "@/stores/messages.store";
+import { useMessagesStore } from "@/stores/messages/messages.store";
 import { useConversationSearchResults } from "@/utils/messages/use-conversation-search-results";
 
 export function useNewConversationSearchResultsController() {

@@ -1,4 +1,4 @@
-import type { NewConversationSearchResultItemProps } from "@/types/components/messages/new-conversation-search-result-item-props";
+import type { NewConversationSearchResultItemProps } from "@/types/messages/new-conversation-search-result-item-props";
 import { useCreateDirectConversation } from "@/utils/messages/use-create-direct-conversation";
 
 import { UserAvatar } from "@/components/user-avatar";

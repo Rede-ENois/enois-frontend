@@ -2,7 +2,7 @@ import { type FormEvent, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useMessagesStore } from "@/stores/messages.store";
+import { useMessagesStore } from "@/stores/messages/messages.store";
 
 import { sendMessage } from "@/lib/messages/api/send-message";
 

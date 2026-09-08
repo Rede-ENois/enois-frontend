@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { Conversation } from "@/types/application/message/conversation";
+import type { Conversation } from "@/types/messages/conversation";
 import { getConversationCounterpartId } from "@/utils/messages/get-conversation-counterpart-id";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";

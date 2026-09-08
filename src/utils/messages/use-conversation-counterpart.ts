@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import type { Conversation } from "@/types/application/message/conversation";
+import type { Conversation } from "@/types/messages/conversation";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/get-current-user-id";

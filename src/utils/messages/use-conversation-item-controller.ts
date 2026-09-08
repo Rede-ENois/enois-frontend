@@ -1,5 +1,5 @@
-import { useMessagesStore } from "@/stores/messages.store";
-import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
+import { useMessagesStore } from "@/stores/messages/messages.store";
+import type { ConversationItemProps } from "@/types/messages/conversation-item-props";
 import { useConversationCounterpart } from "@/utils/messages/use-conversation-counterpart";
 import { useConversationReadAction } from "@/utils/messages/use-conversation-read-action";
 import { formatRelativeTime } from "@/utils/format-relative-time";
