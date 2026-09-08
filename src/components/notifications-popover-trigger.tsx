@@ -1,14 +1,14 @@
-import type { NotificationsPopoverTriggerProps } from "@/types/components/notification/notifications-popover-trigger-props";
 import { Bell } from "lucide-react";
 
-export function NotificationsPopoverTrigger({
-  label,
-  unreadBadgeLabel,
-}: NotificationsPopoverTriggerProps) {
+import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
+
+export function NotificationsPopoverTrigger() {
+  const { triggerLabel, unreadBadgeLabel } = useNotificationsPopoverView();
+
   return (
     <button
       className="relative grid h-10 w-10 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-      aria-label={label}
+      aria-label={triggerLabel}
     >
       <Bell className="h-5 w-5" />
       {unreadBadgeLabel !== null && (

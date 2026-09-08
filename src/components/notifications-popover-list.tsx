@@ -1,14 +1,10 @@
-import type { NotificationsPopoverListProps } from "@/types/components/notification/notifications-popover-list-props";
-
 import { NotificationItem } from "@/components/notification-item";
 
-export function NotificationsPopoverList({
-  notifications,
-  showEmptyState,
-  emptyMessage,
-  onMarkAsRead,
-  onAcceptConnection,
-}: NotificationsPopoverListProps) {
+import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
+
+export function NotificationsPopoverList() {
+  const { displayedNotifications, showEmptyState, emptyMessage } = useNotificationsPopoverView();
+
   return (
     <div className="max-h-[28rem] overflow-y-auto">
       {showEmptyState ? (
@@ -16,13 +12,8 @@ export function NotificationsPopoverList({
           {emptyMessage}
         </p>
       ) : (
-        notifications.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            onMarkAsRead={onMarkAsRead}
-            onAcceptConnection={onAcceptConnection}
-          />
+        displayedNotifications.map((notification) => (
+          <NotificationItem key={notification.id} notification={notification} />
         ))
       )}
     </div>

@@ -1,17 +1,19 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import type { NotificationItemProps } from "@/types/components/notification/notification-item-props";
+import type { Notification } from "@/types/application/notification/notification";
+
 import { navigateToHref } from "@/utils/navigation";
 
-export function useNotificationItemActions({
-  notification,
-  onMarkAsRead,
-  onAcceptConnection,
-}: NotificationItemProps) {
+import { useNotificationConnectionAction } from "@/utils/components/notifications/use-notification-connection-action";
+import { useNotificationReadActions } from "@/utils/components/notifications/use-notification-read-actions";
+
+export function useNotificationItemActions(notification: Notification) {
   const navigate = useNavigate();
+  const { markAsRead: markNotificationAsRead } = useNotificationReadActions();
+  const acceptNotificationConnection = useNotificationConnectionAction();
 
   const markAsRead = () => {
-    if (!notification.read) onMarkAsRead(notification.id);
+    if (!notification.read) markNotificationAsRead(notification.id);
   };
 
   const navigateToNotification = () => {
@@ -22,7 +24,7 @@ export function useNotificationItemActions({
   const acceptConnection = () => {
     if (!notification.actorId) return;
     markAsRead();
-    onAcceptConnection(notification.actorId);
+    acceptNotificationConnection(notification.actorId);
   };
 
   return { markAsRead, navigateToNotification, acceptConnection };
