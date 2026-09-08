@@ -1,13 +1,22 @@
-import type { ConversationMessagesProps } from "@/types/components/messages/conversation-messages-props";
+import { useMessagesStore } from "@/stores/messages.store";
 import { createConversationMessageItems } from "@/utils/components/messages/create-conversation-message-items";
 import { useConversationScrollAnchor } from "@/utils/components/messages/use-conversation-scroll-anchor";
 
-export function useConversationMessagesController({
-  messages,
-  currentUserId,
-  otherParticipantId,
-  otherUser,
-}: ConversationMessagesProps) {
+import { getCurrentUserId } from "@/lib/get-current-user-id";
+import { useConversationMessages } from "@/lib/use-conversation-messages";
+import { useConversationParticipant } from "@/lib/use-conversation-participant";
+import { useConversationSelection } from "@/lib/use-conversation-selection";
+
+export function useConversationMessagesController() {
+  const conversationId = useMessagesStore((state) => state.activeConversationId);
+  const currentUserId = getCurrentUserId();
+  const conversation = useConversationSelection(conversationId);
+  const messages = useConversationMessages(conversation?.id);
+  const { otherParticipantId, otherUser } = useConversationParticipant(
+    conversation,
+    currentUserId,
+  );
+
   return {
     messagesEndRef: useConversationScrollAnchor(messages.length),
     showEmptyState: messages.length === 0,

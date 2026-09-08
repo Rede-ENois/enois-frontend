@@ -2,16 +2,19 @@ import { type FormEvent, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { useMessagesStore } from "@/stores/messages.store";
+
 import { sendMessage } from "@/lib/api/messages/send-message";
 
-export function useConversationComposerController(conversationId: string) {
+export function useConversationComposerController() {
   const queryClient = useQueryClient();
+  const conversationId = useMessagesStore((state) => state.activeConversationId);
   const [text, setText] = useState("");
 
   const send = useMutation({
-    mutationFn: (content: string) => sendMessage(conversationId, content),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+    mutationFn: ({ id, content }: { id: string; content: string }) => sendMessage(id, content),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["messages", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       setText("");
     },
@@ -20,8 +23,8 @@ export function useConversationComposerController(conversationId: string) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const content = text.trim();
-    if (!content) return;
-    send.mutate(content);
+    if (!conversationId || !content) return;
+    send.mutate({ id: conversationId, content });
   };
 
   return {
@@ -29,6 +32,6 @@ export function useConversationComposerController(conversationId: string) {
     setText,
     submit,
     sending: send.isPending,
-    submitDisabled: !text.trim() || send.isPending,
+    submitDisabled: !conversationId || !text.trim() || send.isPending,
   };
 }

@@ -1,10 +1,9 @@
-import type { ConversationMessagesProps } from "@/types/components/messages/conversation-messages-props";
 import { useConversationMessagesController } from "@/utils/components/messages/use-conversation-messages-controller";
 
 import { ConversationMessageList } from "@/components/conversation-message-list";
 
-export function ConversationMessages(props: ConversationMessagesProps) {
-  const messages = useConversationMessagesController(props);
+export function ConversationMessages() {
+  const messages = useConversationMessagesController();
 
   return (
     <ConversationMessageList

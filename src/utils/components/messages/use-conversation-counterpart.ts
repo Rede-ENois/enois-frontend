@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
+import type { Conversation } from "@/types/application/message/conversation";
 
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
-export function useConversationCounterpart(conversation: ConversationItemProps["conversation"]) {
+export function useConversationCounterpart(conversation: Conversation | null) {
   const currentUserId = getCurrentUserId();
-  const otherId = conversation.participantIds.find((id) => id !== currentUserId);
+  const otherId = conversation?.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
     queryKey: ["profile", "by-id", otherId],
     queryFn: () => getProfileById(otherId ?? ""),
@@ -18,7 +18,7 @@ export function useConversationCounterpart(conversation: ConversationItemProps["
   return {
     otherId,
     otherUser,
-    title: conversation.title ?? otherUser?.name ?? texts.messages.conversationFallback,
+    title: conversation?.title ?? otherUser?.name ?? texts.messages.conversationFallback,
     profileUsername: otherUser?.username ?? otherId ?? "",
   };
 }
