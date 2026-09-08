@@ -1,11 +1,11 @@
-import { useForgotPasswordStore } from "@/stores/forgot-password.store";
 import { texts } from "@/texts";
+import { useForgotPasswordSuccessController } from "@/utils/components/auth/use-forgot-password-success-controller";
 import { MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 export function ForgotPasswordSuccess() {
-  const close = useForgotPasswordStore((state) => state.close);
+  const { close } = useForgotPasswordSuccessController();
 
   return (
     <div className="space-y-4 pb-2 pt-2">

@@ -1,5 +1,5 @@
-import { useForgotPasswordStore } from "@/stores/forgot-password.store";
 import { texts } from "@/texts";
+import { useForgotPasswordDialogController } from "@/utils/components/auth/use-forgot-password-dialog-controller";
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -10,9 +10,7 @@ import { ForgotPasswordForm } from "./forgot-password-form";
 import { ForgotPasswordSuccess } from "./forgot-password-success";
 
 export function ForgotPasswordDialog() {
-  const open = useForgotPasswordStore((state) => state.open);
-  const sent = useForgotPasswordStore((state) => state.sent);
-  const setOpen = useForgotPasswordStore((state) => state.setOpen);
+  const { open, sent, setOpen } = useForgotPasswordDialogController();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

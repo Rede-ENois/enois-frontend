@@ -1,12 +1,11 @@
-import { useMessagesStore } from "@/stores/messages.store";
 import { texts } from "@/texts";
+import { useNewConversationSearchInputController } from "@/utils/components/messages/use-new-conversation-search-input-controller";
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
 export function NewConversationSearchInput() {
-  const query = useMessagesStore((state) => state.newConversationSearchQuery);
-  const setQuery = useMessagesStore((state) => state.setNewConversationSearchQuery);
+  const { query, setQuery } = useNewConversationSearchInputController();
 
   return (
     <div className="relative">
