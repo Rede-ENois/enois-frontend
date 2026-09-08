@@ -4,7 +4,7 @@ import { ProfileMetadataItem } from "@/components/profile-metadata-item";
 import { ProfileReputationBadge } from "@/components/profile-reputation-badge";
 
 export function ProfileHeaderMetadata() {
-  const { items, connectionsLabel, reputation, showReputation } =
+  const { items, connectionsLabel, reputationLabel, showReputation } =
     useProfileHeaderMetadataController();
 
   return (
@@ -13,7 +13,7 @@ export function ProfileHeaderMetadata() {
         <ProfileMetadataItem key={item.key} icon={item.icon} value={item.value} />
       ))}
       <span>{connectionsLabel}</span>
-      {showReputation && <ProfileReputationBadge reputation={reputation} />}
+      {showReputation && <ProfileReputationBadge label={reputationLabel} />}
     </div>
   );
 }

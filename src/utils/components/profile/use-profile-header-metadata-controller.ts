@@ -12,7 +12,7 @@ export function useProfileHeaderMetadataController() {
       return value ? [{ ...item, value }] : [];
     }),
     connectionsLabel: texts.profile.connectionsMeta(user.connectionsCount ?? 0),
-    reputation,
+    reputationLabel: texts.profile.reputationMeta(reputation),
     showReputation: reputation > 0,
   };
 }
