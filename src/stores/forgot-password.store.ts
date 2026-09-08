@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { FORGOT_PASSWORD_INITIAL_STATE } from "@/consts/components/auth/forgot-password-initial-state";
+import { FORGOT_PASSWORD_INITIAL_STATE } from "@/constants/components/auth/forgot-password-initial-state";
 import { forgotPassword } from "@/lib/api/auth/forgot-password";
 import type { ForgotPasswordStore } from "@/types/stores/forgot-password-store";
 

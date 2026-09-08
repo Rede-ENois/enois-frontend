@@ -1,4 +1,4 @@
-import { LANDING_INFO_CARD_CLASS_NAMES } from "@/consts/components/landing/landing-info-card-class-names";
+import { LANDING_INFO_CARD_CLASS_NAMES } from "@/constants/components/landing/landing-info-card-class-names";
 import type { LandingInfoCardProps } from "@/types/components/landing/landing-info-card-props";
 
 export function LandingInfoCard({ icon: Icon, title, description, variant }: LandingInfoCardProps) {

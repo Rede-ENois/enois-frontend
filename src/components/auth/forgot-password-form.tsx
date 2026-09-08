@@ -1,5 +1,6 @@
 import { texts } from "@/texts";
-import type { ForgotPasswordFormProps } from "@/types/components/auth/forgot-password-form-props";
+
+import { useForgotPasswordFormController } from "@/utils/components/auth/use-forgot-password-form-controller";
 
 import { Input } from "@/components/ui/input";
 
@@ -8,17 +9,14 @@ import { FormField } from "@/components/form-field";
 
 import { AuthSubmitButton } from "./auth-submit-button";
 
-export function ForgotPasswordForm({
-  errors,
-  formError,
-  loading,
-  submit,
-}: ForgotPasswordFormProps) {
+export function ForgotPasswordForm() {
+  const { emailError, formError, loading, submit } = useForgotPasswordFormController();
+
   return (
     <form onSubmit={submit} className="space-y-4 pb-2 pt-2" noValidate>
       <p className="text-sm text-muted-foreground">{texts.auth.forgot.description}</p>
 
-      <FormField label={texts.auth.fields.email} error={errors.email}>
+      <FormField label={texts.auth.fields.email} error={emailError}>
         <Input
           name="email"
           type="email"

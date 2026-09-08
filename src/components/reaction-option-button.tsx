@@ -1,4 +1,4 @@
-import { REACTION_OPTION_CLASS_NAMES } from "@/consts/components/post/reaction-option-class-names";
+import { REACTION_OPTION_CLASS_NAMES } from "@/constants/components/post/reaction-option-class-names";
 import type { ReactionOptionButtonProps } from "@/types/components/post/reaction-option-button-props";
 
 export function ReactionOptionButton({ option, variant }: ReactionOptionButtonProps) {

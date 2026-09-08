@@ -1,10 +1,13 @@
-import { texts } from "@/texts";
-import type { ForgotPasswordSuccessProps } from "@/types/components/auth/forgot-password-success-props";
 import { MailCheck } from "lucide-react";
+
+import { useForgotPasswordStore } from "@/stores/forgot-password.store";
+import { texts } from "@/texts";
 
 import { Button } from "@/components/ui/button";
 
-export function ForgotPasswordSuccess({ onClose }: ForgotPasswordSuccessProps) {
+export function ForgotPasswordSuccess() {
+  const close = useForgotPasswordStore((state) => state.close);
+
   return (
     <div className="space-y-4 pb-2 pt-2">
       <div className="flex items-start gap-3 rounded-xl bg-primary/10 p-4">
@@ -18,7 +21,7 @@ export function ForgotPasswordSuccess({ onClose }: ForgotPasswordSuccessProps) {
         </div>
       </div>
 
-      <Button className="w-full rounded-full" onClick={onClose}>
+      <Button className="w-full rounded-full" onClick={close}>
         {texts.auth.forgot.understood}
       </Button>
     </div>

@@ -1,4 +1,4 @@
-import { LANDING_PHILOSOPHY_VALUES } from "@/consts/components/landing/landing-philosophy-values";
+import { LANDING_PHILOSOPHY_VALUES } from "@/constants/components/landing/landing-philosophy-values";
 
 import { LandingInfoCard } from "@/components/landing-info-card";
 import { LandingPhilosophyFreeBadge } from "@/components/landing-philosophy-free-badge";

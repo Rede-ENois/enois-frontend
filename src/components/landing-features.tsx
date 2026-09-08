@@ -1,4 +1,4 @@
-import { LANDING_FEATURES } from "@/consts/components/landing/landing-features";
+import { LANDING_FEATURES } from "@/constants/components/landing/landing-features";
 
 import { LandingFeaturesHeader } from "@/components/landing-features-header";
 import { LandingInfoCard } from "@/components/landing-info-card";
