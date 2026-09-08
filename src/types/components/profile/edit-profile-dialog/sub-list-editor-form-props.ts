@@ -1,13 +1,9 @@
-import type { SubField } from "@/types/components/profile/edit-profile-dialog/sub-field";
+import type { SubListCurrentlyHereToggleProps } from "@/types/components/profile/edit-profile-dialog/sub-list-currently-here-toggle-props";
+import type { SubListEditorActionsProps } from "@/types/components/profile/edit-profile-dialog/sub-list-editor-actions-props";
+import type { SubListEditorFieldProps } from "@/types/components/profile/edit-profile-dialog/sub-list-editor-field-props";
 
 export type SubListEditorFormProps = {
-  fields: SubField[];
-  form: Record<string, string>;
-  showCurrentlyHere: boolean;
-  currentlyHere: boolean;
-  onCurrentlyHereChange: (checked: boolean) => void;
-  onFieldChange: (key: string, value: string) => void;
-  isPending: boolean;
-  onSubmit: () => void | Promise<void>;
-  onCancel: () => void;
+  fields: SubListEditorFieldProps[];
+  currentlyHere: SubListCurrentlyHereToggleProps | null;
+  actions: SubListEditorActionsProps;
 };

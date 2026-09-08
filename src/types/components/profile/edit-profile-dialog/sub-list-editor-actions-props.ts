@@ -1,5 +1,7 @@
 export type SubListEditorActionsProps = {
-  isPending: boolean;
-  onSubmit: () => void | Promise<void>;
+  saveLabel: string;
+  saveDisabled: boolean;
+  onSave: () => void | Promise<void>;
+  cancelLabel: string;
   onCancel: () => void;
 };

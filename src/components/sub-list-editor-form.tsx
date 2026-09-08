@@ -4,30 +4,20 @@ import { SubListCurrentlyHereToggle } from "@/components/sub-list-currently-here
 import { SubListEditorActions } from "@/components/sub-list-editor-actions";
 import { SubListEditorField } from "@/components/sub-list-editor-field";
 
-export function SubListEditorForm(props: SubListEditorFormProps) {
+export function SubListEditorForm({
+  fields,
+  currentlyHere,
+  actions,
+}: SubListEditorFormProps) {
   return (
     <div className="space-y-3 rounded-xl border border-border-soft p-4">
-      {props.fields.map((field) => (
-        <SubListEditorField
-          key={field.key}
-          field={field}
-          value={props.form[field.key] ?? ""}
-          onChange={(value) => props.onFieldChange(field.key, value)}
-        />
+      {fields.map((field) => (
+        <SubListEditorField key={field.fieldKey} {...field} />
       ))}
 
-      {props.showCurrentlyHere && (
-        <SubListCurrentlyHereToggle
-          checked={props.currentlyHere}
-          onCheckedChange={props.onCurrentlyHereChange}
-        />
-      )}
+      {currentlyHere && <SubListCurrentlyHereToggle {...currentlyHere} />}
 
-      <SubListEditorActions
-        isPending={props.isPending}
-        onSubmit={props.onSubmit}
-        onCancel={props.onCancel}
-      />
+      <SubListEditorActions {...actions} />
     </div>
   );
 }

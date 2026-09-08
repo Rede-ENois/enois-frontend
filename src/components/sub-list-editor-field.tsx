@@ -5,21 +5,27 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { FormField } from "@/components/form-field";
 
-export function SubListEditorField({ field, value, onChange }: SubListEditorFieldProps) {
+export function SubListEditorField({
+  label,
+  multiline,
+  type,
+  value,
+  onChange,
+}: SubListEditorFieldProps) {
   return (
-    <FormField label={field.label} labelClassName="text-[13px] font-light text-text-subtle">
-      {field.multiline ? (
+    <FormField label={label} labelClassName="text-[13px] font-light text-text-subtle">
+      {multiline ? (
         <Textarea
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={onChange}
           rows={2}
           className="h-10 border-border-soft bg-surface-1"
         />
       ) : (
         <Input
-          type={field.type ?? "text"}
+          type={type}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={onChange}
           className="h-10 border-border-soft bg-surface-1"
         />
       )}

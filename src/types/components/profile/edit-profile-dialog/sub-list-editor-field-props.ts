@@ -1,7 +1,10 @@
-import type { SubField } from "@/types/components/profile/edit-profile-dialog/sub-field";
+import type { ChangeEventHandler, ComponentPropsWithoutRef } from "react";
 
 export type SubListEditorFieldProps = {
-  field: SubField;
+  fieldKey: string;
+  label: string;
+  multiline: boolean;
+  type: ComponentPropsWithoutRef<"input">["type"];
   value: string;
-  onChange: (value: string) => void;
+  onChange: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
 };
