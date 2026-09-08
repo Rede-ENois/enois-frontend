@@ -1,7 +1,7 @@
 import type { Community } from "@/types/application/community/community";
 
 export function buildCommunityUpdateRequest(
-  community: Community,
+  community: Pick<Community, "name" | "description">,
   form: { name: string; description: string; cover: string; avatar: string },
 ) {
   return {

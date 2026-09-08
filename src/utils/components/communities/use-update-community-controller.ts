@@ -7,7 +7,7 @@ import { buildCommunityUpdateRequest } from "@/utils/components/communities/buil
 import { updateCommunity as updateCommunityRequest } from "@/lib/api/communities/update-community";
 
 export function useUpdateCommunityController(
-  community: Community,
+  community: Pick<Community, "id" | "name" | "description">,
   form: { name: string; description: string; cover: string; avatar: string },
 ) {
   const queryClient = useQueryClient();

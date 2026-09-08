@@ -6,7 +6,9 @@ import type { Conversation } from "@/types/application/message/conversation";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
-export function useConversationCounterpart(conversation: Conversation | null) {
+export function useConversationCounterpart(
+  conversation: Pick<Conversation, "title" | "participantIds"> | null,
+) {
   const currentUserId = getCurrentUserId();
   const otherId = conversation?.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
