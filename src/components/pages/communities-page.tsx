@@ -6,7 +6,7 @@ import { AppContainer } from "@/components/app-container";
 import { CommunitiesGrid } from "@/components/communities/communities-grid";
 import { CommunitiesLoadMore } from "@/components/communities/communities-load-more";
 import { CommunitiesPageHeader } from "@/components/communities/communities-page-header";
-import { CommunityTopicFilters } from "@/components/community-topic-filters";
+import { CommunityTopicFilters } from "@/components/communities/community-topic-filters";
 
 export function Comunidades() {
   const { isDetail } = useCommunitiesPageContext();
