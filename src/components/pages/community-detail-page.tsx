@@ -1,7 +1,7 @@
 import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 
 import { AppContainer } from "@/components/app-container";
-import { CommunityComposer } from "@/components/community-composer";
+import { CommunityComposerProvider } from "@/components/community-composer-provider";
 import { CommunityDetailBackLink } from "@/components/community-detail-back-link";
 import { CommunityFeed } from "@/components/community-feed";
 import { CommunityHeader } from "@/components/community-header";
@@ -15,7 +15,7 @@ export function CommunityDetail() {
       <div className="space-y-6">
         <CommunityDetailBackLink />
         <CommunityHeader />
-        {showComposer && <CommunityComposer />}
+        {showComposer && <CommunityComposerProvider />}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
           <CommunityFeed />
