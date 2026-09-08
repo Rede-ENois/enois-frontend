@@ -9,7 +9,10 @@ export function useNetworkRequestCardController(request: ConnectionRequest) {
   const requestActions = useNetworkRequestActions();
 
   return {
-    user,
+    avatar: user?.avatar,
+    displayName: user?.name ?? texts.common.loading,
+    headline: user?.headline,
+    showHeadline: Boolean(user?.headline),
     profileUsername: user?.username ?? targetUserId,
     statusLabel: isOutgoing ? texts.network.requestSent : texts.network.wantsToConnect,
     actions: createNetworkRequestCardActions(request, isOutgoing, requestActions),
