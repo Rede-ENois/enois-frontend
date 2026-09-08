@@ -1,18 +1,27 @@
-import type { PostReactionControlsProps } from "@/types/components/post/post-reaction-controls-props";
+import { usePostActionsContext } from "@/utils/components/post/use-post-actions-context";
 
 import { PostReactionCountButton } from "@/components/post-reaction-count-button";
 import { PostReactionPicker } from "@/components/post-reaction-picker";
 
-export function PostReactionControls(props: PostReactionControlsProps) {
+export function PostReactionControls() {
+  const {
+    reactionActive,
+    reactionEmoji,
+    reactionTitle,
+    reactionOptions,
+    postCounters,
+    openReactions,
+  } = usePostActionsContext();
+
   return (
     <div className="flex">
       <PostReactionPicker
-        active={props.active}
-        emoji={props.emoji}
-        title={props.title}
-        options={props.options}
+        active={reactionActive}
+        emoji={reactionEmoji}
+        title={reactionTitle}
+        options={reactionOptions}
       />
-      <PostReactionCountButton count={props.count} onOpen={props.onOpen} />
+      <PostReactionCountButton count={postCounters.reactions} onOpen={openReactions} />
     </div>
   );
 }

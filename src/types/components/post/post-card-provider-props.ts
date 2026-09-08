@@ -1,5 +1,5 @@
 import type { PostView } from "@/types/application/feed/post-view";
 
-export type PostCardProps = {
+export type PostCardProviderProps = {
   post: PostView;
 };

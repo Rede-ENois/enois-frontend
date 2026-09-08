@@ -5,7 +5,7 @@ import { AppContainer } from "@/components/app-container";
 import { FeedComposer } from "@/components/feed-composer";
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { FeedTabs } from "@/components/feed-tabs";
-import { PostCard } from "@/components/post-card";
+import { PostCardProvider } from "@/components/post-card-provider";
 
 export function Home() {
   const { tabsProps, posts, showLoading, showPosts } = useFeedPageController();
@@ -23,7 +23,8 @@ export function Home() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             )}
-            {showPosts && posts.map((post) => <PostCard key={post.id} post={post} />)}
+            {showPosts &&
+              posts.map((post) => <PostCardProvider key={post.id} post={post} />)}
           </div>
         </div>
 

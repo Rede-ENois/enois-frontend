@@ -1,15 +1,19 @@
-import type { PostActionPanelsProps } from "@/types/components/post/post-action-panels-props";
+import { usePostActionsContext } from "@/utils/components/post/use-post-actions-context";
+import { usePostCardContext } from "@/utils/components/post/use-post-card-context";
 
 import { PostComments } from "@/components/post-comments";
 import { ReportDialog } from "@/components/post-report-dialog";
 import { ReactionsDialog } from "@/components/reactions-dialog";
 
-export function PostActionPanels({ postId, showComments }: PostActionPanelsProps) {
+export function PostActionPanels() {
+  const { post } = usePostCardContext();
+  const { showComments } = usePostActionsContext();
+
   return (
     <>
-      <ReactionsDialog postId={postId} />
-      <ReportDialog postId={postId} />
-      <PostComments postId={postId} visible={showComments} />
+      <ReactionsDialog postId={post.id} />
+      <ReportDialog postId={post.id} />
+      <PostComments postId={post.id} visible={showComments} />
     </>
   );
 }

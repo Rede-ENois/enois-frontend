@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
+import { ArrowLeft, Bookmark } from "lucide-react";
 
 import { texts } from "@/texts";
 import { useSavedPostsPageController } from "@/utils/components/feed/use-saved-posts-page-controller";
-import { ArrowLeft, Bookmark } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
-import { PostCard } from "@/components/post-card";
+import { PostCardProvider } from "@/components/post-card-provider";
 
 export function SavedPosts() {
   const { savedPosts } = useSavedPostsPageController();
@@ -45,7 +45,7 @@ export function SavedPosts() {
         ) : (
           <div className="space-y-4">
             {savedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCardProvider key={post.id} post={post} />
             ))}
           </div>
         )}

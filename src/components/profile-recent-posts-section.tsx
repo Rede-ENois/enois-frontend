@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { useProfileRecentPostsController } from "@/utils/components/profile/use-profile-recent-posts-controller";
 
-import { PostCard } from "@/components/post-card";
+import { PostCardProvider } from "@/components/post-card-provider";
 import { ProfileSection } from "@/components/profile-section";
 
 export function ProfileRecentPostsSection() {
@@ -14,7 +14,7 @@ export function ProfileRecentPostsSection() {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCardProvider key={post.id} post={post} />
           ))}
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useCommunityDetailContext } from "@/utils/components/communities/use-community-detail-context";
 
-import { PostCard } from "@/components/post-card";
+import { PostCardProvider } from "@/components/post-card-provider";
 
 export function CommunityFeed() {
   const { posts, showEmptyState, emptyMessage } = useCommunityDetailContext();
@@ -8,7 +8,7 @@ export function CommunityFeed() {
   return (
     <div className="flex-1 space-y-6 overflow-visible px-0 pb-3 pt-0">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+        <PostCardProvider key={post.id} post={post} />
       ))}
 
       {showEmptyState ? (

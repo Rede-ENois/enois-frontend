@@ -2,9 +2,9 @@ import { useEffect } from "react";
 
 import { typeMeta } from "@/constants/post-type-meta";
 import { usePostCardStore } from "@/stores/post-card.store";
-import type { PostCardProps } from "@/types/components/post/post-card-props";
+import type { PostView } from "@/types/application/feed/post-view";
 
-export function usePostCardController({ post }: PostCardProps) {
+export function usePostCardController(post: PostView) {
   const initializePostCard = usePostCardStore((state) => state.initializePostCard);
   const disposePostCard = usePostCardStore((state) => state.disposePostCard);
   const setReactionStatus = usePostCardStore((state) => state.setReactionStatus);

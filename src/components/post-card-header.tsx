@@ -1,9 +1,11 @@
-import type { PostCardHeaderProps } from "@/types/components/post/post-card-header-props";
+import { usePostCardContext } from "@/utils/components/post/use-post-card-context";
 
 import { AuthorInfo } from "@/components/post-author-info";
 import { PostTypeBadge } from "@/components/post-type-badge";
 
-export function PostCardHeader({ post, meta }: PostCardHeaderProps) {
+export function PostCardHeader() {
+  const { post, meta } = usePostCardContext();
+
   return (
     <header className="flex items-start justify-between gap-3">
       <AuthorInfo

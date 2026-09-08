@@ -1,36 +1,31 @@
-import { texts } from "@/texts";
-import type { PostActionButtonsProps } from "@/types/components/post/post-action-buttons-props";
 import { Bookmark, Flag, MessageSquare, Share2 } from "lucide-react";
 
-export function PostActionButtons({
-  comments,
-  saves,
-  saved,
-  onToggleComments,
-  onShare,
-  onReport,
-  onToggleSave,
-}: PostActionButtonsProps) {
+import { texts } from "@/texts";
+import { usePostActionsContext } from "@/utils/components/post/use-post-actions-context";
+
+export function PostActionButtons() {
+  const { postCounters, saved, toggleComments, sharePost, openReport, toggleSave } =
+    usePostActionsContext();
   const actions = [
     {
       key: "comments",
       icon: MessageSquare,
-      label: comments,
-      onClick: onToggleComments,
+      label: postCounters.comments,
+      onClick: toggleComments,
       muted: false,
     },
     {
       key: "share",
       icon: Share2,
       label: texts.posts.share,
-      onClick: onShare,
+      onClick: sharePost,
       muted: false,
     },
     {
       key: "report",
       icon: Flag,
       label: null,
-      onClick: onReport,
+      onClick: openReport,
       muted: true,
     },
   ];
@@ -54,14 +49,14 @@ export function PostActionButtons({
       </div>
 
       <button
-        onClick={onToggleSave}
+        onClick={toggleSave}
         className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground ${
           saved ? "text-primary" : ""
         }`}
       >
         <Bookmark className="h-4 w-4" />
 
-        <>{saves}</>
+        <>{postCounters.saves}</>
       </button>
     </>
   );
