@@ -1,5 +1,4 @@
 import type { Profile } from "@/types/application/profile/profile";
-
 import { useEditProfileValues } from "@/utils/components/profile/use-edit-profile-values";
 import { useUpdateProfileInfo } from "@/utils/components/profile/use-update-profile-info";
 

@@ -19,7 +19,11 @@ export function CommunityDetail() {
         {showComposer && <CommunityComposer communityId={community.id} />}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-          <CommunityFeed posts={posts} showEmptyState={showEmptyState} emptyMessage={emptyMessage} />
+          <CommunityFeed
+            posts={posts}
+            showEmptyState={showEmptyState}
+            emptyMessage={emptyMessage}
+          />
           <CommunityMembers members={members} />
         </div>
       </div>

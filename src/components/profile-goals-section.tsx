@@ -1,8 +1,7 @@
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
-import { Target } from "lucide-react";
-
 import { createProfileGoalsSectionViewModel } from "@/utils/components/profile/create-profile-goals-section-view-model";
+import { Target } from "lucide-react";
 
 import { ProfileSection } from "@/components/profile-section";
 

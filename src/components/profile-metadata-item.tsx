@@ -4,6 +4,7 @@ export function ProfileMetadataItem({ icon: Icon, value }: ProfileMetadataItemPr
   return (
     <span className="inline-flex items-center gap-1.5">
       <Icon className="h-4 w-4" />
+
       <>{value}</>
     </span>
   );

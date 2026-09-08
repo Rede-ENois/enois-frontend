@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import type { Area } from "react-easy-crop";
-
 import { getCroppedImg } from "@/utils/crop-image";
+import type { Area } from "react-easy-crop";
 
 export function useImageCropSave(
   imageSrc: string,

@@ -1,5 +1,4 @@
 import type { ConversationMessagesProps } from "@/types/components/messages/conversation-messages-props";
-
 import { useConversationMessagesController } from "@/utils/components/messages/use-conversation-messages-controller";
 
 import { ConversationMessageList } from "@/components/conversation-message-list";

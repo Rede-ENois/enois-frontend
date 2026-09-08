@@ -1,7 +1,6 @@
 import type { Props } from "@/types/components/profile/edit-profile-dialog/props";
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { useEditProfileDialogController } from "@/utils/components/profile/use-edit-profile-dialog-controller";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 

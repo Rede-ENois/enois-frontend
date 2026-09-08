@@ -1,5 +1,4 @@
 import type { CommunityHeaderProps } from "@/types/components/communities/community-header-props";
-
 import { useCommunityHeaderController } from "@/utils/components/communities/use-community-header-controller";
 
 import { CommunityHeaderActions } from "@/components/community-header-actions";
@@ -20,7 +19,6 @@ export function CommunityHeader({ community, members }: CommunityHeaderProps) {
             primaryAdmin={controller.primaryAdmin}
             avatarUrl={controller.avatarUrl}
           />
-
           <CommunityHeaderActions community={community} members={members} />
         </div>
       </div>

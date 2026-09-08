@@ -13,10 +13,7 @@ export function SubListItem<T extends Record<"id", string>>({
     <div className="rounded-xl border border-border-soft p-4">
       <div className="flex items-start justify-between gap-3">
         <SubListItemContent item={item} fields={fields} />
-        <SubListItemActions
-          onEdit={() => onEdit(item)}
-          onRemove={() => onRemove(item.id)}
-        />
+        <SubListItemActions onEdit={() => onEdit(item)} onRemove={() => onRemove(item.id)} />
       </div>
     </div>
   );

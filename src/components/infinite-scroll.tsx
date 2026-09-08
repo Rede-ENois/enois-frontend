@@ -1,5 +1,4 @@
 import type { InfiniteScrollProps } from "@/types/components/infinite-scroll-props";
-
 import { useInfiniteScrollController } from "@/utils/components/infinite-scroll/use-infinite-scroll-controller";
 
 export function InfiniteScroll(props: InfiniteScrollProps) {

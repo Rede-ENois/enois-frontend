@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 
 import { texts } from "@/texts";
+import { ArrowLeft } from "lucide-react";
 
 export function CommunityDetailBackLink() {
   return (

@@ -1,5 +1,4 @@
 import type { PostCardProps } from "@/types/components/post/post-card-props";
-
 import { usePostActionsController } from "@/utils/components/post/use-post-actions-controller";
 
 import { PostActionButtons } from "@/components/post-action-buttons";
@@ -20,7 +19,6 @@ export function PostActions({ post }: PostCardProps) {
           count={controller.postCounters.reactions}
           onOpen={controller.openReactions}
         />
-
         <PostActionButtons
           comments={controller.postCounters.comments}
           saves={controller.postCounters.saves}

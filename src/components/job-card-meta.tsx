@@ -1,7 +1,6 @@
-import { Sparkles } from "lucide-react";
-
 import { JOB_CARD_ATTRIBUTES } from "@/constants/job-card-attributes";
 import type { JobCardMetaProps } from "@/types/components/jobs/job-card-meta-props";
+import { Sparkles } from "lucide-react";
 
 export function JobCardMeta({ job, matchLabel, showSalary }: JobCardMetaProps) {
   return (

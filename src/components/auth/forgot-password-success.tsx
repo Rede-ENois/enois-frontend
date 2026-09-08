@@ -1,7 +1,6 @@
-import { MailCheck } from "lucide-react";
-
 import { useForgotPasswordStore } from "@/stores/forgot-password.store";
 import { texts } from "@/texts";
+import { MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +14,7 @@ export function ForgotPasswordSuccess() {
 
         <div>
           <p className="text-sm font-medium">{texts.auth.forgot.checkEmail}</p>
+
           <p className="mt-1 text-[13px] text-muted-foreground">
             {texts.auth.forgot.sentDescription}
           </p>

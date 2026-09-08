@@ -1,6 +1,5 @@
-import { Pencil, Trash2 } from "lucide-react";
-
 import type { SubListItemActionsProps } from "@/types/components/profile/edit-profile-dialog/sub-list-item-actions-props";
+import { Pencil, Trash2 } from "lucide-react";
 
 export function SubListItemActions({ onEdit, onRemove }: SubListItemActionsProps) {
   const actions = [

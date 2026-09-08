@@ -1,5 +1,4 @@
 import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
-
 import { createSubListSubmitData } from "@/utils/components/profile/create-sub-list-submit-data";
 import { useSubListEditorState } from "@/utils/components/profile/use-sub-list-editor-state";
 import { useSubListMutations } from "@/utils/components/profile/use-sub-list-mutations";

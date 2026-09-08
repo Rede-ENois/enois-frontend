@@ -1,10 +1,10 @@
 import { texts } from "@/texts";
+import { useProfileSubListController } from "@/utils/components/profile/use-profile-sub-list-controller";
 
 import { createCertification } from "@/lib/api/profile/certifications/create-certification";
 import { deleteCertification } from "@/lib/api/profile/certifications/delete-certification";
 import { listCertifications } from "@/lib/api/profile/certifications/list-certifications";
 import { updateCertification } from "@/lib/api/profile/certifications/update-certification";
-import { useProfileSubListController } from "@/utils/components/profile/use-profile-sub-list-controller";
 
 export function useEditProfileCertificationsController() {
   return useProfileSubListController(["me", "certifications"], listCertifications, {

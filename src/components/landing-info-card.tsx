@@ -9,7 +9,9 @@ export function LandingInfoCard({ icon: Icon, title, description, variant }: Lan
       <div className={classNames.icon}>
         <Icon className="h-5 w-5" />
       </div>
+
       <h3 className="mt-4 font-semibold">{title}</h3>
+
       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );

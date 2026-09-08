@@ -1,6 +1,6 @@
+import { usePostCardStore } from "@/stores/post-card.store";
 import type { CommentView } from "@/types/application/comment/comment-view";
 
-import { usePostCardStore } from "@/stores/post-card.store";
 import { getProfileById } from "@/lib/api/profile/get-profile-by-id";
 
 export function useCommentReplyAction(comment: CommentView) {

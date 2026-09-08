@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import type { EmbedPlayerProps } from "@/types/components/post/embed-player-props";
-
 import { createEmbedPlayerViewModel } from "@/utils/components/post/create-embed-player-view-model";
 
 export function useEmbedPlayerController(props: EmbedPlayerProps) {

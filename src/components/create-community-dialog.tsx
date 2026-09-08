@@ -1,8 +1,7 @@
 import { texts } from "@/texts";
 import type { CreateCommunityDialogProps } from "@/types/components/communities/create-community-dialog-props";
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { useCreateCommunityDialogController } from "@/utils/components/communities/use-create-community-dialog-controller";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";

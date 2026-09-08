@@ -1,11 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 
 import type { SearchResult } from "@/types/application/search/search-result";
-import { navigateToHref } from "@/utils/navigation";
-
 import { useGlobalSearchInput } from "@/utils/components/search/use-global-search-input";
 import { useGlobalSearchOverlay } from "@/utils/components/search/use-global-search-overlay";
 import { useGlobalSearchResults } from "@/utils/components/search/use-global-search-results";
+import { navigateToHref } from "@/utils/navigation";
 
 export function useGlobalSearch() {
   const navigate = useNavigate();

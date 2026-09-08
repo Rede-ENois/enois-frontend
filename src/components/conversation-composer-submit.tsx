@@ -1,6 +1,5 @@
-import { Send } from "lucide-react";
-
 import type { ConversationComposerSubmitProps } from "@/types/components/messages/conversation-composer-submit-props";
+import { Send } from "lucide-react";
 
 export function ConversationComposerSubmit({ disabled }: ConversationComposerSubmitProps) {
   return (

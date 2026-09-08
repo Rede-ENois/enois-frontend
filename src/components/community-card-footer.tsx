@@ -1,7 +1,6 @@
-import { Users } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { CommunityCardFooterProps } from "@/types/components/communities/community-card-footer-props";
+import { Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

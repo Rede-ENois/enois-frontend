@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import type { AuthorInfoProps } from "@/types/components/post/author-info-props";
-
 import { createAuthorInfoViewModel } from "@/utils/components/post/create-author-info-view-model";
 
 import { UserAvatar } from "@/components/user-avatar";

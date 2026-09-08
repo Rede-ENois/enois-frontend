@@ -1,5 +1,4 @@
 import type { RecommendationItemProps } from "@/types/components/profile/recommendation-item-props";
-
 import { useProfileRecommendationItemController } from "@/utils/components/profile/use-profile-recommendation-item-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -15,9 +14,7 @@ export function ProfileRecommendationItem(props: RecommendationItemProps) {
         <span className="text-[12px] font-medium text-text-strong">{recommenderName}</span>
       </div>
 
-      <p className="break-words text-[13px] font-light leading-relaxed text-text-subtle">
-        {quote}
-      </p>
+      <p className="break-words text-[13px] font-light leading-relaxed text-text-subtle">{quote}</p>
     </div>
   );
 }

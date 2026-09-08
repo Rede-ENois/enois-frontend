@@ -1,7 +1,6 @@
-import { Send, UserMinus, UserPlus } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { NetworkUser } from "@/types/application/network/network-user";
+import { Send, UserMinus, UserPlus } from "lucide-react";
 
 export function createNetworkMatchViewModel(
   user: NetworkUser,

@@ -1,6 +1,5 @@
-import { ArrowRight, Loader2 } from "lucide-react";
-
 import type { AuthSubmitButtonProps } from "@/types/components/auth/auth-submit-button-props";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +11,7 @@ export function AuthSubmitButton({ loading, label }: AuthSubmitButtonProps) {
       ) : (
         <>
           <>{label} </>
+
           <ArrowRight className="h-4 w-4" />
         </>
       )}

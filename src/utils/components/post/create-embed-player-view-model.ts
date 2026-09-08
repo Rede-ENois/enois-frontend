@@ -1,10 +1,7 @@
 import { texts } from "@/texts";
 import type { EmbedPlayerProps } from "@/types/components/post/embed-player-props";
 
-export function createEmbedPlayerViewModel(
-  { type, id }: EmbedPlayerProps,
-  hostname: string,
-) {
+export function createEmbedPlayerViewModel({ type, id }: EmbedPlayerProps, hostname: string) {
   const thumbnail =
     type === "youtube"
       ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg`

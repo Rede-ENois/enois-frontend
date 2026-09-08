@@ -2,11 +2,10 @@ import { useCallback, useRef } from "react";
 
 import type { Profile } from "@/types/application/profile/profile";
 import type { ProfileCropPurpose } from "@/types/components/profile/profile-crop-purpose";
+import { useProfileMediaUpdater } from "@/utils/components/profile/use-profile-media-updater";
 
 import { useImageCropUpload } from "@/lib/use-image-crop-upload";
 import { useMediaUpload } from "@/lib/use-media-upload";
-
-import { useProfileMediaUpdater } from "@/utils/components/profile/use-profile-media-updater";
 
 export function useProfileMediaEditor(user: Profile) {
   const upload = useMediaUpload();

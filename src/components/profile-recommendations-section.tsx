@@ -1,8 +1,7 @@
 import { texts } from "@/texts";
 import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
-import { Star } from "lucide-react";
-
 import { useProfileRecommendationsController } from "@/utils/components/profile/use-profile-recommendations-controller";
+import { Star } from "lucide-react";
 
 import { ProfileRecommendationItem } from "@/components/profile-recommendation-item";
 import { ProfileSection } from "@/components/profile-section";

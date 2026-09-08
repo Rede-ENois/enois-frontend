@@ -1,7 +1,6 @@
 import { texts } from "@/texts";
-import { UserPlus } from "lucide-react";
-
 import { useFeedNetworkSuggestionsController } from "@/utils/components/feed/use-feed-network-suggestions-controller";
+import { UserPlus } from "lucide-react";
 
 import { FeedNetworkSuggestionItem } from "@/components/feed-network-suggestion-item";
 

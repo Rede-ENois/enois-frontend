@@ -4,10 +4,7 @@ import { buildMediaUploadFileName } from "@/utils/media/build-media-upload-file-
 import { requestUpload } from "@/lib/api/media/request-upload";
 import { uploadToImageKit } from "@/lib/api/media/upload-to-imagekit";
 
-export async function uploadMediaFile(
-  file: File,
-  purpose = "POST_IMAGE",
-): Promise<UploadResult> {
+export async function uploadMediaFile(file: File, purpose = "POST_IMAGE"): Promise<UploadResult> {
   const fileName = buildMediaUploadFileName(file.name);
   const { id, cdnUrl } = await requestUpload({
     fileName,

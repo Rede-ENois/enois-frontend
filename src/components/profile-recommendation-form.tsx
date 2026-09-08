@@ -1,6 +1,5 @@
 import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
 import { texts } from "@/texts";
-
 import { useCreateProfileRecommendation } from "@/utils/components/profile/use-create-profile-recommendation";
 
 import { Button } from "@/components/ui/button";

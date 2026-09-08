@@ -1,11 +1,9 @@
 import { type FormEvent, useState } from "react";
 
-import type { ZodType } from "zod";
-
 import type { AuthResponse } from "@/types/application/auth/auth-response";
-import { getZodFieldErrors } from "@/utils/get-zod-field-errors";
-
 import { useAuthSessionSubmission } from "@/utils/components/auth/use-auth-session-submission";
+import { getZodFieldErrors } from "@/utils/get-zod-field-errors";
+import type { ZodType } from "zod";
 
 export function useAuthSessionFormController<TInput>(
   schema: ZodType<TInput>,

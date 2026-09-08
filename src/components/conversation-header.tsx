@@ -1,5 +1,4 @@
 import type { ConversationHeaderProps } from "@/types/components/messages/conversation-header-props";
-
 import { useConversationHeaderController } from "@/utils/components/messages/use-conversation-header-controller";
 
 import { ConversationHeaderBackButton } from "@/components/conversation-header-back-button";

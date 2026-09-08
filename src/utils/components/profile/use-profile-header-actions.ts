@@ -1,9 +1,8 @@
 import type { Profile } from "@/types/application/profile/profile";
-
-import { useAuth } from "@/lib/use-auth";
-
 import { useProfileConnectionController } from "@/utils/components/profile/use-profile-connection-controller";
 import { useProfileMessageAction } from "@/utils/components/profile/use-profile-message-action";
+
+import { useAuth } from "@/lib/use-auth";
 
 export function useProfileHeaderActions(user: Profile) {
   const { user: me, requireAuth } = useAuth();

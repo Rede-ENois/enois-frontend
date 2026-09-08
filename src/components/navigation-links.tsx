@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import type { NavigationLinksProps } from "@/types/components/navigation/navigation-links-props";
-
 import { useNavigationLinksController } from "@/utils/components/navigation/use-navigation-links-controller";
 
 import { cn } from "@/lib/utils";

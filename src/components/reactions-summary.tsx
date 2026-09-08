@@ -1,5 +1,4 @@
 import type { PostIdProps } from "@/types/components/post/post-id-props";
-
 import { useReactionsSummaryController } from "@/utils/components/post/use-reactions-summary-controller";
 
 export function ReactionsSummary({ postId }: PostIdProps) {

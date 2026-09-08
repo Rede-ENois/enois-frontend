@@ -8,7 +8,8 @@ export function createPostCommentThreads(comments: CommentView[]) {
       .filter((reply) => reply.parentCommentId === comment.id)
       .map((reply) => ({
         reply,
-        replyingTo: comments.find((candidate) => candidate.id === reply.parentCommentId)?.authorName,
+        replyingTo: comments.find((candidate) => candidate.id === reply.parentCommentId)
+          ?.authorName,
       })),
   }));
 

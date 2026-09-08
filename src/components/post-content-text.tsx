@@ -1,5 +1,4 @@
 import type { PostContentTextProps } from "@/types/components/post/post-content-text-props";
-
 import { linkifyText } from "@/utils/linkify-text";
 
 export function PostContentText({ content }: PostContentTextProps) {

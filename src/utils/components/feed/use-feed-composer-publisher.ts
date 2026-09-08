@@ -3,10 +3,9 @@ import { type FormEvent, useState } from "react";
 import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { MediaItem } from "@/types/components/feed/media-item";
+import { useCreateFeedPost } from "@/utils/components/feed/use-create-feed-post";
 
 import { useMediaUpload } from "@/lib/use-media-upload";
-
-import { useCreateFeedPost } from "@/utils/components/feed/use-create-feed-post";
 
 export function useFeedComposerPublisher(
   draft: string,

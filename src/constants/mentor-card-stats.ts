@@ -1,6 +1,5 @@
-import { Calendar, Star } from "lucide-react";
-
 import { texts } from "@/texts";
+import { Calendar, Star } from "lucide-react";
 
 export const MENTOR_CARD_STATS = [
   {

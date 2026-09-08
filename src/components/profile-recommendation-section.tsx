@@ -1,8 +1,8 @@
+import { texts } from "@/texts";
+import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 import { ThumbsUp } from "lucide-react";
 
 import { useAuth } from "@/lib/use-auth";
-import { texts } from "@/texts";
-import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 
 import { ProfileRecommendationDialog } from "@/components/profile-recommendation-dialog";
 import { ProfileSection } from "@/components/profile-section";

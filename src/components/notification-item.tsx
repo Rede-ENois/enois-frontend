@@ -1,5 +1,4 @@
 import type { NotificationItemProps } from "@/types/components/notification/notification-item-props";
-
 import { useNotificationItemController } from "@/utils/components/notifications/use-notification-item-controller";
 
 import { cn } from "@/lib/utils";

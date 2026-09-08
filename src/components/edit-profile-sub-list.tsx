@@ -1,5 +1,4 @@
 import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
-
 import { useSubListEditor } from "@/utils/components/profile/use-sub-list-editor";
 
 import { SubListCollection } from "@/components/sub-list-collection";

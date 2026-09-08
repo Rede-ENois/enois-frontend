@@ -1,5 +1,4 @@
 import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
-
 import { useResetPasswordFormController } from "@/utils/components/auth/use-reset-password-form-controller";
 
 import { ResetPasswordContent } from "./reset-password-content";

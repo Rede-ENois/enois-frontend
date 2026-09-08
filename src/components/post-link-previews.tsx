@@ -1,5 +1,4 @@
 import type { PostView } from "@/types/application/feed/post-view";
-
 import { createLinkPreviewsViewModel } from "@/utils/components/post/create-link-previews-view-model";
 
 import { EmbedPlayer } from "@/components/post-embed-player";

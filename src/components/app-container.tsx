@@ -1,5 +1,4 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
-
 import { useAppContainerController } from "@/utils/components/app/use-app-container-controller";
 
 import { AuthenticatedAppContainer } from "./authenticated-app-container";

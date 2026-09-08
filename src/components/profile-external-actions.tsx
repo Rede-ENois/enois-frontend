@@ -1,8 +1,7 @@
-import { MessageCircle } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { ProfileExternalActionsProps } from "@/types/components/profile/profile-external-actions-props";
 import type { ProfileHeaderAction } from "@/types/components/profile/profile-header-action";
+import { MessageCircle } from "lucide-react";
 
 import { ProfileHeaderActionButton } from "@/components/profile-header-action-button";
 

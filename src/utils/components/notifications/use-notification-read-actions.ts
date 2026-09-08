@@ -7,7 +7,10 @@ export function useNotificationReadActions() {
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications"] });
   const markAsRead = useMutation({ mutationFn: markNotificationAsRead, onSuccess: invalidate });
-  const markAllAsRead = useMutation({ mutationFn: markAllNotificationsAsRead, onSuccess: invalidate });
+  const markAllAsRead = useMutation({
+    mutationFn: markAllNotificationsAsRead,
+    onSuccess: invalidate,
+  });
 
   return {
     markAsRead: (id: string) => markAsRead.mutate(id),

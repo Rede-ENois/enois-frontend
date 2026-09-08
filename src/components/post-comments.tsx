@@ -1,5 +1,4 @@
 import type { PostCommentsProps } from "@/types/components/post/post-comments-props";
-
 import { usePostCommentsController } from "@/utils/components/post/use-post-comments-controller";
 
 import { PostCommentComposer } from "@/components/post-comment-composer";

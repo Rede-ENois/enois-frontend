@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import type { Profile } from "@/types/application/profile/profile";
 import type { EditProfileValues } from "@/types/components/profile/edit-profile-values";
-
 import { createEditProfileValues } from "@/utils/components/profile/create-edit-profile-values";
 
 export function useEditProfileValues(profile: Profile) {

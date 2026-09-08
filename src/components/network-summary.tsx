@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-
 import { useNetworkSummaryController } from "@/utils/components/network/use-network-summary-controller";
 
 import { Stat } from "@/components/network-stat";

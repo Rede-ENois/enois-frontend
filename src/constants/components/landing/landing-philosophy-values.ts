@@ -1,7 +1,6 @@
-import { GraduationCap, Heart, ShieldCheck, Users } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { LandingInfoCardProps } from "@/types/components/landing/landing-info-card-props";
+import { GraduationCap, Heart, ShieldCheck, Users } from "lucide-react";
 
 export const LANDING_PHILOSOPHY_VALUES = [
   {

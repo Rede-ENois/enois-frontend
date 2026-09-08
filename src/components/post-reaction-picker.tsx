@@ -1,9 +1,9 @@
+import type { PostReactionPickerProps } from "@/types/components/post/post-reaction-picker-props";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 import { Heart } from "lucide-react";
 
-import type { PostReactionPickerProps } from "@/types/components/post/post-reaction-picker-props";
-
 import { PopoverContent } from "@/components/ui/popover-content";
+
 import { ReactionOptionList } from "@/components/reaction-option-list";
 
 export function PostReactionPicker({ active, emoji, title, options }: PostReactionPickerProps) {

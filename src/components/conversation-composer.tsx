@@ -1,5 +1,4 @@
 import type { ConversationComposerProps } from "@/types/components/messages/conversation-composer-props";
-
 import { useConversationComposerController } from "@/utils/components/messages/use-conversation-composer-controller";
 
 import { ConversationComposerField } from "@/components/conversation-composer-field";

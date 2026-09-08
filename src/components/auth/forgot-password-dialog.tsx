@@ -1,7 +1,6 @@
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { useForgotPasswordStore } from "@/stores/forgot-password.store";
 import { texts } from "@/texts";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";

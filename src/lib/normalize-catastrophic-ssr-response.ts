@@ -1,5 +1,5 @@
-import { consumeCapturedError } from "@/lib/error-capture";
 import { createErrorPageResponse } from "@/lib/create-error-page-response";
+import { consumeCapturedError } from "@/lib/error-capture";
 
 export async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;

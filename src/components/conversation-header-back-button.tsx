@@ -1,6 +1,5 @@
-import { ArrowLeft } from "lucide-react";
-
 import { useMessagesStore } from "@/stores/messages.store";
+import { ArrowLeft } from "lucide-react";
 
 export function ConversationHeaderBackButton() {
   const clearConversation = useMessagesStore((state) => state.clearConversation);

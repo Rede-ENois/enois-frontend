@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { EVENT_FORMAT_OPTIONS } from "@/constants/event-format-options";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
-
 import { createInitialEventForm } from "@/utils/components/events/create-initial-event-form";
 import { useCreateEvent } from "@/utils/components/events/use-create-event";
 
@@ -14,10 +13,7 @@ export function useCreateEventDialogController() {
     setForm(createInitialEventForm());
   });
 
-  const setField = <K extends keyof CreateEventRequest>(
-    field: K,
-    value: CreateEventRequest[K],
-  ) => {
+  const setField = <K extends keyof CreateEventRequest>(field: K, value: CreateEventRequest[K]) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 

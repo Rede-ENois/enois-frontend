@@ -7,6 +7,7 @@ export function EventCardMetadata(props: EventCardMetadataProps) {
       {EVENT_CARD_METADATA_ITEMS.map((item) => (
         <span key={item.key} className="inline-flex items-center gap-1.5">
           <item.icon className="h-3.5 w-3.5" />
+
           <>{props[item.field]}</>
         </span>
       ))}

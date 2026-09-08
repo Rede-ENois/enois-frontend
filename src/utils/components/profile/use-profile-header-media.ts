@@ -1,12 +1,11 @@
 import { texts } from "@/texts";
 import type { Profile } from "@/types/application/profile/profile";
-
-import { resolveCdnUrl } from "@/lib/api/media";
-
 import { createProfileCropDialog } from "@/utils/components/profile/create-profile-crop-dialog";
 import { createProfileMediaOverlay } from "@/utils/components/profile/create-profile-media-overlay";
 import { useProfileHeaderHover } from "@/utils/components/profile/use-profile-header-hover";
 import { useProfileMediaEditor } from "@/utils/components/profile/use-profile-media-editor";
+
+import { resolveCdnUrl } from "@/lib/api/media";
 
 export function useProfileHeaderMedia(user: Profile, editable: boolean) {
   const hover = useProfileHeaderHover();

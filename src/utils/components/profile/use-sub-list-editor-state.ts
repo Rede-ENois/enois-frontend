@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import type { SubField } from "@/types/components/profile/edit-profile-dialog/sub-field";
-
 import { createSubListFormValues } from "@/utils/components/profile/create-sub-list-form-values";
 
 export function useSubListEditorState<T extends Record<"id", string>>(

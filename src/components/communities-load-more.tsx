@@ -1,7 +1,6 @@
-import { Loader2 } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { CommunitiesLoadMoreProps } from "@/types/components/communities/communities-load-more-props";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

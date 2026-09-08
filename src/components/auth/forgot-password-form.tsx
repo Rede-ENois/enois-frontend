@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-
 import { useForgotPasswordFormController } from "@/utils/components/auth/use-forgot-password-form-controller";
 
 import { Input } from "@/components/ui/input";

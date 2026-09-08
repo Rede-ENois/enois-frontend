@@ -12,7 +12,10 @@ export function EventCardContent(props: EventCardContentProps) {
         formatIcon={props.formatIcon}
         formatLabel={props.formatLabel}
       />
-      <EventCardMetadata dateTimeLabel={props.dateTimeLabel} attendees={props.event.attendees ?? 0} />
+      <EventCardMetadata
+        dateTimeLabel={props.dateTimeLabel}
+        attendees={props.event.attendees ?? 0}
+      />
       <EventCardAction attending={props.attending} onAttend={props.onAttend} />
     </div>
   );

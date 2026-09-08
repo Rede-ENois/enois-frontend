@@ -1,7 +1,6 @@
-import { BarChart3, Calendar, FileText, Film, Image } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
+import { BarChart3, Calendar, FileText, Film, Image } from "lucide-react";
 
 export function createFeedComposerActions(
   postType: PostView["type"],

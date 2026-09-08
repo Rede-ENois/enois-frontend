@@ -1,7 +1,6 @@
-import { Briefcase } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { JobsFiltersInputsProps } from "@/types/components/jobs/jobs-filters-inputs-props";
+import { Briefcase } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 

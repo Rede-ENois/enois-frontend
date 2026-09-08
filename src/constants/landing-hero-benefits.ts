@@ -1,6 +1,5 @@
-import { Heart, ShieldCheck, Sparkles } from "lucide-react";
-
 import { texts } from "@/texts";
+import { Heart, ShieldCheck, Sparkles } from "lucide-react";
 
 export const LANDING_HERO_BENEFITS = [
   { key: "no-vanity", icon: Heart, label: texts.landing.hero.benefits.noVanity },

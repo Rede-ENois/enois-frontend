@@ -1,5 +1,4 @@
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
-
 import { useProfileHeaderController } from "@/utils/components/profile/use-profile-header-controller";
 
 import { ImageCropDialog } from "@/components/image-crop-dialog";
@@ -30,7 +29,6 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               overlay={controller.avatarOverlay}
               input={controller.avatarInput}
             />
-
             <ProfileHeaderActions
               profile={user}
               showEditAction={controller.showEditAction}

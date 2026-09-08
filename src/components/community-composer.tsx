@@ -1,5 +1,4 @@
 import type { CommunityComposerProps } from "@/types/components/communities/community-composer-props";
-
 import { useCommunityComposerController } from "@/utils/components/communities/use-community-composer-controller";
 
 import { CommunityComposerField } from "@/components/community-composer-field";

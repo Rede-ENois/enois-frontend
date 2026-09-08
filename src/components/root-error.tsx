@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
 import type { ErrorComponentProps } from "@/types/components/root/error-component-props";
-
 import { useRootErrorController } from "@/utils/components/root/use-root-error-controller";
 
 export function RootError(props: ErrorComponentProps) {

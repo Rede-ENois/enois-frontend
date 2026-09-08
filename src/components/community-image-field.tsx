@@ -1,5 +1,4 @@
 import type { CommunityImageFieldProps } from "@/types/components/communities/community-image-field-props";
-
 import { createCommunityImageFieldViewModel } from "@/utils/components/communities/create-community-image-field-view-model";
 
 import { Label } from "@/components/ui/label";

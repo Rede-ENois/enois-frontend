@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import type { ConversationItemProps } from "@/types/components/messages/conversation-item-props";
-
 import { useConversationItemController } from "@/utils/components/messages/use-conversation-item-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -26,6 +25,7 @@ export function ConversationItem(props: ConversationItemProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <span className="truncate text-sm font-medium">{title}</span>
+
             <span className="text-[11px] text-muted-foreground shrink-0 ml-2">{timeLabel}</span>
           </div>
 

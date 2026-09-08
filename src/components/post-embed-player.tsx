@@ -1,5 +1,4 @@
 import type { EmbedPlayerProps } from "@/types/components/post/embed-player-props";
-
 import { useEmbedPlayerController } from "@/utils/components/post/use-embed-player-controller";
 
 export function EmbedPlayer(props: EmbedPlayerProps) {

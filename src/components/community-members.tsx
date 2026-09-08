@@ -1,5 +1,4 @@
 import type { CommunityMembersProps } from "@/types/components/communities/community-members-props";
-
 import { createCommunityMembersViewModel } from "@/utils/components/communities/create-community-members-view-model";
 
 import { CommunityMemberItem } from "@/components/community-member-item";

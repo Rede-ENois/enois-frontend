@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-
 import { useEventsPageController } from "@/utils/components/events/use-events-page-controller";
 
 import { AppContainer } from "@/components/app-container";

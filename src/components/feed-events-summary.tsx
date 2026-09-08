@@ -1,7 +1,6 @@
 import { texts } from "@/texts";
-import { TrendingUp } from "lucide-react";
-
 import { useFeedEventsSummaryController } from "@/utils/components/feed/use-feed-events-summary-controller";
+import { TrendingUp } from "lucide-react";
 
 export function FeedEventsSummary() {
   const { visible, items } = useFeedEventsSummaryController();

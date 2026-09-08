@@ -1,6 +1,5 @@
-import { ArrowRight } from "lucide-react";
-
 import { texts } from "@/texts";
+import { ArrowRight } from "lucide-react";
 
 export const LANDING_CTA_ACTIONS = [
   {

@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 import { NavigationLinks } from "./navigation-links";
 
 export function AppSidebar() {
-  const { collapsed, toggle, widthClassName, ToggleIcon, toggleLabel } =
-    useAppSidebarController();
+  const { collapsed, toggle, widthClassName, ToggleIcon, toggleLabel } = useAppSidebarController();
 
   return (
     <aside

@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listNetworkUsers } from "@/lib/api/network";
-
 import { createNetworkMatchViewModel } from "@/utils/components/network/create-network-match-view-model";
 import { useNetworkConnectionToggle } from "@/utils/components/network/use-network-connection-toggle";
+
+import { listNetworkUsers } from "@/lib/api/network";
 
 export function useNetworkMatchesController() {
   const { data } = useQuery({

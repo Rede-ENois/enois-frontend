@@ -1,7 +1,6 @@
-import { X } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { JobsFiltersHeaderProps } from "@/types/components/jobs/jobs-filters-header-props";
+import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

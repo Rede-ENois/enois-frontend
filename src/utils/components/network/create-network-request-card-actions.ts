@@ -1,7 +1,6 @@
-import { Check, X } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { RequestCardProps } from "@/types/components/network/request-card-props";
+import { Check, X } from "lucide-react";
 
 export function createNetworkRequestCardActions(
   { request, onAccept, onCancel }: RequestCardProps,

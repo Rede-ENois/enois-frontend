@@ -13,6 +13,7 @@ export function MentorCardIdentity({ mentorUserId, user }: MentorCardIdentityPro
       >
         {user?.name ?? texts.mentoring.mentorFallback}
       </Link>
+
       <p className="line-clamp-2 text-xs text-muted-foreground">{user?.headline ?? ""}</p>
     </div>
   );

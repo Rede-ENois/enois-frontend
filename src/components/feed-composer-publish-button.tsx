@@ -1,6 +1,5 @@
-import { Loader2 } from "lucide-react";
-
 import type { FeedComposerPublishButtonProps } from "@/types/components/feed/feed-composer-publish-button-props";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

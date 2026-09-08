@@ -14,6 +14,7 @@ export function CommunityCardIdentity({ community, avatarUrl }: CommunityCardIde
         <p className="text-xs font-medium uppercase tracking-wider text-primary">
           {community.topic}
         </p>
+
         <h3 className="truncate font-semibold">{community.name}</h3>
       </div>
     </div>

@@ -1,8 +1,7 @@
 import { useCallback } from "react";
 
-import type { CommentView } from "@/types/application/comment/comment-view";
-
 import { usePostCardStore } from "@/stores/post-card.store";
+import type { CommentView } from "@/types/application/comment/comment-view";
 
 export function usePostCommentsStore(postId: string) {
   const card = usePostCardStore((state) => state.cards[postId]);

@@ -1,5 +1,4 @@
 import type { CommunityHeaderActionsProps } from "@/types/components/communities/community-header-actions-props";
-
 import { useCommunityHeaderAccess } from "@/utils/components/communities/use-community-header-access";
 
 import { CommunityHeaderEditAction } from "@/components/community-header-edit-action";

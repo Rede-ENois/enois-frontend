@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import type { Notification } from "@/types/application/notification/notification";
-import { formatNotificationTime } from "@/utils/notification-time";
 import { notificationMeta } from "@/utils/components/notifications/notification-meta";
+import { formatNotificationTime } from "@/utils/notification-time";
 
 export function createNotificationItemViewModel(
   notification: Notification,

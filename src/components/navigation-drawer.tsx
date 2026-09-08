@@ -1,8 +1,7 @@
 import { texts } from "@/texts";
+import { useNavigationDrawerController } from "@/utils/components/navigation/use-navigation-drawer-controller";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-
-import { useNavigationDrawerController } from "@/utils/components/navigation/use-navigation-drawer-controller";
 
 import { AppBrand } from "./app-brand";
 import { NavigationLinks } from "./navigation-links";

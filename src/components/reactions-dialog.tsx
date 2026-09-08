@@ -1,8 +1,7 @@
 import { texts } from "@/texts";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
-import { Root as Dialog } from "@radix-ui/react-dialog";
-
 import { useReactionsDialogController } from "@/utils/components/post/use-reactions-dialog-controller";
+import { Root as Dialog } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";

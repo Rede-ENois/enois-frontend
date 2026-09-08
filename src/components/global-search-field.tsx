@@ -1,7 +1,6 @@
-import { Loader2, Search } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { GlobalSearchFieldProps } from "@/types/components/global-search/global-search-field-props";
+import { Loader2, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 

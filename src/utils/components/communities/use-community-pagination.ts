@@ -4,10 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { Community } from "@/types/application/community/community";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
+import { mergeCommunityPageItems } from "@/utils/components/communities/merge-community-page-items";
 
 import { listCommunities } from "@/lib/api/communities";
-
-import { mergeCommunityPageItems } from "@/utils/components/communities/merge-community-page-items";
 
 export function useCommunityPagination(topic: CommunityTopic | undefined, enabled: boolean) {
   const [cursor, setCursor] = useState<string | undefined>(undefined);

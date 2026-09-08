@@ -1,5 +1,4 @@
 import type { JobsFiltersProps } from "@/types/components/jobs/jobs-filters-props";
-
 import { createJobsFiltersViewModel } from "@/utils/components/jobs/create-jobs-filters-view-model";
 
 import { JobsFilterGroup } from "@/components/jobs-filter-group";

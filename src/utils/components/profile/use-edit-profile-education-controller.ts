@@ -1,10 +1,10 @@
 import { texts } from "@/texts";
+import { useProfileSubListController } from "@/utils/components/profile/use-profile-sub-list-controller";
 
 import { createEducation } from "@/lib/api/profile/education/create-education";
 import { deleteEducation } from "@/lib/api/profile/education/delete-education";
 import { listEducation } from "@/lib/api/profile/education/list-education";
 import { updateEducation } from "@/lib/api/profile/education/update-education";
-import { useProfileSubListController } from "@/utils/components/profile/use-profile-sub-list-controller";
 
 export function useEditProfileEducationController() {
   return useProfileSubListController(["me", "education"], listEducation, {

@@ -1,7 +1,6 @@
-import { Search } from "lucide-react";
-
 import { useMessagesStore } from "@/stores/messages.store";
 import { texts } from "@/texts";
+import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 

@@ -1,8 +1,6 @@
-import { Trophy } from "lucide-react";
-
 import { texts } from "@/texts";
-
 import { useProfileRankingController } from "@/utils/components/profile/use-profile-ranking-controller";
+import { Trophy } from "lucide-react";
 
 import { ProfileRankingItem } from "@/components/profile-ranking-item";
 import { ProfileSection } from "@/components/profile-section";

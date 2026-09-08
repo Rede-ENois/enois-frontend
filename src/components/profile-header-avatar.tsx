@@ -1,10 +1,15 @@
-import { Camera } from "lucide-react";
-
 import type { ProfileHeaderMediaProps } from "@/types/components/profile/profile-header-media-props";
+import { Camera } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function ProfileHeaderAvatar({ imageUrl, alt, area, overlay, input }: ProfileHeaderMediaProps) {
+export function ProfileHeaderAvatar({
+  imageUrl,
+  alt,
+  area,
+  overlay,
+  input,
+}: ProfileHeaderMediaProps) {
   return (
     <div className="relative" {...area}>
       <UserAvatar

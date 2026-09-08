@@ -1,7 +1,6 @@
 import { texts } from "@/texts";
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { useCreateEventDialogController } from "@/utils/components/events/use-create-event-dialog-controller";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";

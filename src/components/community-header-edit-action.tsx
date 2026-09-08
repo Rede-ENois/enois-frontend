@@ -1,9 +1,8 @@
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-import { Settings } from "lucide-react";
-
 import { useCommunityEditDialogStore } from "@/stores/community-edit-dialog.store";
 import { texts } from "@/texts";
 import type { CommunityHeaderEditActionProps } from "@/types/components/communities/community-header-edit-action-props";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
+import { Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
@@ -21,6 +20,7 @@ export function CommunityHeaderEditAction({ community }: CommunityHeaderEditActi
       <DialogTrigger asChild>
         <Button variant="outline" className="rounded-full gap-1.5">
           <Settings className="h-4 w-4" />
+
           <>{texts.communities.detail.edit}</>
         </Button>
       </DialogTrigger>

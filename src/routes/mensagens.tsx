@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-
 import { createStaticRouteHead } from "@/utils/routes/create-static-route-head";
 
 import { Mensagens } from "@/components/pages/messages-page";

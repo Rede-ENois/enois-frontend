@@ -1,7 +1,6 @@
-import { Send } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { PostCommentComposerProps } from "@/types/components/post/post-comment-composer-props";
+import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -17,11 +16,7 @@ export function PostCommentComposer({
 }: PostCommentComposerProps) {
   return (
     <form onSubmit={onSubmit} className="mt-4 flex items-center gap-2.5">
-      <UserAvatar
-        src={currentUser?.avatar}
-        alt={currentUser?.name}
-        className="h-8 w-8 shrink-0"
-      />
+      <UserAvatar src={currentUser?.avatar} alt={currentUser?.name} className="h-8 w-8 shrink-0" />
 
       <div className="flex flex-1 items-center gap-2 rounded-full border border-border-soft bg-surface-1 py-1.5 pl-4 pr-1.5">
         <MentionTextarea

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import { createStaticRouteHead } from "@/utils/routes/create-static-route-head";
 
 import { resetPasswordRouteSearchSchema } from "@/lib/validation/reset-password-route-search-schema";
-import { createStaticRouteHead } from "@/utils/routes/create-static-route-head";
 
 import { ResetPassword } from "@/components/pages/reset-password-page";
 

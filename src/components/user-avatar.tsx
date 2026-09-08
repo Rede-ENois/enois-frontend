@@ -1,5 +1,4 @@
 import type { UserAvatarProps } from "@/types/components/user-avatar/user-avatar-props";
-
 import { createUserAvatarViewModel } from "@/utils/components/user-avatar/create-user-avatar-view-model";
 
 import { Avatar } from "@/components/ui/avatar";

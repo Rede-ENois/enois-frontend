@@ -10,6 +10,7 @@ export function SubListCurrentlyHereToggle({
   return (
     <label className="flex items-center gap-2 text-[13px] font-light text-text-strong">
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
+
       <>{texts.profile.edit.currentlyHere}</>
     </label>
   );

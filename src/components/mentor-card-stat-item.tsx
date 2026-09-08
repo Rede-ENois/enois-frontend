@@ -6,6 +6,7 @@ export function MentorCardStatItem({ stat }: MentorCardStatItemProps) {
   return (
     <div>
       <dt className="text-muted-foreground">{stat.label}</dt>
+
       <dd
         className={`mt-0.5 ${Icon ? "inline-flex items-center gap-1 " : ""}${stat.valueClassName}`}
       >

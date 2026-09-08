@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
 import { useMessagesStore } from "@/stores/messages.store";
+
+import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
 
 export function useCreateDirectConversation() {
   const queryClient = useQueryClient();

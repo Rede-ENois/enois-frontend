@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
 import type { ConnectionRequest } from "@/types/application/network/connection-request";
-
 import { createNetworkRequestGroups } from "@/utils/components/network/create-network-request-groups";
 
 export function createNetworkRequestsViewModel(

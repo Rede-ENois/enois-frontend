@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
 import type { Props } from "@/types/components/mention-textarea/props";
-
 import { useMentionTextarea } from "@/utils/components/mentions/use-mention-textarea";
 
 import { UserAvatar } from "@/components/user-avatar";

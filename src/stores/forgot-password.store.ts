@@ -1,8 +1,8 @@
+import { FORGOT_PASSWORD_INITIAL_STATE } from "@/constants/components/auth/forgot-password-initial-state";
+import type { ForgotPasswordStore } from "@/types/stores/forgot-password-store";
 import { create } from "zustand";
 
-import { FORGOT_PASSWORD_INITIAL_STATE } from "@/constants/components/auth/forgot-password-initial-state";
 import { forgotPassword } from "@/lib/api/auth/forgot-password";
-import type { ForgotPasswordStore } from "@/types/stores/forgot-password-store";
 
 export const useForgotPasswordStore = create<ForgotPasswordStore>()((set) => ({
   ...FORGOT_PASSWORD_INITIAL_STATE,

@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-
 import { useNetworkMatchesController } from "@/utils/components/network/use-network-matches-controller";
 
 import { NetworkMatchCard } from "@/components/network-match-card";

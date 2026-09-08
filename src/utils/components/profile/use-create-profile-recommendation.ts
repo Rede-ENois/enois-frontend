@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
 import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
+
+import { createRecommendation } from "@/lib/api/recommendations/create-recommendation";
 
 export function useCreateProfileRecommendation() {
   const queryClient = useQueryClient();

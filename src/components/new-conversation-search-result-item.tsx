@@ -1,5 +1,4 @@
 import type { NewConversationSearchResultItemProps } from "@/types/components/messages/new-conversation-search-result-item-props";
-
 import { useCreateDirectConversation } from "@/utils/components/messages/use-create-direct-conversation";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -16,6 +15,7 @@ export function NewConversationSearchResultItem({ user }: NewConversationSearchR
 
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{user.name}</p>
+
         <p className="truncate text-xs text-muted-foreground">{user.headline}</p>
       </div>
     </button>

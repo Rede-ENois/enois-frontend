@@ -1,7 +1,6 @@
-import { CheckCheck } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { NotificationsPopoverHeaderProps } from "@/types/components/notification/notifications-popover-header-props";
+import { CheckCheck } from "lucide-react";
 
 export function NotificationsPopoverHeader({
   showMarkAllAsRead,

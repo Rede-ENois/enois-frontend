@@ -1,6 +1,5 @@
-import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
-
 import { useNotificationsPopover } from "@/utils/components/notifications/use-notifications-popover";
+import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 
 import { PopoverContent } from "@/components/ui/popover-content";
 

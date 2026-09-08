@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-
 import { useSignupFormController } from "@/utils/components/auth/use-signup-form-controller";
 
 import { ErrorBanner } from "@/components/error-banner";

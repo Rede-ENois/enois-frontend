@@ -12,6 +12,7 @@ export function SubListItemContent<T extends Record<"id", string>>({
       <p className="break-words text-text-strong">
         {String(primaryField ? (values[primaryField.key] ?? "") : "")}
       </p>
+
       <p className="break-words text-text-subtle">
         {String(secondaryField ? (values[secondaryField.key] ?? "") : "")}
       </p>

@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import type { NotificationTab } from "@/types/components/notification/notification-tab";
-
 import { createNotificationsPopoverViewModel } from "@/utils/components/notifications/create-notifications-popover-view-model";
 import { useNotificationConnectionAction } from "@/utils/components/notifications/use-notification-connection-action";
 import { useNotificationReadActions } from "@/utils/components/notifications/use-notification-read-actions";

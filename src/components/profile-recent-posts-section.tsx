@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
-
 import { useProfileRecentPostsController } from "@/utils/components/profile/use-profile-recent-posts-controller";
 
 import { PostCard } from "@/components/post-card";

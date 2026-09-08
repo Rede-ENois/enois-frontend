@@ -1,7 +1,6 @@
 import type { FeedComposerMediaPreviewProps } from "@/types/components/feed/feed-composer-media-preview-props";
-import { X } from "lucide-react";
-
 import { createFeedComposerMediaPreviewViewModel } from "@/utils/components/feed/create-feed-composer-media-preview-view-model";
+import { X } from "lucide-react";
 
 export function FeedComposerMediaPreview(props: FeedComposerMediaPreviewProps) {
   const { visible, showImages, imageGridClassName, imageItems, videoItem } =

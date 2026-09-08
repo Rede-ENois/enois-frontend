@@ -11,6 +11,7 @@ export function EventCardMedia({ coverUrl, monthLabel, dayLabel }: EventCardMedi
 
       <div className="absolute left-4 top-4 rounded-xl bg-card/95 px-3 py-2 text-center shadow-md backdrop-blur">
         <p className="text-[10px] font-medium uppercase text-primary">{monthLabel}</p>
+
         <p className="text-lg font-semibold leading-none">{dayLabel}</p>
       </div>
     </div>

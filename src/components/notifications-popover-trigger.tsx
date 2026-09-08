@@ -1,6 +1,5 @@
-import { Bell } from "lucide-react";
-
 import type { NotificationsPopoverTriggerProps } from "@/types/components/notification/notifications-popover-trigger-props";
+import { Bell } from "lucide-react";
 
 export function NotificationsPopoverTrigger({
   label,

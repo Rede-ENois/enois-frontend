@@ -7,7 +7,9 @@ export function ActiveConversation() {
   const controller = useActiveConversationController();
 
   return (
-    <div className={`flex min-h-0 flex-col ${controller.showConversation ? "flex" : "hidden md:flex"}`}>
+    <div
+      className={`flex min-h-0 flex-col ${controller.showConversation ? "flex" : "hidden md:flex"}`}
+    >
       {!controller.showConversation || !controller.activeConversation ? (
         <ActiveConversationEmptyState />
       ) : (

@@ -1,12 +1,11 @@
 import { useCallback, useRef } from "react";
 
 import type { CommunityCropPurpose } from "@/types/components/communities/community-crop-purpose";
+import { createCommunityCropDialogViewModel } from "@/utils/components/communities/create-community-crop-dialog-view-model";
+import { createCommunityImageField } from "@/utils/components/communities/create-community-image-field";
 
 import { useImageCropUpload } from "@/lib/use-image-crop-upload";
 import { useMediaUpload } from "@/lib/use-media-upload";
-
-import { createCommunityCropDialogViewModel } from "@/utils/components/communities/create-community-crop-dialog-view-model";
-import { createCommunityImageField } from "@/utils/components/communities/create-community-image-field";
 
 export function useEditCommunityImages(
   form: { cover: string; avatar: string },

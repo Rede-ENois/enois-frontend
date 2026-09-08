@@ -13,10 +13,7 @@ export function CommunityCardContent({
     <div className="p-5">
       <CommunityCardIdentity community={community} avatarUrl={avatarUrl} />
       <CommunityCardDescription description={community.description} />
-      <CommunityCardFooter
-        members={community.members ?? 0}
-        membershipAction={membershipAction}
-      />
+      <CommunityCardFooter members={community.members ?? 0} membershipAction={membershipAction} />
     </div>
   );
 }

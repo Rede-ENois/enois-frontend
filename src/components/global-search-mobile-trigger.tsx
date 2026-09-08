@@ -1,7 +1,6 @@
-import { Search } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { GlobalSearchMobileTriggerProps } from "@/types/components/global-search/global-search-mobile-trigger-props";
+import { Search } from "lucide-react";
 
 export function GlobalSearchMobileTrigger({ onOpen }: GlobalSearchMobileTriggerProps) {
   return (

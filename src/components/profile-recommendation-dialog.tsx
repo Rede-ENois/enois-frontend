@@ -1,8 +1,7 @@
-import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
-
 import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
 import { texts } from "@/texts";
 import type { ProfileRecommendationDialogProps } from "@/types/components/profile/profile-recommendation-dialog-props";
+import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";
@@ -26,7 +25,9 @@ export function ProfileRecommendationDialog({ user }: ProfileRecommendationDialo
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-light">{texts.profile.recommendTitle(user.name)}</DialogTitle>
+          <DialogTitle className="font-light">
+            {texts.profile.recommendTitle(user.name)}
+          </DialogTitle>
         </DialogHeader>
 
         <ProfileRecommendationForm />

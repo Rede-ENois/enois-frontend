@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 
 import type { ImageCropDialogProps } from "@/types/components/image-crop-dialog/image-crop-dialog-props";
-
 import { useImageCropSave } from "@/utils/components/image-crop-dialog/use-image-crop-save";
 import { useImageCropState } from "@/utils/components/image-crop-dialog/use-image-crop-state";
 
@@ -12,12 +11,7 @@ export function useImageCropDialogController({
 }: ImageCropDialogProps) {
   const cropState = useImageCropState();
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
-  const saveState = useImageCropSave(
-    imageSrc,
-    cropState.croppedAreaPixels,
-    onCropComplete,
-    close,
-  );
+  const saveState = useImageCropSave(imageSrc, cropState.croppedAreaPixels, onCropComplete, close);
 
   return {
     crop: cropState.crop,

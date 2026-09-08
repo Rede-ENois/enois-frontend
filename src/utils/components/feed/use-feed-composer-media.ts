@@ -1,7 +1,6 @@
 import { type ChangeEvent, useRef, useState } from "react";
 
 import type { MediaItem } from "@/types/components/feed/media-item";
-
 import { appendFeedComposerMedia } from "@/utils/components/feed/append-feed-composer-media";
 import { revokeFeedComposerMedia } from "@/utils/components/feed/revoke-feed-composer-media";
 

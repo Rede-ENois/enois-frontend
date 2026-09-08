@@ -1,6 +1,5 @@
-import { Loader2 } from "lucide-react";
-
 import { useFeedPageController } from "@/utils/components/feed/use-feed-page-controller";
+import { Loader2 } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
 import { FeedComposer } from "@/components/feed-composer";

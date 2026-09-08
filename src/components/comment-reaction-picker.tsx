@@ -1,8 +1,8 @@
+import type { CommentReactionPickerProps } from "@/types/components/post/comment-reaction-picker-props";
 import { Root as Popover, Trigger as PopoverTrigger } from "@radix-ui/react-popover";
 
-import type { CommentReactionPickerProps } from "@/types/components/post/comment-reaction-picker-props";
-
 import { PopoverContent } from "@/components/ui/popover-content";
+
 import { ReactionOptionList } from "@/components/reaction-option-list";
 
 export function CommentReactionPicker({ label, options }: CommentReactionPickerProps) {

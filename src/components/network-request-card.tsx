@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { RequestCardProps } from "@/types/components/network/request-card-props";
-
 import { useNetworkRequestCardController } from "@/utils/components/network/use-network-request-card-controller";
 
 import { Button } from "@/components/ui/button";

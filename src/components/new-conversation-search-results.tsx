@@ -1,6 +1,5 @@
-import { texts } from "@/texts";
 import { useMessagesStore } from "@/stores/messages.store";
-
+import { texts } from "@/texts";
 import { useConversationSearchResults } from "@/utils/components/messages/use-conversation-search-results";
 
 import { NewConversationSearchResultItem } from "@/components/new-conversation-search-result-item";

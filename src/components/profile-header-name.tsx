@@ -12,11 +12,7 @@ export function ProfileHeaderName({ user }: ProfileHeaderNameProps) {
       {PROFILE_HEADER_BADGES.map(
         (badge) =>
           user[badge.field] && (
-            <ProfileStatusBadge
-              key={badge.key}
-              label={badge.label}
-              className={badge.className}
-            />
+            <ProfileStatusBadge key={badge.key} label={badge.label} className={badge.className} />
           ),
       )}
     </div>

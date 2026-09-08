@@ -1,7 +1,6 @@
 import { texts } from "@/texts";
-import { Loader2 } from "lucide-react";
-
 import { useJobsPageController } from "@/utils/components/jobs/use-jobs-page-controller";
+import { Loader2 } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
 import { InfiniteScroll } from "@/components/infinite-scroll";

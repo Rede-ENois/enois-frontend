@@ -1,8 +1,7 @@
 import { texts } from "@/texts";
 import type { ErrorBannerProps } from "@/types/components/error-banner/error-banner-props";
-import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
-
 import { useErrorBannerController } from "@/utils/components/error-banner/use-error-banner-controller";
+import { AlertTriangle, ChevronDown, Copy } from "lucide-react";
 
 export function ErrorBanner({ error, className }: ErrorBannerProps) {
   const controller = useErrorBannerController(error);
@@ -42,9 +41,7 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
               </li>
             ))}
           </ul>
-          {controller.hint && (
-            <p className="font-light text-destructive/90">{controller.hint}</p>
-          )}
+          {controller.hint && <p className="font-light text-destructive/90">{controller.hint}</p>}
           {controller.showCopy && (
             <button
               type="button"

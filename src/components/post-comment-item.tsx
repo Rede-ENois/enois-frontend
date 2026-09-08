@@ -1,5 +1,4 @@
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
-
 import { useCommentItemController } from "@/utils/components/post/use-comment-item-controller";
 
 import { CommentItemActions } from "@/components/post-comment-item-actions";
@@ -19,7 +18,11 @@ export function CommentItem(props: CommentItemProps) {
       />
 
       <div className="min-w-0 flex-1">
-        <CommentItemContent comment={comment} replyingTo={replyingTo} timeLabel={controller.timeLabel} />
+        <CommentItemContent
+          comment={comment}
+          replyingTo={replyingTo}
+          timeLabel={controller.timeLabel}
+        />
         <CommentItemActions
           showDelete={controller.showDelete}
           onReply={controller.reply}

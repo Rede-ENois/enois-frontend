@@ -1,5 +1,4 @@
 import type { PostView } from "@/types/application/feed/post-view";
-
 import { useMediaGridController } from "@/utils/components/post/use-media-grid-controller";
 
 export function MediaGrid({ mediaIds }: Pick<PostView, "mediaIds">) {

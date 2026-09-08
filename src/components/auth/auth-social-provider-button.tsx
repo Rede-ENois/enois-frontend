@@ -1,6 +1,5 @@
-import { Loader2 } from "lucide-react";
-
 import type { AuthSocialProviderButtonProps } from "@/types/components/auth/auth-social-provider-button-props";
+import { Loader2 } from "lucide-react";
 
 import { AuthSocialProviderIcon } from "@/components/auth/auth-social-provider-icon";
 

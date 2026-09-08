@@ -1,7 +1,6 @@
-import { Bookmark, Flag, MessageSquare, Share2 } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { PostActionButtonsProps } from "@/types/components/post/post-action-buttons-props";
+import { Bookmark, Flag, MessageSquare, Share2 } from "lucide-react";
 
 export function PostActionButtons({
   comments,

@@ -1,6 +1,5 @@
-import { Camera } from "lucide-react";
-
 import type { ProfileHeaderMediaProps } from "@/types/components/profile/profile-header-media-props";
+import { Camera } from "lucide-react";
 
 export function ProfileHeaderBanner({ imageUrl, area, overlay, input }: ProfileHeaderMediaProps) {
   return (
@@ -8,10 +7,7 @@ export function ProfileHeaderBanner({ imageUrl, area, overlay, input }: ProfileH
       {imageUrl ? (
         <img src={imageUrl} alt="" className="h-40 w-full object-cover sm:h-52" />
       ) : (
-        <div
-          className="h-40 w-full sm:h-52"
-          style={{ background: "var(--gradient-primary)" }}
-        />
+        <div className="h-40 w-full sm:h-52" style={{ background: "var(--gradient-primary)" }} />
       )}
 
       {overlay.visible && (

@@ -1,9 +1,8 @@
 import { texts } from "@/texts";
 import type { ImageCropDialogProps } from "@/types/components/image-crop-dialog/image-crop-dialog-props";
+import { useImageCropDialogController } from "@/utils/components/image-crop-dialog/use-image-crop-dialog-controller";
 import { Root as Dialog } from "@radix-ui/react-dialog";
 import Cropper from "react-easy-crop";
-
-import { useImageCropDialogController } from "@/utils/components/image-crop-dialog/use-image-crop-dialog-controller";
 
 import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";

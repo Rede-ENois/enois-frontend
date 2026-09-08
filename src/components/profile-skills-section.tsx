@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
 import type { ProfileHeaderProps } from "@/types/components/profile/profile-header-props";
-
 import { createProfileSkillsSectionViewModel } from "@/utils/components/profile/create-profile-skills-section-view-model";
 
 import { ProfileSection } from "@/components/profile-section";

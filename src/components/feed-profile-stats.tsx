@@ -7,6 +7,7 @@ export function FeedProfileStats({ profile }: FeedProfileSectionProps) {
       {FEED_PROFILE_STATS.map((stat) => (
         <div key={stat.key}>
           <p className="font-light text-text-strong">{profile[stat.field]}</p>
+
           <p className="text-text-subtle">{stat.label}</p>
         </div>
       ))}

@@ -1,6 +1,5 @@
-import { MapPin } from "lucide-react";
-
 import type { JobCardIdentityProps } from "@/types/components/jobs/job-card-identity-props";
+import { MapPin } from "lucide-react";
 
 import { Avatar } from "@/components/ui/avatar";
 

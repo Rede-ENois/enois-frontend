@@ -17,6 +17,7 @@ export function ResetPasswordSuccess({ onLogin }: ResetPasswordSuccessProps) {
 
       <Button className="mt-6 w-full gap-2 rounded-full" onClick={onLogin}>
         <>{texts.auth.reset.enterNow}</>
+
         <ArrowRight className="h-4 w-4" />
       </Button>
     </div>

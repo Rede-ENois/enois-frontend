@@ -1,7 +1,6 @@
-import { Sparkles } from "lucide-react";
-
 import { texts } from "@/texts";
 import type { MentoringHeroProps } from "@/types/components/mentoring/mentoring-hero-props";
+import { Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

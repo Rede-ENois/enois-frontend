@@ -1,7 +1,6 @@
 import { EDIT_COMMUNITY_FIELDS } from "@/constants/edit-community-fields";
 import { texts } from "@/texts";
 import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
-
 import { useEditCommunityFormController } from "@/utils/components/communities/use-edit-community-form-controller";
 
 import { Button } from "@/components/ui/button";

@@ -17,10 +17,27 @@ export function useNetworkSummaryController() {
 
   return {
     stats: [
-      { key: "connections", label: texts.network.stats.connections, value: String(summary?.connections ?? 0) },
-      { key: "following", label: texts.network.stats.following, value: String(summary?.followers ?? 0) },
-      { key: "requests", label: texts.network.stats.requests, value: String(summary?.pendingRequests ?? 0), highlight: true },
-      { key: "suggestions", label: texts.network.stats.suggestions, value: String(usersData?.items.length ?? 0) },
+      {
+        key: "connections",
+        label: texts.network.stats.connections,
+        value: String(summary?.connections ?? 0),
+      },
+      {
+        key: "following",
+        label: texts.network.stats.following,
+        value: String(summary?.followers ?? 0),
+      },
+      {
+        key: "requests",
+        label: texts.network.stats.requests,
+        value: String(summary?.pendingRequests ?? 0),
+        highlight: true,
+      },
+      {
+        key: "suggestions",
+        label: texts.network.stats.suggestions,
+        value: String(usersData?.items.length ?? 0),
+      },
     ],
   };
 }

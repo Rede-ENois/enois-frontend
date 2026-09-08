@@ -8,10 +8,7 @@ export function ProfileHeaderActions(props: ProfileHeaderActionsProps) {
     <div className="flex flex-wrap gap-2">
       {props.showEditAction && <ProfileEditAction profile={props.profile} />}
       {props.showExternalActions && (
-        <ProfileExternalActions
-          message={props.message}
-          connectionAction={props.connectionAction}
-        />
+        <ProfileExternalActions message={props.message} connectionAction={props.connectionAction} />
       )}
     </div>
   );

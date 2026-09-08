@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import type { CommunityTopic } from "@/types/application/community/community-topic";
-
 import { useCommunityPagination } from "@/utils/components/communities/use-community-pagination";
 
 export function useCommunityListController(isDetail: boolean) {

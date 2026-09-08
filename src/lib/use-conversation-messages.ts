@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listMessages } from "@/lib/api/messages/list-messages";
 import { sortConversationMessages } from "@/utils/messages/sort-conversation-messages";
+
+import { listMessages } from "@/lib/api/messages/list-messages";
 
 export function useConversationMessages(conversationId?: string) {
   const { data } = useQuery({

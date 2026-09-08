@@ -1,6 +1,5 @@
 import { texts } from "@/texts";
 import type { RequestCardProps } from "@/types/components/network/request-card-props";
-
 import { createNetworkRequestCardActions } from "@/utils/components/network/create-network-request-card-actions";
 import { useNetworkRequestProfile } from "@/utils/components/network/use-network-request-profile";
 

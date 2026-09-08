@@ -1,6 +1,6 @@
+import { usePostCardStore } from "@/stores/post-card.store";
 import type { CommentView } from "@/types/application/comment/comment-view";
 
-import { usePostCardStore } from "@/stores/post-card.store";
 import { deleteComment } from "@/lib/api/comments/delete-comment";
 
 export function useCommentDeleteAction(comment: CommentView) {

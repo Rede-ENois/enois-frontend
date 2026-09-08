@@ -3,7 +3,6 @@ import { useState } from "react";
 import { CREATE_COMMUNITY_TOPIC_OPTIONS } from "@/constants/create-community-topic-options";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { CreateCommunityInput } from "@/types/application/community/create-community-input";
-
 import { createInitialCommunityForm } from "@/utils/components/communities/create-initial-community-form";
 import { useCreateCommunity } from "@/utils/components/communities/use-create-community";
 

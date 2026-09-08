@@ -1,11 +1,11 @@
 import type { FormEvent } from "react";
 
-import { getCurrentUser } from "@/lib/get-current-user";
-
 import { createPostCommentThreads } from "@/utils/components/post/create-post-comment-threads";
 import { usePostCommentSubmission } from "@/utils/components/post/use-post-comment-submission";
 import { usePostCommentsLoader } from "@/utils/components/post/use-post-comments-loader";
 import { usePostCommentsStore } from "@/utils/components/post/use-post-comments-store";
+
+import { getCurrentUser } from "@/lib/get-current-user";
 
 export function usePostCommentsController(postId: string, visible: boolean) {
   const state = usePostCommentsStore(postId);

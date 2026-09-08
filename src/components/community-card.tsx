@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import type { CommunityCardProps } from "@/types/components/communities/community-card-props";
-
 import { createCommunityCardViewModel } from "@/utils/components/communities/create-community-card-view-model";
 
 import { CommunityCardContent } from "@/components/community-card-content";

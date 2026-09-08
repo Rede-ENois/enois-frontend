@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
 
 import type { NetworkMatchCardProps } from "@/types/components/network/network-match-card-props";
+import { Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 

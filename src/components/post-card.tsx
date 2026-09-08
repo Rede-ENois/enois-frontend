@@ -1,5 +1,4 @@
 import type { PostCardProps } from "@/types/components/post/post-card-props";
-
 import { usePostCardController } from "@/utils/components/post/use-post-card-controller";
 
 import { PostActions } from "@/components/post-actions";

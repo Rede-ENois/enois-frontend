@@ -1,5 +1,4 @@
 import type { EventCardProps } from "@/types/components/events/event-card-props";
-
 import { useEventCardController } from "@/utils/components/events/use-event-card-controller";
 
 import { EventCardContent } from "@/components/event-card-content";

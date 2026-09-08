@@ -1,5 +1,4 @@
 import { texts } from "@/texts";
-
 import { useNetworkRequestsController } from "@/utils/components/network/use-network-requests-controller";
 
 import { NetworkRequestSection } from "@/components/network-request-section";

@@ -1,5 +1,4 @@
 import type { MentorCardProps } from "@/types/components/mentoring/mentor-card-props";
-
 import { useMentorCardProfile } from "@/utils/components/mentoring/use-mentor-card-profile";
 
 import { MentorCardExpertise } from "@/components/mentor-card-expertise";
