@@ -1,26 +1,9 @@
-import { texts } from "@/texts";
-import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
+import { useJobCardFooterController } from "@/utils/components/jobs/use-job-card-footer-controller";
 
 import { Button } from "@/components/ui/button";
 
 export function JobCardFooter() {
-  const { postedAtLabel, applying, apply } = useJobCardContext();
-  const actions = [
-    {
-      key: "details",
-      label: texts.jobs.details,
-      variant: "outline" as const,
-      disabled: false,
-      onClick: undefined,
-    },
-    {
-      key: "apply",
-      label: texts.jobs.apply,
-      variant: "default" as const,
-      disabled: applying,
-      onClick: apply,
-    },
-  ];
+  const { postedAtLabel, actions } = useJobCardFooterController();
 
   return (
     <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs text-muted-foreground">

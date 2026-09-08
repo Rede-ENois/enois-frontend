@@ -7,7 +7,7 @@ import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function CommunityHeaderDetails() {
-  const { community, primaryAdmin } = useCommunityHeaderContext();
+  const { community, primaryAdmin, membersLabel } = useCommunityHeaderContext();
 
   return (
     <div className="min-w-0">
@@ -23,7 +23,7 @@ export function CommunityHeaderDetails() {
         <span className="inline-flex items-center gap-1.5">
           <Users className="h-4 w-4" />
 
-          <>{texts.communities.memberCount(community.members)}</>
+          <>{membersLabel}</>
         </span>
 
         {primaryAdmin && (

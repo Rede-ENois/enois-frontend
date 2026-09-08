@@ -1,10 +1,9 @@
-import { texts } from "@/texts";
-import { useEventCardContext } from "@/utils/components/events/use-event-card-context";
+import { useEventCardDetailsController } from "@/utils/components/events/use-event-card-details-controller";
 
 import { Badge } from "@/components/ui/badge";
 
 export function EventCardDetails() {
-  const { event, FormatIcon, formatLabel } = useEventCardContext();
+  const { FormatIcon, formatLabel, title, hostLabel } = useEventCardDetailsController();
 
   return (
     <>
@@ -14,9 +13,9 @@ export function EventCardDetails() {
         <>{formatLabel}</>
       </Badge>
 
-      <h3 className="mt-2 break-words font-semibold">{event.title}</h3>
+      <h3 className="mt-2 break-words font-semibold">{title}</h3>
 
-      <p className="mt-1 text-xs text-muted-foreground">{texts.events.hostedBy(event.host)}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hostLabel}</p>
     </>
   );
 }
