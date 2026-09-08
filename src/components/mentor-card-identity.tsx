@@ -1,14 +1,16 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import type { MentorCardIdentityProps } from "@/types/components/mentoring/mentor-card-identity-props";
+import { useMentorCardContext } from "@/utils/components/mentoring/use-mentor-card-context";
 
-export function MentorCardIdentity({ mentorUserId, user }: MentorCardIdentityProps) {
+export function MentorCardIdentity() {
+  const { mentor, user } = useMentorCardContext();
+
   return (
     <div className="flex-1 space-y-4 overflow-hidden px-4 md:col-span-6">
       <Link
         to="/perfil/$username"
-        params={{ username: user?.username ?? mentorUserId }}
+        params={{ username: user?.username ?? mentor.userId }}
         className="m-0 block truncate font-semibold hover:underline"
       >
         {user?.name ?? texts.mentoring.mentorFallback}

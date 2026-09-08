@@ -1,5 +1,5 @@
 import type { Mentor } from "@/types/application/mentor/mentor";
 
-export type MentorCardProps = {
+export type MentorCardProviderProps = {
   mentor: Mentor;
 };

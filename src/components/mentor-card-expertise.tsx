@@ -1,11 +1,13 @@
-import type { MentorCardExpertiseProps } from "@/types/components/mentoring/mentor-card-expertise-props";
+import { useMentorCardContext } from "@/utils/components/mentoring/use-mentor-card-context";
 
 import { Badge } from "@/components/ui/badge";
 
-export function MentorCardExpertise({ expertise }: MentorCardExpertiseProps) {
+export function MentorCardExpertise() {
+  const { mentor } = useMentorCardContext();
+
   return (
     <section>
-      {expertise.map((item) => (
+      {mentor.expertise.map((item) => (
         <Badge
           key={item}
           variant="secondary"

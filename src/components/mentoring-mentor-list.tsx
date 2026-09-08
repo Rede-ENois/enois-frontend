@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import type { MentoringMentorListProps } from "@/types/components/mentoring/mentoring-mentor-list-props";
 
-import { MentorCard } from "@/components/mentor-card";
+import { MentorCardProvider } from "@/components/mentor-card-provider";
 
 export function MentoringMentorList({ mentors }: MentoringMentorListProps) {
   return (
@@ -12,7 +12,7 @@ export function MentoringMentorList({ mentors }: MentoringMentorListProps) {
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {mentors.map((mentor) => (
-          <MentorCard key={mentor.id} mentor={mentor} />
+          <MentorCardProvider key={mentor.id} mentor={mentor} />
         ))}
       </div>
     </section>
