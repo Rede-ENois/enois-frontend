@@ -1,19 +1,16 @@
 import { texts } from "@/texts";
-import type { GlobalSearchResultsProps } from "@/types/components/global-search/global-search-results-props";
+import { useGlobalSearchContext } from "@/utils/components/search/use-global-search-context";
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function GlobalSearchResults({
-  items,
-  query,
-  isFetching,
-  onSelect,
-}: GlobalSearchResultsProps) {
+export function GlobalSearchResults() {
+  const { items, debounced, isFetching, handleSelect } = useGlobalSearchContext();
+
   return (
     <>
       {items.length === 0 && !isFetching && (
         <p className="px-4 py-6 text-center text-sm text-text-subtle">
-          {texts.search.noResults(query)}
+          {texts.search.noResults(debounced)}
         </p>
       )}
 
@@ -22,7 +19,7 @@ export function GlobalSearchResults({
           <li key={`${item.type}-${item.id}`}>
             <button
               type="button"
-              onClick={() => onSelect(item)}
+              onClick={() => handleSelect(item)}
               className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-surface-3"
             >
               <UserAvatar src={item.image} alt={item.title} className="h-10 w-10" />

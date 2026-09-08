@@ -2,7 +2,7 @@ import type { FocusEventHandler, MouseEventHandler, RefObject } from "react";
 
 import type { SearchResult } from "@/types/application/search/search-result";
 
-export type GlobalSearchOverlayProps = {
+export type GlobalSearchContextValue = {
   query: string;
   debounced: string;
   mobileOpen: boolean;
@@ -11,8 +11,9 @@ export type GlobalSearchOverlayProps = {
   items: SearchResult[];
   isFetching: boolean;
   showResults: boolean;
-  onBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
-  onQueryChange: (value: string) => void;
-  onFocus: FocusEventHandler<HTMLInputElement>;
-  onSelect: (item: SearchResult) => void;
+  openMobileSearch: () => void;
+  handleBackdropMouseDown: MouseEventHandler<HTMLDivElement>;
+  handleQueryChange: (value: string) => void;
+  handleFocus: FocusEventHandler<HTMLInputElement>;
+  handleSelect: (item: SearchResult) => void;
 };

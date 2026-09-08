@@ -1,7 +1,7 @@
 import { AppBrand } from "./app-brand";
 import { AppHeaderLayout } from "./app-header-layout";
 import { AuthenticatedAppHeaderActions } from "./authenticated-app-header-actions";
-import { GlobalSearch } from "./global-search";
+import { GlobalSearchProvider } from "./global-search-provider";
 import { MobileNavigationButton } from "./mobile-navigation-button";
 
 export function AuthenticatedAppHeader() {
@@ -9,7 +9,7 @@ export function AuthenticatedAppHeader() {
     <AppHeaderLayout>
       <MobileNavigationButton />
       <AppBrand />
-      <GlobalSearch />
+      <GlobalSearchProvider />
       <AuthenticatedAppHeaderActions />
     </AppHeaderLayout>
   );
