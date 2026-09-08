@@ -1,14 +1,14 @@
 import type { MentorCardProviderProps } from "@/types/components/mentoring/mentor-card-provider-props";
 import { MentorCardContext } from "@/utils/components/mentoring/mentor-card-context";
-import { useMentorCardProfile } from "@/utils/components/mentoring/use-mentor-card-profile";
+import { useMentorCardController } from "@/utils/components/mentoring/use-mentor-card-controller";
 
 import { MentorCard } from "@/components/mentor-card";
 
 export function MentorCardProvider({ mentor }: MentorCardProviderProps) {
-  const profile = useMentorCardProfile(mentor.userId);
+  const view = useMentorCardController(mentor);
 
   return (
-    <MentorCardContext.Provider value={{ mentor, ...profile }}>
+    <MentorCardContext.Provider value={view}>
       <MentorCard />
     </MentorCardContext.Provider>
   );
