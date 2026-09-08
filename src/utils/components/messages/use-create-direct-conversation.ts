@@ -1,21 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { NewConversationSearchProps } from "@/types/components/messages/new-conversation-search-props";
-
 import { createConversation as createConversationRequest } from "@/lib/api/messages/create-conversation";
+import { useMessagesStore } from "@/stores/messages.store";
 
-export function useCreateDirectConversation(
-  { onSelect, onClose }: NewConversationSearchProps,
-  onCreated: () => void,
-) {
+export function useCreateDirectConversation() {
   const queryClient = useQueryClient();
+  const selectConversation = useMessagesStore((state) => state.selectConversation);
   const createConversation = useMutation({
     mutationFn: (participantId: string) =>
       createConversationRequest({ kind: "DIRECT", participantIds: [participantId] }),
     onSuccess: (conversation) => {
-      onSelect(conversation.id);
-      onClose();
-      onCreated();
+      selectConversation(conversation.id);
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });

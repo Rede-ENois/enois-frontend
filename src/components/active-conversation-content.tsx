@@ -10,11 +10,10 @@ export function ActiveConversationContent({
   currentUserId,
   otherParticipantId,
   otherUser,
-  onBack,
 }: ActiveConversationContentProps) {
   return (
     <>
-      <ConversationHeader conversation={conversation} onBack={onBack} />
+      <ConversationHeader conversation={conversation} />
       <ConversationMessages
         messages={messages}
         currentUserId={currentUserId}

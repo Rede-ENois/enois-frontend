@@ -1,5 +1,5 @@
-import type { NewConversationSearchResult } from "@/types/components/messages/new-conversation-search-result";
+import type { NetworkUser } from "@/types/application/network/network-user";
 
 export type NewConversationSearchResultItemProps = {
-  user: NewConversationSearchResult;
+  user: NetworkUser;
 };

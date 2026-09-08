@@ -11,14 +11,7 @@ export function MessagesSidebarList({ items, showEmptyState }: MessagesSidebarLi
           {texts.messages.noConversations}
         </li>
       ) : (
-        items.map((item) => (
-          <ConversationItem
-            key={item.conversation.id}
-            conversation={item.conversation}
-            isActive={item.isActive}
-            onSelect={item.select}
-          />
-        ))
+        items.map((item) => <ConversationItem key={item.conversation.id} {...item} />)
       )}
     </ul>
   );

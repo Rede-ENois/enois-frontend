@@ -8,5 +8,4 @@ export type ActiveConversationContentProps = {
   currentUserId: string | null;
   otherParticipantId?: string;
   otherUser?: Profile;
-  onBack: () => void;
 };

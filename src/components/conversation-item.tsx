@@ -7,14 +7,14 @@ import { useConversationItemController } from "@/utils/components/messages/use-c
 import { UserAvatar } from "@/components/user-avatar";
 
 export function ConversationItem(props: ConversationItemProps) {
-  const { conversation, isActive, onSelect } = props;
-  const { otherUser, title, profileUsername, timeLabel, showUnread } =
+  const { conversation, isActive } = props;
+  const { otherUser, title, profileUsername, timeLabel, showUnread, select } =
     useConversationItemController(props);
 
   return (
     <li>
       <button
-        onClick={onSelect}
+        onClick={select}
         className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${
           isActive ? "bg-primary-soft" : "hover:bg-muted"
         }`}
@@ -26,7 +26,6 @@ export function ConversationItem(props: ConversationItemProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
             <span className="truncate text-sm font-medium">{title}</span>
-
             <span className="text-[11px] text-muted-foreground shrink-0 ml-2">{timeLabel}</span>
           </div>
 

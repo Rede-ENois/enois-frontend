@@ -6,13 +6,12 @@ import { ConversationHeaderBackButton } from "@/components/conversation-header-b
 import { ConversationHeaderIdentity } from "@/components/conversation-header-identity";
 
 export function ConversationHeader(props: ConversationHeaderProps) {
-  const { onBack } = props;
   const { otherUser, title, profileUsername } = useConversationHeaderController(props);
 
   return (
     <header className="flex items-center gap-3 border-b border-border p-4">
       <div className="flex min-w-0 items-center gap-3">
-        {onBack && <ConversationHeaderBackButton onBack={onBack} />}
+        <ConversationHeaderBackButton />
         <ConversationHeaderIdentity
           profileUsername={profileUsername}
           avatar={otherUser?.avatar}

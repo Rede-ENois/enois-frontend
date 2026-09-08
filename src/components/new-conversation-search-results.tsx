@@ -1,18 +1,20 @@
 import { texts } from "@/texts";
-import type { NewConversationSearchResultsProps } from "@/types/components/messages/new-conversation-search-results-props";
+import { useMessagesStore } from "@/stores/messages.store";
+
+import { useConversationSearchResults } from "@/utils/components/messages/use-conversation-search-results";
 
 import { NewConversationSearchResultItem } from "@/components/new-conversation-search-result-item";
 
-export function NewConversationSearchResults({
-  visible,
-  showEmptyState,
-  users,
-}: NewConversationSearchResultsProps) {
+export function NewConversationSearchResults() {
+  const query = useMessagesStore((state) => state.newConversationSearchQuery);
+  const users = useConversationSearchResults(query);
+  const visible = Boolean(query);
+
   if (!visible) return null;
 
   return (
     <div className="space-y-1">
-      {showEmptyState ? (
+      {users.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">{texts.messages.noContact}</p>
       ) : (
         users.map((user) => <NewConversationSearchResultItem key={user.id} user={user} />)
