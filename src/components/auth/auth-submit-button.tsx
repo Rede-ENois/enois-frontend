@@ -1,4 +1,4 @@
-import type { AuthSubmitButtonProps } from "@/types/components/auth/auth-submit-button-props";
+import type { AuthSubmitButtonProps } from "@/types/auth/auth-submit-button-props";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

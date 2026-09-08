@@ -1,4 +1,4 @@
-import type { AuthFormHeadingProps } from "@/types/components/auth/auth-form-heading-props";
+import type { AuthFormHeadingProps } from "@/types/auth/auth-form-heading-props";
 
 export function AuthFormHeading({ title, subtitle }: AuthFormHeadingProps) {
   return (

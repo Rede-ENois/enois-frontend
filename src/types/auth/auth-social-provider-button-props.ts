@@ -1,4 +1,4 @@
-import type { AuthSocialProvider } from "@/types/components/auth/auth-social-provider";
+import type { AuthSocialProvider } from "@/types/auth/auth-social-provider";
 
 export type AuthSocialProviderButtonProps = {
   provider: AuthSocialProvider;

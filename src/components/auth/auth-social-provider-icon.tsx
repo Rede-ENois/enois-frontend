@@ -1,4 +1,4 @@
-import type { AuthSocialProvider } from "@/types/components/auth/auth-social-provider";
+import type { AuthSocialProvider } from "@/types/auth/auth-social-provider";
 
 import { AppleIcon } from "@/components/auth/apple-icon";
 import { GoogleIcon } from "@/components/auth/google-icon";

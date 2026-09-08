@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import type { AuthModeTab } from "@/types/components/auth/auth-mode-tab";
+import type { AuthModeTab } from "@/types/auth/auth-mode-tab";
 
 export function createAuthModeTabs(
   activeTab: "signup" | "login",
