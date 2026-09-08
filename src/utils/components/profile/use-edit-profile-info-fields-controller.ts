@@ -11,6 +11,7 @@ export function useEditProfileInfoFieldsController() {
         ...field,
         value: values[field.field],
         error: field.field === "username" ? usernameError : undefined,
+        className: `h-10 border-border-soft bg-surface-1${field.field === "bio" ? " pl-9" : ""}`,
         setValue: (value: string) => {
           if (field.field === "username") setUsername(value);
           else setField(field.field, value);

@@ -21,14 +21,14 @@ export function EditProfileInfoFields() {
           value={field.value}
           onChange={(event) => field.setValue(event.target.value)}
           rows={3}
-          className={`h-10 border-border-soft bg-surface-1${field.field === "bio" ? " pl-9" : ""}`}
+          className={field.className}
         />
       ) : (
         <Input
           value={field.value}
           onChange={(event) => field.setValue(event.target.value)}
           placeholder={field.placeholder}
-          className="h-10 border-border-soft bg-surface-1"
+          className={field.className}
         />
       )}
     </FormField>
