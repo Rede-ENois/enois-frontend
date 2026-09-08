@@ -1,18 +1,17 @@
-import type { PostCommentsProps } from "@/types/components/post/post-comments-props";
-import { usePostCommentsController } from "@/utils/components/post/use-post-comments-controller";
+import { usePostCommentsContext } from "@/utils/components/post/use-post-comments-context";
 
 import { PostCommentComposer } from "@/components/post-comment-composer";
 import { PostCommentThreads } from "@/components/post-comment-threads";
 
-export function PostComments({ postId, visible }: PostCommentsProps) {
-  const controller = usePostCommentsController(postId, visible);
+export function PostComments() {
+  const { showComments } = usePostCommentsContext();
 
-  if (!controller.showComments) return null;
+  if (!showComments) return null;
 
   return (
     <section className="mt-4 border-t border-border-soft pt-4">
-      <PostCommentThreads threads={controller.threads} showEmptyState={controller.showEmptyState} />
-      <PostCommentComposer postId={postId} />
+      <PostCommentThreads />
+      <PostCommentComposer />
     </section>
   );
 }

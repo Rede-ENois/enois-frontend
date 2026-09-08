@@ -1,7 +1,6 @@
 import type { CommentView } from "@/types/application/comment/comment-view";
 
-export type CommentItemContentProps = {
+export type CommentItemProviderProps = {
   comment: CommentView;
-  replyingTo?: string;
-  timeLabel: string;
+  replyingTo?: CommentView["authorName"];
 };

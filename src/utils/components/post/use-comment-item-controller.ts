@@ -1,4 +1,4 @@
-import type { CommentItemProps } from "@/types/components/post/comment-item-props";
+import type { CommentView } from "@/types/application/comment/comment-view";
 import { createCommentReactionViewModel } from "@/utils/components/post/create-comment-reaction-view-model";
 import { useCommentDeleteAction } from "@/utils/components/post/use-comment-delete-action";
 import { useCommentReactionController } from "@/utils/components/post/use-comment-reaction-controller";
@@ -7,7 +7,7 @@ import { formatRelativeTime } from "@/utils/format-relative-time";
 
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
-export function useCommentItemController({ comment }: CommentItemProps) {
+export function useCommentItemController(comment: CommentView) {
   const reply = useCommentReplyAction(comment);
   const remove = useCommentDeleteAction(comment);
   const reaction = useCommentReactionController(comment);

@@ -1,8 +1,10 @@
 import { texts } from "@/texts";
-import type { CommentItemContentProps } from "@/types/components/post/comment-item-content-props";
+import { useCommentItemContext } from "@/utils/components/post/use-comment-item-context";
 import { linkifyText } from "@/utils/linkify-text";
 
-export function CommentItemContent({ comment, replyingTo, timeLabel }: CommentItemContentProps) {
+export function CommentItemContent() {
+  const { comment, replyingTo, timeLabel } = useCommentItemContext();
+
   return (
     <div className="rounded-xl bg-surface-1 px-3 py-2">
       <div className="flex flex-wrap items-center gap-2">

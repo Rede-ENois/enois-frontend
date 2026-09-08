@@ -1,14 +1,16 @@
-import { texts } from "@/texts";
-import type { PostCommentComposerProps } from "@/types/components/post/post-comment-composer-props";
-import { usePostCommentComposerController } from "@/utils/components/post/use-post-comment-composer-controller";
 import { Send } from "lucide-react";
+
+import { texts } from "@/texts";
+import { usePostCommentComposerController } from "@/utils/components/post/use-post-comment-composer-controller";
+import { usePostCommentsContext } from "@/utils/components/post/use-post-comments-context";
 
 import { Button } from "@/components/ui/button";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 import { UserAvatar } from "@/components/user-avatar";
 
-export function PostCommentComposer({ postId }: PostCommentComposerProps) {
+export function PostCommentComposer() {
+  const { postId } = usePostCommentsContext();
   const controller = usePostCommentComposerController(postId);
 
   return (

@@ -1,18 +1,20 @@
 import { texts } from "@/texts";
-import type { PostCommentThreadsProps } from "@/types/components/post/post-comment-threads-props";
+import { usePostCommentsContext } from "@/utils/components/post/use-post-comments-context";
 
-import { CommentItem } from "@/components/post-comment-item";
+import { CommentItemProvider } from "@/components/post-comment-item-provider";
 
-export function PostCommentThreads({ threads, showEmptyState }: PostCommentThreadsProps) {
+export function PostCommentThreads() {
+  const { threads, showEmptyState } = usePostCommentsContext();
+
   return (
     <div className="space-y-3">
       {threads.map((thread) => (
         <div key={thread.comment.id}>
-          <CommentItem comment={thread.comment} />
+          <CommentItemProvider comment={thread.comment} />
           {thread.replies.length > 0 && (
             <div className="ml-10 mt-2 space-y-2 border-l-2 border-border-soft pl-4">
               {thread.replies.map(({ reply, replyingTo }) => (
-                <CommentItem key={reply.id} comment={reply} replyingTo={replyingTo} />
+                <CommentItemProvider key={reply.id} comment={reply} replyingTo={replyingTo} />
               ))}
             </div>
           )}
