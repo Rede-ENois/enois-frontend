@@ -1,12 +1,10 @@
-import type { AuthSocialProviderListProps } from "@/types/components/auth/auth-social-provider-list-props";
+import { useAuthSocialOptionsController } from "@/utils/components/auth/use-auth-social-options-controller";
 
 import { AuthSocialProviderButton } from "@/components/auth/auth-social-provider-button";
 
-export function AuthSocialProviderList({
-  providers,
-  disabled,
-  error,
-}: AuthSocialProviderListProps) {
+export function AuthSocialProviderList() {
+  const { providers, disabled, error } = useAuthSocialOptionsController();
+
   return (
     <div className="grid gap-2">
       {providers.map((provider) => (
