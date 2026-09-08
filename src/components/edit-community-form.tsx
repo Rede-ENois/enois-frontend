@@ -1,3 +1,4 @@
+import { EDIT_COMMUNITY_FIELDS } from "@/constants/edit-community-fields";
 import { texts } from "@/texts";
 import type { EditCommunityFormProps } from "@/types/components/communities/edit-community-form-props";
 
@@ -12,60 +13,42 @@ import { CommunityImageField } from "@/components/community-image-field";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
 
 export function EditCommunityForm(props: EditCommunityFormProps) {
-  const {
-    form,
-    setField,
-    coverField,
-    avatarField,
-    cropDialog,
-    savePending,
-    saveDisabled,
-    save,
-  } = useEditCommunityFormController(props);
-  const fields = [
-    {
-      key: "name",
-      label: texts.communities.create.name,
-      control: (
-        <Input value={form.name} onChange={(event) => setField("name", event.target.value)} />
-      ),
-    },
-    {
-      key: "description",
-      label: texts.communities.create.description,
-      control: (
-        <Textarea
-          value={form.description}
-          onChange={(event) => setField("description", event.target.value)}
-          rows={3}
-        />
-      ),
-    },
-  ];
-  const imageFields = [
-    { key: "cover", props: coverField },
-    { key: "avatar", props: avatarField },
-  ];
+  const controller = useEditCommunityFormController(props);
 
   return (
     <div className="space-y-4 pt-2">
-      {fields.map((field) => (
+      {EDIT_COMMUNITY_FIELDS.map((field) => (
         <div key={field.key} className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">{field.label}</Label>
 
-          {field.control}
+          {field.control === "textarea" ? (
+            <Textarea
+              value={controller.form[field.key]}
+              onChange={(event) => controller.setField(field.key, event.target.value)}
+              rows={field.rows}
+            />
+          ) : (
+            <Input
+              value={controller.form[field.key]}
+              onChange={(event) => controller.setField(field.key, event.target.value)}
+            />
+          )}
         </div>
       ))}
 
-      {imageFields.map((field) => (
+      {controller.imageFields.map((field) => (
         <CommunityImageField key={field.key} {...field.props} />
       ))}
 
-      <Button className="w-full rounded-full" disabled={saveDisabled} onClick={save}>
-        {savePending ? texts.common.saving : texts.common.save}
+      <Button
+        className="w-full rounded-full"
+        disabled={controller.saveDisabled}
+        onClick={controller.save}
+      >
+        {controller.savePending ? texts.common.saving : texts.common.save}
       </Button>
 
-      {cropDialog && <ImageCropDialog {...cropDialog} />}
+      {controller.cropDialog && <ImageCropDialog {...controller.cropDialog} />}
     </div>
   );
 }

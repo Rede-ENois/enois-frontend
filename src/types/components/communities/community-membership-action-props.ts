@@ -1,6 +1,5 @@
-import type { CommunityHeaderActionsProps } from "@/types/components/communities/community-header-actions-props";
+import type { Community } from "@/types/application/community/community";
 
-export type CommunityMembershipActionProps = Pick<
-  CommunityHeaderActionsProps,
-  "membershipPending" | "membershipVariant" | "membershipLabel" | "toggleMembership"
->;
+export type CommunityMembershipActionProps = {
+  community: Community;
+};

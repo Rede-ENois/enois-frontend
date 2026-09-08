@@ -21,17 +21,7 @@ export function CommunityHeader({ community, members }: CommunityHeaderProps) {
             avatarUrl={controller.avatarUrl}
           />
 
-          <CommunityHeaderActions
-            community={community}
-            isAdmin={controller.isAdmin}
-            editOpen={controller.editOpen}
-            setEditOpen={controller.setEditOpen}
-            closeEdit={controller.closeEdit}
-            membershipPending={controller.membershipPending}
-            membershipVariant={controller.membershipVariant}
-            membershipLabel={controller.membershipLabel}
-            toggleMembership={controller.toggleMembership}
-          />
+          <CommunityHeaderActions community={community} members={members} />
         </div>
       </div>
     </div>

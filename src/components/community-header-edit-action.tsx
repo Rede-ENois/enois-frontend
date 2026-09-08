@@ -1,6 +1,7 @@
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 import { Settings } from "lucide-react";
 
+import { useCommunityEditDialogStore } from "@/stores/community-edit-dialog.store";
 import { texts } from "@/texts";
 import type { CommunityHeaderEditActionProps } from "@/types/components/communities/community-header-edit-action-props";
 
@@ -11,14 +12,12 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 
 import { EditCommunityForm } from "@/components/edit-community-form";
 
-export function CommunityHeaderEditAction({
-  community,
-  editOpen,
-  setEditOpen,
-  closeEdit,
-}: CommunityHeaderEditActionProps) {
+export function CommunityHeaderEditAction({ community }: CommunityHeaderEditActionProps) {
+  const open = useCommunityEditDialogStore((state) => state.open);
+  const setOpen = useCommunityEditDialogStore((state) => state.setOpen);
+
   return (
-    <Dialog open={editOpen} onOpenChange={setEditOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="rounded-full gap-1.5">
           <Settings className="h-4 w-4" />
@@ -31,7 +30,7 @@ export function CommunityHeaderEditAction({
           <DialogTitle>{texts.communities.detail.editTitle}</DialogTitle>
         </DialogHeader>
 
-        <EditCommunityForm community={community} onClose={closeEdit} />
+        <EditCommunityForm community={community} />
       </DialogContent>
     </Dialog>
   );

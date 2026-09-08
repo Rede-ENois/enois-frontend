@@ -1,0 +1,11 @@
+import { texts } from "@/texts";
+
+export const EDIT_COMMUNITY_FIELDS = [
+  { key: "name", label: texts.communities.create.name, control: "input" },
+  {
+    key: "description",
+    label: texts.communities.create.description,
+    control: "textarea",
+    rows: 3,
+  },
+] as const;
