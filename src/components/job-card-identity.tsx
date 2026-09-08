@@ -1,9 +1,12 @@
-import type { JobCardIdentityProps } from "@/types/components/jobs/job-card-identity-props";
 import { MapPin } from "lucide-react";
+
+import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
 
 import { Avatar } from "@/components/ui/avatar";
 
-export function JobCardIdentity({ job, companyInitial }: JobCardIdentityProps) {
+export function JobCardIdentity() {
+  const { job, companyInitial } = useJobCardContext();
+
   return (
     <div className="flex items-start gap-3">
       <Avatar type="root" className="h-12 w-12 rounded-xl">

@@ -1,11 +1,13 @@
-import type { JobCardSkillsProps } from "@/types/components/jobs/job-card-skills-props";
+import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
 
 import { Badge } from "@/components/ui/badge";
 
-export function JobCardSkills({ skills }: JobCardSkillsProps) {
+export function JobCardSkills() {
+  const { job } = useJobCardContext();
+
   return (
     <div className="mt-3 flex flex-wrap gap-1.5">
-      {skills.map((skill) => (
+      {job.skills.map((skill) => (
         <Badge
           key={skill}
           variant="secondary"

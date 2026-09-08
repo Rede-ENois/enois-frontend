@@ -1,9 +1,10 @@
 import { texts } from "@/texts";
-import type { JobCardFooterProps } from "@/types/components/jobs/job-card-footer-props";
+import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
 
 import { Button } from "@/components/ui/button";
 
-export function JobCardFooter({ postedAtLabel, applying, onApply }: JobCardFooterProps) {
+export function JobCardFooter() {
+  const { postedAtLabel, applying, apply } = useJobCardContext();
   const actions = [
     {
       key: "details",
@@ -17,7 +18,7 @@ export function JobCardFooter({ postedAtLabel, applying, onApply }: JobCardFoote
       label: texts.jobs.apply,
       variant: "default" as const,
       disabled: applying,
-      onClick: onApply,
+      onClick: apply,
     },
   ];
 

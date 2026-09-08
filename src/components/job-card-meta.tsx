@@ -1,8 +1,11 @@
-import { JOB_CARD_ATTRIBUTES } from "@/constants/job-card-attributes";
-import type { JobCardMetaProps } from "@/types/components/jobs/job-card-meta-props";
 import { Sparkles } from "lucide-react";
 
-export function JobCardMeta({ job, matchLabel, showSalary }: JobCardMetaProps) {
+import { JOB_CARD_ATTRIBUTES } from "@/constants/job-card-attributes";
+import { useJobCardContext } from "@/utils/components/jobs/use-job-card-context";
+
+export function JobCardMeta() {
+  const { job, matchLabel, showSalary } = useJobCardContext();
+
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
       {matchLabel && (

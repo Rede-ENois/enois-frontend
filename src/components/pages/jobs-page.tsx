@@ -1,10 +1,11 @@
+import { Loader2 } from "lucide-react";
+
 import { texts } from "@/texts";
 import { useJobsPageController } from "@/utils/components/jobs/use-jobs-page-controller";
-import { Loader2 } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
 import { InfiniteScroll } from "@/components/infinite-scroll";
-import { JobCard } from "@/components/job-card";
+import { JobCardProvider } from "@/components/job-card-provider";
 import { JobsFilters } from "@/components/jobs-filters";
 
 export function Vagas() {
@@ -18,7 +19,7 @@ export function Vagas() {
 
         <div className="grid gap-4 md:grid-cols-2">
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCardProvider key={job.id} job={job} />
           ))}
         </div>
 

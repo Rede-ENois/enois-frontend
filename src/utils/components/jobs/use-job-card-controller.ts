@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import type { JobCardProps } from "@/types/components/jobs/job-card-props";
+import type { Job } from "@/types/application/job/job";
 import { formatPostedAt } from "@/utils/format-posted-at";
 
 import { applyToJob } from "@/lib/api/jobs/apply-to-job";
 
-export function useJobCardController({ job }: JobCardProps) {
+export function useJobCardController(job: Job) {
   const queryClient = useQueryClient();
   const apply = useMutation({
     mutationFn: () => applyToJob(job.id),
