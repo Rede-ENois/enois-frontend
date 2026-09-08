@@ -1,7 +1,7 @@
 import { CommunityComposerContext } from "@/utils/communities/community-composer-context";
 import { useCommunityComposerController } from "@/utils/communities/use-community-composer-controller";
 
-import { CommunityComposer } from "@/components/community-composer";
+import { CommunityComposer } from "@/components/communities/community-composer";
 
 export function CommunityComposerProvider() {
   const controller = useCommunityComposerController();
