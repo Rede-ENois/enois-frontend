@@ -5,5 +5,6 @@ export type CommunityCardContextValue = {
   community: Community;
   coverUrl?: string | null;
   avatarUrl?: string | null;
+  membersLabel: string;
   membershipAction: CommunityCardMembershipAction;
 };
