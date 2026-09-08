@@ -1,5 +1,6 @@
 import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog";
 
+import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
 import { texts } from "@/texts";
 import type { ProfileRecommendationDialogProps } from "@/types/components/profile/profile-recommendation-dialog-props";
 
@@ -10,27 +11,25 @@ import { DialogTitle } from "@/components/ui/dialog-title";
 import { ProfileRecommendationForm } from "@/components/profile-recommendation-form";
 import { ProfileRecommendationTrigger } from "@/components/profile-recommendation-trigger";
 
-export function ProfileRecommendationDialog(props: ProfileRecommendationDialogProps) {
+export function ProfileRecommendationDialog({ user }: ProfileRecommendationDialogProps) {
+  const open = useProfileRecommendationStore(
+    (state) => state.open && state.targetUserId === user.id,
+  );
+  const openForUser = useProfileRecommendationStore((state) => state.openForUser);
+  const close = useProfileRecommendationStore((state) => state.close);
+
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? openForUser(user.id) : close())}>
       <DialogTrigger asChild>
         <ProfileRecommendationTrigger />
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="font-light">
-            {texts.profile.recommendTitle(props.userName)}
-          </DialogTitle>
+          <DialogTitle className="font-light">{texts.profile.recommendTitle(user.name)}</DialogTitle>
         </DialogHeader>
 
-        <ProfileRecommendationForm
-          comment={props.comment}
-          onCommentChange={props.onCommentChange}
-          sending={props.sending}
-          sendDisabled={props.sendDisabled}
-          onSend={props.onSend}
-        />
+        <ProfileRecommendationForm />
       </DialogContent>
     </Dialog>
   );

@@ -1,16 +1,16 @@
-import { texts } from "@/texts";
-import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 import { ThumbsUp } from "lucide-react";
 
-import { useProfileRecommendationController } from "@/utils/components/profile/use-profile-recommendation-controller";
+import { useAuth } from "@/lib/use-auth";
+import { texts } from "@/texts";
+import type { ProfileSidebarProps } from "@/types/components/profile/profile-sidebar-props";
 
 import { ProfileRecommendationDialog } from "@/components/profile-recommendation-dialog";
 import { ProfileSection } from "@/components/profile-section";
 
 export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
-  const controller = useProfileRecommendationController(user);
+  const { user: me } = useAuth();
 
-  if (!controller.visible) return null;
+  if (me?.id === user.id) return null;
 
   return (
     <ProfileSection title={texts.profile.sections.recommend} icon={ThumbsUp}>
@@ -18,16 +18,7 @@ export function ProfileRecommendationSection({ user }: ProfileSidebarProps) {
         {texts.profile.recommendDescription}
       </p>
 
-      <ProfileRecommendationDialog
-        userName={user.name}
-        open={controller.open}
-        onOpenChange={controller.setOpen}
-        comment={controller.comment}
-        onCommentChange={controller.setComment}
-        sending={controller.sending}
-        sendDisabled={controller.sendDisabled}
-        onSend={controller.send}
-      />
+      <ProfileRecommendationDialog user={user} />
     </ProfileSection>
   );
 }
