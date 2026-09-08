@@ -1,14 +1,13 @@
 import { NOTIFICATION_TABS } from "@/constants/components/notifications/notification-tabs";
 import { useNotificationsStore } from "@/stores/notifications.store";
+import { useNotificationsPopoverContext } from "@/utils/components/notifications/use-notifications-popover-context";
 
 import { cn } from "@/lib/utils";
-
-import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
 
 export function NotificationsPopoverTabs() {
   const tab = useNotificationsStore((state) => state.tab);
   const openTab = useNotificationsStore((state) => state.openTab);
-  const { newTabCount } = useNotificationsPopoverView();
+  const { newTabCount } = useNotificationsPopoverContext();
 
   return (
     <div className="flex border-b border-border-soft">

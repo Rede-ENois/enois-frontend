@@ -1,9 +1,10 @@
-import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
+import { useNotificationsPopoverContext } from "@/utils/components/notifications/use-notifications-popover-context";
 
 import { NotificationItemProvider } from "@/components/notification-item-provider";
 
 export function NotificationsPopoverList() {
-  const { displayedNotifications, showEmptyState, emptyMessage } = useNotificationsPopoverView();
+  const { displayedNotifications, showEmptyState, emptyMessage } =
+    useNotificationsPopoverContext();
 
   return (
     <div className="max-h-[28rem] overflow-y-auto">

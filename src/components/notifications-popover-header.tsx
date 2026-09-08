@@ -1,12 +1,11 @@
 import { CheckCheck } from "lucide-react";
 
 import { texts } from "@/texts";
-
 import { useNotificationReadActions } from "@/utils/components/notifications/use-notification-read-actions";
-import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
+import { useNotificationsPopoverContext } from "@/utils/components/notifications/use-notifications-popover-context";
 
 export function NotificationsPopoverHeader() {
-  const { showMarkAllAsRead } = useNotificationsPopoverView();
+  const { showMarkAllAsRead } = useNotificationsPopoverContext();
   const { markAllAsRead } = useNotificationReadActions();
 
   return (

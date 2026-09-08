@@ -1,9 +1,9 @@
 import { Bell } from "lucide-react";
 
-import { useNotificationsPopoverView } from "@/utils/components/notifications/use-notifications-popover-view";
+import { useNotificationsPopoverContext } from "@/utils/components/notifications/use-notifications-popover-context";
 
 export function NotificationsPopoverTrigger() {
-  const { triggerLabel, unreadBadgeLabel } = useNotificationsPopoverView();
+  const { triggerLabel, unreadBadgeLabel } = useNotificationsPopoverContext();
 
   return (
     <button
