@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useSignupFormController } from "@/utils/components/auth/use-signup-form-controller";
+import { useSignupFormContext } from "@/utils/components/auth/use-signup-form-context";
 
 import { ErrorBanner } from "@/components/error-banner";
 
@@ -9,7 +9,7 @@ import { AuthSubmitButton } from "./auth-submit-button";
 import { SignupFormFields } from "./signup-form-fields";
 
 export function SignupForm() {
-  const { errors, formError, loading, submit } = useSignupFormController();
+  const { formError, loading, submit } = useSignupFormContext();
 
   return (
     <div>
@@ -20,7 +20,7 @@ export function SignupForm() {
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <SignupFormFields errors={errors} />
+        <SignupFormFields />
         {formError !== null && <ErrorBanner error={formError} />}
         <AuthSubmitButton loading={loading} label={texts.common.createAccount} />
       </form>

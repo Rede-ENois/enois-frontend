@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useLoginFormController } from "@/utils/components/auth/use-login-form-controller";
+import { useLoginFormContext } from "@/utils/components/auth/use-login-form-context";
 
 import { ErrorBanner } from "@/components/error-banner";
 
@@ -9,7 +9,7 @@ import { AuthSubmitButton } from "./auth-submit-button";
 import { LoginFormFields } from "./login-form-fields";
 
 export function LoginForm() {
-  const { errors, formError, loading, submit } = useLoginFormController();
+  const { formError, loading, submit } = useLoginFormContext();
 
   return (
     <div>
@@ -20,7 +20,7 @@ export function LoginForm() {
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <LoginFormFields errors={errors} />
+        <LoginFormFields />
         {formError !== null && <ErrorBanner error={formError} />}
         <AuthSubmitButton loading={loading} label={texts.common.enter} />
       </form>

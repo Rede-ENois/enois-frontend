@@ -1,5 +1,5 @@
 import { AUTH_SIGNUP_FIELDS } from "@/constants/auth-signup-fields";
-import type { SignupFormFieldsProps } from "@/types/components/auth/signup-form-fields-props";
+import { useSignupFormContext } from "@/utils/components/auth/use-signup-form-context";
 
 import { Input } from "@/components/ui/input";
 
@@ -7,7 +7,9 @@ import { FormField } from "@/components/form-field";
 
 import { AuthPasswordInput } from "./auth-password-input";
 
-export function SignupFormFields({ errors }: SignupFormFieldsProps) {
+export function SignupFormFields() {
+  const { errors } = useSignupFormContext();
+
   return (
     <>
       {AUTH_SIGNUP_FIELDS.map((field) => (

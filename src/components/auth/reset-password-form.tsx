@@ -1,21 +1,10 @@
-import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
-import { useResetPasswordFormController } from "@/utils/components/auth/use-reset-password-form-controller";
+import { useResetPasswordFormContext } from "@/utils/components/auth/use-reset-password-form-context";
 
 import { ResetPasswordContent } from "./reset-password-content";
 import { ResetPasswordSuccess } from "./reset-password-success";
 
-export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
-  const controller = useResetPasswordFormController(token);
+export function ResetPasswordForm() {
+  const { done } = useResetPasswordFormContext();
 
-  if (controller.done) {
-    return <ResetPasswordSuccess onLogin={controller.goToLogin} />;
-  }
-
-  return (
-    <ResetPasswordContent
-      errors={controller.errors}
-      loading={controller.loading}
-      submit={controller.submit}
-    />
-  );
+  return done ? <ResetPasswordSuccess /> : <ResetPasswordContent />;
 }

@@ -1,5 +1,5 @@
 import { AUTH_LOGIN_FIELDS } from "@/constants/auth-login-fields";
-import type { LoginFormFieldsProps } from "@/types/components/auth/login-form-fields-props";
+import { useLoginFormContext } from "@/utils/components/auth/use-login-form-context";
 
 import { Input } from "@/components/ui/input";
 
@@ -8,7 +8,9 @@ import { FormField } from "@/components/form-field";
 import { AuthPasswordInput } from "./auth-password-input";
 import { ForgotPasswordDialog } from "./forgot-password-dialog";
 
-export function LoginFormFields({ errors }: LoginFormFieldsProps) {
+export function LoginFormFields() {
+  const { errors } = useLoginFormContext();
+
   return (
     <>
       {AUTH_LOGIN_FIELDS.map((field) => (

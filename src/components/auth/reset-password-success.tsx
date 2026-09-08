@@ -1,10 +1,13 @@
-import { texts } from "@/texts";
-import type { ResetPasswordSuccessProps } from "@/types/components/auth/reset-password-success-props";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useResetPasswordFormContext } from "@/utils/components/auth/use-reset-password-form-context";
 
 import { Button } from "@/components/ui/button";
 
-export function ResetPasswordSuccess({ onLogin }: ResetPasswordSuccessProps) {
+export function ResetPasswordSuccess() {
+  const { goToLogin } = useResetPasswordFormContext();
+
   return (
     <div className="text-center">
       <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
@@ -15,7 +18,7 @@ export function ResetPasswordSuccess({ onLogin }: ResetPasswordSuccessProps) {
 
       <p className="mt-2 text-sm text-muted-foreground">{texts.auth.reset.successDescription}</p>
 
-      <Button className="mt-6 w-full gap-2 rounded-full" onClick={onLogin}>
+      <Button className="mt-6 w-full gap-2 rounded-full" onClick={goToLogin}>
         <>{texts.auth.reset.enterNow}</>
 
         <ArrowRight className="h-4 w-4" />

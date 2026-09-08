@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import type { ResetPasswordContentProps } from "@/types/components/auth/reset-password-content-props";
+import { useResetPasswordFormContext } from "@/utils/components/auth/use-reset-password-form-context";
 
 import { FormField } from "@/components/form-field";
 
@@ -9,7 +9,9 @@ import { AuthFormHeading } from "./auth-form-heading";
 import { AuthPasswordInput } from "./auth-password-input";
 import { AuthSubmitButton } from "./auth-submit-button";
 
-export function ResetPasswordContent({ errors, loading, submit }: ResetPasswordContentProps) {
+export function ResetPasswordContent() {
+  const { errors, loading, submit } = useResetPasswordFormContext();
+
   return (
     <div>
       <AuthFormHeading title={texts.auth.reset.title} subtitle={texts.auth.reset.description} />
