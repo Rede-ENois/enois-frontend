@@ -2,28 +2,17 @@ import { texts } from "@/texts";
 import type { AuthPageLayoutProps } from "@/types/components/auth/auth-page-layout-props";
 
 import { AppBrand } from "@/components/app-brand";
+import { AuthBackgroundBlobs } from "@/components/auth-background-blobs";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLayoutProps) {
-  const backgroundBlobs = [
-    "-right-20 -top-20",
-    "-bottom-32 -left-20",
-  ];
-
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside
         className="relative hidden flex-col justify-between overflow-hidden p-10 text-primary-foreground lg:flex"
         style={{ background: "var(--gradient-primary)" }}
       >
-        {backgroundBlobs.map((position) => (
-          <div
-            key={position}
-            aria-hidden
-            className={`absolute h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl ${position}`}
-          />
-        ))}
-
+        <AuthBackgroundBlobs />
         <AppBrand variant="auth-desktop" />
 
         <div className="relative max-w-md">
