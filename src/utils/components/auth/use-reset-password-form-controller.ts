@@ -1,8 +1,10 @@
-import type { ResetPasswordFormProps } from "@/types/components/auth/reset-password-form-props";
+import { useSearch } from "@tanstack/react-router";
+
 import { useLoginRouteNavigation } from "@/utils/components/auth/use-login-route-navigation";
 import { useResetPasswordSubmission } from "@/utils/components/auth/use-reset-password-submission";
 
-export function useResetPasswordFormController(token: ResetPasswordFormProps["token"]) {
+export function useResetPasswordFormController() {
+  const token = useSearch({ from: "/auth/reset" }).token ?? "";
   const submission = useResetPasswordSubmission(token);
   const goToLogin = useLoginRouteNavigation();
 

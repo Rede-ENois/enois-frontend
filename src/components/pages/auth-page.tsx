@@ -5,7 +5,7 @@ import { AuthPageLayout } from "@/components/auth/auth-page-layout";
 
 export function Auth() {
   return (
-    <AuthPageLayout showThemeToggle>
+    <AuthPageLayout>
       <AuthModeTabs />
       <AuthFormPanel />
       <AuthLegalNotice />

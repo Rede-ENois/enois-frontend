@@ -1,4 +1,4 @@
-import type { AuthPageLayoutProps } from "@/types/components/auth/auth-page-layout-props";
+import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
 import { AppBrand } from "@/components/app-brand";
 import { AuthBackgroundBlobs } from "@/components/auth-background-blobs";
@@ -6,7 +6,7 @@ import { AuthHeroContent } from "@/components/auth/auth-hero-content";
 import { AuthHeroStats } from "@/components/auth/auth-hero-stats";
 import { AuthMobileHeader } from "@/components/auth/auth-mobile-header";
 
-export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLayoutProps) {
+export function AuthPageLayout({ children }: WithRequiredChildren) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside
@@ -20,7 +20,7 @@ export function AuthPageLayout({ children, showThemeToggle = false }: AuthPageLa
       </aside>
 
       <section className="flex flex-col px-6 py-10 sm:px-12">
-        <AuthMobileHeader showThemeToggle={showThemeToggle} />
+        <AuthMobileHeader />
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">
           {children}
