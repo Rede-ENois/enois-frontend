@@ -1,4 +1,4 @@
-import { useForgotPasswordStore } from "@/stores/forgot-password.store";
+import { useForgotPasswordStore } from "@/stores/auth/forgot-password.store";
 
 export function useForgotPasswordSuccessController() {
   return {

@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from "react";
 
-import { useForgotPasswordStore } from "@/stores/forgot-password.store";
+import { useForgotPasswordStore } from "@/stores/auth/forgot-password.store";
 import { texts } from "@/texts";
 
 import { forgotPassword } from "@/lib/api/auth/forgot-password";
