@@ -1,10 +1,10 @@
 import { texts } from "@/texts";
-import type { EventCardDetailsProps } from "@/types/components/events/event-card-details-props";
+import { useEventCardContext } from "@/utils/components/events/use-event-card-context";
 
 import { Badge } from "@/components/ui/badge";
 
-export function EventCardDetails({ event, formatIcon, formatLabel }: EventCardDetailsProps) {
-  const FormatIcon = formatIcon;
+export function EventCardDetails() {
+  const { event, FormatIcon, formatLabel } = useEventCardContext();
 
   return (
     <>

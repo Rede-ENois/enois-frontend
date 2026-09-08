@@ -1,6 +1,8 @@
-import type { EventCardMediaProps } from "@/types/components/events/event-card-media-props";
+import { useEventCardContext } from "@/utils/components/events/use-event-card-context";
 
-export function EventCardMedia({ coverUrl, monthLabel, dayLabel }: EventCardMediaProps) {
+export function EventCardMedia() {
+  const { coverUrl, monthLabel, dayLabel } = useEventCardContext();
+
   return (
     <div className="relative">
       {coverUrl ? (

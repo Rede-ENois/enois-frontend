@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MapPin, Video } from "lucide-react";
 
 import { texts } from "@/texts";
-import type { EventCardProps } from "@/types/components/events/event-card-props";
-import { MapPin, Video } from "lucide-react";
+import type { Event } from "@/types/application/event/event";
 
 import { attendEvent } from "@/lib/api/events/attend-event";
 import { resolveCdnUrl } from "@/lib/api/media";
 
-export function useEventCardController({ event }: EventCardProps) {
+export function useEventCardController(event: Event) {
   const queryClient = useQueryClient();
   const attend = useMutation({
     mutationFn: () => attendEvent(event.id),

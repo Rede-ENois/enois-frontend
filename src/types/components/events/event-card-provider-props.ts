@@ -1,5 +1,5 @@
 import type { Event } from "@/types/application/event/event";
 
-export type EventCardProps = {
+export type EventCardProviderProps = {
   event: Event;
 };

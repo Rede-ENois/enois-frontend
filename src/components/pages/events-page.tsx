@@ -3,7 +3,7 @@ import { useEventsPageController } from "@/utils/components/events/use-events-pa
 
 import { AppContainer } from "@/components/app-container";
 import { CreateEventDialog } from "@/components/create-event-dialog";
-import { EventCard } from "@/components/event-card";
+import { EventCardProvider } from "@/components/event-card-provider";
 
 export function Eventos() {
   const { events } = useEventsPageController();
@@ -23,7 +23,7 @@ export function Eventos() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCardProvider key={event.id} event={event} />
           ))}
         </div>
       </div>
