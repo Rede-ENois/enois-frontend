@@ -1,3 +1,4 @@
+import { texts } from "@/texts";
 import type { CommentView } from "@/types/application/comment/comment-view";
 import { createCommentReactionViewModel } from "@/utils/components/post/create-comment-reaction-view-model";
 import { useCommentDeleteAction } from "@/utils/components/post/use-comment-delete-action";
@@ -7,13 +8,17 @@ import { formatRelativeTime } from "@/utils/format-relative-time";
 
 import { getCurrentUserId } from "@/lib/get-current-user-id";
 
-export function useCommentItemController(comment: CommentView) {
+export function useCommentItemController(
+  comment: CommentView,
+  replyingTo?: CommentView["authorName"],
+) {
   const reply = useCommentReplyAction(comment);
   const remove = useCommentDeleteAction(comment);
   const reaction = useCommentReactionController(comment);
   const reactionView = createCommentReactionViewModel(reaction.reaction, reaction.toggle);
 
   return {
+    replyingToLabel: replyingTo ? texts.posts.comments.replyingTo(replyingTo) : null,
     timeLabel: formatRelativeTime(comment.createdAt),
     showDelete: getCurrentUserId() === comment.authorId,
     reply,

@@ -3,7 +3,7 @@ import type { PostReactionOption } from "@/types/components/post/post-reaction-o
 
 export type CommentItemContextValue = {
   comment: CommentView;
-  replyingTo?: CommentView["authorName"];
+  replyingToLabel: string | null;
   timeLabel: string;
   showDelete: boolean;
   reply: () => void;

@@ -5,10 +5,10 @@ import { useCommentItemController } from "@/utils/components/post/use-comment-it
 import { CommentItem } from "@/components/post-comment-item";
 
 export function CommentItemProvider({ comment, replyingTo }: CommentItemProviderProps) {
-  const controller = useCommentItemController(comment);
+  const controller = useCommentItemController(comment, replyingTo);
 
   return (
-    <CommentItemContext.Provider value={{ comment, replyingTo, ...controller }}>
+    <CommentItemContext.Provider value={{ comment, ...controller }}>
       <CommentItem />
     </CommentItemContext.Provider>
   );
