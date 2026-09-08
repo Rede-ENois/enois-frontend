@@ -1,4 +1,4 @@
-import { texts } from "@/texts";
+import { CREATE_COMMUNITY_FIELDS } from "@/constants/create-community-fields";
 import type { CreateCommunityFormProps } from "@/types/components/communities/create-community-form-props";
 
 import { Input } from "@/components/ui/input";
@@ -10,41 +10,28 @@ export function CreateCommunityFields({
   form,
   setField,
 }: Pick<CreateCommunityFormProps, "form" | "setField">) {
-  const fields = [
-    {
-      key: "name",
-      label: texts.communities.create.name,
-      control: (
-        <Input
-          value={form.name}
-          onChange={(event) => setField("name", event.target.value)}
-          className="h-10 border-transparent bg-muted"
-        />
-      ),
-    },
-    {
-      key: "description",
-      label: texts.communities.create.description,
-      control: (
-        <Textarea
-          value={form.description}
-          onChange={(event) => setField("description", event.target.value)}
-          rows={3}
-          className="h-10 border-transparent bg-muted"
-        />
-      ),
-    },
-  ];
-
   return (
     <>
-      {fields.map((field) => (
+      {CREATE_COMMUNITY_FIELDS.map((field) => (
         <FormField
           key={field.key}
           label={field.label}
           labelClassName="text-xs text-muted-foreground"
         >
-          {field.control}
+          {field.control === "textarea" ? (
+            <Textarea
+              value={form[field.key]}
+              onChange={(event) => setField(field.key, event.target.value)}
+              rows={field.rows}
+              className="h-10 border-transparent bg-muted"
+            />
+          ) : (
+            <Input
+              value={form[field.key]}
+              onChange={(event) => setField(field.key, event.target.value)}
+              className="h-10 border-transparent bg-muted"
+            />
+          )}
         </FormField>
       ))}
     </>

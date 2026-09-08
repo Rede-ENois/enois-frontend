@@ -1,4 +1,4 @@
-import { texts } from "@/texts";
+import { AUTH_LOGIN_FIELDS } from "@/constants/auth-login-fields";
 import type { LoginFormFieldsProps } from "@/types/components/auth/login-form-fields-props";
 
 import { Input } from "@/components/ui/input";
@@ -9,45 +9,20 @@ import { AuthPasswordInput } from "./auth-password-input";
 import { ForgotPasswordDialog } from "./forgot-password-dialog";
 
 export function LoginFormFields({ errors }: LoginFormFieldsProps) {
-  const fields = [
-    {
-      key: "email",
-      label: texts.auth.fields.email,
-      error: errors.email,
-      right: undefined,
-      control: (
-        <Input
-          name="email"
-          type="email"
-          placeholder={texts.auth.placeholders.email}
-          autoComplete="email"
-          required
-          maxLength={255}
-        />
-      ),
-    },
-    {
-      key: "password",
-      label: texts.auth.fields.password,
-      error: errors.password,
-      right: <ForgotPasswordDialog />,
-      control: (
-        <AuthPasswordInput
-          name="password"
-          placeholder={texts.auth.placeholders.password}
-          autoComplete="current-password"
-          required
-          maxLength={128}
-        />
-      ),
-    },
-  ];
-
   return (
     <>
-      {fields.map((field) => (
-        <FormField key={field.key} label={field.label} error={field.error} right={field.right}>
-          {field.control}
+      {AUTH_LOGIN_FIELDS.map((field) => (
+        <FormField
+          key={field.key}
+          label={field.label}
+          error={errors[field.key]}
+          right={field.right === "forgot-password" ? <ForgotPasswordDialog /> : undefined}
+        >
+          {field.control === "password" ? (
+            <AuthPasswordInput {...field.inputProps} />
+          ) : (
+            <Input {...field.inputProps} />
+          )}
         </FormField>
       ))}
     </>
