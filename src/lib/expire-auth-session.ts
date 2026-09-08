@@ -1,4 +1,4 @@
-import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
+import { clearAuthSession } from "@/lib/auth/session/clear-auth-session";
 
 export function expireAuthSession() {
   clearAuthSession();

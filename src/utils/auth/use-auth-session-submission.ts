@@ -4,8 +4,8 @@ import { useNavigate } from "@tanstack/react-router";
 
 import type { AuthResponse } from "@/types/auth/auth-response";
 
-import { clearAuthSession } from "@/lib/auth-session/clear-auth-session";
-import { persistAuthSession } from "@/lib/auth-session/persist-auth-session";
+import { clearAuthSession } from "@/lib/auth/session/clear-auth-session";
+import { persistAuthSession } from "@/lib/auth/session/persist-auth-session";
 
 export function useAuthSessionSubmission<TInput>(
   authenticate: (data: TInput) => Promise<AuthResponse>,

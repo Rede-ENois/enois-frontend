@@ -1,7 +1,7 @@
 import type { RequestOptions } from "@/types/application/api/request-options";
 import { randomUUID } from "@/utils/random-uuid";
 
-import { getSessionToken } from "@/lib/auth-session/get-session-token";
+import { getSessionToken } from "@/lib/auth/session/get-session-token";
 
 export function buildApiRequestHeaders(options?: RequestOptions) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };

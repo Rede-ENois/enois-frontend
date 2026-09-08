@@ -1,5 +1,5 @@
-import { AUTH_SESSION_CHANGE_EVENT } from "@/constants/auth-session-change-event";
-import { AUTH_SESSION_KEYS } from "@/constants/auth-session-keys";
+import { AUTH_SESSION_CHANGE_EVENT } from "@/constants/auth/auth-session-change-event";
+import { AUTH_SESSION_KEYS } from "@/constants/auth/auth-session-keys";
 
 export function subscribeAuthSessionChange(callback: () => void) {
   if (typeof window === "undefined") return () => {};

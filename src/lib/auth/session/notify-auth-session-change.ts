@@ -1,4 +1,4 @@
-import { AUTH_SESSION_CHANGE_EVENT } from "@/constants/auth-session-change-event";
+import { AUTH_SESSION_CHANGE_EVENT } from "@/constants/auth/auth-session-change-event";
 
 export function notifyAuthSessionChange() {
   if (typeof window === "undefined") return;

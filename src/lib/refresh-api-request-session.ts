@@ -1,7 +1,7 @@
 import type { ApiRequestMethod } from "@/types/application/api/api-request-method";
 
 import { ApiError } from "@/lib/api-client";
-import { getSessionToken } from "@/lib/auth-session/get-session-token";
+import { getSessionToken } from "@/lib/auth/session/get-session-token";
 import { expireAuthSession } from "@/lib/expire-auth-session";
 import { refreshAuthSession } from "@/lib/refresh-auth-session";
 import { sendApiRequest } from "@/lib/send-api-request";

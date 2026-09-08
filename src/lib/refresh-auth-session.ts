@@ -1,6 +1,6 @@
-import { clearAuthSession } from "./auth-session/clear-auth-session";
-import { getRefreshToken } from "./auth-session/get-refresh-token";
-import { persistAuthTokens } from "./auth-session/persist-auth-tokens";
+import { clearAuthSession } from "./auth/session/clear-auth-session";
+import { getRefreshToken } from "./auth/session/get-refresh-token";
+import { persistAuthTokens } from "./auth/session/persist-auth-tokens";
 import { getApiBaseUrl } from "./get-api-base-url";
 
 export async function refreshAuthSession(): Promise<boolean> {

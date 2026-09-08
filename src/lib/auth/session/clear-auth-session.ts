@@ -1,4 +1,4 @@
-import { AUTH_SESSION_KEYS } from "@/constants/auth-session-keys";
+import { AUTH_SESSION_KEYS } from "@/constants/auth/auth-session-keys";
 
 import { getAuthStorage } from "./get-auth-storage";
 import { notifyAuthSessionChange } from "./notify-auth-session-change";
