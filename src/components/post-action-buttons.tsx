@@ -1,39 +1,12 @@
-import { Bookmark, Flag, MessageSquare, Share2 } from "lucide-react";
-
-import { texts } from "@/texts";
-import { usePostActionsContext } from "@/utils/components/post/use-post-actions-context";
+import { usePostActionButtonsController } from "@/utils/components/post/use-post-action-buttons-controller";
 
 export function PostActionButtons() {
-  const { postCounters, saved, toggleComments, sharePost, openReport, toggleSave } =
-    usePostActionsContext();
-  const actions = [
-    {
-      key: "comments",
-      icon: MessageSquare,
-      label: postCounters.comments,
-      onClick: toggleComments,
-      muted: false,
-    },
-    {
-      key: "share",
-      icon: Share2,
-      label: texts.posts.share,
-      onClick: sharePost,
-      muted: false,
-    },
-    {
-      key: "report",
-      icon: Flag,
-      label: null,
-      onClick: openReport,
-      muted: true,
-    },
-  ];
+  const { primaryActions, saveAction } = usePostActionButtonsController();
 
   return (
     <>
       <div className="flex">
-        {actions.map((action) => (
+        {primaryActions.map((action) => (
           <button
             key={action.key}
             onClick={action.onClick}
@@ -49,14 +22,14 @@ export function PostActionButtons() {
       </div>
 
       <button
-        onClick={toggleSave}
+        onClick={saveAction.onClick}
         className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:bg-muted hover:text-foreground ${
-          saved ? "text-primary" : ""
+          saveAction.active ? "text-primary" : ""
         }`}
       >
-        <Bookmark className="h-4 w-4" />
+        <saveAction.icon className="h-4 w-4" />
 
-        <>{postCounters.saves}</>
+        <>{saveAction.label}</>
       </button>
     </>
   );
