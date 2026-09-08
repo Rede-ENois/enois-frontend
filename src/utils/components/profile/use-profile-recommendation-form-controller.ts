@@ -1,6 +1,7 @@
 import type { ChangeEvent } from "react";
 
 import { useProfileRecommendationStore } from "@/stores/profile-recommendation.store";
+import { texts } from "@/texts";
 import { useCreateProfileRecommendation } from "@/utils/components/profile/use-create-profile-recommendation";
 
 export function useProfileRecommendationFormController() {
@@ -15,7 +16,7 @@ export function useProfileRecommendationFormController() {
   return {
     comment,
     handleCommentChange,
-    sending: recommendation.sending,
+    sendLabel: recommendation.sending ? texts.common.sending : texts.profile.sendRecommendation,
     sendDisabled: recommendation.sendDisabled,
     send: recommendation.send,
   };

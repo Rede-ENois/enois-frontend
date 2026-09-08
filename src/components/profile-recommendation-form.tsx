@@ -23,7 +23,7 @@ export function ProfileRecommendationForm() {
         disabled={controller.sendDisabled}
         onClick={controller.send}
       >
-        {controller.sending ? texts.common.sending : texts.profile.sendRecommendation}
+        {controller.sendLabel}
       </Button>
     </div>
   );
