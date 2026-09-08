@@ -3,40 +3,20 @@ import { Root as Dialog, Trigger as DialogTrigger } from "@radix-ui/react-dialog
 
 import { useRegisterMentorDialogController } from "@/utils/components/mentoring/use-register-mentor-dialog-controller";
 
-import { Button } from "@/components/ui/button";
 import { DialogContent } from "@/components/ui/dialog-content";
 import { DialogHeader } from "@/components/ui/dialog-header";
 import { DialogTitle } from "@/components/ui/dialog-title";
-import { Input } from "@/components/ui/input";
 
-import { FormField } from "@/components/form-field";
+import { RegisterMentorForm } from "@/components/register-mentor-form";
+import { RegisterMentorTrigger } from "@/components/register-mentor-trigger";
 
 export function RegisterMentorDialog() {
-  const { open, setOpen, skillsText, setSkillsText, price, setPrice, saving, saveDisabled, save } =
-    useRegisterMentorDialogController();
-  const fields = [
-    {
-      key: "skills",
-      label: texts.mentoring.expertise,
-      value: skillsText,
-      onChange: setSkillsText,
-      placeholder: texts.mentoring.expertisePlaceholder,
-    },
-    {
-      key: "price",
-      label: texts.mentoring.investment,
-      value: price,
-      onChange: setPrice,
-      placeholder: texts.mentoring.free,
-    },
-  ];
+  const controller = useRegisterMentorDialogController();
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={controller.open} onOpenChange={controller.setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="rounded-full">
-          {texts.mentoring.becomeMentor}
-        </Button>
+        <RegisterMentorTrigger />
       </DialogTrigger>
 
       <DialogContent>
@@ -44,26 +24,15 @@ export function RegisterMentorDialog() {
           <DialogTitle>{texts.mentoring.becomeMentorTitle}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 pt-2">
-          {fields.map((field) => (
-            <FormField
-              key={field.key}
-              label={field.label}
-              labelClassName="text-xs text-muted-foreground"
-            >
-              <Input
-                value={field.value}
-                onChange={(event) => field.onChange(event.target.value)}
-                placeholder={field.placeholder}
-                className="h-10 border-transparent bg-muted"
-              />
-            </FormField>
-          ))}
-
-          <Button className="w-full rounded-full" disabled={saveDisabled} onClick={save}>
-            {saving ? texts.common.saving : texts.common.save}
-          </Button>
-        </div>
+        <RegisterMentorForm
+          skillsText={controller.skillsText}
+          setSkillsText={controller.setSkillsText}
+          price={controller.price}
+          setPrice={controller.setPrice}
+          saving={controller.saving}
+          saveDisabled={controller.saveDisabled}
+          save={controller.save}
+        />
       </DialogContent>
     </Dialog>
   );
