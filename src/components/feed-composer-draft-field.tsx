@@ -5,15 +5,11 @@ import { MentionTextarea } from "@/components/mention-textarea";
 import { UserAvatar } from "@/components/user-avatar";
 
 export function FeedComposerDraftField() {
-  const { profile, draft, handleDraftChange } = useFeedComposerContext();
+  const { profileAvatar, profileName, draft, handleDraftChange } = useFeedComposerContext();
 
   return (
     <div className="flex items-center gap-3">
-      <UserAvatar
-        src={profile?.avatar}
-        alt={profile?.name ?? texts.feed.you}
-        className="h-11 w-11"
-      />
+      <UserAvatar src={profileAvatar} alt={profileName} className="h-11 w-11" />
       <MentionTextarea
         value={draft}
         onChange={handleDraftChange}
