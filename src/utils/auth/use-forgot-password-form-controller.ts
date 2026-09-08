@@ -3,8 +3,8 @@ import { type FormEvent, useState } from "react";
 import { useForgotPasswordStore } from "@/stores/auth/forgot-password.store";
 import { texts } from "@/texts";
 
-import { forgotPassword } from "@/lib/api/auth/forgot-password";
-import { emailSchema } from "@/lib/validation/email-schema";
+import { forgotPassword } from "@/lib/auth/api/forgot-password";
+import { emailSchema } from "@/lib/auth/validation/email-schema";
 
 export function useForgotPasswordFormController() {
   const [emailError, setEmailError] = useState<string>();

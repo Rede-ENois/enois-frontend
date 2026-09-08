@@ -4,8 +4,8 @@ import { texts } from "@/texts";
 import { getZodFieldErrors } from "@/utils/get-zod-field-errors";
 
 import { ApiError } from "@/lib/api-client";
-import { resetPassword } from "@/lib/api/auth/reset-password";
-import { resetPasswordSchema } from "@/lib/validation/reset-password-schema";
+import { resetPassword } from "@/lib/auth/api/reset-password";
+import { resetPasswordSchema } from "@/lib/auth/validation/reset-password-schema";
 
 export function useResetPasswordSubmission(token: string) {
   const [errors, setErrors] = useState<Record<string, string>>({});
