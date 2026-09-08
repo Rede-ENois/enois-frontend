@@ -1,4 +1,4 @@
-import { useAuthMobileHeaderController } from "@/utils/components/auth/use-auth-mobile-header-controller";
+import { useAuthMobileHeaderController } from "@/utils/auth/use-auth-mobile-header-controller";
 
 import { AppBrand } from "@/components/app-brand";
 import { ThemeToggle } from "@/components/theme-toggle";

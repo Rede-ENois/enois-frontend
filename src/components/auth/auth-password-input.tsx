@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import { useAuthPasswordInputController } from "@/utils/components/auth/use-auth-password-input-controller";
+import { useAuthPasswordInputController } from "@/utils/auth/use-auth-password-input-controller";
 
 import { Input } from "@/components/ui/input";
 

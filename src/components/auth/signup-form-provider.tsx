@@ -1,5 +1,5 @@
-import { SignupFormContext } from "@/utils/components/auth/signup-form-context";
-import { useSignupFormController } from "@/utils/components/auth/use-signup-form-controller";
+import { SignupFormContext } from "@/utils/auth/signup-form-context";
+import { useSignupFormController } from "@/utils/auth/use-signup-form-controller";
 
 import { SignupForm } from "@/components/auth/signup-form";
 

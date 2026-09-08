@@ -1,5 +1,5 @@
-import { LoginFormContext } from "@/utils/components/auth/login-form-context";
-import { useLoginFormController } from "@/utils/components/auth/use-login-form-controller";
+import { LoginFormContext } from "@/utils/auth/login-form-context";
+import { useLoginFormController } from "@/utils/auth/use-login-form-controller";
 
 import { LoginForm } from "@/components/auth/login-form";
 

@@ -1,5 +1,5 @@
-import { ResetPasswordFormContext } from "@/utils/components/auth/reset-password-form-context";
-import { useResetPasswordFormController } from "@/utils/components/auth/use-reset-password-form-controller";
+import { ResetPasswordFormContext } from "@/utils/auth/reset-password-form-context";
+import { useResetPasswordFormController } from "@/utils/auth/use-reset-password-form-controller";
 
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 

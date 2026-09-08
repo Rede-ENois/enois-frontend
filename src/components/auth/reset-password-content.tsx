@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { useResetPasswordFormContext } from "@/utils/components/auth/use-reset-password-form-context";
+import { useResetPasswordFormContext } from "@/utils/auth/use-reset-password-form-context";
 
 import { FormField } from "@/components/form-field";
 

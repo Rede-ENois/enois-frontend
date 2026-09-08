@@ -1,5 +1,5 @@
 import { AUTH_LOGIN_FIELDS } from "@/constants/auth-login-fields";
-import { useLoginFormContext } from "@/utils/components/auth/use-login-form-context";
+import { useLoginFormContext } from "@/utils/auth/use-login-form-context";
 
 import { Input } from "@/components/ui/input";
 

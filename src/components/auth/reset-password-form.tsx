@@ -1,4 +1,4 @@
-import { useResetPasswordFormContext } from "@/utils/components/auth/use-reset-password-form-context";
+import { useResetPasswordFormContext } from "@/utils/auth/use-reset-password-form-context";
 
 import { ResetPasswordContent } from "./reset-password-content";
 import { ResetPasswordSuccess } from "./reset-password-success";

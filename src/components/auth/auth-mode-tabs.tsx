@@ -1,4 +1,4 @@
-import { useAuthModeTabsController } from "@/utils/components/auth/use-auth-mode-tabs-controller";
+import { useAuthModeTabsController } from "@/utils/auth/use-auth-mode-tabs-controller";
 
 import { TabButton } from "@/components/tab-button";
 

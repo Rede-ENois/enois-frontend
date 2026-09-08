@@ -1,4 +1,4 @@
-import { useAuthFormPanelController } from "@/utils/components/auth/use-auth-form-panel-controller";
+import { useAuthFormPanelController } from "@/utils/auth/use-auth-form-panel-controller";
 
 import { LoginFormProvider } from "@/components/auth/login-form-provider";
 import { SignupFormProvider } from "@/components/auth/signup-form-provider";

@@ -1,4 +1,4 @@
-import { useAuthSocialOptionsController } from "@/utils/components/auth/use-auth-social-options-controller";
+import { useAuthSocialOptionsController } from "@/utils/auth/use-auth-social-options-controller";
 
 import { AuthSocialProviderButton } from "@/components/auth/auth-social-provider-button";
 

@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useForgotPasswordSuccessController } from "@/utils/components/auth/use-forgot-password-success-controller";
+import { useForgotPasswordSuccessController } from "@/utils/auth/use-forgot-password-success-controller";
 import { MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
