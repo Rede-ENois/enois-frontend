@@ -1,13 +1,16 @@
-import { texts } from "@/texts";
-import type { MentoringHeroProps } from "@/types/components/mentoring/mentoring-hero-props";
 import { Sparkles } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useMentoringPageContext } from "@/utils/components/mentoring/use-mentoring-page-context";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { RegisterMentorDialog } from "@/components/register-mentor-dialog";
 
-export function MentoringHero({ onFindMentor }: MentoringHeroProps) {
+export function MentoringHero() {
+  const { scrollToMentors } = useMentoringPageContext();
+
   return (
     <section
       className="surface-card relative overflow-hidden p-5 sm:p-8"
@@ -25,7 +28,7 @@ export function MentoringHero({ onFindMentor }: MentoringHeroProps) {
         <p className="mt-2 text-muted-foreground">{texts.mentoring.description}</p>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <Button className="rounded-full" onClick={onFindMentor}>
+          <Button className="rounded-full" onClick={scrollToMentors}>
             {texts.mentoring.findMentor}
           </Button>
 

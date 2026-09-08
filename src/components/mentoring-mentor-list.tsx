@@ -1,9 +1,11 @@
 import { texts } from "@/texts";
-import type { MentoringMentorListProps } from "@/types/components/mentoring/mentoring-mentor-list-props";
+import { useMentoringPageContext } from "@/utils/components/mentoring/use-mentoring-page-context";
 
 import { MentorCardProvider } from "@/components/mentor-card-provider";
 
-export function MentoringMentorList({ mentors }: MentoringMentorListProps) {
+export function MentoringMentorList() {
+  const { mentors } = useMentoringPageContext();
+
   return (
     <section id="mentores-lista">
       <h2 className="text-lg font-semibold">{texts.mentoring.featured}</h2>
