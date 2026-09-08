@@ -4,13 +4,17 @@ import { useConversationCounterpart } from "@/utils/components/messages/use-conv
 import { useConversationReadAction } from "@/utils/components/messages/use-conversation-read-action";
 import { formatRelativeTime } from "@/utils/format-relative-time";
 
-export function useConversationItemController({ conversation }: ConversationItemProps) {
+export function useConversationItemController(
+  conversation: ConversationItemProps["conversation"],
+) {
   const counterpart = useConversationCounterpart(conversation);
+  const activeConversationId = useMessagesStore((state) => state.activeConversationId);
   const selectConversation = useMessagesStore((state) => state.selectConversation);
   const markAsRead = useConversationReadAction();
 
   return {
     ...counterpart,
+    isActive: conversation.id === activeConversationId,
     timeLabel: conversation.time ? formatRelativeTime(conversation.time) : "",
     showUnread: conversation.unread > 0,
     select: () => {

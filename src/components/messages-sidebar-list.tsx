@@ -1,9 +1,11 @@
 import { texts } from "@/texts";
-import type { MessagesSidebarListProps } from "@/types/components/messages/messages-sidebar-list-props";
+import { useMessagesSidebarListController } from "@/utils/components/messages/use-messages-sidebar-list-controller";
 
 import { ConversationItem } from "@/components/conversation-item";
 
-export function MessagesSidebarList({ items, showEmptyState }: MessagesSidebarListProps) {
+export function MessagesSidebarList() {
+  const { conversations, showEmptyState } = useMessagesSidebarListController();
+
   return (
     <ul className="flex-1 overflow-y-auto">
       {showEmptyState ? (
@@ -11,7 +13,9 @@ export function MessagesSidebarList({ items, showEmptyState }: MessagesSidebarLi
           {texts.messages.noConversations}
         </li>
       ) : (
-        items.map((item) => <ConversationItem key={item.conversation.id} {...item} />)
+        conversations.map((conversation) => (
+          <ConversationItem key={conversation.id} conversation={conversation} />
+        ))
       )}
     </ul>
   );

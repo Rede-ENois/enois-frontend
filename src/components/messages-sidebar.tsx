@@ -4,15 +4,12 @@ import { MessagesSidebarHeader } from "@/components/messages-sidebar-header";
 import { MessagesSidebarList } from "@/components/messages-sidebar-list";
 
 export function MessagesSidebar() {
-  const controller = useMessagesSidebarController();
+  const { sidebarClassName } = useMessagesSidebarController();
 
   return (
-    <div className={`flex flex-col border-r border-border ${controller.sidebarClassName}`}>
+    <div className={`flex flex-col border-r border-border ${sidebarClassName}`}>
       <MessagesSidebarHeader />
-      <MessagesSidebarList
-        items={controller.conversations}
-        showEmptyState={controller.showEmptyState}
-      />
+      <MessagesSidebarList />
     </div>
   );
 }

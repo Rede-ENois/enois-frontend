@@ -5,5 +5,4 @@ export type ConversationItemProps = {
     Conversation,
     "id" | "participantIds" | "title" | "time" | "lastMessage" | "unread"
   >;
-  isActive: boolean;
 };

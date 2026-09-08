@@ -1,6 +1,7 @@
-import { useMessagesStore } from "@/stores/messages.store";
-import { texts } from "@/texts";
 import { Search } from "lucide-react";
+
+import { texts } from "@/texts";
+import { useMessagesSidebarHeaderController } from "@/utils/components/messages/use-messages-sidebar-header-controller";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NewConversationSearch } from "@/components/new-conversation-search";
 
 export function MessagesSidebarHeader() {
-  const showSearch = useMessagesStore((state) => state.newConversationSearchOpen);
-  const toggleSearch = useMessagesStore((state) => state.toggleNewConversationSearch);
-  const searchToggleLabel = showSearch ? texts.messages.back : texts.messages.new;
+  const { showSearch, toggleSearch, searchToggleLabel } = useMessagesSidebarHeaderController();
 
   return (
     <div className="border-b border-border p-4">

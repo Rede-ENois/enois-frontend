@@ -5,10 +5,9 @@ import { useConversationItemController } from "@/utils/components/messages/use-c
 
 import { UserAvatar } from "@/components/user-avatar";
 
-export function ConversationItem(props: ConversationItemProps) {
-  const { conversation, isActive } = props;
-  const { otherUser, title, profileUsername, timeLabel, showUnread, select } =
-    useConversationItemController(props);
+export function ConversationItem({ conversation }: ConversationItemProps) {
+  const { isActive, otherUser, title, profileUsername, timeLabel, showUnread, select } =
+    useConversationItemController(conversation);
 
   return (
     <li>
