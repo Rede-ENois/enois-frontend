@@ -1,10 +1,10 @@
-import { useSearch } from "@tanstack/react-router";
+import { useAuthFormPanelController } from "@/utils/components/auth/use-auth-form-panel-controller";
 
 import { LoginFormProvider } from "@/components/auth/login-form-provider";
 import { SignupFormProvider } from "@/components/auth/signup-form-provider";
 
 export function AuthFormPanel() {
-  const { tab } = useSearch({ from: "/entrar" });
+  const { showSignup } = useAuthFormPanelController();
 
-  return <div className="mt-8">{tab === "signup" ? <SignupFormProvider /> : <LoginFormProvider />}</div>;
+  return <div className="mt-8">{showSignup ? <SignupFormProvider /> : <LoginFormProvider />}</div>;
 }
