@@ -1,9 +1,8 @@
-import type { FeedComposerPublishStatusProps } from "@/types/components/feed/feed-composer-publish-status-props";
+import { useFeedComposerContext } from "@/utils/components/feed/use-feed-composer-context";
 
-export function FeedComposerPublishStatus({
-  publishError,
-  uploadProgressText,
-}: FeedComposerPublishStatusProps) {
+export function FeedComposerPublishStatus() {
+  const { publishError, uploadProgressText } = useFeedComposerContext();
+
   return (
     <>
       {publishError && (

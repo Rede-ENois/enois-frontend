@@ -1,9 +1,9 @@
-import type { FeedComposerMediaPreviewProps } from "@/types/components/feed/feed-composer-media-preview-props";
+import type { MediaItem } from "@/types/components/feed/media-item";
 
-export function createFeedComposerMediaPreviewViewModel({
-  media,
-  onRemove,
-}: FeedComposerMediaPreviewProps) {
+export function createFeedComposerMediaPreviewViewModel(
+  media: MediaItem[],
+  removeMedia: (index: number) => void,
+) {
   const mediaType = media[0]?.type ?? null;
 
   return {
@@ -13,13 +13,13 @@ export function createFeedComposerMediaPreviewViewModel({
     imageItems: media.map((item, index) => ({
       key: `${item.preview}-${index}`,
       item,
-      remove: () => onRemove(index),
+      remove: () => removeMedia(index),
     })),
     videoItem:
       mediaType === "video" && media[0]
         ? {
             item: media[0],
-            remove: () => onRemove(0),
+            remove: () => removeMedia(0),
           }
         : null,
   };

@@ -2,7 +2,7 @@ import { useFeedPageController } from "@/utils/components/feed/use-feed-page-con
 import { Loader2 } from "lucide-react";
 
 import { AppContainer } from "@/components/app-container";
-import { FeedComposer } from "@/components/feed-composer";
+import { FeedComposerProvider } from "@/components/feed-composer-provider";
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { FeedTabs } from "@/components/feed-tabs";
 import { PostCardProvider } from "@/components/post-card-provider";
@@ -14,7 +14,7 @@ export function Home() {
     <AppContainer>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
-          <FeedComposer />
+          <FeedComposerProvider />
           <FeedTabs {...tabsProps} />
 
           <div className="space-y-4">

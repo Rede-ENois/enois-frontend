@@ -1,11 +1,13 @@
-import type { FeedComposerActionListProps } from "@/types/components/feed/feed-composer-action-list-props";
+import { useFeedComposerContext } from "@/utils/components/feed/use-feed-composer-context";
 
 import { ComposerAction } from "@/components/composer-action";
 
-export function FeedComposerActionList({ actions }: FeedComposerActionListProps) {
+export function FeedComposerActionList() {
+  const { composerActions } = useFeedComposerContext();
+
   return (
     <div className="flex flex-wrap gap-1.5">
-      {actions.map(({ key, ...action }) => (
+      {composerActions.map(({ key, ...action }) => (
         <ComposerAction key={key} {...action} />
       ))}
     </div>

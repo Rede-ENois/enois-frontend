@@ -1,6 +1,8 @@
-import type { FeedComposerFileInputProps } from "@/types/components/feed/feed-composer-file-input-props";
+import { useFeedComposerContext } from "@/utils/components/feed/use-feed-composer-context";
 
-export function FeedComposerFileInput({ fileRef, onMediaSelect }: FeedComposerFileInputProps) {
+export function FeedComposerFileInput() {
+  const { fileRef, handleMediaSelect } = useFeedComposerContext();
+
   return (
     <input
       ref={fileRef}
@@ -8,7 +10,7 @@ export function FeedComposerFileInput({ fileRef, onMediaSelect }: FeedComposerFi
       accept="image/*,video/*"
       multiple
       className="hidden"
-      onChange={onMediaSelect}
+      onChange={handleMediaSelect}
     />
   );
 }
