@@ -1,5 +1,5 @@
 import { texts } from "@/texts";
-import { useLoginFormContext } from "@/utils/components/auth/use-login-form-context";
+import { useLoginFormContext } from "@/utils/auth/use-login-form-context";
 
 import { ErrorBanner } from "@/components/error-banner";
 
