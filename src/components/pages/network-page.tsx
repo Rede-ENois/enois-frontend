@@ -1,4 +1,4 @@
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { NetworkMatches } from "@/components/network-matches";
 import { NetworkRequests } from "@/components/network-requests";
 import { NetworkSummary } from "@/components/network-summary";
