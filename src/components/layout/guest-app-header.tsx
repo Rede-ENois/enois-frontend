@@ -4,7 +4,7 @@ import { texts } from "@/texts";
 import { LogIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { AppBrand } from "@/components/layout/app-brand";
 import { AppHeaderLayout } from "@/components/layout/app-header-layout";
 
