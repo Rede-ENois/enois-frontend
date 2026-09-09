@@ -1,7 +1,7 @@
 import { createCommunityMembersViewModel } from "@/utils/communities/create-community-members-view-model";
 import { useCommunityDetailContext } from "@/utils/communities/use-community-detail-context";
 
-import { CommunityMemberItem } from "@/components/community-member-item";
+import { CommunityMemberItem } from "@/components/communities/community-member-item";
 
 export function CommunityMembers() {
   const { members: communityMembers } = useCommunityDetailContext();
