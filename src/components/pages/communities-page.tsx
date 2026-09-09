@@ -2,7 +2,7 @@ import { Outlet } from "@tanstack/react-router";
 
 import { useCommunitiesPageContext } from "@/utils/communities/use-communities-page-context";
 
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { CommunitiesGrid } from "@/components/communities/communities-grid";
 import { CommunitiesLoadMore } from "@/components/communities/communities-load-more";
 import { CommunitiesPageHeader } from "@/components/communities/communities-page-header";
