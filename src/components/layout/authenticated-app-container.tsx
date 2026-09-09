@@ -1,7 +1,7 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
-import { useAuthenticatedAppContainerController } from "@/utils/components/app/use-authenticated-app-container-controller";
+import { useAuthenticatedAppContainerController } from "@/utils/layout/use-authenticated-app-container-controller";
 
-import { NavigationDrawer } from "@/components/navigation-drawer";
+import { NavigationDrawer } from "@/components/navigation/navigation-drawer";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AuthenticatedAppHeader } from "@/components/layout/authenticated-app-header";
 
