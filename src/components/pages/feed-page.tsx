@@ -1,7 +1,7 @@
 import { useFeedPageContext } from "@/utils/components/feed/use-feed-page-context";
 import { Loader2 } from "lucide-react";
 
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { FeedComposerProvider } from "@/components/feed-composer-provider";
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { FeedTabs } from "@/components/feed-tabs";
