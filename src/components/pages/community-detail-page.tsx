@@ -1,6 +1,6 @@
 import { useCommunityDetailContext } from "@/utils/communities/use-community-detail-context";
 
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { CommunityComposerProvider } from "@/components/communities/community-composer-provider";
 import { CommunityDetailBackLink } from "@/components/communities/community-detail-back-link";
 import { CommunityFeed } from "@/components/communities/community-feed";
