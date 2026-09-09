@@ -1,4 +1,4 @@
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { MentoringHero } from "@/components/mentoring-hero";
 import { MentoringMentorList } from "@/components/mentoring-mentor-list";
 
