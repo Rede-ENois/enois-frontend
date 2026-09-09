@@ -1,7 +1,7 @@
-import { AppBrand } from "@/components/app-brand";
+import { AppBrand } from "@/components/layout/app-brand";
 import { LandingAuthActions } from "@/components/landing-auth-actions";
 import { LandingNavigation } from "@/components/landing-navigation";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function LandingHeader() {
   return (
