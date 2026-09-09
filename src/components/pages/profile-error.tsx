@@ -1,6 +1,6 @@
 import { texts } from "@/texts";
 
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 
 export function ProfileError() {
   return (
