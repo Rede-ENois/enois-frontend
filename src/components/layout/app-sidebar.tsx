@@ -1,11 +1,11 @@
-import { useAppSidebarController } from "@/utils/components/app/use-app-sidebar-controller";
+import { useAppSidebarController } from "@/utils/layout/use-app-sidebar-controller";
 
 import { cn } from "@/lib/utils";
 
-import { NavigationLinks } from "@/components/navigation-links";
+import { NavigationLinks } from "@/components/navigation/navigation-links";
 
 export function AppSidebar() {
-  const { collapsed, toggle, widthClassName, ToggleIcon, toggleLabel } = useAppSidebarController();
+  const { toggle, widthClassName, ToggleIcon, toggleLabel } = useAppSidebarController();
 
   return (
     <aside
