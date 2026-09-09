@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
-import { APP_BRAND_VARIANTS } from "@/constants/app-brand-variants";
+import { APP_BRAND_VARIANTS } from "@/constants/layout/app-brand-variants";
 import { texts } from "@/texts";
-import type { AppBrandProps } from "@/types/components/app-brand-props";
-import { useAppBrandController } from "@/utils/components/app/use-app-brand-controller";
+import type { AppBrandProps } from "@/types/layout/app-brand-props";
+import { useAppBrandController } from "@/utils/layout/use-app-brand-controller";
 import { Sparkles } from "lucide-react";
 
 export function AppBrand({ variant = "app" }: AppBrandProps) {
