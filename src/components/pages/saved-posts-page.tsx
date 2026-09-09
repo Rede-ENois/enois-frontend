@@ -4,7 +4,7 @@ import { texts } from "@/texts";
 import { useSavedPostsPageController } from "@/utils/components/feed/use-saved-posts-page-controller";
 import { ArrowLeft, Bookmark } from "lucide-react";
 
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { PostCardProvider } from "@/components/post-card-provider";
 
 export function SavedPosts() {
