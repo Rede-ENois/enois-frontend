@@ -6,7 +6,7 @@ import { createRootRouteHead } from "@/utils/routes/create-root-route-head";
 import { RootComponent } from "@/components/pages/root-component";
 import { RootError } from "@/components/root-error";
 import { RootNotFound } from "@/components/root-not-found";
-import { RootShell } from "@/components/root-shell";
+import { RootShell } from "@/components/layout/root-shell";
 
 export const Route = createRootRouteWithContext<RootRouteContext>()({
   head: createRootRouteHead,
