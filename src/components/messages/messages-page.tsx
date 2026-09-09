@@ -1,5 +1,5 @@
 import { ActiveConversation } from "@/components/messages/active-conversation";
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { MessagesSidebar } from "@/components/messages/messages-sidebar";
 
 export function Mensagens() {
