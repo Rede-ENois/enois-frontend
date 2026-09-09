@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { useAuthenticatedAppProfileLinkController } from "@/utils/components/app/use-authenticated-app-profile-link-controller";
+import { useAuthenticatedAppProfileLinkController } from "@/utils/layout/use-authenticated-app-profile-link-controller";
 
 import { UserAvatar } from "@/components/user-avatar";
 
