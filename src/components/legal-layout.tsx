@@ -4,8 +4,8 @@ import { texts } from "@/texts";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 import { getLegalFooterCopyright } from "@/utils/components/legal/get-legal-footer-copyright";
 
-import { AppBrand } from "@/components/app-brand";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AppBrand } from "@/components/layout/app-brand";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function LegalLayout({ children }: WithRequiredChildren) {
   const copyright = getLegalFooterCopyright();
