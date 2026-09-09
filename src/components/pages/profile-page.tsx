@@ -1,4 +1,4 @@
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { ProfileAboutSection } from "@/components/profile-about-section";
 import { ProfileGoalsSection } from "@/components/profile-goals-section";
 import { ProfileHeaderProvider } from "@/components/profile-header-provider";
