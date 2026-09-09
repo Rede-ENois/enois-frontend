@@ -2,7 +2,7 @@ import { texts } from "@/texts";
 import { useJobsPageContext } from "@/utils/components/jobs/use-jobs-page-context";
 import { Loader2 } from "lucide-react";
 
-import { AppContainer } from "@/components/app-container";
+import { AppContainer } from "@/components/layout/app-container";
 import { JobCardProvider } from "@/components/job-card-provider";
 import { JobsFilters } from "@/components/jobs-filters";
 import { JobsInfiniteScroll } from "@/components/jobs-infinite-scroll";
