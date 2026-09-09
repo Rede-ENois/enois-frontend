@@ -1,7 +1,7 @@
 import { useAuthMobileHeaderController } from "@/utils/auth/use-auth-mobile-header-controller";
 
-import { AppBrand } from "@/components/app-brand";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AppBrand } from "@/components/layout/app-brand";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function AuthMobileHeader() {
   const { showThemeToggle } = useAuthMobileHeaderController();
