@@ -35,6 +35,8 @@ import { LiteModeEffects } from "@/components/lite-mode-effects";
 import { ModuleDisabledGate } from "@/components/module-disabled-gate";
 import { AdminNoticeDialog } from "@/components/notices/admin-notice";
 
+import { SkipLink } from "@/components/skip-link";
+
 import appCss from "../styles.css?url";
 
 /**
@@ -196,6 +198,7 @@ function RootShell({ children }: WithRequiredChildren) {
       </head>
 
       <body>
+        <SkipLink />
         {children}
         <Scripts />
       </body>

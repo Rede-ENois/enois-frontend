@@ -409,7 +409,7 @@ curl ${API_BASE_URL}/me -H "X-Session-Token: <token>"`}
 
             <p>
               {texts.developersChrome.guidelinesHint}{" "}
-              <a href="/diretrizes" className="text-primary hover:underline">
+              <a href="/diretrizes" className="text-primary underline underline-offset-2">
                 {texts.legal.footer.guidelines}
               </a>
             </p>

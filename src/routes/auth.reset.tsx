@@ -184,7 +184,7 @@ function ResetPassword() {
                 <Link
                   to="/entrar"
                   search={{ tab: "login" }}
-                  className="text-primary hover:underline"
+                  className="text-primary underline underline-offset-2"
                 >
                   {texts.common.enter}
                 </Link>

@@ -894,13 +894,18 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
 
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          aria-label={texts.communities.create.name}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </div>
 
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">{texts.communities.create.topic}</Label>
 
         <select
+          aria-label={texts.communities.create.topic}
           value={topic ?? ""}
           onChange={(e) => setTopic(e.target.value as CommunityTopic)}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm border-transparent bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -918,7 +923,12 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
           {texts.communities.create.description}
         </Label>
 
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+        <Textarea
+          aria-label={texts.communities.create.description}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -926,7 +936,7 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
 
         <div
           className="flex gap-1.5"
-          role="tablist"
+          role="group"
           aria-label={texts.communities.detail.bannerHtml.title}
         >
           <Pill active={bannerMode === "photo"} onClick={() => setBannerMode("photo")}>

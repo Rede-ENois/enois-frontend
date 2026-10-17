@@ -371,6 +371,7 @@ function CreateCommunityDialog({ children, open, onOpenChange }: CreateCommunity
             <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
 
             <Input
+              aria-label={texts.communities.create.name}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="h-10 border-transparent bg-muted"
@@ -383,6 +384,7 @@ function CreateCommunityDialog({ children, open, onOpenChange }: CreateCommunity
             </Label>
 
             <Textarea
+              aria-label={texts.communities.create.description}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -398,6 +400,7 @@ function CreateCommunityDialog({ children, open, onOpenChange }: CreateCommunity
             </Label>
 
             <select
+              aria-label={texts.communities.create.topic}
               value={topic}
               onChange={(e) => setTopic(e.target.value as CommunityTopic)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-10 border-transparent bg-muted"

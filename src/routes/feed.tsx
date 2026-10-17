@@ -525,6 +525,8 @@ function Home() {
 
   return (
     <AppContainer>
+      <h1 className="sr-only">{texts.navigation.items.feed}</h1>
+
       <NightRestReminder />
 
       {/* Pergunta única ao voltar do vínculo com o LinkedIn (flag gravada pelo diálogo de contas). */}
@@ -1159,9 +1161,9 @@ function Home() {
               <div className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-primary" />
 
-                <h3 className="text-sm font-normal text-text-strong">
+                <h2 className="text-sm font-normal text-text-strong">
                   {texts.feed.sidebar.suggestions}
-                </h3>
+                </h2>
 
                 {suggestionList.length > 4 && (
                   <button
@@ -1228,9 +1230,9 @@ function Home() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
 
-                <h3 className="text-sm font-normal text-text-strong">
+                <h2 className="text-sm font-normal text-text-strong">
                   {texts.feed.sidebar.happeningNow}
-                </h3>
+                </h2>
               </div>
 
               <ul className="mt-3 space-y-3">

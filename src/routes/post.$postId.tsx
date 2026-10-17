@@ -115,6 +115,8 @@ function PostDetail() {
 
   return (
     <AppContainer>
+      <h1 className="sr-only">{texts.post.pageHeading}</h1>
+
       <div className="space-y-6">
         <Link
           to="/feed"

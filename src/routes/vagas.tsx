@@ -393,6 +393,7 @@ export function JobsListPage({
             <div className="relative max-w-sm flex-1">
               <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                aria-label={texts.jobs.searchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={texts.jobs.searchPlaceholder}
@@ -445,6 +446,7 @@ export function JobsListPage({
             </p>
 
             <Input
+              aria-label={texts.jobs.skillsPlaceholder}
               value={skills}
               onChange={(e) => setSkills(e.target.value)}
               placeholder={texts.jobs.skillsPlaceholder}
@@ -545,7 +547,7 @@ export function JobsListPage({
                     </Avatar>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="break-words font-semibold">{j.title}</h3>
+                      <h2 className="break-words font-semibold">{j.title}</h2>
 
                       {/* Aviso claro: a vaga NAO foi publicada aqui; a candidatura e na plataforma. */}
                       {j.sourceType === "EXTERNAL" && (
@@ -869,6 +871,7 @@ function CreateJobDialog({
               </Label>
 
               <Input
+                aria-label={texts.jobs.fields.title}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={texts.jobs.fields.titlePlaceholder}
@@ -882,6 +885,7 @@ function CreateJobDialog({
               </Label>
 
               <Input
+                aria-label={texts.jobs.fields.company}
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 placeholder={texts.jobs.fields.companyPlaceholder}
@@ -896,6 +900,7 @@ function CreateJobDialog({
                 </Label>
 
                 <select
+                  aria-label={texts.jobs.fields.location}
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className={SELECT_CLASS}
@@ -919,6 +924,7 @@ function CreateJobDialog({
                   </p>
                 ) : (
                   <select
+                    aria-label={texts.jobs.fields.type}
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                     className={SELECT_CLASS}
@@ -938,6 +944,7 @@ function CreateJobDialog({
                 </Label>
 
                 <select
+                  aria-label={texts.jobs.fields.level}
                   value={level}
                   onChange={(e) => setLevel(e.target.value)}
                   className={SELECT_CLASS}
@@ -1014,6 +1021,7 @@ function CreateJobDialog({
               </Label>
 
               <Input
+                aria-label={texts.jobs.fields.skills}
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
                 placeholder={texts.jobs.fields.skillsPlaceholder}
@@ -1039,6 +1047,7 @@ function CreateJobDialog({
               {fields.map((field, index) => (
                 <div key={index} className="flex flex-wrap items-center gap-2">
                   <Input
+                    aria-label={texts.jobs.applicationForm.labelPlaceholder}
                     value={field.label}
                     onChange={(event) =>
                       setFields((current) =>
@@ -1128,6 +1137,7 @@ function CreateJobDialog({
               </Label>
 
               <Textarea
+                aria-label={texts.jobs.fields.description}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
@@ -1219,6 +1229,7 @@ function ReportJobDialog({ job, onOpenChange }: ReportJobDialogProps) {
               </Label>
 
               <select
+                aria-label={texts.jobs.report.reason}
                 value={reason}
                 onChange={(e) => setReason(e.target.value as JobReportReason)}
                 className={SELECT_CLASS}
@@ -1243,6 +1254,7 @@ function ReportJobDialog({ job, onOpenChange }: ReportJobDialogProps) {
               </Label>
 
               <Textarea
+                aria-label={texts.jobs.report.description}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}

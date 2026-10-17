@@ -76,7 +76,7 @@ function Diretrizes() {
 
           <>{` `}</>
 
-          <Link to="/suporte" className="text-primary hover:underline">
+          <Link to="/suporte" className="text-primary underline underline-offset-2">
             {texts.support.title}
           </Link>
         </p>
@@ -84,7 +84,7 @@ function Diretrizes() {
 
       <footer className="border-t border-border pt-6 text-sm">
         <p>
-          <Link to="/" className="text-primary hover:underline">
+          <Link to="/" className="text-primary underline underline-offset-2">
             {texts.legal.footer.home}
           </Link>
         </p>
