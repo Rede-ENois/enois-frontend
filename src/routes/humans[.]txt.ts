@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
-/** humanstxt.org: quem faz o projeto. Mantenha a lista em dia quando alguém entrar no time. */
+/** @TODO humanstxt.org: quem faz o projeto. Mantenha a lista em dia quando alguém entrar no time. */
 const TEAM = [
   "Sara Borges",
   "Melissa Monfre dos Santos",
