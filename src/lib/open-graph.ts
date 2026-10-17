@@ -1,3 +1,4 @@
+import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { ShareMeta } from "@/types/lib/open-graph/share-meta";
 
@@ -102,9 +103,20 @@ function excerpt(text: string, limit: number): string {
   return `${(lastSpace > limit * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
 }
 
+/**
+ * Miniatura padrão: a da página inicial. Toda página que não tiver texto ou imagem própria cai aqui,
+ * e o `__root` emite estes mesmos valores para que nenhuma rota fique sem Open Graph.
+ */
+export const DEFAULT_SHARE = {
+  title: texts.landing.seo.title,
+  description: texts.landing.seo.description,
+  ogDescription: texts.landing.seo.ogDescription,
+  imageUrl: `${texts.siteUrl}/icons/icon-512.png`,
+  imageAlt: texts.brand.name,
+} as const;
 
-/** Metadados para paginas publicas, emitidos no HTML inicial do servidor. */
-export function buildShareTags(input: {
+/** Só as tags Open Graph e do card do Twitter/X, sem `<title>` nem `description`. */
+export function buildOpenGraphTags(input: {
   title: string;
   description: string;
   url: string;
@@ -113,10 +125,9 @@ export function buildShareTags(input: {
 }) {
   const description = excerpt(collapse(input.description), DESCRIPTION_LIMIT);
   return [
-    { title: input.title },
-    { name: "description", content: description },
     { property: "og:type", content: "website" },
-    { property: "og:site_name", content: "Énóis" },
+    { property: "og:site_name", content: texts.brand.name },
+    { property: "og:locale", content: "pt_BR" },
     { property: "og:title", content: input.title },
     { property: "og:description", content: description },
     { property: "og:url", content: input.url },
@@ -128,4 +139,43 @@ export function buildShareTags(input: {
     { name: "twitter:image", content: input.imageUrl },
     { name: "twitter:image:alt", content: input.imageAlt },
   ];
+}
+
+/** Metadados para paginas publicas, emitidos no HTML inicial do servidor. */
+export function buildShareTags(input: {
+  title: string;
+  description: string;
+  /** Texto da miniatura, quando difere da `description` de busca. */
+  ogDescription?: string;
+  url: string;
+  imageUrl: string;
+  imageAlt: string;
+}) {
+  return [
+    { title: input.title },
+    { name: "description", content: excerpt(collapse(input.description), DESCRIPTION_LIMIT) },
+    ...buildOpenGraphTags({ ...input, description: input.ogDescription ?? input.description }),
+  ];
+}
+
+/**
+ * Atalho para as rotas: só o `path` é obrigatório; o que faltar vem da página inicial
+ * (`DEFAULT_SHARE`). Imagem vazia (perfil sem foto, vaga sem logo) também cai no padrão.
+ */
+export function buildPageShareTags(input: {
+  path: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string | null;
+  imageAlt?: string;
+}) {
+  const hasOwnDescription = Boolean(input.description);
+  return buildShareTags({
+    title: input.title ?? DEFAULT_SHARE.title,
+    description: input.description || DEFAULT_SHARE.description,
+    ogDescription: hasOwnDescription ? undefined : DEFAULT_SHARE.ogDescription,
+    url: `${texts.siteUrl}${input.path}`,
+    imageUrl: input.imageUrl || DEFAULT_SHARE.imageUrl,
+    imageAlt: input.imageAlt ?? input.title ?? DEFAULT_SHARE.imageAlt,
+  });
 }

@@ -1974,7 +1974,6 @@ export const texts = {
       title: "Énóis · Networking profissional humano",
       description:
         "Plataforma de networking profissional com foco em conexões genuínas, mentoria, comunidades e desenvolvimento de carreira.",
-      ogDescription: "Construa relacionamentos profissionais reais — não apenas conexões.",
     },
   },
 

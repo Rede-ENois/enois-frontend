@@ -5,6 +5,7 @@ import { texts } from "@/texts";
 import { ArrowLeft, Flag } from "lucide-react";
 
 import { reportsApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,7 +15,9 @@ import { AppContainer } from "@/components/app-container";
 
 export const Route = createFileRoute("/denuncias")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.myReports.seoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.myReports.seoTitle, path: "/denuncias" }),
+  }),
   component: MinhasDenuncias,
 });
 

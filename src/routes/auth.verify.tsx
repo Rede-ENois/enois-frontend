@@ -7,6 +7,7 @@ import { CheckCircle2, Loader2, MailWarning } from "lucide-react";
 import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { storeSession } from "@/lib/session";
 
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,9 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth/verify")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: texts.auth.verify.title }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.auth.verify.title, path: "/auth/verify" }),
+  }),
   component: VerifyEmail,
 });
 

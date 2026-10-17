@@ -11,6 +11,7 @@ import { Calendar, ImagePlus, MapPin, Plus, Users, Video, X } from "lucide-react
 
 import { eventsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
@@ -30,7 +31,7 @@ import { AppContainer } from "@/components/app-container";
 
 export const Route = createFileRoute("/eventos")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.events.seoTitle }] }),
+  head: () => ({ meta: buildPageShareTags({ title: texts.events.seoTitle, path: "/eventos" }) }),
   component: Eventos,
 });
 

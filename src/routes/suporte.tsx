@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import { ArrowLeft, LifeBuoy } from "lucide-react";
 
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -10,7 +11,7 @@ import { SupportForm } from "@/components/support-form";
 
 export const Route = createFileRoute("/suporte")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.support.seoTitle }] }),
+  head: () => ({ meta: buildPageShareTags({ title: texts.support.seoTitle, path: "/suporte" }) }),
   component: Suporte,
 });
 

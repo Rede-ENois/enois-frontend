@@ -6,6 +6,7 @@ import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 
 import { sanctionsApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,9 @@ import { AppContainer } from "@/components/app-container";
 
 export const Route = createFileRoute("/penalidades")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.sanctions.seoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.sanctions.seoTitle, path: "/penalidades" }),
+  }),
   component: Penalidades,
 });
 

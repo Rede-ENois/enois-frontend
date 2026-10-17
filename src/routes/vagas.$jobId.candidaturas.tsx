@@ -9,6 +9,7 @@ import { ArrowLeft, BadgeCheck, Loader2, MessageCircle, ShieldAlert } from "luci
 
 import { jobsApi } from "@/lib/api";
 import { actionsFor, statusTone } from "@/lib/job-application-status";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,12 @@ import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/vagas/$jobId/candidaturas")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.jobs.applications.seoTitle }] }),
+  head: ({ params }) => ({
+    meta: buildPageShareTags({
+      title: texts.jobs.applications.seoTitle,
+      path: `/vagas/${encodeURIComponent(params.jobId)}/candidaturas`,
+    }),
+  }),
   component: JobApplications,
 });
 

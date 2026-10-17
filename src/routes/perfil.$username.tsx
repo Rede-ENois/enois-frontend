@@ -36,7 +36,7 @@ import {
 } from "@/lib/api";
 import { authApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
-import { buildShareTags } from "@/lib/open-graph";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
@@ -75,12 +75,11 @@ export const Route = createFileRoute("/perfil/$username")({
     const user = loaderData?.user;
     const title = texts.profile.seoTitle(user?.name ?? texts.profile.seoFallbackTitle);
     return {
-      meta: buildShareTags({
+      meta: buildPageShareTags({
         title,
         description: user?.headline || texts.profile.seoFallbackDescription,
-        url: `${texts.siteUrl}/perfil/${encodeURIComponent(params.username)}`,
-        imageUrl:
-          resolveCdnUrl(user?.banner || user?.avatar) || `${texts.siteUrl}/icons/icon-512.png`,
+        path: `/perfil/${encodeURIComponent(params.username)}`,
+        imageUrl: resolveCdnUrl(user?.banner || user?.avatar),
         imageAlt: user?.name ? `Perfil de ${user.name} no Énóis` : title,
       }),
     };

@@ -35,6 +35,7 @@ import { CURRENCIES, currencySymbol, formatSalary } from "@/lib/currency";
 import type { CurrencyCode } from "@/lib/currency";
 import { useCurrentUser } from "@/lib/current-user";
 import { canCreateJob, missingReputationToCreateJob } from "@/lib/job-permissions";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,7 +60,7 @@ import { AppContainer } from "@/components/app-container";
 import { InfiniteScroll } from "@/components/infinite-scroll";
 
 export const Route = createFileRoute("/vagas")({
-  head: () => ({ meta: [{ title: texts.jobs.seoTitle }] }),
+  head: () => ({ meta: buildPageShareTags({ title: texts.jobs.seoTitle, path: "/vagas" }) }),
   component: Vagas,
 });
 

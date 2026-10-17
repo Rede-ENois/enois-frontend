@@ -7,6 +7,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { z } from "zod";
 
 import { authApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { storeSession } from "@/lib/session";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,9 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth/callback")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: texts.auth.social.callbackTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.auth.social.callbackTitle, path: "/auth/callback" }),
+  }),
   component: OAuthCallback,
 });
 

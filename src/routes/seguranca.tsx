@@ -7,6 +7,7 @@ import { texts } from "@/texts";
 import { AlertTriangle, CheckCircle2, Copy, Loader2, ShieldCheck } from "lucide-react";
 
 import { ApiError, authApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,9 @@ import { IdentityVerificationSection } from "@/components/security/identity-veri
 
 export const Route = createFileRoute("/seguranca")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.auth.twoFactor.pageTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.auth.twoFactor.pageTitle, path: "/seguranca" }),
+  }),
   component: Seguranca,
 });
 

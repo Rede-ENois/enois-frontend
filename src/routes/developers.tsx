@@ -6,16 +6,19 @@ import { type ComponentProps, useState } from "react";
 
 import { API_BASE_URL, apiSections, apiUseCases, type ApiEndpoint, type HttpMethod } from "@/constants/developers-api";
 
+import { buildPageShareTags } from "@/lib/open-graph";
+
 import { AppContainer } from "@/components/app-container";
 
 export const Route = createFileRoute("/developers")({
   // Pagina PUBLICA de documentacao. O subdominio developers.enois.ia.br aponta para ca quando o
   // DNS/TLS estiver configurado (ver docs/DEVELOPERS_PORTAL.md no backend).
   head: () => ({
-    meta: [
-      { title: texts.developers.seoTitle },
-      { name: "description", content: texts.developers.seoDescription },
-    ],
+    meta: buildPageShareTags({
+      title: texts.developers.seoTitle,
+      description: texts.developers.seoDescription,
+      path: "/developers",
+    }),
   }),
   component: Developers,
 });

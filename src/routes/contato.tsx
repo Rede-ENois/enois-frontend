@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { ArrowRight, LifeBuoy, Mail } from "lucide-react";
 
 import { supportApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { isAuthenticated } from "@/lib/use-auth";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ import { AppContainer } from "@/components/app-container";
 import { SupportForm } from "@/components/support-form";
 
 export const Route = createFileRoute("/contato")({
-  head: () => ({ meta: [{ title: texts.support.contatoSeoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.support.contatoSeoTitle, path: "/contato" }),
+  }),
   component: Contato,
 });
 

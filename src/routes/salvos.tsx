@@ -5,6 +5,7 @@ import { texts } from "@/texts";
 import { ArrowLeft, Bookmark } from "lucide-react";
 
 import { feedApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,7 +15,7 @@ import { PostCard } from "@/components/post-card";
 
 export const Route = createFileRoute("/salvos")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.saved.seoTitle }] }),
+  head: () => ({ meta: buildPageShareTags({ title: texts.saved.seoTitle, path: "/salvos" }) }),
   component: SavedPosts,
 });
 

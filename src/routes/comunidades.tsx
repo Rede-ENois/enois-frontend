@@ -11,6 +11,7 @@ import { Loader2, Plus, Star, Users } from "lucide-react";
 
 import { communitiesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,9 @@ const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
 
 export const Route = createFileRoute("/comunidades")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.communities.seoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.communities.seoTitle, path: "/comunidades" }),
+  }),
   component: Comunidades,
 });
 

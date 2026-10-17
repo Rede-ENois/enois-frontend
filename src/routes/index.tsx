@@ -7,6 +7,7 @@ import { texts } from "@/texts";
 import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
 
 import { statsApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 
 import { Button } from "@/components/ui/button";
 
@@ -14,12 +15,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: texts.landing.seo.title },
-      { name: "description", content: texts.landing.seo.description },
-      { property: "og:title", content: texts.landing.seo.title },
-      { property: "og:description", content: texts.landing.seo.ogDescription },
-    ],
+    meta: buildPageShareTags({ path: "/" }),
   }),
   component: Landing,
 });

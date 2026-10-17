@@ -14,6 +14,7 @@ import { ArrowRight, Eye, EyeOff, Loader2, MailCheck, ShieldCheck, Sparkles } fr
 import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { storeSession } from "@/lib/session";
 
 import { Button } from "@/components/ui/button";
@@ -31,13 +32,11 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/entrar")({
   validateSearch: searchSchema,
   head: () => ({
-    meta: [
-      { title: texts.auth.seo.authTitle },
-      {
-        name: "description",
-        content: texts.auth.seo.authDescription,
-      },
-    ],
+    meta: buildPageShareTags({
+      title: texts.auth.seo.authTitle,
+      description: texts.auth.seo.authDescription,
+      path: "/entrar",
+    }),
   }),
   component: Auth,
 });

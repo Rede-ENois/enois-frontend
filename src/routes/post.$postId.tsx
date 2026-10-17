@@ -5,7 +5,7 @@ import { texts } from "@/texts";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { feedApi, mediaApi } from "@/lib/api";
-import { buildPostShareMeta } from "@/lib/open-graph";
+import { DEFAULT_SHARE, buildPageShareTags, buildPostShareMeta } from "@/lib/open-graph";
 
 import { AppContainer } from "@/components/app-container";
 import { PostCard } from "@/components/post-card";
@@ -42,17 +42,18 @@ export const Route = createFileRoute("/post/$postId")({
     const post = loaderData?.post;
     if (!post) {
       return {
-        meta: [
-          { title: texts.post.seoTitle },
-          { name: "description", content: texts.post.seoDescription },
-        ],
+        meta: buildPageShareTags({
+          title: texts.post.seoTitle,
+          description: texts.post.seoDescription,
+          path: `/post/${encodeURIComponent(params.postId)}`,
+        }),
       };
     }
 
     const share = buildPostShareMeta({
       post,
       postUrl: `${texts.siteUrl}/post/${params.postId}`,
-      fallbackImageUrl: `${texts.siteUrl}/icons/icon-512.png`,
+      fallbackImageUrl: DEFAULT_SHARE.imageUrl,
       media: loaderData?.media ?? null,
       // O cartão é gerado pelo backend a partir do texto da página (ver PagePreviewCardService).
       pagePreviewUrl:

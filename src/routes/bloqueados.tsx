@@ -5,6 +5,7 @@ import { texts } from "@/texts";
 import { ShieldOff, Undo2 } from "lucide-react";
 
 import { networkApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,9 @@ import { AppContainer } from "@/components/app-container";
 import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/bloqueados")({
-  head: () => ({ meta: [{ title: texts.profile.blockedSeoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.profile.blockedSeoTitle, path: "/bloqueados" }),
+  }),
   component: BlockedUsers,
 });
 

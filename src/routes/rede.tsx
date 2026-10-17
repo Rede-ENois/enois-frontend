@@ -10,6 +10,7 @@ import { Check, Send, UserMinus, UserPlus, X } from "lucide-react";
 
 import { networkApi, profileApi } from "@/lib/api";
 import { getCurrentUserId } from "@/lib/current-user";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/rede")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.network.seoTitle }] }),
+  head: () => ({ meta: buildPageShareTags({ title: texts.network.seoTitle, path: "/rede" }) }),
   component: Rede,
 });
 

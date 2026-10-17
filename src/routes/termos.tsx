@@ -2,17 +2,17 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
+import { buildPageShareTags } from "@/lib/open-graph";
+
 import { LegalLastUpdated, LegalLayout, LegalSection } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/termos")({
   head: () => ({
-    meta: [
-      { title: texts.legal.terms.seoTitle },
-      {
-        name: "description",
-        content: texts.legal.terms.seoDescription,
-      },
-    ],
+    meta: buildPageShareTags({
+      title: texts.legal.terms.seoTitle,
+      description: texts.legal.terms.seoDescription,
+      path: "/termos",
+    }),
   }),
   component: Termos,
 });

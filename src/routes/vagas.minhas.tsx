@@ -8,6 +8,7 @@ import type { Job } from "@/types/application/job/job";
 import { ArrowLeft, Briefcase, CheckCircle2, Loader2, Pencil, Trash2, Users } from "lucide-react";
 
 import { ApiError, jobsApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import { JobEditDialog } from "@/components/job-edit-dialog";
 
 export const Route = createFileRoute("/vagas/minhas")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.jobs.myJobs }] }),
+  head: () => ({ meta: buildPageShareTags({ title: texts.jobs.myJobs, path: "/vagas/minhas" }) }),
   component: MyJobs,
 });
 

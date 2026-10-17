@@ -11,6 +11,7 @@ import { ArrowLeft, Search, Send } from "lucide-react";
 
 import { messagesApi, networkApi, profileApi } from "@/lib/api";
 import { getCurrentUserId } from "@/lib/current-user";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,9 @@ export const Route = createFileRoute("/mensagens")({
   validateSearch: (search: Record<string, unknown>): { conversation?: string } => ({
     conversation: typeof search.conversation === "string" ? search.conversation : undefined,
   }),
-  head: () => ({ meta: [{ title: texts.messages.seoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.messages.seoTitle, path: "/mensagens" }),
+  }),
   component: Mensagens,
 });
 

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import { eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
@@ -45,13 +46,11 @@ import { UserAvatar } from "@/components/user-avatar";
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,
   head: () => ({
-    meta: [
-      { title: texts.feed.seo.title },
-      {
-        name: "description",
-        content: texts.feed.seo.description,
-      },
-    ],
+    meta: buildPageShareTags({
+      title: texts.feed.seo.title,
+      description: texts.feed.seo.description,
+      path: "/feed",
+    }),
   }),
   component: Home,
 });

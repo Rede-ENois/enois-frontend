@@ -2,15 +2,18 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
+import { buildPageShareTags } from "@/lib/open-graph";
+
 import { LegalLayout, LegalSection } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/diretrizes")({
   // Pagina PUBLICA: vale para quem denuncia e para quem foi denunciado.
   head: () => ({
-    meta: [
-      { title: texts.guidelines.seoTitle },
-      { name: "description", content: texts.guidelines.seoDescription },
-    ],
+    meta: buildPageShareTags({
+      title: texts.guidelines.seoTitle,
+      description: texts.guidelines.seoDescription,
+      path: "/diretrizes",
+    }),
   }),
   component: Diretrizes,
 });

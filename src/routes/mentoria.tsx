@@ -11,6 +11,7 @@ import { Calendar, CheckCircle2, Loader2, Sparkles, Star } from "lucide-react";
 
 import { mentorsApi, profileApi } from "@/lib/api";
 import { getCurrentUserId, useCurrentUser } from "@/lib/current-user";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +33,9 @@ import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/mentoria")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: texts.mentoring.seoTitle }] }),
+  head: () => ({
+    meta: buildPageShareTags({ title: texts.mentoring.seoTitle, path: "/mentoria" }),
+  }),
   component: Mentoria,
 });
 

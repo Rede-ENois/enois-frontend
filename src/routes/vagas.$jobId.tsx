@@ -23,7 +23,7 @@ import {
 
 import { jobsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
-import { buildShareTags } from "@/lib/open-graph";
+import { buildPageShareTags } from "@/lib/open-graph";
 import { formatSalary } from "@/lib/currency";
 import { useCurrentUser } from "@/lib/current-user";
 import { actionsFor, applicationStatusLabel, statusTone } from "@/lib/job-application-status";
@@ -47,11 +47,11 @@ export const Route = createFileRoute("/vagas/$jobId")({
   head: ({ loaderData: job, params }) => {
     const title = job ? `${job.title}${job.company ? ` · ${job.company}` : ""} · ${texts.brand.name}` : texts.jobs.seoTitle;
     return {
-      meta: buildShareTags({
+      meta: buildPageShareTags({
         title,
         description: job?.description || (job ? `${job.company ? `Vaga em ${job.company}.` : "Oportunidade profissional."} Confira os detalhes no Énóis.` : "Confira oportunidades no Énóis."),
-        url: `${texts.siteUrl}/vagas/${encodeURIComponent(params.jobId)}`,
-        imageUrl: resolveCdnUrl(job?.logo) || `${texts.siteUrl}/icons/icon-512.png`,
+        path: `/vagas/${encodeURIComponent(params.jobId)}`,
+        imageUrl: resolveCdnUrl(job?.logo),
         imageAlt: job ? `Vaga ${job.title}${job.company ? ` em ${job.company}` : ""}` : title,
       }),
     };

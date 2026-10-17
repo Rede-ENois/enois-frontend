@@ -17,6 +17,7 @@ import type { WithRequiredChildren } from "@/types/components/with-required-chil
 import type { ErrorComponentProps } from "@/types/routes/root/error-component-props";
 import type { RootRouteContext } from "@/types/routes/root/root-route-context";
 
+import { DEFAULT_SHARE, buildOpenGraphTags } from "@/lib/open-graph";
 import { registerServiceWorker } from "@/lib/pwa";
 import { hasSession, isProtectedPath } from "@/lib/require-auth";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
@@ -94,13 +95,14 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
         name: "description",
         content: texts.root.seo.description,
       },
-      { property: "og:title", content: texts.root.seo.title },
-      {
-        property: "og:description",
-        content: texts.root.seo.ogDescription,
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      // Fallback de toda rota: a miniatura da página inicial. Rotas filhas sobrescrevem tag a tag.
+      ...buildOpenGraphTags({
+        title: DEFAULT_SHARE.title,
+        description: DEFAULT_SHARE.ogDescription,
+        url: texts.siteUrl,
+        imageUrl: DEFAULT_SHARE.imageUrl,
+        imageAlt: DEFAULT_SHARE.imageAlt,
+      }),
       { name: "theme-color", content: texts.pwa.themeColor },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },

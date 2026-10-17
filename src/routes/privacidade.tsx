@@ -2,17 +2,17 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
+import { buildPageShareTags } from "@/lib/open-graph";
+
 import { LegalLastUpdated, LegalLayout, LegalSection } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/privacidade")({
   head: () => ({
-    meta: [
-      { title: texts.legal.privacy.seoTitle },
-      {
-        name: "description",
-        content: texts.legal.privacy.seoDescription,
-      },
-    ],
+    meta: buildPageShareTags({
+      title: texts.legal.privacy.seoTitle,
+      description: texts.legal.privacy.seoDescription,
+      path: "/privacidade",
+    }),
   }),
   component: Privacidade,
 });

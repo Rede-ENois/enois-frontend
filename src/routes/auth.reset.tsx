@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, Sparkles } from "lucide
 import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
+import { buildPageShareTags } from "@/lib/open-graph";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +20,11 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/auth/reset")({
   validateSearch: searchSchema,
   head: () => ({
-    meta: [
-      { title: texts.auth.seo.resetTitle },
-      { name: "description", content: texts.auth.seo.resetDescription },
-    ],
+    meta: buildPageShareTags({
+      title: texts.auth.seo.resetTitle,
+      description: texts.auth.seo.resetDescription,
+      path: "/auth/reset",
+    }),
   }),
   component: ResetPassword,
 });
