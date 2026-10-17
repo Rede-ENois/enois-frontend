@@ -12,14 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as SalvosRouteImport } from './routes/salvos'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as RedeRouteImport } from './routes/rede'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as MentoriaRouteImport } from './routes/mentoria'
 import { Route as MensagensRouteImport } from './routes/mensagens'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as HumansDottxtRouteImport } from './routes/humans[.]txt'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as EntrarRouteImport } from './routes/entrar'
@@ -55,6 +59,11 @@ const SuporteRoute = SuporteRouteImport.update({
   path: '/suporte',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SegurancaRoute = SegurancaRouteImport.update({
   id: '/seguranca',
   path: '/seguranca',
@@ -63,6 +72,11 @@ const SegurancaRoute = SegurancaRouteImport.update({
 const SalvosRoute = SalvosRouteImport.update({
   id: '/salvos',
   path: '/salvos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RedeRoute = RedeRouteImport.update({
@@ -93,6 +107,16 @@ const MentoriaRoute = MentoriaRouteImport.update({
 const MensagensRoute = MensagensRouteImport.update({
   id: '/mensagens',
   path: '/mensagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HumansDottxtRoute = HumansDottxtRouteImport.update({
+  id: '/humans.txt',
+  path: '/humans.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedRoute = FeedRouteImport.update({
@@ -202,14 +226,18 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
   '/feed': typeof FeedRoute
+  '/humans.txt': typeof HumansDottxtRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mensagens': typeof MensagensRoute
   '/mentoria': typeof MentoriaRoute
   '/moderacao': typeof ModeracaoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
   '/rede': typeof RedeRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -234,14 +262,18 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
   '/feed': typeof FeedRoute
+  '/humans.txt': typeof HumansDottxtRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mensagens': typeof MensagensRoute
   '/mentoria': typeof MentoriaRoute
   '/moderacao': typeof ModeracaoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
   '/rede': typeof RedeRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -267,14 +299,18 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
   '/feed': typeof FeedRoute
+  '/humans.txt': typeof HumansDottxtRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/mensagens': typeof MensagensRoute
   '/mentoria': typeof MentoriaRoute
   '/moderacao': typeof ModeracaoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
   '/rede': typeof RedeRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -301,14 +337,18 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/eventos'
     | '/feed'
+    | '/humans.txt'
+    | '/manifest.webmanifest'
     | '/mensagens'
     | '/mentoria'
     | '/moderacao'
     | '/penalidades'
     | '/privacidade'
     | '/rede'
+    | '/robots.txt'
     | '/salvos'
     | '/seguranca'
+    | '/sitemap.xml'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -333,14 +373,18 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/eventos'
     | '/feed'
+    | '/humans.txt'
+    | '/manifest.webmanifest'
     | '/mensagens'
     | '/mentoria'
     | '/moderacao'
     | '/penalidades'
     | '/privacidade'
     | '/rede'
+    | '/robots.txt'
     | '/salvos'
     | '/seguranca'
+    | '/sitemap.xml'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -365,14 +409,18 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/eventos'
     | '/feed'
+    | '/humans.txt'
+    | '/manifest.webmanifest'
     | '/mensagens'
     | '/mentoria'
     | '/moderacao'
     | '/penalidades'
     | '/privacidade'
     | '/rede'
+    | '/robots.txt'
     | '/salvos'
     | '/seguranca'
+    | '/sitemap.xml'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -398,14 +446,18 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   EventosRoute: typeof EventosRoute
   FeedRoute: typeof FeedRoute
+  HumansDottxtRoute: typeof HumansDottxtRoute
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   MensagensRoute: typeof MensagensRoute
   MentoriaRoute: typeof MentoriaRoute
   ModeracaoRoute: typeof ModeracaoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RedeRoute: typeof RedeRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SalvosRoute: typeof SalvosRoute
   SegurancaRoute: typeof SegurancaRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
@@ -439,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuporteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seguranca': {
       id: '/seguranca'
       path: '/seguranca'
@@ -451,6 +510,13 @@ declare module '@tanstack/react-router' {
       path: '/salvos'
       fullPath: '/salvos'
       preLoaderRoute: typeof SalvosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rede': {
@@ -493,6 +559,20 @@ declare module '@tanstack/react-router' {
       path: '/mensagens'
       fullPath: '/mensagens'
       preLoaderRoute: typeof MensagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/humans.txt': {
+      id: '/humans.txt'
+      path: '/humans.txt'
+      fullPath: '/humans.txt'
+      preLoaderRoute: typeof HumansDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed': {
@@ -678,14 +758,18 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   EventosRoute: EventosRoute,
   FeedRoute: FeedRoute,
+  HumansDottxtRoute: HumansDottxtRoute,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   MensagensRoute: MensagensRoute,
   MentoriaRoute: MentoriaRoute,
   ModeracaoRoute: ModeracaoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RedeRoute: RedeRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SalvosRoute: SalvosRoute,
   SegurancaRoute: SegurancaRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
