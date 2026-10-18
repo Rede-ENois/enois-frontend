@@ -1,6 +1,14 @@
 import type { DeveloperPage } from "@/types/application/games/developer-page";
 import type { GameCatalogQuery } from "@/types/application/games/game-catalog-query";
 import type { GamePage } from "@/types/application/games/game-page";
+
+export type ColecaoView = {
+  id: string;
+  title: string;
+  description?: string | null;
+  jogos: GameView[];
+  createdAt: string;
+};
 import type { GameStats } from "@/types/application/games/game-stats";
 import type { GameUpdateView } from "@/types/application/games/game-update-view";
 import type { GameView } from "@/types/application/games/game-view";
@@ -108,4 +116,9 @@ export const gamesApi = {
   /** Reenvia um jogo recusado para nova rodada de moderação. */
   resubmit: (gameId: string) =>
     api.post<{ id: string; status: string }>(`/games/${encodeURIComponent(gameId)}/resubmit`, {}),
+  /** Impulsiona o PRÓPRIO jogo: 5 faíscas por 7 dias no topo do catálogo (G2). */
+  boost: (gameId: string) =>
+    api.post<{ id: string; boosted: boolean }>(`/games/${encodeURIComponent(gameId)}/boost`, {}),
+  /** Coleções temáticas curadas (G3) com os jogos resolvidos. */
+  colecoes: (limit = 20) => api.get<ColecaoView[]>(`/games/colecoes?limit=${limit}`),
 };

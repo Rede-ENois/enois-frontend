@@ -3,6 +3,7 @@ import { type ChangeEvent, type FormEvent, useCallback, useRef, useState } from 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
+import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
 import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
 import { texts } from "@/texts";
@@ -26,7 +27,6 @@ import {
 } from "lucide-react";
 
 import { authApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
-import { INSIGHT_MAX_LENGTH } from "@/lib/feed/insight-article";
 import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
@@ -275,7 +275,7 @@ function Home() {
                       : texts.feed.composer.placeholder
                   }
                   className="flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-sm font-normal"
-                  maxLength={INSIGHT_MAX_LENGTH}
+                  maxLength={postContentLimit(postType)}
                   toolbar
                 />
               )}

@@ -241,7 +241,7 @@ function Mensagens() {
     <AppContainer>
       {/* `dvh` nos dois tamanhos: `100vh` no desktop é o valor que não encolhe quando a barra
           do navegador aparece no celular, e aí o compositor ficava escondido atrás do teclado. */}
-      <div className="surface-card grid h-[calc(100dvh-11rem)] grid-cols-1 overflow-hidden md:h-[calc(100dvh-9rem)] md:grid-cols-[320px_1fr]">
+      <div className="surface-card grid h-[calc(100dvh-11rem)] grid-cols-1 overflow-hidden md:h-[calc(100dvh-9rem)] md:grid-cols-[320px_minmax(0,1fr)]">
         <div
           className={`flex min-h-0 flex-col border-r border-border ${activeConversation ? "hidden md:flex" : "flex"}`}
         >
@@ -438,7 +438,9 @@ function Mensagens() {
           </ul>
         </div>
 
-        <div className={`flex min-h-0 flex-col ${!activeConversation ? "hidden md:flex" : "flex"}`}>
+        <div
+          className={`flex min-h-0 min-w-0 flex-col ${!activeConversation ? "hidden md:flex" : "flex"}`}
+        >
           {!activeConversation ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-sm text-muted-foreground">{texts.messages.selectConversation}</p>
@@ -520,7 +522,7 @@ function Mensagens() {
                             </Link>
                           )}
                           <div
-                            className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                            className={`min-w-0 max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
                               isMe
                                 ? "rounded-br-md bg-primary text-primary-foreground"
                                 : "rounded-bl-md bg-card text-foreground"
@@ -529,7 +531,7 @@ function Mensagens() {
                             <RichText
                               content={m.text}
                               className="break-words"
-                              linkClassName="underline underline-offset-2"
+                              linkClassName="break-all underline underline-offset-2"
                             />
 
                             <p

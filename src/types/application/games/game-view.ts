@@ -43,4 +43,6 @@ export type GameView = {
   owned: boolean;
   /** Se quem está lendo guardou na biblioteca. */
   favorited: boolean;
+  /** Destaque pago (G2): o jogo sobe no catálogo enquanto ativo. */
+  boosted?: boolean;
 };

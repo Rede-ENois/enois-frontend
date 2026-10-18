@@ -6,9 +6,10 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { GAME_GENRES, GAME_STAGES } from "@/constants/game-options";
 import { texts } from "@/texts";
 import type { GameView } from "@/types/application/games/game-view";
-import { ExternalLink, Gamepad2, Send } from "lucide-react";
+import { ExternalLink, Gamepad2, Send , Rocket } from "lucide-react";
 
 import { gamesApi } from "@/lib/api";
+import { formatFaisca } from "@/lib/faisca";
 import { isAuthenticated } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 
@@ -94,6 +95,8 @@ function Games() {
         </header>
 
         {mine.data && mine.data.length > 0 && <MyGames games={mine.data} />}
+
+        <ColecoesSection />
 
         {/* Busca e filtros: o catálogo é para DESCOBRIR — sem isto só rola quem já sabe o que quer. */}
         <div className="mb-4 space-y-2">
@@ -241,11 +244,15 @@ function GameCover({ cover }: { cover?: string | null }) {
   );
 }
 
-/** Os jogos de quem está logado, com o status da moderação e o reenvio. */
+/** Os jogos de quem está logado, com o status da moderação, o reenvio e o impulso. */
 function MyGames({ games }: { games: Awaited<ReturnType<typeof gamesApi.mine>> }) {
   const queryClient = useQueryClient();
   const resubmit = useMutation({
     mutationFn: (gameId: string) => gamesApi.resubmit(gameId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["games"] }),
+  });
+  const boost = useMutation({
+    mutationFn: (gameId: string) => gamesApi.boost(gameId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["games"] }),
   });
 
@@ -265,6 +272,11 @@ function MyGames({ games }: { games: Awaited<ReturnType<typeof gamesApi.mine>> }
               )}
             </span>
 
+            {g.boosted && (
+              <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary-text">
+                impulsionado
+              </span>
+            )}
             <StatusBadge status={g.status} />
             {g.status === "REJECTED" && (
               <Button
@@ -275,6 +287,19 @@ function MyGames({ games }: { games: Awaited<ReturnType<typeof gamesApi.mine>> }
                 onClick={() => resubmit.mutate(g.id)}
               >
                 Reenviar
+              </Button>
+            )}
+            {g.status === "PUBLISHED" && !g.boosted && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full gap-1"
+                disabled={boost.isPending}
+                onClick={() => boost.mutate(g.id)}
+                title={`Sobe no catálogo por 7 dias — ${formatFaisca(5000)} faíscas`}
+              >
+                <Rocket className="h-4 w-4" />
+                Impulsionar
               </Button>
             )}
           </li>
@@ -420,5 +445,40 @@ function SubmitButton() {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * As coleções curadas (G3 do plano): blocos temáticos de jogos escolhidos pela
+ * curadoria, com os jogos resolvidos dentro.
+ */
+function ColecoesSection() {
+  const colecoes = useQuery({ queryKey: ["games", "colecoes"], queryFn: () => gamesApi.colecoes(20) });
+  const itens = colecoes.data ?? [];
+  if (colecoes.isLoading || itens.length === 0) return null;
+
+  return (
+    <section className="mb-6 space-y-3" aria-label="Coleções curadas">
+      {itens.map((c) => (
+        <div key={c.id} className="surface-card p-4">
+          <h2 className="text-sm font-semibold">{c.title}</h2>
+          {c.description && <p className="mt-0.5 text-xs text-text-subtle">{c.description}</p>}
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {c.jogos.map((g) => (
+              <li key={g.id}>
+                <Link
+                  to="/games/$username/$gameSlug"
+                  params={{ username: g.username ?? "", gameSlug: g.slug }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft px-3 py-1.5 text-sm font-medium transition hover:border-primary"
+                >
+                  <Gamepad2 className="h-3.5 w-3.5 text-primary" />
+                  {g.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }

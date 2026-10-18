@@ -268,8 +268,8 @@ export const texts = {
     social: {
       google: "Continuar com Google",
       googleSignup: "Criar conta com Google",
-        linkedin: "Entrar com LinkedIn",
-        linkedinSignup: "Criar conta com LinkedIn",
+      linkedin: "Entrar com LinkedIn",
+      linkedinSignup: "Criar conta com LinkedIn",
       divider: "ou com e-mail",
       /** Aplicativo OAuth ainda em aprovação/verificação, então a entrada por ele falha. */
       pendingApproval:
@@ -1359,7 +1359,9 @@ export const texts = {
       share: "Compartilhar",
       shareCopied: "Link do jogo copiado!",
       stats: (plays: number, players: number) =>
-        plays === 1 ? "1 sessão" : `${plays} sessões · ${players} ${players === 1 ? "pessoa jogou" : "pessoas jogaram"}`,
+        plays === 1
+          ? "1 sessão"
+          : `${plays} sessões · ${players} ${players === 1 ? "pessoa jogou" : "pessoas jogaram"}`,
       about: "Sobre o jogo",
       details: "Ficha",
       genres: "Gêneros",
@@ -1840,7 +1842,9 @@ export const texts = {
     restored: "Conversas de volta na caixa de entrada.",
     selectMessages: "Selecionar mensagens",
     selectedMessages: (count: number) =>
-      count === 0 ? "Toque nas mensagens para escolher" : `${count} selecionada${count === 1 ? "" : "s"}`,
+      count === 0
+        ? "Toque nas mensagens para escolher"
+        : `${count} selecionada${count === 1 ? "" : "s"}`,
     deleteSelectedMessages: (count: number) =>
       count === 0 ? "Apagar para mim" : `Apagar ${count} para mim`,
     messagesDeleted: "Mensagens apagadas para você. O outro participante continua vendo.",
@@ -2085,11 +2089,14 @@ export const texts = {
     viewJobs: "Ver vagas",
     empty: "Nenhuma empresa encontrada.",
   },
-    exportTheme: "Exportar tema",
-    importTheme: "Importar tema",
-    exportFileName: "tema.enois-theme",
-    importError: "Arquivo inválido — use um .enois-theme exportado do Énóis.",
-    galleryLink: "Temas da comunidade",
+  exportTheme: "Exportar tema",
+  importTheme: "Importar tema",
+  exportFileName: "tema.enois-theme",
+  importError: "Arquivo inválido — use um .enois-theme exportado do Énóis.",
+  /** Arquivo de uma versão mais nova do app: recusar explicando é melhor que importar pela metade. */
+  importNewerVersion:
+    "Este arquivo é de uma versão mais nova do Énóis. Atualize o app para importar.",
+  galleryLink: "Temas da comunidade",
 
   wallet: {
     seoTitle: "Carteira · Énóis",
