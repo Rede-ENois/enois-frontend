@@ -3,7 +3,11 @@ import { useRef } from "react";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { Props } from "@/types/hooks/use-insight-article-conversion/props";
 
-import { convertInsightToArticle, shouldSuggestArticle } from "@/lib/feed/insight-article";
+import {
+  convertInsightToArticle,
+  draftAfterTypeChange,
+  shouldSuggestArticle,
+} from "@/lib/feed/insight-article";
 
 export function useInsightArticleConversion({
   draft,
@@ -45,17 +49,17 @@ export function useInsightArticleConversion({
   };
 
   const selectPostType = (next: PostView["type"]) => {
-    // A alternância é reversível, inclusive se a pessoa já escreveu o título do artigo.
-    if (postType === "ARTICLE" && insightBackup.current) {
-      articleTitleBackup.current = draft;
-    }
-    if (next === "INSIGHT" && insightBackup.current) {
-      setDraft(insightBackup.current.text);
-      setMentionedUserIds(insightBackup.current.mentionedUserIds);
-    } else if (next === "ARTICLE" && insightBackup.current) {
-      setDraft(articleTitleBackup.current);
-      setMentionedUserIds([]);
-    }
+    // Guarda o título separado do Insight, para que alternar formatos não descarte nenhum texto.
+    const selected = draftAfterTypeChange(
+      postType,
+      next,
+      draft,
+      articleTitleBackup.current,
+      insightBackup.current,
+    );
+    articleTitleBackup.current = selected.title;
+    if (selected.draft !== null) setDraft(selected.draft);
+    if (selected.mentionedUserIds !== null) setMentionedUserIds(selected.mentionedUserIds);
     setPostType(next);
     setTypePickerOpen(false);
   };
