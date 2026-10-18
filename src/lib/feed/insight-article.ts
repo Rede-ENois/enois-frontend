@@ -15,3 +15,24 @@ export function shouldSuggestArticle(postType: string, draft: string, articleBod
 export function convertInsightToArticle(draft: string) {
   return { title: "", articleBody: draft };
 }
+
+/** Escolhe o campo certo ao alternar os formatos sem descartar o rascunho anterior. */
+export function draftAfterTypeChange(
+  currentType: string,
+  nextType: string,
+  draft: string,
+  articleTitle: string,
+  insightBackup: { text: string; mentionedUserIds: string[] } | null,
+) {
+  const title = currentType === "ARTICLE" && insightBackup ? draft : articleTitle;
+
+  if (nextType === "INSIGHT" && insightBackup) {
+    return { draft: insightBackup.text, mentionedUserIds: insightBackup.mentionedUserIds, title };
+  }
+
+  if (nextType === "ARTICLE" && insightBackup) {
+    return { draft: title, mentionedUserIds: [], title };
+  }
+
+  return { draft: null, mentionedUserIds: null, title };
+}
