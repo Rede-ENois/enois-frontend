@@ -48,7 +48,14 @@ describe("sugestão de artigo", () => {
       title: "Título escrito",
     });
 
-    expect(draftAfterTypeChange("INSIGHT", "ARTICLE", backup.text, restored.title, backup)).toEqual({
+    const backToArticle = draftAfterTypeChange(
+      "INSIGHT",
+      "ARTICLE",
+      backup.text,
+      restored.title,
+      backup,
+    );
+    expect(backToArticle).toEqual({
       draft: "Título escrito",
       mentionedUserIds: [],
       title: "Título escrito",
