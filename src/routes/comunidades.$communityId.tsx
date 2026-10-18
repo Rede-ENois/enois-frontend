@@ -27,8 +27,8 @@ import {
 
 import { communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
-import { buildShareTags } from "@/lib/open-graph";
 import { INSIGHT_MAX_LENGTH } from "@/lib/feed/insight-article";
+import { buildShareTags } from "@/lib/open-graph";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -504,9 +504,7 @@ function CommunityDetail() {
               />
             )}
 
-            {showArticleSuggestion && (
-              <ArticleFormatSuggestion onContinue={continueAsArticle} />
-            )}
+            {showArticleSuggestion && <ArticleFormatSuggestion onContinue={continueAsArticle} />}
 
             {pageMode && (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
