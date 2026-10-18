@@ -281,9 +281,7 @@ function Home() {
               )}
             </div>
 
-            {showArticleSuggestion && (
-              <ArticleFormatSuggestion onContinue={continueAsArticle} />
-            )}
+            {showArticleSuggestion && <ArticleFormatSuggestion onContinue={continueAsArticle} />}
 
             {pageMode && (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
