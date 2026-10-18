@@ -4,6 +4,7 @@ import {
   ARTICLE_SUGGESTION_AT,
   INSIGHT_MAX_LENGTH,
   convertInsightToArticle,
+  draftAfterTypeChange,
   shouldSuggestArticle,
 } from "./insight-article";
 
@@ -34,6 +35,31 @@ describe("sugestão de artigo", () => {
     expect(convertInsightToArticle(original)).toEqual({
       title: "",
       articleBody: original,
+    });
+  });
+
+  it("restaura o Insight e suas menções após escrever um título no Artigo", () => {
+    const backup = { text: "Insight original @ana", mentionedUserIds: ["ana-id"] };
+    const restored = draftAfterTypeChange("ARTICLE", "INSIGHT", "Título escrito", "", backup);
+
+    expect(restored).toEqual({
+      draft: backup.text,
+      mentionedUserIds: ["ana-id"],
+      title: "Título escrito",
+    });
+
+    expect(draftAfterTypeChange("INSIGHT", "ARTICLE", backup.text, restored.title, backup)).toEqual({
+      draft: "Título escrito",
+      mentionedUserIds: [],
+      title: "Título escrito",
+    });
+  });
+
+  it("não substitui texto ao trocar de tipo sem uma conversão prévia", () => {
+    expect(draftAfterTypeChange("QUESTION", "INSIGHT", "Pergunta", "", null)).toEqual({
+      draft: null,
+      mentionedUserIds: null,
+      title: "",
     });
   });
 });
