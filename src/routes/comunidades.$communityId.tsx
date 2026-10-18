@@ -28,9 +28,12 @@ import {
 import { communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { buildShareTags } from "@/lib/open-graph";
+import { INSIGHT_MAX_LENGTH } from "@/lib/feed/insight-article";
 import { requireAuth } from "@/lib/require-auth";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
+
+import { useInsightArticleConversion } from "@/hooks/use-insight-article-conversion";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +52,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
+import { ArticleFormatSuggestion } from "@/components/article-format-suggestion";
 import { CommunityFavoriteButton } from "@/components/community-favorite-button";
 import { HtmlEditor } from "@/components/html-editor";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
@@ -105,6 +109,23 @@ function CommunityDetail() {
   const upload = useMediaUpload();
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
+  const {
+    showArticleSuggestion,
+    onDraftChange,
+    continueAsArticle,
+    selectPostType,
+    clearConversion,
+  } = useInsightArticleConversion({
+    draft,
+    setDraft,
+    articleBody,
+    setArticleBody,
+    mentionedUserIds,
+    setMentionedUserIds,
+    postType,
+    setPostType,
+    setTypePickerOpen,
+  });
   const currentType = POST_TYPES.find((option) => option.id === postType) ?? POST_TYPES[0];
   const [editOpen, setEditOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -199,6 +220,7 @@ function CommunityDetail() {
       setArticleBody("");
       setMentionedUserIds([]);
       setPostType("INSIGHT");
+      clearConversion();
       setPublishError(null);
     },
     onError: (error) =>
@@ -470,15 +492,20 @@ function CommunityDetail() {
             {!pageMode && (
               <MentionTextarea
                 value={draft}
-                onChange={(value, ids) => {
-                  setDraft(value);
-                  setMentionedUserIds(ids);
-                }}
-                placeholder={texts.communities.detail.composerPlaceholder}
+                onChange={onDraftChange}
+                placeholder={
+                  articleMode
+                    ? texts.feed.composer.article.titlePlaceholder
+                    : texts.communities.detail.composerPlaceholder
+                }
                 className="min-h-20 rounded-2xl border border-border bg-muted/40 px-3 py-2 text-sm font-normal"
-                maxLength={1200}
+                maxLength={INSIGHT_MAX_LENGTH}
                 toolbar
               />
+            )}
+
+            {showArticleSuggestion && (
+              <ArticleFormatSuggestion onContinue={continueAsArticle} />
             )}
 
             {pageMode && (
@@ -554,8 +581,7 @@ function CommunityDetail() {
                             key={option.id}
                             type="button"
                             onClick={() => {
-                              setPostType(option.id as PostView["type"]);
-                              setTypePickerOpen(false);
+                              selectPostType(option.id as PostView["type"]);
                             }}
                             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
                               option.id === postType

@@ -767,6 +767,11 @@ export const texts = {
         change: "Trocar o tipo da publicação",
       },
       article: {
+        titlePlaceholder: "Dê um título ao artigo...",
+        suggestionTitle: "Seu Insight está chegando ao limite",
+        suggestionDescription:
+          "Precisa de mais espaço? O Artigo aceita até 4.000 caracteres e seu texto será mantido.",
+        suggestionAction: "Continuar como artigo",
         bodyLabel: "Texto do artigo",
         bodyPlaceholder: "Escreva o artigo. O campo de cima é o título que aparece no feed.",
         bodyHint:

@@ -26,8 +26,11 @@ import {
 } from "lucide-react";
 
 import { authApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
+import { INSIGHT_MAX_LENGTH } from "@/lib/feed/insight-article";
 import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
+
+import { useInsightArticleConversion } from "@/hooks/use-insight-article-conversion";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,6 +39,7 @@ import { Pill } from "@/components/ui/pill";
 import { Textarea } from "@/components/ui/textarea";
 
 import { AppContainer } from "@/components/app-container";
+import { ArticleFormatSuggestion } from "@/components/article-format-suggestion";
 import { HtmlEditor } from "@/components/html-editor";
 import { InfiniteScroll } from "@/components/infinite-scroll";
 import { MentionTextarea } from "@/components/mention-textarea";
@@ -119,6 +123,23 @@ function Home() {
   const [articleBody, setArticleBody] = useState("");
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
+  const {
+    showArticleSuggestion,
+    onDraftChange,
+    continueAsArticle,
+    selectPostType,
+    clearConversion,
+  } = useInsightArticleConversion({
+    draft,
+    setDraft,
+    articleBody,
+    setArticleBody,
+    mentionedUserIds,
+    setMentionedUserIds,
+    postType,
+    setPostType,
+    setTypePickerOpen,
+  });
   const currentType = POST_TYPES.find((option) => option.id === postType) ?? POST_TYPES[0];
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
@@ -177,6 +198,7 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setTypePickerOpen(false);
+      clearConversion();
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     }
@@ -246,17 +268,22 @@ function Home() {
               {!pageMode && (
                 <MentionTextarea
                   value={draft}
-                  onChange={(val, ids) => {
-                    setDraft(val);
-                    setMentionedUserIds(ids);
-                  }}
-                  placeholder={texts.feed.composer.placeholder}
+                  onChange={onDraftChange}
+                  placeholder={
+                    articleMode
+                      ? texts.feed.composer.article.titlePlaceholder
+                      : texts.feed.composer.placeholder
+                  }
                   className="flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-sm font-normal"
-                  maxLength={1200}
+                  maxLength={INSIGHT_MAX_LENGTH}
                   toolbar
                 />
               )}
             </div>
+
+            {showArticleSuggestion && (
+              <ArticleFormatSuggestion onContinue={continueAsArticle} />
+            )}
 
             {pageMode && (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
@@ -394,8 +421,7 @@ function Home() {
                             label={option.label}
                             active={option.id === postType}
                             onClick={() => {
-                              setPostType(option.id as PostView["type"]);
-                              setTypePickerOpen(false);
+                              selectPostType(option.id as PostView["type"]);
                             }}
                           />
                         ))}
