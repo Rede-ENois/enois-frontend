@@ -73,11 +73,42 @@ export const moderationApi = {
   cancelSanction: (proposalId: string) =>
     api.post<SanctionProposalView>(`/admin/sanction-proposals/${proposalId}/cancel`, {}),
 
-  sanctionUser: (username: string, type: "RESTRICTION" | "BAN", reason: string) =>
+  sanctionUser: (username: string, type: "RESTRICTION" | "BAN" | "PERMABAN", reason: string) =>
     api.post<ModeratorSanctionResult>(`/admin/users/${encodeURIComponent(username)}/sanction`, {
       type,
       reason,
     }),
+
+  /**
+   * Sanitizar usuário: apaga do banco TODOS os posts e comentários dele (conta banida por spam).
+   * Diferente da remoção por denúncia (soft delete): aqui a linha sai do banco de verdade.
+   */
+  sanitizeUser: (username: string, reason: string) =>
+    api.post<{
+      userId: string;
+      username: string;
+      posts: number;
+      comments: number;
+      otherRows: number;
+    }>(`/admin/users/${encodeURIComponent(username)}/sanitize`, { note: reason }),
+
+  /** IPs recentes de onde o usuário entrou — a fonte para escolher o que bloquear. */
+  userIps: (username: string) =>
+    api.get<{ ip: string }[]>(`/admin/users/${encodeURIComponent(username)}/ips`),
+
+  blockIp: (ip: string, reason: string) =>
+    api.post<{ id: string; ip: string; reason: string; createdAt: string }>("/admin/blocked-ips", {
+      ip,
+      reason,
+    }),
+
+  blockedIps: (limit = 100) =>
+    api.get<{ id: string; ip: string; reason: string; createdAt: string }[]>(
+      `/admin/blocked-ips?limit=${limit}`,
+    ),
+
+  unblockIp: (ip: string) =>
+    api.post<{ ip: string }>(`/admin/blocked-ips/${encodeURIComponent(ip)}/unblock`, {}),
 
   /** Fila de jogos enviados pela comunidade (moderador ou admin). */
   games: (limit = 30) => api.get<GameReviewView[]>(`/moderation/games?limit=${limit}`),

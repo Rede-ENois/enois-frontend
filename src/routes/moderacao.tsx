@@ -4,9 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { ArrowLeft, Gamepad2, Gavel, ShieldAlert } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { Ban, Gamepad2, Gavel, ShieldAlert, ShieldOff, Trash2 } from "lucide-react";
 
-import { gamesApi, sanctionsApi, walletApi } from "@/lib/api";
+import { gamesApi, moderationApi, sanctionsApi, walletApi } from "@/lib/api";
 import { formatFaisca } from "@/lib/faisca";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -80,6 +81,7 @@ function Moderacao() {
 
         <DisputasSection />
         <JogosSection />
+        <AdminSection />
 
         {isLoading ? (
           <LoadingState />
@@ -235,6 +237,246 @@ const ASPECT: Record<string, string> = {
   SQUARE: "1 / 1",
   PORTRAIT: "9 / 16",
 };
+
+/**
+ * Ações de administrador contra spam: sanitizar o usuário (apaga do banco todos os posts e
+ * comentários dele), banir permanentemente (PERMABAN) e bloquear IPs — o painel lista de onde a
+ * conta entrou (registrado no login) para escolher o que bloquear. Somente administradores:
+ * para os demais a API devolve 403 e a seção nem aparece.
+ */
+function AdminSection() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [motivo, setMotivo] = useState("");
+
+  const { data: bloqueados, error: bloqueadosError } = useQuery({
+    queryKey: ["blocked-ips"],
+    queryFn: () => moderationApi.blockedIps(100),
+    retry: false,
+  });
+
+  const {
+    data: ips,
+    refetch: buscarIps,
+    isFetching: buscandoIps,
+  } = useQuery({
+    queryKey: ["user-ips", username.trim()],
+    queryFn: () => moderationApi.userIps(username.trim()),
+    enabled: false,
+    retry: false,
+  });
+
+  const sanitizar = useMutation({
+    mutationFn: () =>
+      moderationApi.sanitizeUser(
+        username.trim(),
+        motivo.trim() || "Limpeza por spam decidida no painel.",
+      ),
+    onSuccess: (resposta) => {
+      toast(
+        `Conteúdo de @${resposta.username} apagado do banco: ${resposta.posts} posts e ${resposta.comments} comentários.`,
+        "success",
+      );
+    },
+    onError: () =>
+      toast("Não foi possível sanitizar (mínimo de 10 caracteres no motivo).", "error"),
+  });
+
+  const banir = useMutation({
+    mutationFn: ({ tipo }: { tipo: "BAN" | "PERMABAN" }) =>
+      moderationApi.sanctionUser(
+        username.trim(),
+        tipo,
+        motivo.trim() || "Banimento por spam decidido no painel.",
+      ),
+    onSuccess: (_resposta, vars) => {
+      toast(
+        vars.tipo === "PERMABAN" ? "Banimento permanente aplicado." : "Banimento aplicado.",
+        "success",
+      );
+    },
+    onError: () =>
+      toast("Não foi possível banir o usuário (mínimo de 10 caracteres no motivo).", "error"),
+  });
+
+  const bloquear = useMutation({
+    mutationFn: ({ ip, reason }: { ip: string; reason: string }) =>
+      moderationApi.blockIp(ip, reason),
+    onSuccess: (_resposta, vars) => {
+      toast(`IP ${vars.ip} bloqueado: não cria conta nem entra.`, "success");
+      void queryClient.invalidateQueries({ queryKey: ["blocked-ips"] });
+    },
+    onError: () => toast("Não foi possível bloquear o IP.", "error"),
+  });
+
+  const desbloquear = useMutation({
+    mutationFn: (ip: string) => moderationApi.unblockIp(ip),
+    onSuccess: (_resposta, ip) => {
+      toast(`IP ${ip} liberado.`, "success");
+      void queryClient.invalidateQueries({ queryKey: ["blocked-ips"] });
+    },
+    onError: () => toast("Não foi possível liberar o IP.", "error"),
+  });
+
+  const semUsuario = username.trim().length === 0;
+
+  // 403 = não é admin: a seção não existe para quem não decide.
+  if (bloqueadosError) return null;
+
+  return (
+    <section className="space-y-3" aria-label="Ações de administrador">
+      <div className="flex items-center gap-2">
+        <Ban className="h-4 w-4 text-primary" />
+
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-text-subtle">
+          Ações de administrador
+        </h2>
+      </div>
+
+      <div className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="@usuário"
+            autoComplete="off"
+          />
+          <Input
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            placeholder="Motivo (mínimo 10 caracteres)"
+            maxLength={500}
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="destructive"
+            className="rounded-full gap-1.5"
+            disabled={semUsuario || sanitizar.isPending}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  `Apagar do banco TODOS os posts e comentários de @${username.trim()}? Sem volta.`,
+                )
+              ) {
+                return;
+              }
+              sanitizar.mutate();
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Sanitizar
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            disabled={semUsuario || banir.isPending}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  `Banir PERMANENTEMENTE @${username.trim()}? Sem caminho de recurso.`,
+                )
+              )
+                return;
+              banir.mutate({ tipo: "PERMABAN" });
+            }}
+          >
+            Banir permanente
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            disabled={semUsuario || banir.isPending}
+            onClick={() => banir.mutate({ tipo: "BAN" })}
+          >
+            Banir (com recurso)
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            disabled={semUsuario || buscandoIps}
+            onClick={() => void buscarIps()}
+          >
+            Ver IPs
+          </Button>
+        </div>
+
+        {ips && ips.length > 0 && (
+          <ul className="space-y-1.5 pt-1">
+            {ips.map((i) => (
+              <li key={i.ip} className="flex items-center justify-between gap-2 text-sm">
+                <span className="break-all font-mono text-xs">{i.ip}</span>
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="rounded-full"
+                  disabled={bloquear.isPending}
+                  onClick={() =>
+                    bloquear.mutate({ ip: i.ip, reason: `IP de @${username.trim()} (spam)` })
+                  }
+                >
+                  Bloquear IP
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {ips && ips.length === 0 && (
+          <p className="text-xs text-text-subtle">
+            Nenhum IP registrado para este usuário (aparece depois que ele logar de novo).
+          </p>
+        )}
+      </div>
+
+      {(bloqueados?.length ?? 0) > 0 && (
+        <div className="rounded-2xl border border-border-soft bg-surface-card p-4">
+          <div className="flex items-center gap-2 pb-2">
+            <ShieldOff className="h-4 w-4 text-text-subtle" />
+
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-subtle">
+              IPs bloqueados ({bloqueados!.length})
+            </h3>
+          </div>
+
+          <ul className="space-y-1.5">
+            {bloqueados!.map((b) => (
+              <li key={b.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="min-w-0">
+                  <span className="break-all font-mono text-xs">{b.ip}</span>
+
+                  {b.reason && (
+                    <span className="ml-2 truncate text-xs text-text-subtle">{b.reason}</span>
+                  )}
+                </span>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-full"
+                  disabled={desbloquear.isPending}
+                  onClick={() => desbloquear.mutate(b.ip)}
+                >
+                  Liberar
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
 
 /**
  * A fila de jogos submetidos (E3 do plano): o revisor testa o jogo NO MESMO quadro isolado em

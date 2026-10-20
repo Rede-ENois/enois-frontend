@@ -2,7 +2,12 @@ import type { ColecaoView } from "@/types/application/games/colecao-view";
 import type { DeveloperPage } from "@/types/application/games/developer-page";
 import type { GameAnalytics } from "@/types/application/games/game-analytics";
 import type { GameCatalogQuery } from "@/types/application/games/game-catalog-query";
+import type { GameComment } from "@/types/application/games/game-comment";
+import type { GameComments } from "@/types/application/games/game-comments";
 import type { GamePage } from "@/types/application/games/game-page";
+import type { GameRatingSummary } from "@/types/application/games/game-rating-summary";
+import type { GameReview } from "@/types/application/games/game-review";
+import type { GameReviews } from "@/types/application/games/game-reviews";
 import type { GameStats } from "@/types/application/games/game-stats";
 import type { GameUpdateView } from "@/types/application/games/game-update-view";
 import type { GameView } from "@/types/application/games/game-view";
@@ -58,6 +63,31 @@ export const gamesApi = {
   /** Um jogo específico (o dono vê o dele em qualquer estado). */
   bySlug: (username: string, gameSlug: string) =>
     api.get<GameView>(`/games/${encodeURIComponent(username)}/${encodeURIComponent(gameSlug)}`),
+
+  /** Avaliações do jogo (nota 1-5 + texto) e o resumo da nota. */
+  reviews: (gameId: string, limit = 30) =>
+    api.get<GameReviews>(`/games/${gameId}/reviews?limit=${limit}`),
+
+  submitReview: (gameId: string, rating: number, body?: string) =>
+    api.post<GameReview>(`/games/${gameId}/reviews`, { rating, body }),
+
+  deleteReview: (gameId: string) => api.delete<void>(`/games/${gameId}/reviews/mine`),
+
+  /** Nota/comentários em lote para os cards do catálogo. */
+  ratings: (ids: string[]) =>
+    api.get<Record<string, GameRatingSummary>>(
+      `/games/ratings?ids=${encodeURIComponent(ids.join(","))}`,
+    ),
+
+  /** Comentários da página do jogo. */
+  comments: (gameId: string, limit = 50) =>
+    api.get<GameComments>(`/games/${gameId}/comments?limit=${limit}`),
+
+  addComment: (gameId: string, body: string) =>
+    api.post<GameComment>(`/games/${gameId}/comments`, { body }),
+
+  deleteComment: (gameId: string, commentId: string) =>
+    api.delete<void>(`/games/${gameId}/comments/${commentId}`),
 
   /** Jogos de quem está logado (todos os status, para acompanhar a moderação). */
   mine: () => api.get<GameView[]>("/me/games"),

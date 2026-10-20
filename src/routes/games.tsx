@@ -6,7 +6,7 @@ import { Link, Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-ro
 import { GAME_GENRES, GAME_STAGES } from "@/constants/game-options";
 import { texts } from "@/texts";
 import type { GameView } from "@/types/application/games/game-view";
-import { ExternalLink, Gamepad2, Pencil, Rocket, Send } from "lucide-react";
+import { ExternalLink, Gamepad2, Pencil, Rocket, Send, Star } from "lucide-react";
 
 import { gamesApi } from "@/lib/api";
 import { formatFaisca } from "@/lib/faisca";
@@ -81,6 +81,14 @@ function GamesHub() {
       cursor === null ? catalog.data.items : [...current, ...catalog.data.items],
     );
   }, [catalog.data, cursor]);
+
+  const ratingIds = pages.map((game) => game.id);
+  const ratings = useQuery({
+    queryKey: ["games", "ratings", ratingIds.join(",")],
+    queryFn: () => gamesApi.ratings(ratingIds),
+    enabled: ratingIds.length > 0,
+    staleTime: 60_000,
+  });
 
   const mine = useQuery({
     queryKey: ["games", "mine"],
@@ -237,6 +245,16 @@ function GamesHub() {
                     <span className="block truncate text-sm text-text-subtle">
                       {g.description || " "}
                     </span>
+
+                    {ratings.data?.[g.id] && ratings.data[g.id].reviews > 0 && (
+                      <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-text-subtle">
+                        <Star className="h-3 w-3 fill-opportunity text-opportunity" />
+
+                        <>{ratings.data[g.id].average.toFixed(1)}</>
+
+                        <span>({ratings.data[g.id].reviews})</span>
+                      </span>
+                    )}
                   </span>
 
                   <ExternalLink className="h-4 w-4 shrink-0 text-text-subtle" />

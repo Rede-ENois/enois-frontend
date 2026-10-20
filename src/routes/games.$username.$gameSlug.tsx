@@ -27,7 +27,9 @@ import { useToast } from "@/components/ui/toast";
 import { AppContainer } from "@/components/app-container";
 import { GameIcon } from "@/components/game-icon";
 import { GameBanner } from "@/components/games/game-banner";
+import { GameCommentsSection } from "@/components/games/game-comments-section";
 import { GameEditorDialog } from "@/components/games/game-editor-dialog";
+import { GameReviewsSection } from "@/components/games/game-reviews-section";
 import { GameUpdateDialog } from "@/components/games/game-update-dialog";
 
 /** A proporção do quadro, escolhida pelo criador (o jogo decide como quer aparecer). */
@@ -667,6 +669,9 @@ function GamePage() {
             )}
           </dl>
         </section>
+
+        <GameReviewsSection gameId={g.id} ownerId={g.userId} />
+        <GameCommentsSection gameId={g.id} ownerId={g.userId} />
 
         <section className="surface-card space-y-3 p-4 sm:p-5">
           <h2 className="text-base font-medium">{texts.games.game.updates}</h2>
