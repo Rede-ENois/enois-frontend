@@ -1,64 +1,57 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { BlogPost } from "@/types/application/blog/blog-post";
 import type { BlogPostFormat } from "@/types/application/blog/blog-post-format";
-import type { BlogPostDialogProps } from "@/types/components/blog/blog-post-dialog-props";
-import { Eye, PenLine } from "lucide-react";
+import { ArrowLeft, Eye, PenLine } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import { useToast } from "@/components/ui/toast";
 
+import { AppContainer } from "@/components/app-container";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { RichText } from "@/components/post/rich-text";
 
 /**
- * Escrever um post do blog.
- *
- * Dois caminhos, porque o público é misto: "Texto" é o modo de quem sabe usar o Word ou o Obsidian —
- * a barra de formatação escreve markdown simples (# título, **negrito**, - lista) e a prévia mostra
- * como fica; "HTML/CSS" é o editor livre, o mesmo das páginas do perfil. Nos dois casos o backend
- * guarda o que a pessoa escreveu (markdown como markdown, HTML sanitizado).
+ * Escrever ou editar um post do blog, em tela cheia (`/blog/post/new` e `/blog/post/{id}`).
+ * Com `post` é edição (preenche e salva por cima); sem ele publica um post novo. Dois formatos: "Texto" (markdown simples, com barra e prévia) e "HTML/CSS" (editor
+ * livre). O backend guarda o que a pessoa escreveu (markdown como markdown, HTML sanitizado).
  */
-export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps) {
+export function BlogPostEditor({ post }: { post?: BlogPost | null }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [format, setFormat] = useState<BlogPostFormat>("MARKDOWN");
+  const [title, setTitle] = useState(post?.title ?? "");
+  const [body, setBody] = useState(post?.body ?? "");
+  const [format, setFormat] = useState<BlogPostFormat>(post?.bodyFormat ?? "MARKDOWN");
   const [preview, setPreview] = useState(false);
-  // Só no post NOVO faz sentido perguntar: editar nunca reenvia e-mail.
   const [avisar, setAvisar] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    setTitle(post?.title ?? "");
-    setBody(post?.body ?? "");
-    setFormat(post?.bodyFormat ?? "MARKDOWN");
-    setPreview(false);
-    setAvisar(true);
-    setError(null);
-  }, [open, post]);
 
   const publish = useMutation({
     mutationFn: () =>
       post
         ? blogsApi.editPost(post.id, { title, body, format })
         : blogsApi.publish({ title, body, format, notifySubscribers: avisar }),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["blog"] });
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       toast(post ? texts.blog.editor.updated : texts.blog.editor.published);
-      onOpenChange(false);
+      const mine = await blogsApi.mine().catch(() => null);
+      if (mine) {
+        navigate({ to: "/blog/$username", params: { username: mine.slug } });
+      } else {
+        navigate({ to: "/blogs" });
+      }
     },
     onError: (err) => setError(err instanceof Error ? err.message : texts.blog.editor.error),
   });
@@ -66,15 +59,22 @@ export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps
   const canPublish = title.trim().length > 0 && body.trim().length > 0 && !publish.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-normal">
-            {post ? texts.blog.editor.editPost : texts.blog.newPost}
-          </DialogTitle>
-        </DialogHeader>
+    <AppContainer>
+      <div className="space-y-4">
+        <Link
+          to="/blogs"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-text-strong"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
 
-        <div className="space-y-3 pt-1">
+          <>{texts.blog.title}</>
+        </Link>
+
+        <h1 className="text-xl font-semibold tracking-tight text-text-strong">
+          {post ? texts.blog.editor.editPost : texts.blog.newPost}
+        </h1>
+
+        <div className="space-y-3">
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -113,7 +113,7 @@ export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps
           {format === "MARKDOWN" ? (
             <div className="space-y-2">
               {preview ? (
-                <div className="min-h-40 rounded-2xl border border-border bg-muted/40 px-3 py-2">
+                <div className="min-h-[60vh] rounded-2xl border border-border bg-muted/40 px-3 py-2">
                   <RichText
                     content={body}
                     className="whitespace-pre-line break-words text-sm font-normal leading-relaxed text-text-strong"
@@ -124,7 +124,7 @@ export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps
                   value={body}
                   onChange={(value) => setBody(value)}
                   placeholder={texts.blog.editor.textHint}
-                  className="min-h-40 rounded-2xl border border-border bg-muted/40 px-3 py-2 text-sm font-normal"
+                  className="min-h-[60vh] rounded-2xl border border-border bg-muted/40 px-3 py-2 text-sm font-normal"
                   maxLength={20_000}
                   toolbar
                 />
@@ -145,7 +145,7 @@ export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps
               emptyPreview="Cole um HTML para ver a pré-visualização."
               frameTitle={texts.blog.newPost}
               maxLength={20_000}
-              previewClassName="-mx-3 -mb-3 mt-3 h-[320px] w-full"
+              previewClassName="-mx-3 -mb-3 mt-3 h-[60vh] w-full"
             />
           )}
 
@@ -171,9 +171,11 @@ export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps
           {error && <p className="text-xs text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-2">
-            <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>
-              {texts.common.cancel}
-            </Button>
+            <Link to="/blogs">
+              <Button size="sm" variant="outline">
+                {texts.common.cancel}
+              </Button>
+            </Link>
 
             <Button size="sm" onClick={() => publish.mutate()} disabled={!canPublish}>
               {publish.isPending
@@ -184,7 +186,7 @@ export function BlogPostDialog({ open, onOpenChange, post }: BlogPostDialogProps
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </AppContainer>
   );
 }

@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
@@ -16,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
-import { BlogPostDialog } from "@/components/blog/blog-post-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { UserAvatar } from "@/components/user-avatar";
@@ -69,7 +66,6 @@ function BlogPage() {
   const { user: me, requireAuth } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [postOpen, setPostOpen] = useState(false);
 
   const { data: live } = useQuery({
     queryKey: ["blog", username],
@@ -149,15 +145,13 @@ function BlogPage() {
             <div className="flex flex-wrap gap-2">
               {blog.owner ? (
                 <>
-                  <Button
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setPostOpen(true)}
-                  >
-                    <Plus className="h-4 w-4" aria-hidden />
+                  <Link to="/blog/post/new">
+                    <Button size="sm" className="rounded-full gap-1.5">
+                      <Plus className="h-4 w-4" aria-hidden />
 
-                    <>{texts.blog.newPost}</>
-                  </Button>
+                      <>{texts.blog.newPost}</>
+                    </Button>
+                  </Link>
 
                   <Link to="/blogs">
                     <Button size="sm" variant="outline" className="rounded-full gap-1.5">
@@ -244,8 +238,6 @@ function BlogPage() {
           </div>
         )}
       </div>
-
-      <BlogPostDialog open={postOpen} onOpenChange={setPostOpen} />
     </AppContainer>
   );
 }

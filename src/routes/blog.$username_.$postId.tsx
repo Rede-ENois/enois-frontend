@@ -16,7 +16,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
-import { BlogPostDialog } from "@/components/blog/blog-post-dialog";
 import { PostActions } from "@/components/post/post-actions";
 import { PostComments } from "@/components/post/post-comments";
 import { ReactionsSummary } from "@/components/post/reactions-summary";
@@ -93,7 +92,6 @@ function BlogPostPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data } = useQuery({
@@ -156,16 +154,13 @@ function BlogPostPage() {
               {/* Ações do dono: o post é dele, e a página do post é onde ele está lendo. */}
               {blog.owner && (
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setEditOpen(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
+                  <Link to="/blog/post/$postId" params={{ postId: post.id }}>
+                    <Button size="sm" variant="outline" className="rounded-full gap-1.5">
+                      <Pencil className="h-4 w-4" />
 
-                    <>{texts.common.edit}</>
-                  </Button>
+                      <>{texts.common.edit}</>
+                    </Button>
+                  </Link>
 
                   <Button
                     size="sm"
@@ -245,7 +240,6 @@ function BlogPostPage() {
         </section>
       </div>
 
-      <BlogPostDialog open={editOpen} onOpenChange={setEditOpen} post={post} />
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

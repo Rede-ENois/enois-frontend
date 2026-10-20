@@ -15,7 +15,6 @@ import { LoadingState } from "@/components/ui/loading-state";
 
 import { AppContainer } from "@/components/app-container";
 import { BlogEditorDialog } from "@/components/blog/blog-editor-dialog";
-import { BlogPostDialog } from "@/components/blog/blog-post-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -35,7 +34,6 @@ export const Route = createFileRoute("/blogs")({
  */
 function Blogs() {
   const [editorOpen, setEditorOpen] = useState(false);
-  const [postOpen, setPostOpen] = useState(false);
 
   const { data: mine } = useQuery({ queryKey: ["blog", "me"], queryFn: () => blogsApi.mine() });
 
@@ -73,11 +71,13 @@ function Blogs() {
             {/* Post mora DENTRO de um blog: sem blog, o caminho é criar o blog primeiro (o botão
                 ao lado) — não publicar num cantinho que ainda não existe. */}
             {mine && (
-              <Button size="sm" className="rounded-full gap-1.5" onClick={() => setPostOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden />
+              <Link to="/blog/post/new">
+                <Button size="sm" className="rounded-full gap-1.5">
+                  <Plus className="h-4 w-4" aria-hidden />
 
-                <>{texts.blog.newPost}</>
-              </Button>
+                  <>{texts.blog.newPost}</>
+                </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -150,7 +150,6 @@ function Blogs() {
       </div>
 
       <BlogEditorDialog open={editorOpen} onOpenChange={setEditorOpen} blog={mine ?? null} />
-      <BlogPostDialog open={postOpen} onOpenChange={setPostOpen} />
     </AppContainer>
   );
 }
