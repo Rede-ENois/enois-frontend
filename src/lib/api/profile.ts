@@ -11,8 +11,7 @@ import { api } from "../api-client";
 
 export const profileApi = {
   /** Liga/desliga a secao de ranking no perfil (preferencia da conta; padrao: mostrar). */
-  setRanking: (show: boolean) =>
-    api.put<{ id: string; status: string }>("/me/ranking", { show }),
+  setRanking: (show: boolean) => api.put<{ id: string; status: string }>("/me/ranking", { show }),
 
   me: () => api.get<Profile>("/me"),
 

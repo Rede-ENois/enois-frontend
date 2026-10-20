@@ -10,12 +10,10 @@ import type { OAuthMode } from "@/types/application/auth/oauth-mode";
 import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
 import type { SignupInput } from "@/types/application/auth/signup-input";
 import type { SignupResult } from "@/types/application/auth/signup-result";
-import type {
-  TotpSetup,
-  TwoFactorChallenge,
-  TwoFactorEnableResult,
-  TwoFactorStatus,
-} from "@/types/application/auth/two-factor";
+import type { TotpSetup } from "@/types/application/auth/totp-setup";
+import type { TwoFactorChallenge } from "@/types/application/auth/two-factor-challenge";
+import type { TwoFactorEnableResult } from "@/types/application/auth/two-factor-enable-result";
+import type { TwoFactorStatus } from "@/types/application/auth/two-factor-status";
 
 import { api } from "../api-client";
 
@@ -58,8 +56,7 @@ export const authApi = {
   /** Envia o código que confirma a ativação do segundo fator por e-mail. */
   requestEmailOtp: () => api.post<StatusResponse>("/auth/2fa/email/request"),
 
-  confirmEmailOtp: (code: string) =>
-    api.post<StatusResponse>("/auth/2fa/email/confirm", { code }),
+  confirmEmailOtp: (code: string) => api.post<StatusResponse>("/auth/2fa/email/confirm", { code }),
 
   disableEmailOtp: (password: string) =>
     api.post<StatusResponse>("/auth/2fa/email/disable", { password }),

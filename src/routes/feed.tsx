@@ -65,12 +65,12 @@ export const Route = createFileRoute("/feed")({
    * A aba vive na URL (`/feed?aba=ALL`): abrir uma publicação e voltar restaura a MESMA aba em que
    * a pessoa estava — antes o retorno caía sempre em "Para você".
    */
-  validateSearch: (search: Record<string, unknown>) => {
-    const aba =
+  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab } => {
+    const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
-        : "FOR_YOU";
-    return { aba };
+        : undefined;
+    return aba ? { aba } : {};
   },
   head: () => ({
     meta: [
@@ -127,7 +127,7 @@ function Home() {
   // página anterior, e não passeando pelas abas).
   const { aba } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const tab: HomeTab = aba;
+  const tab: HomeTab = aba ?? "FOR_YOU";
   const setTab = (next: HomeTab) => {
     if (next === tab) return;
     void navigate({ search: { aba: next }, replace: true });

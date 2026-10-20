@@ -1,9 +1,10 @@
+import { useState } from "react";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { ArrowLeft, Send, ShieldAlert, ShoppingBag, Sparkles, TrendingUp, Zap } from "lucide-react";
-import { useState } from "react";
 
 import { lojaApi, walletApi } from "@/lib/api";
 import { faiscaToBrlCents, formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
@@ -16,8 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
-import { UserPicker } from "@/components/user-picker";
 import { UserAvatar } from "@/components/user-avatar";
+import { UserPicker } from "@/components/user-picker";
 
 export const Route = createFileRoute("/carteira")({
   beforeLoad: requireAuth,
@@ -31,14 +32,27 @@ function Carteira() {
   const [payOpen, setPayOpen] = useState(false);
   const [form, setForm] = useState({ toUsername: "", amount: "", message: "" });
 
-  const { data: wallet, isLoading, isError, refetch } = useQuery({
+  const {
+    data: wallet,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["carteira"],
     queryFn: () => walletApi.wallet(),
   });
-  const { data: cotacao } = useQuery({ queryKey: ["cotacao"], queryFn: () => walletApi.cotacao(90) });
+  const { data: cotacao } = useQuery({
+    queryKey: ["cotacao"],
+    queryFn: () => walletApi.cotacao(90),
+  });
 
   const transfer = useMutation({
-    mutationFn: () => walletApi.transfer(form.toUsername.trim(), parseFaiscaInput(form.amount) ?? 0, form.message.trim() || undefined),
+    mutationFn: () =>
+      walletApi.transfer(
+        form.toUsername.trim(),
+        parseFaiscaInput(form.amount) ?? 0,
+        form.message.trim() || undefined,
+      ),
     onSuccess: () => {
       setPayOpen(false);
       setForm({ toUsername: "", amount: "", message: "" });
@@ -63,9 +77,14 @@ function Carteira() {
     },
   });
 
-  const [contestar, setContestar] = useState<{ refId: string; motivo: string; descricao: string } | null>(null);
+  const [contestar, setContestar] = useState<{
+    refId: string;
+    motivo: string;
+    descricao: string;
+  } | null>(null);
   const contestarMutation = useMutation({
-    mutationFn: () => walletApi.contestar(contestar!.refId, contestar!.motivo, contestar!.descricao.trim()),
+    mutationFn: () =>
+      walletApi.contestar(contestar!.refId, contestar!.motivo, contestar!.descricao.trim()),
     onSuccess: () => {
       setContestar(null);
       toast("Contestação enviada: a moderação vai analisar os dois lados.", "success");
@@ -73,9 +92,14 @@ function Carteira() {
     },
     onError: (error: unknown) => {
       const code = (error as { code?: string }).code;
-      toast(code === "CONTEST_WINDOW_CLOSED" ? "O prazo de contestação (7 dias) já fechou."
-        : code === "ALREADY_CONTESTED" ? "Esta transferência já foi contestada."
-        : "Não foi possível contestar agora.", "error");
+      toast(
+        code === "CONTEST_WINDOW_CLOSED"
+          ? "O prazo de contestação (7 dias) já fechou."
+          : code === "ALREADY_CONTESTED"
+            ? "Esta transferência já foi contestada."
+            : "Não foi possível contestar agora.",
+        "error",
+      );
     },
   });
 
@@ -96,7 +120,10 @@ function Carteira() {
         <div className="surface-card space-y-4 p-6">
           <div className="flex items-center gap-2 text-text-subtle">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-xs font-medium uppercase tracking-widest">{texts.wallet.title}</span>
+
+            <span className="text-xs font-medium uppercase tracking-widest">
+              {texts.wallet.title}
+            </span>
           </div>
 
           {isLoading ? (
@@ -104,7 +131,12 @@ function Carteira() {
           ) : isError ? (
             <div className="rounded-xl border border-border-soft p-4 text-sm text-text-subtle">
               Não foi possível carregar a carteira agora.
-              <Button size="sm" variant="outline" className="ml-2 rounded-full" onClick={() => refetch()}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="ml-2 rounded-full"
+                onClick={() => refetch()}
+              >
                 Tentar de novo
               </Button>
             </div>
@@ -117,7 +149,8 @@ function Carteira() {
 
           {wallet && (
             <p className="text-xs text-text-subtle">
-              {texts.wallet.chaveLabel}: <span className="font-mono text-text-strong">{wallet.chave}</span>
+              {texts.wallet.chaveLabel}:{" "}
+              <span className="font-mono text-text-strong">{wallet.chave}</span>
             </p>
           )}
 
@@ -130,7 +163,6 @@ function Carteira() {
         </div>
 
         <CotacaoCard mf={wallet?.balance ?? 0} />
-
         <LojaSection />
 
         {payOpen && (
@@ -160,7 +192,11 @@ function Carteira() {
                   />
                   {cotacao && parseFaiscaInput(form.amount) !== null && (
                     <span className="block text-xs text-text-subtle">
-                      ≈ {formatBrlCents(faiscaToBrlCents(parseFaiscaInput(form.amount)!, cotacao.brlCents))} na cotação de referência
+                      ≈{" "}
+                      {formatBrlCents(
+                        faiscaToBrlCents(parseFaiscaInput(form.amount)!, cotacao.brlCents),
+                      )}{" "}
+                      na cotação de referência
                     </span>
                   )}
                 </label>
@@ -176,7 +212,9 @@ function Carteira() {
                   />
                 </label>
 
-                <p className="text-xs leading-relaxed text-text-subtle">{texts.wallet.irreversible}</p>
+                <p className="text-xs leading-relaxed text-text-subtle">
+                  {texts.wallet.irreversible}
+                </p>
               </div>
 
               <div className="mt-4 flex justify-end gap-2">
@@ -209,27 +247,36 @@ function Carteira() {
               </h3>
 
               <p className="mt-2 text-xs leading-relaxed text-text-subtle">
-                Caiu num golpe? A contestação vai para a moderação, que analisa os dois lados:
-                se proceder, a transferência é <span className="font-semibold text-text-strong">revertida</span> e
-                o valor volta para você; se não proceder, quem contestou é penalizado.
+                Caiu num golpe? A contestação vai para a moderação, que analisa os dois lados: se
+                proceder, a transferência é{" "}
+                <span className="font-semibold text-text-strong">revertida</span> e o valor volta
+                para você; se não proceder, quem contestou é penalizado.
               </p>
 
               <div className="mt-3 space-y-3 text-sm">
                 <label className="block space-y-1">
                   <span className="text-xs text-text-subtle">Motivo</span>
+
                   <select
                     className="h-10 w-full rounded-lg border border-border-soft bg-transparent px-3 text-sm text-text-strong"
                     value={contestar.motivo}
                     onChange={(e) => setContestar({ ...contestar, motivo: e.target.value })}
                   >
                     <option value="golpe">Golpe / fraude</option>
+
                     <option value="nao-entregue">Não recebi o combinado</option>
+
                     <option value="conta-comprometida">Minha conta foi comprometida</option>
+
                     <option value="outro">Outro</option>
                   </select>
                 </label>
+
                 <label className="block space-y-1">
-                  <span className="text-xs text-text-subtle">O que aconteceu (mín. 20 caracteres)</span>
+                  <span className="text-xs text-text-subtle">
+                    O que aconteceu (mín. 20 caracteres)
+                  </span>
+
                   <Textarea
                     rows={4}
                     value={contestar.descricao}
@@ -242,6 +289,7 @@ function Carteira() {
                 <Button variant="ghost" className="rounded-full" onClick={() => setContestar(null)}>
                   {texts.common.cancel}
                 </Button>
+
                 <Button
                   className="rounded-full"
                   disabled={contestarMutation.isPending || contestar.descricao.trim().length < 20}
@@ -289,7 +337,9 @@ function Carteira() {
                     <button
                       type="button"
                       className="shrink-0 rounded-full border border-border-soft px-2 py-1 text-xs text-text-subtle transition hover:border-destructive hover:text-destructive"
-                      onClick={() => setContestar({ refId: entry.refId!, motivo: "golpe", descricao: "" })}
+                      onClick={() =>
+                        setContestar({ refId: entry.refId!, motivo: "golpe", descricao: "" })
+                      }
                     >
                       Contestar
                     </button>
@@ -326,26 +376,36 @@ function CotacaoCard({ mf }: { mf: number }) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-text-subtle">
           <TrendingUp className="h-4 w-4 text-primary" />
-          <span className="text-xs font-medium uppercase tracking-widest">Cotação de referência</span>
+
+          <span className="text-xs font-medium uppercase tracking-widest">
+            Cotação de referência
+          </span>
         </div>
-        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-text-subtle">não é câmbio</span>
+
+        <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-text-subtle">
+          não é câmbio
+        </span>
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <p className="text-2xl font-semibold tracking-tight text-text-strong">
           1 faísca = {formatBrlCents(atual)}
         </p>
+
         <p className="text-sm text-text-subtle">
-          Seu saldo ≈ <span className="font-semibold text-text-strong">{formatBrlCents(faiscaToBrlCents(mf, atual))}</span>
+          Seu saldo ≈{" "}
+          <span className="font-semibold text-text-strong">
+            {formatBrlCents(faiscaToBrlCents(mf, atual))}
+          </span>
         </p>
       </div>
 
       {pontos.length > 1 && <Sparkline valores={pontos.map((p) => p.brlCents)} subiu={subiu} />}
 
       <p className="text-xs leading-relaxed text-text-subtle">
-        Preço de referência publicado pela plataforma, usado para remunerar criadores e
-        atualizado quando necessário — o histórico fica aqui embaixo do gráfico.
-        Comprar faísca com dinheiro ainda não existe.
+        Preço de referência publicado pela plataforma, usado para remunerar criadores e atualizado
+        quando necessário — o histórico fica aqui embaixo do gráfico. Comprar faísca com dinheiro
+        ainda não existe.
       </p>
     </section>
   );
@@ -360,14 +420,29 @@ function Sparkline({ valores, subiu }: { valores: number[]; subiu: boolean }) {
   const span = max - min || 1;
   const step = valores.length > 1 ? width / (valores.length - 1) : width;
   const pontos = valores
-    .map((v, i) => `${(i * step).toFixed(1)},${(height - 6 - ((v - min) / span) * (height - 12)).toFixed(1)}`)
+    .map(
+      (v, i) =>
+        `${(i * step).toFixed(1)},${(height - 6 - ((v - min) / span) * (height - 12)).toFixed(1)}`,
+    )
     .join(" ");
   const cor = subiu ? "text-green-600 dark:text-green-400" : "text-destructive";
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-12 w-full" preserveAspectRatio="none" aria-hidden="true">
-      <polyline points={pontos} fill="none" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"
-        className={cor} stroke="currentColor" />
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-12 w-full"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <polyline
+        points={pontos}
+        fill="none"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        className={cor}
+        stroke="currentColor"
+      />
     </svg>
   );
 }
@@ -387,7 +462,8 @@ function LojaSection() {
       void queryClient.invalidateQueries({ queryKey: ["carteira"] });
       toast("Moldura comprada. Agora você pode equipá-la.", "success");
     },
-    onError: () => toast("Não foi possível comprar a moldura. Confira seu saldo e tente novamente.", "error"),
+    onError: () =>
+      toast("Não foi possível comprar a moldura. Confira seu saldo e tente novamente.", "error"),
   });
   const equip = useMutation({
     mutationFn: (id: string) => lojaApi.equip(id),
@@ -407,58 +483,85 @@ function LojaSection() {
     <section className="surface-card space-y-3 p-6" aria-label="Loja de molduras">
       <div className="flex items-center gap-2 text-text-subtle">
         <ShoppingBag className="h-4 w-4 text-primary" />
-        <span className="text-xs font-medium uppercase tracking-widest">Loja · molduras de avatar</span>
+
+        <span className="text-xs font-medium uppercase tracking-widest">
+          Loja · molduras de avatar
+        </span>
       </div>
 
       {[
         { label: "Simples", animated: false },
         { label: "Animadas", animated: true },
       ].map((category) => (
-      <div key={category.label} className="space-y-2">
-        <h3 className="text-sm font-semibold text-text-strong">{category.label}</h3>
-        <ul className="grid gap-2 sm:grid-cols-2">
-        {itens.filter((item) => ["moldura-aurora", "moldura-pulsar", "moldura-solar"].includes(item.id) === category.animated).map((item) => (
-          <li key={item.id} className="rounded-xl border border-border-soft p-3">
-            <div className="flex items-center gap-3">
-              <UserAvatar frame={item.id} alt={item.name} fallback="✦" className="h-10 w-10" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{item.name}</span>
-                <span className="block truncate text-xs text-text-subtle">{item.description}</span>
-              </span>
-              <span className="shrink-0 text-sm font-semibold text-primary-text">
-                {formatFaisca(item.priceMf)}
-              </span>
-            </div>
-            <div className="mt-2 flex justify-end gap-2">
-              {item.equipped ? (
-                <Button size="sm" variant="outline" className="rounded-full" disabled={equip.isPending} onClick={() => equip.mutate("none")}>
-                  Desequipar
-                </Button>
-              ) : item.owned ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  disabled={equip.isPending}
-                  onClick={() => equip.mutate(item.id)}
-                >
-                  Equipar
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  className="rounded-full"
-                  disabled={buy.isPending}
-                  onClick={() => buy.mutate(item.id)}
-                >
-                  Comprar
-                </Button>
-              )}
-            </div>
-          </li>
-        ))}
-        </ul>
-      </div>
+        <div key={category.label} className="space-y-2">
+          <h3 className="text-sm font-semibold text-text-strong">{category.label}</h3>
+
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {itens
+              .filter(
+                (item) =>
+                  ["moldura-aurora", "moldura-pulsar", "moldura-solar"].includes(item.id) ===
+                  category.animated,
+              )
+              .map((item) => (
+                <li key={item.id} className="rounded-xl border border-border-soft p-3">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      frame={item.id}
+                      alt={item.name}
+                      fallback="✦"
+                      className="h-10 w-10"
+                    />
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{item.name}</span>
+
+                      <span className="block truncate text-xs text-text-subtle">
+                        {item.description}
+                      </span>
+                    </span>
+
+                    <span className="shrink-0 text-sm font-semibold text-primary-text">
+                      {formatFaisca(item.priceMf)}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex justify-end gap-2">
+                    {item.equipped ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full"
+                        disabled={equip.isPending}
+                        onClick={() => equip.mutate("none")}
+                      >
+                        Desequipar
+                      </Button>
+                    ) : item.owned ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full"
+                        disabled={equip.isPending}
+                        onClick={() => equip.mutate(item.id)}
+                      >
+                        Equipar
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="rounded-full"
+                        disabled={buy.isPending}
+                        onClick={() => buy.mutate(item.id)}
+                      >
+                        Comprar
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
       ))}
 
       <p className="text-xs text-text-subtle">A moldura equipada acompanha seu avatar.</p>

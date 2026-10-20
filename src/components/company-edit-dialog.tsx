@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import type { CompanyDetail, CompanyMember } from "@/types/application/companies/company-detail";
+import type { CompanyDetail } from "@/types/application/companies/company-detail";
+import type { CompanyMember } from "@/types/application/companies/company-member";
 import { ImagePlus, Loader2, UserPlus } from "lucide-react";
 
 import { companiesApi, searchApi } from "@/lib/api";
@@ -71,7 +72,8 @@ export function CompanyEditDialog({
       toast(texts.empresa.editPanel.saved, "success");
       onOpenChange(false);
     },
-    onError: (error) => toast(error instanceof Error ? error.message : texts.empresa.editPanel.error, "error"),
+    onError: (error) =>
+      toast(error instanceof Error ? error.message : texts.empresa.editPanel.error, "error"),
   });
 
   const enviarImagem = async (file: File, campo: "logo" | "cover") => {
@@ -91,31 +93,40 @@ export function CompanyEditDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-normal">{texts.empresa.editPanel.title}</DialogTitle>
+
           <DialogDescription>{texts.empresa.editPanel.description}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <label className="block space-y-1 text-sm">
             <span className="text-xs text-text-subtle">{texts.empresa.editPanel.nameLabel}</span>
+
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </label>
 
           <div className="grid grid-cols-2 gap-2">
             {(["logo", "cover"] as const).map((campo) => (
               <div key={campo} className="flex flex-col items-center gap-1">
-                <label
-                  className="relative flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border-soft p-3 text-xs text-text-subtle transition hover:border-primary hover:text-primary"
-                >
+                <label className="relative flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border-soft p-3 text-xs text-text-subtle transition hover:border-primary hover:text-primary">
                   {form[campo] ? (
                     <img
                       src={form[campo]}
                       alt=""
-                      className={campo === "logo" ? "h-16 w-16 rounded-xl object-cover" : "h-16 w-full rounded-lg object-cover"}
+                      className={
+                        campo === "logo"
+                          ? "h-16 w-16 rounded-xl object-cover"
+                          : "h-16 w-full rounded-lg object-cover"
+                      }
                     />
                   ) : (
                     <ImagePlus className="h-5 w-5" />
                   )}
-                  <span>{campo === "logo" ? texts.empresa.editPanel.logo : texts.empresa.editPanel.cover}</span>
+                  <span>
+                    {campo === "logo"
+                      ? texts.empresa.editPanel.logo
+                      : texts.empresa.editPanel.cover}
+                  </span>
+
                   <input
                     type="file"
                     accept="image/*"
@@ -146,7 +157,10 @@ export function CompanyEditDialog({
           </div>
 
           <label className="block space-y-1 text-sm">
-            <span className="text-xs text-text-subtle">{texts.empresa.editPanel.descriptionLabel}</span>
+            <span className="text-xs text-text-subtle">
+              {texts.empresa.editPanel.descriptionLabel}
+            </span>
+
             <Textarea
               rows={3}
               value={form.description}
@@ -166,6 +180,7 @@ export function CompanyEditDialog({
             ).map(([campo, label]) => (
               <label key={campo} className="block space-y-1 text-sm">
                 <span className="text-xs text-text-subtle">{label}</span>
+
                 <Input
                   value={form[campo]}
                   onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
@@ -178,9 +193,14 @@ export function CompanyEditDialog({
             <Button variant="ghost" className="rounded-full" onClick={() => onOpenChange(false)}>
               {texts.common.cancel}
             </Button>
+
             <Button
               className="rounded-full"
-              disabled={salvar.isPending || logoUpload.status === "uploading" || coverUpload.status === "uploading"}
+              disabled={
+                salvar.isPending ||
+                logoUpload.status === "uploading" ||
+                coverUpload.status === "uploading"
+              }
               onClick={() => salvar.mutate()}
             >
               {salvar.isPending ? texts.common.saving : texts.common.save}
@@ -204,7 +224,9 @@ function TeamSection({ companyId }: { companyId: string }) {
   });
 
   const [busca, setBusca] = useState("");
-  const [escolhido, setEscolhido] = useState<{ id: string; nome: string; username: string } | null>(null);
+  const [escolhido, setEscolhido] = useState<{ id: string; nome: string; username: string } | null>(
+    null,
+  );
   const [papel, setPapel] = useState<CompanyMember["role"]>("EDITOR");
 
   const resultados = useQuery({
@@ -221,7 +243,8 @@ function TeamSection({ companyId }: { companyId: string }) {
       setEscolhido(null);
       setBusca("");
     },
-    onError: (error) => toast(error instanceof Error ? error.message : texts.empresa.editPanel.memberError, "error"),
+    onError: (error) =>
+      toast(error instanceof Error ? error.message : texts.empresa.editPanel.memberError, "error"),
   });
 
   return (
@@ -232,9 +255,15 @@ function TeamSection({ companyId }: { companyId: string }) {
 
       <ul className="space-y-1">
         {(members ?? []).map((member) => (
-          <li key={member.userId} className="flex items-center justify-between text-xs text-text-strong">
+          <li
+            key={member.userId}
+            className="flex items-center justify-between text-xs text-text-strong"
+          >
             <span className="truncate font-mono">{member.userId.slice(0, 18)}…</span>
-            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-text-subtle">{member.role}</span>
+
+            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-text-subtle">
+              {member.role}
+            </span>
           </li>
         ))}
         {(members?.length ?? 0) === 0 && (
@@ -261,6 +290,7 @@ function TeamSection({ companyId }: { companyId: string }) {
                       onClick={() => setEscolhido({ id: item.id, nome: item.title, username })}
                     >
                       <span className="truncate">{item.title}</span>
+
                       <span className="truncate text-xs text-text-subtle">@{username}</span>
                     </button>
                   </li>
@@ -274,20 +304,39 @@ function TeamSection({ companyId }: { companyId: string }) {
           <span className="min-w-0 flex-1 truncate text-sm">
             {escolhido.nome} <span className="text-xs text-text-subtle">@{escolhido.username}</span>
           </span>
+
           <select
             className="h-9 rounded-lg border border-border-soft bg-transparent px-2 text-sm"
             value={papel}
             onChange={(e) => setPapel(e.target.value as CompanyMember["role"])}
           >
             <option value="EDITOR">EDITOR</option>
+
             <option value="ADMIN">ADMIN</option>
+
             <option value="RECRUITER">RECRUITER</option>
           </select>
-          <Button size="sm" className="rounded-full gap-1" disabled={adicionar.isPending} onClick={() => adicionar.mutate()}>
-            {adicionar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+
+          <Button
+            size="sm"
+            className="rounded-full gap-1"
+            disabled={adicionar.isPending}
+            onClick={() => adicionar.mutate()}
+          >
+            {adicionar.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <UserPlus className="h-3.5 w-3.5" />
+            )}
             {texts.empresa.editPanel.memberAdd}
           </Button>
-          <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setEscolhido(null)}>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            className="rounded-full"
+            onClick={() => setEscolhido(null)}
+          >
             {texts.common.cancel}
           </Button>
         </div>

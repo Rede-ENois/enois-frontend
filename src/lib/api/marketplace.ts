@@ -1,4 +1,5 @@
-import type { MarketplaceListing, MarketplacePurchase } from "@/types/application/marketplace/marketplace-types";
+import type { MarketplaceListing } from "@/types/application/marketplace/marketplace-listing";
+import type { MarketplacePurchase } from "@/types/application/marketplace/marketplace-purchase";
 
 import { api } from "../api-client";
 
@@ -26,13 +27,22 @@ export const marketplaceApi = {
 
   /** Compra: as faíscas vão para o escrow. */
   buy: (listingId: string) =>
-    api.post<{ purchaseId: string; state: string; price: number }>(`/marketplace/${listingId}/buy`, {}),
+    api.post<{ purchaseId: string; state: string; price: number }>(
+      `/marketplace/${listingId}/buy`,
+      {},
+    ),
 
   /** Confirmou que está tudo certo: libera para o criador (−10% de taxa). */
   confirm: (purchaseId: string) =>
-    api.post<{ purchaseId: string; state: string }>(`/marketplace/purchases/${purchaseId}/confirm`, {}),
+    api.post<{ purchaseId: string; state: string }>(
+      `/marketplace/purchases/${purchaseId}/confirm`,
+      {},
+    ),
 
   /** Não serviu (dentro de 7 dias): devolve 100%. */
   refund: (purchaseId: string) =>
-    api.post<{ purchaseId: string; state: string }>(`/marketplace/purchases/${purchaseId}/refund`, {}),
+    api.post<{ purchaseId: string; state: string }>(
+      `/marketplace/purchases/${purchaseId}/refund`,
+      {},
+    ),
 };

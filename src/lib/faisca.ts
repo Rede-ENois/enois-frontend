@@ -23,9 +23,7 @@ export function formatFaisca(mf: number): string {
 export function parseFaiscaInput(text: string): number | null {
   const cleaned = text.trim().replace(/\s/g, "");
   if (!cleaned) return null;
-  const normalized = cleaned.includes(",")
-    ? cleaned.replace(/\./g, "").replace(",", ".")
-    : cleaned;
+  const normalized = cleaned.includes(",") ? cleaned.replace(/\./g, "").replace(",", ".") : cleaned;
   const value = Number(normalized);
   if (!Number.isFinite(value) || value <= 0) return null;
   return Math.round(value * FAIS_SCALE);

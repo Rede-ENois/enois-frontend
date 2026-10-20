@@ -1,23 +1,15 @@
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { StatusResponse } from "@/types/application/api/status-response";
+import type { CompanyDirectoryEntry } from "@/types/application/job/company-directory-entry";
 import type { CreateExternalJobInput } from "@/types/application/job/create-external-job-input";
 import type { CreateJobInput } from "@/types/application/job/create-job-input";
 import type { Job } from "@/types/application/job/job";
-import type { JobApplication, JobApplicationInput } from "@/types/application/job/job-application";
+import type { JobApplication } from "@/types/application/job/job-application";
+import type { JobApplicationInput } from "@/types/application/job/job-application-input";
 import type { ListJobsParams } from "@/types/application/job/list-jobs-params";
-
 import type { MyApplication } from "@/types/application/job/my-application";
 
 import { api, buildQuery } from "../api-client";
-
-/** Empresa no diretorio derivado das vagas (internas abertas + externas). */
-export type CompanyDirectoryEntry = {
-  name: string;
-  logo: string;
-  openJobs: number;
-  /** enois (página real) ou externa (agregador). */
-  origem?: "enois" | "externa" | null;
-};
 
 export const jobsApi = {
   companies: (query?: string, limit = 60) =>

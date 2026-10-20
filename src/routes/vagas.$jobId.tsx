@@ -190,7 +190,9 @@ function JobDetail() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">{job.title}</h1>
+                <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">
+                  {job.title}
+                </h1>
 
                 <p className="mt-0.5 text-sm text-text-subtle">
                   {job.company}

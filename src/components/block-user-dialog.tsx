@@ -88,7 +88,12 @@ export function BlockUserDialog({ userId, name, blocked, onDone }: BlockUserDial
         )}
 
         <DialogFooter className="gap-2">
-          <Button variant="ghost" className="rounded-full" onClick={() => setOpen(false)} disabled={pending}>
+          <Button
+            variant="ghost"
+            className="rounded-full"
+            onClick={() => setOpen(false)}
+            disabled={pending}
+          >
             {texts.common.cancel}
           </Button>
 

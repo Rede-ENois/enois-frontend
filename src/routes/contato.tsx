@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";

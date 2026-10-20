@@ -1,9 +1,10 @@
+import { useState } from "react";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { useState } from "react";
 
 import { sanctionsApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
@@ -119,6 +120,7 @@ function Penalidades() {
         ) : sanctions.length === 0 ? (
           <div className="rounded-2xl border border-border-soft bg-surface-card">
             <EmptyState icon={ShieldAlert} title={texts.sanctions.empty} />
+
             <p className="pb-6 text-center text-sm text-text-subtle">{texts.sanctions.emptyHint}</p>
           </div>
         ) : (
@@ -145,9 +147,7 @@ function Penalidades() {
                   </span>
                 </div>
 
-                {sanction.reason && (
-                  <p className="text-sm text-text-subtle">{sanction.reason}</p>
-                )}
+                {sanction.reason && <p className="text-sm text-text-subtle">{sanction.reason}</p>}
               </li>
             ))}
           </ul>

@@ -51,7 +51,9 @@ export function CommunityFavoriteButton({
         className,
       )}
     >
-      <Star className={cn("h-4 w-4", isFavorite ? "fill-primary text-primary" : "text-text-subtle")} />
+      <Star
+        className={cn("h-4 w-4", isFavorite ? "fill-primary text-primary" : "text-text-subtle")}
+      />
     </button>
   );
 }

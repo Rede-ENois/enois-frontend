@@ -13,7 +13,9 @@ import { api, buildQuery } from "../api-client";
 export const feedApi = {
   /** Feed corporativo: só o que as identidades profissionais assinam. */
   corporate: (cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<PostView>>(`/feed/corporate${buildQuery({ cursor: cursor ?? undefined, limit })}`),
+    api.get<PageResponse<PostView>>(
+      `/feed/corporate${buildQuery({ cursor: cursor ?? undefined, limit })}`,
+    ),
 
   /** Página pública de um perfil profissional: só as publicações BUSINESS daquele @. */
   corporateByUsername: (username: string, cursor?: string | null, limit = 20) =>
@@ -38,7 +40,13 @@ export const feedApi = {
   // demais tipos. Num artigo o corpo e obrigatorio tambem na edicao.
   update: (
     postId: string,
-    data: { content: string; tags?: string[]; pageHtml?: string; articleBody?: string; type?: string },
+    data: {
+      content: string;
+      tags?: string[];
+      pageHtml?: string;
+      articleBody?: string;
+      type?: string;
+    },
   ) => api.patch<PostView>(`/feed/posts/${postId}`, data),
 
   /** Desfaz a exclusão do próprio post (soft delete reversível). */

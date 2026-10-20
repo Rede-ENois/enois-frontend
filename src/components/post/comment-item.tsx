@@ -127,7 +127,12 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
   );
 
   const avatar = (
-    <UserAvatar frame={comment.authorAvatarFrame} src={comment.authorAvatar} alt={comment.authorName} className="h-8 w-8 shrink-0" />
+    <UserAvatar
+      frame={comment.authorAvatarFrame}
+      src={comment.authorAvatar}
+      alt={comment.authorName}
+      className="h-8 w-8 shrink-0"
+    />
   );
 
   return (

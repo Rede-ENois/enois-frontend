@@ -99,13 +99,13 @@ O backend e acessado pelo mesmo host: o front chama `https://enois.ia.br/api/...
 e deve chegar **em runtime** como variavel de ambiente do container (a server function `getImageKitAuth`
 le `process.env.IMAGEKIT_PRIVATE_KEY`).
 
-| Variavel | Quando | Onde |
-|---|---|---|
-| `VITE_API_BACKEND` | build | `.env` versionado (`https://enois.ia.br/api`) |
-| `VITE_IMAGEKIT_PUBLIC_KEY` | build | `.env` versionado (publica) |
-| `VITE_IMAGEKIT_UPLOAD_URL` | build | `.env` versionado |
-| `VITE_IMAGEKIT_URL_ENDPOINT` | build | `.env` versionado |
-| `IMAGEKIT_PRIVATE_KEY` | runtime | **Secret do container — nunca commitar** |
+| Variavel                     | Quando  | Onde                                          |
+| ---------------------------- | ------- | --------------------------------------------- |
+| `VITE_API_BACKEND`           | build   | `.env` versionado (`https://enois.ia.br/api`) |
+| `VITE_IMAGEKIT_PUBLIC_KEY`   | build   | `.env` versionado (publica)                   |
+| `VITE_IMAGEKIT_UPLOAD_URL`   | build   | `.env` versionado                             |
+| `VITE_IMAGEKIT_URL_ENDPOINT` | build   | `.env` versionado                             |
+| `IMAGEKIT_PRIVATE_KEY`       | runtime | **Secret do container — nunca commitar**      |
 
 ## Pendencias (o que falta)
 
@@ -159,7 +159,7 @@ sondas publicas: `GET /api/version` no backend e os chunks servidos no front.
 - `/post/:id` — página pública: é o destino do link compartilhado, então abre para quem recebe (antes
   exigia sessão e o destinatário caía no login). As ações do card (reagir, salvar, compartilhar, comentar)
   pedem login quando não há sessão, em vez de falhar em silêncio.
-- **Edição de foto e capa**: o botão de trocar aparece sempre no próprio perfil (antes só no *hover*, o que
+- **Edição de foto e capa**: o botão de trocar aparece sempre no próprio perfil (antes só no _hover_, o que
   deixava a edição impossível no toque); o input de arquivo é limpo depois da escolha, então escolher a
   **mesma** imagem duas vezes volta a abrir o recorte (o navegador não dispara `change` para o mesmo
   arquivo); e o recorte avisa quando o navegador não consegue abrir a imagem (HEIC do iPhone, arquivo
@@ -189,7 +189,7 @@ sondas publicas: `GET /api/version` no backend e os chunks servidos no front.
   reputação e selo de verificação) e quem publicou tem `/vagas/{id}/candidaturas` com o perfil congelado do
   candidato e as respostas.
 - `/mentoria` — agendamento real: o botao "Agendar" abre os horarios publicados (`GET
-  /mentors/{id}/slots`, que devolve `PageResponse`), envia a solicitacao e da retorno; quem e o
+/mentors/{id}/slots`, que devolve `PageResponse`), envia a solicitacao e da retorno; quem e o
   mentor ve "Minha agenda" para publicar horarios.
 
 3. **Login social**: as credenciais (Google/Apple) ficam no **backend**; aqui nao ha nada a configurar

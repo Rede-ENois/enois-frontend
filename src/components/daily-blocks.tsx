@@ -3,15 +3,12 @@ import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import type { BlocksAction } from "@/types/application/daily-games/blocks-action";
+import type { BlocksState } from "@/types/application/daily-games/blocks-state";
 import { Boxes } from "lucide-react";
 
 import { ApiError, randomUUID } from "@/lib/api-client";
-import {
-  type BlocksAction,
-  type BlocksState,
-  dailyBlocksApi,
-  previousChallengeDate,
-} from "@/lib/api/daily-games";
+import { dailyBlocksApi, previousChallengeDate } from "@/lib/api/daily-games";
 
 import { Button } from "@/components/ui/button";
 
@@ -75,12 +72,12 @@ const SHAPE_NAMES = ["I", "O", "T", "S", "Z", "J", "L"];
 
 // Cores temáticas para cada tipo de peça
 const PIECE_COLORS: Record<number, { bg: string; text: string; ghost: string }> = {
-  0: { bg: "bg-cyan-500", text: "text-white", ghost: "border-cyan-500/60 bg-cyan-500/20" },       // I
-  1: { bg: "bg-amber-400", text: "text-amber-950", ghost: "border-amber-400/60 bg-amber-400/20" },// O
+  0: { bg: "bg-cyan-500", text: "text-white", ghost: "border-cyan-500/60 bg-cyan-500/20" }, // I
+  1: { bg: "bg-amber-400", text: "text-amber-950", ghost: "border-amber-400/60 bg-amber-400/20" }, // O
   2: { bg: "bg-purple-500", text: "text-white", ghost: "border-purple-500/60 bg-purple-500/20" }, // T
-  3: { bg: "bg-emerald-500", text: "text-white", ghost: "border-emerald-500/60 bg-emerald-500/20" },// S
-  4: { bg: "bg-rose-500", text: "text-white", ghost: "border-rose-500/60 bg-rose-500/20" },       // Z
-  5: { bg: "bg-blue-500", text: "text-white", ghost: "border-blue-500/60 bg-blue-500/20" },       // J
+  3: { bg: "bg-emerald-500", text: "text-white", ghost: "border-emerald-500/60 bg-emerald-500/20" }, // S
+  4: { bg: "bg-rose-500", text: "text-white", ghost: "border-rose-500/60 bg-rose-500/20" }, // Z
+  5: { bg: "bg-blue-500", text: "text-white", ghost: "border-blue-500/60 bg-blue-500/20" }, // J
   6: { bg: "bg-orange-500", text: "text-white", ghost: "border-orange-500/60 bg-orange-500/20" }, // L
 };
 const keys: Record<string, BlocksAction> = {
@@ -678,7 +675,9 @@ export function DailyBlocks() {
 
             {playing && (
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Próxima</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Próxima
+                </p>
 
                 <div
                   className="grid grid-cols-4 gap-1 p-2.5 rounded-lg border border-border/50 bg-muted/20"
@@ -711,7 +710,10 @@ export function DailyBlocks() {
           </div>
 
           {playing && (
-            <div className="flex flex-wrap gap-2 sm:gap-2.5 touch-manipulation select-none" aria-label="Controles do jogo">
+            <div
+              className="flex flex-wrap gap-2 sm:gap-2.5 touch-manipulation select-none"
+              aria-label="Controles do jogo"
+            >
               {buttons.map((button) => (
                 <Button
                   key={button.action}

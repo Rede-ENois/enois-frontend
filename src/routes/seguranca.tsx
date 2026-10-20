@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { SectionProps } from "@/types/routes/security/section-props";
 import { AlertTriangle, CheckCircle2, Copy, Loader2, ShieldCheck } from "lucide-react";
 
 import { ApiError, authApi } from "@/lib/api";
@@ -142,12 +143,6 @@ function Seguranca() {
   );
 }
 
-type SectionProps = {
-  status: import("@/types/application/auth/two-factor").TwoFactorStatus;
-  onError: (err: unknown, fallback: string) => void;
-  onDone: () => void;
-};
-
 function EmailSection({ status, onError }: SectionProps) {
   const [sent, setSent] = useState(false);
 
@@ -191,7 +186,7 @@ function EmailSection({ status, onError }: SectionProps) {
 
 function TotpSection({ status, onError, onDone }: SectionProps) {
   const [setup, setSetup] = useState<
-    import("@/types/application/auth/two-factor").TotpSetup | null
+    import("@/types/application/auth/totp-setup").TotpSetup | null
   >(null);
   const [code, setCode] = useState("");
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null);

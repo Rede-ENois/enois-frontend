@@ -1,8 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import type { BackgroundStyle } from "@/types/preferences/background-style";
-
-import { hexToHsl, hexToRgb, hslToHex, readableForeground } from "./color";
+import { describe, expect, it } from "vitest";
 
 import {
   PAGE_PAINT_TARGETS,
@@ -12,6 +9,7 @@ import {
   buildWidgetDeclarations,
   paintGradientCss,
 } from "./build-background-style";
+import { hexToHsl, hexToRgb, hslToHex, readableForeground } from "./color";
 
 const solidDark: BackgroundStyle = {
   type: "solid",
@@ -80,8 +78,12 @@ describe("plano de fundo personalizado", () => {
     const diagonal: BackgroundStyle = { ...solidDark, type: "gradient", direction: "diagonal" };
     expect(backgroundValue(diagonal)).toContain("linear-gradient(135deg");
     expect(backgroundValue({ ...diagonal, direction: "radial" })).toContain("radial-gradient");
-    expect(backgroundValue({ ...diagonal, direction: "custom", angle: 45 })).toContain("linear-gradient(45deg");
-    expect(backgroundValue({ ...diagonal, direction: "horizontal" })).toContain("linear-gradient(90deg");
+    expect(backgroundValue({ ...diagonal, direction: "custom", angle: 45 })).toContain(
+      "linear-gradient(45deg",
+    );
+    expect(backgroundValue({ ...diagonal, direction: "horizontal" })).toContain(
+      "linear-gradient(90deg",
+    );
   });
 });
 

@@ -3,15 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
+import type { WordMark } from "@/types/application/daily-games/word-mark";
+import type { WordState } from "@/types/application/daily-games/word-state";
+import type { RowProps } from "@/types/components/daily-word/row-props";
+import type { TileProps } from "@/types/components/daily-word/tile-props";
+import type { TileState } from "@/types/components/daily-word/tile-state";
+import type { UserWordStats } from "@/types/components/daily-word/user-word-stats";
 import { BarChart2, HelpCircle, Share2, Sparkles, Type } from "lucide-react";
 
 import { randomUUID } from "@/lib/api-client";
-import {
-  dailyWordsApi,
-  previousChallengeDate,
-  type WordMark,
-  type WordState,
-} from "@/lib/api/daily-games";
+import { dailyWordsApi, previousChallengeDate } from "@/lib/api/daily-games";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,22 +25,15 @@ import {
 
 // ─── Estatísticas e Persistência Local ─────────────────────────────────────────
 
-interface UserWordStats {
-  played: number;
-  won: number;
-  currentStreak: number;
-  maxStreak: number;
-  distribution: Record<number, number>;
-  lastRecordedDate?: string;
-}
-
 const STATS_STORAGE_KEY = "enois_wordle_stats_v1";
 
 function loadWordStats(): UserWordStats {
   try {
     const raw = localStorage.getItem(STATS_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    // storage indisponível: segue sem persistir
+  }
   return {
     played: 0,
     won: 0,
@@ -67,7 +61,9 @@ function recordWordGame(won: boolean, attempts: number, date: string): UserWordS
 
   try {
     localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(next));
-  } catch {}
+  } catch {
+    // storage indisponível: segue sem persistir
+  }
   return next;
 }
 
@@ -94,8 +90,6 @@ for (const row of KEYBOARD_ROWS) {
 }
 
 // ─── Helpers de cor ─────────────────────────────────────────────────────────────
-
-type TileState = WordMark | "empty" | "typing";
 
 /**
  * Tile responsiva: usa CSS custom property --tile-size calculada no wrapper da grade.
@@ -166,16 +160,6 @@ function buildKeyMap(guesses: WordState["guesses"]): Record<string, WordMark> {
 
 // ─── Sub-componente: célula da grade ──────────────────────────────────────────
 
-interface TileProps {
-  letter: string;
-  state: TileState;
-  revealed: boolean;
-  /** Índice da coluna (0-4) — controla o delay do flip. */
-  col: number;
-  /** Se true, anima o flip ao ser revelado. */
-  animate: boolean;
-}
-
 function Tile({ letter, state, revealed, col, animate }: TileProps) {
   const [flipped, setFlipped] = useState(false);
   const [displayState, setDisplayState] = useState<TileState>(revealed ? state : state);
@@ -211,29 +195,14 @@ function Tile({ letter, state, revealed, col, animate }: TileProps) {
 
 // ─── Sub-componente: linha da grade ───────────────────────────────────────────
 
-interface RowProps {
-  letters: string[];
-  marks: WordMark[] | null; // null = linha ainda não confirmada
-  shake: boolean;
-  /** Se true, anima o flip ao ser revelado (só na linha recém confirmada). */
-  animateReveal: boolean;
-}
-
 function Row({ letters, marks, shake, animateReveal }: RowProps) {
   return (
-    <div
-      role="row"
-      className={`grid grid-cols-5 gap-1.5 sm:gap-2 ${shake ? "animate-shake" : ""}`}
-    >
+    <div role="row" className={`grid grid-cols-5 gap-1.5 sm:gap-2 ${shake ? "animate-shake" : ""}`}>
       {Array.from({ length: WORD_LENGTH }, (_, i) => {
         const letter = letters[i] ?? "";
         const mark = marks?.[i] ?? null;
         const revealed = marks !== null;
-        const state: TileState = revealed
-          ? (mark as WordMark)
-          : letter
-            ? "typing"
-            : "empty";
+        const state: TileState = revealed ? (mark as WordMark) : letter ? "typing" : "empty";
         return (
           <Tile
             key={i}
@@ -294,15 +263,8 @@ export function DailyWord() {
   });
 
   const guess = useMutation({
-    mutationFn: ({
-      word,
-      requestId,
-      date,
-    }: {
-      word: string;
-      requestId: string;
-      date?: string;
-    }) => dailyWordsApi.guess(word, requestId, date),
+    mutationFn: ({ word, requestId, date }: { word: string; requestId: string; date?: string }) =>
+      dailyWordsApi.guess(word, requestId, date),
     onSuccess: (data) => {
       client.setQueryData(queryKey, data);
       setLastConfirmedRow(data.guesses.length - 1);
@@ -418,10 +380,7 @@ export function DailyWord() {
   }
 
   return (
-    <section
-      className="surface-card p-5 sm:p-6"
-      aria-labelledby="words-title"
-    >
+    <section className="surface-card p-5 sm:p-6" aria-labelledby="words-title">
       {/* Cabeçalho */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -429,6 +388,7 @@ export function DailyWord() {
             <Type className="h-5 w-5 text-emerald-500" />
             Palavras
           </h2>
+
           <p className="mt-1 text-sm text-muted-foreground">
             Descubra a palavra de 5 letras em até {MAX_GUESSES} tentativas.
           </p>
@@ -444,6 +404,7 @@ export function DailyWord() {
             title="Como jogar"
           >
             <HelpCircle className="h-4 w-4 text-primary" />
+
             <span className="hidden sm:inline">Como jogar</span>
           </Button>
 
@@ -456,6 +417,7 @@ export function DailyWord() {
             title="Estatísticas"
           >
             <BarChart2 className="h-4 w-4 text-primary" />
+
             <span className="hidden sm:inline">Estatísticas</span>
           </Button>
         </div>
@@ -511,15 +473,13 @@ export function DailyWord() {
         <div className="mt-5 flex flex-col items-center gap-5">
           <p className="self-start text-sm text-muted-foreground">
             Desafio de {state.date}
-            {state.streak > 0 && ` · 🔥 ${state.streak} ${state.streak === 1 ? "dia" : "dias"} consecutivos`}
+            {state.streak > 0 &&
+              ` · 🔥 ${state.streak} ${state.streak === 1 ? "dia" : "dias"} consecutivos`}
           </p>
 
           {/* Erro local (palavra curta, inválida etc) */}
           {localError && (
-            <div
-              role="alert"
-              className="rounded bg-card px-4 py-2 text-sm font-medium shadow"
-            >
+            <div role="alert" className="rounded bg-card px-4 py-2 text-sm font-medium shadow">
               {localError}
             </div>
           )}
@@ -564,11 +524,13 @@ export function DailyWord() {
                   ? `🎉 Você acertou em ${confirmedGuesses.length} tentativa${confirmedGuesses.length === 1 ? "" : "s"}!`
                   : `😔 Não foi dessa vez. A palavra era ${confirmedGuesses.at(-1)?.word ?? "—"}.`}
               </p>
+
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button variant="outline" className="gap-2" onClick={() => void share()}>
                   <Share2 className="h-4 w-4" />
                   Compartilhar resultado
                 </Button>
+
                 <Button variant="secondary" className="gap-2" onClick={() => setStatsOpen(true)}>
                   <BarChart2 className="h-4 w-4" />
                   Ver estatísticas
@@ -592,7 +554,9 @@ export function DailyWord() {
                     return (
                       <button
                         key={key}
-                        aria-label={key === "⌫" ? "Apagar" : key === "ENTER" ? "Confirmar" : `Letra ${key}`}
+                        aria-label={
+                          key === "⌫" ? "Apagar" : key === "ENTER" ? "Confirmar" : `Letra ${key}`
+                        }
                         className={keyClasses(mark, isAction)}
                         onClick={() => handleKey(key)}
                         disabled={guess.isPending}
@@ -641,6 +605,7 @@ export function DailyWord() {
                     {item.name}
                   </Link>
                 </span>
+
                 <span>
                   {item.attempts} tentativa{item.attempts === 1 ? "" : "s"}
                 </span>
@@ -654,8 +619,10 @@ export function DailyWord() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Como jogar</DialogTitle>
+
             <DialogDescription className="text-sm pt-1">
-              Descubra a palavra certa em 6 tentativas. Depois de cada tentativa, as peças mostram o quão perto você está da solução.
+              Descubra a palavra certa em 6 tentativas. Depois de cada tentativa, as peças mostram o
+              quão perto você está da solução.
             </DialogDescription>
           </DialogHeader>
 
@@ -663,40 +630,87 @@ export function DailyWord() {
             {/* Exemplo 1: TURMA */}
             <div className="space-y-1.5">
               <div className="flex gap-1.5">
-                <span className="grid h-10 w-10 place-items-center rounded bg-[#21a35d] font-bold text-white">T</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">U</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">R</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">M</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">A</span>
+                <span className="grid h-10 w-10 place-items-center rounded bg-[#21a35d] font-bold text-white">
+                  T
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  U
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  R
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  M
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  A
+                </span>
               </div>
+
               <p className="text-xs text-muted-foreground">
-                A letra <strong className="text-foreground">T</strong> faz parte da palavra e está na posição correta.
+                A letra <strong className="text-foreground">T</strong> faz parte da palavra e está
+                na posição correta.
               </p>
             </div>
 
             {/* Exemplo 2: VIOLA */}
             <div className="space-y-1.5">
               <div className="flex gap-1.5">
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">V</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">I</span>
-                <span className="grid h-10 w-10 place-items-center rounded bg-[#c8a227] font-bold text-white">O</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">L</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">A</span>
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  V
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  I
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded bg-[#c8a227] font-bold text-white">
+                  O
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  L
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  A
+                </span>
               </div>
+
               <p className="text-xs text-muted-foreground">
-                A letra <strong className="text-foreground">O</strong> faz parte da palavra mas em outra posição.
+                A letra <strong className="text-foreground">O</strong> faz parte da palavra mas em
+                outra posição.
               </p>
             </div>
 
             {/* Exemplo 3: PULGA */}
             <div className="space-y-1.5">
               <div className="flex gap-1.5">
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">P</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">U</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">L</span>
-                <span className="grid h-10 w-10 place-items-center rounded bg-muted font-bold text-muted-foreground">G</span>
-                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">A</span>
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  P
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  U
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  L
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded bg-muted font-bold text-muted-foreground">
+                  G
+                </span>
+
+                <span className="grid h-10 w-10 place-items-center rounded border-2 border-border/60 font-bold">
+                  A
+                </span>
               </div>
+
               <p className="text-xs text-muted-foreground">
                 A letra <strong className="text-foreground">G</strong> não faz parte da palavra.
               </p>
@@ -704,7 +718,9 @@ export function DailyWord() {
 
             <div className="border-t border-border/60 pt-3 space-y-2 text-xs text-muted-foreground">
               <p>• Os acentos são preenchidos automaticamente, e não são considerados nas dicas.</p>
+
               <p>• As palavras podem possuir letras repetidas.</p>
+
               <p>• Uma palavra nova aparece a cada dia.</p>
             </div>
           </div>
@@ -723,20 +739,27 @@ export function DailyWord() {
             <div className="grid grid-cols-4 gap-2 text-center">
               <div className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-2xl font-bold">{stats.played}</p>
+
                 <p className="text-[11px] text-muted-foreground">Jogos</p>
               </div>
+
               <div className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-2xl font-bold">
                   {stats.played ? Math.round((stats.won / stats.played) * 100) : 0}%
                 </p>
+
                 <p className="text-[11px] text-muted-foreground">Vitórias</p>
               </div>
+
               <div className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-2xl font-bold">{stats.currentStreak}</p>
+
                 <p className="text-[11px] text-muted-foreground">Seq. atual</p>
               </div>
+
               <div className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-2xl font-bold">{stats.maxStreak}</p>
+
                 <p className="text-[11px] text-muted-foreground">Melhor seq.</p>
               </div>
             </div>
@@ -746,15 +769,18 @@ export function DailyWord() {
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Distribuição de tentativas
               </h4>
+
               <div className="space-y-1.5 text-xs font-medium">
                 {([1, 2, 3, 4, 5, 6] as const).map((attempt) => {
                   const count = stats.distribution[attempt] || 0;
                   const maxCount = Math.max(1, ...Object.values(stats.distribution));
                   const pct = Math.max(8, (count / maxCount) * 100);
-                  const isToday = isFinished && confirmedGuesses.length === attempt && state?.status === "WON";
+                  const isToday =
+                    isFinished && confirmedGuesses.length === attempt && state?.status === "WON";
                   return (
                     <div key={attempt} className="flex items-center gap-2">
                       <span className="w-2 text-right">{attempt}</span>
+
                       <div className="flex-1">
                         <div
                           className={`flex items-center justify-end px-2 py-1 rounded text-[11px] font-bold text-white transition-all duration-500 ${

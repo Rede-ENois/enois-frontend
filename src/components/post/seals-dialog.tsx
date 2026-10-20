@@ -103,7 +103,12 @@ export function SealsDialog({ postId }: PostIdProps) {
                   key={entry.userId}
                   className="flex items-center gap-3 rounded-xl bg-surface-1 p-3"
                 >
-                  <UserAvatar frame={user?.avatarFrame} src={user?.avatar} alt={user?.name} className="h-9 w-9 shrink-0" />
+                  <UserAvatar
+                    frame={user?.avatarFrame}
+                    src={user?.avatar}
+                    alt={user?.name}
+                    className="h-9 w-9 shrink-0"
+                  />
 
                   <p className="min-w-0 flex-1 truncate text-sm font-normal text-text-strong">
                     {user?.name ?? texts.common.loading}

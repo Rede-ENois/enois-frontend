@@ -1,7 +1,6 @@
 import { type ReactNode, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
@@ -83,7 +82,9 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
 
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-normal">{texts.jobs.applyDialog.title(job.title)}</DialogTitle>
+          <DialogTitle className="font-normal">
+            {texts.jobs.applyDialog.title(job.title)}
+          </DialogTitle>
 
           <DialogDescription>{texts.jobs.applyDialog.intro}</DialogDescription>
         </DialogHeader>
@@ -109,7 +110,9 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
 
               <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
                 <li>· {texts.jobs.applyDialog.aboutYouProfile}</li>
+
                 <li>· {texts.jobs.applyDialog.aboutYouExperience}</li>
+
                 <li>· {texts.jobs.applyDialog.aboutYouReputation}</li>
               </ul>
             </div>
@@ -138,11 +141,7 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
                     type={field.type === "NUMBER" ? "number" : "text"}
                     inputMode={field.type === "NUMBER" ? "numeric" : undefined}
                     placeholder={
-                      field.type === "LINK"
-                        ? "https://"
-                        : field.type === "NUMBER"
-                          ? "0"
-                          : ""
+                      field.type === "LINK" ? "https://" : field.type === "NUMBER" ? "0" : ""
                     }
                   />
                 )}
@@ -170,10 +169,7 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
                 <p>{errorMessage()}</p>
 
                 {error.code === "EMAIL_NOT_VERIFIED" && (
-                  <Link
-                    to="/seguranca"
-                    className="mt-1 inline-block text-xs font-medium underline"
-                  >
+                  <Link to="/seguranca" className="mt-1 inline-block text-xs font-medium underline">
                     {texts.jobs.applyDialog.verifyIdentity}
                   </Link>
                 )}

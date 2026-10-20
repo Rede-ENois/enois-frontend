@@ -202,7 +202,10 @@ export function PostCard({
     const bodyUnchanged = editType !== "ARTICLE" || bodyDraft.trim() === articleBody.trim();
 
     // Nada mudou (nem a categoria): fecha sem chamar a API.
-    if ((editType !== "PAGE" && !draft.trim()) || (!tipoMudou && contentUnchanged && pageUnchanged && bodyUnchanged)) {
+    if (
+      (editType !== "PAGE" && !draft.trim()) ||
+      (!tipoMudou && contentUnchanged && pageUnchanged && bodyUnchanged)
+    ) {
       setEditOpen(false);
       return;
     }

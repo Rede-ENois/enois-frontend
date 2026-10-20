@@ -1,3 +1,4 @@
+import type { ColecaoView } from "@/types/application/games/colecao-view";
 import type { DeveloperPage } from "@/types/application/games/developer-page";
 import type { GameAnalytics } from "@/types/application/games/game-analytics";
 import type { GameCatalogQuery } from "@/types/application/games/game-catalog-query";
@@ -7,14 +8,6 @@ import type { GameUpdateView } from "@/types/application/games/game-update-view"
 import type { GameView } from "@/types/application/games/game-view";
 
 import { api, buildQuery } from "../api-client";
-
-export type ColecaoView = {
-  id: string;
-  title: string;
-  description?: string | null;
-  jogos: GameView[];
-  createdAt: string;
-};
 
 /**
  * Énóis Games: o catálogo, a página do criador, a biblioteca e o diário de desenvolvimento.

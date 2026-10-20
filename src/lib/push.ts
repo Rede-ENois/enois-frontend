@@ -8,16 +8,15 @@
  * iOS: so funciona no PWA instalado (16.4+). No navegador do iOS, `PushManager` existe mas
  * assinar falha — por isso o erro e tratado e mostrado ao usuario.
  */
-import { pushApi } from "@/lib/api/push";
+import type { EnablePushResult } from "@/types/application/push/enable-push-result";
+import type { PushState } from "@/types/application/push/push-state";
 
-export type PushState = "unsupported" | "unavailable" | "denied" | "granted" | "default";
+import { pushApi } from "@/lib/api/push";
 
 export function isPushSupported(): boolean {
   if (typeof window === "undefined") return false;
   return (
-    "serviceWorker" in navigator &&
-    "PushManager" in window &&
-    typeof Notification !== "undefined"
+    "serviceWorker" in navigator && "PushManager" in window && typeof Notification !== "undefined"
   );
 }
 
@@ -40,8 +39,6 @@ async function readyRegistration(): Promise<ServiceWorkerRegistration> {
   await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   return navigator.serviceWorker.ready;
 }
-
-export type EnablePushResult = { ok: true } | { ok: false; reason: string };
 
 /** Pede permissao e registra este dispositivo para receber push. */
 export async function enablePush(): Promise<EnablePushResult> {

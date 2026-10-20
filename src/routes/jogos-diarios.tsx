@@ -1,8 +1,9 @@
 import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
+import type { GameTab } from "@/types/routes/daily-games/game-tab";
 import { Boxes, CheckCircle2, Flame, Gamepad2, Map, Sparkles, Trophy, Type } from "lucide-react";
 
 import {
@@ -24,8 +25,6 @@ export const Route = createFileRoute("/jogos-diarios")({
   head: () => ({ meta: [{ title: "Jogos diários · Énóis" }] }),
   component: DailyGames,
 });
-
-type GameTab = "words" | "maze" | "blocks";
 
 function DailyGames() {
   const [activeTab, setActiveTab] = useState<GameTab>("words");
@@ -62,17 +61,9 @@ function DailyGames() {
       );
     }
     if (status === "IN_PROGRESS" || status === "PLAYING") {
-      return (
-        <span className="text-[11px] font-medium text-amber-500">
-          Em andamento
-        </span>
-      );
+      return <span className="text-[11px] font-medium text-amber-500">Em andamento</span>;
     }
-    return (
-      <span className="text-[11px] font-medium text-muted-foreground">
-        Disponível
-      </span>
-    );
+    return <span className="text-[11px] font-medium text-muted-foreground">Disponível</span>;
   }
 
   return (
@@ -85,6 +76,7 @@ function DailyGames() {
               <h1 className="flex items-center gap-2 text-2xl font-semibold">
                 <Gamepad2 className="h-6 w-6 text-primary" /> Jogos diários
               </h1>
+
               <p className="mt-1 text-sm text-muted-foreground">
                 Três desafios por dia para exercitar o cérebro e competir com a comunidade.
               </p>
@@ -105,11 +97,15 @@ function DailyGames() {
                 <Trophy className="h-4 w-4 text-amber-500" />
                 Desafios concluídos hoje
               </span>
+
               <span className="flex items-center gap-1 font-semibold text-foreground">
-                {completedCount === 3 && <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />}
+                {completedCount === 3 && (
+                  <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
+                )}
                 {completedCount} de 3
               </span>
             </div>
+
             <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full bg-primary transition-all duration-500 ease-out"
@@ -124,6 +120,7 @@ function DailyGames() {
                 <Sparkles className="h-4 w-4 text-primary" />
                 Prêmios em faíscas
               </div>
+
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
                 {prizes.data.tiers.map((tier) => (
                   <span key={tier.label} className="text-xs text-muted-foreground">
@@ -134,6 +131,7 @@ function DailyGames() {
                   </span>
                 ))}
               </div>
+
               <p className="mt-2 text-[11px] text-muted-foreground">
                 O placar fecha e as faíscas caem na carteira depois que o dia termina — quem
                 completa o desafio, mesmo fora do top 10, recebe.
@@ -158,6 +156,7 @@ function DailyGames() {
           >
             <div className="flex items-center gap-1.5">
               <Type className="h-4 w-4 text-emerald-500" />
+
               <span>Palavras</span>
             </div>
             {getStatusBadge(words.data?.status)}
@@ -174,6 +173,7 @@ function DailyGames() {
           >
             <div className="flex items-center gap-1.5">
               <Map className="h-4 w-4 text-blue-500" />
+
               <span>Labirinto</span>
             </div>
             {getStatusBadge(maze.data?.status)}
@@ -190,6 +190,7 @@ function DailyGames() {
           >
             <div className="flex items-center gap-1.5">
               <Boxes className="h-4 w-4 text-purple-500" />
+
               <span>Blocos</span>
             </div>
             {getStatusBadge(blocks.data?.status)}
@@ -206,4 +207,3 @@ function DailyGames() {
     </AppContainer>
   );
 }
-

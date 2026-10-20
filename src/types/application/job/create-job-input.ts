@@ -1,4 +1,4 @@
-import type { JobApplicationFieldInput } from "./job-application";
+import type { JobApplicationFieldInput } from "./job-application-field-input";
 
 export type CreateJobInput = {
   title: string;

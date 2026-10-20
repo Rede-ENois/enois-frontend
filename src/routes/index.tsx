@@ -10,9 +10,8 @@ import { statsApi } from "@/lib/api";
 
 import { Button } from "@/components/ui/button";
 
-import { ThemeToggle } from "@/components/theme-toggle";
-
 import { ApoieBanner } from "@/components/apoie-banner";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/")({
   head: () => {

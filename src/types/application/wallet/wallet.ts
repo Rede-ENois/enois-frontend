@@ -1,0 +1,9 @@
+import type { WalletEntry } from "./wallet-entry";
+
+export type Wallet = {
+  balance: number;
+  escala: number;
+  cotacaoBrlCents: number;
+  chave: string;
+  entries: WalletEntry[];
+};

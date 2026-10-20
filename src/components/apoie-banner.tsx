@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
+
 import { Copy, Heart, X } from "lucide-react";
+import QRCode from "qrcode";
 
 import { PIX_KEY, pixCopiaECola } from "@/lib/pix";
 
@@ -27,7 +28,11 @@ export function ApoieBanner() {
 
   useEffect(() => {
     if (!aberto || qr) return;
-    QRCode.toDataURL(pixCopiaECola(), { width: 320, margin: 1, color: { dark: "#0b0d12", light: "#ffffff" } })
+    QRCode.toDataURL(pixCopiaECola(), {
+      width: 320,
+      margin: 1,
+      color: { dark: "#0b0d12", light: "#ffffff" },
+    })
       .then(setQr)
       .catch(() => setQr(null));
   }, [aberto, qr]);
@@ -51,8 +56,8 @@ export function ApoieBanner() {
         <Heart className="h-4 w-4 shrink-0 text-primary" />
 
         <p className="min-w-0 flex-1 text-sm text-text-strong">
-          Ajude o Énóis a permanecer <span className="font-semibold">sempre gratuito e livre para todos</span>{" "}
-          com uma doação.
+          Ajude o Énóis a permanecer{" "}
+          <span className="font-semibold">sempre gratuito e livre para todos</span> com uma doação.
         </p>
 
         <button
@@ -90,8 +95,8 @@ export function ApoieBanner() {
 
             <div className="space-y-3">
               <p className="text-sm text-text-strong">
-                Escaneia o QR no app do banco — ou copia o código Pix abaixo e cola na opção
-                "Pix copia e cola". A chave é o CNPJ da fundação.
+                Escaneia o QR no app do banco — ou copia o código Pix abaixo e cola na opção "Pix
+                copia e cola". A chave é o CNPJ da fundação.
               </p>
 
               <div className="flex items-start gap-2">

@@ -66,7 +66,12 @@ export function ReactionsDialog({ postId }: PostIdProps) {
                   key={`${r.userId}-${r.type}`}
                   className="flex items-center gap-3 rounded-xl bg-surface-1 p-3"
                 >
-                  <UserAvatar frame={user?.avatarFrame} src={user?.avatar} alt={user?.name} className="h-9 w-9 shrink-0" />
+                  <UserAvatar
+                    frame={user?.avatarFrame}
+                    src={user?.avatar}
+                    alt={user?.name}
+                    className="h-9 w-9 shrink-0"
+                  />
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-normal text-text-strong">

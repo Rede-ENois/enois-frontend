@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+
+import { useQuery } from "@tanstack/react-query";
+
+import type { SearchResult } from "@/types/application/search/search-result";
 import { AtSign, Loader2 } from "lucide-react";
 
 import { searchApi } from "@/lib/api";
-
-import type { SearchResult } from "@/types/application/search/search-result";
 
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -34,7 +35,9 @@ export function UserPicker({
     enabled: query.trim().length >= 2,
   });
 
-  const resultados: { username: string; nome: string; avatar: string | null }[] = (busca.data?.items ?? [])
+  const resultados: { username: string; nome: string; avatar: string | null }[] = (
+    busca.data?.items ?? []
+  )
     .map((r: SearchResult) => ({
       username: r.href.split("/").pop() ?? "",
       nome: r.title,
@@ -113,8 +116,12 @@ export function UserPicker({
                 onClick={() => seleciona(u.username)}
               >
                 <UserAvatar src={u.avatar} alt={u.nome} className="h-8 w-8 shrink-0" />
+
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-text-strong">{u.nome}</span>
+                  <span className="block truncate text-sm font-medium text-text-strong">
+                    {u.nome}
+                  </span>
+
                   <span className="block truncate text-xs text-text-subtle">@{u.username}</span>
                 </span>
               </button>

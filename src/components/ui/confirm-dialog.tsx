@@ -40,6 +40,7 @@ export function ConfirmDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 

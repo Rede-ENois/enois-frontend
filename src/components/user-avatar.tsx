@@ -13,7 +13,14 @@ function getInitials(name: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
-export function UserAvatar({ src, alt, className, fallback, fallbackClassName, frame }: UserAvatarProps) {
+export function UserAvatar({
+  src,
+  alt,
+  className,
+  fallback,
+  fallbackClassName,
+  frame,
+}: UserAvatarProps) {
   const label = alt ?? texts.profile.avatarFallback;
   const resolved = resolveCdnUrl(src);
   return (

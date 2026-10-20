@@ -1,27 +1,12 @@
 import * as React from "react";
 
+import type { ToastAction } from "@/types/components/ui/toast-action";
+import type { ToastContextValue } from "@/types/components/ui/toast-context-value";
+import type { ToastItem } from "@/types/components/ui/toast-item";
+import type { ToastVariant } from "@/types/components/ui/toast-variant";
 import { CheckCircle2, X, XCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-
-type ToastVariant = "success" | "error";
-
-type ToastAction = { label: string; onClick: () => void };
-
-type ToastItem = {
-  id: number;
-  message: string;
-  variant: ToastVariant;
-  action?: ToastAction;
-};
-
-type ToastContextValue = {
-  /**
-   * Mostra um aviso curto no rodapé. `variant` padrão é "success". `action` habilita o "desfazer"
-   * — só passe uma ação quando a operação for realmente reversível.
-   */
-  toast: (message: string, variant?: ToastVariant, action?: ToastAction) => void;
-};
 
 const ToastContext = React.createContext<ToastContextValue | null>(null);
 

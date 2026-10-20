@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { VerifyStatus } from "@/types/routes/auth/verify-status";
 import { CheckCircle2, Loader2, MailWarning } from "lucide-react";
 import { z } from "zod";
 
@@ -21,8 +22,6 @@ export const Route = createFileRoute("/auth/verify")({
   component: VerifyEmail,
 });
 
-type Status = "verifying" | "done" | "invalid" | "used" | "expired";
-
 /**
  * Tela do link "confirme seu e-mail". A confirmação já devolve a sessão, então quem clica entra
  * direto no app; token expirado, já usado ou inválido tem mensagem própria (com o motivo).
@@ -30,7 +29,7 @@ type Status = "verifying" | "done" | "invalid" | "used" | "expired";
 function VerifyEmail() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<Status>("verifying");
+  const [status, setStatus] = useState<VerifyStatus>("verifying");
   const handled = useRef(false);
 
   useEffect(() => {
@@ -76,7 +75,9 @@ function VerifyEmail() {
               {texts.auth.verify.doneTitle}
             </h1>
 
-            <p className="mt-2 text-sm text-muted-foreground">{texts.auth.verify.doneDescription}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {texts.auth.verify.doneDescription}
+            </p>
 
             <Button
               className="mt-6 w-full rounded-full"

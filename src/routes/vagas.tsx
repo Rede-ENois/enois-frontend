@@ -10,18 +10,20 @@ import {
   MIN_REPUTATION_TO_CREATE_JOB,
 } from "@/constants/job-rules";
 import { texts } from "@/texts";
+import type { CurrencyCode } from "@/types/application/currency/currency-code";
 import type { CreateJobInput } from "@/types/application/job/create-job-input";
 import type { Job } from "@/types/application/job/job";
-import type { JobApplicationFieldInput } from "@/types/application/job/job-application";
+import type { JobApplicationFieldInput } from "@/types/application/job/job-application-field-input";
 import type { JobReportReason } from "@/types/application/job/job-report-reason";
 import type { CreateJobDialogProps } from "@/types/routes/jobs/create-job-dialog-props";
 import type { ReportJobDialogProps } from "@/types/routes/jobs/report-job-dialog-props";
 import {
   AlertTriangle,
+  Bookmark,
   Briefcase,
   CheckCircle2,
   CircleHelp,
-  Bookmark, ExternalLink,
+  ExternalLink,
   Flag,
   Lock,
   MapPin,
@@ -31,11 +33,10 @@ import {
 } from "lucide-react";
 
 import { jobsApi, reportsApi } from "@/lib/api";
-import { requireAuth } from "@/lib/require-auth";
 import { CURRENCIES, currencySymbol, formatSalary } from "@/lib/currency";
-import type { CurrencyCode } from "@/lib/currency";
 import { useCurrentUser } from "@/lib/current-user";
 import { canCreateJob, missingReputationToCreateJob } from "@/lib/job-permissions";
+import { requireAuth } from "@/lib/require-auth";
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,11 +52,11 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/toast";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Pill } from "@/components/ui/pill";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
 import { CreateExternalJobDialog } from "@/components/create-external-job-dialog";
@@ -134,11 +135,20 @@ function Vagas() {
     skills: skills || undefined,
   };
 
-  const { data: jobsData, isFetching, isError } = useQuery({
+  const {
+    data: jobsData,
+    isFetching,
+    isError,
+  } = useQuery({
     queryKey: ["jobs", aba, plataforma, filters, cursor],
     queryFn: () =>
       aba === "externas"
-        ? jobsApi.list({ ...filters, platform: plataforma || undefined, source: "EXTERNAL", limit: 10 })
+        ? jobsApi.list({
+            ...filters,
+            platform: plataforma || undefined,
+            source: "EXTERNAL",
+            limit: 10,
+          })
         : jobsApi.list({ ...filters, source: "INTERNAL", cursor, limit: 10 }),
     // Cache no front: navegar/focar/voltar nao rebate no backend; 60s de frescor.
     staleTime: 60_000,
@@ -159,9 +169,7 @@ function Vagas() {
     enabled: !isChildRoute && aba === "externas",
   });
 
-  const jobs = aba === "externas" && plataforma
-    ? (jobsData?.items ?? [])
-    : jobsData?.items ?? [];
+  const jobs = aba === "externas" && plataforma ? (jobsData?.items ?? []) : (jobsData?.items ?? []);
   const nextCursor = jobsData?.nextCursor ?? null;
 
   // Reset list when filters change
@@ -396,16 +404,20 @@ function Vagas() {
 
         {/* As abas (pedido da Mel): Énóis primeiro, sem misturar com agregadores. */}
         <div className="flex flex-wrap items-center gap-2">
-          {([
-            ["enois", "Vagas do Énóis"],
-            ["externas", "Plataformas externas"],
-            ["salvas", "Salvas"],
-          ] as const).map(([id, label]) => (
+          {(
+            [
+              ["enois", "Vagas do Énóis"],
+              ["externas", "Plataformas externas"],
+              ["salvas", "Salvas"],
+            ] as const
+          ).map(([id, label]) => (
             <button
               key={id}
               type="button"
               className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-                aba === id ? "bg-primary text-primary-foreground" : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
+                aba === id
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
               }`}
               onClick={() => {
                 setAba(id);
@@ -435,10 +447,15 @@ function Vagas() {
             <span className="mx-1 h-4 w-px bg-border-soft" aria-hidden />
 
             <span className="text-xs text-text-subtle">Agregador:</span>
+
             <button
               type="button"
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${!plataforma ? "bg-primary text-primary-foreground" : "border border-border-soft text-text-subtle"}`}
-              onClick={() => { setPlataforma(""); setAllJobs([]); setCursor(null); }}
+              onClick={() => {
+                setPlataforma("");
+                setAllJobs([]);
+                setCursor(null);
+              }}
             >
               todas
             </button>
@@ -447,7 +464,11 @@ function Vagas() {
                 key={p}
                 type="button"
                 className={`rounded-full px-3 py-1 text-xs font-medium transition ${plataforma === p ? "bg-primary text-primary-foreground" : "border border-border-soft text-text-subtle hover:border-primary"}`}
-                onClick={() => { setPlataforma(p); setAllJobs([]); setCursor(null); }}
+                onClick={() => {
+                  setPlataforma(p);
+                  setAllJobs([]);
+                  setCursor(null);
+                }}
               >
                 {p}
               </button>
@@ -459,169 +480,178 @@ function Vagas() {
           <SalvasTab />
         ) : (
           <>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {allJobs.map((j) => (
-            <article key={j.id} className="surface-card flex flex-col p-5">
-              <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12 rounded-xl">
-                  {j.logo && <AvatarImage src={j.logo} alt={j.company} className="rounded-xl" />}
-                  <AvatarFallback className="rounded-xl">
-                    {(j.company ?? j.title ?? "?")[0]}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="min-w-0 flex-1">
-                  <h3 className="break-words font-semibold">{j.title}</h3>
-
-                  {/* Aviso claro: a vaga NAO foi publicada aqui; a candidatura e na plataforma. */}
-                  {j.sourceType === "EXTERNAL" && (
-                    <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-text-subtle">
-                      <ExternalLink className="h-3 w-3" />
-
-                      <>{texts.jobs.externalBadge(j.sourcePlatform ?? "plataforma externa")}</>
-                    </span>
-                  )}
-
-                  {j.company && (
-                    <p className="break-words text-sm text-muted-foreground">{j.company}</p>
-                  )}
-
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-
-                    <>{j.location}</>
-                  </p>
-                </div>
-              </div>
-
-              {j.isFake && (
-                <p className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
-                  <AlertTriangle className="h-3 w-3" />
-
-                  <>{texts.jobs.fakeBadge}</>
-                </p>
-              )}
-
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                {j.matchScore && (
-                  <span className="rounded-full bg-primary-soft px-2.5 py-1 font-medium text-primary inline-flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" />
-
-                    <>{texts.jobs.match(j.matchScore)}</>
-                  </span>
-                )}
-                <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
-                  {j.type}
-                </span>
-
-                <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
-                  {j.level}
-                </span>
-                {formatSalary(j.salary, j.currency) && (
-                  <span className="rounded-full bg-growth/15 px-2.5 py-1 font-medium text-growth">
-                    {formatSalary(j.salary, j.currency)}
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {j.skills.map((s) => (
-                  <Badge
-                    key={s}
-                    variant="secondary"
-                    className="rounded-full bg-accent font-normal text-accent-foreground"
-                  >
-                    {s}
-                  </Badge>
-                ))}
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-                {j.postedAt && <span>{formatPostedAt(j.postedAt)}</span>}
-
-                {/* wrap + ml-auto: em 320px os três botões descem em vez de estourar o card. */}
-                <div className="ml-auto flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setReportTarget(j)}
-                  >
-                    <Flag className="h-3.5 w-3.5" />
-
-                    <>{texts.jobs.report.action}</>
-                  </Button>
-
-                  {/* Favoritar (saves): o marcador fica nas vagas do Énóis (as externas
-                      somem das agregadores quando expiram — o save é para as da casa). */}
-                  {j.sourceType !== "EXTERNAL" && (
-                    <button
-                      type="button"
-                      aria-label={j.saved ? "Remover das salvas" : "Salvar vaga"}
-                      className={cn(
-                        "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-soft transition",
-                        j.saved ? "border-primary text-primary" : "text-text-subtle hover:border-primary hover:text-primary",
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {allJobs.map((j) => (
+                <article key={j.id} className="surface-card flex flex-col p-5">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-12 w-12 rounded-xl">
+                      {j.logo && (
+                        <AvatarImage src={j.logo} alt={j.company} className="rounded-xl" />
                       )}
-                      onClick={() => {
-                        requireAuth();
-                        (j.saved ? unsave : saveMut).mutate(j.id);
-                      }}
-                    >
-                      <Bookmark className={cn("h-4 w-4", j.saved && "fill-current")} />
-                    </button>
+                      <AvatarFallback className="rounded-xl">
+                        {(j.company ?? j.title ?? "?")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="break-words font-semibold">{j.title}</h3>
+
+                      {/* Aviso claro: a vaga NAO foi publicada aqui; a candidatura e na plataforma. */}
+                      {j.sourceType === "EXTERNAL" && (
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-text-subtle">
+                          <ExternalLink className="h-3 w-3" />
+
+                          <>{texts.jobs.externalBadge(j.sourcePlatform ?? "plataforma externa")}</>
+                        </span>
+                      )}
+
+                      {j.company && (
+                        <p className="break-words text-sm text-muted-foreground">{j.company}</p>
+                      )}
+
+                      <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+
+                        <>{j.location}</>
+                      </p>
+                    </div>
+                  </div>
+
+                  {j.isFake && (
+                    <p className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-medium text-destructive">
+                      <AlertTriangle className="h-3 w-3" />
+
+                      <>{texts.jobs.fakeBadge}</>
+                    </p>
                   )}
 
-                  {/* Vaga externa nao tem detalhe no enois (nao e persistida): so "Visitar vaga". */}
-                  {j.sourceType !== "EXTERNAL" && (
-                    <Link
-                      to="/vagas/$jobId"
-                      params={{ jobId: j.id }}
-                      className="inline-flex h-9 items-center rounded-full border border-border-soft px-3 text-sm font-medium transition hover:bg-muted"
-                    >
-                      {texts.jobs.details}
-                    </Link>
-                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    {j.matchScore && (
+                      <span className="rounded-full bg-primary-soft px-2.5 py-1 font-medium text-primary inline-flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />
 
-                  {j.sourceType === "EXTERNAL" ? (
-                    <a
-                      href={j.applyEmail ? `mailto:${j.applyEmail}` : (j.sourceUrl ?? "#")}
-                      target={j.applyEmail ? undefined : "_blank"}
-                      rel={j.applyEmail ? undefined : "noopener noreferrer"}
-                      // text-primary-foreground e obrigatorio aqui: o bloco pai usa text-muted-foreground
-                      // e, sem cor propria, o texto do botao herda o cinza sobre o roxo (ilegivel).
-                      // Nao use o prefixo `!` de importante do Tailwind v3 — aqui e v4 (sufixo), a
-                      // classe com `!` na frente nao gera CSS nenhum.
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
+                        <>{texts.jobs.match(j.matchScore)}</>
+                      </span>
+                    )}
+                    <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+                      {j.type}
+                    </span>
 
-                      <>{j.applyEmail ? texts.jobs.external.applyByEmail : texts.jobs.visit}</>
-                    </a>
-                  ) : j.applied ? (
-                    <Button size="sm" variant="secondary" className="rounded-full gap-1.5" disabled>
-                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+                      {j.level}
+                    </span>
+                    {formatSalary(j.salary, j.currency) && (
+                      <span className="rounded-full bg-growth/15 px-2.5 py-1 font-medium text-growth">
+                        {formatSalary(j.salary, j.currency)}
+                      </span>
+                    )}
+                  </div>
 
-                      <>{texts.jobs.applied}</>
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="rounded-full"
-                      disabled={apply.isPending}
-                      onClick={() => apply.mutate(j.id)}
-                    >
-                      {texts.jobs.apply}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {j.skills.map((s) => (
+                      <Badge
+                        key={s}
+                        variant="secondary"
+                        className="rounded-full bg-accent font-normal text-accent-foreground"
+                      >
+                        {s}
+                      </Badge>
+                    ))}
+                  </div>
 
-        {isFetching && allJobs.length > 0 && <LoadingState className="py-6" />}
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                    {j.postedAt && <span>{formatPostedAt(j.postedAt)}</span>}
 
-        {!isFetching && allJobs.length === 0 && <EmptyState title={texts.jobs.empty} />}
+                    {/* wrap + ml-auto: em 320px os três botões descem em vez de estourar o card. */}
+                    <div className="ml-auto flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full gap-1.5"
+                        onClick={() => setReportTarget(j)}
+                      >
+                        <Flag className="h-3.5 w-3.5" />
+
+                        <>{texts.jobs.report.action}</>
+                      </Button>
+
+                      {/* Favoritar (saves): o marcador fica nas vagas do Énóis (as externas
+                      somem das agregadores quando expiram — o save é para as da casa). */}
+                      {j.sourceType !== "EXTERNAL" && (
+                        <button
+                          type="button"
+                          aria-label={j.saved ? "Remover das salvas" : "Salvar vaga"}
+                          className={cn(
+                            "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-soft transition",
+                            j.saved
+                              ? "border-primary text-primary"
+                              : "text-text-subtle hover:border-primary hover:text-primary",
+                          )}
+                          onClick={() => {
+                            requireAuth();
+                            (j.saved ? unsave : saveMut).mutate(j.id);
+                          }}
+                        >
+                          <Bookmark className={cn("h-4 w-4", j.saved && "fill-current")} />
+                        </button>
+                      )}
+
+                      {/* Vaga externa nao tem detalhe no enois (nao e persistida): so "Visitar vaga". */}
+                      {j.sourceType !== "EXTERNAL" && (
+                        <Link
+                          to="/vagas/$jobId"
+                          params={{ jobId: j.id }}
+                          className="inline-flex h-9 items-center rounded-full border border-border-soft px-3 text-sm font-medium transition hover:bg-muted"
+                        >
+                          {texts.jobs.details}
+                        </Link>
+                      )}
+
+                      {j.sourceType === "EXTERNAL" ? (
+                        <a
+                          href={j.applyEmail ? `mailto:${j.applyEmail}` : (j.sourceUrl ?? "#")}
+                          target={j.applyEmail ? undefined : "_blank"}
+                          rel={j.applyEmail ? undefined : "noopener noreferrer"}
+                          // text-primary-foreground e obrigatorio aqui: o bloco pai usa text-muted-foreground
+                          // e, sem cor propria, o texto do botao herda o cinza sobre o roxo (ilegivel).
+                          // Nao use o prefixo `!` de importante do Tailwind v3 — aqui e v4 (sufixo), a
+                          // classe com `!` na frente nao gera CSS nenhum.
+                          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+
+                          <>{j.applyEmail ? texts.jobs.external.applyByEmail : texts.jobs.visit}</>
+                        </a>
+                      ) : j.applied ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="rounded-full gap-1.5"
+                          disabled
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+
+                          <>{texts.jobs.applied}</>
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="rounded-full"
+                          disabled={apply.isPending}
+                          onClick={() => apply.mutate(j.id)}
+                        >
+                          {texts.jobs.apply}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {isFetching && allJobs.length > 0 && <LoadingState className="py-6" />}
+
+            {!isFetching && allJobs.length === 0 && <EmptyState title={texts.jobs.empty} />}
           </>
         )}
       </div>
@@ -1156,9 +1186,12 @@ function SalvasTab() {
         <li key={j.id} className="surface-card flex flex-wrap items-center gap-3 p-4">
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold">{j.title}</span>
+
             <span className="block truncate text-xs text-text-subtle">
               {j.company ?? ""} {j.location ? `· ${j.location}` : ""}
-              {j.sourceType === "EXTERNAL" ? ` · ${texts.jobs.externalBadge(j.sourcePlatform ?? "plataforma externa")}` : ""}
+              {j.sourceType === "EXTERNAL"
+                ? ` · ${texts.jobs.externalBadge(j.sourcePlatform ?? "plataforma externa")}`
+                : ""}
             </span>
           </span>
           {j.sourceType !== "EXTERNAL" && (

@@ -63,12 +63,12 @@ em denúncia). Admin/moderação: somente leitura visual.
 
 ## Cobertura
 
-| Lote | Rotas | Viewports | Temas | Status |
-|---|---|---|---|---|
-| A | 23 em 390/768/1280 (rodada 1) + 17 públicas e 10 dinâmicas nos outros 6 viewports (rodada 2) | 320, 360, 390, 414, 768, 1024, 1280, 1440, 1920 | claro/escuro padrão | parcial — rotas protegidas nos viewports novos bloqueadas pela sessão expirada |
-| B | 22 rotas públicas (2640 combinações) | 390px | 60 × 2 | público completo; faltam as rotas protegidas |
-| — | Rotas protegidas (Lote A nos viewports novos, Lote B em 390, Lote C em 1280) | todos | 60 × 2 | bloqueado por sessão expirada |
-| C | `/`, `/perfil`, `/post/...`, `/developers`, `/vagas`, `/empresa/n-is`, `/games` (840 combinações) | 1280px | 60 × 2 | 7 páginas-chave concluídas; faltam 3 protegidas |
+| Lote | Rotas                                                                                             | Viewports                                       | Temas               | Status                                                                         |
+| ---- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------- | ------------------------------------------------------------------------------ |
+| A    | 23 em 390/768/1280 (rodada 1) + 17 públicas e 10 dinâmicas nos outros 6 viewports (rodada 2)      | 320, 360, 390, 414, 768, 1024, 1280, 1440, 1920 | claro/escuro padrão | parcial — rotas protegidas nos viewports novos bloqueadas pela sessão expirada |
+| B    | 22 rotas públicas (2640 combinações)                                                              | 390px                                           | 60 × 2              | público completo; faltam as rotas protegidas                                   |
+| —    | Rotas protegidas (Lote A nos viewports novos, Lote B em 390, Lote C em 1280)                      | todos                                           | 60 × 2              | bloqueado por sessão expirada                                                  |
+| C    | `/`, `/perfil`, `/post/...`, `/developers`, `/vagas`, `/empresa/n-is`, `/games` (840 combinações) | 1280px                                          | 60 × 2              | 7 páginas-chave concluídas; faltam 3 protegidas                                |
 
 ## Rodada 1 — 2026-10-19
 

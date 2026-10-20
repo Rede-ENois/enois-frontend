@@ -33,7 +33,7 @@ export function ReactionsSummary({ postId }: PostIdProps) {
           }`}
         >
           <>
-            {REACTION_EMOJIS[type] ?? type} {count}
+            {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS] ?? type} {count}
           </>
         </span>
       ))}

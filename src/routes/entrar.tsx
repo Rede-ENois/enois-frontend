@@ -4,7 +4,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { OAuthProvider } from "@/types/application/auth/oauth-provider";
-import type { TwoFactorChallenge } from "@/types/application/auth/two-factor";
+import type { TwoFactorChallenge } from "@/types/application/auth/two-factor-challenge";
 import type { AuthFormProps } from "@/types/routes/auth/auth-form-props";
 import type { FieldProps } from "@/types/routes/auth/field-props";
 import type { ForgotPasswordDialogProps } from "@/types/routes/auth/forgot-password-dialog-props";
@@ -404,7 +404,7 @@ function SignupForm(_props: AuthFormProps) {
           )}
         </div>
 
-        {formError && <ErrorBanner error={formError} />}
+        {Boolean(formError) && <ErrorBanner error={formError} />}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={loading}>
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -609,7 +609,7 @@ function LoginForm({ onDone, onForgot }: LoginFormProps) {
           </div>
         </Field>
 
-        {formError && <ErrorBanner error={formError} />}
+        {Boolean(formError) && <ErrorBanner error={formError} />}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={loading}>
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -818,7 +818,7 @@ function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialogProps)
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
-            {formError && <ErrorBanner error={formError} />}
+            {Boolean(formError) && <ErrorBanner error={formError} />}
             <Button type="submit" className="w-full gap-2 rounded-full" disabled={loading}>
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

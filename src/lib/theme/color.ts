@@ -135,7 +135,11 @@ export function textSafeAccent(primary: RgbColor, backgrounds: RgbColor[]): stri
     // além da mistura — o pior caso vence.
     let extra = best;
     for (let i = 0; i < 12 && worst(extra) < 3.4; i += 1) {
-      extra = { r: extra.r + (target - extra.r) * 0.5, g: extra.g + (target - extra.g) * 0.5, b: extra.b + (target - extra.b) * 0.5 };
+      extra = {
+        r: extra.r + (target - extra.r) * 0.5,
+        g: extra.g + (target - extra.g) * 0.5,
+        b: extra.b + (target - extra.b) * 0.5,
+      };
     }
     return rgbToHex(extra);
   }

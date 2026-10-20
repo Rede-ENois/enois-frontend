@@ -30,7 +30,8 @@ import { AppContainer } from "@/components/app-container";
 
 export const Route = createFileRoute("/eventos")({
   validateSearch: (search: Record<string, unknown>): { evento?: string } => ({
-    evento: typeof search.evento === "string" && search.evento.length > 0 ? search.evento : undefined,
+    evento:
+      typeof search.evento === "string" && search.evento.length > 0 ? search.evento : undefined,
   }),
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.events.seoTitle }] }),

@@ -79,7 +79,6 @@ function Moderacao() {
         </div>
 
         <DisputasSection />
-
         <JogosSection />
 
         {isLoading ? (
@@ -142,7 +141,11 @@ function Moderacao() {
 function DisputasSection() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: disputas, error, isLoading } = useQuery({
+  const {
+    data: disputas,
+    error,
+    isLoading,
+  } = useQuery({
     queryKey: ["coin-disputas"],
     queryFn: () => walletApi.disputasPendentes(30),
     retry: false,
@@ -170,6 +173,7 @@ function DisputasSection() {
     <section className="space-y-3" aria-label="Contestações de transferência">
       <div className="flex items-center gap-2">
         <ShieldAlert className="h-4 w-4 text-primary" />
+
         <h2 className="text-sm font-semibold uppercase tracking-widest text-text-subtle">
           Contestações de transferência
         </h2>
@@ -184,13 +188,18 @@ function DisputasSection() {
       ) : (
         <ul className="space-y-3">
           {disputas!.map((d) => (
-            <li key={d.id} className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4">
+            <li
+              key={d.id}
+              className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4"
+            >
               <p className="text-sm font-semibold">
                 Transferência de {formatFaisca(d.amount)} faíscas · motivo: {d.reason}
               </p>
+
               <p className="text-xs text-text-subtle">
                 {new Date(d.createdAt).toLocaleString("pt-BR")} · ref {d.entryRef.slice(0, 16)}…
               </p>
+
               <div className="flex flex-wrap gap-2 pt-1">
                 <Button
                   size="sm"
@@ -200,6 +209,7 @@ function DisputasSection() {
                 >
                   Procede (reverter)
                 </Button>
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -238,7 +248,11 @@ function JogosSection() {
   const [testando, setTestando] = useState<string | null>(null);
   const [motivos, setMotivos] = useState<Record<string, string>>({});
 
-  const { data: jogos, error, isLoading } = useQuery({
+  const {
+    data: jogos,
+    error,
+    isLoading,
+  } = useQuery({
     queryKey: ["games-pendentes"],
     queryFn: () => gamesApi.pendentes(30),
     retry: false,
@@ -266,6 +280,7 @@ function JogosSection() {
     <section className="space-y-3" aria-label="Jogos esperando revisão">
       <div className="flex items-center gap-2">
         <Gamepad2 className="h-4 w-4 text-primary" />
+
         <h2 className="text-sm font-semibold uppercase tracking-widest text-text-subtle">
           Jogos esperando revisão
         </h2>
@@ -297,7 +312,8 @@ function JogosSection() {
                   <p className="truncate text-sm font-semibold">{g.title}</p>
 
                   <p className="text-xs text-text-subtle">
-                    @{g.username ?? g.userId} · {new Date(g.submittedAt).toLocaleDateString("pt-BR")}
+                    @{g.username ?? g.userId} ·{" "}
+                    {new Date(g.submittedAt).toLocaleDateString("pt-BR")}
                     {g.tags ? ` · ${g.tags}` : ""}
                   </p>
                 </div>

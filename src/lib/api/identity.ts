@@ -1,4 +1,5 @@
-import type { IdentityStatus, JobEligibility } from "@/types/application/identity/identity-status";
+import type { IdentityStatus } from "@/types/application/identity/identity-status";
+import type { JobEligibility } from "@/types/application/identity/job-eligibility";
 
 import { api } from "../api-client";
 
@@ -8,7 +9,9 @@ export const identityApi = {
 
   /** Inicia a verificação (503 quando não há provedor autorizado configurado). */
   start: (consentVersion: string) =>
-    api.post<{ attemptId: string; redirectUrl: string }>("/identity/verification", { consentVersion }),
+    api.post<{ attemptId: string; redirectUrl: string }>("/identity/verification", {
+      consentVersion,
+    }),
 
   /** Consulta o provedor e aplica o desfecho confirmado. */
   refresh: () => api.post<IdentityStatus>("/identity/verification/refresh"),

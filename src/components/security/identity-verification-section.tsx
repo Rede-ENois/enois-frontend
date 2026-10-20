@@ -97,13 +97,12 @@ export function IdentityVerificationSection() {
       <p className="mt-3 text-sm font-medium">{texts.identity.states[state]}</p>
 
       {verified && status?.provider && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          {texts.identity.badgeHint}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{texts.identity.badgeHint}</p>
       )}
 
       <div className="mt-4 space-y-1 text-xs text-muted-foreground">
         <p>{texts.identity.whatWeStore}</p>
+
         <p>{texts.identity.whoProcesses}</p>
       </div>
 
@@ -131,7 +130,11 @@ export function IdentityVerificationSection() {
             disabled={refresh.isPending}
             onClick={() => refresh.mutate()}
           >
-            {refresh.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : texts.identity.refresh}
+            {refresh.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              texts.identity.refresh
+            )}
           </Button>
         )}
 

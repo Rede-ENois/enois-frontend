@@ -1,4 +1,5 @@
-import type { JobApplicationField, JobAuthor } from "./job-application";
+import type { JobApplicationField } from "./job-application-field";
+import type { JobAuthor } from "./job-author";
 
 export type Job = {
   id: string;

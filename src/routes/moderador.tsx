@@ -6,9 +6,9 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import type { ModeratorApplicationView } from "@/types/application/moderation/moderator-application-view";
 import type { ModeratorMeView } from "@/types/application/moderation/moderator-me-view";
-import type { ModeratorTabId } from "@/types/routes/moderador/moderator-tab-id";
 import type { SanctionProposalDecision } from "@/types/application/moderation/sanction-proposal-decision";
 import type { SanctionProposalView } from "@/types/application/moderation/sanction-proposal-view";
+import type { ModeratorTabId } from "@/types/routes/moderador/moderator-tab-id";
 import {
   ArrowLeft,
   Bug,
@@ -43,9 +43,9 @@ import { AppContainer } from "@/components/app-container";
 import { AppealsSection } from "@/components/moderation/appeals-section";
 import { DisputesSection } from "@/components/moderation/disputes-section";
 import { EmailLogSection } from "@/components/moderation/email-log-section";
-import { UserPicker } from "@/components/user-picker";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
 import { SupportTicketsSection } from "@/components/moderation/support-tickets-section";
+import { UserPicker } from "@/components/user-picker";
 
 export const Route = createFileRoute("/moderador")({
   beforeLoad: requireAuth,
@@ -710,10 +710,7 @@ function AddModeratorForm({ onChanged }: { onChanged: () => void }) {
   const appoint = useMutation({
     mutationFn: () => moderationApi.appoint(username.trim(), note.trim() || undefined),
     onSuccess: (result) => {
-      toast(
-        texts.moderator.admin.moderatorAdded(result.username ?? username.trim()),
-        "success",
-      );
+      toast(texts.moderator.admin.moderatorAdded(result.username ?? username.trim()), "success");
       setUsername("");
       setNote("");
       onChanged();
@@ -752,9 +749,7 @@ function AddModeratorForm({ onChanged }: { onChanged: () => void }) {
         </div>
 
         <label className="block space-y-1">
-          <span className="text-sm font-medium text-text-strong">
-            {texts.moderator.admin.note}
-          </span>
+          <span className="text-sm font-medium text-text-strong">{texts.moderator.admin.note}</span>
 
           <Input
             value={note}
@@ -1144,7 +1139,9 @@ function SanctionProposalCard({
         <div className="min-w-0">
           <p className="text-sm text-text-strong">
             <span className="font-medium">@{proposal.targetUsername}</span>
-            {proposal.targetName && <span className="text-text-subtle"> · {proposal.targetName}</span>}
+            {proposal.targetName && (
+              <span className="text-text-subtle"> · {proposal.targetName}</span>
+            )}
           </p>
 
           {proposal.proposer && (
@@ -1155,9 +1152,7 @@ function SanctionProposalCard({
         </div>
 
         <span className="rounded-full border border-border-soft px-2.5 py-1 text-xs font-medium text-text-subtle">
-          {proposal.type === "BAN"
-            ? texts.moderator.admin.ban
-            : texts.moderator.admin.restriction}
+          {proposal.type === "BAN" ? texts.moderator.admin.ban : texts.moderator.admin.restriction}
         </span>
       </div>
 

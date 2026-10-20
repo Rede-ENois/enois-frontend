@@ -33,8 +33,7 @@ export const networkApi = {
     api.get<ConnectionStatusResult>(`/network/connections/${targetUserId}/status`),
 
   /** Bloqueia: a pessoa some do feed, dos comentários, das notificações e da busca. */
-  block: (targetUserId: string) =>
-    api.post<{ status: string }>(`/network/blocks/${targetUserId}`),
+  block: (targetUserId: string) => api.post<{ status: string }>(`/network/blocks/${targetUserId}`),
 
   unblock: (targetUserId: string) =>
     api.delete<{ status: string }>(`/network/blocks/${targetUserId}`),

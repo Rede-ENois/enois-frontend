@@ -400,13 +400,28 @@
 
 /* ── Jogo de Palavras: animação de erro na linha ───────────────────────────── */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  15%       { transform: translateX(-6px); }
-  30%       { transform: translateX(6px); }
-  45%       { transform: translateX(-5px); }
-  60%       { transform: translateX(5px); }
-  75%       { transform: translateX(-3px); }
-  90%       { transform: translateX(3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-6px);
+  }
+  30% {
+    transform: translateX(6px);
+  }
+  45% {
+    transform: translateX(-5px);
+  }
+  60% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+  90% {
+    transform: translateX(3px);
+  }
 }
 
 .animate-shake {
@@ -414,18 +429,60 @@
 }
 
 /* Molduras da loja: desenhadas sobre o avatar para funcionar em qualquer tamanho. */
-[data-avatar-frame]::after { content: ""; position: absolute; inset: 0; border: 3px solid var(--avatar-frame-color, transparent); border-radius: 50%; pointer-events: none; }
-[data-avatar-frame="moldura-ambar"] { --avatar-frame-color: #fbbf24; }
-[data-avatar-frame="moldura-esmeralda"] { --avatar-frame-color: #34d399; }
-[data-avatar-frame="moldura-violeta"] { --avatar-frame-color: #8b5cf6; }
-[data-avatar-frame="moldura-coral"] { --avatar-frame-color: #fb7185; }
-[data-avatar-frame="moldura-aurora"]::after { border-color: #a78bfa; animation: moldura-aurora 4s linear infinite; }
-[data-avatar-frame="moldura-pulsar"]::after { border-color: #a78bfa; animation: moldura-pulsar 2s ease-in-out infinite; }
-[data-avatar-frame="moldura-solar"]::after { border-color: #fbbf24; animation: moldura-solar 2.5s ease-in-out infinite; }
-@keyframes moldura-aurora { to { filter: hue-rotate(360deg); } }
-@keyframes moldura-pulsar { 50% { border-color: #f5d0fe; box-shadow: inset 0 0 6px #c084fc; } }
-@keyframes moldura-solar { 50% { border-color: #fb7185; box-shadow: inset 0 0 6px #fbbf24; } }
-@media (prefers-reduced-motion: reduce) { [data-avatar-frame]::after { animation: none; } }
+[data-avatar-frame]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--avatar-frame-color, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+[data-avatar-frame="moldura-ambar"] {
+  --avatar-frame-color: #fbbf24;
+}
+[data-avatar-frame="moldura-esmeralda"] {
+  --avatar-frame-color: #34d399;
+}
+[data-avatar-frame="moldura-violeta"] {
+  --avatar-frame-color: #8b5cf6;
+}
+[data-avatar-frame="moldura-coral"] {
+  --avatar-frame-color: #fb7185;
+}
+[data-avatar-frame="moldura-aurora"]::after {
+  border-color: #a78bfa;
+  animation: moldura-aurora 4s linear infinite;
+}
+[data-avatar-frame="moldura-pulsar"]::after {
+  border-color: #a78bfa;
+  animation: moldura-pulsar 2s ease-in-out infinite;
+}
+[data-avatar-frame="moldura-solar"]::after {
+  border-color: #fbbf24;
+  animation: moldura-solar 2.5s ease-in-out infinite;
+}
+@keyframes moldura-aurora {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+@keyframes moldura-pulsar {
+  50% {
+    border-color: #f5d0fe;
+    box-shadow: inset 0 0 6px #c084fc;
+  }
+}
+@keyframes moldura-solar {
+  50% {
+    border-color: #fb7185;
+    box-shadow: inset 0 0 6px #fbbf24;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-avatar-frame]::after {
+    animation: none;
+  }
+}
 
 /* ── Scrollbar na paleta do tema ─────────────────────────────────────────────
    A barra padrão do navegador (cinza do SO) aparecia por cima de temas

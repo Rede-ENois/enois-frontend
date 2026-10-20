@@ -3,8 +3,6 @@ import type { MediaUploadResponse } from "@/types/application/media/media-upload
 
 import { api, getSessionToken } from "../api-client";
 
-  import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY ?? "public_0Y+bnNURFVY+XZuqyCWQGafHo/0=";
-  import.meta.env.VITE_IMAGEKIT_UPLOAD_URL ?? "https://upload.imagekit.io/api/v1/files/upload";
 const IMAGEKIT_URL_ENDPOINT =
   import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT ?? "https://ik.imagekit.io/socialcoisa";
 
