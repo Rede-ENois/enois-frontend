@@ -32,7 +32,7 @@ const PAGE_SIZE = 20;
  * mais recentes primeiro, "ver comentarios anteriores" carrega a proxima pagina e acrescenta no
  * fim; respostas cujo comentario pai ainda nao foi carregado aparecem como raiz para nao sumirem.
  */
-export function PostComments({ postId }: PostIdProps) {
+export function PostComments({ postId, postAuthorId }: { postId: string; postAuthorId: string }) {
   // Em modo lite a primeira página (e cada "carregar mais") já vem maior.
   const lite = useLiteMode();
   const pageSize = litePageSize(PAGE_SIZE, lite);
@@ -159,8 +159,12 @@ export function PostComments({ postId }: PostIdProps) {
   // O servidor entrega do mais novo para o mais antigo (cursor), mas a leitura de uma thread
   // fica confusa assim. Ordenamos por data crescente no cliente e, ao carregar páginas
   // anteriores, mesclamos mantendo o mais antigo no topo.
+  // Fixado sempre primeiro; o resto em ordem crescente (a thread se lê de cima para baixo).
   const oldestFirst = (items: CommentView[]) =>
-    [...items].sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+    [...items].sort((a, b) => {
+      if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
+      return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
+    });
 
   const loadFirstPage = useCallback(async () => {
     setLoading(true);
@@ -304,7 +308,11 @@ export function PostComments({ postId }: PostIdProps) {
             );
             return (
               <div key={comment.id}>
-                <CommentItem comment={comment} />
+                <CommentItem
+                  comment={comment}
+                  postAuthorId={postAuthorId}
+                  onPinChanged={() => void loadFirstPage()}
+                />
 
                 {replies.length > 0 && (
                   <div className="ml-6 mt-2 space-y-2 border-l-2 border-border-soft pl-3 sm:ml-10 sm:pl-4">
@@ -313,6 +321,8 @@ export function PostComments({ postId }: PostIdProps) {
                         key={reply.id}
                         comment={reply}
                         replyingTo={byId.get(reply.parentCommentId ?? "")?.authorName}
+                        postAuthorId={postAuthorId}
+                        onPinChanged={() => void loadFirstPage()}
                       />
                     ))}
                   </div>

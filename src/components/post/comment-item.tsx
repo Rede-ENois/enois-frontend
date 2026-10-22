@@ -6,7 +6,7 @@ import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
-import { Flag, Heart, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { Flag, Heart, MessageCircle, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
 
 import { REACTION_EMOJIS, commentsApi, profileApi, reactionsApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
@@ -14,6 +14,7 @@ import { hideExternalPageUrls } from "@/lib/shared-links";
 
 import { Button } from "@/components/ui/button";
 import { ReadMore } from "@/components/ui/read-more";
+import { useToast } from "@/components/ui/toast";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 import { UserAvatar } from "@/components/user-avatar";
@@ -27,7 +28,8 @@ import { ReportDialog } from "./report-dialog";
 import { RichText } from "./rich-text";
 
 /** Um comentário (com responder, reagir e excluir). */
-export function CommentItem({ comment, replyingTo }: CommentItemProps) {
+export function CommentItem({ comment, replyingTo, postAuthorId, onPinChanged }: CommentItemProps) {
+  const { toast } = useToast();
   // Inscrito na query do /me: sem isso, o comentario da propria pessoa so aparecia como tal
   // depois que alguma outra consulta redesenhava a tela (o cache do /me chega em outra hora).
   const { data: currentUser } = useCurrentUser();
@@ -39,6 +41,12 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
   const removeComment = usePostCardStore((state) => state.removeComment);
   const updateCommentCount = usePostCardStore((state) => state.updateCommentCount);
   const isOwner = currentUserId === comment.authorId;
+  // O autor do post fixa qualquer comentário; o autor do comentário fixa o próprio.
+  const canPin =
+    Boolean(currentUserId) &&
+    comment.parentCommentId == null &&
+    (currentUserId === postAuthorId || isOwner);
+  const [pinning, setPinning] = useState(false);
   const [commentReaction, setCommentReaction] = useState<ReactionType | null>(
     comment.currentUserReaction ?? null,
   );
@@ -165,6 +173,14 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
                 {texts.posts.comments.replyingTo(replyingTo)}
               </span>
             )}
+            {comment.pinned && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-primary-text">
+                <Pin className="h-3 w-3" />
+
+                <>{texts.posts.comments.pinned}</>
+              </span>
+            )}
+
             <span className="text-xs font-normal text-text-subtle">
               {formatTime(comment.createdAt)}
               {editedAt ? ` · ${texts.posts.edited}` : ""}
@@ -261,6 +277,38 @@ export function CommentItem({ comment, replyingTo }: CommentItemProps) {
           >
             <MessageCircle className="h-3.5 w-3.5" />
           </button>
+
+          {canPin && !editing && (
+            <button
+              onClick={async () => {
+                setPinning(true);
+                try {
+                  if (comment.pinned) {
+                    await commentsApi.unpin(postId, comment.id);
+                  } else {
+                    await commentsApi.pin(postId, comment.id);
+                  }
+                  onPinChanged?.();
+                } catch {
+                  toast(texts.posts.comments.pinError, "error");
+                } finally {
+                  setPinning(false);
+                }
+              }}
+              disabled={pinning}
+              title={comment.pinned ? texts.posts.comments.unpin : texts.posts.comments.pin}
+              aria-label={comment.pinned ? texts.posts.comments.unpin : texts.posts.comments.pin}
+              className={`grid h-7 w-7 place-items-center rounded-full transition-colors hover:bg-surface-2 hover:text-primary disabled:opacity-50 ${
+                comment.pinned ? "text-primary" : ""
+              }`}
+            >
+              {comment.pinned ? (
+                <PinOff className="h-3.5 w-3.5" />
+              ) : (
+                <Pin className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
 
           {isOwner && !editing && (
             <button

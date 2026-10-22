@@ -25,4 +25,6 @@ export type CommentView = {
   currentUserReaction?: ReactionType | null;
   /** Total de reações no comentário. */
   reactionCount?: number;
+  /** Fixado no topo da lista do post (um por post). */
+  pinned?: boolean;
 };

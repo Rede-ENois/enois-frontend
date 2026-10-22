@@ -33,4 +33,11 @@ export const commentsApi = {
 
   remove: (postId: string, commentId: string) =>
     api.delete<StatusResponse>(`/feed/posts/${postId}/comments/${commentId}`),
+
+  /** Fixa no topo (autor do post ou do comentário). */
+  pin: (postId: string, commentId: string) =>
+    api.post<StatusResponse>(`/feed/posts/${postId}/comments/${commentId}/pin`),
+
+  unpin: (postId: string, commentId: string) =>
+    api.delete<StatusResponse>(`/feed/posts/${postId}/comments/${commentId}/pin`),
 };

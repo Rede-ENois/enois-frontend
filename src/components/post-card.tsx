@@ -695,7 +695,7 @@ export function PostCard({
         </>
       )}
 
-      {showComments && <PostComments postId={post.id} />}
+      {showComments && <PostComments postId={post.id} postAuthorId={post.authorId} />}
     </article>
   );
 }
