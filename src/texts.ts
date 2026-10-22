@@ -3203,6 +3203,10 @@ export const texts = {
       confirm: "Banir agora",
       result: (banned: number, already: number, failed: number) =>
         `${banned} banida(s), ${already} já estavam banidas, ${failed} falha(s).`,
+      /** Quem falhou e por quê: sem isso, "N falha(s)" não diz o que fazer. */
+      failures: (details: string) => `Falhas: ${details}`,
+      reasonMissing: (missing: number) =>
+        `Faltam ${missing} caractere(s) no motivo para liberar o banimento.`,
       error: "Não foi possível banir as contas selecionadas.",
       risk: (score: number) => `risco ${score}`,
       createdAt: (date: string) => `criada em ${date}`,

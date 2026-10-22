@@ -44,6 +44,14 @@ export function SuspiciousUsersSection() {
         texts.moderator.suspicious.result(result.banned, result.alreadyBanned, result.failed),
         result.failed > 0 ? "error" : "success",
       );
+      // "N falha(s)" sozinho não diz o que aconteceu: quem falhou e por quê vem junto.
+      const failures = result.items
+        .filter((item) => item.status === "FAILED")
+        .slice(0, 3)
+        .map((item) => `@${item.username} (${item.message})`);
+      if (failures.length > 0) {
+        toast(texts.moderator.suspicious.failures(failures.join(", ")), "error");
+      }
       void queryClient.invalidateQueries({ queryKey: ["moderator", "suspicious"] });
     },
     onError: (error) => {
@@ -123,6 +131,12 @@ export function SuspiciousUsersSection() {
               maxLength={300}
               placeholder={texts.moderator.suspicious.reasonPlaceholder}
             />
+
+            {reason.trim().length > 0 && reason.trim().length < 10 && (
+              <p className="text-xs text-destructive">
+                {texts.moderator.suspicious.reasonMissing(10 - reason.trim().length)}
+              </p>
+            )}
 
             <div className="flex flex-wrap items-center gap-2">
               <select
