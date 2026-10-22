@@ -6,4 +6,6 @@ export type BulkBanResult = {
   alreadyBanned: number;
   failed: number;
   items: BulkBanItemResult[];
+  /** IPs fechados junto com o banimento (a conta não volta pelo mesmo caminho). */
+  blockedIps: string[];
 };

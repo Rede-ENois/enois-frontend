@@ -52,6 +52,9 @@ export function SuspiciousUsersSection() {
       if (failures.length > 0) {
         toast(texts.moderator.suspicious.failures(failures.join(", ")), "error");
       }
+      if (result.blockedIps.length > 0) {
+        toast(texts.moderator.suspicious.blockedIps(result.blockedIps.length), "success");
+      }
       void queryClient.invalidateQueries({ queryKey: ["moderator", "suspicious"] });
     },
     onError: (error) => {
@@ -132,12 +135,6 @@ export function SuspiciousUsersSection() {
               placeholder={texts.moderator.suspicious.reasonPlaceholder}
             />
 
-            {reason.trim().length > 0 && reason.trim().length < 10 && (
-              <p className="text-xs text-destructive">
-                {texts.moderator.suspicious.reasonMissing(10 - reason.trim().length)}
-              </p>
-            )}
-
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={type}
@@ -153,7 +150,7 @@ export function SuspiciousUsersSection() {
                 variant="destructive"
                 size="sm"
                 className="w-auto rounded-full"
-                disabled={selected.size === 0 || reason.trim().length < 10}
+                disabled={selected.size === 0}
                 onClick={() => setConfirmOpen(true)}
               >
                 {texts.moderator.suspicious.ban(selected.size)}

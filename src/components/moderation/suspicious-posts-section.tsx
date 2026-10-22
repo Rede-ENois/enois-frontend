@@ -73,7 +73,7 @@ export function SuspiciousPostsSection() {
   };
 
   if (query.isLoading) return <ListRowSkeletons />;
-  if (query.isError) return null; // 403 = não é admin
+  if (query.isError) return null; // 403 = não é do time de moderação
 
   return (
     <section className="space-y-3" aria-label={texts.moderator.suspiciousPosts.title}>

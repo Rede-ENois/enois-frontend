@@ -10,4 +10,5 @@ export type ModeratorTabId =
   | "applications"
   | "users"
   | "suspicious"
+  | "suspiciousPosts"
   | "emails";

@@ -3145,7 +3145,8 @@ export const texts = {
       applications: "Candidaturas",
       users: "Usuários",
       emails: "E-mails",
-      suspicious: "Suspeitos",
+      suspicious: "Contas suspeitas",
+      suspiciousPosts: "Posts suspeitos",
     },
     suspiciousPosts: {
       title: "Posts suspeitos",
@@ -3193,20 +3194,21 @@ export const texts = {
       selectAll: "Selecionar todas",
       clear: "Limpar seleção",
       selected: (count: number) => `${count} selecionada(s)`,
-      reasonPlaceholder: "Motivo do banimento (mínimo de 10 caracteres)",
+      reasonPlaceholder:
+        "Motivo (opcional) — sem ele fica registrado como limpeza de contas em série",
       typeBan: "Banir",
       typePermanent: "Banir permanentemente",
       ban: (count: number) => (count === 0 ? "Banir selecionadas" : `Banir ${count} conta(s)`),
       confirmTitle: "Banir em lote",
       confirmBody: (count: number, type: "BAN" | "PERMABAN") =>
-        `Aplicar ${type === "PERMABAN" ? "banimento permanente" : "banimento"} em ${count} conta(s)? As sessões serão revogadas e o login bloqueado.`,
+        `Aplicar ${type === "PERMABAN" ? "banimento permanente" : "banimento"} em ${count} conta(s)? As sessões serão revogadas, o login bloqueado e o IP de cada conta entra na lista de bloqueio.`,
       confirm: "Banir agora",
       result: (banned: number, already: number, failed: number) =>
         `${banned} banida(s), ${already} já estavam banidas, ${failed} falha(s).`,
       /** Quem falhou e por quê: sem isso, "N falha(s)" não diz o que fazer. */
       failures: (details: string) => `Falhas: ${details}`,
-      reasonMissing: (missing: number) =>
-        `Faltam ${missing} caractere(s) no motivo para liberar o banimento.`,
+      blockedIps: (count: number) =>
+        count === 0 ? "" : `${count} IP(s) bloqueado(s) junto com o lote.`,
       error: "Não foi possível banir as contas selecionadas.",
       risk: (score: number) => `risco ${score}`,
       createdAt: (date: string) => `criada em ${date}`,
