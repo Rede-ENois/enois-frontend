@@ -41,6 +41,12 @@ export type Profile = {
   aka?: string | null;
   /** Moldura de avatar equipada (loja de cosméticos). */
   avatarFrame?: string | null;
+  /** Fonte segura escolhida para o nome do perfil. */
+  nameFont?: "SYSTEM" | "SERIF" | "MONO" | "ROUNDED" | "DISPLAY" | null;
+  /** Cor hexadecimal escolhida para o nome do perfil. */
+  nameColor?: string | null;
+  /** Tema declarativo do nome do perfil, com fonte, paleta e efeito seguros. */
+  nameTheme?: "DEFAULT" | "PIXEL" | "GOTHIC" | "NEON" | "GLITCH" | "CANDY" | null;
   /** Currículo em PDF (endereço no storage) — só o dono recebe estes dois campos. */
   resumeUrl?: string | null;
   resumeName?: string | null;

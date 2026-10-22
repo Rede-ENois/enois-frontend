@@ -199,6 +199,12 @@ export function SuspiciousUsersSection() {
                         <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary-text">
                           {texts.moderator.suspicious.risk(item.riskScore)}
                         </span>
+
+                        {item.staff && (
+                          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-text-strong">
+                            {texts.moderator.suspicious.staffChip}
+                          </span>
+                        )}
                       </span>
 
                       <span className="block text-xs text-text-subtle">

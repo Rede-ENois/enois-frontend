@@ -75,15 +75,31 @@ export function NotificationsPopover() {
   // (mesma fonte de verdade do menu — /me/preferences).
   // Convites de conexao agora vivem na tab Solicitacoes — tirar das notificacoes normais
   // evita duplicidade (a mesma pessoa aparecia em Novas e em Solicitacoes ao mesmo tempo).
-  const notificationList = (notificationsData?.items ?? []).filter(
+  // Conversa tem canal próprio (aba Chat): misturar com curtida/convite no sino fazia a pessoa
+  // perder mensagem no meio do resto — e o pedido do suporte foi justamente separar.
+  const isChatNotification = (kind: string) => kind.toLowerCase() === "new_message";
+  const visibleNotifications = (notificationsData?.items ?? []).filter(
+    (notification) => !isNotificationHidden(notification.kind, disabledModules),
+  );
+  const chatNotifications = visibleNotifications.filter((notification) =>
+    isChatNotification(notification.kind),
+  );
+  const notificationList = visibleNotifications.filter(
     (notification) =>
-      !isNotificationHidden(notification.kind, disabledModules) &&
-      notification.kind.toLowerCase() !== "connection_request",
+      notification.kind.toLowerCase() !== "connection_request" &&
+      !isChatNotification(notification.kind),
   );
   const unreadCount = notificationList.filter((notification) => !notification.read).length;
-  const displayedNotifications = notificationList.filter((notification) =>
-    notificationTab === "novas" ? !notification.read : notification.read,
-  );
+  const chatUnreadCount = chatNotifications.filter((notification) => !notification.read).length;
+  // O sino continua sinalizando mensagem nova (senão a aba Chat passaria despercebida); o que muda
+  // é que ela não se mistura mais com curtida/convite na lista de Novas.
+  const totalUnread = unreadCount + chatUnreadCount;
+  const displayedNotifications =
+    notificationTab === "chat"
+      ? chatNotifications
+      : notificationList.filter((notification) =>
+          notificationTab === "novas" ? !notification.read : notification.read,
+        );
 
   const currentUserId = getCurrentUserId();
   const rawIncoming = (pendingRequests.data?.items ?? []).filter(
@@ -129,15 +145,15 @@ export function NotificationsPopover() {
         <button
           className="relative grid h-10 w-10 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary"
           aria-label={
-            unreadCount > 0
-              ? texts.notifications.unreadLabel(unreadCount)
+            totalUnread > 0
+              ? texts.notifications.unreadLabel(totalUnread)
               : texts.notifications.title
           }
         >
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {totalUnread > 0 && (
             <span className="absolute right-1.5 top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-xs font-medium leading-none text-primary-foreground">
-              {unreadCount > 9 ? texts.notifications.overflowCount : unreadCount}
+              {totalUnread > 9 ? texts.notifications.overflowCount : totalUnread}
             </span>
           )}
         </button>
@@ -197,6 +213,24 @@ export function NotificationsPopover() {
 
           <button
             type="button"
+            onClick={() => setNotificationTab("chat")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-normal transition",
+              notificationTab === "chat"
+                ? "border-b-2 border-primary text-primary"
+                : "text-text-subtle hover:text-text-strong",
+            )}
+          >
+            <>{texts.notifications.tabs.chat}</>
+            {chatUnreadCount > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
+                {chatUnreadCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setNotificationTab("solicitacoes")}
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-normal transition",
@@ -251,7 +285,9 @@ export function NotificationsPopover() {
             <p className="px-4 py-8 text-center text-sm font-normal text-text-subtle">
               {notificationTab === "novas"
                 ? texts.notifications.emptyNew
-                : texts.notifications.emptyHistory}
+                : notificationTab === "chat"
+                  ? texts.notifications.emptyChat
+                  : texts.notifications.emptyHistory}
             </p>
           ) : (
             displayedNotifications.map((notification) => (

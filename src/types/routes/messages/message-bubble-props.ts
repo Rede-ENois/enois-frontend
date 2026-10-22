@@ -16,4 +16,6 @@ export type MessageBubbleProps = {
   onToggleSelect?: () => void;
   /** Reagir ou desfazer. Ausente nas mesmas condições da seleção. */
   onReact?: (type: string) => void;
+  /** Recibo de leitura: a outra pessoa já abriu a conversa depois desta mensagem. */
+  readByOther?: boolean;
 };

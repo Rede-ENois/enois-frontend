@@ -9,7 +9,6 @@ import type { PostIdProps } from "@/types/components/post/post-id-props";
 import { Smile, Users } from "lucide-react";
 
 import { REACTION_EMOJIS, profileApi } from "@/lib/api";
-import { isOwnMediaUrl } from "@/lib/api/media";
 import { reactionsQueryOptions } from "@/lib/reactions/query-options";
 import { sortReactionTabsStable } from "@/lib/reactions/summary";
 import { useAuth } from "@/lib/use-auth";
@@ -82,17 +81,13 @@ export function ReactionsDialog({ postId }: PostIdProps) {
       <ul className="list-none divide-y divide-border-soft">
         {rows.map((r) => {
           const profile = users?.[r.userId];
-          // Avatar de terceiro não carrega sozinho (entregaria o IP de quem lê ao autor). Fora
-          // da nossa mídia/CDN, cai nas iniciais do UserAvatar.
-          const avatar =
-            profile?.avatar && isOwnMediaUrl(profile.avatar) ? profile.avatar : undefined;
           const mine = r.userId === currentUserId;
 
           return (
             <li key={`${r.userId}-${r.type}`} className="flex h-12 items-center gap-3 px-3">
               <UserAvatar
                 frame={profile?.avatarFrame}
-                src={avatar}
+                src={profile?.avatar ?? undefined}
                 alt={profile?.name}
                 className="h-8 w-8 shrink-0"
               />

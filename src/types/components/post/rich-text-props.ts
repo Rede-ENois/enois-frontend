@@ -12,4 +12,6 @@ export type RichTextProps = {
    * bloco no fim (quem decide a lista é quem chama, filtrando os que foram inseridos inline).
    */
   mediaIds?: string[] | null;
+  /** Oculta imagens e vídeos anexados/inline até a pessoa revelar o conteúdo. */
+  mediaSpoiler?: boolean;
 };

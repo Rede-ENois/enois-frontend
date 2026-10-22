@@ -100,7 +100,6 @@ function Freelances() {
             onChange={(event) => setBusca(event.target.value)}
             placeholder={texts.jobs.freelancePage.searchPlaceholder}
             aria-label={texts.jobs.freelancePage.searchPlaceholder}
-            maxLength={80}
             className="pl-9"
           />
         </div>

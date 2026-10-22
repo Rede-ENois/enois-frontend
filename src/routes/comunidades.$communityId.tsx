@@ -20,6 +20,7 @@ import {
   Camera,
   ChevronDown,
   Crown,
+  EyeOff,
   Paperclip,
   Send,
   Settings,
@@ -59,6 +60,7 @@ import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { SpoilerPreview } from "@/components/post/spoiler-preview";
 import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/comunidades/$communityId")({
@@ -98,6 +100,7 @@ function CommunityDetail() {
   // comunidade só dava erro).
   const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
@@ -207,6 +210,7 @@ function CommunityDetail() {
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       setDraft("");
       setMedia([]);
+      setMediaSpoiler(false);
       setPageHtml("");
       setArticleBody("");
       setMentionedUserIds([]);
@@ -237,6 +241,7 @@ function CommunityDetail() {
         content: pageMode ? "" : content,
         communityId: community.id,
         mediaIds,
+        mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
@@ -629,6 +634,22 @@ function CommunityDetail() {
                   </button>
                 )}
 
+                {!pageMode && media.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setMediaSpoiler((active) => !active)}
+                    title={mediaSpoiler ? texts.feed.composer.mediaSpoilerActive : texts.feed.composer.mediaSpoiler}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
+                      mediaSpoiler
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    <EyeOff className="h-3.5 w-3.5" />
+                    {mediaSpoiler ? texts.feed.composer.mediaSpoilerActive : texts.feed.composer.mediaSpoiler}
+                  </button>
+                )}
+
                 <input
                   ref={fileRef}
                   type="file"
@@ -668,14 +689,22 @@ function CommunityDetail() {
                     key={index}
                     className="relative h-20 w-20 overflow-hidden rounded-xl border border-border-soft"
                   >
-                    <img src={item.preview} alt="" className="h-full w-full object-cover" />
+                    <SpoilerPreview
+                      active={mediaSpoiler}
+                      label={texts.posts.mediaSpoiler.badge}
+                      className="h-full w-full"
+                    >
+                      <img src={item.preview} alt="" className="h-full w-full object-cover" />
+                    </SpoilerPreview>
 
                     <button
                       type="button"
                       onClick={() =>
                         setMedia((current) => {
                           URL.revokeObjectURL(current[index].preview);
-                          return current.filter((_, i) => i !== index);
+                          const next = current.filter((_, i) => i !== index);
+                          if (next.length === 0) setMediaSpoiler(false);
+                          return next;
                         })
                       }
                       className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-surface-card/80 text-text-strong"

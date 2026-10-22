@@ -305,6 +305,87 @@
   transform-origin: bottom center;
 }
 
+/* Temas declarativos do nome do perfil: a aparência vem de presets conhecidos,
+   nunca de CSS ou keyframes enviados por usuários. */
+.profile-name-theme-pixel {
+  letter-spacing: 0.04em;
+  text-shadow: 2px 0 0 rgb(54 217 138 / 0.35);
+}
+
+.profile-name-theme-gothic {
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 12px rgb(155 93 229 / 0.3);
+}
+
+.profile-name-theme-neon {
+  background-size: 200% auto;
+  text-shadow:
+    0 0 12px rgb(255 79 163 / 0.45),
+    0 0 24px rgb(139 92 246 / 0.3);
+  animation: profile-name-neon 3.2s ease-in-out infinite;
+}
+
+.profile-name-theme-glitch {
+  letter-spacing: 0.03em;
+  text-shadow:
+    2px 0 0 rgb(34 211 238 / 0.65),
+    -2px 0 0 rgb(255 79 163 / 0.65);
+  animation: profile-name-glitch 2.4s steps(2, end) infinite;
+}
+
+.profile-name-theme-candy {
+  background-size: 180% auto;
+  text-shadow: 0 0 10px rgb(255 126 182 / 0.35);
+  animation: profile-name-shimmer 3.5s linear infinite;
+}
+
+@keyframes profile-name-neon {
+  0%,
+  100% {
+    background-position: 0% 50%;
+    filter: brightness(1);
+  }
+
+  50% {
+    background-position: 100% 50%;
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes profile-name-shimmer {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 180% 50%;
+  }
+}
+
+@keyframes profile-name-glitch {
+  0%,
+  88%,
+  100% {
+    transform: translate(0);
+  }
+
+  90% {
+    transform: translate(-1px, 1px);
+  }
+
+  94% {
+    transform: translate(1px, -1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-name-theme-neon,
+  .profile-name-theme-glitch,
+  .profile-name-theme-candy {
+    animation: none;
+  }
+}
+
 /* Smoky gradient dividers between sections */
 .smoky-bottom-eeedf2::after {
   content: "";

@@ -1,7 +1,7 @@
 import type { PostView } from "./post-view";
 
 export type CreatePostInput = Pick<PostView, "type" | "content"> &
-  Partial<Pick<PostView, "tags" | "mediaIds" | "pageHtml" | "articleBody">> & {
+  Partial<Pick<PostView, "tags" | "mediaIds" | "pageHtml" | "articleBody" | "mediaSpoiler">> & {
     mentionedUserIds?: string[];
     communityId?: string;
     /** Assunto do post AVULSO (um da taxonomia). Em comunidade o post herda o dela — não mande. */

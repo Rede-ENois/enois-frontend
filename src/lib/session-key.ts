@@ -19,8 +19,31 @@ export function getSessionKey(): string | null {
   return localStorage.getItem(SESSION_KEY);
 }
 
+/**
+ * `crypto.randomUUID` só existe em contexto seguro (HTTPS/localhost). Em HTTP (por exemplo o
+ * servidor de dev acessado pelo IP da rede) o login quebrava com "randomUUID is not a function".
+ * A chave só precisa ser imprevisível, então cai para `getRandomValues`/Math.random com o formato
+ * de UUID v4.
+ */
+function newSessionId(): string {
+  const webCrypto = globalThis.crypto;
+  if (webCrypto && typeof webCrypto.randomUUID === "function") {
+    return webCrypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  if (webCrypto && typeof webCrypto.getRandomValues === "function") {
+    webCrypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export function renewSessionKey() {
-  const id = randomUUID();
+  const id = newSessionId();
   localStorage.setItem(SESSION_KEY, id);
   notify();
 }

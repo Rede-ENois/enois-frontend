@@ -1,3 +1,5 @@
+import type { ProfileNameFont } from "@/types/application/cosmetics/profile-name-font";
+import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
 import type { BackgroundStyle } from "@/types/preferences/background-style";
 import type { Theme } from "@/types/preferences/theme";
 import type { ThemeSettings } from "@/types/preferences/theme-settings";
@@ -20,6 +22,10 @@ export type PreferencesState = {
   widgetAlpha: number | null;
   /** Transparência da página; `null` = a nativa do tema (ou opaca). */
   pageAlpha: number | null;
+  /** Estilo local usado imediatamente enquanto o perfil sincroniza com o backend. */
+  displayNameFont: ProfileNameFont | null;
+  displayNameColor: string | null;
+  displayNameTheme: ProfileNameTheme | null;
   setTheme: (theme: Theme) => void;
   setThemeSettings: (settings: ThemeSettings) => void;
   resetThemeSettings: () => void;
@@ -29,5 +35,8 @@ export type PreferencesState = {
   setAccentAlpha: (alpha: number) => void;
   setWidgetAlpha: (alpha: number | null) => void;
   setPageAlpha: (alpha: number | null) => void;
+  setDisplayNameFont: (font: PreferencesState["displayNameFont"]) => void;
+  setDisplayNameColor: (color: string | null) => void;
+  setDisplayNameTheme: (theme: PreferencesState["displayNameTheme"]) => void;
   toggleSidebar: () => void;
 };

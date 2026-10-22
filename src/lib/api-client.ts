@@ -2,6 +2,7 @@ import type { RequestOptions } from "@/types/application/api/request-options";
 
 import { notifyBirthDateRequired, notifyParentalConsentRequired } from "./age-required";
 import { clearAuthHint } from "./auth-hint";
+import { getDeviceId } from "./device-id";
 import { resetSessionScopedData } from "./query-client";
 import { randomUUID } from "./random-uuid";
 import { dropSessionKey } from "./session-key";
@@ -44,6 +45,9 @@ function authHeaders(): Record<string, string> {
   const token = getToken();
   const headers: Record<string, string> = {};
   if (token) headers["X-Session-Token"] = token;
+  // Identificador opaco do dispositivo (não é MAC): correlaciona requisições e uploads nos logs.
+  const deviceId = getDeviceId();
+  if (deviceId) headers["X-Device-Id"] = deviceId;
   return headers;
 }
 

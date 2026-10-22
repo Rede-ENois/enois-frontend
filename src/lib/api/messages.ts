@@ -23,8 +23,17 @@ export const messagesApi = {
       `/conversations/${conversationId}/messages${buildQuery({ cursor, limit })}`,
     ),
 
-  sendMessage: (conversationId: string, text: string, mediaIds: string[] = []) =>
-    api.post<Message>(`/conversations/${conversationId}/messages`, { text, mediaIds }),
+  sendMessage: (
+    conversationId: string,
+    text: string,
+    mediaIds: string[] = [],
+    mediaSpoiler = false,
+  ) =>
+    api.post<Message>(`/conversations/${conversationId}/messages`, {
+      text,
+      mediaIds,
+      mediaSpoiler,
+    }),
 
   /** Reage a uma mensagem (o backend alterna: mesmo emoji remove). */
   react: (conversationId: string, messageId: string, type: string) =>

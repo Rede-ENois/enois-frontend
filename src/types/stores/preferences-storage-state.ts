@@ -10,4 +10,7 @@ export type PreferencesStorageState = {
   accentAlpha?: unknown;
   widgetAlpha?: unknown;
   pageAlpha?: unknown;
+  displayNameFont?: unknown;
+  displayNameColor?: unknown;
+  displayNameTheme?: unknown;
 };

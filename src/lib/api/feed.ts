@@ -69,6 +69,7 @@ export const feedApi = {
     articleBody?: string;
     tags?: string[];
     mediaIds?: string[];
+    mediaSpoiler?: boolean;
     mentionedUserIds?: string[];
     communityId?: string;
     /** Assunto do post avulso (viaja com o agendado; em comunidade o post herda o dela). */

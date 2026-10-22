@@ -10,8 +10,10 @@ import { splitByInlineMedia } from "@/lib/rich-text/inline-media";
 import { parseRichText } from "@/lib/rich-text/parse";
 import { directMediaKind, gifMediaUrl } from "@/lib/shared-links";
 import { cn } from "@/lib/utils";
+import { texts } from "@/texts";
 
 import { InlineMedia } from "./inline-media";
+import { SpoilerMedia } from "./spoiler-media";
 import { SpoilerText } from "./spoiler-text";
 
 /**
@@ -26,7 +28,7 @@ import { SpoilerText } from "./spoiler-text";
  * servidor de terceiro sai como link, porque imagem remota carrega sozinha e entrega o IP de quem
  * lê para quem publicou.
  */
-export function RichText({ content, className, linkClassName, mediaIds }: RichTextProps) {
+export function RichText({ content, className, linkClassName, mediaIds, mediaSpoiler }: RichTextProps) {
   const linkClass = linkClassName ?? "text-primary hover:underline";
 
   // Imagem NO MEIO do texto (item 9): quando há mídias anexadas, o conteúdo é dividido nos
@@ -45,30 +47,30 @@ export function RichText({ content, className, linkClassName, mediaIds }: RichTe
         // na gravação; aqui é a segunda trava) — o texto ao redor continua.
         if (chunk.kind === "media") {
           return mediaIds?.includes(chunk.mediaId) ? (
-            <InlineMedia key={`media-${chunkKey}`} mediaId={chunk.mediaId} />
+            <InlineMedia key={`media-${chunkKey}`} mediaId={chunk.mediaId} mediaSpoiler={mediaSpoiler} />
           ) : null;
         }
         return parseRichText(chunk.text).map((block, key) =>
-          renderBlock(block, `${chunkKey}-${key}`, linkClass),
+          renderBlock(block, `${chunkKey}-${key}`, linkClass, mediaSpoiler),
         );
       })}
     </div>
   );
 }
 
-function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactNode {
+function renderBlock(block: RichNode, key: React.Key, linkClass: string, mediaSpoiler = false): ReactNode {
   switch (block.kind) {
     case "heading":
       return (
         <p key={key} className={cn("mt-2 font-medium", HEADING_SIZE[block.level ?? 1])}>
-          {renderInline(block.children ?? [], linkClass)}
+          {renderInline(block.children ?? [], linkClass, mediaSpoiler)}
         </p>
       );
 
     case "quote":
       return (
         <blockquote key={key} className="my-2 border-l-2 border-border-soft pl-3 text-text-subtle">
-          {renderInline(block.children ?? [], linkClass)}
+          {renderInline(block.children ?? [], linkClass, mediaSpoiler)}
         </blockquote>
       );
 
@@ -90,7 +92,7 @@ function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactN
         <div key={key} className="my-2 overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <tbody>
-              {block.children?.map((child, index) => renderBlock(child, index, linkClass))}
+              {block.children?.map((child, index) => renderBlock(child, index, linkClass, mediaSpoiler))}
             </tbody>
           </table>
         </div>
@@ -99,7 +101,7 @@ function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactN
     case "tableRow":
       return (
         <tr key={key}>
-          {block.children?.map((child, index) => renderBlock(child, index, linkClass))}
+          {block.children?.map((child, index) => renderBlock(child, index, linkClass, mediaSpoiler))}
         </tr>
       );
 
@@ -113,7 +115,7 @@ function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactN
 
       return block.header ? (
         <th key={key} className={cellClass}>
-          {renderInline(block.children ?? [], linkClass)}
+          {renderInline(block.children ?? [], linkClass, mediaSpoiler)}
         </th>
       ) : (
         <td key={key} className={cellClass}>
@@ -128,11 +130,11 @@ function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactN
 
       return block.ordered ? (
         <ol key={key} className="my-2 list-decimal space-y-1 pl-5">
-          {block.children?.map((child, index) => renderBlock(child, index, linkClass))}
+          {block.children?.map((child, index) => renderBlock(child, index, linkClass, mediaSpoiler))}
         </ol>
       ) : (
         <ul key={key} className={cn("my-2 space-y-1", task ? "list-none pl-0" : "list-disc pl-5")}>
-          {block.children?.map((child, index) => renderBlock(child, index, linkClass))}
+          {block.children?.map((child, index) => renderBlock(child, index, linkClass, mediaSpoiler))}
         </ul>
       );
     }
@@ -150,7 +152,7 @@ function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactN
             />
           )}
 
-          {renderInline(block.children ?? [], linkClass)}
+          {renderInline(block.children ?? [], linkClass, mediaSpoiler)}
 
           {block.nested?.map((child, index) => renderBlock(child, index, linkClass))}
         </li>
@@ -159,17 +161,17 @@ function renderBlock(block: RichNode, key: React.Key, linkClass: string): ReactN
     default:
       return (
         <p key={key} className="whitespace-pre-line break-words">
-          {renderInline(block.children ?? [], linkClass)}
+          {renderInline(block.children ?? [], linkClass, mediaSpoiler)}
         </p>
       );
   }
 }
 
-function renderInline(nodes: RichNode[], linkClass: string): ReactNode {
+function renderInline(nodes: RichNode[], linkClass: string, mediaSpoiler = false): ReactNode {
   return nodes.map((node, index) => {
     // Nó com filhos já foi lido de novo pelo parser (negrito com itálico dentro, link com
     // formatação): o texto cru só vale quando não há filhos.
-    const inner = node.children ? renderInline(node.children, linkClass) : node.text;
+    const inner = node.children ? renderInline(node.children, linkClass, mediaSpoiler) : node.text;
 
     switch (node.kind) {
       case "bold":
@@ -213,7 +215,7 @@ function renderInline(nodes: RichNode[], linkClass: string): ReactNode {
 
       case "link":
         if (isMidiaDireta(node.href)) {
-          return renderMidia(node.href!, index);
+          return renderMidia(node.href!, index, mediaSpoiler);
         }
         return (
           <a
@@ -229,17 +231,21 @@ function renderInline(nodes: RichNode[], linkClass: string): ReactNode {
 
       case "image":
         if (isMidiaDireta(node.href)) {
-          return renderMidia(node.href!, index);
+          return renderMidia(node.href!, index, mediaSpoiler);
         }
         return isOwnMediaUrl(node.href ?? "") ? (
-          <img
-            key={index}
-            src={node.href}
-            alt={node.text ?? ""}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            className="my-1 max-h-80 rounded-xl border border-border-soft object-contain"
-          />
+          <SpoilerMedia active={mediaSpoiler} label={texts.posts.mediaSpoiler.reveal}>
+            {() => (
+              <img
+                key={index}
+                src={node.href}
+                alt={node.text ?? ""}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="my-1 max-h-80 rounded-xl border border-border-soft object-contain"
+              />
+            )}
+          </SpoilerMedia>
         ) : (
           <a
             key={index}
@@ -271,17 +277,21 @@ function isMidiaDireta(href?: string | null): boolean {
 }
 
 /** Renderiza a mídia inline: o link cru sai do texto e a mídia roda no player (pedido da Mel). */
-function renderMidia(href: string, key: React.Key): ReactNode {
+function renderMidia(href: string, key: React.Key, mediaSpoiler = false): ReactNode {
   const tipo = directMediaKind(href);
   if (tipo === "video") {
     return (
-      <video
-        key={key}
-        src={withImageKitOriginal(href)}
-        controls
-        playsInline
-        className="my-1 max-h-96 w-full rounded-xl border border-border-soft"
-      />
+      <SpoilerMedia active={mediaSpoiler} label={texts.posts.mediaSpoiler.reveal}>
+        {() => (
+          <video
+            key={key}
+            src={withImageKitOriginal(href)}
+            controls
+            playsInline
+            className="my-1 max-h-96 w-full rounded-xl border border-border-soft"
+          />
+        )}
+      </SpoilerMedia>
     );
   }
   if (tipo === "audio") {
@@ -290,13 +300,17 @@ function renderMidia(href: string, key: React.Key): ReactNode {
     );
   }
   return (
-    <img
-      key={key}
-      src={gifMediaUrl(href) ?? href}
-      alt=""
-      loading="lazy"
-      referrerPolicy="no-referrer"
-      className="my-1 max-h-96 rounded-xl border border-border-soft"
-    />
+    <SpoilerMedia active={mediaSpoiler} label={texts.posts.mediaSpoiler.reveal}>
+      {() => (
+        <img
+          key={key}
+          src={gifMediaUrl(href) ?? href}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="my-1 max-h-96 rounded-xl border border-border-soft"
+        />
+      )}
+    </SpoilerMedia>
   );
 }

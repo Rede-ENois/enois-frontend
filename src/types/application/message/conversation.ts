@@ -6,4 +6,6 @@ export type Conversation = {
   lastMessage: string | null;
   time: string | null;
   unread: number;
+  /** Quando o outro participante abriu a conversa pela última vez (recibo de leitura). */
+  otherLastReadAt?: string | null;
 };

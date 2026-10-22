@@ -6,7 +6,6 @@ import { texts } from "@/texts";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 
 import { profileApi, sealsApi } from "@/lib/api";
-import { isOwnMediaUrl } from "@/lib/api/media";
 import { cn } from "@/lib/utils";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -99,8 +98,7 @@ export function SealsDialog({ postId }: PostIdProps) {
 
             {grouped.map((entry) => {
               const user = users?.[entry.userId];
-              // Avatar de URL externa não carrega: evita rastreio de quem visualiza; mostra iniciais.
-              const avatar = user?.avatar && isOwnMediaUrl(user.avatar) ? user.avatar : undefined;
+              const avatar = user?.avatar ?? undefined;
               return (
                 <div
                   key={entry.userId}

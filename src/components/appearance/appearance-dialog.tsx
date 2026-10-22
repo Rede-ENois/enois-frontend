@@ -1,7 +1,16 @@
 import { useMemo, useRef, useState } from "react";
 
+import { useMutation } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 
+import {
+  PROFILE_NAME_COLORS,
+  PROFILE_NAME_FONTS,
+  PROFILE_NAME_THEMES,
+  profileNameFontFamily,
+  profileNameTheme,
+  profileNameThemePaint,
+} from "@/constants/profile-name-fonts";
 import { THEME_LIMITS } from "@/constants/theme-defaults";
 import { THEME_PRESETS } from "@/constants/theme-presets";
 import { usePreferencesStore } from "@/stores/preferences.store";
@@ -12,6 +21,7 @@ import type { ThemeBackground } from "@/types/preferences/theme-background";
 import type { ThemePresetId } from "@/types/preferences/theme-preset-id";
 import { Download, Moon, RotateCcw, Store, Sun, Upload } from "lucide-react";
 
+import { cosmeticsApi } from "@/lib/api";
 import { resolveThemeCollection } from "@/lib/theme/build-collection-css";
 import { reportThemeContrast, sameThemeSettings } from "@/lib/theme/build-theme-tokens";
 import { syncThemeCollection } from "@/lib/theme/sync-theme-collection";
@@ -52,7 +62,14 @@ function percent(value: number, max: number): string {
  * app ao lado e um aviso de contraste que avisa quando a combinação fica difícil
  * de ler. Não há "salvar" porque não há o que desfazer depois: é preferência.
  */
-export function AppearanceDialog({ open, onOpenChange }: AppearanceDialogProps) {
+export function AppearanceDialog({
+  open,
+  onOpenChange,
+  profileName,
+  profileNameFont,
+  profileNameColor,
+  profileNameTheme: profileNameThemeId,
+}: AppearanceDialogProps) {
   const theme = usePreferencesStore((state) => state.theme);
   const setTheme = usePreferencesStore((state) => state.setTheme);
   const settings = usePreferencesStore((state) => state.themeSettings);
@@ -64,12 +81,30 @@ export function AppearanceDialog({ open, onOpenChange }: AppearanceDialogProps) 
   const setWidgetBackground = usePreferencesStore((state) => state.setWidgetBackground);
   const pageBackground = usePreferencesStore((state) => state.pageBackground);
   const setPageBackground = usePreferencesStore((state) => state.setPageBackground);
+  const displayNameFont = usePreferencesStore((state) => state.displayNameFont);
+  const setDisplayNameFont = usePreferencesStore((state) => state.setDisplayNameFont);
+  const displayNameColor = usePreferencesStore((state) => state.displayNameColor);
+  const setDisplayNameColor = usePreferencesStore((state) => state.setDisplayNameColor);
+  const displayNameTheme = usePreferencesStore((state) => state.displayNameTheme);
+  const setDisplayNameTheme = usePreferencesStore((state) => state.setDisplayNameTheme);
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileMessage, setFileMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(
     null,
   );
   const [sellOpen, setSellOpen] = useState(false);
+
+  const selectedNameTheme = displayNameTheme ?? profileNameThemeId ?? "DEFAULT";
+  const selectedNameThemeDefinition = profileNameTheme(selectedNameTheme);
+  const selectedNameFont = displayNameFont ?? profileNameFont ?? selectedNameThemeDefinition.font;
+  const selectedNameColor = displayNameColor ?? profileNameColor ?? "#ff7a18";
+  const nameStyleMutation = useMutation({
+    mutationFn: cosmeticsApi.setNameStyle,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["profile"] });
+      void queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
 
   const report = useMemo(() => reportThemeContrast(settings, theme), [settings, theme]);
 
@@ -135,6 +170,26 @@ export function AppearanceDialog({ open, onOpenChange }: AppearanceDialogProps) 
   const updateBackground = (patch: Partial<ThemeBackground>) =>
     setThemeSettings({ ...settings, background: { ...settings.background, ...patch } });
 
+  const updateNameStyle = (
+    patch: Partial<{
+      theme: typeof selectedNameTheme;
+      font: typeof selectedNameFont;
+      color: string;
+    }>,
+  ) => {
+    const nextTheme = patch.theme ?? selectedNameTheme;
+    const nextThemeDefinition = profileNameTheme(nextTheme);
+    const next = {
+      theme: nextTheme,
+      font: patch.font ?? (patch.theme ? nextThemeDefinition.font : selectedNameFont),
+      color: patch.color ?? (patch.theme ? nextThemeDefinition.colors[0] : selectedNameColor),
+    };
+    setDisplayNameTheme(next.theme);
+    setDisplayNameFont(next.font);
+    setDisplayNameColor(next.color);
+    nameStyleMutation.mutate(next);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
@@ -161,6 +216,139 @@ export function AppearanceDialog({ open, onOpenChange }: AppearanceDialogProps) 
                 {texts.appearance.colorsNote(activeCollection.name)}
               </p>
             )}
+          </section>
+
+          <section className="space-y-3 border-t border-border-soft pt-4">
+            <div className="space-y-0.5">
+              <h3 className="text-xs font-medium text-text-strong">
+                {texts.appearance.nameStyleTitle}
+              </h3>
+
+              <p className="text-xs font-normal text-text-subtle">
+                {texts.appearance.nameStyleHint}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-xs font-medium text-text-strong">
+                {texts.appearance.nameStyleThemesTitle}
+              </h4>
+
+              <p className="text-xs font-normal text-text-subtle">
+                {texts.appearance.nameStyleThemesHint}
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {Object.entries(PROFILE_NAME_THEMES).map(([theme, definition]) => {
+                  const themeId = theme as typeof selectedNameTheme;
+                  const themeColors = profileNameThemePaint(themeId);
+                  const gradient = definition.colors.length > 1;
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() => updateNameStyle({ theme: themeId })}
+                      aria-pressed={selectedNameTheme === themeId}
+                      className={cn(
+                        "rounded-xl border px-2 py-3 text-center text-sm transition",
+                        selectedNameTheme === themeId
+                          ? "border-primary bg-primary-soft text-primary"
+                          : "border-border-soft bg-surface-1 text-text-subtle hover:border-primary/60 hover:text-text-strong",
+                        definition.className,
+                      )}
+                      style={{
+                        fontFamily: profileNameFontFamily(definition.font),
+                        ...(gradient
+                          ? {
+                              backgroundImage: themeColors,
+                              WebkitBackgroundClip: "text",
+                              backgroundClip: "text",
+                              color: "transparent",
+                            }
+                          : { color: definition.colors[0] }),
+                      }}
+                    >
+                      {texts.appearance.nameStyleThemes[themeId]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {Object.entries(PROFILE_NAME_FONTS).map(([font, family]) => {
+                const fontId = font as typeof selectedNameFont;
+                return (
+                  <button
+                    key={font}
+                    type="button"
+                    onClick={() => updateNameStyle({ font: fontId })}
+                    aria-pressed={selectedNameFont === fontId}
+                    className={cn(
+                      "rounded-xl border px-2 py-3 text-center text-xs transition",
+                      selectedNameFont === fontId
+                        ? "border-primary bg-primary-soft text-primary"
+                        : "border-border-soft bg-surface-1 text-text-subtle hover:border-primary/60 hover:text-text-strong",
+                    )}
+                    style={{ fontFamily: family }}
+                  >
+                    {texts.appearance.nameStyleFonts[fontId]}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {PROFILE_NAME_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  aria-label={texts.appearance.nameStyleUseColor(color)}
+                  aria-pressed={selectedNameColor === color}
+                  onClick={() => updateNameStyle({ color })}
+                  className={cn(
+                    "h-8 w-8 rounded-full border-2 transition",
+                    selectedNameColor === color
+                      ? "border-text-strong ring-2 ring-primary ring-offset-2 ring-offset-surface-card"
+                      : "border-transparent",
+                  )}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+              <label className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-surface-1 px-3 py-1.5 text-xs text-text-subtle">
+                {texts.appearance.nameStyleOtherColor}
+                <input
+                  type="color"
+                  value={selectedNameColor}
+                  onChange={(event) => updateNameStyle({ color: event.target.value })}
+                  className="h-6 w-6 cursor-pointer rounded-full border-0 bg-transparent p-0"
+                />
+              </label>
+            </div>
+
+            <div className="rounded-xl border border-border-soft bg-surface-1 px-4 py-3">
+              <p className="text-xs text-text-subtle">{texts.appearance.nameStylePreview}</p>
+
+              <p
+                className={cn("mt-1 text-xl font-semibold", selectedNameThemeDefinition.className)}
+                style={{
+                  fontFamily: profileNameFontFamily(selectedNameFont),
+                  ...(selectedNameThemeDefinition.colors.length > 1
+                    ? {
+                        backgroundImage: profileNameThemePaint(
+                          selectedNameTheme,
+                          selectedNameColor,
+                        ),
+                        WebkitBackgroundClip: "text",
+                        backgroundClip: "text",
+                        color: "transparent",
+                      }
+                    : { color: selectedNameColor }),
+                }}
+              >
+                {profileName ?? texts.appearance.nameStylePreviewName}
+              </p>
+            </div>
           </section>
 
           <section className="space-y-2">

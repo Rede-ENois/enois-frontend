@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import type { ServiceContract } from "@/types/application/services/service-contract";
 import type { ServiceListing } from "@/types/application/services/service-listing";
 import type { ServiceRequest } from "@/types/application/services/service-request";
 import { Briefcase, Handshake, Search, Send, Sparkles } from "lucide-react";
 
-import { servicesApi } from "@/lib/api";
+import { messagesApi, servicesApi } from "@/lib/api";
 import { formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
+import { requireAuth } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
 import { Button } from "@/components/ui/button";
@@ -194,9 +195,18 @@ function Price({ value, currency }: { value: number; currency: string }) {
 
 function OfferCard({ listing }: { listing: ServiceListing }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const buy = useMutation({
     mutationFn: () => servicesApi.buyListing(listing.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["services"] }),
+  });
+
+  // Antes de contratar (ou de combinar em reais) a pessoa precisa poder FALAR com quem oferece:
+  // abre a conversa direta existente ou cria uma nova, igual ao botão do perfil.
+  const contact = useMutation({
+    mutationFn: () => messagesApi.openDirect(listing.sellerId),
+    onSuccess: (conversation) =>
+      navigate({ to: "/mensagens", search: { conversation: conversation.id } }),
   });
 
   return (
@@ -217,6 +227,20 @@ function OfferCard({ listing }: { listing: ServiceListing }) {
       <p className="mt-2 line-clamp-2 text-sm text-text-subtle">{listing.description}</p>
 
       <p className="mt-1 text-xs text-text-subtle">Entrega: {listing.deliverables}</p>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-3 w-full rounded-full"
+        disabled={contact.isPending}
+        onClick={() => {
+          // requireAuth joga para o login quando não há sessão (visitante não tem conversa).
+          requireAuth();
+          contact.mutate();
+        }}
+      >
+        {contact.isPending ? "Abrindo conversa…" : "Falar com o prestador"}
+      </Button>
 
       {listing.currency === "BRL" ? (
         <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 text-center text-xs text-text-subtle">

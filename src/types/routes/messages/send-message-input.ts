@@ -5,4 +5,5 @@ export type SendMessageInput = {
   conversationId: Conversation["id"];
   text: Message["text"];
   mediaIds: Message["mediaIds"];
+  mediaSpoiler?: boolean;
 };

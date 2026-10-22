@@ -4,7 +4,7 @@ import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { MessageBubbleProps } from "@/types/routes/messages/message-bubble-props";
-import { Smile } from "lucide-react";
+import { Check, CheckCheck, Smile } from "lucide-react";
 
 import { formatTime } from "@/components/post/format-time";
 import { MediaGrid } from "@/components/post/media-grid";
@@ -23,6 +23,7 @@ export function MessageBubble({
   selected,
   onToggleSelect,
   onReact,
+  readByOther = false,
 }: MessageBubbleProps) {
   return (
     <div
@@ -54,6 +55,7 @@ export function MessageBubble({
         {message.text.trim().length > 0 && (
           <RichText
             content={message.text}
+            mediaSpoiler={message.mediaSpoiler}
             className="break-words"
             linkClassName="break-all underline underline-offset-2"
           />
@@ -61,14 +63,31 @@ export function MessageBubble({
 
         {message.mediaIds && message.mediaIds.length > 0 && (
           <div className="mt-1">
-            <MediaGrid mediaIds={message.mediaIds} compact />
+            <MediaGrid mediaIds={message.mediaIds} compact mediaSpoiler={message.mediaSpoiler} />
           </div>
         )}
 
         <p
-          className={`mt-1 text-xs ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+          className={`mt-1 flex items-center gap-1 text-xs ${
+            isMe ? "justify-end text-primary-foreground/70" : "text-muted-foreground"
+          }`}
         >
           {formatTime(message.time)}
+
+          {isMe && (
+            <span
+              title={readByOther ? texts.messages.readReceiptRead : texts.messages.readReceiptSent}
+              aria-label={
+                readByOther ? texts.messages.readReceiptRead : texts.messages.readReceiptSent
+              }
+            >
+              {readByOther ? (
+                <CheckCheck className="h-3.5 w-3.5" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+            </span>
+          )}
         </p>
 
         {/* Reações: mesmos emojis dos comentários. A pílula alterna a reação e

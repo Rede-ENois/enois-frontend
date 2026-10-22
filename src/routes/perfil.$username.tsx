@@ -3,6 +3,12 @@ import { type ChangeEvent, useCallback, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 
+import {
+  profileNameFontFamily,
+  profileNameTheme,
+  profileNameThemePaint,
+} from "@/constants/profile-name-fonts";
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-purpose";
@@ -43,6 +49,7 @@ import { resolveCdnUrl } from "@/lib/api/media";
 import { buildShareTags } from "@/lib/open-graph";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -173,6 +180,15 @@ function Profile() {
 
   const user = liveProfile ?? loaderUser;
   const isOwnProfile = me?.id === user.id;
+  const localNameFont = usePreferencesStore((state) => state.displayNameFont);
+  const localNameColor = usePreferencesStore((state) => state.displayNameColor);
+  const localNameTheme = usePreferencesStore((state) => state.displayNameTheme);
+  const renderedNameTheme = isOwnProfile ? (localNameTheme ?? user.nameTheme) : user.nameTheme;
+  const renderedNameThemeDefinition = profileNameTheme(renderedNameTheme);
+  const renderedNameFont = isOwnProfile
+    ? (localNameFont ?? user.nameFont ?? renderedNameThemeDefinition.font)
+    : (user.nameFont ?? renderedNameThemeDefinition.font);
+  const renderedNameColor = isOwnProfile ? (localNameColor ?? user.nameColor) : user.nameColor;
 
   // Selo "Dev de jogos" (G2 do plano dos games): só aparece quando a pessoa TEM presença de dev
   // de verdade — jogo publicado ou página de criador preenchida. O DONO da conta recebe 200 do
@@ -583,7 +599,26 @@ function Profile() {
 
             <div className="mt-5">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="min-w-0 break-words text-xl font-normal tracking-tight text-text-strong">
+                <h1
+                  className={cn(
+                    "min-w-0 break-words text-xl font-normal tracking-tight text-text-strong",
+                    renderedNameThemeDefinition.className,
+                  )}
+                  style={{
+                    fontFamily: profileNameFontFamily(renderedNameFont),
+                    ...(renderedNameThemeDefinition.colors.length > 1
+                      ? {
+                          backgroundImage: profileNameThemePaint(
+                            renderedNameTheme,
+                            renderedNameColor,
+                          ),
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          color: "transparent",
+                        }
+                      : { color: renderedNameColor ?? undefined }),
+                  }}
+                >
                   {user.name}
                 </h1>
 
@@ -991,7 +1026,14 @@ function Profile() {
           queryClient.invalidateQueries({ queryKey: ["auth-me"] });
         }}
       />
-      <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
+      <AppearanceDialog
+        open={appearanceOpen}
+        onOpenChange={setAppearanceOpen}
+        profileName={user.name}
+        profileNameFont={user.nameFont ?? undefined}
+        profileNameColor={user.nameColor}
+        profileNameTheme={user.nameTheme ?? undefined}
+      />
       <ProfileNetworkDialog
         username={user.username}
         name={user.name}

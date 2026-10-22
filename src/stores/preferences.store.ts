@@ -1,4 +1,5 @@
 import { DEFAULT_THEME_SETTINGS } from "@/constants/theme-defaults";
+import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
 import type { BackgroundStyle } from "@/types/preferences/background-style";
 import type { Theme } from "@/types/preferences/theme";
 import type { ThemeSettings } from "@/types/preferences/theme-settings";
@@ -47,6 +48,22 @@ function normalizeThemeSettings(value: unknown): ThemeSettings {
 
 const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 const BACKGROUND_DEFAULTS = { color: "#f4f1fb", from: "#f9f8ff", to: "#e6dcf7" } as const;
+const NAME_FONTS = new Set(["SYSTEM", "SERIF", "MONO", "ROUNDED", "DISPLAY", "PIXEL", "GOTHIC"]);
+const NAME_THEMES = new Set(["DEFAULT", "PIXEL", "GOTHIC", "NEON", "GLITCH", "CANDY"]);
+
+function normalizeNameFont(value: unknown): PreferencesState["displayNameFont"] {
+  return typeof value === "string" && NAME_FONTS.has(value)
+    ? (value as PreferencesState["displayNameFont"])
+    : null;
+}
+
+function normalizeNameColor(value: unknown): string | null {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+}
+
+function normalizeNameTheme(value: unknown): PreferencesState["displayNameTheme"] {
+  return typeof value === "string" && NAME_THEMES.has(value) ? (value as ProfileNameTheme) : null;
+}
 
 /**
  * Plano de fundo do storage: tipo e direção válidos, cores hex; qualquer coisa
@@ -129,6 +146,9 @@ const preferencesStorage = {
             typeof parsed.state.pageAlpha === "number" && Number.isFinite(parsed.state.pageAlpha)
               ? Math.min(100, Math.max(0, parsed.state.pageAlpha))
               : null;
+          parsed.state.displayNameFont = normalizeNameFont(parsed.state.displayNameFont);
+          parsed.state.displayNameColor = normalizeNameColor(parsed.state.displayNameColor);
+          parsed.state.displayNameTheme = normalizeNameTheme(parsed.state.displayNameTheme);
         }
 
         return JSON.stringify(parsed);
@@ -174,6 +194,9 @@ export const usePreferencesStore = create<PreferencesState>()(
       accentAlpha: 100,
       widgetAlpha: null,
       pageAlpha: null,
+      displayNameFont: null,
+      displayNameColor: null,
+      displayNameTheme: null,
 
       setTheme: (theme: Theme) => set({ theme }),
       setThemeSettings: (themeSettings: ThemeSettings) =>
@@ -197,6 +220,9 @@ export const usePreferencesStore = create<PreferencesState>()(
       setAccentAlpha: (accentAlpha: number) => set({ accentAlpha }),
       setWidgetAlpha: (widgetAlpha: number | null) => set({ widgetAlpha }),
       setPageAlpha: (pageAlpha: number | null) => set({ pageAlpha }),
+      setDisplayNameFont: (displayNameFont) => set({ displayNameFont }),
+      setDisplayNameColor: (displayNameColor) => set({ displayNameColor }),
+      setDisplayNameTheme: (displayNameTheme) => set({ displayNameTheme }),
       toggleSidebar: () =>
         set((state) => ({
           sidebarCollapsed: !state.sidebarCollapsed,
@@ -216,6 +242,9 @@ export const usePreferencesStore = create<PreferencesState>()(
         accentAlpha: state.accentAlpha,
         widgetAlpha: state.widgetAlpha,
         pageAlpha: state.pageAlpha,
+        displayNameFont: state.displayNameFont,
+        displayNameColor: state.displayNameColor,
+        displayNameTheme: state.displayNameTheme,
       }),
       skipHydration: true,
     },

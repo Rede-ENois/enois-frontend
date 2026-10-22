@@ -64,12 +64,11 @@ export function ProfileProjectsSection({ username, isOwner }: ProjectsSectionPro
                 key={project.id}
                 html={project.html}
                 title={texts.profile.projects.htmlFrame}
-                className="h-[460px] w-full rounded-lg border border-border-soft"
+                className="w-full rounded-lg border border-border-soft"
                 innerPadding={false}
-                // Card de ALTURA FIXA (o padrão do "teto e recorte"): o HTML do autor rola por
-                // dentro em vez de esticar o perfil. Sem `clip`, o quadro media o conteúdo e
-                // crescia até 1200px, empurrando a página inteira.
-                clip
+                // O card HTML respeita o tamanho do conteúdo (como o card estruturado), com teto
+                // para um HTML patológico não empurrar o perfil indefinidamente.
+                maxHeight={1200}
               />
             ) : (
               <article key={project.id} className="rounded-xl border border-border-soft p-4">

@@ -374,6 +374,7 @@ export function PostCard({
           <RichText
             content={hideExternalPageUrls(post.content)}
             mediaIds={post.mediaIds}
+            mediaSpoiler={post.mediaSpoiler}
             className={cn(
               "mt-4 whitespace-pre-line break-words text-base font-normal leading-relaxed text-text-strong",
               isCompact && "line-clamp-8",
@@ -477,6 +478,7 @@ export function PostCard({
               sobrou sem marcador — repetir a mesma mídia duas vezes seria estranho. */}
           <MediaGrid
             mediaIds={post.mediaIds.filter((id) => !inlineMediaIds(post.content).includes(id))}
+            mediaSpoiler={post.mediaSpoiler}
           />
         </div>
       )}

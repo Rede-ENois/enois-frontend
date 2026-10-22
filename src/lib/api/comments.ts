@@ -13,6 +13,7 @@ export const commentsApi = {
     mentionedUserIds?: string[],
     mediaIds?: string[],
     website?: string,
+    mediaSpoiler = false,
   ) =>
     api.post<CommentView>(`/feed/posts/${postId}/comments`, {
       content,
@@ -20,6 +21,7 @@ export const commentsApi = {
       mediaIds: mediaIds ?? [],
       mentionedUserIds: mentionedUserIds ?? [],
       website: website ?? "",
+      mediaSpoiler,
     }),
 
   list: (postId: string, cursor?: string | null, limit = 20) =>
