@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { randomUUID } from "./random-uuid";
+
 /**
  * Identifica a sessão (o login), não o token: renovar o token mantém a chave, entrar em outra conta
  * gera outra. É o que distingue as duas coisas quando a troca acontece em outra aba.
@@ -18,7 +20,7 @@ export function getSessionKey(): string | null {
 }
 
 export function renewSessionKey() {
-  const id = globalThis.crypto.randomUUID();
+  const id = randomUUID();
   localStorage.setItem(SESSION_KEY, id);
   notify();
 }

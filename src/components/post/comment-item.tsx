@@ -6,7 +6,6 @@ import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { CommentItemProps } from "@/types/components/post/comment-item-props";
-
 import { Flag, Heart, MessageCircle, Pencil, Trash2 } from "lucide-react";
 
 import { REACTION_EMOJIS, commentsApi, profileApi, reactionsApi } from "@/lib/api";

@@ -230,6 +230,7 @@ function Home() {
   // Assunto do post avulso (opcional): é o que liga o post a "O que quero ver"/"não gosto".
   // Em comunidade o post herda o assunto DELA — lá o compositor é outro.
   const [topic, setTopic] = useState<string>(() => readLastTopic());
+  const [topicPickerOpen, setTopicPickerOpen] = useState(false);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
@@ -237,6 +238,8 @@ function Home() {
   // texto longo, os demais usam o campo de cima. O seletor de tipos abre em painel recolhido — com
   // dez tipos, uma fileira de botões ocupava o composer inteiro e empurrava o texto para longe.
   const [typePickerOpen, setTypePickerOpen] = useState(false);
+  const topicPickerRef = useRef<HTMLDivElement>(null);
+  const typePickerRef = useRef<HTMLDivElement>(null);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   // Agendamento: o post fica na fila do backend e só entra no feed na hora marcada.
@@ -262,6 +265,25 @@ function Home() {
   const currentType = availableTypes.find((option) => option.id === postType) ?? availableTypes[0];
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
+
+  useEffect(() => {
+    if (!topicPickerOpen && !typePickerOpen) return;
+
+    const closePickers = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      if (topicPickerOpen && !topicPickerRef.current?.contains(target)) {
+        setTopicPickerOpen(false);
+      }
+      if (typePickerOpen && !typePickerRef.current?.contains(target)) {
+        setTypePickerOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closePickers);
+    return () => document.removeEventListener("pointerdown", closePickers);
+  }, [topicPickerOpen, typePickerOpen]);
 
   const createPost = useMutation({
     mutationFn: (data: CreatePostInput) => feedApi.create(data),
@@ -649,39 +671,73 @@ function Home() {
               onChange={handleMediaSelect}
             />
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle">
-              <div className="flex flex-wrap items-center gap-1.5">
+            <div className="mt-4 flex min-w-0 items-center gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle">
+              <div
+                className={`flex min-w-0 flex-1 items-center gap-1.5 ${
+                  topicPickerOpen || typePickerOpen ? "overflow-visible" : "overflow-x-auto pb-1"
+                }`}
+              >
                 {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
-                <select
-                  value={topic}
-                  onChange={(event) => {
-                    setTopic(event.target.value);
-                    rememberTopic(event.target.value);
-                  }}
-                  aria-label={texts.feed.composer.topic}
-                  title={texts.feed.composer.topicHint}
-                  className={`max-w-[11rem] rounded-full px-3 py-1.5 text-sm font-normal outline-none transition ${
-                    topic
-                      ? "border border-primary/40 bg-primary/10 text-primary"
-                      : "border border-border-soft text-text-subtle hover:border-primary"
-                  }`}
-                >
-                  <option value="">{texts.feed.composer.topicNone}</option>
-                  {TOPICS.filter((option) => option !== "Todas").map((option) => (
-                    <option key={option} value={option}>
-                      {TOPIC_LABELS[option]}
-                    </option>
-                  ))}
-                </select>
+                <div ref={topicPickerRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setTopicPickerOpen((open) => !open)}
+                    aria-expanded={topicPickerOpen}
+                    aria-label={texts.feed.composer.topic}
+                    title={texts.feed.composer.topicHint}
+                    className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-normal transition ${
+                      topicPickerOpen
+                        ? "bg-primary text-primary-foreground"
+                        : topic
+                          ? "border border-primary/40 bg-primary/10 text-primary"
+                          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {topic
+                      ? TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS]
+                      : texts.feed.composer.topicNone}
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 transition ${topicPickerOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {topicPickerOpen && (
+                    <div className="absolute bottom-full left-0 z-40 mb-2 max-h-[calc(100vh-8rem)] w-[min(48rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-3 shadow-lg">
+                      <div className="flex flex-wrap gap-2">
+                        <ComposerAction
+                          label={texts.feed.composer.topicNone}
+                          active={!topic}
+                          onClick={() => {
+                            setTopic("");
+                            rememberTopic("");
+                            setTopicPickerOpen(false);
+                          }}
+                        />
+                        {TOPICS.filter((option) => option !== "Todas").map((option) => (
+                          <ComposerAction
+                            key={option}
+                            label={TOPIC_LABELS[option]}
+                            active={option === topic}
+                            onClick={() => {
+                              setTopic(option);
+                              rememberTopic(option);
+                              setTopicPickerOpen(false);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
-                <div className="relative">
+                <div ref={typePickerRef} className="relative">
                   <button
                     type="button"
                     onClick={() => setTypePickerOpen((open) => !open)}
                     aria-expanded={typePickerOpen}
                     title={texts.feed.composer.typePicker.change}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
+                    className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-normal transition ${
                       typePickerOpen
                         ? "bg-primary text-primary-foreground"
                         : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
@@ -706,7 +762,7 @@ function Home() {
                   )}
 
                   {typePickerOpen && (
-                    <div className="absolute bottom-full left-0 z-40 mb-1 w-[min(22rem,80vw)] rounded-2xl border border-border-soft bg-popover p-2 shadow-lg">
+                    <div className="absolute bottom-full left-0 z-40 mb-1 max-h-[calc(100vh-8rem)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg">
                       <div className="flex flex-wrap gap-1.5">
                         {availableTypes.map((option) => (
                           <ComposerAction
@@ -762,7 +818,7 @@ function Home() {
 
               {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
                   alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
-              <div className="ml-auto flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 {/* O motivo da recusa fica na linha de baixo, inteiro: antes ele saía truncado em
                     200px ao lado do botão e a publicação recusada parecia "não fazer nada". */}
                 {publishError && (
@@ -779,7 +835,7 @@ function Home() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="rounded-full gap-1.5"
+                  className="h-9 gap-1.5 whitespace-nowrap rounded-full"
                   disabled={
                     (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                     (articleMode && !articleBody.trim()) ||
@@ -796,7 +852,7 @@ function Home() {
 
                 <Button
                   size="sm"
-                  className="rounded-full"
+                  className="h-9 whitespace-nowrap rounded-full"
                   disabled={
                     (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                     (articleMode && !articleBody.trim()) ||
@@ -906,9 +962,7 @@ function Home() {
             </section>
           )}
 
-          {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
-              tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
-              escolhido e abre a lista. */}
+          {/* Tipo de feed: a lista interna usa a mesma disposição do tipo de publicação. */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
 
@@ -917,16 +971,23 @@ function Home() {
                 <button
                   type="button"
                   aria-label={texts.feed.tabs.openList}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
+                  className={cn(
+                    "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-normal transition",
+                    menuTipoFeed
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary",
+                  )}
                 >
                   {TAB_LABELS[tab]}
 
-                  <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
+                  <ChevronDown
+                    className={cn("h-3.5 w-3.5 transition", menuTipoFeed && "rotate-180")}
+                  />
                 </button>
               </PopoverTrigger>
 
-              <PopoverContent align="start" className="w-56 p-1">
-                <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
+              <PopoverContent align="start" className="w-[min(32rem,80vw)] p-3">
+                <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
                   {HOME_TABS.filter(
                     (opcao) =>
                       opcao !== "CORPORATE" || (corporate?.exists && corporate.status === "ACTIVE"),
@@ -940,10 +1001,10 @@ function Home() {
                       }}
                       aria-pressed={opcao === tab}
                       className={cn(
-                        "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
+                        "rounded-full border px-3.5 py-2 text-left text-sm font-normal transition",
                         opcao === tab
-                          ? "bg-primary-soft text-primary"
-                          : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border-soft text-text-subtle hover:border-primary hover:text-primary",
                       )}
                     >
                       {TAB_LABELS[opcao]}
@@ -1159,13 +1220,13 @@ function ComposerAction({ icon: Icon, label, active, onClick }: ComposerActionPr
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
+      className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm font-normal transition ${
         active
           ? "bg-primary text-primary-foreground"
           : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
       }`}
     >
-      <Icon className="h-3.5 w-3.5" />
+      {Icon && <Icon className="h-3.5 w-3.5" />}
 
       <>{label}</>
     </button>

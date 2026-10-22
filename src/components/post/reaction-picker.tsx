@@ -85,7 +85,13 @@ export function ReactionPicker({
     }, HOVER_CLOSE_MS);
   };
 
-  useEffect(() => () => { cancelHold(); cancelHoverTimers(); }, []);
+  useEffect(
+    () => () => {
+      cancelHold();
+      cancelHoverTimers();
+    },
+    [],
+  );
 
   // Vida do gesto de segurar: o ponteiro é seguido na janela; soltar em cima de um emoji reage e
   // fecha, soltar fora deixa o seletor aberto em modo clique.
