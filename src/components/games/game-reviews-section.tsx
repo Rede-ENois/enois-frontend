@@ -26,6 +26,7 @@ function Stars({ value, onPick }: { value: number; onPick?: (rating: number) => 
           onClick={() => onPick?.(star)}
           className={onPick ? "cursor-pointer" : "cursor-default"}
           aria-label={`${star} estrela${star === 1 ? "" : "s"}`}
+          title={`${star} estrela${star === 1 ? "" : "s"}`}
         >
           <Star
             className={`h-4 w-4 ${

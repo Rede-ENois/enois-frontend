@@ -90,6 +90,7 @@ export function MediaStage({ src, initialTime = 0, muted = false, onClose }: Med
             close();
           }}
           aria-label={texts.accessibility.close}
+          title={texts.accessibility.close}
           className="grid h-10 w-10 place-items-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80"
         >
           <X className="h-5 w-5" />

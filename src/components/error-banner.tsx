@@ -26,7 +26,7 @@ function describe(err: unknown): ErrorDescription {
 
 const KNOWN_CODES: Record<string, string> = texts.errors.knownCodes;
 
-export function ErrorBanner({ error, className }: ErrorBannerProps) {
+export function ErrorBanner({ error, className, showDetails = true }: ErrorBannerProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -64,12 +64,23 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
           onClick={() => setOpen((v) => !v)}
           className="shrink-0 p-0.5 text-destructive/70 transition hover:text-destructive"
           aria-label={open ? texts.errors.details.hide : texts.errors.details.show}
+          title={open ? texts.errors.details.hide : texts.errors.details.show}
         >
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
+        {showDetails && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="shrink-0 p-0.5 text-destructive/70 transition hover:text-destructive"
+            aria-label={open ? texts.errors.details.hide : texts.errors.details.show}
+          >
+            <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        )}
       </div>
 
-      {open && (
+      {showDetails && open && (
         <div className="space-y-2 rounded-lg bg-background/40 p-3 text-xs">
           <ul className="list-inside list-disc space-y-0.5 text-destructive/90">
             {details.map((d) => (

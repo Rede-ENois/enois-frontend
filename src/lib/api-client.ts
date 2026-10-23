@@ -1,6 +1,7 @@
 import type { RequestOptions } from "@/types/application/api/request-options";
 
 import { notifyBirthDateRequired, notifyParentalConsentRequired } from "./age-required";
+import { clientOriginHeader } from "./api/client-origin";
 import { clearAuthHint } from "./auth-hint";
 import { getDeviceId } from "./device-id";
 import { resetSessionScopedData } from "./query-client";
@@ -10,8 +11,9 @@ import { dropSessionKey } from "./session-key";
 /**
  * Base da API.
  *
- * O padrao e RELATIVO (`/api`): em producao o proprio host serve a API, e no dev o proxy do Vite
- * encaminha para o backend (ver `BACKEND_TARGET` no vite.config.ts). O fallback antigo era
+ * Em producao a API mora em OUTRO host (`https://api.enois.ia.br/api`, ver `ARG VITE_API_BACKEND`
+ * no Dockerfile) — o host do front nao expoe `/api`. No dev o padrao e RELATIVO (`/api`) e o proxy
+ * do Vite encaminha para o backend (ver `BACKEND_TARGET` no vite.config.ts). O fallback antigo era
  * `http://localhost:8081/api`, e quando um build saiu sem a variavel (Dockerfile sem ARG) a imagem
  * publicada passou a chamar localhost DENTRO do navegador de quem usava — o app ficou vazio e o
  * login dizia "nao foi possivel conectar ao servidor".
@@ -22,6 +24,18 @@ function baseUrl(): string {
   if (typeof window === "undefined") return API_BACKEND;
   if (import.meta.env.DEV) return "/api";
   return API_BACKEND;
+}
+
+/**
+ * URL absoluta de um caminho da API (SEM o prefixo `/api`).
+ *
+ * Serve para o que nao passa pelo cliente `api` (redirect do navegador, `fetch` de multipart): um
+ * caminho relativo a `/api` assume que o host do front tambem serve a API, o que so vale em dev.
+ * Era o que quebrava o login com LinkedIn — o navegador era mandado para `enois.ia.br/api/...` e
+ * recebia o 404 do proprio front, sem nunca chegar no backend.
+ */
+export function apiUrl(path: string): string {
+  return `${baseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export class ApiError extends Error {
@@ -43,7 +57,8 @@ function getToken(): string | null {
 
 function authHeaders(): Record<string, string> {
   const token = getToken();
-  const headers: Record<string, string> = {};
+  // Toda requisição declara a origem do app; o backend recusa sem uma origem cadastrada.
+  const headers: Record<string, string> = { ...clientOriginHeader() };
   if (token) headers["X-Session-Token"] = token;
   // Identificador opaco do dispositivo (não é MAC): correlaciona requisições e uploads nos logs.
   const deviceId = getDeviceId();
@@ -115,7 +130,7 @@ async function doRefresh(): Promise<boolean> {
   try {
     const response = await fetch(`${baseUrl()}/auth/refresh`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...clientOriginHeader() },
       body: JSON.stringify({ refreshToken: token }),
     });
 

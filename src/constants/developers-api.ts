@@ -11,9 +11,16 @@ import type { ApiUseCase } from "@/types/application/developers/api-use-case";
  * Manter em sincronia com os controllers do backend: cada bloco novo de API entra aqui.
  */
 
-const P = "https://enois.ia.br/api";
+const P = "https://enois-api-qa.b7cloud.tech/api";
 
 export const API_BASE_URL = P;
+
+/**
+ * Base versionada: as mesmas rotas, com o endereco fixo. O backend reescreve `/api/v1/...` para o
+ * mesmo handler de `/api/...` (a resposta e a mesma), e `GET /api/v1` devolve o indice da versao
+ * gerado do proprio servidor.
+ */
+export const API_V1_BASE_URL = `${P}/v1`;
 
 export const apiSections: ApiSection[] = [
   {

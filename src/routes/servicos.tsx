@@ -6,7 +6,9 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ServiceContract } from "@/types/application/services/service-contract";
 import type { ServiceListing } from "@/types/application/services/service-listing";
 import type { ServiceRequest } from "@/types/application/services/service-request";
-import { Briefcase, Handshake, Search, Send, Sparkles } from "lucide-react";
+import { Briefcase, Handshake, MessageCircle, Search, Send, Sparkles } from "lucide-react";
+
+// (import duplicado removido no merge)
 
 import { messagesApi, servicesApi } from "@/lib/api";
 import { formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
@@ -17,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 
 import { AppContainer } from "@/components/app-container";
 
@@ -196,9 +199,19 @@ function Price({ value, currency }: { value: number; currency: string }) {
 function OfferCard({ listing }: { listing: ServiceListing }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const buy = useMutation({
     mutationFn: () => servicesApi.buyListing(listing.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["services"] }),
+  });
+  // O chat de servico: abre (ou reaproveita) a conversa com quem presta, com o assunto do
+  // pedido, e leva a pessoa direto para a DM.
+  const chat = useMutation({
+    mutationFn: () => servicesApi.openChat(listing.id),
+    onSuccess: (data) => {
+      void navigate({ to: "/mensagens", search: { conversation: data.conversationId } });
+    },
+    onError: (error) => toast(error.message, "error"),
   });
 
   // Antes de contratar (ou de combinar em reais) a pessoa precisa poder FALAR com quem oferece:
@@ -210,7 +223,7 @@ function OfferCard({ listing }: { listing: ServiceListing }) {
   });
 
   return (
-    <li className="surface-card p-4">
+    <li id={`oferta-${listing.id}`} className="surface-card scroll-mt-4 p-4">
       <div className="flex items-start justify-between gap-2">
         <span className="min-w-0">
           <span className="block truncate font-semibold">{listing.title}</span>
@@ -224,44 +237,49 @@ function OfferCard({ listing }: { listing: ServiceListing }) {
         <Price value={listing.price} currency={listing.currency} />
       </div>
 
+      {listing.sellerName && (
+        <p className="mt-2 flex items-center gap-2 text-xs text-text-subtle">
+          {listing.sellerAvatar ? (
+            <img
+              src={listing.sellerAvatar}
+              alt=""
+              className="h-6 w-6 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[10px] font-semibold text-primary-text">
+              {listing.sellerName.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+
+          <span className="truncate">{listing.sellerName}</span>
+        </p>
+      )}
+
       <p className="mt-2 line-clamp-2 text-sm text-text-subtle">{listing.description}</p>
 
       <p className="mt-1 text-xs text-text-subtle">Entrega: {listing.deliverables}</p>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-3 w-full rounded-full"
-        disabled={contact.isPending}
-        onClick={() => {
-          // requireAuth joga para o login quando não há sessão (visitante não tem conversa).
-          requireAuth();
-          contact.mutate();
-        }}
-      >
-        {contact.isPending ? "Abrindo conversa…" : "Falar com o prestador"}
-      </Button>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          className="flex-1 rounded-full"
+          disabled={buy.isPending}
+          onClick={() => buy.mutate()}
+        >
+          {buy.isPending ? "Retendo faíscas…" : "Contratar"}
+        </Button>
 
-      {listing.currency === "BRL" ? (
-        <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 text-center text-xs text-text-subtle">
-          Pagamento em reais combinado direto com o profissional, sem taxa do Énóis.
-        </p>
-      ) : (
-        <>
-          <Button
-            size="sm"
-            className="mt-3 w-full rounded-full"
-            disabled={buy.isPending}
-            onClick={() => buy.mutate()}
-          >
-            {buy.isPending ? "Retendo faíscas…" : "Contratar"}
-          </Button>
-
-          <p className="mt-1 text-center text-xs text-text-subtle">
-            Em faíscas, o Énóis retém 10% ao liberar o pagamento. Dinheiro não tem taxa.
-          </p>
-        </>
-      )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 gap-1.5 rounded-full"
+          disabled={chat.isPending}
+          onClick={() => chat.mutate()}
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+          {chat.isPending ? "Abrindo…" : "Falar com o prestador"}
+        </Button>
+      </div>
     </li>
   );
 }

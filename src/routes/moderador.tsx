@@ -48,6 +48,7 @@ import { AppealsSection } from "@/components/moderation/appeals-section";
 import { DisputesSection } from "@/components/moderation/disputes-section";
 import { EmailLogSection } from "@/components/moderation/email-log-section";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
+import { PanicModeSection } from "@/components/moderation/panic-mode-section";
 import { ProjectsReviewSection } from "@/components/moderation/projects-review-section";
 import { SupportTicketsSection } from "@/components/moderation/support-tickets-section";
 import { SuspiciousPostsSection } from "@/components/moderation/suspicious-posts-section";
@@ -175,6 +176,8 @@ function Moderador() {
 
           <p className="text-sm text-muted-foreground">{texts.moderator.description}</p>
         </header>
+
+        {me.admin && <PanicModeSection />}
 
         {canModerate ? (
           <div className="space-y-4">

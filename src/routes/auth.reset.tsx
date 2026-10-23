@@ -7,6 +7,7 @@ import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
+import { ogMetas } from "@/lib/seo";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/auth/reset")({
     meta: [
       { title: texts.auth.seo.resetTitle },
       { name: "description", content: texts.auth.seo.resetDescription },
+      ...ogMetas(texts.auth.seo.resetTitle, texts.auth.seo.resetDescription),
     ],
   }),
   component: ResetPassword,

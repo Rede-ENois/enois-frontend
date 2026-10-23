@@ -113,6 +113,8 @@ export function InfernoFx() {
       </defs>
 
       <circle r="50" fill={`url(#${id}-brasa)`} />
+      {/* O núcleo "engrossa" trocando a opacidade entre um anel fino e um grosso: animar
+          stroke-width obriga a thread principal a repintar todo quadro (benchmark), opacidade não. */}
       <circle
         r="49.5"
         fill="none"
@@ -120,6 +122,15 @@ export function InfernoFx() {
         strokeWidth="3.5"
         filter={`url(#${id}-brilho)`}
         className="moldura-inferno__nucleo"
+      />
+      <circle
+        r="49.5"
+        fill="none"
+        stroke="#f97316"
+        strokeWidth="5"
+        opacity="0"
+        filter={`url(#${id}-brilho)`}
+        className="moldura-inferno__nucleo-grosso"
       />
 
       <g filter={`url(#${id}-calor)`}>

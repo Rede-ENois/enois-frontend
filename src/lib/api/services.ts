@@ -16,6 +16,13 @@ export const servicesApi = {
       `/servicos${buildQuery(params)}`,
     ),
 
+  /** Abre (ou reaproveita) a conversa de servico com quem presta e devolve o id dela. */
+  openChat: (listingId: string, message?: string) =>
+    api.post<{ conversationId: string; assunto: string; listingId: string; sellerId: string }>(
+      `/servicos/ofertas/${listingId}/chat`,
+      { message: message ?? "" },
+    ),
+
   /** O meu painel: minhas ofertas e meus contratos (comprador e vendedor). */
   mine: () =>
     api.get<{

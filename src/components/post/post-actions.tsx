@@ -10,6 +10,7 @@ import { Bookmark, Flag, Heart, MessageSquare, Repeat2, Share2 } from "lucide-re
 import { REACTION_EMOJIS, feedApi, reactionsApi } from "@/lib/api";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
+import { useMountedOnce } from "@/lib/use-mounted-once";
 
 import { useToast } from "@/components/ui/toast";
 
@@ -48,6 +49,11 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     : null;
   const reactionCount = summaryTotal ?? postCounters.reactions;
   const showReport = card?.showReport ?? false;
+  // Os diálogos do card só montam quando abertos pela primeira vez: com 20 a 60 cards na tela,
+  // montar todos de saída eram quatro diálogos, quatro queries e uma mutation a mais por card.
+  const reactionsMounted = useMountedOnce(card?.showReactions ?? false);
+  const sealsMounted = useMountedOnce(card?.showSeals ?? false);
+  const reportMounted = useMountedOnce(showReport);
   const { toggle: toggleReaction } = usePostReaction(post.id);
   // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
   const reactionPendingRef = useRef(false);
@@ -99,6 +105,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     !post.community && !["PAGE", "ARTICLE", "BLOG", "BUSINESS", "MOMENT"].includes(post.type);
   // O clique abre o diálogo, que oferece republicar direto ou com uma opinião (até 600).
   const [repostOpen, setRepostOpen] = useState(false);
+  const repostMounted = useMountedOnce(repostOpen);
 
   const handleShare = async () => {
     if (!requireAuth()) return;
@@ -220,15 +227,19 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
         </button>
       </footer>
 
-      <RepostDialog postId={post.id} open={repostOpen} onOpenChange={setRepostOpen} />
-      <ReactionsDialog postId={post.id} />
-      <SealsDialog postId={post.id} />
-      <ReportDialog
-        targetId={post.id}
-        targetType="POST"
-        open={showReport}
-        onOpenChange={(next) => setShowReport(post.id, next)}
-      />
+      {repostMounted && (
+        <RepostDialog postId={post.id} open={repostOpen} onOpenChange={setRepostOpen} />
+      )}
+      {reactionsMounted && <ReactionsDialog postId={post.id} />}
+      {sealsMounted && <SealsDialog postId={post.id} />}
+      {reportMounted && (
+        <ReportDialog
+          targetId={post.id}
+          targetType="POST"
+          open={showReport}
+          onOpenChange={(next) => setShowReport(post.id, next)}
+        />
+      )}
     </>
   );
 }

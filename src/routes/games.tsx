@@ -6,6 +6,7 @@ import { Link, Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-ro
 import { GAME_GENRES, GAME_STAGES } from "@/constants/game-options";
 import { texts } from "@/texts";
 import type { GameView } from "@/types/application/games/game-view";
+import type { GamesCategory } from "@/types/routes/games/games-category";
 import { ExternalLink, Gamepad2, Pencil, Rocket, Send, Star } from "lucide-react";
 
 import { gamesApi } from "@/lib/api";
@@ -19,11 +20,21 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Textarea } from "@/components/ui/textarea";
 
 import { AppContainer } from "@/components/app-container";
+import { DailyGamesPanel } from "@/components/daily-games-panel";
 import { GameIcon } from "@/components/game-icon";
 import { GameEditorDialog } from "@/components/games/game-editor-dialog";
 
 export const Route = createFileRoute("/games")({
   head: () => ({ meta: [{ title: "Jogos · Énóis" }] }),
+  // A categoria vive na URL: /games?categoria=diarios abre direto nos jogos diários (e o
+  // endereço antigo /jogos-diarios redireciona para cá).
+  validateSearch: (search: Record<string, unknown>): { categoria?: GamesCategory } => {
+    const categoria = search.categoria;
+    if (categoria === "diarios" || categoria === "comunidade") {
+      return { categoria };
+    }
+    return {};
+  },
   component: Games,
 });
 
@@ -45,6 +56,9 @@ function Games() {
  */
 function GamesHub() {
   const authenticated = useIsAuthenticated();
+  const navigate = Route.useNavigate();
+  const { categoria } = Route.useSearch();
+  const category: GamesCategory = categoria ?? "comunidade";
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("");
   const [stage, setStage] = useState("");
@@ -126,165 +140,216 @@ function GamesHub() {
           />
         </div>
 
-        {mine.data && mine.data.length > 0 && (
-          <MyGames games={mine.data} onEdit={(game) => setEditing(game)} />
-        )}
-
-        <ColecoesSection />
-
-        {/* Busca e filtros: o catálogo é para DESCOBRIR — sem isto só rola quem já sabe o que quer. */}
-        <div className="mb-4 space-y-2">
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={texts.games.searchPlaceholder}
-            aria-label={texts.games.searchPlaceholder}
-          />
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {GAME_STAGES.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setStage(stage === item.id ? "" : item.id)}
-                className={cn(
-                  "rounded-full border px-2.5 py-1 text-xs font-medium transition",
-                  stage === item.id
-                    ? "border-primary bg-primary-soft text-primary-text"
-                    : "border-border-soft text-text-subtle hover:bg-surface-2",
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            <span className="mx-1 h-4 w-px bg-border-soft" aria-hidden />
-
+        {/* Categorias: a comunidade e os desafios do dia (que eram uma pagina a parte). */}
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {(["comunidade", "diarios"] as const).map((item) => (
             <button
+              key={item}
               type="button"
-              onClick={() => setOrder(order === "plays" ? "recent" : "plays")}
+              onClick={() => void navigate({ search: { categoria: item }, replace: true })}
+              aria-pressed={category === item}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-xs font-medium transition",
-                order === "plays"
+                "rounded-full border px-3 py-1.5 text-sm font-medium transition",
+                category === item
                   ? "border-primary bg-primary-soft text-primary-text"
                   : "border-border-soft text-text-subtle hover:bg-surface-2",
               )}
             >
-              {texts.games.mostPlayed}
+              {item === "diarios" ? texts.games.categoryDaily : texts.games.categoryCommunity}
             </button>
+          ))}
 
-            <button
-              type="button"
-              onClick={() => setOrder(order === "title" ? "recent" : "title")}
-              className={cn(
-                "rounded-full border px-2.5 py-1 text-xs font-medium transition",
-                order === "title"
-                  ? "border-primary bg-primary-soft text-primary-text"
-                  : "border-border-soft text-text-subtle hover:bg-surface-2",
-              )}
-            >
-              {texts.games.alphabetical}
-            </button>
-          </div>
-
-          {GAME_GENRES.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {GAME_GENRES.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setGenre(genre === item ? "" : item)}
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-xs font-normal transition",
-                    genre === item
-                      ? "bg-primary text-primary-foreground"
-                      : "text-text-subtle hover:bg-surface-2",
-                  )}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          )}
+          <span className="text-xs text-text-subtle">{texts.games.categoryHint}</span>
         </div>
 
-        {catalog.isLoading ? (
-          <p className="py-10 text-center text-sm text-text-subtle">Carregando…</p>
-        ) : catalog.isError ? (
-          <p className="py-10 text-center text-sm text-text-subtle">
-            Não foi possível carregar o catálogo agora.
-          </p>
-        ) : pages.length === 0 ? (
-          <div className="surface-card rounded-2xl p-8 text-center">
-            <Gamepad2 className="mx-auto h-10 w-10 text-primary" />
+        {category === "diarios" ? (
+          authenticated ? (
+            <>
+              <DailyGamesPanel />
+              <AllGamesCorner />
+            </>
+          ) : (
+            <section className="surface-card p-6 text-center">
+              <Gamepad2 className="mx-auto h-8 w-8 text-primary" />
 
-            <p className="mt-3 text-sm font-medium">Nenhum jogo publicado ainda.</p>
+              <p className="mt-2 text-sm font-medium text-text-strong">
+                {texts.games.dailyNeedsAccount}
+              </p>
 
-            <p className="mt-1 text-sm text-text-subtle">
-              Você fez um jogo? Envie o link e ele aparece aqui depois da moderação.
-            </p>
-          </div>
+              <p className="mt-1 text-sm text-text-subtle">{texts.games.dailyNeedsAccountHint}</p>
+
+              <Link
+                to="/entrar"
+                search={{ tab: "login" }}
+                className="mt-3 inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
+              >
+                {texts.games.dailyEnter}
+              </Link>
+            </section>
+          )
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {pages.map((g) => (
-              <li key={g.id} className="surface-card flex min-w-0 items-center gap-2 p-2">
-                <Link
-                  to="/games/$username/$gameSlug"
-                  params={{ username: g.username ?? "", gameSlug: g.slug }}
-                  className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-2 transition hover:bg-muted/50"
-                >
-                  <GameCover cover={g.cover} icon={g.icon} url={g.url} />
+          <>
+            {mine.data && mine.data.length > 0 && (
+              <MyGames games={mine.data} onEdit={(game) => setEditing(game)} />
+            )}
 
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{g.title}</span>
+            <ColecoesSection />
 
-                    <span className="block truncate text-sm text-text-subtle">
-                      {g.description || " "}
-                    </span>
+            {/* Busca e filtros: o catálogo é para DESCOBRIR — sem isto só rola quem já sabe o que quer. */}
+            <div className="mb-4 space-y-2">
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={texts.games.searchPlaceholder}
+                aria-label={texts.games.searchPlaceholder}
+              />
 
-                    {ratings.data?.[g.id] && ratings.data[g.id].reviews > 0 && (
-                      <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-text-subtle">
-                        <Star className="h-3 w-3 fill-opportunity text-opportunity" />
-
-                        <>{ratings.data[g.id].average.toFixed(1)}</>
-
-                        <span>({ratings.data[g.id].reviews})</span>
-                      </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {GAME_STAGES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setStage(stage === item.id ? "" : item.id)}
+                    className={cn(
+                      "rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                      stage === item.id
+                        ? "border-primary bg-primary-soft text-primary-text"
+                        : "border-border-soft text-text-subtle hover:bg-surface-2",
                     )}
-                  </span>
-
-                  <ExternalLink className="h-4 w-4 shrink-0 text-text-subtle" />
-                </Link>
-
-                {/* Meu jogo na loja: editar aqui mesmo (o backend marca `owned` no catálogo). */}
-                {g.owned && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="shrink-0 rounded-full gap-1.5"
-                    onClick={() => setEditing(g)}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    {item.label}
+                  </button>
+                ))}
 
-                    <>{texts.games.panel.edit}</>
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+                <span className="mx-1 h-4 w-px bg-border-soft" aria-hidden />
 
-        {catalog.data?.nextCursor && (
-          <div className="mt-4 flex justify-center">
-            <Button
-              variant="outline"
-              className="rounded-full"
-              disabled={catalog.isFetching}
-              onClick={() => setCursor(catalog.data?.nextCursor ?? null)}
-            >
-              {catalog.isFetching ? texts.common.loading : texts.games.loadMore}
-            </Button>
-          </div>
+                <button
+                  type="button"
+                  onClick={() => setOrder(order === "plays" ? "recent" : "plays")}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                    order === "plays"
+                      ? "border-primary bg-primary-soft text-primary-text"
+                      : "border-border-soft text-text-subtle hover:bg-surface-2",
+                  )}
+                >
+                  {texts.games.mostPlayed}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setOrder(order === "title" ? "recent" : "title")}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-xs font-medium transition",
+                    order === "title"
+                      ? "border-primary bg-primary-soft text-primary-text"
+                      : "border-border-soft text-text-subtle hover:bg-surface-2",
+                  )}
+                >
+                  {texts.games.alphabetical}
+                </button>
+              </div>
+
+              {GAME_GENRES.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {GAME_GENRES.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setGenre(genre === item ? "" : item)}
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-xs font-normal transition",
+                        genre === item
+                          ? "bg-primary text-primary-foreground"
+                          : "text-text-subtle hover:bg-surface-2",
+                      )}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {catalog.isLoading ? (
+              <p className="py-10 text-center text-sm text-text-subtle">Carregando…</p>
+            ) : catalog.isError ? (
+              <p className="py-10 text-center text-sm text-text-subtle">
+                Não foi possível carregar o catálogo agora.
+              </p>
+            ) : pages.length === 0 ? (
+              <div className="surface-card rounded-2xl p-8 text-center">
+                <Gamepad2 className="mx-auto h-10 w-10 text-primary" />
+
+                <p className="mt-3 text-sm font-medium">Nenhum jogo publicado ainda.</p>
+
+                <p className="mt-1 text-sm text-text-subtle">
+                  Você fez um jogo? Envie o link e ele aparece aqui depois da moderação.
+                </p>
+              </div>
+            ) : (
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {pages.map((g) => (
+                  <li key={g.id} className="surface-card flex min-w-0 items-center gap-2 p-2">
+                    <Link
+                      to="/games/$username/$gameSlug"
+                      params={{ username: g.username ?? "", gameSlug: g.slug }}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-2 transition hover:bg-muted/50"
+                    >
+                      <GameCover cover={g.cover} icon={g.icon} url={g.url} />
+
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{g.title}</span>
+
+                        <span className="block truncate text-sm text-text-subtle">
+                          {g.description || " "}
+                        </span>
+
+                        {ratings.data?.[g.id] && ratings.data[g.id].reviews > 0 && (
+                          <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-text-subtle">
+                            <Star className="h-3 w-3 fill-opportunity text-opportunity" />
+
+                            <>{ratings.data[g.id].average.toFixed(1)}</>
+
+                            <span>({ratings.data[g.id].reviews})</span>
+                          </span>
+                        )}
+                      </span>
+
+                      <ExternalLink className="h-4 w-4 shrink-0 text-text-subtle" />
+                    </Link>
+
+                    {/* Meu jogo na loja: editar aqui mesmo (o backend marca `owned` no catálogo). */}
+                    {g.owned && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 rounded-full gap-1.5"
+                        onClick={() => setEditing(g)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+
+                        <>{texts.games.panel.edit}</>
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {catalog.data?.nextCursor && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={catalog.isFetching}
+                  onClick={() => setCursor(catalog.data?.nextCursor ?? null)}
+                >
+                  {catalog.isFetching ? texts.common.loading : texts.games.loadMore}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -575,6 +640,62 @@ function ColecoesSection() {
           </ul>
         </div>
       ))}
+    </section>
+  );
+}
+
+/**
+ * O catálogo inteiro em um canto: de dentro dos jogos diários dá para ir direto em qualquer jogo
+ * da comunidade, sem ter que sair da categoria.
+ */
+function AllGamesCorner() {
+  const [open, setOpen] = useState(false);
+  const todos = useQuery({
+    queryKey: ["games", "todos"],
+    queryFn: () => gamesApi.catalog({ limit: 48, order: "title" }),
+  });
+
+  const jogos = todos.data?.items ?? [];
+
+  return (
+    <section className="surface-card p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-semibold text-text-strong">{texts.games.allGamesTitle}</h2>
+
+          <p className="text-xs text-text-subtle">{texts.games.allGamesHint}</p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+        >
+          {open ? texts.games.allGamesHide : texts.games.allGamesShow}
+        </Button>
+      </div>
+
+      {open && (
+        <ul className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {jogos.map((game) => (
+            <li key={game.id} className="min-w-0">
+              <Link
+                to="/games/$username/$gameSlug"
+                params={{ username: game.username ?? "", gameSlug: game.slug }}
+                className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition hover:bg-surface-2"
+              >
+                <GameIcon cover={game.cover} icon={game.icon} url={game.url} className="h-6 w-6" />
+
+                <span className="truncate text-text-strong">{game.title}</span>
+              </Link>
+            </li>
+          ))}
+
+          {jogos.length === 0 && <li className="text-sm text-text-subtle">{texts.games.empty}</li>}
+        </ul>
+      )}
     </section>
   );
 }

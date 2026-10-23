@@ -8,6 +8,7 @@ import { BookOpen, PenLine, Plus } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
 import { requireAuth } from "@/lib/require-auth";
+import { ogMetas } from "@/lib/seo";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,11 @@ import { UserAvatar } from "@/components/user-avatar";
 
 export const Route = createFileRoute("/blogs")({
   head: () => ({
-    meta: [{ title: texts.blog.title }, { name: "description", content: texts.blog.description }],
+    meta: [
+      { title: texts.blog.title },
+      { name: "description", content: texts.blog.description },
+      ...ogMetas(texts.blog.title, texts.blog.description),
+    ],
   }),
   component: Blogs,
 });

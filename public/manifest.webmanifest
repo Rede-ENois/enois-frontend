@@ -1,7 +1,7 @@
 {
   "name": "Énóis",
   "short_name": "Énóis",
-  "description": "Rede profissional para conexões autênticas: vagas, mentoria, comunidades e eventos.",
+  "description": "Rede humana para conexões autênticas: conversa, comunidades, vagas, mentoria, brincadeira e construção junto.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/feed",
@@ -10,7 +10,7 @@
   "orientation": "portrait",
   "background_color": "#faf9ff",
   "theme_color": "#6746f5",
-  "categories": ["social", "business", "productivity"],
+  "categories": ["social", "lifestyle", "games"],
   "icons": [
     {
       "src": "/icons/brand-icon-192.png",

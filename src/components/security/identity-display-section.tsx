@@ -162,6 +162,7 @@ export function IdentitySection() {
                 <button
                   type="button"
                   aria-label={`${texts.account.identity.badgesRemove} ${badges.indexOf(badge) + 1}`}
+                  title={`${texts.account.identity.badgesRemove} ${badges.indexOf(badge) + 1}`}
                   disabled={saveBadges.isPending}
                   onClick={() => void removeBadge(badge)}
                   className="text-muted-foreground transition hover:text-destructive disabled:opacity-50"

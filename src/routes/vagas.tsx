@@ -639,6 +639,7 @@ export function JobsListPage({
                         <button
                           type="button"
                           aria-label={j.saved ? "Remover das salvas" : "Salvar vaga"}
+                          title={j.saved ? "Remover das salvas" : "Salvar vaga"}
                           className={cn(
                             "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border-soft transition",
                             j.saved
@@ -1089,6 +1090,7 @@ function CreateJobDialog({
                     }
                     className="shrink-0 rounded-full p-1.5 text-destructive transition hover:bg-destructive/10"
                     aria-label={texts.jobs.applicationForm.remove}
+                    title={texts.jobs.applicationForm.remove}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

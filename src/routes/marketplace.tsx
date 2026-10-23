@@ -7,6 +7,7 @@ import { MARKETPLACE_KINDS, MARKETPLACE_KIND_LABELS } from "@/constants/marketpl
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { MarketplaceListing as MarketplaceListingView } from "@/types/application/marketplace/marketplace-listing";
+import type { MarketplacePalette } from "@/types/application/marketplace/marketplace-palette";
 import type { MarketplacePurchase } from "@/types/application/marketplace/marketplace-purchase";
 import { BadgeCheck, Check, RotateCcw, Search, Sparkles, Store } from "lucide-react";
 
@@ -17,7 +18,13 @@ import { useIsAuthenticated } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/components/ui/toast";
@@ -226,19 +233,34 @@ function Marketplace() {
   );
 }
 
+/** Lê as cores do pacote com fallbacks: pacote inválido não pode quebrar a vitrine. */
+function paletteOf(packageJson: string): MarketplacePalette {
+  const fallback: MarketplacePalette = {
+    bg: "#f5f5f5",
+    surface: "#ffffff",
+    border: "#e5e5e5",
+    primary: "#7c3aed",
+    strong: "#111111",
+    subtle: "#5f5f5f",
+  };
+  try {
+    const palette = JSON.parse(packageJson).palette ?? {};
+    return {
+      bg: palette.background ?? fallback.bg,
+      surface: palette.surface ?? fallback.surface,
+      border: palette.border ?? fallback.border,
+      primary: palette.primary ?? fallback.primary,
+      strong: palette.text?.strong ?? fallback.strong,
+      subtle: palette.text?.subtle ?? fallback.subtle,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 /** Miniatura real: renderiza os tokens do pacote do tema. */
 function Miniatura({ packageJson }: { packageJson: string }) {
-  let bg = "#f5f5f5",
-    surface = "#ffffff",
-    primary = "#7c3aed";
-  try {
-    const palette = JSON.parse(packageJson).palette;
-    bg = palette.background ?? bg;
-    surface = palette.surface ?? surface;
-    primary = palette.primary ?? primary;
-  } catch {
-    // pacote invalido não chega aqui (o backend valida), mas o preview não pode quebrar
-  }
+  const { bg, surface, primary } = paletteOf(packageJson);
 
   return (
     <div
@@ -254,6 +276,85 @@ function Miniatura({ packageJson }: { packageJson: string }) {
         <div className="mt-0.5 h-1 w-3/5 rounded-full opacity-40" style={{ background: primary }} />
       </div>
     </div>
+  );
+}
+
+/** Amostra maior do item: um cartão de perfil/post com as cores reais do pacote. */
+function PreviewMock({ packageJson }: { packageJson: string }) {
+  const p = paletteOf(packageJson);
+
+  return (
+    <div className="min-w-0 rounded-xl p-4" style={{ background: p.bg }}>
+      <div
+        className="rounded-lg border p-4"
+        style={{ background: p.surface, borderColor: p.border }}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="h-10 w-10 shrink-0 rounded-full" style={{ background: p.primary }} />
+
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-2.5 w-2/3 rounded-full" style={{ background: p.strong }} />
+            <div
+              className="h-2 w-1/2 rounded-full"
+              style={{ background: p.subtle, opacity: 0.55 }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          <div
+            className="h-2 w-full rounded-full"
+            style={{ background: p.subtle, opacity: 0.35 }}
+          />
+          <div
+            className="h-2 w-11/12 rounded-full"
+            style={{ background: p.subtle, opacity: 0.35 }}
+          />
+          <div className="h-2 w-3/5 rounded-full" style={{ background: p.subtle, opacity: 0.35 }} />
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <span
+            className="rounded-full px-4 py-1.5 text-xs font-medium"
+            style={{ background: p.primary, color: p.bg }}
+          >
+            Botão
+          </span>
+
+          <span
+            className="rounded-full border px-4 py-1.5 text-xs font-medium"
+            style={{ borderColor: p.border, color: p.strong }}
+          >
+            Secundário
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Botão "Ver preview": abre a amostra maior sem sair da vitrine. */
+function PreviewButton({ packageJson, title }: { packageJson: string; title: string }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="w-full rounded-full">
+          Ver preview
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Preview · {title}</DialogTitle>
+        </DialogHeader>
+
+        <PreviewMock packageJson={packageJson} />
+
+        <p className="text-xs text-text-subtle">
+          Amostra com as cores do pacote. O item pode incluir outros ajustes além da paleta.
+        </p>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -312,6 +413,10 @@ function ListingCard({
         </div>
 
         <div className="mt-auto space-y-2">
+          {theme.data && (
+            <PreviewButton packageJson={theme.data.packageJson} title={listing.title} />
+          )}
+
           <span className="flex items-center gap-1.5 text-lg font-semibold text-primary">
             <Sparkles className="h-4 w-4" />
             {formatFaisca(listing.price)} faíscas

@@ -9,6 +9,7 @@ import { Code2, FolderKanban, Globe, Plus, Search } from "lucide-react";
 import { communityProjectsApi } from "@/lib/api";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
+import { ogMetas } from "@/lib/seo";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/projetos/")({
     meta: [
       { title: texts.projects.seoTitle },
       { name: "description", content: texts.projects.seoDescription },
+      ...ogMetas(texts.projects.seoTitle, texts.projects.seoDescription),
     ],
   }),
   component: ProjectsCatalog,

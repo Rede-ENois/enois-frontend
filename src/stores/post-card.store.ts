@@ -15,9 +15,17 @@ function updateCard(
   const card = cards[postId];
   if (!card) return cards;
 
+  const next = update(card);
+  // Valor igual ao que já está lá: devolve o mesmo objeto, para o card não renderizar de novo.
+  // O card do feed grava a reação do servidor ao montar, quase sempre a mesma do estado inicial.
+  const changed = (Object.keys(next) as (keyof PostCardState)[]).some(
+    (key) => !Object.is(next[key], card[key]),
+  );
+  if (!changed) return cards;
+
   return {
     ...cards,
-    [postId]: update(card),
+    [postId]: next,
   };
 }
 

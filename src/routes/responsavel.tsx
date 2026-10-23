@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { parentalApi } from "@/lib/api";
 import { hasSession } from "@/lib/require-auth";
+import { ogMetas } from "@/lib/seo";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -32,6 +33,10 @@ export const Route = createFileRoute("/responsavel")({
         content:
           "Autorize ou revogue o uso do Énóis por um adolescente sob sua responsabilidade legal.",
       },
+      ...ogMetas(
+        "Supervisão parental · Énóis",
+        "Autorize ou revogue o uso do Énóis por um adolescente sob sua responsabilidade legal.",
+      ),
     ],
   }),
   component: Responsavel,

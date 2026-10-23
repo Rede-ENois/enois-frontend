@@ -58,8 +58,7 @@ export const navigationItems: {
     module: "MENTORING",
   },
   { to: "/eventos", label: texts.navigation.items.events, icon: Calendar, module: "EVENTS" },
-  { to: "/jogos-diarios", label: "Jogos diários", icon: Gamepad2, module: "DAILY_GAMES" },
-  { to: "/games", label: "Jogos da comunidade", icon: Joystick, module: "COMMUNITY_GAMES" },
+  { to: "/games", label: "Jogos", icon: Joystick, module: "COMMUNITY_GAMES" },
   {
     to: "/projetos",
     label: "Projetos da comunidade",

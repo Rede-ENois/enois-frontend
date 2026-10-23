@@ -283,8 +283,11 @@ function Empresa() {
                   {project.deadline && (
                     <span>
                       <strong className="text-text-strong">{texts.empresa.deadline}:</strong>{" "}
+                      {/* O prazo vem como data pura ("2026-10-30"). `new Date` lê isso como
+                          meia-noite UTC, que no Brasil ainda é o dia anterior: o prazo aparecia
+                          um dia antes. Meio-dia local, como em /freelances, mantém o dia. */}
                       {texts.empresa.deadlineBy(
-                        new Date(project.deadline).toLocaleDateString("pt-BR"),
+                        new Date(`${project.deadline}T12:00:00`).toLocaleDateString("pt-BR"),
                       )}
                     </span>
                   )}

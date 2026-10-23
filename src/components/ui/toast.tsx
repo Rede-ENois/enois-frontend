@@ -83,6 +83,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               onClick={() => remove(item.id)}
               className="shrink-0 opacity-60 transition hover:opacity-100"
               aria-label="Fechar aviso"
+              title="Fechar aviso"
             >
               <X className="h-4 w-4" />
             </button>

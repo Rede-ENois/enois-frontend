@@ -3,6 +3,7 @@ import type { LinkedinImportPreview } from "@/types/application/profile/linkedin
 import type { Profile } from "@/types/application/profile/profile";
 
 import { api } from "../api-client";
+import { clientOriginHeader } from "./client-origin";
 
 /**
  * Preferências sincronizadas com a conta.
@@ -42,12 +43,14 @@ export const preferencesApi = {
    * para revisão — nada é salvo automaticamente. Usa fetch direto (multipart).
    */
   importLinkedinArchive: async (file: File) => {
-    const { getSessionToken } = await import("../api-client");
+    const { apiUrl, getSessionToken } = await import("../api-client");
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch("/api/me/import/linkedin", {
+    // URL absoluta (`apiUrl`): o host do front não serve `/api` em produção, e o multipart
+    // relativo ia parar no 404 do próprio front.
+    const response = await fetch(apiUrl("/me/import/linkedin"), {
       method: "POST",
-      headers: { "X-Session-Token": getSessionToken() ?? "" },
+      headers: { "X-Session-Token": getSessionToken() ?? "", ...clientOriginHeader() },
       body: formData,
     });
     if (!response.ok) {

@@ -22,6 +22,7 @@ export function AuthenticatedAppHeader() {
         onClick={openMobileNavigation}
         className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary md:hidden"
         aria-label={texts.navigation.openMenu}
+        title={texts.navigation.openMenu}
       >
         <Menu className="h-5 w-5" />
       </button>

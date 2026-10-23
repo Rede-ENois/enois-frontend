@@ -1,7 +1,8 @@
 import type { LinkedinImportPreview } from "@/types/application/profile/linkedin-import-preview";
 import type { ResumeApplyPrefill } from "@/types/application/profile/resume-apply-prefill";
 
-import { ApiError, getSessionToken } from "../api-client";
+import { ApiError, apiUrl, getSessionToken } from "../api-client";
+import { clientOriginHeader } from "./client-origin";
 
 /**
  * Importação via CURRÍCULO (PDF ou texto). Terceira origem do retrato profissional, ao lado
@@ -16,9 +17,9 @@ export const resumeImportApi = {
   importResume: async (file: File): Promise<LinkedinImportPreview> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch("/api/me/import/resume", {
+    const response = await fetch(apiUrl("/me/import/resume"), {
       method: "POST",
-      headers: { "X-Session-Token": getSessionToken() ?? "" },
+      headers: { "X-Session-Token": getSessionToken() ?? "", ...clientOriginHeader() },
       body: formData,
     });
     if (!response.ok) {
@@ -40,9 +41,9 @@ export const resumeImportApi = {
   prefillApplication: async (jobId: string, file: File): Promise<ResumeApplyPrefill> => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch(`/api/me/import/resume/prefill/${jobId}`, {
+    const response = await fetch(apiUrl(`/me/import/resume/prefill/${jobId}`), {
       method: "POST",
-      headers: { "X-Session-Token": getSessionToken() ?? "" },
+      headers: { "X-Session-Token": getSessionToken() ?? "", ...clientOriginHeader() },
       body: formData,
     });
     if (!response.ok) {

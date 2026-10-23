@@ -8,6 +8,7 @@ import { ArrowLeft, Building2, Globe, Link as LinkIcon, MapPin, UserX } from "lu
 import { ApiError, corporateApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { litePageSize } from "@/lib/lite-mode";
+import { ogMetas } from "@/lib/seo";
 import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/profissional_/$username")({
     meta: [
       { title: `${params.username} · ${texts.corporate.seoTitle}` },
       { name: "description", content: texts.corporate.subtitle },
+      ...ogMetas(`${params.username} · ${texts.corporate.seoTitle}`, texts.corporate.subtitle),
     ],
   }),
   component: ProfessionalProfile,

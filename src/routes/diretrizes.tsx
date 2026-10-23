@@ -2,6 +2,8 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
+import { ogMetas } from "@/lib/seo";
+
 import { LegalLayout, LegalSection } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/diretrizes")({
@@ -10,6 +12,7 @@ export const Route = createFileRoute("/diretrizes")({
     meta: [
       { title: texts.guidelines.seoTitle },
       { name: "description", content: texts.guidelines.seoDescription },
+      ...ogMetas(texts.guidelines.seoTitle, texts.guidelines.seoDescription),
     ],
   }),
   component: Diretrizes,

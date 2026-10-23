@@ -52,4 +52,38 @@ describe("texts da interface", () => {
     }
     expect(flagrados).toEqual([]);
   });
+
+  /**
+   * A identidade do produto mudou em 2026-10-21: o Énóis deixou de se dizer "rede profissional"
+   * e passou a se dizer rede humana (conversa, comunidades, trabalho, estudo, brincadeira e
+   * construção). A varredura achou a frase antiga sobrevivendo em três superfícies de entrada
+   * que ninguém abre no dia a dia: a descrição do login, o rodapé e o manifesto do PWA.
+   *
+   * "Perfil profissional" continua existindo (é a feature do alter ego corporativo) e por isso o
+   * marcador é a frase inteira, não a palavra "profissional".
+   */
+  it("não chama o Énóis de rede profissional", () => {
+    const flagrados: string[] = [];
+    for (const { caminho, valor } of valores(texts)) {
+      if (/rede profissional/i.test(valor) || /jornada profissional/i.test(valor)) {
+        flagrados.push(`${caminho} = ${valor}`);
+      }
+    }
+    expect(flagrados).toEqual([]);
+  });
+
+  /**
+   * A marca é "o Énóis" (o projeto, a rede, o app). "da Énóis" e "a Énóis" apareciam em três
+   * telas de entrada: a de redefinir senha, a do convite de instalar o app e a descrição do
+   * login. Nenhuma delas está no caminho principal, então o erro passou anos sem ninguém ver.
+   */
+  it("usa o artigo masculino da marca (o Énóis)", () => {
+    const flagrados: string[] = [];
+    for (const { caminho, valor } of valores(texts)) {
+      if (/\ba Énóis\b/.test(valor) || /\bda Énóis\b/.test(valor)) {
+        flagrados.push(`${caminho} = ${valor}`);
+      }
+    }
+    expect(flagrados).toEqual([]);
+  });
 });

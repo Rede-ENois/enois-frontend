@@ -391,6 +391,7 @@ function CreateEventForm({ onSave, isPending }: CreateEventFormProps) {
                 type="button"
                 onClick={() => setCover(null)}
                 aria-label={texts.events.form.removeCover}
+                title={texts.events.form.removeCover}
                 className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-card/85 text-text-strong shadow transition hover:bg-card"
               >
                 <X className="h-3.5 w-3.5" />

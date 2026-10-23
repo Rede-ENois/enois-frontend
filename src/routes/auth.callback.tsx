@@ -7,6 +7,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { z } from "zod";
 
 import { authApi } from "@/lib/api";
+import { apiUrl } from "@/lib/api-client";
 import { storeSession } from "@/lib/session";
 
 import { Button } from "@/components/ui/button";
@@ -48,10 +49,12 @@ function OAuthCallback() {
 
     // LinkedIn está registrado com redirect_uri para esta página: o code/state são trocados no
     // backend, que devolve a sessão em /auth/callback?token=... (o mesmo caminho do Google).
+    // A URL precisa ser ABSOLUTA (`apiUrl`): o host do front não expõe `/api`, então um caminho
+    // relativo cai no 404 do próprio front e o login morre antes de chegar no backend.
     if (search.provider && search.code && search.state) {
       const params = new URLSearchParams({ code: search.code, state: search.state });
       window.location.replace(
-        `/api/auth/oauth/${search.provider.toLowerCase()}/callback?${params.toString()}`,
+        apiUrl(`/auth/oauth/${search.provider.toLowerCase()}/callback?${params.toString()}`),
       );
       return;
     }

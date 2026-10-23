@@ -13,6 +13,12 @@ COPY . .
 ARG VITE_API_BACKEND=https://enois.ia.br/api
 ENV VITE_API_BACKEND=$VITE_API_BACKEND
 
+# Origem pública que o SSR declara ao backend (X-Client-Origin). No browser o front usa
+# window.location.origin; no servidor não existe location, então a URL entra no build — QA e prod
+# precisam de valores diferentes.
+ARG VITE_SITE_URL=https://enois.ia.br
+ENV VITE_SITE_URL=$VITE_SITE_URL
+
 RUN NITRO_PRESET=node-server npm run build
 
 FROM node:22-alpine AS runner

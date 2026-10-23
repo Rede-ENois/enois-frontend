@@ -60,6 +60,13 @@ export const moderationApi = {
     api.post<ModeratorApplicationView>(`/admin/moderators/${userId}/revoke`, { note }),
 
   /** Punição por votação: só existe com 10+ moderadores; o limiar é >50% dos ativos. */
+  /** Modo pânico: bloqueia toda escrita da aplicação com 429. */
+  panicStatus: () =>
+    api.get<{ active: boolean; envLocked: boolean; message: string }>("/admin/panic"),
+
+  setPanic: (active: boolean) =>
+    api.post<{ active: boolean; envLocked: boolean; message: string }>("/admin/panic", { active }),
+
   sanctionProposals: (limit = 50) =>
     api.get<SanctionProposalView[]>(`/moderation/sanction-proposals?limit=${limit}`),
 

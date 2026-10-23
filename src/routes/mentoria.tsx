@@ -238,6 +238,7 @@ function RegisterMentorForm({
               onClick={() => setBanner("")}
               className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-background/90 text-destructive shadow"
               aria-label={texts.mentoring.bannerRemove}
+              title={texts.mentoring.bannerRemove}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>

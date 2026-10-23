@@ -18,6 +18,7 @@ import { ArrowRight, Loader2, MailCheck, ShieldCheck } from "lucide-react";
 import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
+import { ogMetas } from "@/lib/seo";
 import { storeSession } from "@/lib/session";
 import { useCaptchaConfig } from "@/lib/use-captcha-config";
 
@@ -45,6 +46,7 @@ export const Route = createFileRoute("/entrar")({
         name: "description",
         content: texts.auth.seo.authDescription,
       },
+      ...ogMetas(texts.auth.seo.authTitle, texts.auth.seo.authDescription),
     ],
   }),
   component: Auth,
@@ -444,12 +446,18 @@ function SignupForm(_props: AuthFormProps) {
           )}
         </div>
 
-        {!!formError && <ErrorBanner error={formError} />}
+        {!!formError && <ErrorBanner error={formError} showDetails={false} />}
         {captchaMode === "TURNSTILE" && turnstileSiteKey && (
           <Turnstile
             ref={turnstileRef}
             siteKey={turnstileSiteKey}
-            options={{ size: "flexible", theme: "dark" }}
+            options={{
+              // Invisible na maior parte do tempo: o widget so aparece se o Cloudflare
+              // pedir interacao. Protecao continua, caixa na tela nao.
+              size: "flexible",
+              theme: "dark",
+              appearance: "interaction-only",
+            }}
           />
         )}
         {captchaMode === "CHALLENGE" && (
@@ -688,12 +696,18 @@ function LoginForm({ onDone, onForgot }: LoginFormProps) {
           />
         </Field>
 
-        {!!formError && <ErrorBanner error={formError} />}
+        {!!formError && <ErrorBanner error={formError} showDetails={false} />}
         {captcha.data?.captchaMode === "TURNSTILE" && turnstileSiteKey && (
           <Turnstile
             ref={loginTurnstileRef}
             siteKey={turnstileSiteKey}
-            options={{ size: "flexible", theme: "dark" }}
+            options={{
+              // Invisible na maior parte do tempo: o widget so aparece se o Cloudflare
+              // pedir interacao. Protecao continua, caixa na tela nao.
+              size: "flexible",
+              theme: "dark",
+              appearance: "interaction-only",
+            }}
           />
         )}
         <Button type="submit" className="w-full rounded-full gap-2" disabled={loading}>

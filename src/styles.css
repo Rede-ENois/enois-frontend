@@ -676,6 +676,9 @@
 .moldura-inferno__nucleo {
   animation: moldura-inferno-nucleo 1.3s ease-in-out infinite;
 }
+.moldura-inferno__nucleo-grosso {
+  animation: moldura-inferno-nucleo-grosso 1.3s ease-in-out infinite;
+}
 .moldura-inferno__chama {
   transform-origin: 0 0;
   animation: moldura-inferno-chama 0.7s ease-in-out infinite;
@@ -685,8 +688,12 @@
 }
 @keyframes moldura-inferno-nucleo {
   50% {
+    opacity: 0;
+  }
+}
+@keyframes moldura-inferno-nucleo-grosso {
+  50% {
     opacity: 0.6;
-    stroke-width: 5;
   }
 }
 @keyframes moldura-inferno-chama {
@@ -965,6 +972,358 @@
   }
 }
 
+/* As molduras abaixo só animam transform e opacidade: o
+   benchmark mostrou que animar pintura dentro do SVG (stroke-width, stroke-dashoffset) obriga a
+   repintar o SVG inteiro na thread principal a cada quadro. */
+
+/* Nebulosa: massas de gás difusas se cruzam lentamente, com poeira e estrelas em planos separados. */
+.moldura-nebulosa__nuvens {
+  animation: moldura-giro 38s linear infinite;
+}
+.moldura-nebulosa__poeira {
+  animation: moldura-giro 53s linear infinite reverse;
+}
+.moldura-nebulosa__veus {
+  animation: moldura-nebulosa-veus 9s ease-in-out infinite alternate;
+}
+.moldura-nebulosa__estrelas {
+  animation: moldura-nebulosa-estrelas 4.8s ease-in-out infinite;
+}
+@keyframes moldura-nebulosa-veus {
+  from {
+    transform: rotate(-5deg) scale(0.98);
+    opacity: 0.35;
+  }
+  to {
+    transform: rotate(8deg) scale(1.025);
+    opacity: 0.8;
+  }
+}
+@keyframes moldura-nebulosa-estrelas {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Supernova: uma coroa persistente sustenta o desenho entre as explosões de matéria e luz. */
+.moldura-supernova__halo {
+  animation: moldura-supernova-halo 5.6s ease-out infinite;
+  animation-delay: -1.6s;
+}
+.moldura-supernova__coroa {
+  animation: moldura-supernova-coroa 5.6s ease-out infinite;
+  animation-delay: -1.6s;
+}
+.moldura-supernova__nucleo {
+  animation: moldura-supernova-nucleo 5.6s ease-out infinite;
+  animation-delay: -1.6s;
+}
+.moldura-supernova__plasma {
+  animation: moldura-giro 24s linear infinite;
+}
+.moldura-supernova__onda {
+  opacity: 0;
+  animation: moldura-supernova-onda 5.6s ease-out infinite;
+}
+.moldura-supernova__ejecao {
+  opacity: 0;
+  animation: moldura-supernova-ejecao 5.6s ease-out infinite;
+}
+@keyframes moldura-supernova-halo {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(0.97);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.025);
+  }
+}
+@keyframes moldura-supernova-coroa {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(0.97) rotate(-2deg);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.035) rotate(0deg);
+  }
+  45% {
+    opacity: 0.65;
+    transform: scale(0.98) rotate(2deg);
+  }
+}
+@keyframes moldura-supernova-nucleo {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  12% {
+    opacity: 1;
+  }
+}
+@keyframes moldura-supernova-onda {
+  0% {
+    transform: scale(0.93);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.8;
+  }
+  38%,
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+@keyframes moldura-supernova-ejecao {
+  0% {
+    transform: translateY(-53px) scale(0.45);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  38%,
+  100% {
+    transform: translateY(-77px) scale(0.65);
+    opacity: 0;
+  }
+}
+
+.moldura-galaxia,
+.moldura-galaxia__camada,
+.moldura-galaxia__sistema {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+  user-select: none;
+}
+.moldura-galaxia__camada {
+  object-fit: contain;
+}
+.moldura-galaxia__sistema {
+  animation: moldura-galaxia-giro 18s linear infinite;
+}
+.moldura-galaxia__gas {
+  animation: moldura-galaxia-giro 41s linear infinite;
+  opacity: 0.85;
+}
+.moldura-galaxia__particulas--a {
+  animation: moldura-galaxia-particulas 13s linear infinite;
+  animation-delay: -1s;
+}
+.moldura-galaxia__particulas--b {
+  animation: moldura-galaxia-particulas 27s linear infinite;
+  animation-delay: -5.4s;
+}
+.moldura-galaxia__movimento {
+  animation-play-state: paused;
+}
+.moldura-galaxia--ativa .moldura-galaxia__movimento {
+  animation-play-state: running;
+}
+.moldura-galaxia--ativa .moldura-galaxia__sistema,
+.moldura-galaxia--ativa .moldura-galaxia__gas {
+  will-change: transform;
+}
+.moldura-galaxia--ativa .moldura-galaxia__particulas {
+  will-change: transform, opacity;
+}
+@keyframes moldura-galaxia-giro {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes moldura-galaxia-particulas {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.35;
+  }
+  12.5%,
+  62.5% {
+    opacity: 0.85;
+  }
+  25%,
+  75% {
+    opacity: 0.45;
+  }
+  37.5%,
+  87.5% {
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(-180deg) scale(1.018);
+    opacity: 0.4;
+  }
+  100% {
+    transform: rotate(-360deg) scale(1);
+    opacity: 0.35;
+  }
+}
+
+/* Portal: borda de plasma persistente, filamentos assimétricos e partículas em queda radial. */
+.moldura-portal__coroa {
+  animation: moldura-giro 9s linear infinite;
+}
+.moldura-portal__contrafluxo {
+  animation: moldura-giro 14s linear infinite reverse;
+}
+.moldura-portal__fluxo {
+  animation: moldura-giro 5.5s linear infinite reverse;
+}
+.moldura-portal__horizonte {
+  animation: moldura-giro 7s linear infinite reverse;
+}
+.moldura-portal__aura {
+  animation: moldura-portal-pulso 3.8s ease-in-out infinite;
+}
+.moldura-portal__abertura {
+  animation: moldura-portal-abertura 3.8s ease-in-out infinite;
+}
+.moldura-portal__materia {
+  animation: moldura-portal-materia 3s cubic-bezier(0.4, 0, 0.8, 0.6) infinite;
+}
+@keyframes moldura-portal-abertura {
+  50% {
+    transform: scale(1.015);
+    opacity: 0.88;
+  }
+}
+@keyframes moldura-portal-pulso {
+  50% {
+    transform: scale(1.04);
+    opacity: 0.6;
+  }
+}
+@keyframes moldura-portal-materia {
+  0% {
+    transform: rotate(-20deg) translateX(77px) scale(0.4);
+    opacity: 0;
+  }
+  15%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(100deg) translateX(51px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Holograma: tremor de sinal, scan descendo pelo rosto, anéis de dados e glitch RGB em degraus. */
+.moldura-holograma__tremor {
+  animation: moldura-holograma-tremor 3.7s steps(1, end) infinite;
+}
+.moldura-holograma__scan {
+  animation: moldura-holograma-scan 2.6s linear infinite;
+}
+.moldura-holograma__dados {
+  animation: moldura-giro 9s linear infinite;
+}
+.moldura-holograma__marcas {
+  animation: moldura-giro 14s linear infinite reverse;
+}
+.moldura-holograma__arcos {
+  animation: moldura-giro 4s linear infinite;
+}
+.moldura-holograma__magenta {
+  animation: moldura-holograma-glitch-magenta 2.7s steps(1, end) infinite;
+}
+.moldura-holograma__ciano {
+  animation: moldura-holograma-glitch-ciano 2.7s steps(1, end) infinite;
+}
+.moldura-holograma__faixa {
+  opacity: 0;
+  animation: moldura-holograma-faixa 2.5s steps(1, end) infinite;
+}
+@keyframes moldura-holograma-tremor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  31% {
+    opacity: 0.55;
+  }
+  32% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 0.75;
+  }
+  34% {
+    opacity: 1;
+  }
+  77% {
+    opacity: 0.65;
+  }
+  78% {
+    opacity: 1;
+  }
+}
+@keyframes moldura-holograma-scan {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(104px);
+  }
+}
+@keyframes moldura-holograma-glitch-magenta {
+  0%,
+  88%,
+  95%,
+  100% {
+    transform: translate(-0.6px, 0);
+  }
+  89% {
+    transform: translate(-2.4px, 0.8px);
+  }
+  91% {
+    transform: translate(1.8px, -0.6px);
+  }
+  93% {
+    transform: translate(-1.2px, 0);
+  }
+}
+@keyframes moldura-holograma-glitch-ciano {
+  0%,
+  88%,
+  95%,
+  100% {
+    transform: translate(0.6px, 0);
+  }
+  89% {
+    transform: translate(2.4px, -0.8px);
+  }
+  91% {
+    transform: translate(-1.8px, 0.6px);
+  }
+  93% {
+    transform: translate(1.2px, 0);
+  }
+}
+@keyframes moldura-holograma-faixa {
+  0% {
+    opacity: 0.9;
+    transform: translateX(0);
+  }
+  4% {
+    opacity: 0.6;
+    transform: translateX(6px);
+  }
+  7%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
 /* Sem animação: o desenho fica parado (com dois raios acesos) e as partículas somem. */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-force-motion]) .moldura-fx * {
@@ -975,6 +1334,12 @@
   }
   html:not([data-force-motion]) .moldura-tempestade__raio:nth-child(-n + 2) {
     opacity: 1;
+  }
+  .moldura-galaxia .moldura-galaxia__movimento {
+    will-change: auto;
+  }
+  .moldura-galaxia__particulas {
+    opacity: 0.7;
   }
 }
 

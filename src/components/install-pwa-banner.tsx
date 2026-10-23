@@ -170,6 +170,7 @@ export function InstallPwaBanner() {
               type="button"
               onClick={closeBanner}
               aria-label={texts.pwa.install.close}
+              title={texts.pwa.install.close}
               className="flex shrink-0 items-center justify-center rounded-md p-1 text-text-subtle transition hover:text-text-strong"
             >
               <X className="h-5 w-5" aria-hidden="true" />

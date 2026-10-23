@@ -1,132 +1,259 @@
-name: Build, Push and GitOps Deploy
+name: Build, Push and Deploy
+
+# SECURITY — read before editing this file:
+# This repo is public. The self-hosted runner (labels: self-hosted, enois, docker-prod4)
+# has NO docker.sock mount and only talks to Portainer's HTTP API with scoped credentials.
+# It must NEVER be targeted by a job that runs on `pull_request` — a fork PR would then
+# execute arbitrary workflow code with access to our infra ("pwn request"). The deploy job
+# below is gated to `push`/`workflow_dispatch` on protected branches only. PR validation
+# always runs on GitHub-hosted `ubuntu-latest` and never touches secrets.
 
 on:
   push:
     branches:
       - main
+      - qa
   pull_request:
     branches:
       - main
+      - qa
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
-  ECR_REGISTRY: 818928662779.dkr.ecr.us-east-1.amazonaws.com
-  ECR_REPOSITORY: enois/frontend
-  GITOPS_REPO: florestaencantada/integration_gitops
-  GITOPS_BRANCH: main
-  MANIFEST_PATH: clusters/forest-dev/applications/enois-app.yaml
+  HARBOR_REGISTRY: harbor.b7cloud.top
+  HARBOR_PROJECT: enois
+  IMAGE_NAME: frontend
+  CONTAINER_NAME: enois-qa-frontend
+  PORTAINER_ENDPOINT_ID: 8
+  # Baked at build time into the Vite/Nitro bundle — NOT a runtime env var.
+  # Changing this for a running container requires a rebuild, not just a redeploy.
+  # (This exact gotcha took the AWS deploy down once — see Dockerfile comment.)
+  VITE_API_BACKEND_QA: https://enois-api-qa.b7cloud.tech/api
+  # Origem pública que o SSR declara ao backend (X-Client-Origin). Precisa ser a origem da QA:
+  # o backend só aceita origens da allowlist (CORS_ALLOWED_ORIGINS=https://enois-qa.b7cloud.tech).
+  VITE_SITE_URL_QA: https://enois-qa.b7cloud.tech
+  VITE_API_BACKEND_PROD: https://api.enois.ia.br/api
+  VITE_SITE_URL_PROD: https://enois.ia.br
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
-  # =========================================================================
-  # ETAPA 1: Build da imagem Docker e Push para o ECR
-  # =========================================================================
-  build-and-push:
-    name: 🐳 Build & Push Docker Image
+  # ===========================================================================
+  # Validação de build em PR (sempre hosted, nunca self-hosted, sem credenciais)
+  # ===========================================================================
+  validate-pr-build:
+    name: 🧪 Validar build (PR)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    outputs:
-      image_tag: ${{ steps.vars.outputs.sha_short }}
-      image_ref: ${{ steps.vars.outputs.image_ref }}
-
     steps:
-      - name: 📥 Checkout do código
+      - name: 📥 Checkout
         uses: actions/checkout@v7
-
-      - name: 🏷️ Definir Tag (SHA Curto)
-        id: vars
-        run: |
-          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "sha_short=${SHA_SHORT}" >> $GITHUB_OUTPUT
-          echo "image_ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${SHA_SHORT}" >> $GITHUB_OUTPUT
-
-      # PRs (including forks) only validate the image build: the role trusts main only, and the
-      # build below does not push on pull_request. Same gating as the backend workflow.
-      - name: ⚙️ Configurar Credenciais AWS via OIDC
-        if: github.event_name != 'pull_request'
-        uses: aws-actions/configure-aws-credentials@v6.3.0
-        with:
-          role-to-assume: arn:aws:iam::818928662779:role/forest-dev-enois-front-ecr
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: 🔑 Login no Amazon ECR
-        if: github.event_name != 'pull_request'
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Verifica e cria o repositório no ECR
-        if: github.event_name != 'pull_request'
-        uses: int128/create-ecr-repository-action@v1
-        with:
-          repository: ${{ env.ECR_REPOSITORY }}
 
       - name: ⚙️ Configurar Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: 🚀 Build & Push para o ECR
-        id: build
+      - name: 🧪 Build sem push
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.sha_short }}
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          push: false
+          tags: enois/frontend:pr-check
+          build-args: |
+            VITE_API_BACKEND=${{ env.VITE_API_BACKEND_QA }}
+            VITE_SITE_URL=${{ env.VITE_SITE_URL_QA }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # =========================================================================
-  # ETAPA 2: Promoção GitOps → EKS Floresta
-  # =========================================================================
-  promote-gitops:
-    name: 🔄 GitOps Update → EKS Floresta
-    needs: build-and-push
+  # ===========================================================================
+  # Build + Push para Harbor (push/workflow_dispatch em main ou qa, hosted runner)
+  # ===========================================================================
+  build-and-push:
+    name: 🐳 Build & Push → Harbor
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+      branch: ${{ steps.vars.outputs.branch }}
 
     steps:
-      - name: 📥 Checkout do Repositório GitOps
+      - name: 📥 Checkout
         uses: actions/checkout@v7
+
+      - name: 🏷️ Definir tags
+        id: vars
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${BRANCH}-${SHA_SHORT}" >> "$GITHUB_OUTPUT"
+
+      - name: ⚙️ Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: 🔑 Login no Harbor
+        uses: docker/login-action@v3
         with:
-          repository: ${{ env.GITOPS_REPO }}
-          ref: ${{ env.GITOPS_BRANCH }}
-          # Deploy key escopada SO no integration_gitops (o PAT nao tinha API de criacao e
-          # deploy keys estavam desabilitadas na org). Alternativa a um PAT de escopo largo.
-          ssh-key: ${{ secrets.GITOPS_SSH_KEY }}
-          path: gitops-repo
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USER }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
 
-      - name: ✏️ Atualizar Tag da Imagem no Manifesto
+      - name: 🏷️ Definir build-args por branch
+        id: buildargs
         run: |
-          cd gitops-repo
-          echo "==> Atualizando ${{ env.MANIFEST_PATH }} para tag ${{ needs.build-and-push.outputs.image_tag }}"
-
-          # Atualiza a tag da imagem no skilrush-front
-          sed -i -E \
-            "s|(image:\s*${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:).*|\1${{ needs.build-and-push.outputs.image_tag }}|g" \
-            "${{ env.MANIFEST_PATH }}"
-
-          echo "Diff gerado:"
-          git diff "${{ env.MANIFEST_PATH }}"
-
-      - name: 🚀 Commit & Push no GitOps
-        run: |
-          cd gitops-repo
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add "${{ env.MANIFEST_PATH }}"
-
-          if git diff --staged --quiet; then
-            echo "Nenhuma mudança de imagem, pulando commit."
-            exit 0
+          if [ "${{ steps.vars.outputs.branch }}" = "main" ]; then
+            echo "api_backend=${{ env.VITE_API_BACKEND_PROD }}" >> "$GITHUB_OUTPUT"
+            echo "site_url=${{ env.VITE_SITE_URL_PROD }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "api_backend=${{ env.VITE_API_BACKEND_QA }}" >> "$GITHUB_OUTPUT"
+            echo "site_url=${{ env.VITE_SITE_URL_QA }}" >> "$GITHUB_OUTPUT"
           fi
 
-          git commit \
-            -m "ci(skillify-frontend): atualiza imagem para ${{ needs.build-and-push.outputs.image_tag }}" \
-            -m "Disparado pelo commit ${{ github.sha }} por @${{ github.actor }}"
+      # push:true direto no buildx (buildkit) dá 400 no token service do Harbor com
+      # multi-tag num push só (bug conhecido buildkit x Harbor 2.11 — não é bug nosso,
+      # não tocar na config do Harbor, que funciona normal pras pipes do GitLab).
+      # Fix: build local (load) + docker push classico por tag, igual ao fluxo do GitLab.
+      - name: 🚀 Build (local, sem push)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          build-args: |
+            VITE_API_BACKEND=${{ steps.buildargs.outputs.api_backend }}
+            VITE_SITE_URL=${{ steps.buildargs.outputs.site_url }}
+          tags: |
+            ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
+            ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.branch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-          git push origin ${{ env.GITOPS_BRANCH }}
+      - name: 📤 Push para Harbor (docker push classico, tag por tag)
+        run: |
+          set -euo pipefail
+          IMG="${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}"
+          docker push "${IMG}:${{ steps.vars.outputs.image_tag }}"
+          docker push "${IMG}:${{ steps.vars.outputs.branch }}"
+
+  # ===========================================================================
+  # Deploy QA — SOMENTE branch qa, SOMENTE push/workflow_dispatch, self-hosted
+  # ===========================================================================
+  deploy-qa:
+    name: 🚢 Deploy → QA (docker-prod4)
+    needs: build-and-push
+    if: >
+      needs.build-and-push.outputs.branch == 'qa' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: [self-hosted, enois, docker-prod4]
+    steps:
+      - name: 🚢 Recriar container via Portainer API
+        env:
+          PORTAINER_BASE_URL: ${{ secrets.PORTAINER_BASE_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          IMAGE_REF: ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}
+          HARBOR_USER: ${{ secrets.HARBOR_USER }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+        run: |
+          set -euo pipefail
+          API="${PORTAINER_BASE_URL}/api/endpoints/${PORTAINER_ENDPOINT_ID}/docker"
+          AUTH=(-H "X-API-Key: ${PORTAINER_API_KEY}" -H "Referer: ${PORTAINER_BASE_URL}")
+
+          echo "==> Pull ${IMAGE_REF}"
+          ENCODED_IMAGE=$(python3 -c "import urllib.parse,os;print(urllib.parse.quote(os.environ['IMAGE_REF'].rsplit(':',1)[0]))")
+          TAG=$(echo "${IMAGE_REF}" | rev | cut -d: -f1 | rev)
+          # projeto 'enois' e privado no Harbor -> precisa de X-Registry-Auth no pull via Portainer
+          REGISTRY_AUTH=$(python3 -c "import json,base64,os;print(base64.b64encode(json.dumps({'username':os.environ['HARBOR_USER'],'password':os.environ['HARBOR_PASSWORD'],'serveraddress':'${HARBOR_REGISTRY}'}).encode()).decode())")
+          curl -sf -X POST "${AUTH[@]}" -H "X-Registry-Auth: ${REGISTRY_AUTH}" "${API}/images/create?fromImage=${ENCODED_IMAGE}&tag=${TAG}"
+
+          echo "==> Stop + remove container antigo (ignora erro se não existir)"
+          curl -s -X POST "${AUTH[@]}" "${API}/containers/${CONTAINER_NAME}/stop" || true
+          curl -s -X DELETE "${AUTH[@]}" "${API}/containers/${CONTAINER_NAME}?v=1" || true
+
+          echo "==> Criar container novo"
+          cat > /tmp/enois-frontend-deploy.json <<EOF
+          {
+            "Image": "${IMAGE_REF}",
+            "Env": ["PORT=3000", "NODE_ENV=production"],
+            "ExposedPorts": {"3000/tcp": {}},
+            "HostConfig": {
+              "RestartPolicy": {"Name": "unless-stopped"},
+              "Memory": 536870912,
+              "MemorySwap": 536870912,
+              "MemoryReservation": 268435456,
+              "PortBindings": {"3000/tcp": [{"HostPort": "8106"}]}
+            }
+          }
+          EOF
+          curl -sf -X POST "${AUTH[@]}" -H "Content-Type: application/json" \
+            "${API}/containers/create?name=${CONTAINER_NAME}" -d @/tmp/enois-frontend-deploy.json
+
+          echo "==> Start"
+          curl -sf -X POST "${AUTH[@]}" "${API}/containers/${CONTAINER_NAME}/start"
+
+      - name: 🩺 Health check
+        run: |
+          sleep 5
+          curl -sfI --max-time 15 https://enois-qa.b7cloud.tech | head -1
+
+  # ===========================================================================
+  # Deploy PROD — SOMENTE branch main, SOMENTE push/workflow_dispatch, self-hosted
+  # ===========================================================================
+  deploy-prod:
+    name: 🚢 Deploy → PROD (enois-node1)
+    needs: build-and-push
+    if: >
+      needs.build-and-push.outputs.branch == 'main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: [self-hosted, enois, docker-prod4]
+    steps:
+      - name: 🚢 Recriar container via Portainer API (endpoint enois-node1)
+        env:
+          PORTAINER_BASE_URL: ${{ secrets.PORTAINER_BASE_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          PORTAINER_ENDPOINT_ID_PROD: 10
+          IMAGE_REF: ${{ env.HARBOR_REGISTRY }}/${{ env.HARBOR_PROJECT }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image_tag }}
+          HARBOR_USER: ${{ secrets.HARBOR_USER }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+        run: |
+          set -euo pipefail
+          API="${PORTAINER_BASE_URL}/api/endpoints/${PORTAINER_ENDPOINT_ID_PROD}/docker"
+          AUTH=(-H "X-API-Key: ${PORTAINER_API_KEY}" -H "Referer: ${PORTAINER_BASE_URL}")
+          PROD_CONTAINER_NAME="enois-prod-frontend"
+
+          echo "==> Pull ${IMAGE_REF}"
+          ENCODED_IMAGE=$(python3 -c "import urllib.parse,os;print(urllib.parse.quote(os.environ['IMAGE_REF'].rsplit(':',1)[0]))")
+          TAG=$(echo "${IMAGE_REF}" | rev | cut -d: -f1 | rev)
+          REGISTRY_AUTH=$(python3 -c "import json,base64,os;print(base64.b64encode(json.dumps({'username':os.environ['HARBOR_USER'],'password':os.environ['HARBOR_PASSWORD'],'serveraddress':'${HARBOR_REGISTRY}'}).encode()).decode())")
+          curl -sf -X POST "${AUTH[@]}" -H "X-Registry-Auth: ${REGISTRY_AUTH}" "${API}/images/create?fromImage=${ENCODED_IMAGE}&tag=${TAG}"
+
+          echo "==> Stop + remove container antigo (ignora erro se não existir)"
+          curl -s -X POST "${AUTH[@]}" "${API}/containers/${PROD_CONTAINER_NAME}/stop" || true
+          curl -s -X DELETE "${AUTH[@]}" "${API}/containers/${PROD_CONTAINER_NAME}?v=1" || true
+
+          echo "==> Criar container novo"
+          cat > /tmp/enois-frontend-prod-deploy.json <<EOF
+          {
+            "Image": "${IMAGE_REF}",
+            "Env": ["PORT=3000", "NODE_ENV=production"],
+            "ExposedPorts": {"3000/tcp": {}},
+            "HostConfig": {
+              "RestartPolicy": {"Name": "unless-stopped"},
+              "Memory": 536870912,
+              "MemorySwap": 536870912,
+              "MemoryReservation": 268435456,
+              "PortBindings": {"3000/tcp": [{"HostPort": "8106"}]}
+            }
+          }
+          EOF
+          curl -sf -X POST "${AUTH[@]}" -H "Content-Type: application/json" \
+            "${API}/containers/create?name=${PROD_CONTAINER_NAME}" -d @/tmp/enois-frontend-prod-deploy.json
+
+          echo "==> Start"
+          curl -sf -X POST "${AUTH[@]}" "${API}/containers/${PROD_CONTAINER_NAME}/start"
+
+      - name: 🩺 Health check
+        run: |
+          sleep 5
+          curl -sfI --max-time 15 https://enois.ia.br | head -1

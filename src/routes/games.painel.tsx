@@ -133,6 +133,7 @@ function StudioPanel() {
                 <button
                   type="button"
                   aria-label={texts.games.panel.removeAvatar}
+                  title={texts.games.panel.removeAvatar}
                   onClick={() => setAvatar(null)}
                   className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-destructive text-destructive-foreground"
                 >
@@ -173,6 +174,7 @@ function StudioPanel() {
                 <button
                   type="button"
                   aria-label={texts.games.panel.removeCover}
+                  title={texts.games.panel.removeCover}
                   onClick={() => setCover(null)}
                   className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground"
                 >

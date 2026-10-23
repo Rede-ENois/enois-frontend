@@ -2,6 +2,8 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 
+import { ogMetas } from "@/lib/seo";
+
 import { LegalLastUpdated, LegalLayout, LegalSection } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/privacidade")({
@@ -12,6 +14,7 @@ export const Route = createFileRoute("/privacidade")({
         name: "description",
         content: texts.legal.privacy.seoDescription,
       },
+      ...ogMetas(texts.legal.privacy.seoTitle, texts.legal.privacy.seoDescription),
     ],
   }),
   component: Privacidade,

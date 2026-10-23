@@ -1,6 +1,6 @@
 export type Conversation = {
   id: string;
-  kind: "DIRECT" | "GROUP" | "JOB";
+  kind: "DIRECT" | "GROUP" | "JOB" | "SERVICE";
   title: string | null;
   participantIds: string[];
   lastMessage: string | null;

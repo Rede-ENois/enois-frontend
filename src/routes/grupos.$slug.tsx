@@ -311,7 +311,9 @@ function GroupFeed({ group }: { group: GroupView }) {
       setContent("");
       invalidatePosts();
     },
-    onError: () => toast(texts.groups.publishError, "error"),
+    // A mensagem do servidor diz o motivo (conta restrita, ECA, topico arquivado): um texto
+    // generico escondia exatamente o que a pessoa precisa saber.
+    onError: (error) => toast(error.message || texts.groups.publishError, "error"),
   });
 
   const createTopic = useMutation({

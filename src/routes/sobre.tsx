@@ -3,6 +3,8 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import { ArrowLeft } from "lucide-react";
 
+import { ogMetas } from "@/lib/seo";
+
 import { LegalLayout, LegalSection } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/sobre")({
@@ -11,6 +13,7 @@ export const Route = createFileRoute("/sobre")({
     meta: [
       { title: texts.about.seoTitle },
       { name: "description", content: texts.about.seoDescription },
+      ...ogMetas(texts.about.seoTitle, texts.about.seoDescription),
     ],
   }),
   component: Sobre,

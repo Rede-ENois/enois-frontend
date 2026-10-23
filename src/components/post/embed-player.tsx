@@ -34,6 +34,7 @@ export function EmbedPlayer({ type, id, autoplay = false }: EmbedPlayerProps) {
               autoplay: true,
               host: typeof window !== "undefined" ? window.location.hostname : "",
             })}
+            title={texts.posts.video.playerTitle}
             className="aspect-video w-full"
             allow="autoplay; fullscreen; encrypted-media"
             allowFullScreen

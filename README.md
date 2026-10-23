@@ -13,6 +13,22 @@ ou propriedade: a tela pede, o backend decide.
 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Falha de segurança tem canal próprio no
 [`SECURITY.md`](SECURITY.md) — não vira issue pública.
 
+## O que o Énóis é
+
+- Uma rede **de gente**: conversa, grupos, trabalho, estudo, brincadeira e construção juntos.
+- Um lugar onde cada pessoa constrói a própria reputação, e onde a moderação é feita por gente.
+- Software livre, sob GPL-3.0, sem plano pago, sem anúncio e sem paywall.
+
+## O que o Énóis não é
+
+- **Não é uma rede de recrutamento.** Vaga é uma das coisas que se posta aqui, não o motivo de a
+  rede existir.
+- **Não é um mercado de atenção.** Não existe métrica pública de engajamento, não existe
+  impulsionamento pago e o feed não é vendido.
+- **Não é um playground de automação.** Publicar, comentar e reagir por máquina é proibido
+  (a política está no repositório do backend, em `docs/PUBLISHING_POLICY.md`).
+- **Não é uma empresa que vende dado.** Minimização (LGPD) é regra de arquitetura, não promessa.
+
 ## Stack
 
 - React 19

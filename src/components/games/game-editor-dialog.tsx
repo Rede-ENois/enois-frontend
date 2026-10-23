@@ -210,6 +210,7 @@ export function GameEditorDialog({
                       <button
                         type="button"
                         aria-label={texts.games.editor.removeIcon}
+                        title={texts.games.editor.removeIcon}
                         onClick={() => setIcon(null)}
                         className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-destructive text-destructive-foreground"
                       >
@@ -258,6 +259,7 @@ export function GameEditorDialog({
                       <button
                         type="button"
                         aria-label={texts.games.editor.removeBanner}
+                        title={texts.games.editor.removeBanner}
                         onClick={() => setBanner(null)}
                         className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground"
                       >

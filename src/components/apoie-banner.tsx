@@ -71,6 +71,7 @@ export function ApoieBanner() {
         <button
           type="button"
           aria-label="Fechar convite"
+          title="Fechar convite"
           className="shrink-0 rounded-full p-1 text-text-subtle transition hover:bg-muted"
           onClick={() => {
             setFechado(true);

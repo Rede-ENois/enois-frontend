@@ -16,7 +16,8 @@ import { redirect } from "@tanstack/react-router";
  * `requireAuth()` e mandam para o login.
  */
 const PROTECTED_ROUTES = [
-  "/jogos-diarios",
+  // "/jogos-diarios" saiu de proposito: a rota virou um redirecionamento para a categoria
+  // diaria dentro de /games, e o proprio painel e que pede a conta.
   "/feed",
   "/rede",
   "/salvos",
