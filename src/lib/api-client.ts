@@ -1,3 +1,4 @@
+import { HttpStatus } from "@/types/application/api/http-status";
 import type { RefreshOutcome } from "@/types/application/api/refresh-outcome";
 import type { RequestOptions } from "@/types/application/api/request-options";
 
@@ -151,7 +152,7 @@ async function doRefresh(): Promise<RefreshOutcome> {
     // So a recusa EXPLICITA (401/403) significa sessao encerrada. Um 429 do limitador ou um 502
     // durante o deploy sao falhas do servidor, nao prova de que a sessao morreu — deslogar aqui
     // era o que fazia a pessoa cair no login "sem motivo".
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
       clearSession();
       return "refused";
     }
@@ -260,7 +261,7 @@ async function request<T>(
   // 401 e sessao invalida/expirada (tenta refresh e, se nao der, manda para o login). 403 e
   // PERMISSAO negada, nao sessao: derrubar o usuario aqui era um erro (quem tem conta pendente de
   // verificacao, por exemplo, era desconectado em vez de ler o aviso).
-  if (response.status === 401 && hadSession && !path.startsWith("/auth/")) {
+  if (response.status === HttpStatus.UNAUTHORIZED && hadSession && !path.startsWith("/auth/")) {
     const refreshed = await refreshSession();
 
     if (refreshed === "unavailable") {
@@ -276,32 +277,26 @@ async function request<T>(
 
     if (refreshed === "renewed") {
       headers["X-Session-Token"] = getToken() ?? "";
-      const retry = await fetch(`${baseUrl()}${path}`, {
+      response = await fetch(`${baseUrl()}${path}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
       });
+    }
 
-      if (retry.ok) {
-        if (retry.status === 204 || retry.headers.get("content-length") === "0") {
-          return undefined as T;
-        }
-        const data = await retry.json();
-        if (data?.body !== undefined) return data.body as T;
-        return data as T;
+    // Uma falha da operação após renovar não significa que a sessão foi recusada.
+    if (refreshed === "refused" || response.status === HttpStatus.UNAUTHORIZED) {
+      clearSession();
+      if (typeof window !== "undefined") {
+        window.location.href = "/entrar?tab=login";
       }
+      throw new ApiError(
+        response.status,
+        "SESSION_EXPIRED",
+        "Sessão expirada. Faça login novamente.",
+        path,
+      );
     }
-
-    clearSession();
-    if (typeof window !== "undefined") {
-      window.location.href = "/entrar?tab=login";
-    }
-    throw new ApiError(
-      response.status,
-      "SESSION_EXPIRED",
-      "Sessão expirada. Faça login novamente.",
-      path,
-    );
   }
 
   // Sem sessao nao redireciona daqui (ha consultas autenticadas em telas publicas, como "posts
@@ -314,7 +309,7 @@ async function request<T>(
     if (
       !errorBody?.code &&
       !errorBody?.message &&
-      (response.status === 401 || response.status === 403) &&
+      (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) &&
       !hadSession
     ) {
       throw new ApiError(
@@ -341,7 +336,7 @@ async function request<T>(
     );
   }
 
-  if (response.status === 204 || response.headers.get("content-length") === "0") {
+  if (response.status === HttpStatus.NO_CONTENT || response.headers.get("content-length") === "0") {
     return undefined as T;
   }
 
