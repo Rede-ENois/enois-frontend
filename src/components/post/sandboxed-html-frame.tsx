@@ -32,6 +32,7 @@ export function SandboxedHtmlFrame({
   html,
   className,
   title,
+  allowSoundCloudPlayer = false,
   innerPadding = true,
   autoHeight = true,
   maxHeight,
@@ -106,11 +107,15 @@ export function SandboxedHtmlFrame({
       ref={frame}
       title={title}
       srcDoc={buildDocument(html, innerPadding, clip)}
-      // Sem `allow-scripts` e sem `allow-same-origin`: e o que garante que o HTML colado nao roda
-      // codigo. `allow-fullscreen` existe so para o botao de tela cheia do player de video, e
-      // `autoplay` delega a permissao do autoplay que o autor pediu: midia muda toca sozinha (mesmo
-      // dentro do sandbox); com som, o navegador continua exigindo um gesto de quem le.
-      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      // Por padrão, o HTML colado não recebe scripts e mantém origem legível apenas para a medição.
+      // O modo SoundCloud troca a origem legível por origem opaca e libera scripts para o iframe
+      // aninhado; a CSP continua bloqueando scripts do documento e restringindo frames ao player.
+      // `autoplay` delega a permissão pedida pelo autor; com som, o navegador exige gesto de quem lê.
+      sandbox={
+        allowSoundCloudPlayer
+          ? "allow-scripts allow-popups allow-popups-to-escape-sandbox"
+          : "allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      }
       allow={lite ? "fullscreen" : "autoplay; fullscreen"}
       allowFullScreen
       referrerPolicy="no-referrer"

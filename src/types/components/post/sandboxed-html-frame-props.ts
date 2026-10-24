@@ -5,6 +5,8 @@ export type SandboxedHtmlFrameProps = {
   className?: string;
   /** Descrição do quadro para leitores de tela. */
   title: string;
+  /** Permite scripts apenas nos iframes SoundCloud aprovados pela CSP; a origem do HTML segue opaca. */
+  allowSoundCloudPlayer?: boolean;
   /**
    * Folga interna em volta do conteúdo (o "papel" da página). `false` faz o HTML começar na borda
    * do quadro, para quem quer usar o espaço inteiro — é o caso da bio do perfil, onde o quadro

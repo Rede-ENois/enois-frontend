@@ -385,17 +385,14 @@ function Profile() {
         <div className="overflow-hidden rounded-[1.5rem] border border-border-soft bg-surface-card shadow-[0_28px_80px_-48px_color-mix(in_oklab,var(--primary)_95%,transparent)]">
           <div className="group relative h-[24dvh] min-h-48 overflow-hidden sm:h-[28dvh] sm:min-h-60">
             {user.bannerHtml ? (
-              // Capa em HTML/CSS: mesmo espaço da foto (mesmas classes), sem moldura própria — quem
-              // recorta é a capa, e o quadro já vem com sandbox sem scripts. `clip` é o delimitador:
-              // a capa é uma FAIXA da altura que o layout diz, e o HTML do autor é cortado nela —
-              // sem ele, um `height: 100vh` na capa realimentava a medida e crescia até tomar a tela.
+              // O widget SoundCloud precisa de scripts no iframe aninhado. A opção mantém o HTML
+              // numa origem opaca; a CSP só permite o host oficial do player.
               <SandboxedHtmlFrame
                 html={user.bannerHtml}
                 title={texts.profile.bannerHtml.frameTitle}
                 className="h-full w-full rounded-none border-0 shadow-none"
-                // Faixa fixa com ROLAGEM interna (pedido da comunidade): o HTML do autor não é
-                // mais cortado — se passar da altura, rola dentro da capa.
                 autoHeight={false}
+                allowSoundCloudPlayer
               />
             ) : user.banner ? (
               <img src={resolveCdnUrl(user.banner)} alt="" className="h-full w-full object-cover" />
