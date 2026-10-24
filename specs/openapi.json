@@ -1,0 +1,17 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Énois API",
+    "version": "0.0.0-placeholder",
+    "description": "Placeholder local. Gere novamente com FETCH_OPENAPI=1 quando o backend estiver disponível."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081/api"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {}
+  }
+}
