@@ -1,11 +1,14 @@
 import type { MonitoringEvent } from "@/types/application/monitoring/monitoring-event";
 import type { MonitoringOverview } from "@/types/application/monitoring/monitoring-overview";
+import type { MonitoringSupply } from "@/types/application/monitoring/monitoring-supply";
 
 import { api } from "../api-client";
 
 /** Painel de monitorabilidade (somente admin). */
 export const monitoringApi = {
   overview: () => api.get<MonitoringOverview>("/admin/monitoring/overview"),
+
+  supply: () => api.get<MonitoringSupply>("/admin/carteira/supply"),
 
   events: (params: {
     level?: string;

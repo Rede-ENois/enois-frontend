@@ -10,6 +10,7 @@ import type { MonitoringResource } from "@/types/application/monitoring/monitori
 import {
   Activity,
   AlertTriangle,
+  Coins,
   Copy,
   Cpu,
   Pause,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { monitoringApi } from "@/lib/api";
+import { formatFaisca } from "@/lib/faisca";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -65,6 +67,14 @@ export function MonitoringSection() {
   });
 
   const { toast } = useToast();
+
+  // Supply da moeda: só administração tem acesso; para os demais o cartão simplesmente não aparece.
+  const supply = useQuery({
+    queryKey: ["monitoring", "supply"],
+    queryFn: () => monitoringApi.supply(),
+    refetchInterval: paused ? false : 30_000,
+    retry: false,
+  });
 
   const filtered = Boolean(level || type || debounced || from || to);
   const events = useInfiniteQuery({
@@ -337,6 +347,92 @@ export function MonitoringSection() {
       </div>
 
       <ResourcePanel resource={data.resources} />
+
+      {supply.data && (
+        <div className="surface-card min-w-0 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Coins className="h-4 w-4 text-primary" />
+
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+              {texts.moderator.monitoring.moedaTitle}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Kpi
+              label={texts.moderator.monitoring.moedaTotal}
+              value={formatFaisca(supply.data.total)}
+            />
+            <Kpi
+              label={texts.moderator.monitoring.moedaCofre}
+              value={formatFaisca(supply.data.cofre)}
+            />
+            <Kpi
+              label={texts.moderator.monitoring.moedaCirculacao}
+              value={formatFaisca(supply.data.circulacao)}
+            />
+          </div>
+
+          <p
+            className={cn(
+              "mt-2 text-[11px]",
+              supply.data.coerente ? "text-growth" : "text-destructive",
+            )}
+          >
+            {supply.data.coerente
+              ? texts.moderator.monitoring.moedaCoerente
+              : texts.moderator.monitoring.moedaDivergente}
+          </p>
+        </div>
+      )}
+
+      {supply.data && (
+        <div className="surface-card min-w-0 p-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+              <Coins className="h-3.5 w-3.5" />
+              {texts.moderator.monitoring.moedaTitle}
+            </p>
+
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-medium",
+                supply.data.coerente
+                  ? "bg-growth/10 text-growth"
+                  : "bg-destructive/10 text-destructive",
+              )}
+              title={
+                supply.data.coerente
+                  ? texts.moderator.monitoring.moedaCoerente
+                  : texts.moderator.monitoring.moedaDivergente
+              }
+            >
+              {supply.data.coerente ? "✓" : "⚠"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {[
+              [texts.moderator.monitoring.moedaTotal, supply.data.total],
+              [texts.moderator.monitoring.moedaCofre, supply.data.cofre],
+              [texts.moderator.monitoring.moedaCirculacao, supply.data.circulacao],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="min-w-0 rounded-xl border border-border-soft bg-surface-card p-2"
+              >
+                <p className="truncate text-[10px] uppercase tracking-wide text-text-subtle">
+                  {label}
+                </p>
+
+                <p className="text-sm font-semibold text-text-strong">
+                  {formatFaisca(value as number)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="surface-card min-w-0 p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
