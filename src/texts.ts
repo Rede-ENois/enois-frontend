@@ -2937,6 +2937,7 @@ export const texts = {
     originError: "Não foi possível cadastrar a origem.",
     originValidHint:
       "Use só o domínio com https (http é aceito apenas em localhost). Sem origem cadastrada, a requisição recebe 403 ORIGIN_REQUIRED.",
+    originBlocked: "Bloqueada por atividade suspeita",
     sandboxTitle: "API pública = sandbox. Produção só com pedido aprovado",
     sandboxBody:
       "Os exemplos desta página apontam para o ambiente de testes (sandbox). Quem precisa falar com a API de produção abre um pedido no suporte com os dados abaixo — a gente confere e libera o acesso.",

@@ -151,7 +151,7 @@ export function CommentItem({ comment, replyingTo, postAuthorId, onPinChanged }:
   );
 
   return (
-    <div className="flex gap-2 sm:gap-2.5">
+    <div className="flex gap-3">
       {comment.authorUsername ? (
         <Link
           to="/perfil/$username"

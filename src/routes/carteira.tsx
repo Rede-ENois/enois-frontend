@@ -7,7 +7,7 @@ import { texts } from "@/texts";
 import { ArrowLeft, Send, ShieldAlert, ShoppingBag, Sparkles, TrendingUp, Zap } from "lucide-react";
 
 import { lojaApi, walletApi } from "@/lib/api";
-import { ANIMATED_FRAMES, isFxFrame } from "@/lib/avatar-frames";
+import { ANIMATED_FRAMES } from "@/lib/avatar-frames";
 import { faiscaToBrlCents, formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -507,7 +507,7 @@ function LojaSection() {
                       frame={item.id}
                       alt={item.name}
                       fallback="✦"
-                      className={isFxFrame(item.id) ? "mx-2.5 h-12 w-12" : "h-10 w-10"}
+                      className="h-10 w-10"
                     />
 
                     <span className="min-w-0 flex-1">

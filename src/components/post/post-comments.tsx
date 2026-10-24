@@ -279,7 +279,9 @@ export function PostComments({ postId, postAuthorId }: { postId: string; postAut
         // Sem `overscroll-contain`: quando a lista ainda não transborda, ele impede a propagação
         // do toque para a página e o usuário não consegue rolar (relato em tablet/Fennec — o
         // último post da viewport travava o scroll até fechar os comentários).
-        className="max-h-[55vh] min-h-0 space-y-3 overflow-y-auto pr-1"
+        // A rolagem também recorta o eixo horizontal: o respiro acolhe os 30% da moldura
+        // fora do avatar, inclusive no primeiro e no último comentário, mantendo o alinhamento lateral.
+        className="-mx-3 max-h-[55vh] min-h-0 space-y-3 overflow-y-auto p-3"
       >
         {loading && <CommentSkeletons />}
 

@@ -382,8 +382,8 @@ function Profile() {
       <div className="space-y-5 sm:space-y-6">
         {/* Quem recorta os cantos é a capa, não o card: o card cortaria as molduras com
             efeito, que vazam para fora do avatar. */}
-        <div className="overflow-hidden rounded-[1.5rem] border border-border-soft bg-surface-card shadow-[0_28px_80px_-48px_color-mix(in_oklab,var(--primary)_95%,transparent)]">
-          <div className="group relative h-[24dvh] min-h-48 overflow-hidden sm:h-[28dvh] sm:min-h-60">
+        <div className="rounded-[1.5rem] border border-border-soft bg-surface-card shadow-[0_28px_80px_-48px_color-mix(in_oklab,var(--primary)_95%,transparent)]">
+          <div className="group relative h-[24dvh] min-h-48 overflow-hidden rounded-t-[1.5rem] sm:h-[28dvh] sm:min-h-60">
             {user.bannerHtml ? (
               // Capa em HTML/CSS: mesmo espaço da foto (mesmas classes), sem moldura própria — quem
               // recorta é a capa, e o quadro já vem com sandbox sem scripts. `clip` é o delimitador:

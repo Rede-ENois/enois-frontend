@@ -972,6 +972,11 @@
   }
 }
 
+[data-avatar-animated]:not([data-avatar-animating])::after,
+[data-avatar-animated]:not([data-avatar-animating]) .moldura-fx * {
+  animation-play-state: paused;
+}
+
 /* As molduras abaixo só animam transform e opacidade: o
    benchmark mostrou que animar pintura dentro do SVG (stroke-width, stroke-dashoffset) obriga a
    repintar o SVG inteiro na thread principal a cada quadro. */

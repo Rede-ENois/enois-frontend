@@ -38,7 +38,6 @@ export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
           <div className="flex items-center gap-3">
             <UserAvatar
               frame={profile.avatarFrame}
-              frameOverflow="hidden"
               src={resolveCdnUrl(profile.avatar)}
               alt={profile.name}
               className="h-10 w-10 shrink-0"

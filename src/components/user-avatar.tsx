@@ -2,7 +2,8 @@ import { texts } from "@/texts";
 import type { UserAvatarProps } from "@/types/components/user-avatar/user-avatar-props";
 
 import { resolveCdnUrl } from "@/lib/api/media";
-import { isFxFrame } from "@/lib/avatar-frames";
+import { ANIMATED_FRAMES, isFxFrame } from "@/lib/avatar-frames";
+import { useAvatarAnimation } from "@/lib/use-avatar-animation";
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,10 +30,14 @@ export function UserAvatar({
   const label = alt ?? texts.profile.avatarFallback;
   const resolved = resolveCdnUrl(src);
   const fx = isFxFrame(frame);
+  const animated = !!frame && ANIMATED_FRAMES.includes(frame);
+  const animationRef = useAvatarAnimation(frame);
   const avatar = (
     <Avatar
+      ref={fx ? undefined : animationRef}
       className={fx ? "h-full w-full" : className}
       data-avatar-frame={fx ? undefined : frame || undefined}
+      data-avatar-animated={!fx && animated ? true : undefined}
     >
       {resolved && <AvatarImage src={resolved} alt={label} />}
       <AvatarFallback
@@ -53,12 +58,14 @@ export function UserAvatar({
   // de edição podem optar pelo corte para que a moldura nunca invada o texto.
   return (
     <span
+      ref={animationRef}
       className={cn(
         "@container relative isolate flex h-10 w-10 shrink-0 rounded-full",
         frameOverflow === "hidden" && "overflow-hidden",
         className,
       )}
       data-avatar-frame={frame}
+      data-avatar-animated
     >
       {avatar}
       <AvatarFrameFx frame={frame} />

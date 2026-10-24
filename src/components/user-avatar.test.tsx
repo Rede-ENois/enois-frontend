@@ -26,7 +26,7 @@ describe("UserAvatar com moldura", () => {
         <UserAvatar frame={frame} alt="Ana Lima" className="h-8 w-8 shrink-0" />,
       );
       expect(html).toMatch(
-        new RegExp(`^<span class="[^"]*h-8 w-8[^"]*" data-avatar-frame="${frame}">`),
+        new RegExp(`^<span class="[^"]*h-8 w-8[^"]*" data-avatar-frame="${frame}"`),
       );
       expect(html).not.toContain("h-10 w-10");
       expect(html).toContain('<span aria-hidden="true" class="moldura-fx">');
