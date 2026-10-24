@@ -1,7 +1,4 @@
-import type { CommentView } from "@/types/application/comment/comment-view";
-import type { PostView } from "@/types/application/feed/post-view";
-import type { ReactionType } from "@/types/application/reaction/reaction-type";
-import type { PostCardState } from "@/types/stores/post-card-state";
+﻿import type { PostCardState } from "@/types/stores/post-card-state";
 import type { PostCardStore } from "@/types/stores/post-card-store";
 import { create } from "zustand";
 
@@ -29,34 +26,48 @@ function updateCard(
   };
 }
 
+/**
+ * Store APENAS para estado UI efêmero do card de post.
+ *
+ * Estado que NÃO deve estar aqui (já vive no TanStack Query cache via feed/comments queries):
+ * - postCounters (vem de post.counters)
+ * - reactionStatus (vem de post.currentUserReaction)
+ * - reactionSummary (vem de post.reactionSummary)
+ * - localComments (carregados por PostComments via commentsApi.list)
+ *
+ * Estado que FICA aqui (ephemeral UI state):
+ * - draft (rascunho de comentário)
+ * - commentMentions (menções no rascunho)
+ * - replyToId (resposta a comentário)
+ * - showReactions (diálogo de reações aberto)
+ * - showSeals (diálogo de selos aberto)
+ * - showReport (diálogo de denúncia aberto)
+ * - reactionPending (otimismo: evita sobrescrever durante mutation)
+ */
 export const usePostCardStore = create<PostCardStore>()((set) => ({
   cards: {} as Record<string, PostCardState>,
 
-  initializePostCard: (post: PostView) => {
-    const pendingDisposal = pendingDisposals.get(post.id);
+  initializePostCard: (postId: string) => {
+    const pendingDisposal = pendingDisposals.get(postId);
     if (pendingDisposal) {
       clearTimeout(pendingDisposal);
-      pendingDisposals.delete(post.id);
+      pendingDisposals.delete(postId);
     }
 
     set((state) => {
-      if (state.cards[post.id]) return state;
+      if (state.cards[postId]) return state;
 
       return {
         cards: {
           ...state.cards,
-          [post.id]: {
+          [postId]: {
             draft: "",
             commentMentions: [],
             replyToId: null,
-            localComments: [],
-            postCounters: post.counters,
-            reactionStatus: post.currentUserReaction ?? null,
-            reactionSummary: post.reactionSummary ?? null,
-            reactionPending: false,
             showReactions: false,
             showSeals: false,
             showReport: false,
+            reactionPending: false,
           },
         },
       };
@@ -88,46 +99,6 @@ export const usePostCardStore = create<PostCardStore>()((set) => ({
     set((state) => ({
       cards: updateCard(state.cards, postId, (card) => ({ ...card, replyToId })),
     })),
-  setComments: (postId: string, localComments: CommentView[]) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({ ...card, localComments })),
-    })),
-  addComment: (postId: string, comment: CommentView) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({
-        ...card,
-        localComments: [...card.localComments, comment],
-      })),
-    })),
-  removeComment: (postId: string, commentId: string) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({
-        ...card,
-        localComments: card.localComments.filter((comment) => comment.id !== commentId),
-      })),
-    })),
-  updateCommentCount: (postId: string, delta: number) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({
-        ...card,
-        postCounters: {
-          ...card.postCounters,
-          comments: card.postCounters.comments + delta,
-        },
-      })),
-    })),
-  setPostCounters: (postId: string, postCounters: PostView["counters"]) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({ ...card, postCounters })),
-    })),
-  setReactionStatus: (postId: string, reactionStatus: ReactionType | null) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({ ...card, reactionStatus })),
-    })),
-  setReactionPending: (postId: string, reactionPending: boolean) =>
-    set((state) => ({
-      cards: updateCard(state.cards, postId, (card) => ({ ...card, reactionPending })),
-    })),
   setShowReactions: (postId: string, showReactions: boolean) =>
     set((state) => ({
       cards: updateCard(state.cards, postId, (card) => ({ ...card, showReactions })),
@@ -139,5 +110,9 @@ export const usePostCardStore = create<PostCardStore>()((set) => ({
   setShowReport: (postId: string, showReport: boolean) =>
     set((state) => ({
       cards: updateCard(state.cards, postId, (card) => ({ ...card, showReport })),
+    })),
+  setReactionPending: (postId: string, reactionPending: boolean) =>
+    set((state) => ({
+      cards: updateCard(state.cards, postId, (card) => ({ ...card, reactionPending })),
     })),
 }));
