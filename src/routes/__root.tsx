@@ -175,7 +175,7 @@ if(css){var style=document.createElement("style");style.id="app-theme";style.tex
 
 function RootShell({ children }: WithRequiredChildren) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
