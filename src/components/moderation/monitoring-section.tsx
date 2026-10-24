@@ -47,6 +47,10 @@ export function MonitoringSection() {
   const [type, setType] = useState("");
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
+  // Intervalo de tempo dos eventos: guardamos o valor cru do campo datetime-local
+  // e convertemos para ISO só na consulta.
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 350);
@@ -62,14 +66,16 @@ export function MonitoringSection() {
 
   const { toast } = useToast();
 
-  const filtered = Boolean(level || type || debounced);
+  const filtered = Boolean(level || type || debounced || from || to);
   const events = useInfiniteQuery({
-    queryKey: ["monitoring", "events", level, type, debounced],
+    queryKey: ["monitoring", "events", level, type, debounced, from, to],
     queryFn: ({ pageParam }) =>
       monitoringApi.events({
         level: level || undefined,
         type: type || undefined,
         q: debounced || undefined,
+        from: from ? new Date(from).toISOString() : undefined,
+        to: to ? new Date(to).toISOString() : undefined,
         before: pageParam || undefined,
         limit: 100,
       }),
@@ -389,6 +395,52 @@ export function MonitoringSection() {
               </option>
             ))}
           </select>
+
+          <input
+            type="datetime-local"
+            value={from}
+            onChange={(event) => setFrom(event.target.value)}
+            aria-label={texts.moderator.monitoring.fromLabel}
+            title={texts.moderator.monitoring.fromLabel}
+            className="h-8 rounded-lg border border-border-soft bg-surface-1 px-2 text-xs text-text-strong"
+          />
+          <input
+            type="datetime-local"
+            value={to}
+            onChange={(event) => setTo(event.target.value)}
+            aria-label={texts.moderator.monitoring.toLabel}
+            title={texts.moderator.monitoring.toLabel}
+            className="h-8 rounded-lg border border-border-soft bg-surface-1 px-2 text-xs text-text-strong"
+          />
+
+          <button
+            type="button"
+            onClick={() => {
+              setFrom(localInput(new Date(Date.now() - 3_600_000)));
+              setTo("");
+            }}
+            className={cn(
+              "inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs",
+              from && !to
+                ? "bg-primary/10 text-primary"
+                : "border border-border-soft text-text-subtle hover:text-primary",
+            )}
+          >
+            {texts.moderator.monitoring.lastHour}
+          </button>
+
+          {(from || to) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFrom("");
+                setTo("");
+              }}
+              className="inline-flex h-8 items-center rounded-lg border border-border-soft px-2 text-xs text-text-subtle hover:text-text-strong"
+            >
+              {texts.moderator.monitoring.clearDates}
+            </button>
+          )}
 
           <div className="relative min-w-[10rem] flex-1">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle" />
@@ -893,6 +945,12 @@ function formatUptime(seconds: number) {
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
+}
+
+/** Converte um Date para o valor cru de um campo datetime-local (hora local). */
+function localInput(date: Date): string {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 /** Uma linha legível do evento, para colar em relatório ou ticket. */

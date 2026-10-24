@@ -3582,6 +3582,10 @@ export const texts = {
       showMore: "mostrar mais",
       showLess: "mostrar menos",
       loadMore: "Carregar mais eventos",
+      fromLabel: "De (data e hora)",
+      toLabel: "Até (data e hora)",
+      lastHour: "Última hora",
+      clearDates: "Limpar datas",
     },
     sanction: {
       title: "Punição por votação",
