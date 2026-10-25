@@ -97,6 +97,7 @@ export function EmailLogSection() {
                 {texts.moderator.emails.to}: {email.toEmail}
                 {" · "}
                 {email.kind.replaceAll("_", " ").toLowerCase()}
+                {email.ip ? ` · IP ${email.ip}` : " · sem IP (envio fora de requisição)"}
               </p>
 
               {email.error && (

@@ -5,5 +5,6 @@ export type EmailLogView = {
   kind: string;
   status: "SENT" | "FAILED";
   error: string | null;
+  ip: string | null;
   createdAt: string;
 };
