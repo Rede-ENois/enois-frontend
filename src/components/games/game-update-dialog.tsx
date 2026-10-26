@@ -1,21 +1,12 @@
-import { useEffect, useState } from "react";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { GameView } from "@/types/application/games/game-view";
 import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-  Textarea,
-  useToast,
-} from "@rede-enois/design-system/ui";
+  GameUpdateDialog as GameUpdateDialogView,
+  type GameUpdateValues,
+} from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { gamesApi } from "@/lib/api";
 
@@ -34,19 +25,9 @@ export function GameUpdateDialog({
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [version, setVersion] = useState("");
-
-  useEffect(() => {
-    if (!open) return;
-    setTitle("");
-    setBody("");
-    setVersion(game.version ?? "");
-  }, [open, game.version]);
 
   const publish = useMutation({
-    mutationFn: () =>
+    mutationFn: ({ title, body, version }: GameUpdateValues) =>
       gamesApi.publishUpdate(game.id, {
         title: title.trim(),
         body: body.trim() || undefined,
@@ -63,67 +44,12 @@ export function GameUpdateDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-normal">{texts.games.panel.newUpdate}</DialogTitle>
-
-          <DialogDescription>{texts.games.panel.newUpdateHint}</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-3 pt-1">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-normal text-text-subtle">
-              {texts.games.panel.updateTitle}
-            </Label>
-
-            <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder={texts.games.panel.updateTitlePlaceholder}
-              maxLength={200}
-              className="bg-muted"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-normal text-text-subtle">
-              {texts.games.panel.updateBody}
-            </Label>
-
-            <Textarea
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-              placeholder={texts.games.panel.updateBodyPlaceholder}
-              rows={4}
-              maxLength={4000}
-              className="bg-muted"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-normal text-text-subtle">
-              {texts.games.panel.updateVersion}
-            </Label>
-
-            <Input
-              value={version}
-              onChange={(event) => setVersion(event.target.value)}
-              placeholder="1.2"
-              maxLength={40}
-              className="bg-muted"
-            />
-          </div>
-
-          <Button
-            className="w-full rounded-full"
-            disabled={title.trim() === "" || publish.isPending}
-            onClick={() => publish.mutate()}
-          >
-            {publish.isPending ? texts.common.publishing : texts.games.panel.publishUpdate}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <GameUpdateDialogView
+      open={open}
+      onOpenChange={onOpenChange}
+      initialVersion={game.version}
+      pending={publish.isPending}
+      onSubmit={(values) => publish.mutate(values)}
+    />
   );
 }

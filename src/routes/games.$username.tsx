@@ -2,8 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { UserBadges } from "@rede-enois/design-system/domain";
-import { UserAvatar } from "@rede-enois/design-system/domain";
+import { GameIcon, UserAvatar, UserBadges } from "@rede-enois/design-system/domain";
 import { Button } from "@rede-enois/design-system/ui";
 import { ExternalLink, Gamepad2, Users } from "lucide-react";
 
@@ -13,7 +12,6 @@ import { safeHref } from "@/lib/safe-url";
 import { useAuth } from "@/lib/use-auth";
 
 import { AppContainer } from "@/components/app-container";
-import { GameIcon } from "@/components/game-icon";
 
 export const Route = createFileRoute("/games/$username")({
   head: ({ params }) => ({ meta: [{ title: `${params.username} · Jogos · Énóis` }] }),

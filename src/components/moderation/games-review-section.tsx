@@ -3,14 +3,13 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { GamePlayer } from "@rede-enois/design-system/domain";
 import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, Input, useToast } from "@rede-enois/design-system/ui";
 import { Gamepad2 } from "lucide-react";
 
 import { moderationApi } from "@/lib/api";
 import { dataCurta } from "@/lib/date/format";
-
-import { GamePlayer } from "@/components/games/game-player";
 
 /** Fila de jogos enviados pela comunidade: testar no mesmo quadro isolado e aprovar/recusar. */
 export function GamesReviewSection() {
