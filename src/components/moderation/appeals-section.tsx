@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, EmptyState, useToast } from "@rede-enois/design-system/ui";
 import { Gavel } from "lucide-react";
 
 import { sanctionsApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /** Recursos de penalidade automática: aprovar libera; negar converte em banimento. */
 export function AppealsSection() {

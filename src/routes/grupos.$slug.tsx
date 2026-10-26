@@ -10,7 +10,7 @@ import type { GroupMember } from "@/types/application/group/group-member";
 import type { GroupPost } from "@/types/application/group/group-post";
 import type { GroupView } from "@/types/application/group/group-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
-import { StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import { StyledName, UserAvatar, UserBadges } from "@rede-enois/design-system/domain";
 import {
   Button,
   ConfirmDialog,
@@ -55,7 +55,6 @@ import { ReactionPicker } from "@/components/post/reaction-picker";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
-import { UserBadges } from "@/components/user-badge";
 
 export const Route = createFileRoute("/grupos/$slug")({
   head: () => ({ meta: [{ title: texts.groups.seoTitle }] }),

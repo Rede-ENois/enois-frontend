@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { ConversationItemProps } from "@/types/routes/messages/conversation-item-props";
-import { StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import { StyledName, UserAvatar, UserBadges } from "@rede-enois/design-system/domain";
 import { Loader2 } from "lucide-react";
 
 import { profileApi } from "@/lib/api";
@@ -15,7 +15,6 @@ import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { authorNameStyle } from "@/lib/profile-name-style";
 
 import { formatTime } from "@/components/post/format-time";
-import { UserBadges } from "@/components/user-badge";
 
 /** Uma linha da lista de conversas. Vive fora da rota para o dock poder reaproveitá-la. */
 export function ConversationItem({

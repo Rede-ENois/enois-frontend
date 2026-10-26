@@ -8,6 +8,7 @@ import type { CreateMentorInput } from "@/types/application/mentor/create-mentor
 import type { MentorCardProps } from "@/types/routes/mentoring/mentor-card-props";
 import type { RegisterMentorFormProps } from "@/types/routes/mentoring/register-mentor-form-props";
 import { UserAvatar } from "@rede-enois/design-system/domain";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import {
   Badge,
   Button,
@@ -31,7 +32,6 @@ import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 export const Route = createFileRoute("/mentoria")({
   head: () => ({ meta: [{ title: texts.mentoring.seoTitle }] }),

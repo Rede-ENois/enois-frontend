@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { MAX_BADGES } from "@/constants/badges";
 import { texts } from "@/texts";
+import { MAX_BADGES } from "@rede-enois/design-system/domain";
 import { Button, Input, Label, useToast } from "@rede-enois/design-system/ui";
 import { X } from "lucide-react";
 

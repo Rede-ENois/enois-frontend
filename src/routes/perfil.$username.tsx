@@ -15,6 +15,7 @@ import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-pur
 import type { RecommendationItemProps } from "@/types/routes/profile/recommendation-item-props";
 import type { SectionProps } from "@/types/routes/profile/section-props";
 import { ContributorTag, StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   Dialog,
@@ -70,7 +71,6 @@ import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { ImageCropDialog } from "@/components/image-crop-dialog";
-import { InfiniteScroll } from "@/components/infinite-scroll";
 import { PostCard } from "@/components/post-card";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";

@@ -4,14 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { OpenPullRequest } from "@/types/application/seals/open-pull-request";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, Textarea, useToast } from "@rede-enois/design-system/ui";
 import { GitPullRequest, Loader2 } from "lucide-react";
 
 import { authApi, contributorSealsApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 import { safeHref } from "@/lib/safe-url";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /**
  * Fila de revisão dos PRs abertos dos repositórios oficiais. A revisão vai para o GitHub em nome de

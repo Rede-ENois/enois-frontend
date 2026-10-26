@@ -5,13 +5,12 @@ import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { AdminPostNote } from "@/types/application/feed/admin-post-note";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, Textarea, useToast } from "@rede-enois/design-system/ui";
 import { Loader2, StickyNote } from "lucide-react";
 
 import { postNotesApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /** Fila de notas de rodapé: aprovar publica no post; negar exige motivo e pesa na credibilidade. */
 export function NotesSection() {

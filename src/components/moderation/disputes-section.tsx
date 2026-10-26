@@ -1,14 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, useToast } from "@rede-enois/design-system/ui";
 import { ShieldAlert } from "lucide-react";
 
 import { walletApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /**
  * Contestações de transferência: deferir reverte e pune o golpista; rejeitar pune quem contestou

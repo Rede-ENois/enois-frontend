@@ -1,8 +1,8 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
+import { AppLayout } from "@rede-enois/design-system/patterns";
 
 import { useCurrentUser } from "@/lib/current-user";
 
-import { AppLayout } from "./app-layout";
 import { AppSidebar } from "./app-sidebar";
 import { AuthenticatedAppHeader } from "./authenticated-app-header";
 import { NavigationDrawer } from "./navigation-drawer";

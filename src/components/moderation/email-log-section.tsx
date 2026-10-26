@@ -4,13 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { EmailLogStatusFilter } from "@/types/application/moderation/email-log-status-filter";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Mail } from "lucide-react";
 
 import { moderationApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 import { cn } from "@/lib/utils";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /** Metadados dos e-mails enviados: útil para ver falha de SMTP sem abrir caixa de mensagens. */
 export function EmailLogSection() {

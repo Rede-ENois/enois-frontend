@@ -2,13 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { Button } from "@rede-enois/design-system/ui";
+import { Button, GithubIcon } from "@rede-enois/design-system/ui";
 import { Award, Link2, Link2Off, Loader2, RefreshCw } from "lucide-react";
 
 import { ApiError, authApi, contributorSealsApi } from "@/lib/api";
 import { dataEHora } from "@/lib/date/format";
-
-import { GithubIcon } from "@/components/icons/github";
 
 /**
  * Vínculo GitHub usado pelos selos de contribuição. É separado do login social: vincular não

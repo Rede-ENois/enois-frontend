@@ -3,15 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { texts } from "@/texts";
 import type { ContributorAdminView } from "@/types/application/contributors/contributor-admin-view";
 import type { ContributorApplicationStatus } from "@/types/application/contributors/contributor-application-status";
-import { Button } from "@rede-enois/design-system/ui";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
+import { Button, GithubIcon } from "@rede-enois/design-system/ui";
 import { BadgeCheck, Mail, RefreshCw, UserPlus } from "lucide-react";
 
 import { contributorsApi } from "@/lib/api";
 import { dataCurta, dataHora } from "@/lib/date/format";
 import { cn } from "@/lib/utils";
-
-import { GithubIcon } from "@/components/icons/github";
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /**
  * Painel de contribuintes.

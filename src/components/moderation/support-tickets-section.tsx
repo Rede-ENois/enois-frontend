@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { texts } from "@/texts";
 import type { SupportCategory } from "@/types/application/support/support-category";
 import type { SupportStatus } from "@/types/application/support/support-status";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, Textarea, useToast } from "@rede-enois/design-system/ui";
 import { LifeBuoy } from "lucide-react";
 
@@ -12,8 +13,6 @@ import { supportApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 import { safeHref } from "@/lib/safe-url";
 import { cn } from "@/lib/utils";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 const CATEGORIES: SupportCategory[] = ["BUG", "ACCOUNT", "CONTENT", "IDEA", "OTHER"];
 

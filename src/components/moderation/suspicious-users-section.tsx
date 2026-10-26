@@ -3,14 +3,13 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, ConfirmDialog, EmptyState, Input, useToast } from "@rede-enois/design-system/ui";
 import { Check, ShieldAlert, ShieldCheck } from "lucide-react";
 
 import { moderationApi } from "@/lib/api";
 import { dataCurta } from "@/lib/date/format";
 import { cn } from "@/lib/utils";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /** Triagem de contas recém-criadas: sinais objetivos, seleção múltipla e banimento em lote. */
 export function SuspiciousUsersSection() {

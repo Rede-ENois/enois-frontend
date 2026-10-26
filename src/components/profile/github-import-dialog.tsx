@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  GithubIcon,
   useToast,
 } from "@rede-enois/design-system/ui";
 import { Archive, Download, GitFork, Loader2, Star } from "lucide-react";
@@ -18,7 +19,6 @@ import { Archive, Download, GitFork, Loader2, Star } from "lucide-react";
 import { ApiError, githubProfileApi } from "@/lib/api";
 import { dataCurta } from "@/lib/date/format";
 
-import { GithubIcon } from "@/components/icons/github";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
 /**

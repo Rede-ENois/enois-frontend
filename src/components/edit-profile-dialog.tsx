@@ -3,7 +3,6 @@ import { type ChangeEvent, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
-import { MAX_BADGES } from "@/constants/badges";
 import { texts } from "@/texts";
 import type { Certification } from "@/types/application/profile/certification";
 import type { CertificationRequest } from "@/types/application/profile/certification-request";
@@ -16,6 +15,7 @@ import type { FieldProps } from "@/types/components/profile/edit-profile-dialog/
 import type { Props } from "@/types/components/profile/edit-profile-dialog/props";
 import type { SubListProps } from "@/types/components/profile/edit-profile-dialog/sub-list-props";
 import type { SubListUpdate } from "@/types/components/profile/edit-profile-dialog/sub-list-update";
+import { MAX_BADGES } from "@rede-enois/design-system/domain";
 import {
   Button,
   DateTextInput,

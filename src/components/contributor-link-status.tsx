@@ -2,13 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { Button } from "@rede-enois/design-system/ui";
+import { Button, GithubIcon } from "@rede-enois/design-system/ui";
 import { Loader2, RefreshCw } from "lucide-react";
 
 import { contributorSealsApi, contributorsApi } from "@/lib/api";
 import { useIsAuthenticated } from "@/lib/use-auth";
-
-import { GithubIcon } from "@/components/icons/github";
 
 /**
  * Vínculo feito, mas nenhuma contribuição verificada ainda. Mostra o estado e permite verificar

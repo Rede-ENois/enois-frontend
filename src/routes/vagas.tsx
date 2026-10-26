@@ -23,6 +23,7 @@ import type { JobApplicationFieldInput } from "@/types/application/job/job-appli
 import type { JobReportReason } from "@/types/application/job/job-report-reason";
 import type { CreateJobDialogProps } from "@/types/routes/jobs/create-job-dialog-props";
 import type { ReportJobDialogProps } from "@/types/routes/jobs/report-job-dialog-props";
+import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Avatar,
   AvatarFallback,
@@ -72,7 +73,6 @@ import { cn } from "@/lib/utils";
 
 import { AppContainer } from "@/components/app-container";
 import { CreateExternalJobDialog } from "@/components/create-external-job-dialog";
-import { InfiniteScroll } from "@/components/infinite-scroll";
 import { JobCardSkeletons } from "@/components/skeletons/job-card-skeletons";
 
 const MAX_CARD_SKILLS = 8;

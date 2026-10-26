@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, Input, useToast } from "@rede-enois/design-system/ui";
 import { Gamepad2 } from "lucide-react";
 
@@ -10,7 +11,6 @@ import { moderationApi } from "@/lib/api";
 import { dataCurta } from "@/lib/date/format";
 
 import { GamePlayer } from "@/components/games/game-player";
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /** Fila de jogos enviados pela comunidade: testar no mesmo quadro isolado e aprovar/recusar. */
 export function GamesReviewSection() {

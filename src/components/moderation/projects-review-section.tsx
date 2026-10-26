@@ -3,13 +3,12 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import { Button, EmptyState, Input, useToast } from "@rede-enois/design-system/ui";
 import { FolderKanban, Globe } from "lucide-react";
 
 import { communityProjectsApi } from "@/lib/api";
 import { safeHref } from "@/lib/safe-url";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /** Fila de projetos enviados pela comunidade: mesma revisão dos jogos, em espaço próprio. */
 export function ProjectsReviewSection() {

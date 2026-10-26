@@ -2,9 +2,12 @@ import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { AuthorInfoProps } from "@/types/components/post/author-info-props";
-import { ContributorTag, StyledName, UserAvatar } from "@rede-enois/design-system/domain";
-
-import { UserBadges } from "@/components/user-badge";
+import {
+  ContributorTag,
+  StyledName,
+  UserAvatar,
+  UserBadges,
+} from "@rede-enois/design-system/domain";
 
 import { formatTime } from "./format-time";
 

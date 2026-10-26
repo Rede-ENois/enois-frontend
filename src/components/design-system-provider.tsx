@@ -8,6 +8,10 @@ import { resolveCdnUrl } from "@/lib/api/media";
 /** Design system links navigate through the router; anything outside the app stays a plain anchor. */
 function RouterLink({ href, ...props }: LinkProps) {
   if (!href.startsWith("/")) return <a href={href} {...props} />;
+  // The router takes the query string apart from the path ("/entrar?tab=login").
+  const [to, query] = href.split("?");
+  if (query)
+    return <Link to={to} search={Object.fromEntries(new URLSearchParams(query))} {...props} />;
   return <Link to={href} {...props} />;
 }
 

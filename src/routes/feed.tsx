@@ -15,7 +15,8 @@ import type { ActiveIdentity } from "@/types/lib/active-identity";
 import type { ComposerActionProps } from "@/types/routes/feed/composer-action-props";
 import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
-import { StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import { ApoieCard, StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   EmptyState,
@@ -63,11 +64,9 @@ import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
 
-import { ApoieCard } from "@/components/apoie-card";
 import { AppContainer } from "@/components/app-container";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
-import { InfiniteScroll } from "@/components/infinite-scroll";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
