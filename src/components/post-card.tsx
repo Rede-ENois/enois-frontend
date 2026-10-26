@@ -1,67 +1,46 @@
 import { memo, useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 
 import { TOPIC_LABELS } from "@/constants/community-topics";
+import { CONTENT_ORIGIN, HAS_CONTENT_ORIGIN } from "@/constants/content-origin";
 import { postContentLimit } from "@/constants/post-content-limits";
-import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
-import { POST_SEALS, postSeal } from "@/constants/post-seals";
+import { PAGE_EMBED_HEIGHT, PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
 import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { PostCardProps } from "@/types/components/post/post-card-props";
 import {
-  Badge,
-  Button,
-  ConfirmDialog,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Textarea,
-  useToast,
-} from "@rede-enois/design-system/ui";
-import { BookOpen, Clock, FileText, Pin, PinOff, Repeat2, Tag } from "lucide-react";
+  PostCard as PostCardView,
+  PostEditDialog,
+  PostPage,
+  PostSealPicker,
+  type PostTypeOption,
+} from "@rede-enois/design-system/domain";
+import { ConfirmDialog, useToast } from "@rede-enois/design-system/ui";
 
 import { communitiesApi, feedApi } from "@/lib/api";
 import { sealsApi } from "@/lib/api/seals";
 import { saveFeedScroll } from "@/lib/feed-scroll-restoration";
 import { savedPostsQueryOptions } from "@/lib/feed/saved-posts";
-import { inlineMediaIds } from "@/lib/rich-text/inline-media";
-import { hideExternalPageUrls } from "@/lib/shared-links";
 import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
-import { cn } from "@/lib/utils";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 
-import { AuthorInfo } from "./post/author-info";
 import { formatTime } from "./post/format-time";
-import { LinkPreviews } from "./post/link-previews";
 import { MediaGrid } from "./post/media-grid";
 import { PostActions } from "./post/post-actions";
 import { PostComments } from "./post/post-comments";
 import { PostNotes } from "./post/post-notes";
-import { PostOwnerMenu } from "./post/post-owner-menu";
-import { PostPage } from "./post/post-page";
 import { ReactionsSummary } from "./post/reactions-summary";
 import { RichText } from "./post/rich-text";
-import { SpoilerMedia } from "./post/spoiler-media";
-import { typeMeta } from "./post/type-meta";
+import { SandboxedHtmlFrame } from "./post/sandboxed-html-frame";
 
-/**
- * Posts acima disso entram compactados na LISTA: o corte é por linhas (8) e o "Ler mais" abre o
- * post inteiro. Na página do post o card é o post (`fullPost`), então não corta nem mostra o link —
- * era o furo: o "Ler mais" levava para a página em que a pessoa já estava e o texto seguia cortado.
- */
-const POST_COMPACT_THRESHOLD = 400;
+const TYPE_OPTIONS = POST_TYPES as PostTypeOption[];
 
-function PostCardView({
+function PostCardContainer({
   post,
   feedTab,
   fullPost = false,
@@ -75,9 +54,6 @@ function PostCardView({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isOwner = user?.id != null && user.id === post.authorId;
-  const meta = typeMeta[post.type] ?? typeMeta.INSIGHT;
-  // Só corta em lista: na página do post o texto inteiro é o conteúdo da página.
-  const isCompact = !fullPost && post.content.length > POST_COMPACT_THRESHOLD;
   const [showComments, setShowComments] = useState(fullPost);
   // Selos do post: `forPost` junta os cards da página numa chamada só ao lote do backend.
   const { data: seals } = useQuery({
@@ -241,396 +217,100 @@ function PostCardView({
   // Os comentarios sao carregados pelo proprio PostComments quando a secao abre.
   const toggleComments = () => setShowComments((value) => !value);
 
+  // O nome leva para a identidade que ASSINOU: post profissional abre o perfil profissional
+  // (o @ é de outro namespace e não existe em /perfil).
+  const authorHref =
+    post.authorIdentity === "CORPORATE"
+      ? `/profissional/${post.authorUsername}`
+      : `/perfil/${post.authorUsername}`;
+
   return (
-    <article
-      id={feedTab ? `feed-post-${post.id}` : undefined}
-      tabIndex={feedTab ? -1 : undefined}
-      className={`min-w-0 border border-border-soft bg-surface-card p-4 transition sm:p-5 ${
-        // Post de página: sem canto no card, porque o conteúdo tem de alcançar as bordas — o
-        // arredondamento do card recortava os cantos da página e era o que sobrava de "rounding".
-        post.pageHtml ? "rounded-none" : "overflow-hidden rounded-2xl"
-      } ${
-        // Na lista, o navegador pula layout e pintura dos cards fora da tela; `auto` no tamanho
-        // guarda a altura real depois da primeira vez, para a barra de rolagem não pular. Fica de
-        // fora o post de página (o iframe dele mede a própria altura) e a página do post.
-        !fullPost && post.type !== "PAGE"
-          ? "[contain-intrinsic-size:auto_360px] [content-visibility:auto]"
-          : ""
-      }`}
-    >
-      {post.repostOf && (
-        <Link
-          to="/post/$postId"
-          params={{ postId: post.repostOf }}
-          className="mb-2 inline-flex items-center gap-1.5 text-xs text-text-subtle transition hover:text-primary"
-        >
-          <Repeat2 className="h-3.5 w-3.5" />
-
-          <>
-            {post.repostWithOpinion
-              ? texts.posts.repostedWithOpinion
-              : texts.posts.repostedFrom(post.repostOfAuthor)}
-          </>
-        </Link>
-      )}
-
-      <header className="flex justify-between items-start gap-3">
-        <AuthorInfo
-          authorUsername={post.authorUsername}
-          authorName={post.authorName}
-          authorBadge={post.authorBadge}
-          authorBadges={post.authorBadges}
-          authorStyle={post.authorStyle}
-          authorContributor={post.authorContributor}
-          authorIdentity={post.authorIdentity}
-          authorAvatar={post.authorAvatar}
-          authorAvatarFrame={post.authorAvatarFrame}
-          createdAt={post.createdAt}
-          community={post.community}
-          fallbackClassName={meta.classAvatar}
-          onFollowCommunity={handleFollowCommunity}
-          followPending={followCommunity.isPending}
-        />
-
-        <div className="flex items-center gap-1.5">
-          {pinned && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
-              <Pin className="h-3 w-3" aria-hidden />
-
-              <>{texts.posts.pin.pinned}</>
-            </span>
-          )}
-
-          {onTogglePin && (
-            <button
-              type="button"
-              onClick={onTogglePin}
-              disabled={pinPending}
-              title={pinned ? texts.posts.pin.unpin : texts.posts.pin.pin}
-              aria-label={pinned ? texts.posts.pin.unpin : texts.posts.pin.pin}
-              className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-primary disabled:opacity-50"
-            >
-              {pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-            </button>
-          )}
-
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${meta.className}`}
-          >
-            {meta.label}
-          </span>
-
-          {/* O assunto (categoria) do post fica ao lado do tipo, quando o autor classificou. */}
-          {post.topic && (
-            <span
-              className="inline-flex items-center rounded-full border border-border-soft px-2.5 py-1 text-xs font-medium text-text-subtle"
-              title={texts.feed.composer.topic}
-            >
-              {TOPIC_LABELS[post.topic as keyof typeof TOPIC_LABELS] ?? post.topic}
-            </span>
-          )}
-
-          {post.type === "MOMENT" && post.expiresAt && (
-            <span
-              className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 px-2 py-1 text-xs font-normal text-amber-600 dark:text-amber-400"
-              title={texts.posts.momentExpiryTitle}
-            >
-              <Clock className="h-3 w-3" />
-              {texts.posts.momentExpiry(remainingHours(post.expiresAt))}
-            </span>
-          )}
-
-          {isOwner && (
-            <PostOwnerMenu
-              onEdit={() => {
-                setDraft(post.content);
-                setPageDraft(pageHtml);
-                setEditType(post.type);
-                setEditOpen(true);
-              }}
-              onDelete={() => setDeleteOpen(true)}
+    <PostCardView
+      post={post}
+      hrefs={{
+        author: authorHref,
+        post: feedTab ? `/post/${post.id}?feedTab=${feedTab}` : `/post/${post.id}`,
+        community: post.community ? `/comunidades/${post.community.id}` : null,
+        repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
+        blog: `/blog/${post.authorUsername}/${post.id}`,
+      }}
+      timeLabel={formatTime(post.createdAt)}
+      editedTimeLabel={formatTime(post.editedAt)}
+      topicLabel={
+        post.topic ? (TOPIC_LABELS[post.topic as keyof typeof TOPIC_LABELS] ?? post.topic) : null
+      }
+      anchored={Boolean(feedTab)}
+      fullPost={fullPost}
+      pinned={pinned}
+      onTogglePin={onTogglePin}
+      pinPending={pinPending}
+      isOwner={isOwner}
+      onEdit={() => {
+        setDraft(post.content);
+        setPageDraft(pageHtml);
+        setEditType(post.type);
+        setEditOpen(true);
+      }}
+      onDelete={() => setDeleteOpen(true)}
+      seals={seals?.seals}
+      mySeals={mySeals}
+      onShowSeals={() => setShowSeals(post.id, true)}
+      onFollowCommunity={handleFollowCommunity}
+      followPending={followCommunity.isPending}
+      onOpenPost={() => {
+        if (feedTab) {
+          saveFeedScroll({ tab: feedTab, postId: post.id, scrollY: window.scrollY });
+        }
+      }}
+      autoplayLinks={!lite}
+      pageHtml={pageHtml}
+      pageLoading={pageLoading}
+      mediaSpoiler={mediaSpoiler}
+      page={
+        <PostPage
+          pageUrl={HAS_CONTENT_ORIGIN ? `${CONTENT_ORIGIN}/pages/${post.id}` : null}
+          embedHeight={PAGE_EMBED_HEIGHT}
+          frame={
+            <SandboxedHtmlFrame
+              html={pageHtml}
+              title={texts.posts.page.frameTitle}
+              className="h-full w-full"
+              innerPadding={false}
+              // Janela, não faixa: a altura vem do contêiner e o excedente rola dentro do quadro.
+              autoHeight={false}
             />
-          )}
-        </div>
-      </header>
-
-      {/* Selos da comunidade: ficam no topo, acima do conteudo — e os que a pessoa marcou ficam em
-          destaque (anel). Cada selo é um botão: abre a lista de quem marcou, como a contagem de
-          reações abre a de quem reagiu. A contagem aparece sempre (é a resposta de "quantos"). */}
-      {seals && seals.seals.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {seals.seals.map((item) => {
-            const seal = postSeal(item.seal);
-            if (!seal) return null;
-            return (
-              <button
-                key={item.seal}
-                type="button"
-                onClick={() => setShowSeals(post.id, true)}
-                title={`${seal.label} · ${texts.posts.seals.seeWho}`}
-                aria-label={`${seal.label} · ${texts.posts.seals.seeWho}`}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition hover:border-primary/50",
-                  seal.className,
-                  mySeals.includes(item.seal) && "ring-1 ring-primary/60",
-                )}
-              >
-                <seal.icon className="h-3 w-3" aria-hidden />
-
-                <>{seal.label}</>
-
-                <span className="tabular-nums opacity-70">{item.count}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Post de pagina pode nao ter texto nenhum: sem paragrafo, so a pagina logo abaixo.
-          Na lista, texto acima de 400 caracteres entra cortado em 8 linhas com o "Ler mais" que
-          abre o post; na propria pagina do post (`fullPost`) nada e cortado — o texto completo mora
-          la. Artigo fica so cortado na lista: o bloco abaixo dele ja e o convite para abrir. */}
-      {hideExternalPageUrls(post.content) !== "" && (
-        <>
-          <RichText
-            content={hideExternalPageUrls(post.content)}
-            mediaIds={post.mediaIds}
-            mediaSpoiler={mediaSpoiler}
-            className={cn(
-              "mt-4 whitespace-pre-line break-words text-base font-normal leading-relaxed text-text-strong",
-              isCompact && "line-clamp-8",
-            )}
-          />
-
-          {isCompact && post.type !== "ARTICLE" && (
-            <Link
-              to="/post/$postId"
-              params={{ postId: post.id }}
-              search={feedTab ? { feedTab } : undefined}
-              onClick={() => {
-                if (feedTab) {
-                  saveFeedScroll({ tab: feedTab, postId: post.id, scrollY: window.scrollY });
-                }
-              }}
-              className="mt-1 inline-flex text-sm font-normal text-primary hover:underline"
-            >
-              <>{texts.common.readMore}</>
-            </Link>
-          )}
-        </>
-      )}
-
-      {/* Repost COM opinião: o texto acima é o comentário; aqui vai o post original citado. */}
-      {post.repostWithOpinion && post.repostOf && (
-        <div className="mt-3 rounded-xl border border-border-soft bg-surface-1 p-3">
-          <Link
-            to="/post/$postId"
-            params={{ postId: post.repostOf }}
-            className="inline-flex items-center gap-1.5 text-xs text-text-subtle transition hover:text-primary"
-          >
-            <Repeat2 className="h-3.5 w-3.5" />
-
-            <>{texts.posts.quotedFrom(post.repostOfAuthor)}</>
-          </Link>
-
-          {post.repostOfContent && (
-            <p className="mt-2 line-clamp-6 whitespace-pre-line break-words text-sm text-text-strong">
-              {post.repostOfContent}
-            </p>
-          )}
-
-          {post.repostOfMediaIds && post.repostOfMediaIds.length > 0 && (
-            <div className="mt-2">
-              <MediaGrid mediaIds={post.repostOfMediaIds} compact mediaSpoiler={mediaSpoiler} />
-            </div>
-          )}
-
-          <Link
-            to="/post/$postId"
-            params={{ postId: post.repostOf }}
-            className="mt-2 inline-flex text-xs text-primary hover:underline"
-          >
-            {texts.posts.viewOriginal}
-          </Link>
-        </div>
-      )}
-
-      {/* Blog: o post-ponteiro so aponta para o cantinho — o conteudo mora la, nao no feed. */}
-      {post.type === "BLOG" && (
-        <Link
-          to="/blog/$username/$postId"
-          params={{ username: post.authorUsername, postId: post.id }}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-normal text-primary hover:underline"
-        >
-          <BookOpen className="h-3.5 w-3.5" aria-hidden />
-
-          <>{texts.blog.feed.read}</>
-        </Link>
-      )}
-
-      {/* Artigo tem corpo (completo) na pagina do post; o card mostra o resumo e o convite. */}
-      {post.type === "ARTICLE" && (
-        <Link
-          to="/post/$postId"
-          params={{ postId: post.id }}
-          search={feedTab ? { feedTab } : undefined}
-          onClick={() => {
-            if (feedTab) {
-              saveFeedScroll({ tab: feedTab, postId: post.id, scrollY: window.scrollY });
+          }
+        />
+      }
+      reactionsSummary={<ReactionsSummary post={post} initialSummary={post.reactionSummary} />}
+      notes={<PostNotes post={post} />}
+      actions={
+        // Selos: entram na fileira das ações (a peça é do card, que é quem sabe os selos do post).
+        <PostActions post={post} onComments={toggleComments}>
+          <PostSealPicker
+            mySeals={mySeals}
+            onToggle={(seal) => toggleSeal.mutate(seal)}
+            pending={toggleSeal.isPending}
+            onRemove={() =>
+              sealsApi.remove(post.id).then((result) => {
+                queryClient.setQueryData(["seals", post.id], result);
+                queryClient.invalidateQueries({ queryKey: ["seals-people", post.id] });
+              })
             }
-          }}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-normal text-primary hover:underline"
-        >
-          <FileText className="h-3.5 w-3.5" />
-
-          <>{texts.feed.composer.article.read}</>
-        </Link>
-      )}
-
-      {post.editedAt && (
-        <p className="mt-1 text-xs font-normal text-text-subtle">
-          {texts.posts.edited} {texts.posts.authorTime(formatTime(post.editedAt))}
-        </p>
-      )}
-
-      {post.mediaIds.length > 0 && (
-        <div className="mt-4">
-          {/* Mídia inserida no texto aparece NO TEXTO (item 9); a grade do fim é só o que
-              sobrou sem marcador — repetir a mesma mídia duas vezes seria estranho. */}
-          <MediaGrid
-            mediaIds={post.mediaIds.filter((id) => !inlineMediaIds(post.content).includes(id))}
-            mediaSpoiler={mediaSpoiler}
           />
-        </div>
-      )}
-
-      {pageHtml ? (
-        <SpoilerMedia active={mediaSpoiler} label={texts.posts.mediaSpoiler.reveal}>
-          {() => <PostPage postId={post.id} html={pageHtml} />}
-        </SpoilerMedia>
-      ) : pageLoading ? (
-        <p className="mt-4 rounded-xl border border-dashed border-border-soft px-3 py-6 text-center text-xs font-normal text-text-subtle">
-          {texts.posts.page.loading}
-        </p>
-      ) : null}
-
-      <ReactionsSummary post={post} initialSummary={post.reactionSummary} />
-      <LinkPreviews content={post.content} autoplay={!lite} />
-
-      {post.tags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {post.tags.map((t) => (
-            <Badge
-              key={t}
-              variant="secondary"
-              className="rounded-full border border-border-soft bg-transparent font-normal text-text-subtle"
-            >
-              {texts.posts.tag(t)}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <PostNotes post={post} />
-
-      {/* Selos: entram na fileira das ações (a peça é do card, que é quem sabe os selos do post). */}
-      <PostActions post={post} onComments={toggleComments}>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-2.5 transition hover:bg-muted hover:text-foreground text-muted-foreground"
-              title={texts.posts.seals.action}
-              aria-label={texts.posts.seals.action}
-            >
-              <Tag className="h-4 w-4" />
-            </button>
-          </PopoverTrigger>
-
-          <PopoverContent align="start" className="w-64 p-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-text-subtle">
-              {texts.posts.seals.title}
-            </p>
-
-            <div className="mt-2 grid grid-cols-3 gap-1.5">
-              {POST_SEALS.map((seal) => {
-                const mine = mySeals.includes(seal.id);
-                return (
-                  <button
-                    key={seal.id}
-                    type="button"
-                    onClick={() => toggleSeal.mutate(seal.id)}
-                    disabled={toggleSeal.isPending}
-                    title={seal.label}
-                    aria-label={seal.label}
-                    aria-pressed={mine}
-                    className={cn(
-                      "flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[10px] font-medium transition hover:border-primary/50",
-                      mine
-                        ? "border-primary bg-primary-soft text-primary"
-                        : "border-border-soft text-text-subtle",
-                    )}
-                  >
-                    <seal.icon className="h-4 w-4" aria-hidden />
-
-                    <span className="text-center leading-tight">{seal.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <p className="mt-2 text-[11px] leading-snug text-text-subtle">
-              {texts.posts.seals.hint}
-            </p>
-
-            {mySeals.length > 0 && (
-              <button
-                type="button"
-                onClick={() =>
-                  sealsApi.remove(post.id).then((result) => {
-                    queryClient.setQueryData(["seals", post.id], result);
-                    queryClient.invalidateQueries({ queryKey: ["seals-people", post.id] });
-                  })
-                }
-                className="mt-2 w-full rounded-lg px-2 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
-              >
-                {texts.posts.seals.remove}
-              </button>
-            )}
-          </PopoverContent>
-        </Popover>
-      </PostActions>
-
-      {isOwner && (
+        </PostActions>
+      }
+      ownerDialogs={
         <>
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{texts.posts.owner.editTitle}</DialogTitle>
-              </DialogHeader>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-normal text-text-subtle">
-                  {texts.feed.composer.typePicker.label}:
-                </span>
-
-                {POST_TYPES.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setEditType(option.id as PostView["type"])}
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-normal transition ${
-                      editType === option.id
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                    }`}
-                  >
-                    <option.icon className="h-3 w-3" />
-
-                    <>{option.label}</>
-                  </button>
-                ))}
-              </div>
-
+          <PostEditDialog
+            postId={post.id}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            typeOptions={TYPE_OPTIONS}
+            editType={editType}
+            onTypeChange={setEditType}
+            draft={draft}
+            contentField={
               <MentionTextarea
                 value={draft}
                 maxLength={postContentLimit(editType)}
@@ -639,76 +319,30 @@ function PostCardView({
                 placeholder={texts.posts.owner.editDescription}
                 className="rounded-md border border-input bg-transparent px-3 py-2 text-sm"
               />
-
-              {editType === "PAGE" && (
-                <div>
-                  <label
-                    htmlFor={`page-html-${post.id}`}
-                    className="mb-1 block text-xs font-normal text-text-subtle"
-                  >
-                    {texts.feed.composer.pageLabel}
-                  </label>
-
-                  <Textarea
-                    id={`page-html-${post.id}`}
-                    value={pageDraft}
-                    maxLength={PAGE_HTML_MAX_LENGTH}
-                    onChange={(event) => setPageDraft(event.target.value)}
-                    placeholder={
-                      pageLoading ? texts.posts.page.loading : texts.feed.composer.pagePlaceholder
-                    }
-                    className="min-h-[160px] font-mono text-xs"
-                  />
-                </div>
-              )}
-
-              {editType === "ARTICLE" && (
-                <div>
-                  <span className="mb-1 block text-xs font-normal text-text-subtle">
-                    {texts.feed.composer.article.bodyLabel}
-                  </span>
-
-                  <MentionTextarea
-                    value={bodyDraft}
-                    maxLength={ARTICLE_BODY_MAX_LENGTH}
-                    onChange={(value) => setBodyDraft(value)}
-                    placeholder={
-                      pageLoading
-                        ? texts.posts.page.loading
-                        : texts.feed.composer.article.bodyPlaceholder
-                    }
-                    className="min-h-[160px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
-                    rows={6}
-                    toolbar
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => setEditOpen(false)}
-                >
-                  {texts.common.cancel}
-                </Button>
-
-                <Button
-                  className="rounded-full"
-                  disabled={
-                    editPost.isPending ||
-                    (editType !== "PAGE" && !draft.trim()) ||
-                    (editType === "PAGE" && !pageDraft.trim()) ||
-                    (editType === "ARTICLE" && !bodyDraft.trim())
-                  }
-                  onClick={handleSaveEdit}
-                >
-                  {editPost.isPending ? texts.common.saving : texts.posts.owner.save}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
+            }
+            pageDraft={pageDraft}
+            onPageDraftChange={setPageDraft}
+            pageMaxLength={PAGE_HTML_MAX_LENGTH}
+            bodyDraft={bodyDraft}
+            bodyField={
+              <MentionTextarea
+                value={bodyDraft}
+                maxLength={ARTICLE_BODY_MAX_LENGTH}
+                onChange={(value) => setBodyDraft(value)}
+                placeholder={
+                  pageLoading
+                    ? texts.posts.page.loading
+                    : texts.feed.composer.article.bodyPlaceholder
+                }
+                className="min-h-[160px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
+                rows={6}
+                toolbar
+              />
+            }
+            pageLoading={pageLoading}
+            pending={editPost.isPending}
+            onSave={handleSaveEdit}
+          />
           <ConfirmDialog
             open={deleteOpen}
             onOpenChange={setDeleteOpen}
@@ -720,10 +354,13 @@ function PostCardView({
             onConfirm={() => deletePost.mutate()}
           />
         </>
-      )}
-
-      {showComments && <PostComments postId={post.id} postAuthorId={post.authorId} />}
-    </article>
+      }
+      comments={
+        showComments ? <PostComments postId={post.id} postAuthorId={post.authorId} /> : null
+      }
+      renderRichText={(props) => <RichText {...props} />}
+      renderMediaGrid={(props) => <MediaGrid {...props} />}
+    />
   );
 }
 
@@ -733,10 +370,4 @@ function PostCardView({
  * renderiza quando o post dele (ou outra prop) muda; o React Query preserva o objeto do post que
  * não mudou entre uma página e outra.
  */
-export const PostCard = memo(PostCardView);
-
-/** Quantas horas faltam para o Momento se apagar (arredonda para cima; mínimo 1). */
-function remainingHours(expiresAt: string): number {
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  return Math.max(1, Math.ceil(diff / 3_600_000));
-}
+export const PostCard = memo(PostCardContainer);

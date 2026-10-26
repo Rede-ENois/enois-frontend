@@ -93,22 +93,11 @@ Dialog multi-aba para edição completa do perfil.
 - `Field()` - Wrapper de campo com label e erro
 - `SubList()` - Componente genérico de CRUD para listas aninhadas
 
-## `ImageCropDialog` (`src/components/image-crop-dialog.tsx`)
+## `ImageCropDialog` (`@rede-enois/design-system/patterns`)
 
-Dialog para corte de imagens usando `react-easy-crop`.
-
-**Props:** `{ open, onOpenChange, imageSrc, aspect, title, onCropComplete }`
-
-**Funcionalidades:**
-
-- Zoom slider (1x a 3x)
-- Crop em canvas com output JPEG (qualidade 0.9)
-- Carregamento de imagem com CORS
-
-**Funções auxiliares:**
-
-- `createImage(url)` - Carrega imagem com CORS
-- `getCroppedImg(imageSrc, pixelCrop)` - Executa o crop via canvas
+Dialog de corte de imagem (`react-easy-crop`). Mora no design system
+(`src/patterns/editor/image-crop-dialog.tsx` do repositório `enois-design-system`); props e
+variações estão no Storybook de lá.
 
 ## `MentionTextarea` (`src/components/mention-textarea.tsx`)
 

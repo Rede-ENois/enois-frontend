@@ -14,8 +14,13 @@ import type { UpdateProfileRequest } from "@/types/application/profile/update-pr
 import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-purpose";
 import type { RecommendationItemProps } from "@/types/routes/profile/recommendation-item-props";
 import type { SectionProps } from "@/types/routes/profile/section-props";
-import { ContributorTag, StyledName, UserAvatar } from "@rede-enois/design-system/domain";
-import { InfiniteScroll } from "@rede-enois/design-system/patterns";
+import {
+  ContributorTag,
+  PostCardSkeletons,
+  StyledName,
+  UserAvatar,
+} from "@rede-enois/design-system/domain";
+import { ImageCropDialog, InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   Dialog,
@@ -70,7 +75,6 @@ import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
-import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { PostCard } from "@/components/post-card";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
@@ -86,7 +90,6 @@ import { ProfileGamificationPanel } from "@/components/profile/profile-gamificat
 import { ProfileNetworkDialog } from "@/components/profile/profile-network-dialog";
 import { ProfileQuickComposer } from "@/components/profile/profile-quick-composer";
 import { ProfileProjectsSection } from "@/components/profile/projects-section";
-import { PostCardSkeletons } from "@/components/skeletons/post-card-skeletons";
 import { VerifiedContributorPrompt } from "@/components/verified-contributor-prompt";
 
 /** Paginas de "Publicacoes recentes": o mesmo tamanho do feed, para nao sobrecarregar o perfil. */

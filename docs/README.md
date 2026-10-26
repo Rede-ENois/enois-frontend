@@ -51,7 +51,6 @@ src/
 ├── components/                  # Componentes React
 │   ├── app-shell.tsx            # Layout principal
 │   ├── edit-profile-dialog.tsx  # Edição de perfil
-│   ├── image-crop-dialog.tsx    # Crop de imagens
 │   ├── mention-textarea.tsx     # Textarea com @menções
 │   ├── post-card.tsx            # Card de post
 │   ├── theme-toggle.tsx         # Alternador de tema

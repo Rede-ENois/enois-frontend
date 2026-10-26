@@ -1,24 +1,10 @@
-import { useState } from "react";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Textarea,
-  useToast,
-} from "@rede-enois/design-system/ui";
-import { Repeat2 } from "lucide-react";
+import { RepostDialog as RepostDialogView } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, reactionsApi } from "@/lib/api";
-
-/** Limite combinado com o backend (`RepostPostService`). */
-export const REPOST_OPINION_MAX = 600;
 
 /**
  * Republicar em duas portas: direto (cópia com o crédito) ou COM opinião — o comentário vira o
@@ -33,7 +19,6 @@ export function RepostDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [opinion, setOpinion] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -42,7 +27,6 @@ export function RepostDialog({
     onSuccess: () => {
       toast(texts.posts.reposted, "success");
       void queryClient.invalidateQueries({ queryKey: ["feed"] });
-      setOpinion("");
       onOpenChange(false);
     },
     onError: (error) => {
@@ -55,70 +39,13 @@ export function RepostDialog({
     },
   });
 
-  const cleanOpinion = opinion.trim();
-
   return (
-    <Dialog
+    <RepostDialogView
+      postId={postId}
       open={open}
-      onOpenChange={(next) => {
-        if (!next) setOpinion("");
-        onOpenChange(next);
-      }}
-    >
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-normal">
-            <Repeat2 className="h-5 w-5 text-primary" />
-
-            <>{texts.posts.repostTitle}</>
-          </DialogTitle>
-
-          <DialogDescription className="text-sm leading-relaxed text-text-subtle">
-            {texts.posts.repostDescription}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor={`repost-opinion-${postId}`}
-            className="text-xs font-normal text-text-subtle"
-          >
-            {texts.posts.opinionLabel}
-          </label>
-
-          <Textarea
-            id={`repost-opinion-${postId}`}
-            value={opinion}
-            onChange={(event) => setOpinion(event.target.value)}
-            placeholder={texts.posts.opinionPlaceholder}
-            rows={4}
-            maxLength={REPOST_OPINION_MAX}
-          />
-
-          <p className="text-right text-xs text-text-subtle">
-            {texts.posts.opinionCount(opinion.length)}
-          </p>
-        </div>
-
-        <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            className="rounded-full"
-            disabled={repost.isPending}
-            onClick={() => repost.mutate(undefined)}
-          >
-            {texts.posts.repostPlain}
-          </Button>
-
-          <Button
-            className="rounded-full"
-            disabled={repost.isPending || cleanOpinion.length === 0}
-            onClick={() => repost.mutate(cleanOpinion)}
-          >
-            {texts.posts.repostWithOpinion}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      onOpenChange={onOpenChange}
+      pending={repost.isPending}
+      onRepost={(opinion) => repost.mutate(opinion)}
+    />
   );
 }

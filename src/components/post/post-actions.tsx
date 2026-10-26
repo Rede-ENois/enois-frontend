@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
-import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
+import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
-import { Bookmark, Flag, Heart, MessageSquare, Repeat2, Share2 } from "lucide-react";
 
 import { REACTION_EMOJIS, reactionsApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
@@ -21,11 +20,13 @@ import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
 import { useMountedOnce } from "@/lib/use-mounted-once";
 
-import { ReactionPicker } from "./reaction-picker";
 import { ReactionsDialog } from "./reactions-dialog";
 import { ReportDialog } from "./report-dialog";
 import { RepostDialog } from "./repost-dialog";
 import { SealsDialog } from "./seals-dialog";
+
+/** O pulso da reação respeita o modo lite e o "reduzir movimento" do sistema. */
+const motionAllowed = () => !readLiteMode() && (readForceMotion() || !prefersReducedMotion());
 
 /**
  * A fileira de ações de um post: reagir, ver quem reagiu, comentar, compartilhar, salvar e
@@ -47,7 +48,6 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const setShowReport = usePostCardStore((state) => state.setShowReport);
 
   const postCounters = post.counters;
-  const reactionStatus: ReactionType | null = post.currentUserReaction ?? null;
   // O reactionSummary (contagem real por tipo) é a verdade; postCounters.reactions pode estar
   // dessincronizado (bug no decrement ou credibilidade que desconta). Soma do summary quando existe.
   const summaryTotal = post.reactionSummary
@@ -61,21 +61,6 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const sealsMounted = useMountedOnce(card?.showSeals ?? false);
   const reportMounted = useMountedOnce(showReport);
   const { toggle: toggleReaction } = usePostReaction(post.id, post);
-  // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
-  const reactionPendingRef = useRef(false);
-  reactionPendingRef.current = card?.reactionPending ?? false;
-  const wasReactionPending = useRef(card?.reactionPending ?? false);
-  const [reactionPulse, setReactionPulse] = useState<ReactionType | null>(null);
-
-  useEffect(() => {
-    const pending = card?.reactionPending ?? false;
-    // Só a nova ação dispara o pulso: carregar o feed ou desfazer uma falha não celebra a reação.
-    if (pending && !wasReactionPending.current) {
-      const motionAllowed = !readLiteMode() && (readForceMotion() || !prefersReducedMotion());
-      setReactionPulse(motionAllowed ? reactionStatus : null);
-    }
-    wasReactionPending.current = pending;
-  }, [card?.reactionPending, reactionStatus]);
 
   useEffect(() => {
     initializePostCard(post.id);
@@ -150,126 +135,46 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   };
 
   return (
-    <>
-      <footer className="mt-4 flex flex-wrap items-center justify-between gap-1 border-t border-border pt-3 text-sm text-muted-foreground">
-        <div className="flex items-center">
-          {/* Coração primeiro — reação principal, estilo LinkedIn. */}
-          <ReactionPicker
-            activeType={reactionStatus}
-            onReact={toggleReaction}
-            buttonClassName={`flex items-center gap-1.5 rounded-lg px-2.5 py-2.5 transition hover:bg-muted hover:text-foreground ${
-              reactionStatus ? "text-primary" : ""
-            }`}
-            buttonTitle={
-              reactionStatus
-                ? texts.posts.reactions.reactedWith(REACTION_EMOJIS[reactionStatus])
-                : texts.posts.reactions.react
-            }
-          >
-            <span
-              key={reactionStatus ?? "none"}
-              className={`grid h-4 w-4 place-items-center ${
-                reactionPulse && reactionPulse === reactionStatus
-                  ? "post-action-reaction-pulse"
-                  : ""
-              }`}
-              onAnimationEnd={() => setReactionPulse(null)}
-            >
-              {reactionStatus ? (
-                <span className="text-base leading-none">{REACTION_EMOJIS[reactionStatus]}</span>
-              ) : (
-                <Heart className="h-4 w-4" />
-              )}
-            </span>
-          </ReactionPicker>
-
-          {reactionCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowReactions(post.id, true)}
-              title={texts.posts.reactions.seeWho(reactionCount)}
-              aria-label={texts.posts.reactions.seeWho(reactionCount)}
-              aria-haspopup="dialog"
-              className="flex h-9 items-center rounded-lg px-1.5 text-xs tabular-nums text-muted-foreground transition hover:bg-muted hover:text-foreground hover:underline decoration-dotted underline-offset-4"
-            >
-              {reactionCount}
-            </button>
+    <PostActionsView
+      emojis={REACTION_EMOJIS}
+      reactionStatus={post.currentUserReaction ?? null}
+      onReact={toggleReaction}
+      // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
+      reactionPending={card?.reactionPending ?? false}
+      motionAllowed={motionAllowed}
+      reactionCount={reactionCount}
+      commentsCount={postCounters.comments}
+      savesCount={postCounters.saves}
+      saved={saved}
+      canRepost={canRepost}
+      onShowReactions={() => setShowReactions(post.id, true)}
+      onComments={onComments}
+      onRepost={() => {
+        if (!requireAuth()) return;
+        setRepostOpen(true);
+      }}
+      onShare={handleShare}
+      onReport={() => setShowReport(post.id, true)}
+      onSave={handleSave}
+      dialogs={
+        <>
+          {repostMounted && (
+            <RepostDialog postId={post.id} open={repostOpen} onOpenChange={setRepostOpen} />
           )}
-
-          <button
-            onClick={onComments}
-            title={texts.posts.comments.title}
-            aria-label={texts.posts.comments.title}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-2.5 transition hover:bg-muted hover:text-foreground"
-          >
-            <MessageSquare className="h-4 w-4" />
-
-            <span className="text-xs tabular-nums">{postCounters.comments}</span>
-          </button>
-
-          {canRepost && (
-            <button
-              onClick={() => {
-                if (!requireAuth()) return;
-                setRepostOpen(true);
-              }}
-              title={texts.posts.repost}
-              aria-label={texts.posts.repost}
-              className="flex items-center rounded-lg px-2.5 py-2.5 transition hover:bg-muted hover:text-foreground"
-            >
-              <Repeat2 className="h-4 w-4" />
-            </button>
+          {reactionsMounted && <ReactionsDialog postId={post.id} />}
+          {sealsMounted && <SealsDialog postId={post.id} />}
+          {reportMounted && (
+            <ReportDialog
+              targetId={post.id}
+              targetType="POST"
+              open={showReport}
+              onOpenChange={(next) => setShowReport(post.id, next)}
+            />
           )}
-
-          <button
-            onClick={handleShare}
-            title={texts.posts.share}
-            aria-label={texts.posts.share}
-            className="flex items-center rounded-lg px-2.5 py-2.5 transition hover:bg-muted hover:text-foreground"
-          >
-            <Share2 className="h-4 w-4" />
-          </button>
-
-          {children}
-
-          <button
-            onClick={() => setShowReport(post.id, true)}
-            title={texts.posts.report.title}
-            aria-label={texts.posts.report.title}
-            className="flex items-center rounded-lg px-2.5 py-2.5 transition hover:bg-muted hover:text-foreground"
-          >
-            <Flag className="h-4 w-4" />
-          </button>
-        </div>
-
-        <button
-          onClick={handleSave}
-          title={saved ? texts.posts.unsave : texts.posts.save}
-          aria-label={saved ? texts.posts.unsave : texts.posts.save}
-          aria-pressed={saved}
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-2.5 transition-colors hover:bg-muted ${
-            saved ? "text-primary" : "hover:text-foreground"
-          }`}
-        >
-          <Bookmark className="post-action-bookmark h-4 w-4" data-saved={saved} />
-
-          <span className="text-xs tabular-nums">{postCounters.saves}</span>
-        </button>
-      </footer>
-
-      {repostMounted && (
-        <RepostDialog postId={post.id} open={repostOpen} onOpenChange={setRepostOpen} />
-      )}
-      {reactionsMounted && <ReactionsDialog postId={post.id} />}
-      {sealsMounted && <SealsDialog postId={post.id} />}
-      {reportMounted && (
-        <ReportDialog
-          targetId={post.id}
-          targetType="POST"
-          open={showReport}
-          onOpenChange={(next) => setShowReport(post.id, next)}
-        />
-      )}
-    </>
+        </>
+      }
+    >
+      {children}
+    </PostActionsView>
   );
 }

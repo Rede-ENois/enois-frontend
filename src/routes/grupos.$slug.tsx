@@ -10,7 +10,12 @@ import type { GroupMember } from "@/types/application/group/group-member";
 import type { GroupPost } from "@/types/application/group/group-post";
 import type { GroupView } from "@/types/application/group/group-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
-import { StyledName, UserAvatar, UserBadges } from "@rede-enois/design-system/domain";
+import {
+  ReactionPicker,
+  StyledName,
+  UserAvatar,
+  UserBadges,
+} from "@rede-enois/design-system/domain";
 import {
   Button,
   ConfirmDialog,
@@ -51,7 +56,6 @@ import { AppContainer } from "@/components/app-container";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { formatTime } from "@/components/post/format-time";
-import { ReactionPicker } from "@/components/post/reaction-picker";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
@@ -599,6 +603,7 @@ function GroupPostItem({
 
       <div className="mt-2 flex items-center gap-3 text-xs text-text-subtle">
         <ReactionPicker
+          emojis={REACTION_EMOJIS}
           activeType={currentReaction}
           onReact={(type) => react.mutate(type)}
           buttonClassName="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-text-subtle transition hover:text-text-strong"

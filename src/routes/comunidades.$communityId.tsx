@@ -15,7 +15,8 @@ import type { PostView } from "@/types/application/feed/post-view";
 import type { CommunityCropPurpose } from "@/types/routes/communities/community-crop-purpose";
 import type { EditCommunityFormProps } from "@/types/routes/communities/edit-community-form-props";
 import type { MediaItem } from "@/types/routes/feed/media-item";
-import { UserAvatar } from "@rede-enois/design-system/domain";
+import { SpoilerPreview, UserAvatar } from "@rede-enois/design-system/domain";
+import { ImageCropDialog } from "@rede-enois/design-system/patterns";
 import {
   Badge,
   Button,
@@ -55,12 +56,10 @@ import { AppContainer } from "@/components/app-container";
 import { CommunityChannels } from "@/components/communities/community-channels";
 import { CommunityFavoriteButton } from "@/components/community-favorite-button";
 import { HtmlEditor } from "@/components/html-editor";
-import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
-import { SpoilerPreview } from "@/components/post/spoiler-preview";
 
 export const Route = createFileRoute("/comunidades/$communityId")({
   loader: async ({ params }) => {

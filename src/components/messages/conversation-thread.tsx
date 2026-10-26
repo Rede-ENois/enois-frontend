@@ -12,6 +12,7 @@ import { texts } from "@/texts";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
 import type { SendMessageInput } from "@/types/routes/messages/send-message-input";
+import { SpoilerPreview, insertSnippet } from "@rede-enois/design-system/domain";
 import { Button, EmojiPicker, useToast } from "@rede-enois/design-system/ui";
 import { Briefcase, EyeOff, ImageIcon, Send, X } from "lucide-react";
 
@@ -21,11 +22,9 @@ import { encryptForSend } from "@/lib/e2e/conversation";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
 import { liteInterval, litePageSize } from "@/lib/lite-mode";
-import { insertSnippet } from "@/lib/rich-text/insert-snippet";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
-import { SpoilerPreview } from "@/components/post/spoiler-preview";
 import { MessageSkeletons } from "@/components/skeletons/message-skeletons";
 
 import { ConversationHeader } from "./conversation-header";
