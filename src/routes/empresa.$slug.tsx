@@ -159,7 +159,7 @@ function Empresa() {
         </Link>
 
         <div className="surface-card overflow-hidden">
-          <div className="relative">
+          <div>
             {company.cover ? (
               <img
                 src={resolveCdnUrl(company.cover)}
@@ -171,16 +171,16 @@ function Empresa() {
             )}
           </div>
 
-          <div className="px-4 pb-5 sm:px-6">
+          <div className="relative z-10 px-4 pb-5 sm:px-6">
             <div className="-mt-10 flex items-end gap-4">
               {company.logo ? (
                 <img
                   src={resolveCdnUrl(company.logo)}
                   alt=""
-                  className="h-20 w-20 rounded-2xl border-4 border-surface-card object-cover"
+                  className="relative z-10 h-20 w-20 shrink-0 rounded-2xl border-4 border-surface-card object-cover"
                 />
               ) : (
-                <span className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-surface-card bg-primary-soft text-2xl font-bold text-primary">
+                <span className="relative z-10 grid h-20 w-20 shrink-0 place-items-center rounded-2xl border-4 border-surface-card bg-primary-soft text-2xl font-bold text-primary">
                   {company.name.charAt(0)}
                 </span>
               )}
