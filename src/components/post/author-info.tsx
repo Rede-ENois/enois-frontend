@@ -29,7 +29,7 @@ export function AuthorInfo({
   // (o @ é de outro namespace e não existe em /perfil).
   const corporate = authorIdentity === "CORPORATE";
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex min-w-0 w-full items-start gap-3 sm:w-auto sm:flex-1">
       {corporate ? (
         <Link to="/profissional/$username" params={{ username: authorUsername }}>
           <UserAvatar

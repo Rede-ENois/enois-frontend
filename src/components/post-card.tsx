@@ -274,7 +274,7 @@ function PostCardView({
         </Link>
       )}
 
-      <header className="flex justify-between items-start gap-3">
+      <header className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:justify-between">
         <AuthorInfo
           authorUsername={post.authorUsername}
           authorName={post.authorName}
@@ -292,7 +292,7 @@ function PostCardView({
           followPending={followCommunity.isPending}
         />
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
           {pinned && (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
               <Pin className="h-3 w-3" aria-hidden />
