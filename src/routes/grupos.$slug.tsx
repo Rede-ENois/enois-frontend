@@ -592,7 +592,7 @@ function GroupPostItem({
         className="mt-2 whitespace-pre-line break-words text-sm text-text-strong"
       />
 
-      <div className="mt-2 flex items-center gap-3 text-xs text-text-subtle">
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-text-subtle">
         <ReactionPicker
           activeType={currentReaction}
           onReact={(type) => react.mutate(type)}
