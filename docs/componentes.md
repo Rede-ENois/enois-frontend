@@ -75,6 +75,14 @@ Card de post no feed, com todas as ações sociais.
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
 
+## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
+
+Post do feed de um grupo, com reações, comentários e ações de moderação.
+
+- Comentários: no mobile, o campo ocupa a linha toda e o rodapé põe o contador à esquerda e o botão
+  à direita; em telas maiores, campo e botão ficam lado a lado e o contador volta à direita, abaixo
+  do campo.
+
 ## `EditProfileDialog` (`src/components/edit-profile-dialog.tsx`)
 
 Dialog multi-aba para edição completa do perfil.
