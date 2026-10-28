@@ -11,7 +11,8 @@ import { MentionTextarea } from "./mention-textarea";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const BTTV = "https://cdn.betterttv.net/emote/abc123/2x.png";
+/** A grade do seletor mostra a miniatura 1x da figurinha estática. */
+const BTTV = "https://cdn.betterttv.net/emote/abc123/1x.png";
 
 /** Mesmo formato das duas APIs reais: o catálogo global chega pelo `fetch` do navegador. */
 function fakeFetch(input: RequestInfo | URL) {

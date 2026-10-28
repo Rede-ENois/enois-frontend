@@ -1,4 +1,5 @@
 import type { BttvEmote } from "@/types/application/emote/bttv-emote";
+import type { FfzEmote } from "@/types/application/emote/ffz-emote";
 import type { FfzGlobalResponse } from "@/types/application/emote/ffz-global-response";
 import type { GlobalEmote } from "@/types/application/emote/global-emote";
 
@@ -12,8 +13,19 @@ import type { GlobalEmote } from "@/types/application/emote/global-emote";
 const BTTV_GLOBAL = "https://api.betterttv.net/3/cached/emotes/global";
 const FFZ_GLOBAL = "https://api.frankerfacez.com/v1/set/global";
 
-/** Escalas do BTTV: `1x` é 28px, `2x` 56px; a tela reduz por CSS, então `2x` fica nítido. */
-const BTTV_IMAGE = (id: string) => `https://cdn.betterttv.net/emote/${id}/2x.png`;
+/**
+ * Escalas do BTTV: `1x` é 28px, `2x` 56px; a tela reduz por CSS, então `2x` fica nítido.
+ *
+ * O BTTV só publica animação em GIF (`1x.gif` ~300KB, `2x.gif` ~1MB) — não existe WebP nem o
+ * caminho `/animated`. No chat a figurinha é desenhada em 28px, então o `1x` já é a resolução
+ * certa. Na GRADE do seletor até a animada usa o PNG de 1x (o primeiro quadro, ~3KB): animar a
+ * grade com centenas de KB de GIF é exatamente o que deixava o seletor lento.
+ */
+function bttvUrls(id: string, animated: boolean): { url: string; preview: string } {
+  const base = `https://cdn.betterttv.net/emote/${id}`;
+  if (animated) return { url: `${base}/1x.gif`, preview: `${base}/1x.png` };
+  return { url: `${base}/2x.png`, preview: `${base}/1x.png` };
+}
 
 async function fetchBttv(signal?: AbortSignal): Promise<GlobalEmote[]> {
   const response = await fetch(BTTV_GLOBAL, { signal });
@@ -22,7 +34,23 @@ async function fetchBttv(signal?: AbortSignal): Promise<GlobalEmote[]> {
   if (!Array.isArray(emotes)) return [];
   return emotes
     .filter((emote) => Boolean(emote?.id && emote?.code))
-    .map((emote) => ({ code: emote.code, url: BTTV_IMAGE(emote.id), provider: "BTTV" as const }));
+    .map((emote) => {
+      const animated = Boolean(emote.animated) || emote.imageType === "gif";
+      return { code: emote.code, ...bttvUrls(emote.id, animated), provider: "BTTV" as const };
+    });
+}
+
+/**
+ * No FFZ a versão em movimento vive em `animated` (WebP animado, ~8KB na escala 1) e é o que dá
+ * animação no chat; a estática em `urls` continua valendo para quem não publicou animação.
+ */
+function ffzUrls(emoticon: FfzEmote): { url: string; preview: string } | null {
+  const animado = emoticon.animated?.["2"] ?? emoticon.animated?.["1"];
+  if (animado) return { url: animado, preview: emoticon.animated?.["1"] ?? animado };
+
+  const url = emoticon.urls?.["2"] ?? emoticon.urls?.["1"] ?? emoticon.urls?.["4"];
+  if (!url) return null;
+  return { url, preview: emoticon.urls?.["1"] ?? url };
 }
 
 async function fetchFfz(signal?: AbortSignal): Promise<GlobalEmote[]> {
@@ -35,9 +63,9 @@ async function fetchFfz(signal?: AbortSignal): Promise<GlobalEmote[]> {
   for (const id of ids) {
     for (const emoticon of sets[String(id)]?.emoticons ?? []) {
       if (emoticon.hidden || !emoticon.name) continue;
-      const url = emoticon.urls?.["2"] ?? emoticon.urls?.["1"] ?? emoticon.urls?.["4"];
-      if (!url) continue;
-      emotes.push({ code: emoticon.name, url, provider: "FFZ" as const });
+      const urls = ffzUrls(emoticon);
+      if (!urls) continue;
+      emotes.push({ code: emoticon.name, ...urls, provider: "FFZ" as const });
     }
   }
   return emotes;

@@ -12,14 +12,20 @@
  *
  * O alvo é o `<p>`/`<li>` do texto: a grade do seletor de figurinhas mostra as mesmas imagens
  * dentro de `<button>` e continua no tamanho de miniatura dela.
+ *
+ * Todas as figurinhas ocupam a MESMA caixa quadrada de 28px (`object-fit: contain`): emote largo
+ * do FFZ, GIF do BTTV e emote alto ficam alinhados na linha, sem empurrar o texto em alturas
+ * diferentes. O seletor casa pelo HOST — os mesmos CDNs que `isOwnMediaUrl` libera — e não pelo
+ * caminho: o FFZ já serviu `/emoticon/{id}` e hoje serve `/emote/{id}` (estático e animado), e o
+ * padrão antigo só conhecia o primeiro.
  */
-p img[src^="https://cdn.betterttv.net/emote/"],
-p img[src^="https://cdn.frankerfacez.com/emoticon/"],
-li img[src^="https://cdn.betterttv.net/emote/"],
-li img[src^="https://cdn.frankerfacez.com/emoticon/"] {
+p img[src^="https://cdn.betterttv.net/"],
+p img[src^="https://cdn.frankerfacez.com/"],
+li img[src^="https://cdn.betterttv.net/"],
+li img[src^="https://cdn.frankerfacez.com/"] {
   display: inline-block;
   height: 1.75rem;
-  width: auto;
+  width: 1.75rem;
   margin: 0 0.125rem;
   border: 0;
   border-radius: 0;

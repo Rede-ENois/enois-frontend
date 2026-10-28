@@ -3,14 +3,28 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { applyEmotes, emoteIndex, fetchGlobalEmotes } from "./catalog";
+import { loadCachedEmotes, saveCachedEmotes } from "./catalog-cache";
 
 const SEIS_HORAS = 6 * 60 * 60 * 1000;
 
-/** Catálogo global de figurinhas; uma busca por sessão (o provedor muda pouco). */
+/**
+ * Catálogo global de figurinhas; uma busca por sessão (o provedor muda pouco).
+ *
+ * A cópia do `localStorage` entra como dado inicial: o chat já desenha as figurinhas — e o seletor
+ * abre cheio — no primeiro quadro, sem esperar a API de terceiro. A busca continua rodando em
+ * segundo plano e atualiza a cópia quando passa da validade.
+ */
 export function useGlobalEmotes() {
+  const cached = useMemo(() => loadCachedEmotes(), []);
   return useQuery({
     queryKey: ["emotes", "global"],
-    queryFn: ({ signal }) => fetchGlobalEmotes(signal),
+    queryFn: async ({ signal }) => {
+      const emotes = await fetchGlobalEmotes(signal);
+      saveCachedEmotes(emotes);
+      return emotes;
+    },
+    initialData: cached?.emotes,
+    initialDataUpdatedAt: cached?.savedAt,
     staleTime: SEIS_HORAS,
     gcTime: SEIS_HORAS * 4,
     retry: 1,

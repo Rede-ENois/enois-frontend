@@ -29,6 +29,10 @@ export const texts = {
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
     hint: "Coleções globais do BTTV e do FrankerFaceZ. O código entra no texto — quem lê vê a figurinha.",
+    count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
+    page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
+    previous: "Página anterior",
+    next: "Próxima página",
   },
 
   coinEconomy: {
