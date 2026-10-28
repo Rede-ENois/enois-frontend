@@ -137,22 +137,27 @@ function ContributorCard({ application }: { application: ContributorAdminView })
           {texts.moderator.contributors.contact}
         </p>
 
+        {/*
+         * Login do GitHub e e-mail são texto do usuário e não têm espaço: sem `break-all` o item
+         * de flex nasce com o min-content do e-mail e a página passa a rolar de lado no celular
+         * (medido em 2026-10-27, Chrome headless a 390px: 40px de transbordo com e-mail real).
+         */}
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <a
             href={`https://github.com/${application.github}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-primary hover:underline"
+            className="inline-flex min-w-0 items-center gap-1 break-all text-primary hover:underline"
           >
-            <GithubIcon className="h-3.5 w-3.5" />@{application.github}
+            <GithubIcon className="h-3.5 w-3.5 shrink-0" />@{application.github}
           </a>
 
           {application.email && (
             <a
               href={`mailto:${application.email}`}
-              className="inline-flex items-center gap-1 text-text-subtle hover:text-primary"
+              className="inline-flex min-w-0 items-center gap-1 break-all text-text-subtle hover:text-primary"
             >
-              <Mail className="h-3.5 w-3.5" />
+              <Mail className="h-3.5 w-3.5 shrink-0" />
               {application.email}
             </a>
           )}
