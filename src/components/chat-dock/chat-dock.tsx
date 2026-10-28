@@ -7,6 +7,8 @@ import { texts } from "@/texts";
 import { ChevronDown, ChevronUp, MessageCircle, X } from "lucide-react";
 
 import { messagesApi } from "@/lib/api";
+import { janelasQueCabem } from "@/lib/chat-dock/chat-dock-layout";
+import { useLarguraDaJanela } from "@/lib/chat-dock/use-largura-da-janela";
 import { useCurrentUser } from "@/lib/current-user";
 import { hasSession } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
@@ -37,6 +39,7 @@ export function ChatDock() {
 function ChatDockInner() {
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
+  const larguraDaJanela = useLarguraDaJanela();
   const expanded = useChatDockStore((s) => s.expanded);
   const openChats = useChatDockStore((s) => s.openChats);
   const toggleExpanded = useChatDockStore((s) => s.toggleExpanded);
@@ -78,6 +81,14 @@ function ChatDockInner() {
 
   const totalUnread = unreadData?.count ?? 0;
 
+  /*
+   * O dock e ancorado a direita e cresce para a ESQUERDA: cada mini-janela tem 22rem. Se abrirem
+   * mais janelas do que cabem, a mais a esquerda sai da tela (medido em 2026-10-28: a 1024px com
+   * 2 janelas a primeira comeca em -32px; a 1280px com 4, em -496px) e o botao de fechar dela
+   * fica fora do alcance. Aqui so se desenha o que cabe — a conversa continua aberta no estado.
+   */
+  const janelasVisiveis = openChats.slice(0, janelasQueCabem(larguraDaJanela, openChats.length));
+
   const handleSelectConversation = (id: string) => {
     openChat(id);
     const conv = conversations.find((c) => c.id === id);
@@ -87,7 +98,7 @@ function ChatDockInner() {
   return (
     <div className="fixed bottom-0 right-4 z-50 hidden items-end gap-2 lg:flex">
       {/* Mini-janelas de conversas abertas */}
-      {openChats.map((id) => (
+      {janelasVisiveis.map((id) => (
         <ChatDockWindow key={id} conversationId={id} />
       ))}
 
