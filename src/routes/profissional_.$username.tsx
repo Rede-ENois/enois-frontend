@@ -138,7 +138,7 @@ function ProfessionalProfile() {
             <div className="space-y-1">
               <h1 className="break-words text-2xl font-semibold tracking-tight">{data.name}</h1>
 
-              <p className="text-sm text-text-subtle">@{data.username}</p>
+              <p className="break-words text-sm text-text-subtle">@{data.username}</p>
 
               {data.headline && (
                 <p className="break-words text-sm text-text-strong">{data.headline}</p>

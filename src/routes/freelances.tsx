@@ -269,7 +269,7 @@ function FreelanceCard({ item, authenticated }: { item: FreelanceView; authentic
         </span>
       </div>
 
-      {item.username && <p className="text-xs text-text-subtle">@{item.username}</p>}
+      {item.username && <p className="break-words text-xs text-text-subtle">@{item.username}</p>}
 
       {/* Candidatar-se é falar com quem publicou: abre a conversa direta (mesma API do botão
           "Mensagem" do perfil) e manda a apresentação. Sem conta, o clique leva ao login. */}

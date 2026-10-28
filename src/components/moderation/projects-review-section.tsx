@@ -72,7 +72,7 @@ export function ProjectsReviewSection() {
               <div className="space-y-1">
                 <h3 className="font-semibold text-text-strong">{project.title}</h3>
 
-                <p className="text-xs text-text-subtle">
+                <p className="break-words text-xs text-text-subtle">
                   @{project.username} · {project.category ?? texts.moderator.projects.noCategory}
                 </p>
 

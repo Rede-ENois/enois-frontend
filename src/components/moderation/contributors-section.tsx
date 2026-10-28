@@ -108,7 +108,9 @@ function ContributorCard({ application }: { application: ContributorAdminView })
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-text-strong">{application.name}</p>
+            <p className="min-w-0 break-words text-sm font-semibold text-text-strong">
+              {application.name}
+            </p>
 
             {githubVerified ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary-text">

@@ -114,7 +114,7 @@ function CreatorPage() {
                 <UserBadges badges={dev.badges} badge={dev.badge} />
               </h1>
 
-              <p className="text-sm text-text-subtle">
+              <p className="break-words text-sm text-text-subtle">
                 @{dev.username} · {texts.games.developer.games(dev.games.length)} ·{" "}
                 {texts.games.developer.followers(dev.followers)}
               </p>

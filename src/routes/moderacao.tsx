@@ -536,7 +536,7 @@ function JogosSection() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{g.title}</p>
 
-                  <p className="text-xs text-text-subtle">
+                  <p className="break-words text-xs text-text-subtle">
                     @{g.username ?? g.userId} · {dataCurta(g.submittedAt)}
                     {g.tags ? ` · ${g.tags}` : ""}
                   </p>
