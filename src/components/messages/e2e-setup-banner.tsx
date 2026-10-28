@@ -3,7 +3,7 @@ import { type FormEvent, useState } from "react";
 import { Button, Input } from "@rede-enois/design-system/ui";
 import { Loader2, Lock } from "lucide-react";
 
-import { authApi } from "@/lib/api/auth";
+import { ativarE2eComNovaSenha } from "@/lib/e2e/ativar-e2e";
 import { generateAndUpload, restoreFromBackup } from "@/lib/e2e/key-manager";
 
 /**
@@ -51,8 +51,9 @@ export function E2eSetupBanner({
     setError(null);
     setStep("loading");
     try {
-      await authApi.changePassword({ currentPassword: "", newPassword });
-      await generateAndUpload(newPassword);
+      // A ordem (keypair ANTES da senha) mora em `ativar-e2e.ts`: trocar a senha encerra a
+      // sessão, e o upload do keypair depois sairia com 401.
+      await ativarE2eComNovaSenha(newPassword);
       onSetupComplete();
     } catch {
       setError("Não foi possível definir a senha. Tente de novo.");
