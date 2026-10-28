@@ -18,6 +18,7 @@ import {
 } from "@rede-enois/design-system/domain";
 import {
   Button,
+  CharCounter,
   ConfirmDialog,
   Dialog,
   DialogContent,
@@ -731,19 +732,28 @@ function GroupPostItem({
             </ul>
           )}
 
-          <div className="flex items-end gap-2">
-            <MentionTextarea
-              value={comment}
-              onChange={(value) => setComment(value)}
-              placeholder={texts.groups.commentPlaceholder}
-              maxLength={1200}
-              className="min-h-10 rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
-              rows={1}
-              toolbar
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-2 sm:items-end">
+            <div className="col-span-2 min-w-0 sm:col-span-1">
+              <MentionTextarea
+                value={comment}
+                onChange={(value) => setComment(value)}
+                placeholder={texts.groups.commentPlaceholder}
+                maxLength={1200}
+                showCounter={false}
+                className="min-h-10 rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
+                rows={1}
+                toolbar
+              />
+            </div>
+
+            <CharCounter
+              length={comment.length}
+              max={1200}
+              className="col-start-1 row-start-2 mt-0 text-left sm:text-right"
             />
 
             <Button
-              className="w-auto rounded-full"
+              className="col-start-2 row-start-2 w-auto justify-self-end rounded-full sm:row-span-2 sm:row-start-1"
               disabled={!comment.trim() || sendComment.isPending}
               onClick={() => sendComment.mutate()}
             >
