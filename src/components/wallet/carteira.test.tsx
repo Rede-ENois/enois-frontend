@@ -21,6 +21,9 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("@/components/marketplace/marketplace-section", () => ({
   MarketplaceSection: () => null,
 }));
+// Os eventos do Saci têm a própria cobertura (lib/cosmetics e lib/api/cosmetic-events).
+vi.mock("@/components/events/saci-spot", () => ({ SaciSpot: () => null }));
+vi.mock("@/components/events/saci-duel-panel", () => ({ SaciDuelPanel: () => null }));
 vi.mock("@/lib/require-auth", () => ({ requireAuth: vi.fn() }));
 vi.mock("@/components/app-container", () => ({
   AppContainer: ({ children }: { children: ReactNode }) => <main>{children}</main>,
@@ -32,7 +35,15 @@ vi.mock("@rede-enois/design-system/ui", async (importOriginal) => ({
 vi.mock("@/lib/current-user", () => ({ useCurrentUser: () => ({ data: undefined }) }));
 vi.mock("@/lib/api", () => ({
   walletApi: { wallet: vi.fn(), cotacao: vi.fn() },
-  lojaApi: { catalog: vi.fn(), buy: vi.fn(), equip: vi.fn() },
+  lojaApi: {
+    catalog: vi.fn(),
+    collections: vi.fn(),
+    buy: vi.fn(),
+    buyLook: vi.fn(),
+    equip: vi.fn(),
+    unequip: vi.fn(),
+  },
+  cosmeticEventsApi: { duel: vi.fn(), hunt: vi.fn(), choose: vi.fn(), find: vi.fn() },
 }));
 
 const catalog: LojaItem[] = [
@@ -56,6 +67,10 @@ const catalog: LojaItem[] = [
   "galaxia",
 ].map((name, index) => ({
   id: `moldura-${name}`,
+  kind: "FRAME",
+  collection: null,
+  available: true,
+  purchasable: true,
   name,
   description: "Moldura de demonstração",
   priceMf: 2000,
@@ -64,6 +79,17 @@ const catalog: LojaItem[] = [
   owned: index % 2 === 0,
   equipped: false,
 }));
+/** Owned, but not a frame: "Minhas molduras" must leave it out. */
+const ownedBadge: LojaItem = {
+  ...catalog[0],
+  id: "emblema-carapuca",
+  kind: "BADGE",
+  collection: "saci",
+  name: "Carapuça",
+  releaseOrder: catalog.length + 1,
+  owned: true,
+};
+const ownedCatalog = catalog.map((item): LojaItem => ({ ...item, owned: true }));
 
 describe("Carteira e ordenação das molduras", () => {
   let root: Root;
@@ -76,13 +102,14 @@ describe("Carteira e ordenação das molduras", () => {
     document.body.append(host);
     root = createRoot(host);
     client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } });
-    client.setQueryData(["loja", "oldest"], catalog);
+    client.setQueryData(["loja", "oldest"], [...catalog, ownedBadge]);
     client.setQueryData(
       ["loja", "newest"],
-      [...catalog].sort((a, b) => b.releaseOrder - a.releaseOrder),
+      [ownedBadge, ...[...catalog].sort((a, b) => b.releaseOrder - a.releaseOrder)],
     );
+    client.setQueryData(["loja", "colecoes"], []);
     client.setQueryData(["carteira"], { balance: 0, chave: "demonstracao", entries: [] });
-    client.setQueryData(["cotacao"], { brlCents: 100, historico: [] });
+    client.setQueryData(["cotacao"], { brlCents: 100, brlMicros: 1_000_000, historico: [] });
     const Page = Route.options.component!;
     await act(async () =>
       root.render(
@@ -139,8 +166,26 @@ describe("Carteira e ordenação das molduras", () => {
     expect(host.querySelector(".frame-shop-grid")).toBeNull();
   });
 
-  it("exibe a ordem de cada resposta da API e pagina sem alterar o cache", async () => {
+  it("abre a loja de cosméticos na aba Loja", async () => {
     await openTab(texts.frameShop.storeTab);
+    expect(host.querySelector(".frame-shop-grid")).toBeNull();
+    // Sem coleções, a loja abre nos clássicos (moldura sem coleção) com a prévia do perfil.
+    expect(host.querySelector(".cos-card")).not.toBeNull();
+    expect(host.textContent).toContain("galaxia");
+  });
+
+  /** Com todas as molduras compradas, "Minhas molduras" mostra o catálogo inteiro na ordem da API. */
+  function ownAll() {
+    client.setQueryData(["loja", "oldest"], ownedCatalog);
+    client.setQueryData(
+      ["loja", "newest"],
+      [...ownedCatalog].sort((a, b) => b.releaseOrder - a.releaseOrder),
+    );
+  }
+
+  it("exibe a ordem de cada resposta da API e pagina sem alterar o cache", async () => {
+    ownAll();
+    await openTab(texts.frameShop.ownedTab);
     expect(names()).toEqual(catalog.slice(0, 12).map((item) => item.name));
     expect(host.querySelector("select")!.value).toBe("oldest");
     await changeOrder("newest");
@@ -156,11 +201,12 @@ describe("Carteira e ordenação das molduras", () => {
     );
     await changeOrder("oldest");
     expect(names()).toEqual(catalog.slice(0, 12).map((item) => item.name));
-    expect(client.getQueryData(["loja", "oldest"])).toEqual(catalog);
+    expect(client.getQueryData(["loja", "oldest"])).toEqual(ownedCatalog);
   });
 
   it("preserva a ordenação ao filtrar e ao voltar para Todas", async () => {
-    await openTab(texts.frameShop.storeTab);
+    ownAll();
+    await openTab(texts.frameShop.ownedTab);
     await changeOrder("newest");
     await click(texts.frameShop.filters.simple);
     expect(names()).toEqual(["coral", "violeta", "esmeralda", "ambar"]);

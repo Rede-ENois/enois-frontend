@@ -18,4 +18,6 @@ export type RankingUser = {
   nameTheme?: AuthorNameStyle["theme"];
   nameFont?: AuthorNameStyle["font"];
   nameColor?: string | null;
+  /** Equipped nameplate (`placa-*`); the list is the public profile view, so it carries it. */
+  nameplate?: string | null;
 };

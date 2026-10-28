@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { CorporateProfileView } from "@/types/application/corporate/corporate-profile-view";
-import { UserAvatar } from "@rede-enois/design-system/domain";
+import { PostCardSkeletons, UserAvatar } from "@rede-enois/design-system/domain";
 import { Button, EmptyState } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Building2, Globe, Link as LinkIcon, MapPin, UserX } from "lucide-react";
 
@@ -20,7 +20,6 @@ import { PostCard } from "@/components/post-card";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { ProfileSeals } from "@/components/profile-seals";
 import { PageSkeleton } from "@/components/skeletons/page-skeleton";
-import { PostCardSkeletons } from "@/components/skeletons/post-card-skeletons";
 
 export const Route = createFileRoute("/profissional_/$username")({
   head: ({ params }) => ({

@@ -1,3 +1,5 @@
+import type { MonitoringEconomy } from "@/types/application/monitoring/monitoring-economy";
+import type { MonitoringEconomyRecalculation } from "@/types/application/monitoring/monitoring-economy-recalculation";
 import type { MonitoringEvent } from "@/types/application/monitoring/monitoring-event";
 import type { MonitoringOverview } from "@/types/application/monitoring/monitoring-overview";
 import type { MonitoringSupply } from "@/types/application/monitoring/monitoring-supply";
@@ -9,6 +11,13 @@ export const monitoringApi = {
   overview: () => api.get<MonitoringOverview>("/admin/monitoring/overview"),
 
   supply: () => api.get<MonitoringSupply>("/admin/carteira/supply"),
+
+  /** Métricas do cálculo automático da cotação (admin). */
+  economy: () => api.get<MonitoringEconomy>("/admin/carteira/economia"),
+
+  /** Roda o cálculo agora e publica a cotação se o valor sugerido mudou. */
+  recalculateEconomy: () =>
+    api.post<MonitoringEconomyRecalculation>("/admin/carteira/economia/recalcular"),
 
   events: (params: {
     level?: string;

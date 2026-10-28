@@ -6,6 +6,12 @@ export function authorNameStyle(
   profile: ProfileNameFields | null | undefined,
 ): AuthorNameStyle | null {
   if (!profile) return null;
-  if (!profile.nameTheme && !profile.nameFont && !profile.nameColor) return null;
-  return { theme: profile.nameTheme, font: profile.nameFont, color: profile.nameColor };
+  if (!profile.nameTheme && !profile.nameFont && !profile.nameColor && !profile.nameplate)
+    return null;
+  return {
+    theme: profile.nameTheme,
+    font: profile.nameFont,
+    color: profile.nameColor,
+    nameplate: profile.nameplate,
+  };
 }

@@ -4,6 +4,8 @@ export type Wallet = {
   balance: number;
   escala: number;
   cotacaoBrlCents: number;
+  /** Precisão real da cotação: micro-reais por faísca. */
+  cotacaoBrlMicros: number;
   chave: string;
   entries: WalletEntry[];
 };

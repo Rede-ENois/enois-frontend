@@ -2,33 +2,15 @@ import { useState } from "react";
 
 import { texts } from "@/texts";
 import type { DeleteAccountDialogProps } from "@/types/components/account/delete-account-dialog-props";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-} from "@rede-enois/design-system/ui";
+import { DeleteAccountDialog as DeleteAccountDialogView } from "@rede-enois/design-system/domain";
 
 import { ApiError, authApi, clearSession } from "@/lib/api";
 
 export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogProps) {
-  const [password, setPassword] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const reset = () => {
-    setPassword("");
-    setConfirmed(false);
-    setError(null);
-    setDeleting(false);
-  };
-
-  const submit = async () => {
+  const submit = async (password: string) => {
     setError(null);
     setDeleting(true);
     try {
@@ -42,69 +24,16 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
   };
 
   return (
-    <Dialog
+    <DeleteAccountDialogView
       open={open}
-      onOpenChange={(next) => {
-        if (!next) reset();
-        onOpenChange(next);
+      onOpenChange={onOpenChange}
+      onSubmit={(password) => void submit(password)}
+      pending={deleting}
+      error={error}
+      onReset={() => {
+        setError(null);
+        setDeleting(false);
       }}
-    >
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-normal text-destructive">
-            {texts.account.deleteAccount.title}
-          </DialogTitle>
-
-          <DialogDescription>{texts.account.deleteAccount.description}</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <ul className="list-disc space-y-1 pl-5 text-sm font-normal text-text-subtle">
-            {texts.account.deleteAccount.consequences.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="deletePassword">{texts.account.deleteAccount.password}</Label>
-
-            <Input
-              id="deletePassword"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              maxLength={128}
-            />
-          </div>
-
-          <label className="flex items-start gap-2 text-sm font-normal text-text-strong">
-            <input
-              type="checkbox"
-              checked={confirmed}
-              onChange={(event) => setConfirmed(event.target.checked)}
-              className="mt-0.5 h-4 w-4"
-            />
-
-            <>{texts.account.deleteAccount.confirm}</>
-          </label>
-
-          {error && (
-            <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-
-          <Button
-            variant="destructive"
-            className="w-full rounded-full"
-            disabled={deleting || !password || !confirmed}
-            onClick={submit}
-          >
-            {deleting ? texts.account.deleteAccount.deleting : texts.account.deleteAccount.action}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    />
   );
 }

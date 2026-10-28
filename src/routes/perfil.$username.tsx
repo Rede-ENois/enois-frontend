@@ -3,18 +3,20 @@ import { type ChangeEvent, useCallback, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 
-import {
-  profileNameFontFamily,
-  profileNameTheme,
-  profileNameThemePaint,
-} from "@/constants/profile-name-fonts";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-purpose";
 import type { RecommendationItemProps } from "@/types/routes/profile/recommendation-item-props";
 import type { SectionProps } from "@/types/routes/profile/section-props";
-import { ContributorTag, StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import {
+  ContributorTag,
+  PostCardSkeletons,
+  ProfileCard,
+  StyledName,
+  UserAvatar,
+} from "@rede-enois/design-system/domain";
+import { ImageCropDialog, InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   Dialog,
@@ -35,6 +37,7 @@ import {
   Link as LinkIcon,
   MapPin,
   MessageCircle,
+  MessageSquareText,
   Palette,
   Settings,
   ShieldCheck,
@@ -59,18 +62,18 @@ import {
 import { authApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
+import { profileCardData } from "@/lib/cosmetics";
 import { buildShareTags } from "@/lib/open-graph";
+import { authorNameStyle } from "@/lib/profile-name-style";
 import { isApprovedSoundCloudEmbed } from "@/lib/soundcloud-embed";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
-import { cn } from "@/lib/utils";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
-import { ImageCropDialog } from "@/components/image-crop-dialog";
-import { InfiniteScroll } from "@/components/infinite-scroll";
+import { SaciSpot } from "@/components/events/saci-spot";
 import { PostCard } from "@/components/post-card";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
@@ -84,21 +87,14 @@ import { ProfileCommunityShelf } from "@/components/profile/profile-community-sh
 import { ProfileExplorePanel } from "@/components/profile/profile-explore-panel";
 import { ProfileGamificationPanel } from "@/components/profile/profile-gamification-panel";
 import { ProfileNetworkDialog } from "@/components/profile/profile-network-dialog";
+import { ProfilePeek } from "@/components/profile/profile-peek";
 import { ProfileQuickComposer } from "@/components/profile/profile-quick-composer";
+import { ProfileStatusDialog } from "@/components/profile/profile-status-dialog";
 import { ProfileProjectsSection } from "@/components/profile/projects-section";
-import { PostCardSkeletons } from "@/components/skeletons/post-card-skeletons";
 import { VerifiedContributorPrompt } from "@/components/verified-contributor-prompt";
 
 /** Paginas de "Publicacoes recentes": o mesmo tamanho do feed, para nao sobrecarregar o perfil. */
 const USER_POSTS_PAGE_SIZE = 10;
-
-/** As molduras da loja (C3): o anel que cada uma pinta ao redor do avatar. */
-const FRAME_RING: Record<string, string> = {
-  "moldura-ambar": "ring-amber-400",
-  "moldura-esmeralda": "ring-emerald-400",
-  "moldura-violeta": "ring-violet-500",
-  "moldura-coral": "ring-rose-400",
-};
 
 export const Route = createFileRoute("/perfil/$username")({
   loader: async ({ params }) => {
@@ -170,6 +166,7 @@ function Profile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [recommendComment, setRecommendComment] = useState("");
   const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   // A capa tem duas formas (foto ou HTML/CSS): o dialogo escolhe, e o clique na capa abre ele.
   const [bannerOpen, setBannerOpen] = useState(false);
   const [networkDialogKind, setNetworkDialogKind] = useState<"connections" | "followers" | null>(
@@ -193,15 +190,19 @@ function Profile() {
   });
   const isContributor = (contributorSeals?.length ?? 0) > 0;
 
+  // A preferência local do nome (deste dispositivo) vale primeiro no próprio perfil.
   const localNameFont = usePreferencesStore((state) => state.displayNameFont);
   const localNameColor = usePreferencesStore((state) => state.displayNameColor);
   const localNameTheme = usePreferencesStore((state) => state.displayNameTheme);
-  const renderedNameTheme = isOwnProfile ? (localNameTheme ?? user.nameTheme) : user.nameTheme;
-  const renderedNameThemeDefinition = profileNameTheme(renderedNameTheme);
-  const renderedNameFont = isOwnProfile
-    ? (localNameFont ?? user.nameFont ?? renderedNameThemeDefinition.font)
-    : (user.nameFont ?? renderedNameThemeDefinition.font);
-  const renderedNameColor = isOwnProfile ? (localNameColor ?? user.nameColor) : user.nameColor;
+  const renderedNameStyle = isOwnProfile
+    ? {
+        theme: localNameTheme ?? user.nameTheme,
+        font: localNameFont ?? user.nameFont,
+        color: localNameColor ?? user.nameColor,
+        // The plate is not a device preference: it is always the equipped one.
+        nameplate: user.nameplate,
+      }
+    : authorNameStyle(user);
 
   // Selo "Dev de jogos" (G2 do plano dos games): só aparece quando a pessoa TEM presença de dev
   // de verdade — jogo publicado ou página de criador preenchida. O DONO da conta recebe 200 do
@@ -394,11 +395,27 @@ function Profile() {
   return (
     <AppContainer>
       <div className="space-y-5 sm:space-y-6">
-        {/* Quem recorta os cantos é a capa, não o card: o card cortaria as molduras com
-            efeito, que vazam para fora do avatar. */}
-        <div className="rounded-[1.5rem] border border-border-soft bg-surface-card shadow-[0_28px_80px_-48px_color-mix(in_oklab,var(--primary)_95%,transparent)]">
-          <div className="group relative h-[24dvh] min-h-48 overflow-hidden rounded-t-[1.5rem] sm:h-[28dvh] sm:min-h-60">
-            {user.bannerHtml ? (
+        <input
+          ref={bannerRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleBannerUpload}
+        />
+        <input
+          ref={avatarRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarUpload}
+        />
+
+        <h1 className="sr-only">{user.name}</h1>
+
+        <ProfileCard
+          profile={{ ...profileCardData(user, renderedNameStyle), bio: null }}
+          bannerSlot={
+            user.bannerHtml ? (
               // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
               <SandboxedHtmlFrame
                 html={user.bannerHtml}
@@ -407,293 +424,48 @@ function Profile() {
                 autoHeight={false}
                 allowSoundCloudPlayer={isApprovedSoundCloudEmbed(user.bannerHtml)}
               />
-            ) : user.banner ? (
-              <img src={resolveCdnUrl(user.banner)} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full" style={{ background: "var(--gradient-primary)" }} />
-            )}
-            <input
-              ref={bannerRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleBannerUpload}
-            />
-          </div>
-
-          <div className="relative px-4 pb-5 sm:px-6 sm:pb-6">
-            <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4">
-              <div className="group relative">
-                <UserAvatar
-                  frame={user.avatarFrame}
-                  src={resolveCdnUrl(user.avatar)}
-                  alt={user.name}
-                  className={`-mt-14 sm:-mt-16 h-28 w-28 ring-8 shadow-[0_20px_42px_-20px_color-mix(in_oklab,var(--primary)_90%,transparent)] sm:h-32 sm:w-32 ${FRAME_RING[user.avatarFrame ?? ""] ?? "ring-surface-card"}`}
-                />
-                <input
-                  ref={avatarRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarUpload}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {isOwnProfile ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => avatarRef.current?.click()}
-                      disabled={avatarUpload.status === "uploading"}
-                    >
-                      <Camera className="h-4 w-4" />
-
-                      <>
-                        {avatarUpload.status === "uploading"
-                          ? texts.common.sending
-                          : texts.posts.editPhoto}
-                      </>
-                    </Button>
-
-                    <EditProfileDialog profile={user}>
-                      <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                        <Settings className="h-4 w-4" />
-
-                        <>{texts.profile.editProfile}</>
-                      </Button>
-                    </EditProfileDialog>
-
-                    {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
-                        Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setBannerOpen(true)}
-                      disabled={bannerUpload.status === "uploading"}
-                    >
-                      <ImageIcon className="h-4 w-4" />
-
-                      <>
-                        {bannerUpload.status === "uploading"
-                          ? texts.common.sending
-                          : texts.profile.bannerHtml.action}
-                      </>
-                    </Button>
-
-                    <ProfileResumeDialog
-                      resumeUrl={myProfile?.resumeUrl}
-                      resumeName={myProfile?.resumeName}
-                      onSaved={() => {
-                        queryClient.invalidateQueries({ queryKey: ["me"] });
-                      }}
-                    />
-                    <ProfileBioDialog
-                      initialHtml={user.bioHtml ?? null}
-                      onSaved={() => {
-                        queryClient.invalidateQueries({ queryKey: ["me"] });
-                        queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
-                        queryClient.invalidateQueries({ queryKey: ["auth-me"] });
-                      }}
-                    />
-
-                    {/* Personalização do tema: fica no próprio perfil, que é onde a pessoa
-                        cuida da conta. As cores valem só neste dispositivo. */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setAppearanceOpen(true)}
-                    >
-                      <Palette className="h-4 w-4" />
-
-                      <>{texts.appearance.action}</>
-                    </Button>
-
-                    {/* Sem identidade verificada a reputação é multiplicada por zero: o caminho para
-                        resolver (confirmar e-mail ou ligar o 2FA) fica aqui, no próprio perfil. */}
-                    {authMe && !authMe.identityVerified && (
-                      <Link to="/seguranca">
-                        <Button size="sm" className="rounded-full gap-1.5">
-                          <ShieldCheck className="h-4 w-4" />
-
-                          <>{texts.auth.twoFactor.verifyIdentity}</>
-                        </Button>
-                      </Link>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={handleMessage}
-                      disabled={openConversation.isPending}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-
-                      <>{texts.profile.message}</>
-                    </Button>
-
-                    {connectionStatus === "ACCEPTED" || connectionStatus === "PENDING" ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full gap-1.5"
-                        disabled={disconnect.isPending}
-                        onClick={() => {
-                          if (!requireAuth()) return;
-                          disconnect.mutate();
-                        }}
-                      >
-                        {connectionStatus === "PENDING"
-                          ? texts.profile.cancelRequest
-                          : texts.profile.removeConnection}
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        className="rounded-full gap-1.5"
-                        onClick={() => {
-                          if (!requireAuth()) return;
-                          connect.mutate();
-                        }}
-                        disabled={connect.isPending}
-                      >
-                        {texts.profile.connect}
-                      </Button>
-                    )}
-
-                    <BlockUserDialog
-                      userId={user.id}
-                      name={user.name}
-                      blocked={blocked}
-                      onDone={() =>
-                        queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
-                      }
-                    />
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setReportOpen(true)}
-                    >
-                      <Flag className="h-4 w-4" />
-
-                      <>{texts.posts.report.action}</>
-                    </Button>
-
-                    <ReportDialog
-                      targetId={user.id}
-                      targetType="USER"
-                      open={reportOpen}
-                      onOpenChange={setReportOpen}
-                    />
-                  </>
-                )}
-              </div>
-
-              {blocked && (
-                <p className="mt-3 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
-                  <ShieldOff className="h-4 w-4 shrink-0" />
-
-                  <>{texts.profile.blockedBadge}</>
-                </p>
+            ) : undefined
+          }
+          nameAddon={
+            <>
+              {/* Vulgo: etiqueta ao lado do nome, escolhida pela própria pessoa. */}
+              {user.aka && (
+                <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-text-subtle">
+                  {texts.profile.aka(user.aka)}
+                </span>
               )}
-            </div>
-
-            <div className="mt-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1
-                  className={cn(
-                    "min-w-0 break-words text-xl font-normal tracking-tight text-text-strong",
-                    renderedNameThemeDefinition.className,
-                  )}
-                  style={{
-                    fontFamily: profileNameFontFamily(renderedNameFont),
-                    ...(renderedNameThemeDefinition.colors.length > 1
-                      ? {
-                          backgroundImage: profileNameThemePaint(
-                            renderedNameTheme,
-                            renderedNameColor,
-                          ),
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                          color: "transparent",
-                        }
-                      : { color: renderedNameColor ?? undefined }),
-                  }}
+              {user.openToWork && (
+                <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-growth">
+                  {texts.profile.openToWork}
+                </span>
+              )}
+              {user.isMentor && (
+                <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary">
+                  {texts.profile.mentorAvailable}
+                </span>
+              )}
+              {temPaginaDeDev && (
+                <Link
+                  to="/games/$username"
+                  params={{ username: user.username }}
+                  className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary hover:underline"
                 >
-                  {user.name}
-                </h1>
+                  <Gamepad2 className="h-3 w-3" />
 
-                {/* Vulgo: etiqueta ao lado do nome, escolhida pela própria pessoa. */}
-                {user.aka && (
-                  <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-text-subtle">
-                    {texts.profile.aka(user.aka)}
-                  </span>
-                )}
+                  <>{texts.games.developer.devChip}</>
+                </Link>
+              )}
+            </>
+          }
+          bio={
+            <div className="space-y-3">
+              {isContributor && <ContributorTag color={user.contributorTagColor} />}
 
-                {/* Emblemas: até 5, PNG pequeno colado ao nome — fora do <h1> para não entrar no
-                    texto do título. Quem escolhe é a própria pessoa, nas configurações. */}
-                {(user.badges?.length ? user.badges : user.badge ? [user.badge] : []).map(
-                  (badge) => (
-                    <img
-                      key={badge}
-                      src={resolveCdnUrl(badge)}
-                      alt=""
-                      className="h-4 w-4 shrink-0 rounded-full object-cover"
-                    />
-                  ),
-                )}
-
-                {user.openToWork && (
-                  <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-growth">
-                    {texts.profile.openToWork}
-                  </span>
-                )}
-                {user.isMentor && (
-                  <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary">
-                    {texts.profile.mentorAvailable}
-                  </span>
-                )}
-                {temPaginaDeDev && (
-                  <Link
-                    to="/games/$username"
-                    params={{ username: user.username }}
-                    className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary hover:underline"
-                  >
-                    <Gamepad2 className="h-3 w-3" />
-
-                    <>{texts.games.developer.devChip}</>
-                  </Link>
-                )}
-              </div>
-
-              {isContributor && (
-                <div className="mt-1">
-                  <ContributorTag color={user.contributorTagColor} />
-                </div>
+              {user.headline && (
+                <p className="break-words text-sm font-normal text-primary">{user.headline}</p>
               )}
 
-              <div className="mt-4">
-                <ProfileSeals username={user.username} />
-              </div>
-
-              {isOwnProfile && (
-                <div className="mt-4">
-                  <VerifiedContributorPrompt />
-                </div>
-              )}
-
-              <p className="mt-1 break-words text-sm font-normal text-primary">{user.headline}</p>
-
-              <p className="mt-3 flex flex-wrap items-center gap-4 text-sm font-normal text-text-subtle">
+              <p className="flex flex-wrap items-center gap-4 text-sm font-normal text-text-subtle">
                 {user.company && (
                   <span className="inline-flex items-center gap-1.5">
                     <Briefcase className="h-4 w-4" />
@@ -715,81 +487,266 @@ function Profile() {
                   </span>
                 )}
               </p>
+
+              <ProfileSeals username={user.username} />
+
+              {isOwnProfile && <VerifiedContributorPrompt />}
             </div>
+          }
+          actions={
+            <div className="flex flex-wrap gap-2">
+              {isOwnProfile ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => avatarRef.current?.click()}
+                    disabled={avatarUpload.status === "uploading"}
+                  >
+                    <Camera className="h-4 w-4" />
 
-            <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-border-soft bg-surface-1/70 sm:grid-cols-4">
-              <a
-                href="#atividade"
-                className="group border-b border-r border-border-soft px-4 py-3 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
-              >
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
-                  {texts.profile.dashboard.postsLabel}
-                </dt>
+                    <>
+                      {avatarUpload.status === "uploading"
+                        ? texts.common.sending
+                        : texts.posts.editPhoto}
+                    </>
+                  </Button>
 
-                <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
-                  {postsCount}
-                </dd>
-              </a>
+                  <EditProfileDialog profile={user}>
+                    <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                      <Settings className="h-4 w-4" />
 
-              <button
-                type="button"
-                onClick={() => setNetworkDialogKind("connections")}
-                className="group border-b border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0 sm:border-r"
-              >
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
-                  {texts.profile.dashboard.connectionsLabel}
-                </dt>
+                      <>{texts.profile.editProfile}</>
+                    </Button>
+                  </EditProfileDialog>
 
-                <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
-                  {user.connectionsCount ?? 0}
-                </dd>
-              </button>
+                  {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
+                      Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => setBannerOpen(true)}
+                    disabled={bannerUpload.status === "uploading"}
+                  >
+                    <ImageIcon className="h-4 w-4" />
 
-              <button
-                type="button"
-                onClick={() => setNetworkDialogKind("followers")}
-                className="group border-b border-r border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
-              >
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
-                  {texts.profile.dashboard.followersLabel}
-                </dt>
+                    <>
+                      {bannerUpload.status === "uploading"
+                        ? texts.common.sending
+                        : texts.profile.bannerHtml.action}
+                    </>
+                  </Button>
 
-                <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
-                  {user.followersCount ?? 0}
-                </dd>
-              </button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => setStatusOpen(true)}
+                  >
+                    <MessageSquareText className="h-4 w-4" />
 
-              <div className="px-4 py-3">
-                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle">
-                  {texts.profile.dashboard.reputationLabel}
-                </dt>
+                    <>{texts.cosmetics.status.action}</>
+                  </Button>
 
-                <dd className="mt-1 text-xl font-medium tracking-tight text-primary">
-                  {user.reputation ?? 0}
-                </dd>
-              </div>
-            </dl>
+                  <ProfileResumeDialog
+                    resumeUrl={myProfile?.resumeUrl}
+                    resumeName={myProfile?.resumeName}
+                    onSaved={() => {
+                      queryClient.invalidateQueries({ queryKey: ["me"] });
+                    }}
+                  />
+                  <ProfileBioDialog
+                    initialHtml={user.bioHtml ?? null}
+                    onSaved={() => {
+                      queryClient.invalidateQueries({ queryKey: ["me"] });
+                      queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
+                      queryClient.invalidateQueries({ queryKey: ["auth-me"] });
+                    }}
+                  />
 
-            <nav
-              aria-label={texts.profile.dashboard.progressTitle}
-              className="mt-4 flex snap-x gap-2 overflow-x-auto border-t border-border-soft pt-4 scrollbar-hide"
+                  {/* Personalização do tema: fica no próprio perfil, que é onde a pessoa
+                      cuida da conta. As cores valem só neste dispositivo. */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => setAppearanceOpen(true)}
+                  >
+                    <Palette className="h-4 w-4" />
+
+                    <>{texts.appearance.action}</>
+                  </Button>
+
+                  {/* Sem identidade verificada a reputação é multiplicada por zero: o caminho para
+                      resolver (confirmar e-mail ou ligar o 2FA) fica aqui, no próprio perfil. */}
+                  {authMe && !authMe.identityVerified && (
+                    <Link to="/seguranca">
+                      <Button size="sm" className="rounded-full gap-1.5">
+                        <ShieldCheck className="h-4 w-4" />
+
+                        <>{texts.auth.twoFactor.verifyIdentity}</>
+                      </Button>
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={handleMessage}
+                    disabled={openConversation.isPending}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+
+                    <>{texts.profile.message}</>
+                  </Button>
+
+                  {connectionStatus === "ACCEPTED" || connectionStatus === "PENDING" ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      disabled={disconnect.isPending}
+                      onClick={() => {
+                        if (!requireAuth()) return;
+                        disconnect.mutate();
+                      }}
+                    >
+                      {connectionStatus === "PENDING"
+                        ? texts.profile.cancelRequest
+                        : texts.profile.removeConnection}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => {
+                        if (!requireAuth()) return;
+                        connect.mutate();
+                      }}
+                      disabled={connect.isPending}
+                    >
+                      {texts.profile.connect}
+                    </Button>
+                  )}
+
+                  <BlockUserDialog
+                    userId={user.id}
+                    name={user.name}
+                    blocked={blocked}
+                    onDone={() =>
+                      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
+                    }
+                  />
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => setReportOpen(true)}
+                  >
+                    <Flag className="h-4 w-4" />
+
+                    <>{texts.posts.report.action}</>
+                  </Button>
+
+                  <ReportDialog
+                    targetId={user.id}
+                    targetType="USER"
+                    open={reportOpen}
+                    onOpenChange={setReportOpen}
+                  />
+                </>
+              )}
+
+              {blocked && (
+                <p className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
+                  <ShieldOff className="h-4 w-4 shrink-0" />
+
+                  <>{texts.profile.blockedBadge}</>
+                </p>
+              )}
+            </div>
+          }
+        >
+          <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-border-soft bg-surface-1/70 sm:grid-cols-4">
+            <a
+              href="#atividade"
+              className="group border-b border-r border-border-soft px-4 py-3 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
             >
-              {[
-                texts.profile.sections.about,
-                texts.profile.projects.title,
-                texts.profile.sections.recentPosts,
-              ].map((label, index) => (
-                <a
-                  key={label}
-                  href={index === 0 ? "#sobre" : index === 1 ? "#projetos" : "#atividade"}
-                  className="shrink-0 snap-start rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-xs font-medium text-text-subtle transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
-                >
-                  {label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </div>
+              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
+                {texts.profile.dashboard.postsLabel}
+              </dt>
+
+              <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
+                {postsCount}
+              </dd>
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setNetworkDialogKind("connections")}
+              className="group border-b border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0 sm:border-r"
+            >
+              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
+                {texts.profile.dashboard.connectionsLabel}
+              </dt>
+
+              <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
+                {user.connectionsCount ?? 0}
+              </dd>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setNetworkDialogKind("followers")}
+              className="group border-b border-r border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
+            >
+              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
+                {texts.profile.dashboard.followersLabel}
+              </dt>
+
+              <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
+                {user.followersCount ?? 0}
+              </dd>
+            </button>
+
+            <div className="px-4 py-3">
+              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle">
+                {texts.profile.dashboard.reputationLabel}
+              </dt>
+
+              <dd className="mt-1 text-xl font-medium tracking-tight text-primary">
+                {user.reputation ?? 0}
+              </dd>
+            </div>
+          </dl>
+
+          <nav
+            aria-label={texts.profile.dashboard.progressTitle}
+            className="mt-4 flex snap-x gap-2 overflow-x-auto border-t border-border-soft pt-4 scrollbar-hide"
+          >
+            {[
+              texts.profile.sections.about,
+              texts.profile.projects.title,
+              texts.profile.sections.recentPosts,
+            ].map((label, index) => (
+              <a
+                key={label}
+                href={index === 0 ? "#sobre" : index === 1 ? "#projetos" : "#atividade"}
+                className="shrink-0 snap-start rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-xs font-medium text-text-subtle transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+              >
+                {label}
+              </a>
+            ))}
+
+            <SaciSpot spot="perfil" className="ml-auto shrink-0" />
+          </nav>
+        </ProfileCard>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-5 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-6">
           <div className="space-y-6">
@@ -978,21 +935,18 @@ function Profile() {
                 <div className="space-y-2">
                   {rankingData.slice(0, 5).map((u) => (
                     <div key={u.id} className="flex items-center gap-3">
-                      <Link to="/perfil/$username" params={{ username: u.username }}>
+                      <ProfilePeek username={u.username} name={u.name} className="shrink-0">
                         <UserAvatar src={u.avatar} alt={u.name} className="h-8 w-8 shrink-0" />
-                      </Link>
+                      </ProfilePeek>
 
                       <div className="min-w-0 flex-1">
-                        <Link
-                          to="/perfil/$username"
-                          params={{ username: u.username }}
-                          className="block truncate text-sm font-normal text-text-strong hover:underline"
+                        <ProfilePeek
+                          username={u.username}
+                          name={u.name}
+                          className="block max-w-full truncate text-sm font-normal text-text-strong hover:underline"
                         >
-                          <StyledName
-                            name={u.name}
-                            style={{ theme: u.nameTheme, font: u.nameFont, color: u.nameColor }}
-                          />
-                        </Link>
+                          <StyledName name={u.name} style={authorNameStyle(u)} />
+                        </ProfilePeek>
                       </div>
 
                       {/* A coluna da direita é QUANDO chegou (o número de reputação não descreve
@@ -1065,6 +1019,15 @@ function Profile() {
         contributor={isOwnProfile && isContributor}
         contributorTagColor={user.contributorTagColor ?? null}
       />
+      {isOwnProfile && (
+        <ProfileStatusDialog
+          open={statusOpen}
+          onOpenChange={setStatusOpen}
+          username={user.username}
+          statusText={user.statusText}
+          statusIcon={user.statusIcon}
+        />
+      )}
       <ProfileNetworkDialog
         username={user.username}
         name={user.name}
@@ -1105,7 +1068,11 @@ function RecommendationItem({ recommendation }: RecommendationItemProps) {
 
   return (
     <div className="rounded-xl bg-surface-1 p-3">
-      <div className="flex items-center gap-2 mb-2">
+      <ProfilePeek
+        userId={recommendation.recommenderId}
+        name={recommender?.name ?? texts.profile.userFallback}
+        className="mb-2 flex items-center gap-2"
+      >
         <UserAvatar
           frame={recommender?.avatarFrame}
           src={recommender?.avatar}
@@ -1116,7 +1083,7 @@ function RecommendationItem({ recommendation }: RecommendationItemProps) {
         <span className="text-xs font-medium text-text-strong">
           {recommender?.name ?? texts.profile.userFallback}
         </span>
-      </div>
+      </ProfilePeek>
 
       <p className="break-words text-sm font-normal leading-relaxed text-text-subtle">
         {texts.profile.recommendationQuote(recommendation.comment)}

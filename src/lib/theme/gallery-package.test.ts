@@ -1,4 +1,4 @@
-import { THEME_COLLECTIONS } from "@/constants/theme-collections";
+import { THEME_COLLECTIONS } from "@rede-enois/design-system/domain";
 import { describe, expect, it } from "vitest";
 
 import { buildGalleryPackage } from "./gallery-package";

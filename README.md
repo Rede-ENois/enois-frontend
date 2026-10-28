@@ -283,7 +283,7 @@ cuidado com rota que é página e mãe ao mesmo tempo (a que "não abre" quando 
 
 ```bash
 npx vitest run                # tudo
-npx vitest run src/lib/rich-text/parse.test.ts   # um arquivo
+npx vitest run src/lib/api-client.test.ts        # um arquivo
 ```
 
 Os testes cobrem lógica pura — parser de formatação, inserção no cursor, cálculo de contraste de

@@ -3,15 +3,8 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  useToast,
-} from "@rede-enois/design-system/ui";
+import { LinkedInSyncPrompt as LinkedInSyncPromptView } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { linkedInIntegrationApi } from "@/lib/api";
 
@@ -67,51 +60,13 @@ export function LinkedInSyncPrompt() {
 
   if (!pending || !status || !status.connected) return null;
 
-  const notReady = !status.canPost;
-  const reason =
-    status.reason === "SERVER_KEY_MISSING"
-      ? texts.auth.links.linkedinSync.serverKey
-      : texts.auth.links.linkedinSync.notReady;
-
   return (
-    <Dialog open onOpenChange={(open) => (!open ? close() : undefined)}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="font-normal">
-            {texts.auth.links.linkedinSync.promptTitle}
-          </DialogTitle>
-
-          <DialogDescription>
-            {notReady ? reason : texts.auth.links.linkedinSync.promptBody}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-wrap justify-end gap-2 pt-2">
-          {notReady ? (
-            <Button className="rounded-full" onClick={close}>
-              {texts.common.close}
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={() => setSync.mutate(false)}
-              >
-                {texts.auth.links.linkedinSync.no}
-              </Button>
-
-              <Button
-                className="rounded-full"
-                disabled={setSync.isPending}
-                onClick={() => setSync.mutate(true)}
-              >
-                {texts.auth.links.linkedinSync.yes}
-              </Button>
-            </>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <LinkedInSyncPromptView
+      notReady={!status.canPost}
+      serverKeyMissing={status.reason === "SERVER_KEY_MISSING"}
+      pending={setSync.isPending}
+      onClose={close}
+      onAnswer={(enabled) => setSync.mutate(enabled)}
+    />
   );
 }

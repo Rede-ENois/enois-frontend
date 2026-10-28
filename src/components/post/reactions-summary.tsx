@@ -1,29 +1,20 @@
-import { useRef } from "react";
-
 import { useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
-import { texts } from "@/texts";
-import type { ReactionTab } from "@/types/application/reaction/reaction-tab";
 import type { ReactionsSummaryProps } from "@/types/components/post/reactions-summary-props";
+import { ReactionsSummary as ReactionsSummaryView } from "@rede-enois/design-system/domain";
 
 import { reactionsQueryOptions } from "@/lib/reactions/query-options";
-import { sortReactionTabsStable } from "@/lib/reactions/summary";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
-import { cn } from "@/lib/utils";
 
 /**
- * Resumo compacto (emoji + contagem) das reações de um post — agora clicável.
- *
- * Cada pílula alterna a reação: a minha fica destacada em roxo; clicar nela remove, clicar em
- * outra troca. Sem card no store (o blog monta o card num efeito do PostActions) a pílula vira
- * texto, para não existir alvo de clique que não tem onde gravar.
+ * Resumo compacto (emoji + contagem) das reações de um post — clicável quando o card existe no
+ * store (o blog monta o card num efeito do PostActions).
  */
 export function ReactionsSummary({ post, initialSummary }: ReactionsSummaryProps) {
   const postId = post.id;
   const card = usePostCardStore((state) => state.cards[postId]);
-  const reactionStatus = post.currentUserReaction ?? null;
   // Com o resumo vindo do feed, nada é buscado: o cache só existe depois de reagir ou abrir o
   // diálogo (aí ele manda). Sem resumo (blog, resposta antiga), o card busca como antes.
   const hasInitialSummary = initialSummary != null;
@@ -31,80 +22,16 @@ export function ReactionsSummary({ post, initialSummary }: ReactionsSummaryProps
   const summary = data?.summary ?? initialSummary ?? {};
   const { toggle, isPending } = usePostReaction(postId, post);
 
-  // A ordem fica no ref: o resumo é otimista, então reordenar a cada clique moveria a pílula no
-  // meio do toque. Só a entrada de um tipo novo (ou o primeiro load) reordena por contagem.
-  const tabsRef = useRef<ReactionTab[]>([]);
-  const tabs = sortReactionTabsStable(tabsRef.current, summary);
-  tabsRef.current = tabs;
-
-  if (tabs.length === 0) return null;
-
-  const clickable = Boolean(card);
-
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-1.5">
-      {tabs.map(({ type, count }) => {
-        const mine = reactionStatus === type;
-        const emoji = REACTION_EMOJIS[type] ?? type;
-        const pillClassName = cn(
-          "inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-xs leading-none transition-colors",
-          mine
-            ? "border-[#8b5cf6]/40 bg-[#8b5cf6]/15 text-[#c4b5fd] hover:bg-[#8b5cf6]/25"
-            : "border-white/10 bg-white/[0.06] text-text-subtle hover:bg-white/10",
-        );
-        const content = (
-          <>
-            <span
-              className={cn(
-                "inline-flex h-4 items-center justify-center text-base leading-none",
-                !mine && "grayscale-[0.3] opacity-80",
-              )}
-            >
-              {emoji}
-            </span>
-
-            <span className="tabular-nums leading-none">{count}</span>
-          </>
-        );
-
-        if (!clickable) {
-          return (
-            <span key={type} className={pillClassName}>
-              {content}
-            </span>
-          );
-        }
-
-        return (
-          <button
-            key={type}
-            type="button"
-            aria-pressed={mine}
-            // `isPending` é por instância do hook; o flag do store é compartilhado com o
-            // PostActions do mesmo post, então as pílulas também bloqueiam a outra instância.
-            disabled={card?.reactionPending ?? isPending}
-            onClick={() => toggle(type)}
-            title={
-              mine
-                ? texts.posts.reactions.removeWith(emoji)
-                : texts.posts.reactions.reactWith(emoji)
-            }
-            aria-label={
-              mine
-                ? texts.posts.reactions.removeWith(emoji)
-                : texts.posts.reactions.reactWith(emoji)
-            }
-            // Área de toque acessível: a pílula tem h-7 (~28px), abaixo dos 44px exigidos; o
-            // pseudo-elemento before infla só o alvo de toque, sem alterar o visual.
-            className={cn(
-              pillClassName,
-              "relative before:absolute before:-inset-y-2 before:-inset-x-1 before:content-['']",
-            )}
-          >
-            {content}
-          </button>
-        );
-      })}
-    </div>
+    <ReactionsSummaryView
+      summary={summary}
+      emojis={REACTION_EMOJIS}
+      activeType={post.currentUserReaction ?? null}
+      clickable={Boolean(card)}
+      // `isPending` é por instância do hook; o flag do store é compartilhado com o
+      // PostActions do mesmo post, então as pílulas também bloqueiam a outra instância.
+      disabled={card?.reactionPending ?? isPending}
+      onToggle={toggle}
+    />
   );
 }

@@ -2,8 +2,8 @@ import { useState } from "react";
 
 import { texts } from "@/texts";
 import type { ApplyByEmailButtonProps } from "@/types/components/job/apply-by-email-button-props";
-import { Button, useToast } from "@rede-enois/design-system/ui";
-import { Mail } from "lucide-react";
+import { ApplyByEmailButton as ApplyByEmailButtonView } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { resolveCdnUrl } from "@/lib/api/media";
 import {
@@ -70,17 +70,5 @@ export function ApplyByEmailButton({ job, email }: ApplyByEmailButtonProps) {
     }
   };
 
-  return (
-    <Button
-      variant="outline"
-      className="rounded-full gap-2"
-      disabled={busy}
-      title={texts.jobs.applyByEmail.hint}
-      onClick={() => void start()}
-    >
-      <Mail className="h-4 w-4" />
-
-      <>{texts.jobs.applyByEmail.action}</>
-    </Button>
-  );
+  return <ApplyByEmailButtonView busy={busy} onClick={() => void start()} />;
 }

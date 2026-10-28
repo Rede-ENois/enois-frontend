@@ -5,13 +5,13 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { SIGNUP_OPEN } from "@/constants/account";
 import { texts } from "@/texts";
+import { ApoieBanner } from "@rede-enois/design-system/domain";
 import { Button } from "@rede-enois/design-system/ui";
 import { ArrowRight, ArrowUpRight, GitPullRequest, ShieldAlert } from "lucide-react";
 
 import { statsApi } from "@/lib/api";
 import { anoAtual } from "@/lib/date/format";
 
-import { ApoieBanner } from "@/components/apoie-banner";
 import { ContributionForm } from "@/components/contribution-form";
 import { ThemeToggle } from "@/components/theme-toggle";
 

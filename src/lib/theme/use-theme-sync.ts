@@ -3,13 +3,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { hydratePreferences, usePreferencesStore } from "@/stores/preferences.store";
+import { isGalleryCollectionId } from "@rede-enois/design-system/domain";
 
 import { preferencesApi } from "@/lib/api";
 import { hasSessionFlag } from "@/lib/session";
 
 import { applyThemeSettings } from "./apply-theme";
-import { resolveThemeCollection } from "./build-collection-css";
-import { isGalleryCollectionId } from "./gallery-collections";
+import { resolveThemeCollection } from "./resolve-theme-collection";
 import { syncThemeCollection } from "./sync-theme-collection";
 
 /**

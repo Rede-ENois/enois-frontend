@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { Button } from "@rede-enois/design-system/ui";
+import { Button, GithubIcon } from "@rede-enois/design-system/ui";
 import { ArrowRight, Award, GitPullRequest, ShieldCheck } from "lucide-react";
 
 import { contributorSealsApi } from "@/lib/api";
@@ -10,7 +10,6 @@ import { ogMetas } from "@/lib/seo";
 
 import { AppContainer } from "@/components/app-container";
 import { ContributorLinkStatus } from "@/components/contributor-link-status";
-import { GithubIcon } from "@/components/icons/github";
 import { VerifiedContributorPrompt } from "@/components/verified-contributor-prompt";
 
 export const Route = createFileRoute("/selos")({

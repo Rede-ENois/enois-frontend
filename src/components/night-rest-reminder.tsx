@@ -3,16 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 
-import { texts } from "@/texts";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@rede-enois/design-system/ui";
-import { Moon } from "lucide-react";
+import { NightRestReminder as NightRestReminderView } from "@rede-enois/design-system/domain";
 
 import { preferencesApi } from "@/lib/api";
 import { nightKey, shouldShowNightRest } from "@/lib/night-rest";
@@ -68,31 +59,5 @@ export function NightRestReminder() {
     dismissOnServer.mutate(today);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : dismiss())}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-normal">
-            <Moon className="h-5 w-5 text-primary" />
-
-            <>{texts.account.healthyUsage.nightRest.title}</>
-          </DialogTitle>
-
-          <DialogDescription className="text-sm leading-relaxed text-text-strong">
-            {texts.account.healthyUsage.nightRest.body}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" className="rounded-full" onClick={dismiss}>
-            {texts.account.healthyUsage.nightRest.keep}
-          </Button>
-
-          <Button className="rounded-full" onClick={dismiss}>
-            {texts.account.healthyUsage.nightRest.rest}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  return <NightRestReminderView open={open} onDismiss={dismiss} />;
 }

@@ -14,4 +14,6 @@ regras valem por inteiro; a de baixo é repetida porque é a mais fácil de pula
 
 - Cliente de sessão: nunca altere o estado local de autenticação (apagar token legado, marcar ou limpar a sessão) antes de o servidor confirmar, e trate toda recusa explícita de `/auth/*` (400/401/403) como sessão recusada — só falha de rede é "indisponível".
 
+- Repintar um token do design system num escopo (tema de cartão, seção escura): antes, liste todo uso dele ali dentro — `--primary` pinta texto (`text-primary`) e fundo com tinta fixa (`bg-primary` + `--primary-foreground`). Troque o par junto e confira o contraste em cada tom (claro e escuro); token que depende do tom vai inline por tema, não numa regra única. Antes de repintar, confira qual variável a utilitária lê de fato no CSS do DS (`.text-primary` lê `--primary-text`, não `--primary`) e prove o contraste com teste numérico, não só com print.
+
 <!-- /engineering-learn:live -->

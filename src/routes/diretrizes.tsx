@@ -1,10 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import { LegalSection } from "@rede-enois/design-system/domain";
 
 import { ogMetas } from "@/lib/seo";
 
-import { LegalLayout, LegalSection } from "@/components/legal-layout";
+import { LegalLayout } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/diretrizes")({
   // Pagina PUBLICA: vale para quem denuncia e para quem foi denunciado.

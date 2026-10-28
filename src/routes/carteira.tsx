@@ -30,12 +30,14 @@ import {
 
 import { walletApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
-import { faiscaToBrlCents, formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
+import { faiscaToBrlMicros, formatBrlMicros, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
+import { SaciSpot } from "@/components/events/saci-spot";
 import { MarketplaceSection } from "@/components/marketplace/marketplace-section";
 import { UserPicker } from "@/components/user-picker";
+import { CosmeticShop } from "@/components/wallet/cosmetic-shop";
 import { FrameShop } from "@/components/wallet/frame-shop";
 
 const WALLET_TABS: WalletTab[] = ["carteira", "marketplace", "loja", "minhas"];
@@ -152,12 +154,16 @@ function Carteira() {
           <>{texts.wallet.back}</>
         </Link>
 
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-text-strong">
-            {texts.frameShop.title}
-          </h1>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-text-strong">
+              {texts.frameShop.title}
+            </h1>
 
-          <p className="text-sm text-text-subtle">{texts.frameShop.subtitle}</p>
+            <p className="text-sm text-text-subtle">{texts.frameShop.subtitle}</p>
+          </div>
+
+          <SaciSpot spot="carteira" className="shrink-0" />
         </div>
 
         <Tabs
@@ -295,7 +301,7 @@ function Carteira() {
           </TabsContent>
 
           <TabsContent value="loja" className="pt-5">
-            <FrameShop />
+            <CosmeticShop />
           </TabsContent>
 
           <TabsContent value="minhas" className="pt-5">
@@ -331,8 +337,8 @@ function Carteira() {
                   {cotacao && parseFaiscaInput(form.amount) !== null && (
                     <span className="block text-xs text-text-subtle">
                       ≈{" "}
-                      {formatBrlCents(
-                        faiscaToBrlCents(parseFaiscaInput(form.amount)!, cotacao.brlCents),
+                      {formatBrlMicros(
+                        faiscaToBrlMicros(parseFaiscaInput(form.amount)!, cotacao.brlMicros),
                       )}{" "}
                       na cotação de referência
                     </span>
@@ -458,8 +464,8 @@ function CotacaoCard({ mf }: { mf: number }) {
   if (!cotacao) return null;
 
   const pontos = [...cotacao.historico].reverse();
-  const atual = cotacao.brlCents;
-  const anterior = pontos.length > 1 ? pontos[pontos.length - 2].brlCents : atual;
+  const atual = cotacao.brlMicros;
+  const anterior = pontos.length > 1 ? pontos[pontos.length - 2].brlMicros : atual;
   const subiu = atual >= anterior;
 
   return (
@@ -480,23 +486,23 @@ function CotacaoCard({ mf }: { mf: number }) {
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <p className="text-2xl font-semibold tracking-tight text-text-strong">
-          1 faísca = {formatBrlCents(atual)}
+          1 faísca = {formatBrlMicros(atual)}
         </p>
 
         <p className="text-sm text-text-subtle">
           Seu saldo ≈{" "}
           <span className="font-semibold text-text-strong">
-            {formatBrlCents(faiscaToBrlCents(mf, atual))}
+            {formatBrlMicros(faiscaToBrlMicros(mf, atual))}
           </span>
         </p>
       </div>
 
-      {pontos.length > 1 && <Sparkline valores={pontos.map((p) => p.brlCents)} subiu={subiu} />}
+      {pontos.length > 1 && <Sparkline valores={pontos.map((p) => p.brlMicros)} subiu={subiu} />}
 
       <p className="text-xs leading-relaxed text-text-subtle">
-        Preço de referência publicado pela plataforma, usado para remunerar criadores e atualizado
-        quando necessário — o histórico fica aqui embaixo do gráfico. Comprar faísca com dinheiro
-        ainda não existe.
+        Preço de referência recalculado pela plataforma a partir do uso da moeda (marketplace,
+        serviços e transferências) e da emissão automática. O histórico fica no gráfico acima.
+        Comprar faísca com dinheiro ainda não existe.
       </p>
     </section>
   );

@@ -1,25 +1,53 @@
 # Componentes
 
+## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
+
+Seasonal cosmetics shop in the `Loja` tab of `/carteira`, drawn by the design system
+`CosmeticShop`.
+
+- Reads `GET /loja` and `GET /loja/colecoes` (Zod-validated in `src/lib/api/loja.ts`); prices are
+  formatted with `formatFaisca`, and each look shows the price of the pieces still missing
+  (`lookPriceMf` in `src/lib/cosmetics.ts`: 75% of their sum, rounded to whole faíscas, the
+  backend arithmetic)
+- Buy, buy look, equip and unequip invalidate `loja`, `carteira`, `profile`, `me` and `feed`;
+  every API error code has its own pt-BR toast (`texts.cosmetics.errors`)
+- The `saci` and `halloween` collections show the Saci × Halloween duel (`SaciDuelPanel`)
+
 ## `FrameShop` (`src/components/wallet/frame-shop.tsx`)
 
-Loja de molduras de avatar na rota `/carteira`.
+The owned frames in the `Minhas molduras` tab of `/carteira` (`onlyOwned`). It lists only the
+`FRAME` items of the catalog.
 
 **Props:** `{ onlyOwned?: boolean }`
 
-**Funcionalidades:**
+- Search, filters, `oldest`/`newest` order (`GET /loja?order=`), pagination of 12 and the frame
+  preview come from the design system `FrameShop`
 
-- Abas Carteira, Loja e Minhas molduras com ícones; a rota abre na aba Carteira
-- Busca por nome e descrição, filtros Todas, Simples e Animadas
-- Ordenação por mais antigas (padrão) ou mais novas, preservada ao buscar e filtrar
-- Ordenação solicitada à API por `GET /loja?order=oldest|newest`, baseada no campo
-  `releaseOrder` do catálogo; resposta validada antes da exibição
-- Paginação de 12 itens com botão "Mostrar mais molduras"
-- Prévia da moldura no avatar e no perfil
-- Compra, equipar e desequipar pelos contratos existentes de `POST /loja/{itemId}/comprar` e
-  `POST /loja/{itemId}/equipar`
+## `ProfilePeek` (`src/components/profile/profile-peek.tsx`)
 
-**Estado:** `useQuery` para catálogo; `useMutation` para comprar e equipar; estado local para
-busca, filtro, ordenação, quantidade visível e prévia selecionada
+The avatar or name of a person in a list opens a popover with the design system
+`ProfileMiniCard`. The public profile loads only when the popover opens (same query key as the
+profile page), with loading and error states. Used in the network, feed suggestions, group
+members, requests, posts and comments, community members, ranking and recommendations.
+In posts and comments it comes through the design system `renderAuthorTrigger` prop; a corporate
+post keeps the link to the professional profile.
+
+## `ProfileStatusDialog` (`src/components/profile/profile-status-dialog.tsx`)
+
+The owner's status bubble (`PUT /me/status`): up to 60 characters and an icon from the free
+icons or the icons of owned official badges.
+
+## `SaciSpot` and `SaciDuelBanner` (`src/components/events/`)
+
+- `SaciSpot`: the hidden Saci of the hunt in one of the 7 spots (feed, vagas, comunidades, blog,
+  carteira, mensagens, perfil), shown only while the hunt is active, for a signed-in person, and
+  until that spot is found
+- `SaciDuelBanner`: the duel on the feed while it is open; closing it hides it on the device
+
+## `BadgeMediaProvider` (`src/components/badge-media-provider.tsx`)
+
+The badge editors of the design system draw each badge with `<img src>`. Official badge ids
+(`emblema-*`) become SVG data URLs; the renderer is loaded only when the list has one.
 
 ## `AppShell` (`src/components/app-shell.tsx`)
 
@@ -102,22 +130,11 @@ Dialog multi-aba para edição completa do perfil.
 - `Field()` - Wrapper de campo com label e erro
 - `SubList()` - Componente genérico de CRUD para listas aninhadas
 
-## `ImageCropDialog` (`src/components/image-crop-dialog.tsx`)
+## `ImageCropDialog` (`@rede-enois/design-system/patterns`)
 
-Dialog para corte de imagens usando `react-easy-crop`.
-
-**Props:** `{ open, onOpenChange, imageSrc, aspect, title, onCropComplete }`
-
-**Funcionalidades:**
-
-- Zoom slider (1x a 3x)
-- Crop em canvas com output JPEG (qualidade 0.9)
-- Carregamento de imagem com CORS
-
-**Funções auxiliares:**
-
-- `createImage(url)` - Carrega imagem com CORS
-- `getCroppedImg(imageSrc, pixelCrop)` - Executa o crop via canvas
+Dialog de corte de imagem (`react-easy-crop`). Mora no design system
+(`src/patterns/editor/image-crop-dialog.tsx` do repositório `enois-design-system`); props e
+variações estão no Storybook de lá.
 
 ## `MentionTextarea` (`src/components/mention-textarea.tsx`)
 

@@ -15,6 +15,7 @@ import { useIsAuthenticated } from "@/lib/use-auth";
 
 import { AppContainer } from "@/components/app-container";
 import { BlogEditorDialog } from "@/components/blog/blog-editor-dialog";
+import { SaciSpot } from "@/components/events/saci-spot";
 import { RichText } from "@/components/post/rich-text";
 
 export const Route = createFileRoute("/blogs")({
@@ -82,6 +83,8 @@ function Blogs() {
                   </Button>
                 </Link>
               )}
+
+              <SaciSpot spot="blog" />
             </>
           }
         />

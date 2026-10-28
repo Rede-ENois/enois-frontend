@@ -1,3 +1,43 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "@rede-enois/design-system/styles.css";
+
+/*
+ * Texto do usuário sem espaços não tem onde quebrar.
+ *
+ * Título de jogo, nome de projeto, assunto de ticket, título de PR: são palavras que a pessoa
+ * escreve coladas (sem espaço, sem hífen) e o navegador não tem ponto de quebra — a palavra
+ * estoura a caixa e a **página inteira passa a rolar de lado no celular**.
+ *
+ * Medido em 2026-10-27 (Chrome headless, 390px e 1280px, DOM real e CSS compilado da QA): a
+ * fila de jogos, a de projetos, a de PRs, a de contribuições e a de tickets do painel de
+ * moderador estouravam de 424px a 586px. Com `overflow-wrap: break-word` nos elementos de
+ * texto, o transbordo vai a zero — e, com dado normal (com espaços), **a geometria de nenhum
+ * elemento muda** em 44 telas medidas: a regra só age quando a palavra realmente não cabe.
+ *
+ * `overflow-wrap` (e não `word-break: break-all`) porque só quebra a palavra quando ela não
+ * cabe na linha; `break-all` quebraria toda palavra, mesmo a que cabe.
+ *
+ * `truncate`/`line-clamp` continuam valendo: quem corta o texto define a própria quebra.
+ */
+@layer base {
+  p,
+  span,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  li,
+  a,
+  dd,
+  dt,
+  td,
+  th,
+  label,
+  strong,
+  em {
+    overflow-wrap: break-word;
+  }
+}

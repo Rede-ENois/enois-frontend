@@ -1,14 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { texts } from "@/texts";
-import { Button, useToast } from "@rede-enois/design-system/ui";
-import { ShieldAlert } from "lucide-react";
+import { DisputesSection as DisputesSectionView } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { walletApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
-
-import { ListRowSkeletons } from "@/components/skeletons/list-row-skeletons";
 
 /**
  * Contestações de transferência: deferir reverte e pune o golpista; rejeitar pune quem contestou
@@ -41,61 +38,21 @@ export function DisputesSection() {
 
   if (error) return null;
 
+  const disputes = (data ?? []).map((disputa) => ({
+    id: disputa.id,
+    amountLabel: formatFaisca(disputa.amount),
+    reason: disputa.reason,
+    createdAtLabel: dataHora(disputa.createdAt),
+    entryRef: disputa.entryRef,
+  }));
+
   return (
-    <section className="space-y-3" aria-label="Contestações de transferência">
-      <div className="flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 text-primary" />
-
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-text-subtle">
-          Contestações de transferência
-        </h2>
-      </div>
-
-      {isLoading ? (
-        <ListRowSkeletons />
-      ) : (data?.length ?? 0) === 0 ? (
-        <p className="rounded-2xl border border-border-soft bg-surface-card p-4 text-sm text-text-subtle">
-          Nenhuma contestação esperando decisão.
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {data!.map((disputa) => (
-            <li
-              key={disputa.id}
-              className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4"
-            >
-              <p className="text-sm font-semibold">
-                Transferência de {formatFaisca(disputa.amount)} faíscas · motivo: {disputa.reason}
-              </p>
-
-              <p className="text-xs text-text-subtle">
-                {dataHora(disputa.createdAt)} · ref {disputa.entryRef.slice(0, 16)}…
-              </p>
-
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Button
-                  size="sm"
-                  className="rounded-full"
-                  disabled={decidir.isPending}
-                  onClick={() => decidir.mutate({ id: disputa.id, deferir: true })}
-                >
-                  Procede (reverter)
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  disabled={decidir.isPending}
-                  onClick={() => decidir.mutate({ id: disputa.id, deferir: false })}
-                >
-                  Não procede (punir contestador)
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <DisputesSectionView
+      loading={isLoading}
+      disputes={disputes}
+      pending={decidir.isPending}
+      onUphold={(id) => decidir.mutate({ id, deferir: true })}
+      onReject={(id) => decidir.mutate({ id, deferir: false })}
+    />
   );
 }

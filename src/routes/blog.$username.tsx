@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import { StyledName, UserAvatar, UserBadges } from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
 import { ArrowLeft, PenLine, Plus, Rss } from "lucide-react";
 
@@ -16,7 +16,6 @@ import { useAuth } from "@/lib/use-auth";
 import { AppContainer } from "@/components/app-container";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
-import { UserBadges } from "@/components/user-badge";
 
 export const Route = createFileRoute("/blog/$username")({
   loader: async ({ params }) => {

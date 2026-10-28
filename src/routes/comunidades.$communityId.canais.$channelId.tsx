@@ -6,6 +6,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { TOPIC_LABELS } from "@/constants/community-topics";
 import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
+import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import { Button } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Hash, Lock } from "lucide-react";
 
@@ -15,7 +16,6 @@ import { useIsAuthenticated } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
-import { InfiniteScroll } from "@/components/infinite-scroll";
 import { PostCard } from "@/components/post-card";
 
 export const Route = createFileRoute("/comunidades/$communityId/canais/$channelId")({

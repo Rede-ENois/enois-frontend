@@ -1,16 +1,17 @@
-import { PROFILE_NAME_FONTS, PROFILE_NAME_THEMES } from "@/constants/profile-name-fonts";
-import { DEFAULT_THEME_SETTINGS } from "@/constants/theme-defaults";
 import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
-import type { Theme } from "@/types/preferences/theme";
-import type { ThemeSettings } from "@/types/preferences/theme-settings";
 import type { PreferencesState } from "@/types/stores/preferences-state";
 import type { PreferencesStorageValue } from "@/types/stores/preferences-storage-value";
+import {
+  DEFAULT_THEME_SETTINGS,
+  PROFILE_NAME_FONTS,
+  PROFILE_NAME_THEMES,
+  clampThemeSettings,
+} from "@rede-enois/design-system/domain";
+import type { BackgroundStyle, Theme, ThemeSettings } from "@rede-enois/design-system/domain";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import { resolveThemeCollection } from "@/lib/theme/build-collection-css";
-import { clampThemeSettings } from "@/lib/theme/build-theme-tokens";
+import { resolveThemeCollection } from "@/lib/theme/resolve-theme-collection";
 
 const PREFERENCES_STORAGE_KEY = "connect-grow-preferences";
 const LEGACY_THEME_STORAGE_KEY = "connect-grow-theme";

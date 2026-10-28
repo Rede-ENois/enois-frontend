@@ -1,6 +1,4 @@
-import type { RichNode } from "@/types/lib/rich-text/rich-node";
-
-import { parseRichText } from "./parse";
+import { type RichNode, parseRichText } from "@rede-enois/design-system/domain";
 
 /** Quanto do começo do texto entra na prévia (o corte final é na última palavra inteira). */
 const PREVIEW_LIMIT = 180;

@@ -1,5 +1,4 @@
-import { DEFAULT_THEME_SETTINGS } from "@/constants/theme-defaults";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
+import { type BackgroundStyle, DEFAULT_THEME_SETTINGS } from "@rede-enois/design-system/domain";
 import { describe, expect, it } from "vitest";
 
 import { buildThemeFile, parseThemeFile } from "./theme-file";

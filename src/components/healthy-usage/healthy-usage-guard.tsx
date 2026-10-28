@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { texts } from "@/texts";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@rede-enois/design-system/ui";
-import { HeartPulse } from "lucide-react";
+import { HealthyUsageReminder } from "@rede-enois/design-system/domain";
 
 import { readHealthyUsage, subscribeHealthyUsage } from "@/lib/healthy-usage";
 
@@ -53,39 +45,10 @@ export function HealthyUsageGuard() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : dismiss())}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-normal">
-            <HeartPulse className="h-5 w-5 text-primary" />
-
-            <>{texts.account.healthyUsage.reminderTitle}</>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 pt-1">
-          <div className="flex items-center gap-3">
-            <img
-              src="/icons/brand-icon-192.png"
-              alt={texts.brand.name}
-              className="h-16 w-16 shrink-0 rounded-2xl"
-            />
-
-            {/* Balão do Nois, ao lado da logo. */}
-            <div className="relative flex-1 rounded-2xl rounded-bl-sm border border-border-soft bg-primary-soft px-3 py-2 text-sm text-primary-text">
-              {texts.account.healthyUsage.noise}
-            </div>
-          </div>
-
-          <p className="text-sm text-text-strong">{texts.account.healthyUsage.reminderBody}</p>
-
-          <div className="flex justify-end">
-            <Button className="rounded-full" onClick={dismiss}>
-              {texts.account.healthyUsage.reminderCta}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <HealthyUsageReminder
+      open={open}
+      onDismiss={dismiss}
+      brandIconUrl="/icons/brand-icon-192.png"
+    />
   );
 }

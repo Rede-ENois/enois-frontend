@@ -1,15 +1,10 @@
-import { useState } from "react";
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { texts } from "@/texts";
 import type { VerifiedContributorPromptProps } from "@/types/components/verified-contributor-prompt-props";
-import { Button } from "@rede-enois/design-system/ui";
-import { Award, ChevronDown } from "lucide-react";
+import { VerifiedContributorPrompt as VerifiedContributorPromptView } from "@rede-enois/design-system/domain";
 
 import { contributorsApi } from "@/lib/api";
 import { useIsAuthenticated } from "@/lib/use-auth";
-import { cn } from "@/lib/utils";
 
 import { ContributionForm } from "./contribution-form";
 
@@ -23,7 +18,6 @@ export function VerifiedContributorPrompt({
 }: VerifiedContributorPromptProps) {
   const authenticated = useIsAuthenticated();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["contributors", "me"],
@@ -37,84 +31,22 @@ export function VerifiedContributorPrompt({
 
   // Quem já confirmou não vê o formulário de novo; na página de selos mostramos o estado para a
   // ausência do convite não parecer falha.
-  if (!data.applicationPending) {
-    if (!showConfirmed) return null;
-
-    return (
-      <section className="surface-card flex items-start gap-3 p-5">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Award className="h-5 w-5" aria-hidden />
-        </span>
-
-        <div className="min-w-0 space-y-1">
-          <h2 className="text-base font-semibold tracking-tight">
-            {texts.sealsPage.verified.confirmedTitle}
-          </h2>
-
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {texts.sealsPage.verified.confirmedDescription}
-          </p>
-        </div>
-      </section>
-    );
-  }
+  if (!data.applicationPending && !showConfirmed) return null;
 
   return (
-    <section className="surface-card space-y-3 p-5">
-      <div className="flex items-start gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
-          <Award className="h-5 w-5" aria-hidden />
-        </span>
-
-        <div className="min-w-0 space-y-1">
-          <h2 className="text-base font-semibold tracking-tight">
-            {texts.sealsPage.verified.title}
-          </h2>
-
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {texts.sealsPage.verified.description}
-          </p>
-        </div>
-      </div>
-
-      <Button
-        variant={open ? "outline" : "default"}
-        className="rounded-full gap-1.5"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-      >
-        {open ? texts.sealsPage.verified.close : texts.sealsPage.verified.action}
-
-        <ChevronDown
-          className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
-          aria-hidden
+    <VerifiedContributorPromptView
+      confirmed={!data.applicationPending}
+      form={
+        <ContributionForm
+          mode="verified"
+          initial={{
+            name: data.name ?? "",
+            email: data.email ?? "",
+            github: data.github ?? "",
+          }}
+          onSuccess={() => void queryClient.invalidateQueries({ queryKey: ["contributors", "me"] })}
         />
-      </Button>
-
-      {open && (
-        <div className="space-y-3 border-t border-border-soft pt-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-text-strong">
-              {texts.sealsPage.verified.formTitle}
-            </h3>
-
-            <p className="text-xs text-text-subtle">{texts.sealsPage.verified.formHint}</p>
-          </div>
-
-          <ContributionForm
-            mode="verified"
-            initial={{
-              name: data.name ?? "",
-              email: data.email ?? "",
-              github: data.github ?? "",
-            }}
-            onSuccess={() => {
-              setOpen(false);
-              void queryClient.invalidateQueries({ queryKey: ["contributors", "me"] });
-            }}
-          />
-        </div>
-      )}
-    </section>
+      }
+    />
   );
 }

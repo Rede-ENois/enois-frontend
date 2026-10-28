@@ -1,8 +1,6 @@
 import type { ProfileNameFont } from "@/types/application/cosmetics/profile-name-font";
 import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
-import type { Theme } from "@/types/preferences/theme";
-import type { ThemeSettings } from "@/types/preferences/theme-settings";
+import type { BackgroundStyle, Theme, ThemeSettings } from "@rede-enois/design-system/domain";
 
 export type PreferencesState = {
   theme: Theme;

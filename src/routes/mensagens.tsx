@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
-import { UserAvatar } from "@rede-enois/design-system/domain";
+import { ConversationListSkeletons, UserAvatar } from "@rede-enois/design-system/domain";
 import { Button, ConfirmDialog, Input, useToast } from "@rede-enois/design-system/ui";
 import { Search } from "lucide-react";
 
@@ -16,9 +16,9 @@ import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
+import { SaciSpot } from "@/components/events/saci-spot";
 import { ConversationItem } from "@/components/messages/conversation-item";
 import { ConversationThread } from "@/components/messages/conversation-thread";
-import { ConversationListSkeletons } from "@/components/skeletons/conversation-list-skeletons";
 
 export const Route = createFileRoute("/mensagens")({
   beforeLoad: requireAuth,
@@ -183,6 +183,8 @@ function Mensagens() {
                 >
                   {showSearch ? texts.messages.back : texts.messages.new}
                 </Button>
+
+                <SaciSpot spot="mensagens" />
               </div>
             </div>
             {showSearch ? (

@@ -1,4 +1,4 @@
-import type { Theme } from "@/types/preferences/theme";
+import type { Theme } from "@rede-enois/design-system/domain";
 
 /** A personalização atual convertida no pacote que a galeria aceita (e o marketplace vende). */
 export type GalleryPackage = {

@@ -6,7 +6,11 @@ import { Link, Outlet, createFileRoute, useMatchRoute, useNavigate } from "@tans
 import { jobLevelLabel, jobTypeLabel } from "@/constants/job-options";
 import { texts } from "@/texts";
 import type { JobApplication } from "@/types/application/job/job-application";
-import { StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import {
+  ApplicationFeedbackDialog,
+  StyledName,
+  UserAvatar,
+} from "@rede-enois/design-system/domain";
 import { Button, ConfirmDialog } from "@rede-enois/design-system/ui";
 import {
   ArrowLeft,
@@ -34,7 +38,6 @@ import { buildShareTags } from "@/lib/open-graph";
 import { safeHref } from "@/lib/safe-url";
 
 import { AppContainer } from "@/components/app-container";
-import { ApplicationFeedbackDialog } from "@/components/application-feedback-dialog";
 import { ApplyByEmailButton } from "@/components/apply-by-email-button";
 import { ApplyJobDialog } from "@/components/apply-job-dialog";
 import { JobEditDialog } from "@/components/job-edit-dialog";

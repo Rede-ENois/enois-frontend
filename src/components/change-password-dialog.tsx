@@ -5,21 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { texts } from "@/texts";
 import type { ChangePasswordDialogProps } from "@/types/components/account/change-password-dialog-props";
 import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-  PasswordInput,
-} from "@rede-enois/design-system/ui";
-import { Loader2 } from "lucide-react";
+  ChangePasswordDialog as ChangePasswordDialogView,
+  type ChangePasswordValues,
+} from "@rede-enois/design-system/domain";
 
 import { ApiError, authApi, clearSession } from "@/lib/api";
-
-const MIN_LENGTH = 8;
 
 /**
  * Troca de senha — e, para quem entrou por login social, a CRIAÇÃO da primeira.
@@ -30,10 +20,6 @@ const MIN_LENGTH = 8;
  * pedia uma senha que nunca existiu.
  */
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPasswords, setShowPasswords] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -46,30 +32,11 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   });
   const hasPassword = authUser?.hasPassword ?? true;
 
-  const reset = () => {
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setError(null);
-    setSaving(false);
-  };
-
-  const submit = async () => {
-    if (newPassword.length < MIN_LENGTH) {
-      setError(texts.account.changePassword.tooShort);
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError(texts.account.changePassword.mismatch);
-      return;
-    }
+  const submit = async (values: ChangePasswordValues) => {
     setError(null);
     setSaving(true);
     try {
-      await authApi.changePassword({
-        currentPassword: hasPassword ? currentPassword : "",
-        newPassword,
-      });
+      await authApi.changePassword(values);
       // O backend revoga todas as sessoes ao trocar a senha: e preciso entrar de novo.
       clearSession();
       window.location.href = "/entrar?tab=login";
@@ -86,98 +53,18 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
   };
 
   return (
-    <Dialog
+    <ChangePasswordDialogView
       open={open}
-      onOpenChange={(next) => {
-        if (!next) reset();
-        onOpenChange(next);
+      onOpenChange={onOpenChange}
+      loading={isPending}
+      hasPassword={hasPassword}
+      onSubmit={(values) => void submit(values)}
+      pending={saving}
+      error={error}
+      onReset={() => {
+        setError(null);
+        setSaving(false);
       }}
-    >
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-normal text-text-strong">
-            {hasPassword
-              ? texts.account.changePassword.title
-              : texts.account.changePassword.titleCreate}
-          </DialogTitle>
-
-          <DialogDescription>
-            {hasPassword
-              ? texts.account.changePassword.description
-              : texts.account.changePassword.descriptionCreate}
-          </DialogDescription>
-        </DialogHeader>
-
-        {isPending ? (
-          <div className="flex justify-center py-6 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {hasPassword && (
-              <div className="space-y-1.5">
-                <Label htmlFor="currentPassword">{texts.account.changePassword.current}</Label>
-
-                <Input
-                  id="currentPassword"
-                  type={showPasswords ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={currentPassword}
-                  onChange={(event) => setCurrentPassword(event.target.value)}
-                  maxLength={128}
-                />
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <Label htmlFor="newPassword">{texts.account.changePassword.newPassword}</Label>
-
-              <PasswordInput
-                id="newPassword"
-                revealed={showPasswords}
-                onToggle={() => setShowPasswords((value) => !value)}
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-                maxLength={128}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">{texts.account.changePassword.confirm}</Label>
-
-              <Input
-                id="confirmPassword"
-                type={showPasswords ? "text" : "password"}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                maxLength={128}
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-
-            <Button
-              className="w-full rounded-full"
-              disabled={
-                saving || !newPassword || !confirmPassword || (hasPassword && !currentPassword)
-              }
-              onClick={submit}
-            >
-              {saving
-                ? texts.account.changePassword.saving
-                : hasPassword
-                  ? texts.account.changePassword.action
-                  : texts.account.changePassword.actionCreate}
-            </Button>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    />
   );
 }

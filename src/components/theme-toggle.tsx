@@ -1,30 +1,15 @@
 import { usePreferencesStore } from "@/stores/preferences.store";
-import { texts } from "@/texts";
-import type { Theme } from "@/types/preferences/theme";
-import { Moon, Sun } from "lucide-react";
+import { ThemeToggle as ThemeToggleView } from "@rede-enois/design-system/patterns";
 
 /** Alterna claro/escuro. A aplicação no DOM fica em `useThemeSync`, no root. */
 export function ThemeToggle() {
   const theme = usePreferencesStore((state) => state.theme);
   const setTheme = usePreferencesStore((state) => state.setTheme);
 
-  const cycleTheme = () => {
-    const next: Theme = theme === "light" ? "dark" : "light";
-    setTheme(next);
-  };
-
-  const Icon = theme === "light" ? Sun : Moon;
-  const label = theme === "light" ? texts.theme.light : texts.theme.dark;
-
   return (
-    <button
-      type="button"
-      onClick={cycleTheme}
-      className="grid h-10 w-10 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-      aria-label={label}
-      title={label}
-    >
-      <Icon className="h-5 w-5 transition-transform duration-300 ease-out" />
-    </button>
+    <ThemeToggleView
+      theme={theme}
+      onToggle={() => setTheme(theme === "light" ? "dark" : "light")}
+    />
   );
 }

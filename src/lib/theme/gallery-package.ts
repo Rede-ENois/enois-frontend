@@ -1,11 +1,14 @@
 import type { GalleryPackage } from "@/types/lib/theme/gallery-package";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
-import type { Theme } from "@/types/preferences/theme";
-import type { ThemeSettings } from "@/types/preferences/theme-settings";
+import {
+  type BackgroundStyle,
+  type Theme,
+  type ThemeSettings,
+  buildThemeColor,
+  clampThemeSettings,
+  representativeHex,
+} from "@rede-enois/design-system/domain";
 
-import { representativeHex } from "./build-background-style";
-import { resolveThemeCollection } from "./build-collection-css";
-import { buildThemeColor, clampThemeSettings } from "./build-theme-tokens";
+import { resolveThemeCollection } from "./resolve-theme-collection";
 
 /**
  * A PERSONALIZAÇÃO ATUAL como pacote da galeria (o formato que o marketplace vende).

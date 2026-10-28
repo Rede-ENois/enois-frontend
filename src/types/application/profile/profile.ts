@@ -54,4 +54,12 @@ export type Profile = {
   resumeName?: string | null;
   /** Até 5 emblemas; o primeiro acompanha o nome por todo o app. */
   badges?: string[] | null;
+  /** Shop items equipped on the profile card (cosmetic catalog ids). */
+  cardTheme?: string | null;
+  nameplate?: string | null;
+  bannerItem?: string | null;
+  profileEffect?: string | null;
+  /** Status bubble: up to 60 characters and a cosmetic icon key. */
+  statusText?: string | null;
+  statusIcon?: string | null;
 };

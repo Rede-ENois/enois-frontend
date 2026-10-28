@@ -7,17 +7,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { NavigationDrawer } from "./navigation-drawer";
 
-// O efeito em teste não depende do Radix nem dos links: mockar a camada visual mantém o
+// O efeito em teste não depende da view do design system nem dos links: mockar a camada visual mantém o
 // teste no contrato (cruzar 1024px fecha a store) sem exigir browser real. O scroll/focus
 // do Radix é provado à parte, no navegador.
 vi.mock("./navigation-links", () => ({ NavigationLinks: () => <nav /> }));
-vi.mock("./app-brand", () => ({ AppBrand: () => <span /> }));
-vi.mock("@rede-enois/design-system/ui", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@rede-enois/design-system/ui")>()),
-  Sheet: ({ children, open }: { children: ReactNode; open: boolean }) =>
+vi.mock("@rede-enois/design-system/domain", () => ({ AppBrand: () => <span /> }));
+vi.mock("@rede-enois/design-system/patterns", () => ({
+  NavigationDrawer: ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <div>{children}</div> : null,
-  SheetContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SheetTitle: ({ children }: { children: ReactNode }) => <h2>{children}</h2>,
 }));
 
 describe("drawer de navegação no desktop", () => {

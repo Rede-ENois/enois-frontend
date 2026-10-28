@@ -2,19 +2,8 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { texts } from "@/texts";
 import type { BlockUserDialogProps } from "@/types/components/profile/block-user-dialog-props";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@rede-enois/design-system/ui";
-import { Loader2, ShieldOff, Undo2 } from "lucide-react";
+import { BlockUserDialog as BlockUserDialogView } from "@rede-enois/design-system/domain";
 
 import { networkApi } from "@/lib/api";
 
@@ -47,71 +36,23 @@ export function BlockUserDialog({ userId, name, blocked, onDone }: BlockUserDial
     onError: () => setError(true),
   });
 
-  const pending = block.isPending || unblock.isPending;
-
   return (
-    <Dialog
+    <BlockUserDialogView
+      name={name}
+      blocked={blocked}
       open={open}
       onOpenChange={(next) => {
         if (!next) setError(false);
         setOpen(next);
       }}
-    >
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full gap-1.5 text-destructive hover:text-destructive"
-        >
-          {blocked ? <Undo2 className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
-
-          <>{blocked ? texts.profile.unblockUser : texts.profile.blockUser}</>
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="font-normal">
-            {blocked ? texts.profile.unblockTitle(name) : texts.profile.blockTitle(name)}
-          </DialogTitle>
-
-          <DialogDescription>
-            {blocked ? texts.profile.unblockDescription : texts.profile.blockDescription}
-          </DialogDescription>
-        </DialogHeader>
-
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {texts.profile.blockError}
-          </p>
-        )}
-
-        <DialogFooter className="gap-2">
-          <Button
-            variant="ghost"
-            className="rounded-full"
-            onClick={() => setOpen(false)}
-            disabled={pending}
-          >
-            {texts.common.cancel}
-          </Button>
-
-          <Button
-            className="rounded-full gap-2"
-            variant={blocked ? "outline" : "destructive"}
-            disabled={pending}
-            onClick={() => {
-              setError(false);
-              if (blocked) unblock.mutate();
-              else block.mutate();
-            }}
-          >
-            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-
-            {blocked ? texts.profile.unblockUser : texts.profile.blockUser}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      onCancel={() => setOpen(false)}
+      pending={block.isPending || unblock.isPending}
+      error={error}
+      onConfirm={() => {
+        setError(false);
+        if (blocked) unblock.mutate();
+        else block.mutate();
+      }}
+    />
   );
 }

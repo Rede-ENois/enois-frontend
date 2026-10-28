@@ -38,3 +38,18 @@ export function formatBrlCents(cents: number): string {
 export function faiscaToBrlCents(mf: number, brlCentsPerFaisca: number): number {
   return Math.round((mf / FAIS_SCALE) * brlCentsPerFaisca);
 }
+
+/** Milésimos de faísca → micro-reais, pela cotação precisa (1 centavo = 10.000 µ). */
+export function faiscaToBrlMicros(mf: number, brlMicrosPerFaisca: number): number {
+  return Math.round((mf / FAIS_SCALE) * brlMicrosPerFaisca);
+}
+
+/** Micro-reais → "R$ 0,0102" (até 4 casas, o suficiente para a cotação fracionada). */
+export function formatBrlMicros(micros: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(micros / 1_000_000);
+}

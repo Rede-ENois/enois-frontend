@@ -1,16 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { MAX_BADGES } from "@/constants/badges";
 import { texts } from "@/texts";
-import { Button, Input, Label, useToast } from "@rede-enois/design-system/ui";
-import { X } from "lucide-react";
+import {
+  IdentitySection as IdentitySectionView,
+  type IdentityValues,
+  MAX_BADGES,
+} from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { preferencesApi } from "@/lib/api";
-import { resolveCdnUrl } from "@/lib/api/media";
 import { useCurrentUser } from "@/lib/current-user";
 import { useMediaUpload } from "@/lib/use-media-upload";
+
+import { BadgeMediaProvider } from "@/components/badge-media-provider";
 
 /**
  * Nome e identidade: nome social (substitui o de cadastro para todo mundo), apelido
@@ -24,23 +28,16 @@ export function IdentitySection() {
   const { toast } = useToast();
   const { data: me } = useCurrentUser();
   const badgeUpload = useMediaUpload();
-  const badgeInputRef = useRef<HTMLInputElement>(null);
 
-  const [socialName, setSocialName] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [pronouns, setPronouns] = useState("");
   const [badges, setBadges] = useState<string[]>([]);
 
   useEffect(() => {
     if (!me) return;
-    setSocialName(me.socialName ?? "");
-    setNickname(me.nickname ?? "");
-    setPronouns(me.pronouns ?? "");
     setBadges(me.badges ?? (me.badge ? [me.badge] : []));
   }, [me]);
 
   const saveIdentity = useMutation({
-    mutationFn: () =>
+    mutationFn: ({ socialName, nickname, pronouns }: IdentityValues) =>
       preferencesApi.setIdentity({
         socialName: socialName.trim() || null,
         nickname: nickname.trim() || null,
@@ -83,124 +80,17 @@ export function IdentitySection() {
   };
 
   return (
-    <section className="surface-card space-y-3 p-4">
-      <div>
-        <h2 className="text-base font-medium">{texts.account.identity.title}</h2>
-
-        <p className="mt-0.5 text-sm text-muted-foreground">{texts.account.identity.hint}</p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">
-            {texts.account.identity.socialName}
-          </Label>
-
-          <Input
-            value={socialName}
-            onChange={(event) => setSocialName(event.target.value)}
-            maxLength={160}
-            placeholder={texts.account.identity.placeholderOptional}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">{texts.account.identity.nickname}</Label>
-
-          <Input
-            value={nickname}
-            onChange={(event) => setNickname(event.target.value)}
-            maxLength={60}
-            placeholder={texts.account.identity.placeholderOptional}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">{texts.account.identity.pronouns}</Label>
-
-          <Input
-            value={pronouns}
-            onChange={(event) => setPronouns(event.target.value)}
-            maxLength={60}
-            placeholder="ela/dela"
-          />
-        </div>
-      </div>
-
-      <Button
-        variant="outline"
-        className="rounded-full"
-        disabled={saveIdentity.isPending}
-        onClick={() => saveIdentity.mutate()}
-      >
-        {texts.account.identity.save}
-      </Button>
-
-      {/* Emblemas: até 5 PNGs pequenos. O primeiro acompanha o nome em todo o app. */}
-      <div className="space-y-2 border-t border-border-soft pt-3">
-        <p className="text-xs font-medium text-text-strong">{texts.account.identity.badgesTitle}</p>
-
-        <p className="text-xs font-normal text-text-subtle">{texts.account.identity.badgesHint}</p>
-
-        {badges.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {badges.map((badge) => (
-              <span
-                key={badge}
-                className="inline-flex items-center gap-1 rounded-full bg-surface-2 py-1 pl-1 pr-2"
-              >
-                <img
-                  src={resolveCdnUrl(badge)}
-                  alt=""
-                  className="h-6 w-6 rounded-full object-cover"
-                />
-
-                <button
-                  type="button"
-                  aria-label={`${texts.account.identity.badgesRemove} ${badges.indexOf(badge) + 1}`}
-                  title={`${texts.account.identity.badgesRemove} ${badges.indexOf(badge) + 1}`}
-                  disabled={saveBadges.isPending}
-                  onClick={() => void removeBadge(badge)}
-                  className="text-muted-foreground transition hover:text-destructive disabled:opacity-50"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-
-        {badges.length < MAX_BADGES && (
-          <>
-            <input
-              ref={badgeInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void addBadge(file);
-                event.target.value = "";
-              }}
-            />
-
-            <Button
-              variant="outline"
-              className="rounded-full"
-              disabled={badgeUpload.status === "uploading" || saveBadges.isPending}
-              onClick={() => badgeInputRef.current?.click()}
-            >
-              {badgeUpload.status === "uploading"
-                ? texts.common.sending
-                : texts.account.identity.badgesAdd}
-            </Button>
-          </>
-        )}
-
-        {badges.length >= MAX_BADGES && (
-          <p className="text-xs font-normal text-text-date">{texts.account.identity.badgesFull}</p>
-        )}
-      </div>
-    </section>
+    <BadgeMediaProvider badges={badges}>
+      <IdentitySectionView
+        identity={me}
+        onSave={(values) => saveIdentity.mutate(values)}
+        savePending={saveIdentity.isPending}
+        badges={badges}
+        onAddBadge={(file) => void addBadge(file)}
+        onRemoveBadge={(url) => void removeBadge(url)}
+        badgesPending={saveBadges.isPending}
+        uploading={badgeUpload.status === "uploading"}
+      />
+    </BadgeMediaProvider>
   );
 }

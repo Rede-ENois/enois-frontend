@@ -1,6 +1,6 @@
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
+import { AppLayout } from "@rede-enois/design-system/patterns";
 
-import { AppLayout } from "./app-layout";
 import { GuestAppHeader } from "./guest-app-header";
 
 export function GuestAppContainer({ children }: WithRequiredChildren) {

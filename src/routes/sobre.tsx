@@ -1,11 +1,12 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import { LegalSection } from "@rede-enois/design-system/domain";
 import { ArrowLeft } from "lucide-react";
 
 import { ogMetas } from "@/lib/seo";
 
-import { LegalLayout, LegalSection } from "@/components/legal-layout";
+import { LegalLayout } from "@/components/legal-layout";
 
 export const Route = createFileRoute("/sobre")({
   // Página pública: é a identidade do projeto, inclusive para quem chega de fora.

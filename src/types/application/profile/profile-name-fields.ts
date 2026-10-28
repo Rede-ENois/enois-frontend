@@ -6,4 +6,5 @@ export type ProfileNameFields = {
   nameTheme?: ProfileNameTheme | null;
   nameFont?: ProfileNameFont | null;
   nameColor?: string | null;
+  nameplate?: string | null;
 };

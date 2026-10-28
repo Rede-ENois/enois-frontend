@@ -37,6 +37,7 @@ export { cosmeticsApi } from "./cosmetics";
 export { walletApi } from "./wallet";
 export { linkedInIntegrationApi, linkedinContactsApi } from "./linkedin";
 export { lojaApi } from "./loja";
+export { cosmeticEventsApi, HUNT_SPOTS } from "./cosmetic-events";
 export { rankingApi } from "./ranking";
 export { usersApi } from "./users";
 export { recommendationsApi } from "./recommendations";

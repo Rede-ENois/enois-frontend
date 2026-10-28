@@ -37,6 +37,7 @@ import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
 import { CommunityCard } from "@/components/community-card";
+import { SaciSpot } from "@/components/events/saci-spot";
 
 export const Route = createFileRoute("/comunidades")({
   head: () => ({ meta: [{ title: texts.communities.seoTitle }] }),
@@ -180,20 +181,24 @@ function Comunidades() {
           title={texts.communities.title}
           description={texts.communities.description}
           actions={
-            <CreateCommunityDialog
-              open={open}
-              onOpenChange={(o) => {
-                // Visitante nao abre o formulario: manda para o login.
-                if (o && !needsLogin()) return;
-                setOpen(o);
-              }}
-            >
-              <Button className="rounded-full gap-1.5">
-                <Plus className="h-4 w-4" />
+            <>
+              <CreateCommunityDialog
+                open={open}
+                onOpenChange={(o) => {
+                  // Visitante nao abre o formulario: manda para o login.
+                  if (o && !needsLogin()) return;
+                  setOpen(o);
+                }}
+              >
+                <Button className="rounded-full gap-1.5">
+                  <Plus className="h-4 w-4" />
 
-                <>{texts.communities.createCommunity}</>
-              </Button>
-            </CreateCommunityDialog>
+                  <>{texts.communities.createCommunity}</>
+                </Button>
+              </CreateCommunityDialog>
+
+              <SaciSpot spot="comunidades" />
+            </>
           }
         />
 

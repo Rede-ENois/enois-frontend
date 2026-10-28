@@ -8,6 +8,10 @@ import type { PostView } from "@/types/application/feed/post-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import type { ReactionsListResponse } from "@/types/application/reaction/reactions-list-response";
 import type { UsePostReactionResult } from "@/types/lib/reactions/use-post-reaction-result";
+import {
+  applyReactionToSummary,
+  removeReactionFromSummary,
+} from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, reactionsApi } from "@/lib/api";
@@ -15,7 +19,6 @@ import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAuth } from "@/lib/use-auth";
 
 import { reactionsQueryOptions } from "./query-options";
-import { applyReactionToSummary, removeReactionFromSummary } from "./summary";
 
 /**
  * Janela curta contra duplo toque. Fica fora do React de propósito: as duas instâncias do hook

@@ -1,5 +1,4 @@
-import type { BackgroundStyle } from "@/types/preferences/background-style";
-import type { ThemeSettings } from "@/types/preferences/theme-settings";
+import type { BackgroundStyle, ThemeSettings } from "@rede-enois/design-system/domain";
 
 /**
  * O arquivo de tema do Énóis (`.enois-theme`).
@@ -15,7 +14,7 @@ export type ThemeFile = {
   version: number;
   /** Nome que a pessoa deu ao tema (opcional: o arquivo funciona sem ele). */
   name?: string;
-  /** Coleção de base (ver constants/theme-collections.ts). `null` = só as cores livres. */
+  /** Coleção de base (ver THEME_COLLECTIONS no design system). `null` = só as cores livres. */
   collection: string | null;
   settings: ThemeSettings;
   /** Cor de widget livre do tema. Ausente = automática (a do tema ou da marca). */

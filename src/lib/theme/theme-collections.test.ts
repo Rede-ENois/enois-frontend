@@ -1,9 +1,13 @@
-import { THEME_COLLECTIONS, THEME_COLLECTION_IDS } from "@/constants/theme-collections";
-import { THEME_TOKEN_NAMES } from "@/constants/theme-tokens";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
+import {
+  type BackgroundStyle,
+  THEME_COLLECTIONS,
+  THEME_COLLECTION_IDS,
+  THEME_TOKEN_NAMES,
+  buildCollectionCss,
+} from "@rede-enois/design-system/domain";
 import { describe, expect, it } from "vitest";
 
-import { buildCollectionCss, resolveThemeCollection } from "./build-collection-css";
+import { resolveThemeCollection } from "./resolve-theme-collection";
 
 /**
  * O contrato da coleção temática: identificadores estáveis (é o que o backend

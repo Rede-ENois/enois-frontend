@@ -29,8 +29,8 @@ corrigível em aberto — e **somente depois** de a automação ser apagada com 
 
 - **Viewports:** 320×568, 360×800, 390×844, 414×896, 768×1024, 1024×768, 1280×800, 1440×900,
   1920×1080.
-- **Temas:** todos os IDs de `src/constants/theme-collections.ts` +
-  `theme-collections-extra.ts` (60), nos modos claro e escuro.
+- **Temas:** todos os IDs de `src/lib/theme/theme-collections.ts` +
+  `theme-collections-extra.ts` (60), hoje no design system, nos modos claro e escuro.
 - **Lote A:** todas as rotas × todos os viewports, nos modos claro/escuro padrão.
 - **Lote B:** todos os 60 temas × 2 modos × 390px em todas as rotas testáveis.
 - **Lote C:** todos os 60 temas × 2 modos × 1280px nas páginas-chave: home, `/feed`,

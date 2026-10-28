@@ -15,7 +15,14 @@ import type { ActiveIdentity } from "@/types/lib/active-identity";
 import type { ComposerActionProps } from "@/types/routes/feed/composer-action-props";
 import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
-import { StyledName, UserAvatar } from "@rede-enois/design-system/domain";
+import {
+  ApoieCard,
+  PostCardSkeletons,
+  SpoilerPreview,
+  StyledName,
+  UserAvatar,
+} from "@rede-enois/design-system/domain";
+import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   EmptyState,
@@ -63,18 +70,17 @@ import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
 
-import { ApoieCard } from "@/components/apoie-card";
 import { AppContainer } from "@/components/app-container";
+import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
+import { SaciSpot } from "@/components/events/saci-spot";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
-import { InfiniteScroll } from "@/components/infinite-scroll";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PlatformSpacesCard } from "@/components/platform-spaces-card";
 import { PostCard } from "@/components/post-card";
-import { SpoilerPreview } from "@/components/post/spoiler-preview";
-import { PostCardSkeletons } from "@/components/skeletons/post-card-skeletons";
+import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Abas válidas da tela inicial (a URL carrega a escolhida). */
 const HOME_TABS: HomeTab[] = ["ALL", "FOR_YOU", "UNSEEN", "TRENDING", "CORPORATE"];
@@ -525,11 +531,15 @@ function Home() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
+          <SaciDuelBanner />
+
           {/* Composer */}
           <form
             onSubmit={publishPost}
-            className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
+            className="relative rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
           >
+            {/* Na borda de cima do compositor, dentro da folga: não cobre o campo nem botões. */}
+            <SaciSpot spot="feed" className="absolute -top-4 right-4" />
             <input
               type="text"
               name="website"
@@ -1172,21 +1182,23 @@ function Home() {
               <ul className="mt-4 space-y-3">
                 {visibleSuggestions.map((u) => (
                   <li key={u.id} className="flex items-center gap-3">
-                    <UserAvatar
-                      src={u.avatar}
-                      frame={u.avatarFrame}
-                      alt={u.name}
-                      className="h-10 w-10"
-                    />
+                    <ProfilePeek username={u.username} name={u.name} className="shrink-0">
+                      <UserAvatar
+                        src={u.avatar}
+                        frame={u.avatarFrame}
+                        alt={u.name}
+                        className="h-10 w-10"
+                      />
+                    </ProfilePeek>
 
                     <div className="min-w-0 flex-1">
-                      <Link
-                        to="/perfil/$username"
-                        params={{ username: u.username }}
-                        className="block truncate text-sm font-normal text-text-strong hover:underline"
+                      <ProfilePeek
+                        username={u.username}
+                        name={u.name}
+                        className="block max-w-full truncate text-sm font-normal text-text-strong hover:underline"
                       >
                         <StyledName name={u.name} style={u.nameStyle} />
-                      </Link>
+                      </ProfilePeek>
 
                       <p className="truncate text-xs font-normal text-text-subtle">{u.headline}</p>
                     </div>

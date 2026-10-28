@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   keepPreviousData,
@@ -9,11 +9,13 @@ import {
 } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
-import type { MediaItem } from "@/types/routes/feed/media-item";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
 import type { SendMessageInput } from "@/types/routes/messages/send-message-input";
-import { Button, EmojiPicker, useToast } from "@rede-enois/design-system/ui";
-import { Briefcase, EyeOff, ImageIcon, Send, X } from "lucide-react";
+import {
+  type ConversationSendValues,
+  ConversationThread as ConversationThreadView,
+} from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { messagesApi, profileApi, reportsApi, servicesApi } from "@/lib/api";
 import { authApi } from "@/lib/api/auth";
@@ -21,14 +23,10 @@ import { encryptForSend } from "@/lib/e2e/conversation";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
 import { liteInterval, litePageSize } from "@/lib/lite-mode";
-import { insertSnippet } from "@/lib/rich-text/insert-snippet";
+import { authorNameStyle } from "@/lib/profile-name-style";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
-import { SpoilerPreview } from "@/components/post/spoiler-preview";
-import { MessageSkeletons } from "@/components/skeletons/message-skeletons";
-
-import { ConversationHeader } from "./conversation-header";
 import { E2eSetupBanner } from "./e2e-setup-banner";
 import { MessageBubble } from "./message-bubble";
 
@@ -50,14 +48,9 @@ export function ConversationThread({
   const { toast } = useToast();
   const lite = useLiteMode();
   const upload = useMediaUpload();
-  const [text, setText] = useState("");
-  const [media, setMedia] = useState<MediaItem[]>([]);
-  const [mediaSpoiler, setMediaSpoiler] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [showServices, setShowServices] = useState(false);
   const [selectingMessages, setSelectingMessages] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
-  const messagesScrollRef = useRef<HTMLDivElement>(null);
 
   // Paginado por cursor: a primeira pagina so traz as mensagens mais recentes — sem carregar as
   // anteriores as de semanas atras ficavam inalcancaveis.
@@ -88,7 +81,7 @@ export function ConversationThread({
     queryKey: ["auth-me"],
     queryFn: () => authApi.me(),
   });
-  const [e2eReady, setE2eReady] = useState(false);
+  const [e2eReady, setE2eReady] = useState<boolean | null>(null);
   useEffect(() => {
     hasLocalKeys().then(setE2eReady);
   }, []);
@@ -96,7 +89,7 @@ export function ConversationThread({
   const rawMessages = (messagesData?.pages.flatMap((page) => page.items) ?? []).sort(
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
-  const messages = useDecryptedMessages(rawMessages);
+  const { messages, decrypting } = useDecryptedMessages(rawMessages);
 
   const sendMessage = useMutation({
     mutationFn: ({ conversationId, text, mediaIds, mediaSpoiler, e2e }: SendMessageInput) =>
@@ -118,14 +111,6 @@ export function ConversationThread({
     enabled: showServices,
   });
 
-  const attachService = (listing: { id: string; title: string }) => {
-    const origin = typeof window === "undefined" ? "" : window.location.origin;
-    const snippet = `${texts.messages.serviceAttachment} ${listing.title} — ${origin}/servicos#oferta-${listing.id}`;
-    setText((previous) => (previous.trim() ? `${previous.trimEnd()}\n${snippet}` : snippet));
-    setShowServices(false);
-    messageInputRef.current?.focus();
-  };
-
   const reactToMessage = useMutation({
     mutationFn: ({ messageId, type }: { messageId: string; type: string }) =>
       messagesApi.react(conversation.id, messageId, type),
@@ -146,10 +131,6 @@ export function ConversationThread({
 
   const reportMessage = async (messageId: string, conversationId: string) => {
     try {
-      const { exportSymmetricKey } = await import("@/lib/e2e/crypto");
-      const { default: convModule } = await import("@/lib/e2e/conversation").then((m) => ({
-        default: m,
-      }));
       let e2eKey: string | undefined;
       try {
         // Tenta exportar a chave simétrica da conversa pra o moderador decifrar.
@@ -181,103 +162,22 @@ export function ConversationThread({
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (sendMessage.isPending) return;
-    const content = text.trim();
-    if (!content && media.length === 0) return;
-    // Limpa na hora para evitar reenvio se Enter disparar duas vezes antes do onSuccess.
-    setText("");
-    setMedia([]);
-    const shouldSpoiler = mediaSpoiler;
-    setMediaSpoiler(false);
-    setUploadError(null);
-    try {
-      let mediaIds: string[] = [];
-      if (media.length > 0) {
-        const results = await upload.uploadAll(media.map((item) => ({ file: item.file })));
-        mediaIds = results.map((result) => result.mediaId);
-      }
-      const e2eReady = await hasLocalKeys();
-      let e2ePayload: { ciphertext: string; iv: string } | undefined;
-      if (e2eReady && content) {
-        try {
-          e2ePayload = await encryptForSend(conversation.id, content, conversation.participantIds);
-        } catch {
-          // E2E falhou — envia em texto claro.
-        }
-      }
-      sendMessage.mutate({
-        conversationId: conversation.id,
-        text: content,
-        mediaIds,
-        mediaSpoiler: shouldSpoiler,
-        e2e: e2ePayload,
-      });
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : texts.messages.mediaError);
+  /** Sobe as imagens (a falha volta para o compositor mostrar) e envia a mensagem. */
+  const send = async ({ text, files, mediaSpoiler }: ConversationSendValues) => {
+    let mediaIds: string[] = [];
+    if (files.length > 0) {
+      const results = await upload.uploadAll(files.map((file) => ({ file })));
+      mediaIds = results.map((result) => result.mediaId);
     }
-  };
-
-  const addMediaFiles = (files: File[]) => {
-    const images = files.filter((file) => file.type.startsWith("image/"));
-    if (images.length === 0) return;
-    setMedia((current) => {
-      const room = 4 - current.length;
-      if (room <= 0) {
-        setUploadError(texts.messages.mediaLimit);
-        return current;
+    let e2e: { ciphertext: string; iv: string } | undefined;
+    if (text && (await hasLocalKeys())) {
+      try {
+        e2e = await encryptForSend(conversation.id, text, conversation.participantIds);
+      } catch {
+        // E2E falhou — envia em texto claro.
       }
-      setUploadError(null);
-      return [
-        ...current,
-        ...images.slice(0, room).map((file) => ({
-          type: "image" as const,
-          file,
-          preview: URL.createObjectURL(file),
-        })),
-      ];
-    });
-  };
-
-  const handleMediaSelect = (event: ChangeEvent<HTMLInputElement>) => {
-    addMediaFiles(Array.from(event.target.files ?? []));
-    event.target.value = "";
-  };
-
-  const removeMediaItem = (index: number) => {
-    setMedia((current) => {
-      URL.revokeObjectURL(current[index].preview);
-      const next = current.filter((_, i) => i !== index);
-      if (next.length === 0) setMediaSpoiler(false);
-      return next;
-    });
-  };
-
-  // Campo de mensagem cresce com o texto (teto 128px) e volta a 1 linha ao enviar.
-  const messageInputRef = useRef<HTMLTextAreaElement>(null);
-  const mediaInputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const el = messageInputRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
-  }, [text]);
-
-  /** Emoji do seletor: entra na posição do cursor (o campo é o mesmo, então vale para o chat). */
-  const insertEmoji = (emoji: string) => {
-    const el = messageInputRef.current;
-    const start = el?.selectionStart ?? text.length;
-    const end = el?.selectionEnd ?? start;
-    const result = insertSnippet(text, start, end, emoji);
-    setText(result.value);
-
-    requestAnimationFrame(() => {
-      const node = messageInputRef.current;
-      if (!node) return;
-      node.focus();
-      node.setSelectionRange(result.selectionStart, result.selectionEnd);
-    });
+    }
+    sendMessage.mutate({ conversationId: conversation.id, text, mediaIds, mediaSpoiler, e2e });
   };
 
   const otherParticipantId = conversation.participantIds.find((id) => id !== currentUserId);
@@ -286,20 +186,6 @@ export function ConversationThread({
     queryFn: () => profileApi.getById(otherParticipantId ?? ""),
     enabled: !!otherParticipantId,
   });
-
-  // Rola para o fim quando chega mensagem nova — mas NAO quando o usuario carrega mensagens
-  // antigas (senao a lista salta para o fim e ele perde o ponto em que estava lendo).
-  const newestMessageId = messages.length > 0 ? messages[messages.length - 1].id : null;
-  const lastScrolledRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!newestMessageId || lastScrolledRef.current === newestMessageId) return;
-    lastScrolledRef.current = newestMessageId;
-    // Rola DENTRO do quadro de mensagens: `scrollIntoView` fazia o navegador rolar a página
-    // inteira quando o teclado abria no mobile.
-    const el = messagesScrollRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [newestMessageId]);
 
   /** O clique só marca no filão de verdade: no placeholder os ids são de outra conversa. */
   const toggleMessage = (messageId: string) =>
@@ -311,283 +197,75 @@ export function ConversationThread({
     });
 
   return (
-    <>
-      <ConversationHeader
-        action={
-          selectingMessages ? undefined : (
-            <button
-              type="button"
-              onClick={() => setSelectingMessages(true)}
-              className="rounded-full px-3 py-1 text-xs font-normal text-text-subtle transition hover:bg-surface-2 hover:text-primary"
-            >
-              {texts.messages.selectMessages}
-            </button>
-          )
-        }
-        conversation={conversation}
-        onBack={onBack}
-      />
-
-      {!e2eReady && authMe && (
-        <div className="px-4 pt-3">
+    <ConversationThreadView
+      conversationTitle={conversation.title}
+      peer={otherUser && { ...otherUser, nameStyle: authorNameStyle(otherUser) }}
+      profileHref={`/perfil/${otherUser?.username ?? otherParticipantId ?? ""}`}
+      onBack={onBack}
+      banner={
+        e2eReady === false && authMe ? (
           <E2eSetupBanner
             hasPassword={authMe.hasPassword}
             onSetupComplete={() => setE2eReady(true)}
           />
-        </div>
-      )}
-
-      <div
-        ref={messagesScrollRef}
-        className="flex-1 overflow-y-auto overscroll-contain bg-muted/30 p-5"
-      >
-        {hasOlderMessages && (
-          <div className="mb-4 flex justify-center">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full text-xs"
-              disabled={isLoadingOlder}
-              onClick={() => fetchOlderMessages()}
-            >
-              {isLoadingOlder ? texts.messages.loadingOlder : texts.messages.loadOlderMessages}
-            </Button>
-          </div>
-        )}
-        <div className="space-y-3">
-          {isLoadingMessages ? (
-            <MessageSkeletons />
-          ) : messages.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">
-              {texts.messages.noMessages}
-            </p>
-          ) : (
-            messages.map((m) => (
-              <MessageBubble
-                key={m.id}
-                message={m}
-                isMe={m.from === currentUserId}
-                readByOther={
-                  peerLastReadAt !== null &&
-                  m.from === currentUserId &&
-                  new Date(m.time).getTime() <= peerLastReadAt
-                }
-                otherUser={otherUser}
-                otherId={otherParticipantId}
-                selecting={selectingMessages}
-                selected={selectedMessages.has(m.id)}
-                onToggleSelect={
-                  !selectingMessages || showingPreviousThread
-                    ? undefined
-                    : () => toggleMessage(m.id)
-                }
-                onReact={
-                  showingPreviousThread
-                    ? undefined
-                    : (type) => reactToMessage.mutate({ messageId: m.id, type })
-                }
-                onReport={
-                  showingPreviousThread || m.from === currentUserId
-                    ? undefined
-                    : () => reportMessage(m.id, conversation.id)
-                }
-              />
-            ))
-          )}
-          <div />
-        </div>
-      </div>
-
-      {selectingMessages ? (
-        <div className="flex flex-wrap items-center gap-2 border-t border-border bg-surface-2 p-3">
-          <span className="text-xs font-normal text-text-subtle">
-            {texts.messages.selectedMessages(selectedMessages.size)}
-          </span>
-
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => {
-                setSelectingMessages(false);
-                setSelectedMessages(new Set());
-              }}
-            >
-              {texts.messages.cancelSelection}
-            </Button>
-
-            <Button
-              size="sm"
-              variant="destructive"
-              className="rounded-full"
-              disabled={selectedMessages.size === 0 || hideMessages.isPending}
-              onClick={() => hideMessages.mutate()}
-            >
-              {texts.messages.deleteSelectedMessages(selectedMessages.size)}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="border-t border-border px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-        >
-          {media.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-2">
-              {media.map((item, index) => (
-                <div key={item.preview} className="relative">
-                  <SpoilerPreview
-                    active={mediaSpoiler}
-                    label={texts.posts.mediaSpoiler.badge}
-                    className="h-16 w-16 rounded-lg"
-                  >
-                    <img
-                      src={item.preview}
-                      alt=""
-                      className="h-16 w-16 rounded-lg border border-border-soft object-cover"
-                    />
-                  </SpoilerPreview>
-
-                  <button
-                    type="button"
-                    onClick={() => removeMediaItem(index)}
-                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-foreground text-background shadow"
-                    aria-label={texts.messages.removeMedia}
-                    title={texts.messages.removeMedia}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setMediaSpoiler((active) => !active)}
-                className={`inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs transition ${
-                  mediaSpoiler
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                }`}
-                aria-label={
-                  mediaSpoiler ? texts.messages.mediaSpoilerActive : texts.messages.mediaSpoiler
-                }
-                title={
-                  mediaSpoiler ? texts.messages.mediaSpoilerActive : texts.messages.mediaSpoiler
-                }
-              >
-                <EyeOff className="h-3.5 w-3.5" />
-                {mediaSpoiler ? texts.messages.mediaSpoilerActive : texts.messages.mediaSpoiler}
-              </button>
-            </div>
-          )}
-
-          {uploadError && <p className="mb-2 text-xs text-destructive">{uploadError}</p>}
-
-          {showServices && (
-            <div className="mb-2 rounded-xl border border-border-soft bg-surface-2 p-2">
-              <p className="px-1 text-xs font-medium">{texts.messages.attachServiceTitle}</p>
-
-              <p className="px-1 pb-2 text-[11px] text-text-subtle">
-                {texts.messages.attachServiceHint}
-              </p>
-
-              {isLoadingServices ? (
-                <p className="px-1 py-2 text-xs text-text-subtle">{texts.messages.loadingOlder}</p>
-              ) : (myServices?.ofertas ?? []).length === 0 ? (
-                <p className="px-1 py-2 text-xs text-text-subtle">{texts.messages.noServices}</p>
-              ) : (
-                <ul className="max-h-40 space-y-1 overflow-y-auto overscroll-contain">
-                  {(myServices?.ofertas ?? []).map((listing) => (
-                    <li key={listing.id}>
-                      <button
-                        type="button"
-                        onClick={() => attachService(listing)}
-                        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition hover:bg-surface-card"
-                      >
-                        <span className="min-w-0 flex-1 truncate">{listing.title}</span>
-
-                        <span className="shrink-0 text-text-subtle">{listing.category}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-end gap-2">
-            <input
-              ref={mediaInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleMediaSelect}
-            />
-
-            <button
-              type="button"
-              onClick={() => mediaInputRef.current?.click()}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-text-subtle transition hover:bg-muted hover:text-foreground"
-              aria-label={texts.messages.attachMedia}
-              title={texts.messages.attachMedia}
-            >
-              <ImageIcon className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowServices((open) => !open)}
-              className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition hover:bg-muted hover:text-foreground ${
-                showServices ? "bg-muted text-primary" : "text-text-subtle"
-              }`}
-              aria-label={texts.messages.attachService}
-              aria-expanded={showServices}
-              title={texts.messages.attachService}
-            >
-              <Briefcase className="h-4 w-4" />
-            </button>
-
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                // Enter envia; Shift+Enter quebra linha (padrao de chat).
-                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  void handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
-                }
-              }}
-              onPaste={(event) => {
-                const files = Array.from(event.clipboardData?.files ?? []);
-                if (files.some((file) => file.type.startsWith("image/"))) {
-                  event.preventDefault();
-                  addMediaFiles(files);
-                }
-              }}
-              ref={messageInputRef}
-              rows={1}
-              placeholder={texts.messages.inputPlaceholder}
-              className="max-h-32 min-h-[40px] w-full resize-none rounded-2xl bg-muted px-4 py-2.5 text-sm outline-none"
-            />
-            <EmojiPicker
-              onPick={insertEmoji}
-              buttonTitle={texts.posts.formatting.emoji}
-              buttonClassName="grid h-10 w-10 shrink-0 place-items-center rounded-full text-text-subtle transition hover:bg-muted hover:text-foreground"
-            />
-
-            <button
-              type="submit"
-              aria-label={texts.messages.send}
-              title={texts.messages.send}
-              disabled={(!text.trim() && media.length === 0) || sendMessage.isPending}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </form>
-      )}
-    </>
+        ) : undefined
+      }
+      e2eRequired={e2eReady === false}
+      loading={isLoadingMessages || decrypting}
+      empty={messages.length === 0}
+      newestMessageId={messages.length > 0 ? messages[messages.length - 1].id : null}
+      hasOlderMessages={hasOlderMessages}
+      loadingOlder={isLoadingOlder}
+      onLoadOlder={() => fetchOlderMessages()}
+      selecting={selectingMessages}
+      selectedCount={selectedMessages.size}
+      onStartSelecting={() => setSelectingMessages(true)}
+      onCancelSelection={() => {
+        setSelectingMessages(false);
+        setSelectedMessages(new Set());
+      }}
+      deletePending={hideMessages.isPending}
+      onDeleteSelected={() => hideMessages.mutate()}
+      sendPending={sendMessage.isPending}
+      onSend={send}
+      servicesOpen={showServices}
+      onServicesOpenChange={setShowServices}
+      servicesLoading={isLoadingServices}
+      services={myServices?.ofertas ?? []}
+      serviceHref={(serviceId) => {
+        const origin = typeof window === "undefined" ? "" : window.location.origin;
+        return `${origin}/servicos#oferta-${serviceId}`;
+      }}
+    >
+      {messages.map((m) => (
+        <MessageBubble
+          key={m.id}
+          message={m}
+          isMe={m.from === currentUserId}
+          readByOther={
+            peerLastReadAt !== null &&
+            m.from === currentUserId &&
+            new Date(m.time).getTime() <= peerLastReadAt
+          }
+          otherUser={otherUser}
+          otherId={otherParticipantId}
+          selecting={selectingMessages}
+          selected={selectedMessages.has(m.id)}
+          onToggleSelect={
+            !selectingMessages || showingPreviousThread ? undefined : () => toggleMessage(m.id)
+          }
+          onReact={
+            showingPreviousThread
+              ? undefined
+              : (type) => reactToMessage.mutate({ messageId: m.id, type })
+          }
+          onReport={
+            showingPreviousThread || m.from === currentUserId
+              ? undefined
+              : () => reportMessage(m.id, conversation.id)
+          }
+        />
+      ))}
+    </ConversationThreadView>
   );
 }

@@ -13,10 +13,12 @@ import { Check, Send, UserMinus, UserPlus, X } from "lucide-react";
 import { networkApi, profileApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
 import { liteInterval } from "@/lib/lite-mode";
+import { authorNameStyle } from "@/lib/profile-name-style";
 import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
+import { ProfilePeek } from "@/components/profile/profile-peek";
 
 export const Route = createFileRoute("/rede")({
   beforeLoad: requireAuth,
@@ -151,20 +153,22 @@ function Rede() {
                 <div className="h-16" style={{ background: "var(--gradient-soft)" }} />
 
                 <div className="-mt-10 min-w-0 px-5 pb-5">
-                  <UserAvatar
-                    src={u.avatar}
-                    frame={u.avatarFrame}
-                    alt={u.name}
-                    className="mx-auto h-20 w-20 ring-4 ring-card"
-                  />
+                  <ProfilePeek username={u.username} name={u.name} className="mx-auto block">
+                    <UserAvatar
+                      src={u.avatar}
+                      frame={u.avatarFrame}
+                      alt={u.name}
+                      className="mx-auto h-20 w-20 ring-4 ring-card"
+                    />
+                  </ProfilePeek>
 
-                  <Link
-                    to="/perfil/$username"
-                    params={{ username: u.username }}
-                    className="mt-3 block break-words font-semibold hover:underline"
+                  <ProfilePeek
+                    username={u.username}
+                    name={u.name}
+                    className="mx-auto mt-3 block max-w-full break-words text-center font-semibold hover:underline"
                   >
                     <StyledName name={u.name} style={u.nameStyle} />
-                  </Link>
+                  </ProfilePeek>
 
                   <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-xs text-muted-foreground">
                     {u.headline}
@@ -232,17 +236,18 @@ function RequestCard({ request, onAccept, onCancel }: RequestCardProps) {
   });
 
   return (
-    <div className="surface-card flex items-center justify-between gap-4 p-4">
-      <div className="flex items-center gap-3 min-w-0">
+    // The name keeps at least 12rem: on a phone the buttons drop below it instead of squeezing it.
+    <div className="surface-card flex flex-wrap items-center justify-between gap-4 p-4">
+      <div className="flex min-w-[12rem] flex-1 items-center gap-3">
         <UserAvatar src={user?.avatar} alt={user?.name} className="h-12 w-12 shrink-0" />
 
         <div className="min-w-0">
           <Link
             to="/perfil/$username"
             params={{ username: user?.username ?? targetUserId }}
-            className="break-words font-semibold hover:underline"
+            className="block truncate font-semibold hover:underline"
           >
-            {user?.name ?? texts.common.loading}
+            <StyledName name={user?.name ?? texts.common.loading} style={authorNameStyle(user)} />
           </Link>
           {user?.headline && (
             <p className="truncate text-xs text-muted-foreground">{user.headline}</p>

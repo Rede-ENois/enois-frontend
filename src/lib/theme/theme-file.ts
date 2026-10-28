@@ -1,10 +1,12 @@
 import type { ThemeFile } from "@/types/lib/theme-file";
 import type { ThemeFileResult } from "@/types/lib/theme-file-result";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
-import type { ThemeSettings } from "@/types/preferences/theme-settings";
+import {
+  type BackgroundStyle,
+  type ThemeSettings,
+  clampThemeSettings,
+} from "@rede-enois/design-system/domain";
 
-import { resolveThemeCollection } from "@/lib/theme/build-collection-css";
-import { clampThemeSettings } from "@/lib/theme/build-theme-tokens";
+import { resolveThemeCollection } from "@/lib/theme/resolve-theme-collection";
 
 /** Versão do formato que este app escreve e entende. */
 export const THEME_FILE_VERSION = 1;

@@ -5,6 +5,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { GameView } from "@/types/application/games/game-view";
+import { GameIcon } from "@rede-enois/design-system/domain";
 import { Button, Input, Textarea, useToast } from "@rede-enois/design-system/ui";
 import { BarChart3, Newspaper, Pencil, X } from "lucide-react";
 
@@ -14,7 +15,6 @@ import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
-import { GameIcon } from "@/components/game-icon";
 import { GameAnalyticsCard } from "@/components/games/game-analytics-card";
 import { GameEditorDialog } from "@/components/games/game-editor-dialog";
 import { GameUpdateDialog } from "@/components/games/game-update-dialog";

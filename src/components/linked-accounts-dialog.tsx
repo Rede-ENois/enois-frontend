@@ -9,17 +9,8 @@ import {
 import { texts } from "@/texts";
 import type { OAuthProvider } from "@/types/application/auth/oauth-provider";
 import type { LinkedAccountsDialogProps } from "@/types/components/account/linked-accounts-dialog-props";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Switch,
-  useToast,
-} from "@rede-enois/design-system/ui";
-import { Link2, Link2Off, Loader2 } from "lucide-react";
+import { LinkedAccountsDialog as LinkedAccountsDialogView } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, authApi, linkedInIntegrationApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
@@ -100,151 +91,42 @@ export function LinkedAccountsDialog({ open, onOpenChange }: LinkedAccountsDialo
       : texts.auth.links.linkError
     : null;
 
-  const errorMessage = unlinkMessage ?? linkMessage;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="font-normal">{texts.auth.links.title}</DialogTitle>
-
-          <DialogDescription>{texts.auth.links.description}</DialogDescription>
-        </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex justify-center py-6 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        ) : (
-          <ul className="space-y-2 pt-2">
-            {visibleProviders.map((provider) => {
-              const current = linked.find((item) => item.provider === provider);
-              const linkable = isOAuthProviderEnabled(provider) ? provider : null;
-              const label = isOAuthProvider(provider) ? OAUTH_PROVIDER_LABELS[provider] : provider;
-              const busy = unlink.isPending || link.isPending;
-
-              return (
-                <li
-                  key={provider}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border-soft px-3 py-2.5"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-strong">{label}</p>
-
-                    <p className="truncate text-xs font-normal text-text-subtle">
-                      {current
-                        ? current.email || texts.auth.links.linked
-                        : texts.auth.links.notLinked}
-                    </p>
-                  </div>
-
-                  {current ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 rounded-full gap-1.5"
-                      disabled={busy}
-                      onClick={() => unlink.mutate(provider)}
-                    >
-                      <Link2Off className="h-3.5 w-3.5" />
-
-                      <>{texts.auth.links.unlink}</>
-                    </Button>
-                  ) : (
-                    linkable && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0 rounded-full gap-1.5"
-                        disabled={busy}
-                        onClick={() => link.mutate(linkable)}
-                      >
-                        <Link2 className="h-3.5 w-3.5" />
-
-                        <>{texts.auth.links.link(label)}</>
-                      </Button>
-                    )
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {errorMessage && (
-          <p className="mt-2 rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-            {errorMessage}
-          </p>
-        )}
-
-        {linkedinLinked && linkedinStatus && (
-          <div className="mt-2 rounded-xl border border-border-soft px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-text-strong">
-                  {texts.auth.links.linkedinSync.toggle}
-                </p>
-
-                <p className="text-xs font-normal text-text-subtle">
-                  {texts.auth.links.linkedinSync.toggleHint}
-                </p>
-              </div>
-
-              <Switch
-                checked={linkedinStatus.postSync}
-                disabled={setSync.isPending || !linkedinStatus.canPost}
-                onCheckedChange={(checked) => setSync.mutate(checked)}
-              />
-            </div>
-
-            {/* O share falha em silêncio de propósito; o resultado da última tentativa é o que
-                deixa a pessoa diagnosticar sem suporte (relato: "ativei, publiquei e não foi"). */}
-            {linkedinStatus.lastShareStatus && (
-              <p className="mt-2 text-xs font-normal text-text-subtle">
-                {linkedinStatus.lastShareStatus === "OK"
-                  ? texts.auth.links.linkedinSync.lastShareOk
-                  : texts.auth.links.linkedinSync.lastShareFailed(linkedinStatus.lastShareStatus)}
-                {linkedinStatus.lastShareAt ? dataHora(linkedinStatus.lastShareAt) : null}
-              </p>
-            )}
-
-            {!linkedinStatus.canPost && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <p className="text-xs font-normal text-text-subtle">
-                  {linkedinStatus.reason === "SERVER_KEY_MISSING"
-                    ? texts.auth.links.linkedinSync.serverKey
-                    : texts.auth.links.linkedinSync.notReady}
-                </p>
-                {linkedinStatus.reason !== "SERVER_KEY_MISSING" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-auto shrink-0 rounded-full"
-                    disabled={link.isPending}
-                    onClick={() => link.mutate("LINKEDIN")}
-                  >
-                    {texts.auth.links.linkedinSync.reconnect}
-                  </Button>
-                )}
-                {linkedinStatus.reason !== "SERVER_KEY_MISSING" && (
-                  <p className="mt-1 basis-full text-xs text-text-subtle">
-                    {texts.auth.links.linkedinSync.reconnectHint}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* A importação mora AQUI: conectou o LinkedIn, o próximo passo natural está na mesma tela.
-            O import lê o ARQUIVO DE DADOS do LinkedIn (o mesmo caminho sancionado — sem scraping e
-            sem depender da aprovação de parceiro): a pessoa escolhe o que quer trazer. */}
-        <div className="mt-3">
-          <LinkedinImportSection
-            linkedinConectado={linked.some((item) => item.provider === "LINKEDIN")}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <LinkedAccountsDialogView
+      open={open}
+      onOpenChange={onOpenChange}
+      loading={isLoading}
+      providers={visibleProviders.map((provider) => ({
+        provider,
+        label: isOAuthProvider(provider) ? OAUTH_PROVIDER_LABELS[provider] : provider,
+        current: linked.find((item) => item.provider === provider) ?? null,
+        linkable: isOAuthProviderEnabled(provider),
+      }))}
+      busy={unlink.isPending || link.isPending}
+      onLink={(provider) => {
+        if (isOAuthProviderEnabled(provider)) link.mutate(provider);
+      }}
+      onUnlink={(provider) => unlink.mutate(provider)}
+      errorMessage={unlinkMessage ?? linkMessage}
+      linkedinSync={
+        linkedinLinked && linkedinStatus
+          ? {
+              ...linkedinStatus,
+              lastShareAtLabel: linkedinStatus.lastShareAt
+                ? dataHora(linkedinStatus.lastShareAt)
+                : null,
+            }
+          : null
+      }
+      syncPending={setSync.isPending}
+      onSyncChange={(checked) => setSync.mutate(checked)}
+      reconnectPending={link.isPending}
+      onReconnect={() => link.mutate("LINKEDIN")}
+      importSection={
+        <LinkedinImportSection
+          linkedinConectado={linked.some((item) => item.provider === "LINKEDIN")}
+        />
+      }
+    />
   );
 }

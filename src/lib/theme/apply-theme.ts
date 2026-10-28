@@ -1,24 +1,23 @@
 import { texts } from "@/texts";
-import type { BackgroundStyle } from "@/types/preferences/background-style";
-import type { Theme } from "@/types/preferences/theme";
-import type { ThemeSettings } from "@/types/preferences/theme-settings";
-
 import {
+  type BackgroundStyle,
   PAGE_PAINT_TARGETS,
+  type Theme,
+  type ThemeSettings,
   WIDGET_PAINT_TARGETS,
   backgroundValue,
+  buildCollectionCss,
   buildPageDeclarations,
-  buildWidgetDeclarations,
-  pageRepresentative,
-  paintGradientCss,
-} from "./build-background-style";
-import { buildCollectionCss, resolveThemeCollection } from "./build-collection-css";
-import {
   buildThemeColor,
   buildThemeCss,
+  buildWidgetDeclarations,
   clampThemeSettings,
   isDefaultThemeSettings,
-} from "./build-theme-tokens";
+  pageRepresentative,
+  paintGradientCss,
+} from "@rede-enois/design-system/domain";
+
+import { resolveThemeCollection } from "./resolve-theme-collection";
 
 export const THEME_STYLE_ELEMENT_ID = "app-theme";
 
