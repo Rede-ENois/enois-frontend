@@ -81,7 +81,8 @@ Post do feed de um grupo, com reações, comentários e ações de moderação.
 
 - Comentários: no mobile, o campo ocupa a linha toda e o rodapé põe o contador à esquerda e o botão
   à direita; em telas maiores, campo e botão ficam lado a lado e o contador volta à direita, abaixo
-  do campo.
+  do campo. O contador interno do `MentionTextarea` fica desativado nesse formulário, que renderiza
+  o mesmo `CharCounter` no rodapé.
 
 ## `EditProfileDialog` (`src/components/edit-profile-dialog.tsx`)
 
@@ -122,7 +123,7 @@ Dialog para corte de imagens usando `react-easy-crop`.
 
 Textarea com autocomplete de @menções.
 
-**Props:** `{ value, onChange, placeholder?, className?, maxLength?, rows? }`
+**Props:** `{ value, onChange, placeholder?, className?, maxLength?, showCounter?, rows? }`
 
 **Funcionalidades:**
 
@@ -130,6 +131,7 @@ Textarea com autocomplete de @menções.
 - Query na API de search de usuários (mínimo 2 caracteres)
 - Dropdown de resultados com navegação por setas, Tab/Enter para selecionar, Escape para fechar
 - Insere `@username` no texto e rastreia IDs dos mencionados
+- Mostra o contador interno quando há `maxLength`, exceto se `showCounter={false}` (padrão `true`)
 
 ## `UserAvatar` (`@rede-enois/design-system/domain`)
 
