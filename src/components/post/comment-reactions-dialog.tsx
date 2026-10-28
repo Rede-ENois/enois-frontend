@@ -27,6 +27,7 @@ export function CommentReactionsDialog({
 
   const reactions = data?.reactions ?? [];
 
+  // Um perfil que falhar ao carregar só fica de fora do mapa: não derruba a lista inteira.
   const uniqueUserIds = [...new Set(reactions.map((r) => r.userId))];
   const { data: users } = useQuery({
     queryKey: ["profiles", "by-ids", uniqueUserIds.sort().join(",")],
