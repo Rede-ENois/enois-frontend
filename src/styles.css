@@ -3,6 +3,31 @@
 @import "@rede-enois/design-system/styles.css";
 
 /*
+ * Figurinhas do BTTV/FFZ no meio do texto.
+ *
+ * O RichText do design system desenha imagem com moldura, canto arredondado e margem vertical —
+ * o certo para uma foto, errado para um emote de 28px no meio da frase. A regra pega pelo CDN
+ * (o endereço só existe no catálogo global, ninguém escreve um `<img>` à mão) e devolve o desenho
+ * inline do chat. Seletor de atributo vence as classes utilitárias por especificidade.
+ *
+ * O alvo é o `<p>`/`<li>` do texto: a grade do seletor de figurinhas mostra as mesmas imagens
+ * dentro de `<button>` e continua no tamanho de miniatura dela.
+ */
+p img[src^="https://cdn.betterttv.net/emote/"],
+p img[src^="https://cdn.frankerfacez.com/emoticon/"],
+li img[src^="https://cdn.betterttv.net/emote/"],
+li img[src^="https://cdn.frankerfacez.com/emoticon/"] {
+  display: inline-block;
+  height: 1.75rem;
+  width: auto;
+  margin: 0 0.125rem;
+  border: 0;
+  border-radius: 0;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
+/*
  * Texto do usuário sem espaços não tem onde quebrar.
  *
  * Título de jogo, nome de projeto, assunto de ticket, título de PR: são palavras que a pessoa

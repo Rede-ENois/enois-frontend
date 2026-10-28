@@ -20,9 +20,20 @@ const common = {
 export const texts = {
   common,
 
+  emotes: {
+    title: "Figurinhas",
+    button: "Figurinhas",
+    searchPlaceholder: "Buscar figurinha",
+    all: "Todas",
+    loading: "Carregando figurinhas...",
+    empty: "Nenhuma figurinha com esse nome.",
+    error: "Não foi possível carregar as figurinhas agora.",
+    hint: "Coleções globais do BTTV e do FrankerFaceZ. O código entra no texto — quem lê vê a figurinha.",
+  },
+
   coinEconomy: {
     title: "Economia da faísca",
-    hint: "A cotação é recalculada sozinha todos os dias às 03:10 (America/Sao_Paulo). Giro, escassez do cofre e emissão definem se o valor sobe ou desce.",
+    hint: "A cotação é recalculada no máximo uma vez por dia, às 03:10 (America/Sao_Paulo), e anda um passo conforme a movimentação dos últimos 30 dias. O botão roda a mesma conta: se o período já fechou, publica; se não, nada muda.",
     cofre: "No cofre",
     retorno: "Voltou ao cofre (30d)",
     emissao: "Emissão (30d)",
@@ -30,10 +41,16 @@ export const texts = {
     escassez: "Escassez",
     indice: "Índice",
     cotacao: "Cotação",
+    periodo: "Período decorrido",
+    proxima: "Próxima avaliação",
+    janela: "Janela do período",
+    janelaAberta: "Aberta — publica agora",
+    janelaFechada: "Fechada",
     recalculate: "Recalcular agora",
     calculating: "Recalculando...",
     published: "Cotação recalculada e publicada.",
-    unchanged: "Cotação recalculada: sem mudança no valor.",
+    unchanged:
+      "O período diário ainda não fechou: nada foi publicado. Veja a próxima avaliação no cartão.",
     error: "Não foi possível recalcular a cotação.",
   },
 

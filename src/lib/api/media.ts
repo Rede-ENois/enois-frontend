@@ -43,10 +43,16 @@ const IMAGEKIT_HOST = (() => {
 })();
 
 /**
+ * CDNs de figurinha (BTTV/FFZ). Não é mídia enviada por ninguém, mas é imagem que o app mostra de
+ * propósito: o endereço vem do catálogo global, nunca de um texto escrito por terceiro.
+ */
+const EMOTE_HOSTS = new Set(["cdn.betterttv.net", "cdn.frankerfacez.com"]);
+
+/**
  * O endereço é de mídia nossa (caminho relativo, mesmo host do app ou o CDN que a gente usa)?
  *
- * Serve para decidir o que pode virar imagem num texto formatado: imagem de servidor de terceiro
- * carrega sozinha e entrega o IP de quem lê para quem publicou, então ela sai como link.
+ * Serve para decidir o que pode virar imagem num texto formatado: imagem de servidor de
+ * terceiro carrega sozinha e entrega o IP de quem lê para quem publicou, então ela sai como link.
  */
 export function isOwnMediaUrl(url: string): boolean {
   if (!/^https?:\/\//i.test(url)) return true;
@@ -54,6 +60,7 @@ export function isOwnMediaUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     if (typeof window !== "undefined" && parsed.host === window.location.host) return true;
+    if (EMOTE_HOSTS.has(parsed.host)) return true;
     return IMAGEKIT_HOST !== "" && parsed.host === IMAGEKIT_HOST;
   } catch {
     return false;

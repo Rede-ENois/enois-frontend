@@ -15,4 +15,10 @@ export type MonitoringEconomy = {
   indice: number;
   cotacaoAtualMicros: number;
   cotacaoSugeridaMicros: number;
+  /** O período diário já fechou e o valor sugerido é diferente: clicar publica. */
+  publicavelAgora: boolean;
+  /** Fração do período diário já decorrida desde a última publicação (0 a 1). */
+  periodoDecorrido: number;
+  /** Quando o worker diário reavalia a cotação. */
+  proximaAvaliacaoEm: string;
 };

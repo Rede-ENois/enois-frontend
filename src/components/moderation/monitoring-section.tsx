@@ -92,15 +92,23 @@ export function MonitoringSection() {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>
       lastPage.length >= 100 ? (lastPage[lastPage.length - 1]?.createdAt ?? undefined) : undefined,
-    enabled: filtered,
-    refetchInterval: paused ? false : 3_000,
+    // Sempre busca no arquivo: a lista não pode depender de haver filtro, nem se limitar ao
+    // "recent" do overview (era isso que resetava a cada recarga da página).
+    refetchInterval: (query) => {
+      if (paused) return false;
+      // Com mais de uma página carregada, refazer o polling puxaria todas as páginas de novo.
+      return (query.state.data?.pages.length ?? 1) > 1 ? false : 5_000;
+    },
     retry: false,
   });
 
   const data = overview.data;
-  const rows = (filtered ? (events.data?.pages.flat() ?? []) : (data?.recent ?? [])).map(
-    (event) => ({ ...event, timeLabel: hora(event.createdAt) }),
-  );
+  const historico = events.data?.pages.flat();
+  // Enquanto o arquivo não respondeu, o "recent" do overview serve de esqueleto.
+  const rows = (historico ?? data?.recent ?? []).map((event) => ({
+    ...event,
+    timeLabel: hora(event.createdAt),
+  }));
   const types = useMemo(() => data?.types24h.map((item) => item.label) ?? [], [data]);
 
   return (
@@ -169,7 +177,7 @@ export function MonitoringSection() {
  * O cartão da economia automática fica abaixo do painel do design system: mostra as métricas do
  * cálculo (cofre, retorno, emissão, giro, escassez, índice) e o botão que roda a reavaliação agora.
  */
-function EconomyCard({
+export function EconomyCard({
   economy,
   pending,
   onRecalculate,
@@ -188,6 +196,12 @@ function EconomyCard({
     ],
     [texts.coinEconomy.escassez, `${economy.escassez.toFixed(2)}×`],
     [texts.coinEconomy.indice, economy.indice.toFixed(2)],
+    [texts.coinEconomy.periodo, `${Math.round(economy.periodoDecorrido * 100)}%`],
+    [texts.coinEconomy.proxima, hora(economy.proximaAvaliacaoEm)],
+    [
+      texts.coinEconomy.janela,
+      economy.publicavelAgora ? texts.coinEconomy.janelaAberta : texts.coinEconomy.janelaFechada,
+    ],
   ];
 
   return (
@@ -202,7 +216,8 @@ function EconomyCard({
           size="sm"
           variant="outline"
           className="rounded-full gap-1.5"
-          disabled={pending}
+          // Fora da janela do período a chamada não publica nada — o botão desligado mostra isso.
+          disabled={pending || !economy.publicavelAgora}
           onClick={onRecalculate}
         >
           <RefreshCw className={cn("h-3.5 w-3.5", pending && "animate-spin")} />
