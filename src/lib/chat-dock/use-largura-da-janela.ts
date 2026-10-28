@@ -10,7 +10,11 @@ import { useEffect, useState } from "react";
  * quem chama lê o valor no render seguinte.
  */
 export function useLarguraDaJanela(): number {
-  const [largura, setLargura] = useState(0);
+  // O valor inicial já é a largura real: no servidor é 0 (o dock nem aparece sem sessão), e no
+  // cliente evita o primeiro render sem janelas (o "flash" de quem abre duas conversas).
+  const [largura, setLargura] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerWidth,
+  );
 
   useEffect(() => {
     let agendado = 0;

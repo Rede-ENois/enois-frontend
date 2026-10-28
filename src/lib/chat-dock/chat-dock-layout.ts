@@ -18,7 +18,12 @@ export const DOCK_WINDOW_WIDTH_PX = 352; // 22rem
 export const DOCK_PANEL_WIDTH_PX = 320; // 20rem (w-80)
 export const DOCK_GAP_PX = 8; // gap-2
 export const DOCK_EDGE_PX = 16; // right-4
-/** Teto do store: quantas conversas podem ficar abertas ao mesmo tempo. */
+/**
+ * Teto do store: quantas conversas podem ficar abertas ao mesmo tempo.
+ *
+ * Vive aqui (e não no store) para a conta do espaço e o teto serem o mesmo número — o store
+ * importa daqui.
+ */
 export const MAX_OPEN_CHATS = 4;
 
 /**
