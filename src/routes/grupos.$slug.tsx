@@ -707,7 +707,7 @@ function GroupPostItem({
 
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-2 sm:items-end">
             {/* O contador interno fica oculto aqui para dividir o rodapé mobile com o botão. */}
-            <div className="col-span-2 min-w-0 sm:col-span-1 [&>div>p[aria-live]]:hidden">
+            <div className="col-span-2 min-w-0 sm:col-span-1 [&_[aria-live][aria-atomic]]:hidden">
               <MentionTextarea
                 value={comment}
                 onChange={(value) => setComment(value)}
