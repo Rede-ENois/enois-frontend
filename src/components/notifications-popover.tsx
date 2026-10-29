@@ -134,7 +134,6 @@ export function NotificationsPopover() {
       open={open}
       onOpenChange={setOpen}
       notifications={notificationList.map(toNotificationData)}
-      chatNotifications={[]}
       requests={incomingRequests.map((request) => {
         const profile = profilesByUserId.get(request.fromUserId) ?? null;
         return {
