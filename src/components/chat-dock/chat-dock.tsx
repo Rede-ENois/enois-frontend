@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -54,6 +54,7 @@ function ChatDockInner() {
   const expanded = useChatDockStore((s) => s.expanded);
   const openChats = useChatDockStore((s) => s.openChats);
   const toggleExpanded = useChatDockStore((s) => s.toggleExpanded);
+  const expand = useChatDockStore((s) => s.expand);
   const openChat = useChatDockStore((s) => s.openChat);
 
   const {
@@ -72,8 +73,20 @@ function ChatDockInner() {
   const { data: unreadData } = useQuery({
     queryKey: ["conversations", "unread-count"],
     queryFn: () => messagesApi.unreadCount(),
-    staleTime: 120_000,
+    refetchInterval: 15_000,
   });
+
+  const totalUnread = unreadData?.count ?? 0;
+  // -1 = ainda nao leu o primeiro valor; so reage a partir da segunda leitura pra nao
+  // expandir o dock toda vez que a pagina carrega com mensagens nao lidas pendentes.
+  const prevUnreadRef = useRef(-1);
+  useEffect(() => {
+    if (prevUnreadRef.current >= 0 && totalUnread > prevUnreadRef.current) {
+      expand();
+      queryClient.invalidateQueries({ queryKey: ["conversations", "inbox"] });
+    }
+    prevUnreadRef.current = totalUnread;
+  }, [totalUnread, expand, queryClient]);
 
   const markAsRead = useMutation({
     mutationFn: (id: string) => messagesApi.markAsRead(id),
@@ -88,8 +101,6 @@ function ChatDockInner() {
       return new Date(b.time).getTime() - new Date(a.time).getTime();
     },
   );
-
-  const totalUnread = unreadData?.count ?? 0;
 
   /*
    * O dock e ancorado a direita e cresce para a ESQUERDA: cada mini-janela tem 22rem. Se abrirem
