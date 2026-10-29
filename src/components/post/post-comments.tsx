@@ -246,6 +246,12 @@ export function PostComments({ postId, postAuthorId }: { postId: string; postAut
           maxLength={800}
           toolbar
           onPasteImages={addMediaFiles}
+          // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
+          onSubmitShortcut={() =>
+            (
+              document.getElementById(`comment-form-${postId}`) as HTMLFormElement | null
+            )?.requestSubmit()
+          }
         />
       }
       canSend={Boolean(draft.trim()) || media.length > 0}

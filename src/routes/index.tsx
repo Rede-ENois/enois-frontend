@@ -742,6 +742,31 @@ function Landing() {
             <p className="max-w-3xl text-xs font-normal leading-relaxed text-muted-foreground">
               {texts.about.disclaimer}
             </p>
+
+            {/*
+              Procedência das figurinhas. O catálogo do backend guarda cópia das artes do BetterTTV e do
+              FrankerFaceZ para servir de memória; nenhuma das duas plataformas licencia o conteúdo sob
+              Creative Commons, e as duas proíbem redistribuição sem autorização. O aviso existe para
+              deixar claro que a arte não é nossa, e o link de contato é a via de remoção.
+            */}
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                {texts.landing.footer.emotesTitle}
+              </p>
+
+              <p className="mt-2 text-xs font-normal leading-relaxed text-muted-foreground">
+                {texts.landing.footer.emotes}
+              </p>
+
+              <Link
+                to="/contato"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                {texts.landing.footer.emotesRemoval}
+
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

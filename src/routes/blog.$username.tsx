@@ -197,7 +197,7 @@ function BlogPage() {
           </p>
         ) : (
           <div className="space-y-3">
-            {blog.items.map((post) => {
+            {blog.items.map((post: import("@/types/application/blog/blog-post").BlogPost) => {
               // O resumo: sem ele a lista mostrava só o título, e um post cheio de texto parecia
               // vazio. Post escrito no editor livre (HTML/CSS) não tem resumo em texto — o rótulo
               // diz o que é, em vez de abrir um espaço em branco no card.

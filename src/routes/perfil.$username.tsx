@@ -46,6 +46,7 @@ import {
   Target,
   ThumbsUp,
   Trophy,
+  VolumeX,
 } from "lucide-react";
 
 import {
@@ -247,6 +248,7 @@ function Profile() {
 
   const connectionStatus = connectionData?.status ?? null;
   const blocked = connectionData?.blocked ?? false;
+  const muted = connectionData?.muted ?? false;
 
   const updateProfile = useMutation({
     mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => profileApi.update(data),
@@ -306,6 +308,13 @@ function Profile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
       queryClient.invalidateQueries({ queryKey: ["network"] });
+    },
+  });
+
+  const toggleMute = useMutation({
+    mutationFn: () => (muted ? networkApi.unmute(user.id) : networkApi.mute(user.id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
     },
   });
 
@@ -642,6 +651,18 @@ function Profile() {
                       queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
                     }
                   />
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => toggleMute.mutate()}
+                    disabled={toggleMute.isPending}
+                  >
+                    <VolumeX className="h-4 w-4" />
+
+                    <>{muted ? texts.profile.unmute : texts.profile.mute}</>
+                  </Button>
 
                   <Button
                     variant="outline"

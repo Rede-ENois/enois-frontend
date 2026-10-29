@@ -24,11 +24,10 @@ export const texts = {
     title: "Figurinhas",
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
-    all: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
-    hint: "Coleções globais do BTTV e do FrankerFaceZ. O código entra no texto — quem lê vê a figurinha.",
+    hint: "As mais usadas primeiro. O código entra no texto — quem lê vê a figurinha.",
     count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
     page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
     previous: "Página anterior",
@@ -598,6 +597,8 @@ export const texts = {
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
       pushError: "Não foi possível ativar as notificações. Tente novamente.",
+      identitySocial: "Identidade ativa: social.",
+      identityCorporate: "Identidade ativa: profissional.",
     },
     changeEmail: {
       error: "Não foi possível alterar o e-mail. Tente novamente.",
@@ -906,6 +907,10 @@ export const texts = {
       seals: "Selos",
       about: "Sobre o énóis",
       home: "Início",
+      emotesTitle: "De onde vêm as figurinhas",
+      emotes:
+        "As figurinhas das conversas não são nossas nem foram feitas por nós: vêm do BetterTTV e do FrankerFaceZ, e cada uma continua pertencendo a quem a criou. O énóis não vende, não licencia e não usa essas imagens fora do site — mantém só uma cópia em cache, para elas abrirem na hora nas conversas. Se você é autor de uma figurinha e quer que ela saia do ar aqui, escreva pela página de contato e ela sai.",
+      emotesRemoval: "Pedir a remoção de uma figurinha",
     },
   },
 
@@ -1014,6 +1019,7 @@ export const texts = {
       discussions: "Discussões",
       unseen: "Ainda não vi",
       trending: "Em Alta",
+      interacted: "Interações",
       projects: "Projetos",
       corporate: "Corporativo",
       type: "Tipo de feed",
@@ -1154,6 +1160,16 @@ export const texts = {
     blockedHint:
       "O bloqueio vale para sempre e os dois lados deixam de se ver. Desbloqueie aqui quando quiser.",
     blockedSince: (date: string | null) => (date ? `Bloqueado em ${dataCurta(date)}` : "Bloqueado"),
+    mute: "Silenciar",
+    unmute: "Remover silêncio",
+    mutedTitle: "Usuários silenciados",
+    mutedSeoTitle: "Usuários silenciados · Énóis",
+    mutedDescription:
+      "Estas pessoas estão silenciadas: os posts, mensagens e notificações delas não aparecem para você, mas elas não sabem.",
+    mutedEmpty: "Você não silenciou ninguém.",
+    mutedHint:
+      "O silêncio esconde o conteúdo da pessoa sem que ela saiba. Diferente do bloqueio, a pessoa ainda pode ver você. Remova o silêncio aqui quando quiser.",
+    mutedSince: (date: string | null) => (date ? `Silenciado em ${dataCurta(date)}` : "Silenciado"),
     openToWork: "Aberto a oportunidades",
     mentorAvailable: "Mentor disponível",
     connectionsMeta: (count: number) => `· ${count} ${count === 1 ? "conexão" : "conexões"}`,
@@ -1256,7 +1272,22 @@ export const texts = {
     /** Post escrito no editor livre: na lista não há resumo em texto, então o card diz o que é. */
     pagePost: "Página em HTML/CSS",
     editor: {
+      postTitle: "Título do post",
+      modeText: "Texto",
+      modeHtml: "HTML/CSS",
+      write: "Editar",
+      preview: "Pré-visualizar",
+      textHint: "Use Markdown para formatar o texto.",
+      htmlHint: "Cole o HTML que quiser — ele é sanitizado antes de publicar.",
+      publish: "Publicar",
+      savePost: "Salvar",
       published: "Post publicado. Quem segue seu blog foi avisado.",
+      draftSaved: "Rascunho salvo neste navegador.",
+      draftSaveError:
+        "Não foi possível salvar o rascunho neste navegador. Mantenha esta página aberta.",
+      notifySubscribers: "Avisar os assinantes por e-mail",
+      notifySubscribersHint:
+        "Quem assina o seu blog recebe um e-mail com este post (além da notificação no app). Dá para desativar só para este post.",
       updated: "Post atualizado.",
       editPost: "Editar post",
       deletePost: "Excluir post",
@@ -1277,6 +1308,15 @@ export const texts = {
     purchaseHeld:
       "As faíscas ficam retidas com segurança até você confirmar que recebeu o conteúdo. Se algo der errado, o reembolso devolve tudo.",
     keepShopping: "Continuar comprando",
+    details: "Ver detalhes",
+    previewHint:
+      "Amostra com as cores do pacote. O item pode incluir outros ajustes além da paleta.",
+    soldBy: "Vendido por",
+    noDescription: "Quem vende não escreveu uma descrição para este item.",
+    escrowHint: "As faíscas ficam retidas até você confirmar que recebeu (ou por 7 dias).",
+    buy: "Comprar",
+    buying: "Retendo faíscas…",
+    buyError: "Não foi possível comprar agora. Confira seu saldo e tente de novo.",
   },
   projects: {
     seoTitle: "Projetos da comunidade · Énóis",
@@ -2331,6 +2371,7 @@ export const texts = {
       notes: "Notas",
       suspicious: "Contas suspeitas",
       suspiciousPosts: "Posts suspeitos",
+      notices: "Avisos",
     },
     suspiciousPosts: {
       result: (deleted: number, failed: number) =>
@@ -2371,6 +2412,34 @@ export const texts = {
       approved: "PR aprovado.",
       changesRequested: "Mudanças solicitadas.",
       reviewError: "Não foi possível enviar a revisão. Confira a permissão do seu GitHub.",
+    },
+    notices: {
+      title: "Aviso da plataforma",
+      description:
+        "Um aviso por vez, em HTML e CSS. Publicar reescreve o que está no ar; tirar do ar some com ele.",
+      none: "Nenhum aviso no ar.",
+      live: (title: string, surface: string) => `No ar: ${title} (${surface}).`,
+      titleLabel: "Título",
+      titlePlaceholder: "Ex.: Manutenção no marketplace",
+      surfaceLabel: "Onde aparece",
+      surfaces: {
+        BANNER: "Faixa no topo",
+        MODAL: "Popup",
+        BOTH: "Faixa e popup",
+      } as Record<string, string>,
+      surfaceHint: "A faixa tem altura fixa: um recado longo cabe melhor no popup.",
+      htmlLabel: "Conteúdo (HTML e CSS)",
+      htmlHint:
+        "Sem JavaScript: o aviso é renderizado num quadro isolado, do mesmo jeito que o post de página.",
+      emptyPreview: "Escreva um HTML para ver como fica.",
+      formHint: "Quem já fechou o aviso volta a vê-lo depois de uma nova publicação.",
+      publish: "Publicar aviso",
+      republish: "Republicar alterações",
+      publishing: "Publicando…",
+      retire: "Tirar do ar",
+      published: "Aviso publicado.",
+      retired: "Aviso tirado do ar.",
+      error: "Não foi possível publicar o aviso.",
     },
     sanction: {
       title: "Punição por votação",
@@ -2480,6 +2549,24 @@ export const texts = {
     savedMinor:
       "Data registrada. Agora falta a autorização de um responsável para liberar a conta.",
     error: "Não foi possível salvar a data. Tente de novo.",
+  },
+  /** Aviso da plataforma publicado por um admin (faixa e/ou popup). */
+  notices: {
+    bannerLabel: "Aviso",
+    close: "Fechar aviso",
+    closeButton: "Entendi",
+    dialogDescription: "Aviso publicado pela equipe do Énóis.",
+    publishedOn: (raw: string | undefined) => {
+      if (!raw) return "";
+      const at = new Date(raw);
+      if (Number.isNaN(at.getTime())) return "";
+      return `Publicado em ${at.toLocaleString("pt-BR", {
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}.`;
+    },
   },
   /** Canais privados por tema dentro das comunidades. */
   communityChannels: {
@@ -2846,6 +2933,10 @@ export const texts = {
         {
           title: "14. Contribuição open source",
           text: "O código do Énóis é aberto e recebe contribuições pelo GitHub. Contribuir não cria vínculo empregatício, sociedade, participação societária, direito a remuneração ou expectativa de retorno financeiro. A decisão sobre aceitar, revisar ou mesclar uma contribuição é dos mantenedores, conforme o guia de contribuição e o código de conduta.\n\nO formulário de contribuição da landing existe para organizar e documentar quem procura o projeto. Ao enviar, você declara que os dados são verdadeiros e autoriza o contato pelo GitHub ou pelo e-mail informado. O envio não garante aprovação, atribuição ou prioridade; o processo segue as regras publicadas no repositório.\n\nContribuições devem vir com issue ou discussão prévia quando mudarem arquitetura, contrato público, segurança ou dados. Mudanças pequenas, com teste e descrição clara, têm prioridade. O projeto não é uma bagunça: é aberto, com processo, revisão e responsabilidade sobre o que entra.",
+        },
+        {
+          title: "15. Figurinhas de terceiros",
+          text: "As figurinhas disponíveis nas conversas do Énóis não são criadas nem de propriedade da plataforma. Elas vêm de dois catálogos públicos de emotes, o BetterTTV e o FrankerFaceZ, e cada imagem continua pertencendo a quem a criou. A plataforma não reivindica direito autoral sobre essas artes.\n\nO Énóis não vende, não licencia, não sublicencia e não explora comercialmente essas imagens. O uso é acessório e não comercial: a plataforma mantém uma cópia temporária em cache, para que a figurinha abra imediatamente nas conversas em vez de depender do tempo de resposta dos sites de origem. Essa cópia não é oferecida para download, para redistribuição nem para uso fora do Énóis.\n\nSe você é autor ou titular de uma figurinha e não quer que ela apareça na plataforma, escreva pela página de contato (enois.ia.br/contato) informando o código e o endereço da figurinha. A remoção é feita assim que o pedido é confirmado, sem necessidade de justificativa, e o código correspondente passa a não ser mais exibido nas conversas.\n\nAs marcas, os nomes e os logotipos do BetterTTV e do FrankerFaceZ pertencem aos seus respectivos titulares. O Énóis não tem vínculo, patrocínio ou endosso dessas plataformas.",
         },
       ],
     },

@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -45,7 +45,11 @@ function arquivosDoApp(): string[] {
       }
       if (!caminho.endsWith(".ts") && !caminho.endsWith(".tsx")) continue;
       if (caminho.includes(".test.")) continue;
-      const relativa = caminho.slice(process.cwd().length + 1);
+      // No Windows o `join` devolve `\`; a lista de exceções é escrita com `/`.
+      const relativa = caminho
+        .slice(process.cwd().length + 1)
+        .split(sep)
+        .join("/");
       if (relativa === "src/lib/date/format.ts") continue;
       encontrados.push(relativa);
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 import { MARKETPLACE_KINDS, MARKETPLACE_KIND_LABELS } from "@/constants/marketplace-kinds";
 import { usePreferencesStore } from "@/stores/preferences.store";
@@ -15,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   Input,
   PageHeader,
   useToast,
@@ -325,32 +325,112 @@ function PreviewMock({ packageJson }: { packageJson: string }) {
   );
 }
 
-/** Botão "Ver preview": abre a amostra maior sem sair da vitrine. */
-function PreviewButton({ packageJson, title }: { packageJson: string; title: string }) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="w-full rounded-full">
-          Ver preview
-        </Button>
-      </DialogTrigger>
+/** O nome e o @ de quem vende, levando ao perfil para conferir a reputação antes de comprar. */
+function SellerLine({ listing }: { listing: MarketplaceListingView }) {
+  if (!listing.sellerUsername) {
+    return (
+      <p className="truncate text-xs text-text-subtle">
+        <StyledName name={listing.sellerName ?? ""} style={listing.sellerStyle} />
+      </p>
+    );
+  }
 
-      <DialogContent className="max-w-md">
+  return (
+    <Link
+      to="/perfil/$username"
+      params={{ username: listing.sellerUsername }}
+      className="-my-1 block truncate py-1 text-xs text-text-subtle hover:text-text-strong hover:underline"
+    >
+      <StyledName name={listing.sellerName ?? ""} style={listing.sellerStyle} />
+      {` · @${listing.sellerUsername}`}
+    </Link>
+  );
+}
+
+/**
+ * Detalhes da listagem: o que se leva (descrição inteira e, no tema, a amostra) antes de gastar
+ * faísca. O conteúdo em si só sai depois da compra.
+ */
+function ListingDetailsDialog({
+  listing,
+  packageJson,
+  open,
+  onOpenChange,
+  buying,
+  buyFailed,
+  onBuy,
+}: {
+  listing: MarketplaceListingView;
+  packageJson: string | null | undefined;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  buying: boolean;
+  buyFailed: boolean;
+  onBuy: () => void;
+}) {
+  const description = listing.description?.trim();
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Preview · {title}</DialogTitle>
+          <span className="inline-flex w-fit rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-text-subtle">
+            {MARKETPLACE_KIND_LABELS[listing.itemKind]}
+          </span>
+
+          <DialogTitle className="break-words text-left">{listing.title}</DialogTitle>
         </DialogHeader>
 
-        <PreviewMock packageJson={packageJson} />
+        <div className="min-w-0 space-y-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
+              {texts.marketplace.soldBy}
+            </p>
 
-        <p className="text-xs text-text-subtle">
-          Amostra com as cores do pacote. O item pode incluir outros ajustes além da paleta.
-        </p>
+            <SellerLine listing={listing} />
+          </div>
+
+          {description ? (
+            <p className="whitespace-pre-line break-words text-sm text-text-strong">
+              {description}
+            </p>
+          ) : (
+            <p className="text-sm text-text-subtle">{texts.marketplace.noDescription}</p>
+          )}
+
+          {packageJson && (
+            <div className="space-y-2">
+              <PreviewMock packageJson={packageJson} />
+
+              <p className="text-xs text-text-subtle">{texts.marketplace.previewHint}</p>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-border-soft bg-surface-1 p-4">
+            <span className="flex items-center gap-1.5 text-lg font-semibold text-primary">
+              <Sparkles className="h-4 w-4" />
+              {formatFaisca(listing.price)} faíscas
+            </span>
+
+            <p className="mt-1 text-xs text-text-subtle">{texts.marketplace.escrowHint}</p>
+
+            {buyFailed && (
+              <p role="alert" className="mt-2 text-xs text-destructive">
+                {texts.marketplace.buyError}
+              </p>
+            )}
+
+            <Button className="mt-3 w-full rounded-full" disabled={buying} onClick={onBuy}>
+              {buying ? texts.marketplace.buying : texts.marketplace.buy}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-/** A listagem com o preview do tema (buscado da galeria). */
+/** A listagem com o resumo do que se leva; os detalhes abrem sem sair da vitrine. */
 function ListingCard({
   listing,
   onBought,
@@ -360,13 +440,16 @@ function ListingCard({
 }) {
   const theme = useListingTheme(listing);
   const queryClient = useQueryClient();
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const buy = useMutation({
     mutationFn: () => marketplaceApi.buy(listing.id),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["marketplace"] });
+      setDetailsOpen(false);
       onBought(result.purchaseId);
     },
   });
+  const description = listing.description?.trim();
 
   return (
     <li className="surface-card flex h-full min-w-0 flex-col overflow-hidden">
@@ -389,27 +472,47 @@ function ListingCard({
         </span>
 
         <div className="min-w-0">
-          <h3 className="line-clamp-2 font-semibold text-text-strong">{listing.title}</h3>
+          <h3 className="line-clamp-2 font-semibold text-text-strong">
+            <button
+              type="button"
+              onClick={() => setDetailsOpen(true)}
+              className="text-left hover:underline"
+            >
+              {listing.title}
+            </button>
+          </h3>
 
           {theme.data?.name && theme.data.name !== listing.title && (
             <p className="truncate text-xs text-text-subtle">{theme.data.name}</p>
           )}
 
-          <p className="truncate text-xs text-text-subtle">
-            <StyledName name={listing.sellerName ?? ""} style={listing.sellerStyle} />
-            {listing.sellerUsername ? ` · @${listing.sellerUsername}` : ""}
-          </p>
+          <SellerLine listing={listing} />
         </div>
 
+        {description && (
+          <p className="line-clamp-3 break-words text-sm text-text-subtle">{description}</p>
+        )}
+
         <div className="mt-auto space-y-2">
-          {theme.data && (
-            <PreviewButton packageJson={theme.data.packageJson} title={listing.title} />
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full rounded-full"
+            onClick={() => setDetailsOpen(true)}
+          >
+            {texts.marketplace.details}
+          </Button>
 
           <span className="flex items-center gap-1.5 text-lg font-semibold text-primary">
             <Sparkles className="h-4 w-4" />
             {formatFaisca(listing.price)} faíscas
           </span>
+
+          {buy.isError && !detailsOpen && (
+            <p role="alert" className="text-xs text-destructive">
+              {texts.marketplace.buyError}
+            </p>
+          )}
 
           <Button
             size="sm"
@@ -417,10 +520,20 @@ function ListingCard({
             disabled={buy.isPending}
             onClick={() => buy.mutate()}
           >
-            {buy.isPending ? "Retendo faíscas…" : "Comprar"}
+            {buy.isPending ? texts.marketplace.buying : texts.marketplace.buy}
           </Button>
         </div>
       </div>
+
+      <ListingDetailsDialog
+        listing={listing}
+        packageJson={theme.data?.packageJson}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        buying={buy.isPending}
+        buyFailed={buy.isError}
+        onBuy={() => buy.mutate()}
+      />
     </li>
   );
 }

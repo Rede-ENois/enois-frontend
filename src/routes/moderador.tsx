@@ -31,6 +31,7 @@ import {
   History,
   LifeBuoy,
   Mail,
+  Megaphone,
   Scale,
   ScanEye,
   Shield,
@@ -58,6 +59,7 @@ import { EmailLogSection } from "@/components/moderation/email-log-section";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
 import { MonitoringSection } from "@/components/moderation/monitoring-section";
 import { NotesSection } from "@/components/moderation/notes-section";
+import { NoticesSection } from "@/components/moderation/notices-section";
 import { PanicModeSection } from "@/components/moderation/panic-mode-section";
 import { ProjectsReviewSection } from "@/components/moderation/projects-review-section";
 import { PullRequestsSection } from "@/components/moderation/pull-requests-section";
@@ -92,6 +94,12 @@ const ALL_TABS: { id: ModeratorTabId; label: string; icon: typeof Flag; adminOnl
   { id: "users", label: texts.moderator.tabs.users, icon: Gavel, adminOnly: false },
   // Triagem de contas em série é trabalho do time inteiro (decisão da dona): qualquer moderador
   // aprovado vê a fila e pode banir em lote.
+  {
+    id: "notices",
+    label: texts.moderator.tabs.notices,
+    icon: Megaphone,
+    adminOnly: true,
+  },
   {
     id: "suspicious",
     label: texts.moderator.tabs.suspicious,
@@ -260,6 +268,7 @@ function Moderador() {
             {me.admin && activeTab === "githubContributions" && <ContributionsSection />}
             {canModerate && activeTab === "pulls" && <PullRequestsSection />}
             {canModerate && activeTab === "notes" && <NotesSection />}
+            {me.admin && activeTab === "notices" && <NoticesSection />}
           </div>
         ) : (
           <ApplicationSection me={me} />

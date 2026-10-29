@@ -22,6 +22,7 @@ export { reportsApi, REPORT_REASONS } from "./reports";
 export { sanctionsApi } from "./sanctions";
 export { moderationApi } from "./moderation";
 export { monitoringApi } from "./monitoring";
+export { noticesApi } from "./notices";
 export { sealsApi } from "./seals";
 export { contributorSealsApi } from "./contributor-seals";
 export { companiesApi } from "./companies";

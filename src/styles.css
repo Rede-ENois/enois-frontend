@@ -3,22 +3,24 @@
 @import "@rede-enois/design-system/styles.css";
 
 /*
- * Figurinhas do BTTV/FFZ no meio do texto.
+ * Figurinhas no meio do texto.
  *
  * O RichText do design system desenha imagem com moldura, canto arredondado e margem vertical —
- * o certo para uma foto, errado para um emote de 28px no meio da frase. A regra pega pelo CDN
- * (o endereço só existe no catálogo global, ninguém escreve um `<img>` à mão) e devolve o desenho
- * inline do chat. Seletor de atributo vence as classes utilitárias por especificidade.
+ * o certo para uma foto, errado para um emote de 28px no meio da frase. A regra pega pelo caminho
+ * do catálogo (ninguém escreve um `<img>` à mão com esse endereço) e devolve o desenho inline do
+ * chat. Seletor de atributo vence as classes utilitárias por especificidade.
  *
  * O alvo é o `<p>`/`<li>` do texto: a grade do seletor de figurinhas mostra as mesmas imagens
  * dentro de `<button>` e continua no tamanho de miniatura dela.
  *
  * Todas as figurinhas ocupam a MESMA caixa quadrada de 28px (`object-fit: contain`): emote largo
  * do FFZ, GIF do BTTV e emote alto ficam alinhados na linha, sem empurrar o texto em alturas
- * diferentes. O seletor casa pelo HOST — os mesmos CDNs que `isOwnMediaUrl` libera — e não pelo
- * caminho: o FFZ já serviu `/emoticon/{id}` e hoje serve `/emote/{id}` (estático e animado), e o
- * padrão antigo só conhecia o primeiro.
+ * diferentes. O seletor casa pelo CAMINHO (`/emotes/image/...`), que é igual em qualquer host — a
+ * imagem sai do proxy do próprio backend, e o host muda entre dev, QA e produção. Os CDNs dos
+ * provedores continuam listados porque texto antigo pode ter endereço deles.
  */
+p img[src*="/emotes/image/"],
+li img[src*="/emotes/image/"],
 p img[src^="https://cdn.betterttv.net/"],
 p img[src^="https://cdn.frankerfacez.com/"],
 li img[src^="https://cdn.betterttv.net/"],

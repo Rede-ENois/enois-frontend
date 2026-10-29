@@ -37,7 +37,7 @@ describe("login longo não pode estourar a tela", () => {
   it("a lista de freelas quebra o login", () => {
     const classeDoLogin = classe(
       "src/routes/freelances.tsx",
-      /<p className="([^"]*)"[^>]*>@?\{item\.username\}/,
+      /params=\{\{ username: item\.username \}\}\s+className="([^"]*)"/,
     );
     expect(classeDoLogin).toContain("break-words");
   });

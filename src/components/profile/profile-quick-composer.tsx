@@ -40,12 +40,23 @@ export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
         upload.status === "uploading" ? texts.feed.composer.uploadProgress(upload.progress) : null
       }
       onPublish={async (payload: ProfileQuickComposerPublishPayload) => {
-        try {
-          let mediaIds: string[] = [];
-          if (payload.files.length > 0) {
+        let mediaIds: string[] = [];
+        if (payload.files.length > 0) {
+          try {
             const results = await upload.uploadAll(payload.files.map((file) => ({ file })));
             mediaIds = results.map((r) => r.mediaId);
+          } catch (err) {
+            // Sem isto a falha do envio sumia e a pessoa ficava num composer de texto, sem saber por quê.
+            toast(
+              err instanceof Error && err.message
+                ? err.message
+                : texts.profile.dashboard.composer.error,
+              "error",
+            );
+            return false;
           }
+        }
+        try {
           await publish.mutateAsync({
             content: payload.content,
             mediaIds,
@@ -53,6 +64,7 @@ export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
           });
           return true;
         } catch {
+          // O toast de erro da publicação já sai no onError da mutation.
           return false;
         }
       }}

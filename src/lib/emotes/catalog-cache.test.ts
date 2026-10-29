@@ -1,62 +1,80 @@
 // @vitest-environment jsdom
-import type { GlobalEmote } from "@/types/application/emote/global-emote";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { loadCachedEmotes, saveCachedEmotes } from "./catalog-cache";
+import { loadCachedIndex, saveCachedIndex } from "./catalog-cache";
 
-const KEKW: GlobalEmote = {
-  code: "KEKW",
-  url: "https://cdn.betterttv.net/emote/abc/2x.png",
-  preview: "https://cdn.betterttv.net/emote/abc/1x.png",
-  provider: "BTTV",
+const CHAVE = "rede:emotes:index:v3";
+
+const ENTRIES = {
+  KEKW: "/emotes/image/BTTV/abc?variant=full",
+  catJAM: "/emotes/image/FFZ/1?variant=full&a=1",
 };
-
-const CHAVE = "rede:emotes:global";
 
 beforeEach(() => {
   window.localStorage.clear();
 });
 
-describe("cache do catálogo de figurinhas", () => {
-  it("guarda e devolve a lista com o horário em que foi salva", () => {
-    saveCachedEmotes([KEKW], 1_700_000_000_000);
+describe("cache do índice de figurinhas", () => {
+  it("guarda e devolve o índice com o horário em que foi salvo", () => {
+    saveCachedIndex(ENTRIES, 1_700_000_000_000);
 
-    expect(loadCachedEmotes()).toEqual({ emotes: [KEKW], savedAt: 1_700_000_000_000 });
+    expect(loadCachedIndex()).toEqual({ entries: ENTRIES, savedAt: 1_700_000_000_000 });
   });
 
   it("sem nada salvo devolve null", () => {
-    expect(loadCachedEmotes()).toBeNull();
+    expect(loadCachedIndex()).toBeNull();
   });
 
-  it("JSON quebrado não derruba o seletor", () => {
+  it("JSON quebrado não derruba o texto", () => {
     window.localStorage.setItem(CHAVE, "{isso não é json");
 
-    expect(loadCachedEmotes()).toBeNull();
+    expect(loadCachedIndex()).toBeNull();
   });
 
-  it("descarta item salvo por uma versão antiga (sem a miniatura)", () => {
+  it("descarta o formato antigo (lista das coleções globais com URL de CDN)", () => {
     window.localStorage.setItem(
       CHAVE,
-      JSON.stringify({ emotes: [{ code: "OLD", url: "u", provider: "BTTV" }], savedAt: 1 }),
+      JSON.stringify({
+        entries: [{ code: "KEKW", url: "https://cdn.betterttv.net/emote/abc/2x.png" }],
+        savedAt: 1,
+      }),
     );
 
-    expect(loadCachedEmotes()).toBeNull();
+    expect(loadCachedIndex()).toBeNull();
   });
 
-  it("mantém os itens válidos e joga fora o resto", () => {
-    const dados = {
-      emotes: [KEKW, { code: "SEMPROVEDOR", url: "u", preview: "p" }, null, 7],
-      savedAt: 42,
-    };
-    window.localStorage.setItem(CHAVE, JSON.stringify(dados));
+  it("só aceita caminho do proxy de figurinhas", () => {
+    window.localStorage.setItem(
+      CHAVE,
+      JSON.stringify({
+        entries: {
+          ...ENTRIES,
+          EXTERNO: "https://cdn.betterttv.net/emote/abc/2x.png",
+          SCRIPT: "javascript:alert(1)",
+          FUGA: "/emotes/image/BTTV/abc) ![x](http://mal/",
+          PROVEDOR: "/emotes/image/FFZ/2?variant=thumb",
+        },
+        savedAt: 9,
+      }),
+    );
 
-    expect(loadCachedEmotes()).toEqual({ emotes: [KEKW], savedAt: 42 });
+    expect(Object.keys(loadCachedIndex()?.entries ?? {}).sort()).toEqual([
+      "KEKW",
+      "PROVEDOR",
+      "catJAM",
+    ]);
   });
 
-  it("lista vazia não sobrescreve a cópia boa", () => {
-    saveCachedEmotes([KEKW], 10);
-    saveCachedEmotes([], 20);
+  it("índice vazio não sobrescreve a cópia boa", () => {
+    saveCachedIndex(ENTRIES, 10);
+    saveCachedIndex({}, 20);
 
-    expect(loadCachedEmotes()?.emotes).toHaveLength(1);
+    expect(loadCachedIndex()?.entries).toEqual(ENTRIES);
+  });
+
+  it("guarda a figurinha cujo código tem símbolo", () => {
+    saveCachedIndex({ ":D": "/emotes/image/BTTV/x?variant=full" }, 3);
+
+    expect(loadCachedIndex()?.entries).toEqual({ ":D": "/emotes/image/BTTV/x?variant=full" });
   });
 });

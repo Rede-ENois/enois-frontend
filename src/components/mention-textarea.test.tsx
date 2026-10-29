@@ -11,15 +11,47 @@ import { MentionTextarea } from "./mention-textarea";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** A grade do seletor mostra a miniatura 1x da figurinha estática. */
-const BTTV = "https://cdn.betterttv.net/emote/abc123/1x.png";
+/** A grade do seletor mostra a miniatura do proxy do backend. */
+const MINIATURA = "/api/emotes/image/BTTV/abc123?variant=thumb";
 
-/** Mesmo formato das duas APIs reais: o catálogo global chega pelo `fetch` do navegador. */
+/** Mesmo formato do backend: a página do catálogo já vem pronta e a imagem sai do proxy. */
 function fakeFetch(input: RequestInfo | URL) {
-  if (String(input).includes("betterttv")) {
-    return { ok: true, json: async () => [{ id: "abc123", code: "KEKW" }] };
+  const url = new URL(String(input), "http://localhost");
+  if (url.pathname.endsWith("/emotes/index")) {
+    return resposta({
+      entries: { KEKW: "/emotes/image/BTTV/abc123?variant=full" },
+      generatedAt: "2026-10-29T00:00:00Z",
+    });
   }
-  return { ok: true, json: async () => ({ default_sets: [], sets: {} }) };
+  return resposta({
+    items: [
+      {
+        code: "KEKW",
+        provider: "BTTV",
+        id: "abc123",
+        animated: false,
+        popularRank: null,
+        image: "/emotes/image/BTTV/abc123?variant=full",
+        thumb: "/emotes/image/BTTV/abc123?variant=thumb",
+      },
+    ],
+    page: 1,
+    limit: 40,
+    total: 1,
+    totalPages: 1,
+    generatedAt: "2026-10-29T00:00:00Z",
+  });
+}
+
+/** Resposta 200 mínima que o cliente da API entende (ele lê cabeçalhos e corpo). */
+function resposta(body: unknown) {
+  return {
+    ok: true,
+    status: 200,
+    statusText: "OK",
+    headers: new Headers({ "content-type": "application/json" }),
+    json: async () => body,
+  };
 }
 
 let root: Root | null = null;
@@ -49,6 +81,14 @@ async function esperar() {
   });
 }
 
+/** A figurinha chega por promise: espera a grade desenhar em vez de dormir um tempo fixo. */
+async function esperarFigurinha() {
+  const limite = Date.now() + 3000;
+  while (!document.querySelector('button[title="KEKW"]') && Date.now() < limite) {
+    await esperar();
+  }
+}
+
 describe("Seletor de figurinhas do campo de escrita", () => {
   it("insere o código da figurinha escolhida no texto", async () => {
     const onChange = vi.fn();
@@ -65,10 +105,10 @@ describe("Seletor de figurinhas do campo de escrita", () => {
     expect(abrir).toBeTruthy();
 
     await act(async () => abrir?.click());
-    await esperar();
+    await esperarFigurinha();
 
     const figurinha = document.querySelector<HTMLButtonElement>(`button[title="KEKW"]`);
-    expect(figurinha?.querySelector("img")?.getAttribute("src")).toBe(BTTV);
+    expect(figurinha?.querySelector("img")?.getAttribute("src")).toBe(MINIATURA);
 
     await act(async () => figurinha?.click());
 
@@ -94,7 +134,7 @@ describe("Seletor de figurinhas do campo de escrita", () => {
     act(() => campo?.setSelectionRange(2, 2));
 
     await act(async () => botao(texts.emotes.button)?.click());
-    await esperar();
+    await esperarFigurinha();
     await act(async () =>
       document.querySelector<HTMLButtonElement>(`button[title="KEKW"]`)?.click(),
     );

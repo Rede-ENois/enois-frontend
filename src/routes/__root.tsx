@@ -33,6 +33,7 @@ import { HealthyUsageGuard } from "@/components/healthy-usage/healthy-usage-guar
 import { InstallPwaBanner } from "@/components/install-pwa-banner";
 import { LiteModeEffects } from "@/components/lite-mode-effects";
 import { ModuleDisabledGate } from "@/components/module-disabled-gate";
+import { AdminNoticeDialog } from "@/components/notices/admin-notice";
 
 import appCss from "../styles.css?url";
 
@@ -263,6 +264,7 @@ function RootInsideProvider() {
       <LiteModeEffects />
       <HealthyUsageGuard />
       <AgeGate />
+      <AdminNoticeDialog />
     </ToastProvider>
   );
 }

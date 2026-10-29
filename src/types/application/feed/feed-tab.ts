@@ -3,6 +3,7 @@ export type FeedTab =
   | "ALL"
   | "UNSEEN"
   | "TRENDING"
+  | "INTERACTED"
   // Legado — backend ainda aceita, frontend não mostra mais.
   | "FOLLOWING"
   | "RECENT"

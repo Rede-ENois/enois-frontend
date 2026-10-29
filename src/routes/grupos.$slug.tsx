@@ -740,6 +740,9 @@ function GroupPostItem({
               className="min-h-10 rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
               rows={1}
               toolbar
+              onSubmitShortcut={() => {
+                if (comment.trim() && !sendComment.isPending) sendComment.mutate();
+              }}
             />
 
             <Button

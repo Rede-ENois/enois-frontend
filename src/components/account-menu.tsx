@@ -63,6 +63,15 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const chooseIdentity = (next: ActiveIdentity) => {
     writeActiveIdentity(next);
     setChosenIdentity(next);
+    // A troca é silenciosa fora do feed: fecha o menu e confirma, senão parece que o clique
+    // não fez nada.
+    setMenuOpen(false);
+    toast(
+      next === "CORPORATE"
+        ? texts.account.menu.identityCorporate
+        : texts.account.menu.identitySocial,
+      "success",
+    );
   };
 
   const openDialog = (show: (open: boolean) => void) => () => {
@@ -87,7 +96,9 @@ export function AccountMenu({ profile }: AccountMenuProps) {
         hrefs={{ ...ACCOUNT_MENU_HREFS, profile: `/perfil/${profile.username}` }}
         open={menuOpen}
         onOpenChange={setMenuOpen}
-        showIdentitySwitch={Boolean(corporate?.exists)}
+        // Só com perfil ATIVO a escolha vale; em rascunho/desativado o controle ficaria
+        // desabilitado sem explicar nada (issue #376).
+        showIdentitySwitch={corporate?.exists === true && corporate.status === "ACTIVE"}
         corporateIdentityEnabled={corporate?.status === "ACTIVE"}
         identity={identity}
         onChooseIdentity={chooseIdentity}

@@ -1,7 +1,14 @@
 import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  notFound,
+  useMatchRoute,
+  useNavigate,
+} from "@tanstack/react-router";
 
 import { TOPICS, TOPIC_LABELS, topicLabel } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
@@ -84,8 +91,20 @@ export const Route = createFileRoute("/comunidades/$communityId")({
       }),
     };
   },
-  component: CommunityDetail,
+  component: CommunityRoute,
 });
+
+function CommunityRoute() {
+  const matchRoute = useMatchRoute();
+  const isCommunityDetail = Boolean(matchRoute({ to: "/comunidades/$communityId", fuzzy: false }));
+
+  // O canal é rota filha; esta tela só ocupa o caminho exato da comunidade.
+  if (!isCommunityDetail) {
+    return <Outlet />;
+  }
+
+  return <CommunityDetail />;
+}
 
 function CommunityDetail() {
   const queryClient = useQueryClient();

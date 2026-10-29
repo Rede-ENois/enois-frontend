@@ -199,7 +199,7 @@ export function CommentItem({
             )
           : undefined
       }
-      renderEditField={(value, onChange) => (
+      renderEditField={(value, onChange, submit) => (
         <MentionTextarea
           value={value}
           onChange={(next) => onChange(next)}
@@ -207,6 +207,7 @@ export function CommentItem({
           maxLength={1024}
           className="rounded-lg border border-border-soft bg-surface-card px-3 py-2 text-sm font-normal"
           toolbar
+          onSubmitShortcut={submit}
         />
       )}
       reportDialog={

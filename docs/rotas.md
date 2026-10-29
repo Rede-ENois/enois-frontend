@@ -26,6 +26,7 @@ Seções:
 Funcionalidades:
 
 - **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo)
+- **Identidade ativa:** escolhida no menu da conta; com a profissional, o compositor publica no feed corporativo (`BUSINESS`) e os tipos de página/artigo saem da seleção — regras em `componentes.md`
 - **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos
 - **Feed infinito** de `PostCard` components
 - **Sidebar direita:** Mini-perfil, sugestões de conexão, eventos
@@ -239,7 +240,7 @@ seguintes; aqui é o mapa completo.
 | `/carteira`                      | `carteira.tsx`                                   | Carteira em faíscas: saldo, transferências, contestações.                     |
 | `/comunidades`                   | `comunidades.tsx`                                | Catálogo de comunidades.                                                      |
 | `/comunidades/:id`               | `comunidades.$communityId.tsx`                   | Página da comunidade (posts, membros, regras).                                |
-| `/comunidades/:id/canais/:canal` | `comunidades.$communityId.canais.$channelId.tsx` | Canal de uma comunidade.                                                      |
+| `/comunidades/:id/canais/:canal` | `comunidades.$communityId.canais.$channelId.tsx` | Canal privado de uma comunidade; acessível somente a membros.                 |
 | `/contato`                       | `contato.tsx`                                    | Contato com o time (abre ticket de suporte).                                  |
 | `/denuncias`                     | `denuncias.tsx`                                  | Minhas denúncias e seus estados.                                              |
 | `/developers`                    | `developers.tsx`                                 | Portal de desenvolvedores da API pública (catálogo + casos de uso).           |

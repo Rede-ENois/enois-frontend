@@ -269,7 +269,17 @@ function FreelanceCard({ item, authenticated }: { item: FreelanceView; authentic
         </span>
       </div>
 
-      {item.username && <p className="break-words text-xs text-text-subtle">@{item.username}</p>}
+      {/* O @ leva ao perfil de quem publicou: antes de se candidatar a pessoa quer saber com
+          quem vai combinar o trabalho. */}
+      {item.username && (
+        <Link
+          to="/perfil/$username"
+          params={{ username: item.username }}
+          className="-my-1 max-w-full self-start break-words py-1 text-xs text-text-subtle hover:text-text-strong hover:underline"
+        >
+          @{item.username}
+        </Link>
+      )}
 
       {/* Candidatar-se é falar com quem publicou: abre a conversa direta (mesma API do botão
           "Mensagem" do perfil) e manda a apresentação. Sem conta, o clique leva ao login. */}

@@ -83,13 +83,14 @@ import { PostCard } from "@/components/post-card";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Abas válidas da tela inicial (a URL carrega a escolhida). */
-const HOME_TABS: HomeTab[] = ["ALL", "FOR_YOU", "UNSEEN", "TRENDING", "CORPORATE"];
+const HOME_TABS: HomeTab[] = ["ALL", "FOR_YOU", "UNSEEN", "TRENDING", "INTERACTED", "CORPORATE"];
 
 const TAB_LABELS: Record<HomeTab, string> = {
   ALL: texts.feed.tabs.all,
   FOR_YOU: texts.feed.tabs.forYou,
   UNSEEN: texts.feed.tabs.unseen,
   TRENDING: texts.feed.tabs.trending,
+  INTERACTED: texts.feed.tabs.interacted,
   CORPORATE: texts.feed.tabs.corporate,
   // Legado (backend aceita mas frontend não mostra).
   FOLLOWING: texts.feed.tabs.following,
