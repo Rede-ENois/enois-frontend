@@ -45,7 +45,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
+    "@eslint/js": "^10.0.1",
     "@lovable.dev/vite-tanstack-config": "2.3.2",
     "@orval/core": "^8.44.0",
     "@tailwindcss/vite": "^4.3.3",
@@ -55,11 +55,11 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.0.4",
-    "eslint": "^9.32.0",
+    "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.5.7",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^15.15.0",
     "jsdom": "^26.1.0",
     "lint-staged": "^17.6.0",
@@ -68,7 +68,7 @@
     "prettier": "^3.9.10",
     "simple-git-hooks": "^2.14.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.8.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
     "vitest": "^5.0.5"
