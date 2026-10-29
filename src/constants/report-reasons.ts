@@ -1,4 +1,5 @@
 export const REPORT_REASONS = [
+  "SEXUAL_CONTENT",
   "AI_GENERATED",
   "FAKE_CONTENT",
   "SCAM",

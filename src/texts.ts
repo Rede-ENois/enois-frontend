@@ -2208,6 +2208,7 @@ export const texts = {
       JOB: "Vaga",
     } as Record<string, string>,
     reason: {
+      SEXUAL_CONTENT: "Nudez ou conteúdo sexual",
       AI_GENERATED: "Conteúdo gerado por IA",
       FAKE_CONTENT: "Conteúdo falso",
       SCAM: "Golpe",
@@ -2333,6 +2334,7 @@ export const texts = {
       actionError: "Não foi possível concluir a ação.",
       filterAll: "Todas",
       reasons: {
+        SEXUAL_CONTENT: "Nudez ou conteúdo sexual",
         AI_GENERATED: "IA gerada",
         FAKE_CONTENT: "Conteúdo falso",
         SCAM: "Golpe",
@@ -2823,6 +2825,7 @@ export const texts = {
       "Racismo, homofobia, transfobia, intolerância religiosa, xenofobia ou qualquer forma de discriminação.",
       "Assédio, ameaça ou incitação à violência contra uma pessoa ou grupo.",
       "Golpes, fraudes e esquemas financeiros que prejudiquem outras pessoas.",
+      "Nudez, pornografia e conteúdo sexual explícito, inclusive quando a imagem é o conteúdo e o texto não diz nada.",
       "Conteúdo ilegal, exploração ou sexualização de menores.",
     ],
     notWelcomeTitle: "O que não é bem-vindo",
@@ -2873,7 +2876,7 @@ export const texts = {
       backPrefix: "Voltar para a ",
       home: "página inicial",
     },
-    updatedAt: "24 de outubro de 2026",
+    updatedAt: "29 de outubro de 2026",
     terms: {
       seoTitle: "Termos de Uso · Énóis",
       seoDescription:
@@ -2894,7 +2897,7 @@ export const texts = {
         },
         {
           title: "4. Conduta do usuário",
-          text: "Você concorda em não usar a plataforma para: (a) publicar conteúdo ilegal, difamatório, discriminatório, assediador ou que incite violência; (b) violar direitos de propriedade intelectual de terceiros; (c) enviar spam, phishing ou conteúdo malicioso; (d) tentar acessar sistemas ou contas de outros usuários sem autorização; (e) coletar dados de usuários sem consentimento.\n\nPublicações que violem estas regras de conduta podem ser removidas, e a conta do infrator pode ser suspensa ou encerrada, sem prejuízo das medidas legais cabíveis.",
+          text: "Você concorda em não usar a plataforma para: (a) publicar conteúdo ilegal, difamatório, discriminatório, assediador, pornográfico, de nudez explícita ou que incite violência; (b) violar direitos de propriedade intelectual de terceiros; (c) enviar spam, phishing ou conteúdo malicioso; (d) tentar acessar sistemas ou contas de outros usuários sem autorização; (e) coletar dados de usuários sem consentimento.\n\nConteúdo sexual explícito, inclusive em imagens enviadas sem texto de apoio, é removido assim que identificado e a conta responsável é banida. Publicações que violem estas regras de conduta podem ser removidas, e a conta do infrator pode ser suspensa ou encerrada, sem prejuízo das medidas legais cabíveis.",
         },
         {
           title: "5. Conteúdo publicado",

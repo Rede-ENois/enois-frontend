@@ -579,7 +579,7 @@ export const apiSections: ApiSection[] = [
         path: "/reports",
         access: "auth",
         description:
-          "Denuncia. targetType: POST | COMMENT | USER | JOB; reason: AI_GENERATED, FAKE_CONTENT, SCAM, DISCRIMINATION, PREJUDICE, HARASSMENT, SPAM, VIOLENCE, COPYRIGHT, OTHER.",
+          "Denuncia. targetType: POST | COMMENT | USER | JOB; reason: SEXUAL_CONTENT, AI_GENERATED, FAKE_CONTENT, SCAM, DISCRIMINATION, PREJUDICE, HARASSMENT, SPAM, VIOLENCE, COPYRIGHT, OTHER.",
         request: `curl -X POST ${P}/reports \\
   -H "X-Session-Token: $TOKEN" -H "Idempotency-Key: rep-1" \\
   -H "Content-Type: application/json" \\
