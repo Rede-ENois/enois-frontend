@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { SIGNUP_OPEN } from "@/constants/account";
 import { texts } from "@/texts";
@@ -11,11 +11,17 @@ import { ArrowRight, ArrowUpRight, GitPullRequest, ShieldAlert } from "lucide-re
 
 import { statsApi } from "@/lib/api";
 import { anoAtual } from "@/lib/date/format";
+import { hasSessionFlag } from "@/lib/session";
 
 import { ContributionForm } from "@/components/contribution-form";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && hasSessionFlag()) {
+      throw redirect({ to: "/feed" });
+    }
+  },
   head: () => {
     // Cartão de marca usado ao compartilhar a página inicial.
     const shareImage = `${texts.siteUrl}/landing/brand-og.png`;
