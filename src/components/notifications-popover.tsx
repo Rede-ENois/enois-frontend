@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -8,11 +8,9 @@ import { navigateToHref } from "@/utils/navigation";
 import { formatNotificationTime } from "@/utils/notification-time";
 import { NotificationsPopover as NotificationsPopoverView } from "@rede-enois/design-system/domain";
 
-import { messagesApi, networkApi, notificationsApi, profileApi } from "@/lib/api";
+import { networkApi, notificationsApi, profileApi } from "@/lib/api";
 import { getCurrentUserId } from "@/lib/current-user";
 import { formatarData } from "@/lib/date/format";
-import { decryptReceived } from "@/lib/e2e/conversation";
-import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { isNotificationHidden } from "@/lib/notification-module";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useDisabledModules } from "@/lib/use-personalization";
@@ -82,23 +80,16 @@ export function NotificationsPopover() {
       )
     : undefined;
 
-  // Módulo desativado não volta pela porta do sino: a notificação dele fica fora da lista
-  // (mesma fonte de verdade do menu — /me/preferences).
-  // Convites de conexao agora vivem na tab Solicitacoes — tirar das notificacoes normais
-  // evita duplicidade (a mesma pessoa aparecia em Novas e em Solicitacoes ao mesmo tempo).
-  // Conversa tem canal próprio (aba Chat): misturar com curtida/convite no sino fazia a pessoa
-  // perder mensagem no meio do resto — e o pedido do suporte foi justamente separar.
-  const isChatNotification = (kind: string) => kind.toLowerCase() === "new_message";
+  // Módulo desativado não volta pela porta do sino: a notificação dele fica fora da lista.
+  // Mensagens de chat saíram do sino — o ChatDock e o ícone mobile são o canal de mensagens.
+  // Convites de conexão vivem na tab Solicitações.
   const visibleNotifications = (notificationsData?.items ?? []).filter(
     (notification) => !isNotificationHidden(notification.kind, disabledModules),
-  );
-  const chatNotifications = visibleNotifications.filter((notification) =>
-    isChatNotification(notification.kind),
   );
   const notificationList = visibleNotifications.filter(
     (notification) =>
       notification.kind.toLowerCase() !== "connection_request" &&
-      !isChatNotification(notification.kind),
+      notification.kind.toLowerCase() !== "new_message",
   );
 
   const currentUserId = getCurrentUserId();
@@ -138,21 +129,12 @@ export function NotificationsPopover() {
     },
   });
 
-  // A aba ativa vive na view; decifrar com o popover aberto cobre a aba Chat.
-  const chatPreviewOverrides = useDecryptedChatPreviews(open ? chatNotifications : []);
-
   return (
     <NotificationsPopoverView
       open={open}
       onOpenChange={setOpen}
       notifications={notificationList.map(toNotificationData)}
-      chatNotifications={chatNotifications
-        .map((notification) =>
-          chatPreviewOverrides.has(notification.id)
-            ? { ...notification, body: chatPreviewOverrides.get(notification.id)! }
-            : notification,
-        )
-        .map(toNotificationData)}
+      chatNotifications={[]}
       requests={incomingRequests.map((request) => {
         const profile = profilesByUserId.get(request.fromUserId) ?? null;
         return {
@@ -183,60 +165,4 @@ export function NotificationsPopover() {
       }}
     />
   );
-}
-
-/**
- * Para notificacoes de chat com "Mensagem cifrada", busca as conversas e decifra o preview.
- * Retorna um mapa notificationId → texto decifrado.
- */
-function useDecryptedChatPreviews(chatNotifications: Notification[]): Map<string, string> {
-  const [previews, setPreviews] = useState<Map<string, string>>(new Map());
-
-  const needsDecrypt = chatNotifications.filter((n) => n.body === "Mensagem cifrada");
-
-  const { data: conversations } = useQuery({
-    queryKey: ["conversations", "e2e-preview"],
-    queryFn: () => messagesApi.listConversations(null, 20),
-    enabled: needsDecrypt.length > 0,
-    staleTime: 30_000,
-  });
-
-  useEffect(() => {
-    if (!conversations || needsDecrypt.length === 0) return;
-    let cancelled = false;
-
-    async function decrypt() {
-      const has = await hasLocalKeys();
-      if (!has || cancelled) return;
-
-      const convMap = new Map(conversations!.items.map((c) => [c.id, c]));
-      const result = new Map<string, string>();
-
-      for (const notif of needsDecrypt) {
-        const convId = notif.href.replace(/.*\/conversations\//, "").split(/[/?#]/)[0];
-        const conv = convMap.get(convId);
-        if (!conv?.lastMessageE2e || !conv.lastMessage || !conv.lastMessageIv) continue;
-        try {
-          const plain = await decryptReceived({
-            e2e: true,
-            text: conv.lastMessage,
-            iv: conv.lastMessageIv,
-            conversationId: convId,
-          } as Parameters<typeof decryptReceived>[0]);
-          result.set(notif.id, plain);
-        } catch {
-          /* decifrar falhou, mantém o body original */
-        }
-      }
-
-      if (!cancelled) setPreviews(result);
-    }
-
-    decrypt();
-    return () => {
-      cancelled = true;
-    };
-  }, [conversations, needsDecrypt.length]);
-
-  return previews;
 }
