@@ -555,6 +555,28 @@ export const texts = {
       backToFeed: "Voltar ao feed",
     },
   },
+  presence: {
+    title: "Estado de presença",
+    change: "Mudar presença",
+    unavailable: "O estado de presença ainda não está disponível neste servidor.",
+    updateError: "Não foi possível atualizar sua presença. Tente novamente.",
+    options: {
+      AVAILABLE: { label: "Disponível", hint: "Você aparece online." },
+      AWAY: { label: "Ausente", hint: "Você aparece como ausente." },
+      DO_NOT_DISTURB: {
+        label: "Não perturbar",
+        hint: "Notificações no dispositivo ficam silenciadas.",
+      },
+      INVISIBLE: { label: "Invisível", hint: "Você aparece offline para outras pessoas." },
+    },
+    publicStatus: {
+      AVAILABLE: "Disponível",
+      AWAY: "Ausente",
+      DO_NOT_DISTURB: "Não perturbar",
+      INVISIBLE: "Offline",
+      OFFLINE: "Offline",
+    },
+  },
   account: {
     identity: {
       saved: "Identidade salva.",

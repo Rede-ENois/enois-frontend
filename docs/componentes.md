@@ -1,5 +1,12 @@
 # Componentes
 
+## `PresenceIndicator` (`src/components/presence-indicator.tsx`)
+
+A bolinha aparece junto ao nome no perfil e no post do feed. Para o titular, abre as
+opções Disponível, Ausente, Não perturbar e Invisível. Para outras pessoas, mostra
+somente o estado público. O heartbeat da área autenticada atualiza a atividade sem
+modificar a escolha. O status de texto e ícone do perfil continua separado.
+
 ## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
 
 Seasonal cosmetics shop in the `Loja` tab of `/carteira`, drawn by the design system
