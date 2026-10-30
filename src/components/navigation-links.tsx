@@ -11,7 +11,6 @@ import { communityQueries } from "@/lib/query-options/communities";
 import { hasSessionFlag } from "@/lib/session";
 import { useDisabledModules } from "@/lib/use-personalization";
 
-import { ContextSwitcher } from "./context-switcher";
 import { navigationItemsFor } from "./navigation-items";
 
 /**
@@ -54,9 +53,6 @@ export function NavigationLinks({
 
   return (
     <NavigationLinksView
-      // Rendered on the server too: this menu only exists inside the authenticated shell, and the
-      // switcher reads the device choice through useSyncExternalStore (no hydration mismatch).
-      header={<ContextSwitcher collapsed={collapsed} onNavigate={onNavigate} />}
       items={navigationItemsFor(context)
         .filter((item) => !item.module || !disabledModules.has(item.module))
         .map((item) => ({
