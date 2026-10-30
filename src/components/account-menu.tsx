@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { AccountMenuProps } from "@/types/components/account/account-menu-props";
@@ -52,8 +51,6 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const [showHealthyUsage, setShowHealthyUsage] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const context = useInterfaceContext();
   const { data: corporate } = useQuery({
@@ -67,8 +64,8 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const choose = (next: InterfaceContext) => {
     writeStoredContext(next);
     setMenuOpen(false);
-    const destination = destinationAfterSwitch(pathname, next);
-    if (destination) void navigate({ to: destination });
+    const destination = destinationAfterSwitch(window.location.pathname, next);
+    if (destination) window.location.assign(destination);
   };
 
   const openDialog = (show: (open: boolean) => void) => () => {
