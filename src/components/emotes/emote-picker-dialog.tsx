@@ -80,6 +80,7 @@ export function EmotePickerDialog({
         <div className="relative min-w-0">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle" />
           <Input
+            aria-label={texts.emotes.searchPlaceholder}
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
             placeholder={texts.emotes.searchPlaceholder}

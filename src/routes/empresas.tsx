@@ -211,12 +211,14 @@ function Empresas() {
 
               <div className="mt-3 space-y-3 text-sm">
                 <input
+                  aria-label={texts.empresa.name}
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   placeholder={texts.empresa.name}
                   className="h-10 w-full rounded-lg border border-border-soft bg-surface-1 px-3 outline-none"
                 />
                 <textarea
+                  aria-label={texts.empresa.description}
                   value={form.description}
                   onChange={(event) => setForm({ ...form, description: event.target.value })}
                   placeholder={texts.empresa.description}
@@ -226,6 +228,7 @@ function Empresas() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <input
+                    aria-label={texts.empresa.sector}
                     value={form.sector}
                     onChange={(event) => setForm({ ...form, sector: event.target.value })}
                     placeholder={texts.empresa.sector}
@@ -248,12 +251,14 @@ function Empresas() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <input
+                    aria-label={texts.empresa.location}
                     value={form.location}
                     onChange={(event) => setForm({ ...form, location: event.target.value })}
                     placeholder={texts.empresa.location}
                     className="h-10 w-full rounded-lg border border-border-soft bg-surface-1 px-3 outline-none"
                   />
                   <input
+                    aria-label={texts.empresa.website}
                     value={form.website}
                     onChange={(event) => setForm({ ...form, website: event.target.value })}
                     placeholder={texts.empresa.website}

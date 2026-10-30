@@ -240,6 +240,7 @@ function RevokePenaltyDialog({
             </span>
 
             <Textarea
+              aria-label={texts.moderator.penalties.revokeReasonPlaceholder}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               maxLength={1000}
@@ -354,6 +355,7 @@ function EditPenaltyDialog({
             </span>
 
             <Textarea
+              aria-label={texts.moderator.penalties.editReasonPlaceholder}
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               maxLength={1000}

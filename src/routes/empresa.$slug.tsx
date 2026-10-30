@@ -411,6 +411,7 @@ function Empresa() {
             <p className="mt-1 text-xs text-text-subtle">{texts.empresa.applyHint}</p>
 
             <Textarea
+              aria-label={texts.empresa.applyPlaceholder}
               value={proposalMessage}
               onChange={(event) => setProposalMessage(event.target.value)}
               rows={4}
@@ -442,6 +443,7 @@ function Empresa() {
 
             <div className="mt-3 space-y-3 text-sm">
               <input
+                aria-label={texts.empresa.projectTitle}
                 value={projectForm.title}
                 maxLength={200}
                 onChange={(event) => setProjectForm({ ...projectForm, title: event.target.value })}
@@ -503,6 +505,7 @@ function Empresa() {
 
               <div className="grid grid-cols-2 gap-3">
                 <input
+                  aria-label={texts.empresa.budgetLabel}
                   value={projectForm.budget}
                   onChange={(event) =>
                     setProjectForm({ ...projectForm, budget: event.target.value })
