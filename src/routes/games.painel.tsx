@@ -202,18 +202,21 @@ function StudioPanel() {
           </div>
 
           <Input
+            aria-label={texts.games.panel.displayName}
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             placeholder={texts.games.panel.displayName}
             maxLength={120}
           />
           <Input
+            aria-label={texts.games.panel.headline}
             value={headline}
             onChange={(event) => setHeadline(event.target.value)}
             placeholder={texts.games.panel.headline}
             maxLength={200}
           />
           <Textarea
+            aria-label={texts.games.panel.bio}
             value={bio}
             onChange={(event) => setBio(event.target.value)}
             placeholder={texts.games.panel.bio}
@@ -221,6 +224,7 @@ function StudioPanel() {
             className="min-h-[120px]"
           />
           <Input
+            aria-label={texts.games.panel.links}
             value={links}
             onChange={(event) => setLinks(event.target.value)}
             placeholder={texts.games.panel.links}

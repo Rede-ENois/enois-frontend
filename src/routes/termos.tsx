@@ -42,7 +42,7 @@ function Termos() {
         <p>
           <>{texts.legal.footer.backPrefix}</>
 
-          <Link to="/" className="text-primary hover:underline">
+          <Link to="/" className="text-primary underline underline-offset-2">
             {texts.legal.footer.home}
           </Link>
         </p>

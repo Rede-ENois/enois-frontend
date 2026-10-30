@@ -277,6 +277,7 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.expertise}</Label>
 
         <Input
+          aria-label={texts.mentoring.expertise}
           value={skillsText}
           onChange={(e) => setSkillsText(e.target.value)}
           placeholder={texts.mentoring.expertisePlaceholder}
@@ -288,6 +289,7 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.investment}</Label>
 
         <Input
+          aria-label={texts.mentoring.investment}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder={texts.mentoring.free}

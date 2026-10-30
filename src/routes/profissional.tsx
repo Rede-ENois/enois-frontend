@@ -269,6 +269,7 @@ function Profissional() {
               <label className="text-xs text-muted-foreground">{texts.corporate.username}</label>
 
               <Input
+                aria-label={texts.corporate.username}
                 className={FIELD_CLASS}
                 value={form.username}
                 onChange={(event) => setForm({ ...form, username: event.target.value })}
@@ -282,6 +283,7 @@ function Profissional() {
               <label className="text-xs text-muted-foreground">{texts.corporate.name}</label>
 
               <Input
+                aria-label={texts.corporate.name}
                 className={FIELD_CLASS}
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -386,6 +388,7 @@ function Profissional() {
                 <label className="text-xs text-muted-foreground">{texts.corporate.name}</label>
 
                 <Input
+                  aria-label={texts.corporate.name}
                   className={FIELD_CLASS}
                   value={form.name}
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -438,6 +441,7 @@ function Profissional() {
                 <label className="text-xs text-muted-foreground">{texts.corporate.headline}</label>
 
                 <Input
+                  aria-label={texts.corporate.headline}
                   className={FIELD_CLASS}
                   value={form.headline}
                   onChange={(event) => setForm({ ...form, headline: event.target.value })}
@@ -451,6 +455,7 @@ function Profissional() {
                 <label className="text-xs text-muted-foreground">{texts.corporate.bio}</label>
 
                 <Textarea
+                  aria-label={texts.corporate.bio}
                   className={FIELD_CLASS}
                   rows={4}
                   value={form.bio}
@@ -465,6 +470,7 @@ function Profissional() {
                 </label>
 
                 <Textarea
+                  aria-label={texts.corporate.bannerHtml}
                   className={`${FIELD_CLASS} font-mono text-xs`}
                   rows={6}
                   value={form.bannerHtml}
@@ -483,6 +489,7 @@ function Profissional() {
                   </label>
 
                   <Input
+                    aria-label={texts.corporate.location}
                     className={FIELD_CLASS}
                     value={form.location}
                     onChange={(event) => setForm({ ...form, location: event.target.value })}
@@ -496,6 +503,7 @@ function Profissional() {
                   </label>
 
                   <Input
+                    aria-label={texts.corporate.industry}
                     className={FIELD_CLASS}
                     value={form.industry}
                     onChange={(event) => setForm({ ...form, industry: event.target.value })}
@@ -510,6 +518,7 @@ function Profissional() {
                 </label>
 
                 <Input
+                  aria-label={texts.corporate.externalLinks}
                   className={FIELD_CLASS}
                   value={form.externalLinks}
                   onChange={(event) => setForm({ ...form, externalLinks: event.target.value })}

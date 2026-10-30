@@ -86,6 +86,7 @@ function ProjectsCatalog() {
           <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
             <Input
+              aria-label={texts.projects.searchPlaceholder}
               value={term}
               onChange={(event) => setTerm(event.target.value)}
               placeholder={texts.projects.searchPlaceholder}
