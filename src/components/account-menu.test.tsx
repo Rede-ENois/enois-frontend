@@ -44,7 +44,10 @@ vi.mock("@/lib/interface-context", () => ({
   destinationAfterSwitch: () => null,
   professionalReady: () => false,
 }));
-vi.mock("@/lib/session", () => ({ hasSessionFlag: () => true }));
+vi.mock("@/lib/session", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/session")>()),
+  hasSessionFlag: () => true,
+}));
 
 const perfil = {
   id: "user_1",
