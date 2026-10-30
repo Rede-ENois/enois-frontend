@@ -26,6 +26,7 @@ Seções:
 Funcionalidades:
 
 - **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo)
+- **`?tipo=artigo`:** abre o compositor no tipo Artigo; é a entrada de "Escrever artigo" no perfil. O parâmetro sai da URL ao ser lido, para recarregar a página não reabrir o editor. Com a identidade profissional ele é ignorado (ali só se publica `BUSINESS`)
 - **Identidade ativa:** escolhida no menu da conta; com a profissional, o compositor publica no feed corporativo (`BUSINESS`) e os tipos de página/artigo saem da seleção — regras em `componentes.md`
 - **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos
 - **Feed infinito** de `PostCard` components
