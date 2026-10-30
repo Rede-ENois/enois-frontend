@@ -1047,7 +1047,7 @@ export const texts = {
         bodyLabel: "Texto do artigo",
         bodyPlaceholder: "Escreva o artigo. O campo de cima é o título que aparece no feed.",
         bodyHint:
-          "Artigo aceita até 4.000 caracteres (post comum aceita 1.200) e o texto fica guardado separado do post.",
+          "Artigo aceita até 10.000 caracteres (post comum aceita 1.200) e o texto fica guardado separado do post.",
       },
       media: "Mídia",
       video: "Vídeo",

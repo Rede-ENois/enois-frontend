@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { ProfileQuickComposerProps } from "@/types/components/profile/profile-quick-composer-props";
@@ -13,6 +14,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const upload = useMediaUpload();
 
@@ -39,6 +41,7 @@ export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
       uploadProgress={
         upload.status === "uploading" ? texts.feed.composer.uploadProgress(upload.progress) : null
       }
+      onWriteArticle={() => void navigate({ to: "/feed", search: { tipo: "artigo" } })}
       onPublish={async (payload: ProfileQuickComposerPublishPayload) => {
         let mediaIds: string[] = [];
         if (payload.files.length > 0) {

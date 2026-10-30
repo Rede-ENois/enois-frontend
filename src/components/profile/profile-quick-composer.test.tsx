@@ -12,17 +12,24 @@ const mocks = vi.hoisted(() => ({
   toast: vi.fn(),
   uploadAll: vi.fn(),
   create: vi.fn(),
-  // O composer visual vem do design system; aqui ele só expõe o onPublish para o teste acioná-lo.
+  navigate: vi.fn(),
+  // O composer visual vem do design system; aqui ele só expõe as ações para o teste acioná-las.
   onPublish: null as null | ((payload: unknown) => Promise<boolean>),
+  onWriteArticle: null as null | (() => void),
 }));
 
 vi.mock("@rede-enois/design-system/ui", () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock("@rede-enois/design-system/domain", () => ({
-  ProfileQuickComposer: (props: { onPublish: (payload: unknown) => Promise<boolean> }) => {
+  ProfileQuickComposer: (props: {
+    onPublish: (payload: unknown) => Promise<boolean>;
+    onWriteArticle: () => void;
+  }) => {
     mocks.onPublish = props.onPublish;
+    mocks.onWriteArticle = props.onWriteArticle;
     return null;
   },
 }));
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
 vi.mock("@/lib/use-media-upload", () => ({
   useMediaUpload: () => ({ status: "idle", progress: 0, uploadAll: mocks.uploadAll }),
 }));
@@ -44,6 +51,7 @@ describe("ProfileQuickComposer (perfil): falha de envio de mídia", () => {
     mocks.toast.mockReset();
     mocks.uploadAll.mockReset();
     mocks.create.mockReset();
+    mocks.navigate.mockReset();
     host = document.createElement("div");
     document.body.append(host);
     root = createRoot(host);
@@ -62,6 +70,12 @@ describe("ProfileQuickComposer (perfil): falha de envio de mídia", () => {
     host.remove();
     client.clear();
     vi.unstubAllGlobals();
+  });
+
+  it('leva "Escrever artigo" ao composer do feed já no tipo artigo', () => {
+    mocks.onWriteArticle?.();
+
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/feed", search: { tipo: "artigo" } });
   });
 
   it("avisa a pessoa e não publica quando o envio da mídia falha", async () => {

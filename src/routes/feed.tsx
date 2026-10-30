@@ -132,13 +132,16 @@ export const Route = createFileRoute("/feed")({
   /**
    * A aba vive na URL (`/feed?aba=ALL`): abrir uma publicação e voltar restaura a MESMA aba em que
    * a pessoa estava — antes o retorno caía sempre em "Para você".
+   *
+   * `tipo=artigo` é a entrada de quem vem de "Escrever artigo" no perfil: o editor de artigo mora
+   * no composer do feed, e o parâmetro só escolhe o tipo ao chegar.
    */
-  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab } => {
+  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab; tipo?: "artigo" } => {
     const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
         : undefined;
-    return aba ? { aba } : {};
+    return { ...(aba ? { aba } : {}), ...(search.tipo === "artigo" ? { tipo: "artigo" } : {}) };
   },
   head: () => ({
     meta: [
@@ -242,7 +245,7 @@ function Home() {
   const authenticated = useIsAuthenticated();
   // A aba vem da URL; trocar de aba REPLACES o histórico (o "voltar" continua voltando para a
   // página anterior, e não passeando pelas abas).
-  const { aba } = Route.useSearch();
+  const { aba, tipo } = Route.useSearch();
   const navigate = Route.useNavigate();
   // Interface profissional: o início É o feed corporativo (publicações de trabalho). Na social,
   // o feed corporativo não aparece.
@@ -318,6 +321,13 @@ function Home() {
       setPostType((current) => (current === "BUSINESS" ? "INSIGHT" : current));
     }
   }, [identity]);
+  // O parâmetro sai da URL assim que é lido: senão recarregar a página depois de publicar reabriria
+  // o editor de artigo. A identidade profissional só publica BUSINESS, e esse tipo continua valendo.
+  useEffect(() => {
+    if (tipo !== "artigo") return;
+    if (identity !== "CORPORATE") setPostType("ARTICLE");
+    void navigate({ search: aba ? { aba } : {}, replace: true });
+  }, [tipo, identity, aba, navigate]);
 
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
