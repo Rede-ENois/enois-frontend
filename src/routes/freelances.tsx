@@ -467,12 +467,14 @@ function FreelanceDialog({
 
         <div className="space-y-3">
           <Input
+            aria-label={texts.jobs.freelancePage.titleField}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder={texts.jobs.freelancePage.titleField}
             maxLength={200}
           />
           <Textarea
+            aria-label={texts.jobs.freelancePage.scopeField}
             value={scope}
             onChange={(event) => setScope(event.target.value)}
             placeholder={texts.jobs.freelancePage.scopeField}
@@ -503,6 +505,11 @@ function FreelanceDialog({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
+              aria-label={
+                paymentMethod === "CASH"
+                  ? texts.jobs.freelancePage.budgetMinCash
+                  : texts.jobs.freelancePage.budgetMin
+              }
               value={budgetMin}
               onChange={(event) => setBudgetMin(event.target.value)}
               placeholder={
@@ -513,6 +520,11 @@ function FreelanceDialog({
               inputMode="decimal"
             />
             <Input
+              aria-label={
+                paymentMethod === "CASH"
+                  ? texts.jobs.freelancePage.budgetMaxCash
+                  : texts.jobs.freelancePage.budgetMax
+              }
               value={budgetMax}
               onChange={(event) => setBudgetMax(event.target.value)}
               placeholder={

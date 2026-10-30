@@ -82,6 +82,7 @@ function MyServices() {
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
           <Input
+            aria-label="Buscar nos meus serviços"
             value={term}
             onChange={(event) => setTerm(event.target.value)}
             placeholder="Buscar nos meus serviços"
@@ -199,18 +200,21 @@ function NewServiceDialog({
 
         <div className="space-y-3">
           <Input
+            aria-label="Título do serviço"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Título do serviço"
             maxLength={160}
           />
           <Input
+            aria-label="Categoria"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder="Categoria"
             maxLength={40}
           />
           <Textarea
+            aria-label="O que você faz"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="O que você faz"
@@ -218,6 +222,7 @@ function NewServiceDialog({
             maxLength={2000}
           />
           <Textarea
+            aria-label="O que está incluído (entregáveis)"
             value={deliverables}
             onChange={(e) => setDeliverables(e.target.value)}
             placeholder="O que está incluído (entregáveis)"
@@ -230,6 +235,7 @@ function NewServiceDialog({
               <Label className="text-xs text-text-subtle">Moeda</Label>
 
               <select
+                aria-label="Moeda"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value as "FAISCA" | "BRL")}
                 className="h-10 w-full rounded-md border border-border-soft bg-surface-1 px-3 text-sm"
@@ -246,6 +252,7 @@ function NewServiceDialog({
               </Label>
 
               <Input
+                aria-label={currency === "BRL" ? "Preço (R$)" : "Preço (faíscas)"}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder={currency === "BRL" ? "150,00" : "50"}
@@ -257,6 +264,7 @@ function NewServiceDialog({
               <Label className="text-xs text-text-subtle">Prazo (dias)</Label>
 
               <Input
+                aria-label="Prazo (dias)"
                 type="number"
                 min={1}
                 max={365}

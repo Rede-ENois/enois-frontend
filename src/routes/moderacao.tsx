@@ -320,12 +320,14 @@ function AdminSection() {
       <div className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4">
         <div className="grid gap-2 sm:grid-cols-2">
           <Input
+            aria-label="Nome de usuário"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="@usuário"
             autoComplete="off"
           />
           <Input
+            aria-label="Motivo (mínimo 10 caracteres)"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder="Motivo (mínimo 10 caracteres)"
@@ -569,6 +571,7 @@ function JogosSection() {
               )}
 
               <Input
+                aria-label="Motivo da decisão (opcional — quem recusa deve dizer por quê)"
                 value={motivos[g.id] ?? ""}
                 onChange={(e) => setMotivos((m) => ({ ...m, [g.id]: e.target.value }))}
                 placeholder="Motivo da decisão (opcional — quem recusa deve dizer por quê)"
