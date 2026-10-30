@@ -38,6 +38,13 @@ vi.mock("./delete-account-dialog", () => ({ DeleteAccountDialog: () => null }));
 vi.mock("./healthy-usage/healthy-usage-dialog", () => ({ HealthyUsageDialog: () => null }));
 vi.mock("./linked-accounts-dialog", () => ({ LinkedAccountsDialog: () => null }));
 vi.mock("./push-toggle", () => ({ PushToggle: () => null }));
+vi.mock("@/lib/interface-context", () => ({
+  useInterfaceContext: () => "SOCIAL" as const,
+  writeStoredContext: vi.fn(),
+  destinationAfterSwitch: () => null,
+  professionalReady: () => false,
+}));
+vi.mock("@/lib/session", () => ({ hasSessionFlag: () => true }));
 
 const perfil = {
   id: "user_1",
