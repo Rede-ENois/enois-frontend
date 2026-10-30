@@ -780,7 +780,7 @@ function Profile() {
                  do iframe eram o que parecia "borda branca". */
               <section
                 id="sobre"
-                className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
+                className="scroll-mt-20 overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
               >
                 {/* Sem canto no card: a bio em HTML vai até as bordas (o raio do card recortava os
                     cantos dela — era o que sobrava de arredondamento). */}
@@ -814,7 +814,7 @@ function Profile() {
 
             {/* Projetos: cards abaixo da bio — estruturados (stack, repo, status, diário)
                 ou o HTML próprio do autor. O dono gerencia por aqui mesmo. */}
-            <div id="projetos">
+            <div id="projetos" className="scroll-mt-20">
               <ProfileProjectsSection username={user.username} isOwner={isOwnProfile} />
             </div>
 
@@ -1066,7 +1066,7 @@ function Section({ title, icon: Icon, children, id }: SectionProps & { id?: stri
   return (
     <section
       id={id}
-      className="rounded-2xl border border-border-soft bg-surface-card p-4 shadow-[0_18px_50px_-44px_color-mix(in_oklab,var(--primary)_85%,transparent)] sm:p-6"
+      className="scroll-mt-20 rounded-2xl border border-border-soft bg-surface-card p-4 shadow-[0_18px_50px_-44px_color-mix(in_oklab,var(--primary)_85%,transparent)] sm:p-6"
     >
       <h2 className="mb-4 flex items-center gap-2 text-base font-normal text-text-strong">
         {Icon && (

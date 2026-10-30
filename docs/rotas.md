@@ -200,6 +200,9 @@ Página pública (qualquer um pode ver). Loader busca dados ou `notFound`.
 - Avatar editável com hover e crop
 - Nome, headline, badges (openToWork, isMentor), empresa, local, conexões, reputação
 - Seções: Sobre, Habilidades, Objetivos, Publicações
+- As âncoras nativas de Sobre, Projetos e Publicações recentes usam `scroll-mt-20` nos destinos
+  para manter os títulos visíveis abaixo do cabeçalho. O contador de publicações usa o mesmo
+  destino `#atividade`.
 - Sidebar: Disponibilidade, Recomendar, Recomendações recebidas, Ranking, Links externos
 - Dono do perfil: botão "Editar perfil" com dialog multi-aba
 - Outros usuários: botões "Mensagem" e "Conectar"
