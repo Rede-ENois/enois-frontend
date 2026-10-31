@@ -1038,6 +1038,8 @@ export const texts = {
         divertido: "Divertido",
         moment: "Momento",
         momentHint: "Momento se apaga sozinho em 24 horas.",
+        poll: "Enquete",
+        pollHint: "O campo de cima é o título da enquete; abaixo entram de 2 a 6 alternativas.",
       },
       typePicker: {
         label: "Tipo",
@@ -1109,6 +1111,22 @@ export const texts = {
   posts: {
     mediaSpoiler: {
       badge: "SPOILER",
+    },
+    /** Enquete: o voto é único e definitivo — a tela diz isso antes e depois de votar. */
+    poll: {
+      optionsLabel: "Alternativas",
+      optionPlaceholder: (position: number) => `Alternativa ${position}`,
+      addOption: "Adicionar alternativa",
+      removeOption: "Remover alternativa",
+      hint: "De 2 a 6 alternativas, até 120 caracteres cada.",
+      vote: "Votar",
+      voting: "Registrando seu voto...",
+      votes: (total: number) => (total === 1 ? "1 voto" : `${total} votos`),
+      noVotes: "Nenhum voto ainda",
+      yourVote: "Seu voto",
+      locked: "Voto único — não dá para trocar depois.",
+      error: "Não foi possível registrar o voto agora.",
+      alreadyVoted: "Você já votou nesta enquete — o voto não pode ser trocado.",
     },
     /** Fixar UM post no topo do feed da comunidade/grupo (a administração faz isso). */
     pin: {
