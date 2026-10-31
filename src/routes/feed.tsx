@@ -14,7 +14,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { POST_TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
-import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
+import { ARTICLE_BODY_MAX_LENGTH, POLL_MIN_OPTIONS, POST_TYPES } from "@/constants/post-types";
 import { texts } from "@/texts";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { FeedPage } from "@/types/application/feed/feed-page";
@@ -70,6 +70,7 @@ import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } fro
 import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { caughtUpIndex, isDateOrderedTab, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { effectiveIdentity, professionalReady, useInterfaceContext } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
@@ -90,6 +91,7 @@ import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PlatformSpacesCard } from "@/components/platform-spaces-card";
 import { PostCard } from "@/components/post-card";
+import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Abas válidas da tela inicial (a URL carrega a escolhida). */
@@ -321,6 +323,9 @@ function Home() {
 
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
+  // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
       ? POST_TYPES.filter((option) => option.id === "BUSINESS")
@@ -367,6 +372,8 @@ function Home() {
     const content = draft.trim();
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    const scheduledOptions = normalizePollOptions(pollOptions);
+    if (pollMode && scheduledOptions.length < POLL_MIN_OPTIONS) return;
     if (!scheduleAt) return;
 
     setPublishError(null);
@@ -391,6 +398,7 @@ function Home() {
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: scheduledOptions } : {}),
         // O assunto viaja com o agendado e vale quando ele entra no ar.
         ...(topic ? { topic } : {}),
         scheduledAt: new Date(scheduleAt).toISOString(),
@@ -402,6 +410,7 @@ function Home() {
       setMediaSpoiler(false);
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setTypePickerOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
@@ -421,6 +430,9 @@ function Home() {
     // precisa de titulo (o texto de cima) E do corpo. Nos demais, o texto de cima e o post.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
+    const options = normalizePollOptions(pollOptions);
+    if (pollMode && options.length < POLL_MIN_OPTIONS) return;
 
     const formData = new FormData(event.currentTarget);
     setPublishError(null);
@@ -436,6 +448,7 @@ function Home() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(topic ? { topic } : {}),
         website: String(formData.get("website") ?? ""),
@@ -460,9 +473,9 @@ function Home() {
       setPostType("INSIGHT");
       setMedia([]);
       setMediaSpoiler(false);
-      setPostType("INSIGHT");
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setTypePickerOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
@@ -697,6 +710,8 @@ function Home() {
               </div>
 
               {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
+
+              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
 
               {pageMode && (
                 <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">

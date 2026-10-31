@@ -14,6 +14,8 @@ const LIMITS: Record<PostView["type"], number> = {
   QUESTION: 1200,
   DIVERTIDO: 400,
   MOMENT: 500,
+  // Enquete: o título da enquete (as alternativas têm limite próprio: 120 cada).
+  POLL: 400,
   REVIEW: 600,
   PROJECT: 2000,
   NEWS: 2000,

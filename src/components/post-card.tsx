@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { MentionTextarea } from "@/components/mention-textarea";
+import { PollCard } from "@/components/post/poll-card";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 import { formatTime } from "./post/format-time";
@@ -283,6 +284,7 @@ function PostCardContainer({
           }
         />
       }
+      poll={post.type === "POLL" && post.poll ? <PollCard post={post} /> : undefined}
       reactionsSummary={<ReactionsSummary post={post} initialSummary={post.reactionSummary} />}
       notes={<PostNotes post={post} />}
       actions={

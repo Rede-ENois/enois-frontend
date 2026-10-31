@@ -13,7 +13,7 @@ import {
 import { TOPICS, TOPIC_LABELS, topicLabel } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
-import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
+import { ARTICLE_BODY_MAX_LENGTH, POLL_MIN_OPTIONS, POST_TYPES } from "@/constants/post-types";
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
@@ -55,6 +55,7 @@ import {
 
 import { ApiError, communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -68,6 +69,7 @@ import { CommunityFavoriteButton } from "@/components/community-favorite-button"
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
+import { PollComposer } from "@/components/post/poll-composer";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { ProfilePeek } from "@/components/profile/profile-peek";
@@ -133,6 +135,9 @@ function CommunityDetail() {
   const [typePickerOpen, setTypePickerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
+  // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
   const currentType = POST_TYPES.find((option) => option.id === postType) ?? POST_TYPES[0];
@@ -238,6 +243,7 @@ function CommunityDetail() {
       setMediaSpoiler(false);
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setMentionedUserIds([]);
       setPostType("INSIGHT");
       setPublishError(null);
@@ -254,6 +260,9 @@ function CommunityDetail() {
     // — as mesmas regras do composer do feed.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
+    const options = normalizePollOptions(pollOptions);
+    if (pollMode && options.length < POLL_MIN_OPTIONS) return;
 
     setPublishError(null);
     try {
@@ -269,6 +278,7 @@ function CommunityDetail() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
       });
     } catch (error) {
@@ -630,6 +640,8 @@ function CommunityDetail() {
               </div>
             )}
 
+            {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 <div className="relative">
@@ -740,6 +752,7 @@ function CommunityDetail() {
                 disabled={
                   (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                   (articleMode && !articleBody.trim()) ||
+                  (pollMode && normalizePollOptions(pollOptions).length < POLL_MIN_OPTIONS) ||
                   createPost.isPending ||
                   upload.status === "uploading" ||
                   !mediaReady

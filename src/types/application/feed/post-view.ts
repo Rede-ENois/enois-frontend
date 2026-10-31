@@ -1,5 +1,6 @@
 import type { PostCommunity } from "@/types/application/community/post-community";
 import type { MyPostNote } from "@/types/application/feed/my-post-note";
+import type { PollView } from "@/types/application/feed/poll-view";
 import type { PostNote } from "@/types/application/feed/post-note";
 import type { AuthorContributorTag } from "@/types/application/profile/author-contributor-tag";
 import type { AuthorNameStyle } from "@/types/application/profile/author-name-style";
@@ -43,7 +44,9 @@ export type PostView = {
     | "DIVERTIDO"
     | "MOMENT"
     /** Ponteiro de um post de blog: o conteúdo mora em /blog/{username}. */
-    | "BLOG";
+    | "BLOG"
+    /** Enquete: o content é o título e o `poll` traz as alternativas e o voto. */
+    | "POLL";
   content: string;
   /** Assunto do post (taxonomia da plataforma); nulo quando não classificado. */
   topic?: string | null;
@@ -57,6 +60,8 @@ export type PostView = {
   repostOfContent?: string | null;
   /** Mídias do original citado. */
   repostOfMediaIds?: string[] | null;
+  /** Enquete (só em posts do tipo POLL): alternativas, contagem e o voto de quem lê. */
+  poll?: PollView | null;
   /** HTML já sanitizado da mini página (só em posts do tipo PAGE; nulo nos demais). */
   pageHtml?: string | null;
   /**

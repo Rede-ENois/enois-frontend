@@ -12,6 +12,7 @@ import {
   Newspaper,
   Smile,
   Star,
+  Vote,
 } from "lucide-react";
 
 /**
@@ -38,6 +39,12 @@ export const POST_TYPES: { id: string; label: string; icon: LucideIcon; hint?: s
     icon: Calendar,
     hint: texts.feed.composer.types.momentHint,
   },
+  {
+    id: "POLL",
+    label: texts.feed.composer.types.poll,
+    icon: Vote,
+    hint: texts.feed.composer.types.pollHint,
+  },
   { id: "PAGE", label: texts.feed.composer.page, icon: Code2 },
   // Publicação corporativa: só aparece quando a identidade ativa é a profissional.
   { id: "BUSINESS", label: texts.feed.composer.types.business, icon: Briefcase },
@@ -45,3 +52,8 @@ export const POST_TYPES: { id: string; label: string; icon: LucideIcon; hint?: s
 
 /** Teto do texto do artigo — o mesmo do backend (`PublishPostService.MAX_ARTICLE_BODY`). */
 export const ARTICLE_BODY_MAX_LENGTH = 10_000;
+
+/** Enquete: os mesmos números do backend (`PublishPostService.MIN/MAX_POLL_*`). */
+export const POLL_MIN_OPTIONS = 2;
+export const POLL_MAX_OPTIONS = 6;
+export const POLL_OPTION_MAX_LENGTH = 120;
