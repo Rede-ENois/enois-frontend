@@ -30,6 +30,7 @@ import {
   GitPullRequest,
   History,
   LifeBuoy,
+  Lightbulb,
   Mail,
   Megaphone,
   Scale,
@@ -64,6 +65,7 @@ import { PanicModeSection } from "@/components/moderation/panic-mode-section";
 import { PenaltiesSection } from "@/components/moderation/penalties-section";
 import { ProjectsReviewSection } from "@/components/moderation/projects-review-section";
 import { PullRequestsSection } from "@/components/moderation/pull-requests-section";
+import { SuggestionsSection } from "@/components/moderation/suggestions-section";
 import { SupportTicketsSection } from "@/components/moderation/support-tickets-section";
 import { SuspiciousPostsSection } from "@/components/moderation/suspicious-posts-section";
 import { SuspiciousUsersSection } from "@/components/moderation/suspicious-users-section";
@@ -80,6 +82,12 @@ const ALL_TABS: { id: ModeratorTabId; label: string; icon: typeof Flag; adminOnl
   { id: "games", label: texts.moderator.tabs.games, icon: Gamepad2, adminOnly: false },
   { id: "projects", label: texts.moderator.tabs.projects, icon: FolderKanban, adminOnly: false },
   { id: "support", label: texts.moderator.tabs.support, icon: LifeBuoy, adminOnly: false },
+  {
+    id: "suggestions",
+    label: texts.moderator.tabs.suggestions,
+    icon: Lightbulb,
+    adminOnly: false,
+  },
   { id: "issues", label: texts.moderator.tabs.issues, icon: Bug, adminOnly: false },
   { id: "pulls", label: texts.moderator.tabs.pulls, icon: GitPullRequest, adminOnly: false },
   { id: "notes", label: texts.moderator.tabs.notes, icon: StickyNote, adminOnly: false },
@@ -253,6 +261,7 @@ function Moderador() {
             {activeTab === "games" && <GamesReviewSection />}
             {activeTab === "projects" && <ProjectsReviewSection />}
             {canModerate && activeTab === "support" && <SupportTicketsSection mode="active" />}
+            {canModerate && activeTab === "suggestions" && <SuggestionsSection />}
             {canModerate && activeTab === "issues" && (
               <SupportTicketsSection lockedCategory="BUG" mode="active" />
             )}

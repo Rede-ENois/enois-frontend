@@ -3,6 +3,7 @@ export type ModeratorTabId =
   | "games"
   | "projects"
   | "support"
+  | "suggestions"
   | "issues"
   | "history"
   | "appeals"

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as SugestoesRouteImport } from './routes/sugestoes'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SilenciadosRouteImport } from './routes/silenciados'
@@ -93,6 +94,11 @@ const TermosRoute = TermosRouteImport.update({
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SugestoesRoute = SugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SobreRoute = SobreRouteImport.update({
@@ -475,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -547,6 +554,7 @@ export interface FileRoutesByTo {
   '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -620,6 +628,7 @@ export interface FileRoutesById {
   '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -694,6 +703,7 @@ export interface FileRouteTypes {
     | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -766,6 +776,7 @@ export interface FileRouteTypes {
     | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -838,6 +849,7 @@ export interface FileRouteTypes {
     | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -911,6 +923,7 @@ export interface RootRouteChildren {
   SilenciadosRoute: typeof SilenciadosRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
+  SugestoesRoute: typeof SugestoesRoute
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
@@ -953,6 +966,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/suporte'
       preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sugestoes': {
+      id: '/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/sugestoes'
+      preLoaderRoute: typeof SugestoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sobre': {
@@ -1577,6 +1597,7 @@ const rootRouteChildren: RootRouteChildren = {
   SilenciadosRoute: SilenciadosRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
+  SugestoesRoute: SugestoesRoute,
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,

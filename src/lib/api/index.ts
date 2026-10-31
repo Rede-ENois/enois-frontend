@@ -45,6 +45,7 @@ export { rankingApi } from "./ranking";
 export { usersApi } from "./users";
 export { recommendationsApi } from "./recommendations";
 export { supportApi } from "./support";
+export { suggestionsApi } from "./suggestions";
 export { contributorsApi } from "./contributors";
 export { statsApi } from "./stats";
 export { corporateApi } from "./corporate";

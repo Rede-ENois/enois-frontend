@@ -2338,6 +2338,58 @@ export const texts = {
       "Escreva direto para o time de suporte. Conte o que aconteceu e informe o e-mail da sua conta, se tiver.",
   },
 
+  suggestions: {
+    seoTitle: "Sugestões · Énóis",
+    title: "Sugestões",
+    subtitle:
+      "Tem uma ideia para o Énóis? Depois que o time aprova, ela vira uma issue pública no GitHub. Seu nome e seu e-mail nunca aparecem lá.",
+    target: "Onde a ideia se aplica",
+    targets: {
+      BACKEND: "Servidor e regras (backend)",
+      FRONTEND: "Telas e navegação (frontend)",
+      DESIGN_SYSTEM: "Visual e componentes (design system)",
+    } as Record<string, string>,
+    titleLabel: "Título",
+    titlePlaceholder: "Resuma a ideia em uma frase",
+    bodyLabel: "Descreva a ideia",
+    bodyPlaceholder: "O que você gostaria de ver e por quê?",
+    publicNotice:
+      "O texto vira público depois da aprovação. Não escreva dados pessoais, como e-mail, telefone ou endereço.",
+    validationTitle: "O título precisa ter pelo menos 5 caracteres.",
+    validationBody: "Descreva a ideia com pelo menos 20 caracteres.",
+    action: "Enviar sugestão",
+    sending: "Enviando...",
+    error: "Não foi possível enviar a sugestão. Tente novamente em instantes.",
+    successTitle: "Sugestão enviada",
+    successDescription:
+      "O time vai analisar. Se for aprovada, você acompanha o link da issue aqui embaixo.",
+    newSuggestion: "Enviar outra",
+    mineTitle: "Minhas sugestões",
+    mineEmpty: "Você ainda não enviou sugestões.",
+    mineError: "Não foi possível carregar suas sugestões.",
+    openIssue: "Ver issue no GitHub",
+    status: {
+      PENDING: "Em análise",
+      PUBLISHED: "Publicada",
+      REJECTED: "Não aprovada",
+    } as Record<string, string>,
+    link: "Quer sugerir uma melhoria? Envie uma sugestão",
+    admin: {
+      empty: "Nenhuma sugestão nesta fila.",
+      error: "Não foi possível carregar as sugestões.",
+      approve: "Aprovar e publicar",
+      reject: "Rejeitar",
+      approved: "Sugestão aprovada e issue aberta.",
+      rejected: "Sugestão rejeitada.",
+      actionError: "Não foi possível concluir a ação.",
+      publicWarning:
+        "Ao aprovar, o título e o texto abaixo viram uma issue pública. Confira se não há dado pessoal.",
+      filterPending: "Em análise",
+      filterPublished: "Publicadas",
+      filterRejected: "Rejeitadas",
+    },
+  },
+
   myReports: {
     seoTitle: "Minhas denúncias · Énóis",
     back: "Voltar",
@@ -2515,6 +2567,7 @@ export const texts = {
       games: "Jogos",
       projects: "Projetos",
       support: "Suporte",
+      suggestions: "Sugestões",
       issues: "Issues",
       history: "Histórico",
       appeals: "Recursos",

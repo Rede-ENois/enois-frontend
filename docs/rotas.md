@@ -349,6 +349,7 @@ seguintes; aqui é o mapa completo.
 | `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                               |
 | `/sobre`                         | `sobre.tsx`                                      | Sobre o projeto.                                                                |
 | `/suporte`                       | `suporte.tsx`                                    | Central de suporte (tickets, FAQ).                                              |
+| `/sugestoes`                     | `sugestoes.tsx`                                  | Enviar sugestão (anônima na issue pública, após aprovação) e ver as minhas.     |
 | `/termos`                        | `termos.tsx`                                     | Termos de uso.                                                                  |
 | `/vagas`                         | `vagas.tsx`                                      | Catálogo de vagas com busca booleana.                                           |
 | `/vagas/:jobId`                  | `vagas.$jobId.tsx`                               | Detalhe da vaga (candidatar, salvar).                                           |
