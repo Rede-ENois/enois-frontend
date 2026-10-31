@@ -9,6 +9,7 @@ import {
 
 import { contributorSealsApi } from "@/lib/api";
 import { dataCurta } from "@/lib/date/format";
+import { sealEmblemSrc } from "@/lib/seal-emblem";
 
 /**
  * Selos oficiais de contribuição no perfil. Só chegam aqui evidências validadas; notas internas e
@@ -22,9 +23,16 @@ export function ProfileSeals({ username }: { username: string }) {
     retry: false,
   });
 
+  // Variável intermediária: `emblemSrc` só existe no tipo do design system a partir da próxima versão.
+  const seals = (data ?? []).map((seal) => ({
+    ...seal,
+    grantedAtLabel: dataCurta(seal.grantedAt),
+    emblemSrc: sealEmblemSrc(seal.emblem),
+  }));
+
   return (
     <ProfileSealsView
-      seals={(data ?? []).map((seal) => ({ ...seal, grantedAtLabel: dataCurta(seal.grantedAt) }))}
+      seals={seals}
       renderEvidence={(seal) => (
         <SealEvidenceList username={username} category={seal.category} total={seal.evidenceCount} />
       )}
