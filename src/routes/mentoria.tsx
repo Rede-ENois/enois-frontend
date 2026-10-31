@@ -5,6 +5,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { CreateMentorInput } from "@/types/application/mentor/create-mentor-input";
+import type { MentorRoomMode } from "@/types/application/mentor/mentor-room-mode";
 import type { MentorCardProps } from "@/types/routes/mentoring/mentor-card-props";
 import type { RegisterMentorFormProps } from "@/types/routes/mentoring/register-mentor-form-props";
 import { UserAvatar } from "@rede-enois/design-system/domain";
@@ -44,13 +45,36 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { MentorAgendaDialog } from "@/components/mentoring/mentor-agenda-dialog";
+import { MentorRoomDialog } from "@/components/mentoring/mentor-room-dialog";
 import { MySessionsSection } from "@/components/mentoring/my-sessions-section";
+import { RoomNote } from "@/components/mentoring/session-room";
 import { WeeklyAvailabilityEditor } from "@/components/mentoring/weekly-availability-editor";
 
 // Os mesmos limites do backend (MentorService.MIN_SPARKS_PRICE / MAX_SPARKS_PRICE): o formulário
 // barra antes de gastar uma ida à API.
 const MIN_SPARKS_PRICE = 50 * FAIS_SCALE;
 const MAX_SPARKS_PRICE = 10_000 * FAIS_SCALE;
+
+// Formato que o Jitsi aceita como nome de sala (o backend normaliza para minúsculas).
+const JITSI_ROOM_NAME = /^[a-z0-9-]{3,100}$/i;
+
+const ROOM_OPTIONS: { value: MentorRoomMode; label: string; hint: string }[] = [
+  {
+    value: "JITSI_SESSION",
+    label: texts.mentoring.roomModeSession,
+    hint: texts.mentoring.roomModeSessionHint,
+  },
+  {
+    value: "JITSI_PERMANENT",
+    label: texts.mentoring.roomModePermanent,
+    hint: texts.mentoring.roomModePermanentHint,
+  },
+  {
+    value: "CUSTOM",
+    label: texts.mentoring.roomModeCustom,
+    hint: texts.mentoring.roomModeCustomHint,
+  },
+];
 
 export const Route = createFileRoute("/mentoria")({
   head: () => ({ meta: [{ title: texts.mentoring.seoTitle }] }),
@@ -84,6 +108,13 @@ function Mentoria() {
   // Quem já tem perfil de mentor edita o existente; "criar" de novo batia em 409 e a tela
   // escondia o motivo atrás de um erro genérico.
   const myMentor = mentors.find((m) => m.userId === currentUserId);
+
+  // O link permanente do Jitsi não vem na vitrine (é só do dono): buscado à parte, sob demanda.
+  const { data: myMentorRoom } = useQuery({
+    queryKey: ["mentor-room", myMentor?.id],
+    queryFn: () => mentorsApi.getRoom(myMentor!.id),
+    enabled: myMentor != null,
+  });
 
   const saveMentor = useMutation({
     mutationFn: (data: CreateMentorInput) =>
@@ -164,6 +195,8 @@ function Mentoria() {
                     initialPrice={myMentor?.price}
                     initialBanner={myMentor?.banner ?? undefined}
                     initialMeetingUrl={myMentor?.meetingUrl ?? undefined}
+                    initialRoomMode={myMentor?.roomMode}
+                    initialJitsiRoom={myMentorRoom?.jitsiRoom}
                     initialSparksPrice={myMentor?.sparksPrice ?? undefined}
                     mentorId={myMentor?.id}
                   />
@@ -231,6 +264,8 @@ function RegisterMentorForm({
   initialPrice,
   initialBanner,
   initialMeetingUrl,
+  initialRoomMode,
+  initialJitsiRoom,
   initialSparksPrice,
   mentorId,
 }: RegisterMentorFormProps) {
@@ -238,6 +273,8 @@ function RegisterMentorForm({
   const [price, setPrice] = useState(initialPrice ?? texts.mentoring.free);
   const [banner, setBanner] = useState(initialBanner ?? "");
   const [meetingUrl, setMeetingUrl] = useState(initialMeetingUrl ?? "");
+  const [roomMode, setRoomMode] = useState<MentorRoomMode>(initialRoomMode ?? "JITSI_SESSION");
+  const [jitsiRoom, setJitsiRoom] = useState(initialJitsiRoom ?? "");
   const [acceptSparks, setAcceptSparks] = useState(initialSparksPrice != null);
   const [sparksPriceText, setSparksPriceText] = useState(
     initialSparksPrice != null ? formatFaisca(initialSparksPrice) : "",
@@ -373,21 +410,68 @@ function RegisterMentorForm({
         )}
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">{texts.mentoring.meetingUrl}</Label>
+      <div className="space-y-2 rounded-xl border border-border-soft p-3">
+        <Label className="text-xs text-muted-foreground">{texts.mentoring.roomModeTitle}</Label>
 
-        <Input
-          value={meetingUrl}
-          onChange={(e) => setMeetingUrl(e.target.value)}
-          placeholder={texts.mentoring.meetingUrlPlaceholder}
-          type="url"
-          inputMode="url"
-          className="h-10 border-transparent bg-muted"
-        />
+        <p className="text-xs text-text-subtle">{texts.mentoring.roomModeHint}</p>
 
-        <p className="text-xs text-text-subtle">{texts.mentoring.meetingUrlHint}</p>
-        {meetingUrl.trim() && !meetingUrl.trim().startsWith("https://") && (
-          <p className="text-xs text-destructive">{texts.mentoring.meetingUrlInvalid}</p>
+        <div className="space-y-1.5" role="radiogroup" aria-label={texts.mentoring.roomModeTitle}>
+          {ROOM_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={roomMode === option.value}
+              onClick={() => setRoomMode(option.value)}
+              className={
+                roomMode === option.value
+                  ? "block w-full rounded-xl border border-primary bg-primary-soft px-3 py-2 text-left"
+                  : "block w-full rounded-xl border border-border-soft px-3 py-2 text-left transition hover:bg-muted"
+              }
+            >
+              <span className="text-sm font-medium">{option.label}</span>
+
+              <span className="block text-xs text-text-subtle">{option.hint}</span>
+            </button>
+          ))}
+        </div>
+
+        {roomMode === "JITSI_PERMANENT" && (
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">{texts.mentoring.jitsiRoomName}</Label>
+
+            <Input
+              value={jitsiRoom}
+              onChange={(e) => setJitsiRoom(e.target.value)}
+              placeholder={texts.mentoring.jitsiRoomNamePlaceholder}
+              className="h-10 border-transparent bg-muted"
+            />
+
+            <p className="text-xs text-text-subtle">{texts.mentoring.jitsiRoomNameHint}</p>
+            {jitsiRoom.trim() && !JITSI_ROOM_NAME.test(jitsiRoom.trim()) && (
+              <p className="text-xs text-destructive">{texts.mentoring.jitsiRoomNameInvalid}</p>
+            )}
+          </div>
+        )}
+
+        {roomMode === "CUSTOM" && (
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">{texts.mentoring.meetingUrl}</Label>
+
+            <Input
+              value={meetingUrl}
+              onChange={(e) => setMeetingUrl(e.target.value)}
+              placeholder={texts.mentoring.meetingUrlPlaceholder}
+              type="url"
+              inputMode="url"
+              className="h-10 border-transparent bg-muted"
+            />
+
+            <p className="text-xs text-text-subtle">{texts.mentoring.meetingUrlHint}</p>
+            {meetingUrl.trim() && !meetingUrl.trim().startsWith("https://") && (
+              <p className="text-xs text-destructive">{texts.mentoring.meetingUrlInvalid}</p>
+            )}
+          </div>
         )}
       </div>
 
@@ -397,7 +481,12 @@ function RegisterMentorForm({
           !skillsText.trim() ||
           isPending ||
           (acceptSparks && !sparksPriceValid) ||
-          (meetingUrl.trim().length > 0 && !meetingUrl.trim().startsWith("https://"))
+          (roomMode === "CUSTOM" &&
+            meetingUrl.trim().length > 0 &&
+            !meetingUrl.trim().startsWith("https://")) ||
+          (roomMode === "JITSI_PERMANENT" &&
+            jitsiRoom.trim().length > 0 &&
+            !JITSI_ROOM_NAME.test(jitsiRoom.trim()))
         }
         onClick={() => {
           const expertise = skillsText
@@ -408,8 +497,10 @@ function RegisterMentorForm({
             expertise,
             price: price || texts.mentoring.free,
             banner: banner || null,
-            meetingUrl: meetingUrl.trim() || null,
+            meetingUrl: roomMode === "CUSTOM" ? meetingUrl.trim() || null : null,
             sparksPrice: acceptSparks ? sparksPrice : null,
+            roomMode,
+            jitsiRoom: roomMode === "JITSI_PERMANENT" ? jitsiRoom.trim() || null : null,
           });
         }}
       >
@@ -474,12 +565,14 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
             <div className="flex flex-col gap-2">
               <AddSlotDialog mentorId={mentor.id} defaultOpen={openSlots} />
               <MentorAgendaDialog mentorId={mentor.id} />
+              <MentorRoomDialog mentorId={mentor.id} />
             </div>
           ) : (
             <BookSessionDialog
               mentorId={mentor.id}
               mentorName={user?.name ?? texts.mentoring.mentorFallback}
               meetingUrl={mentor.meetingUrl}
+              roomMode={mentor.roomMode}
               sparksPrice={mentor.sparksPrice}
             />
           )}
@@ -553,11 +646,13 @@ function BookSessionDialog({
   mentorId,
   mentorName,
   meetingUrl,
+  roomMode,
   sparksPrice,
 }: {
   mentorId: string;
   mentorName: string;
   meetingUrl?: string | null;
+  roomMode?: MentorRoomMode;
   /** Preço em milésimos de faísca; `null`/`undefined` quando o mentor não cobra em faíscas. */
   sparksPrice?: number | null;
 }) {
@@ -685,7 +780,7 @@ function BookSessionDialog({
               </div>
             )}
 
-            {meetingUrl && (
+            {roomMode === "CUSTOM" && meetingUrl ? (
               <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
                 {texts.mentoring.meetingRoom}:{" "}
                 <a
@@ -697,6 +792,10 @@ function BookSessionDialog({
                   {meetingUrl}
                 </a>
               </p>
+            ) : (
+              <div className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                <RoomNote mode={roomMode ?? "JITSI_SESSION"} />
+              </div>
             )}
 
             {slots.length > 0 && (

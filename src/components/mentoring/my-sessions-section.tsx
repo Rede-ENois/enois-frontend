@@ -14,6 +14,8 @@ import { useCurrentUser } from "@/lib/current-user";
 import { formatarData } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
+import { SessionRoom } from "@/components/mentoring/session-room";
+
 const STATUS_LABELS: Record<MySession["status"], string> = {
   SCHEDULED: texts.mentoring.statusScheduled,
   COMPLETED: texts.mentoring.statusCompleted,
@@ -200,16 +202,12 @@ function SessionList({
                 </Badge>
               </div>
 
-              {session.meetingUrl && (
-                <a
-                  href={session.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="block break-all text-xs text-primary underline"
-                >
-                  {session.meetingUrl}
-                </a>
-              )}
+              <SessionRoom
+                mentorId={session.mentorId}
+                sessionId={session.id}
+                roomUrl={session.roomUrl}
+                roomMode={session.roomMode}
+              />
 
               {onCancel && session.status === "SCHEDULED" && (
                 <Button

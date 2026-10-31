@@ -25,6 +25,8 @@ import { resolveCdnUrl } from "@/lib/api/media";
 import { formatarData } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
+import { SessionRoom } from "@/components/mentoring/session-room";
+
 const STATUS_LABELS: Record<MenteeSession["status"], string> = {
   SCHEDULED: texts.mentoring.statusScheduled,
   COMPLETED: texts.mentoring.statusCompleted,
@@ -154,6 +156,7 @@ export function MentorAgendaDialog({ mentorId }: { mentorId: string }) {
           {!isLoading && !isError && sessions.length > 0 && (
             <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
               <SessionGroup
+                mentorId={mentorId}
                 title={texts.mentoring.agendaUpcoming}
                 sessions={upcoming}
                 emptyLabel={texts.mentoring.agendaNoUpcoming}
@@ -165,6 +168,7 @@ export function MentorAgendaDialog({ mentorId }: { mentorId: string }) {
 
               {others.length > 0 && (
                 <SessionGroup
+                  mentorId={mentorId}
                   title={texts.mentoring.agendaHistory}
                   sessions={others}
                   contacting={contacting}
@@ -214,6 +218,7 @@ export function MentorAgendaDialog({ mentorId }: { mentorId: string }) {
 }
 
 function SessionGroup({
+  mentorId,
   title,
   sessions,
   emptyLabel,
@@ -222,6 +227,7 @@ function SessionGroup({
   onComplete,
   onCancel,
 }: {
+  mentorId: string;
   title: string;
   sessions: MenteeSession[];
   emptyLabel?: string;
@@ -284,6 +290,13 @@ function SessionGroup({
                   {session.message}
                 </p>
               )}
+
+              <SessionRoom
+                mentorId={mentorId}
+                sessionId={session.id}
+                roomUrl={session.roomUrl}
+                roomMode={session.roomMode}
+              />
 
               <div className="flex flex-wrap items-center gap-1">
                 <Button

@@ -34,7 +34,8 @@ const paid: MySession = {
   message: null,
   status: "SCHEDULED",
   priceSparks: 300_000,
-  meetingUrl: "https://meet.google.com/xyz",
+  roomUrl: "https://meet.google.com/xyz",
+  roomMode: "CUSTOM",
   createdAt: "2026-10-30T12:00:00Z",
 };
 
@@ -84,6 +85,10 @@ async function render(sessions: MySession[]) {
 const buttonByText = (text: string) =>
   Array.from(container.querySelectorAll("button")).find((item) => item.textContent?.includes(text));
 
+/** "Entrar na sala" é um link (abre em outra aba), não um botão. */
+const linkByText = (text: string) =>
+  Array.from(container.querySelectorAll("a")).find((item) => item.textContent?.includes(text));
+
 /**
  * O mentorado precisa ver o que agendou, quanto pagou e conseguir cancelar antes do horário —
  * antes dessa seção, o pedido só existia na conversa de mensagens.
@@ -97,6 +102,28 @@ describe("MySessionsSection", () => {
     expect(container.textContent).toContain("pago com 300 faíscas");
     expect(container.textContent).toContain("https://meet.google.com/xyz");
     expect(container.textContent).toContain("Agendada");
+  });
+
+  it("mostra a sala do Jitsi da sessão com o atalho de entrar", async () => {
+    const jitsi: MySession = {
+      ...paid,
+      id: "session_jitsi",
+      roomUrl: "https://meet.jit.si/rede-mentoria-session_jitsi",
+      roomMode: "JITSI_SESSION",
+    };
+    await render([jitsi]);
+
+    expect(container.textContent).toContain("https://meet.jit.si/rede-mentoria-session_jitsi");
+    // Sala do Jitsi tem entrada por telefone; a sala própria (Meet) não.
+    expect(buttonByText("Entrar por telefone")).toBeDefined();
+    expect(linkByText("Entrar na sala")?.getAttribute("href")).toBe(jitsi.roomUrl);
+  });
+
+  it("não oferece telefone para a sala própria do mentor", async () => {
+    await render([paid]);
+
+    expect(linkByText("Entrar na sala")?.getAttribute("href")).toBe(paid.roomUrl);
+    expect(buttonByText("Entrar por telefone")).toBeUndefined();
   });
 
   it("distingue a sessão gratuita no histórico", async () => {

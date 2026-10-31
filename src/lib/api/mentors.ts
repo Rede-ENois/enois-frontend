@@ -6,7 +6,9 @@ import type { CreateMentorInput } from "@/types/application/mentor/create-mentor
 import type { CreateSlotInput } from "@/types/application/mentor/create-slot-input";
 import type { MenteeSession } from "@/types/application/mentor/mentee-session";
 import type { Mentor } from "@/types/application/mentor/mentor";
+import type { MentorRoom } from "@/types/application/mentor/mentor-room";
 import type { MySession } from "@/types/application/mentor/my-session";
+import type { SessionDialIn } from "@/types/application/mentor/session-dial-in";
 import type { TimeSlot } from "@/types/application/mentor/time-slot";
 import type { UpdateMentorInput } from "@/types/application/mentor/update-mentor-input";
 
@@ -39,6 +41,13 @@ export const mentorsApi = {
       slotId,
       message,
     }),
+
+  /** Sala configurada pelo mentor (só o dono): link permanente ou sala própria. */
+  getRoom: (mentorId: string) => api.get<MentorRoom>(`/mentors/${mentorId}/room`),
+
+  /** Entrar por telefone numa sala Jitsi; a lista vem vazia quando a API do Jitsi não responde. */
+  getDialIn: (mentorId: string, sessionId: string) =>
+    api.get<SessionDialIn>(`/mentors/${mentorId}/sessions/${sessionId}/dial-in`),
 
   /** Inscrições recebidas (só o dono da agenda). */
   getSessions: (mentorId: string) => api.get<MenteeSession[]>(`/mentors/${mentorId}/sessions`),

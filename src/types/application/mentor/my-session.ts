@@ -1,3 +1,4 @@
+import type { MentorRoomMode } from "./mentor-room-mode";
 import type { SessionStatus } from "./session-status";
 
 /** Sessão vista por quem agendou (mentorado): quem atende, quando e por quanto. */
@@ -13,7 +14,9 @@ export type MySession = {
   status: SessionStatus;
   /** Preço pago em milésimos de faísca (`null` quando a sessão é gratuita). */
   priceSparks: number | null;
-  /** Sala externa da sessão, exposta para quem agendou. */
-  meetingUrl: string | null;
+  /** Link da sala, congelado no agendamento (Jitsi por sessão, sala fixa ou sala própria). */
+  roomUrl: string | null;
+  /** Como a sala foi escolhida quando a sessão foi marcada. */
+  roomMode: MentorRoomMode | null;
   createdAt: string;
 };
