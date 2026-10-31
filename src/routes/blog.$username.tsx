@@ -8,6 +8,7 @@ import { ArrowLeft, PenLine, Plus, Rss } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { blogReadingMinutes } from "@/lib/blog-reading-time";
 import { formatarData } from "@/lib/date/format";
 import { buildShareTags } from "@/lib/open-graph";
 import { plainPreview } from "@/lib/rich-text/preview";
@@ -210,7 +211,15 @@ function BlogPage() {
                   params={{ username: blog.slug, postId: post.id }}
                   className="surface-card block p-4 transition hover:border-primary/40 sm:p-5"
                 >
-                  <p className="text-base font-semibold text-text-strong">{post.title}</p>
+                  <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                    <p className="min-w-0 break-words text-base font-semibold text-text-strong">
+                      {post.title}
+                    </p>
+
+                    <p className="text-xs font-normal text-secondary">
+                      {texts.blog.readingTime(blogReadingMinutes(post.body, post.bodyFormat))}
+                    </p>
+                  </div>
 
                   {preview !== "" ? (
                     <p className="mt-1 line-clamp-2 text-sm font-normal text-muted-foreground">

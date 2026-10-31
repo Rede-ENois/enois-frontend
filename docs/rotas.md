@@ -306,7 +306,7 @@ seguintes; aqui é o mapa completo.
 | `/auth/redefinir`                | `auth.reset.tsx`                                 | Redefinição de senha por token de e-mail.                                       |
 | `/auth/verificar`                | `auth.verify.tsx`                                | Verificação de e-mail do cadastro (token do link).                              |
 | `/blog/:username`                | `blog.$username.tsx`                             | Blog de um usuário.                                                             |
-| `/blog/:username/:postId`        | `blog.$username_.$postId.tsx`                    | Post de blog público (com assinatura).                                          |
+| `/blog/:username/:postId`        | `blog.$username_.$postId.tsx`                    | Post de blog público (com assinatura e tempo estimado de leitura).              |
 | `/blog/post/:postId`             | `blog.post.$postId.tsx`                          | Post por id (compartilhamento).                                                 |
 | `/blog/post/novo`                | `blog.post.new.tsx`                              | Editor de post de blog.                                                         |
 | `/blogs`                         | `blogs.tsx`                                      | Catálogo de blogs.                                                              |
@@ -387,3 +387,9 @@ fim da URL pública, tem namespace próprio no backend e pode ser diferente do `
 com ação própria (não espera o resto do formulário); o formato é validado em
 `src/lib/corporate/nametag.ts`, o mesmo do backend. Trocar o nametag muda o endereço público — o
 antigo deixa de responder — sem tocar no perfil social.
+
+O cabeçalho do post público e o card da lista do blog mostram o tempo estimado de leitura
+na cor secundária do tema. O cálculo considera o corpo: 200 palavras
+por minuto, arredondado para cima, com mínimo de 1 minuto. Markdown reutiliza a extração de
+texto da prévia (sem imagens, blocos de código e spoilers); HTML ignora tags, scripts, estilos
+e comentários. O cálculo ocorre no frontend, também no SSR, sem mudar o contrato da API.

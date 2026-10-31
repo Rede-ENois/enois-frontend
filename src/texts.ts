@@ -1323,6 +1323,7 @@ export const texts = {
   },
 
   blog: {
+    readingTime: (minutes: number) => `${minutes} min de leitura estimada`,
     seoFallbackTitle: "Blog",
     seoTitle: (name: string) => `${name} · Blog · Énóis`,
     seoDescription: (name: string) =>

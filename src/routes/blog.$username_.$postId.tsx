@@ -11,6 +11,7 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { feedApi } from "@/lib/api";
 import { blogsApi } from "@/lib/api/blogs";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { blogReadingMinutes } from "@/lib/blog-reading-time";
 import { formatarData } from "@/lib/date/format";
 import { buildShareTags } from "@/lib/open-graph";
 
@@ -198,6 +199,10 @@ function BlogPostPage() {
                 })}
               </span>
             </Link>
+
+            <p className="mt-2 text-xs font-normal text-secondary">
+              {texts.blog.readingTime(blogReadingMinutes(post.body, post.bodyFormat))}
+            </p>
           </header>
 
           {post.bodyFormat === "HTML" ? (
