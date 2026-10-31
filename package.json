@@ -83,5 +83,6 @@
       "prettier --write"
     ],
     "*.{json,md,css,yml,yaml}": "prettier --write"
-  }
+  },
+  "version": "0.20.0"
 }
