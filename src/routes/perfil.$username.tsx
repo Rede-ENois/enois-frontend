@@ -86,6 +86,7 @@ import { PostCard } from "@/components/post-card";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { PresenceIndicator } from "@/components/presence-indicator";
 import { ProfileBannerDialog } from "@/components/profile-banner-dialog";
 import { ProfileBioDialog } from "@/components/profile-bio-dialog";
 import { ProfileResumeDialog } from "@/components/profile-resume-dialog";
@@ -465,6 +466,8 @@ function Profile() {
           }
           nameAddon={
             <>
+              <PresenceIndicator username={user.username} isOwn={isOwnProfile} />
+
               {/* Vulgo: etiqueta ao lado do nome, escolhida pela própria pessoa. */}
               {user.aka && (
                 <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-text-subtle">
