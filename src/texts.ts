@@ -2583,6 +2583,7 @@ export const texts = {
       suspicious: "Contas suspeitas",
       suspiciousPosts: "Posts suspeitos",
       notices: "Avisos",
+      releaseNotes: "Novidades",
     },
     suspiciousPosts: {
       result: (deleted: number, failed: number) =>
@@ -2651,6 +2652,22 @@ export const texts = {
       published: "Aviso publicado.",
       retired: "Aviso tirado do ar.",
       error: "Não foi possível publicar o aviso.",
+    },
+    releaseNotes: {
+      published: "Novidades publicadas. O popup abre de novo para todo mundo.",
+      retired: "Novidades tiradas do ar.",
+      error: "Não foi possível publicar as novidades.",
+      liveSince: (raw: string) => {
+        const at = new Date(raw);
+        return Number.isNaN(at.getTime())
+          ? ""
+          : at.toLocaleString("pt-BR", {
+              day: "numeric",
+              month: "long",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+      },
     },
     sanction: {
       title: "Punição por votação",

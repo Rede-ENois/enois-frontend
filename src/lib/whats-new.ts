@@ -1,39 +1,36 @@
-import { WHATS_NEW } from "@/constants/whats-new";
 import type { AuthUser } from "@/types/application/auth/auth-user";
 
-/** Last release id the person closed, per browser. */
+/** Version (the release `updatedAt`) of the last release the person closed, per browser. */
 const SEEN_KEY = "whats-new-seen";
 
-function lastSeen(): string | null {
+/** `undefined` when there is no storage (restricted private tab): nothing can be remembered. */
+function lastSeen(): string | null | undefined {
   try {
     return localStorage.getItem(SEEN_KEY);
   } catch {
-    // ponytail: no storage (restricted private tab) means "seen", never a popup on every visit.
-    return WHATS_NEW.id;
+    return undefined;
   }
 }
 
-export function markWhatsNewSeen(): void {
+export function markWhatsNewSeen(version: string): void {
   try {
-    localStorage.setItem(SEEN_KEY, WHATS_NEW.id);
+    localStorage.setItem(SEEN_KEY, version);
   } catch {
-    // Without storage there is nothing to remember; lastSeen() already treats it as seen.
+    // Without storage there is nothing to remember; lastSeen() keeps the popup closed.
   }
 }
 
 /**
  * The popup opens on the feed only, for a signed-in person who is not about to be sent to the
- * onboarding, once per release. Seen state lives in localStorage, so another device shows it once
- * more (sync it on the profile if that ever bothers anyone).
+ * onboarding, once per published release (`version`). Without storage it never opens, instead of
+ * opening on every visit. Seen state lives in localStorage, so another device shows it once more.
  */
 export function shouldShowWhatsNew(
   pathname: string,
   user: Pick<AuthUser, "onboardingCompleted"> | null | undefined,
+  version: string | null | undefined,
 ): boolean {
-  return (
-    pathname === "/feed" &&
-    !!user &&
-    user.onboardingCompleted !== false &&
-    lastSeen() !== WHATS_NEW.id
-  );
+  if (pathname !== "/feed" || !user || user.onboardingCompleted === false || !version) return false;
+  const seen = lastSeen();
+  return seen !== undefined && seen !== version;
 }

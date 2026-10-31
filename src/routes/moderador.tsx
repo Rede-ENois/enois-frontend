@@ -38,6 +38,7 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   StickyNote,
   Trash2,
   UserCheck,
@@ -65,6 +66,7 @@ import { PanicModeSection } from "@/components/moderation/panic-mode-section";
 import { PenaltiesSection } from "@/components/moderation/penalties-section";
 import { ProjectsReviewSection } from "@/components/moderation/projects-review-section";
 import { PullRequestsSection } from "@/components/moderation/pull-requests-section";
+import { ReleaseNotesSection } from "@/components/moderation/release-notes-section";
 import { SuggestionsSection } from "@/components/moderation/suggestions-section";
 import { SupportTicketsSection } from "@/components/moderation/support-tickets-section";
 import { SuspiciousPostsSection } from "@/components/moderation/suspicious-posts-section";
@@ -107,6 +109,12 @@ const ALL_TABS: { id: ModeratorTabId; label: string; icon: typeof Flag; adminOnl
     id: "notices",
     label: texts.moderator.tabs.notices,
     icon: Megaphone,
+    adminOnly: true,
+  },
+  {
+    id: "releaseNotes",
+    label: texts.moderator.tabs.releaseNotes,
+    icon: Sparkles,
     adminOnly: true,
   },
   {
@@ -279,6 +287,7 @@ function Moderador() {
             {canModerate && activeTab === "pulls" && <PullRequestsSection />}
             {canModerate && activeTab === "notes" && <NotesSection />}
             {me.admin && activeTab === "notices" && <NoticesSection />}
+            {me.admin && activeTab === "releaseNotes" && <ReleaseNotesSection />}
           </div>
         ) : (
           <ApplicationSection me={me} />

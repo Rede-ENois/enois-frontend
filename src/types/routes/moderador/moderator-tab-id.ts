@@ -18,4 +18,5 @@ export type ModeratorTabId =
   | "githubContributions"
   | "pulls"
   | "notes"
-  | "notices";
+  | "notices"
+  | "releaseNotes";

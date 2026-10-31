@@ -216,9 +216,11 @@ Página pública (mostra layout mesmo sem auth, mas sem funcionalidade).
 
 `WhatsNewGate` (`src/components/whats-new/whats-new-gate.tsx`, mounted on the root) opens the DS
 `WhatsNewDialog` on `/feed` once per release, only after the onboarding is done and never on top of
-an admin notice popup. The release lives in `src/constants/whats-new.ts`: to announce a new one,
-replace the items and change `WHATS_NEW.id`. The last seen id is kept in `localStorage`
-(`whats-new-seen`), so each browser shows it once. Only curated releases go there, not every deploy.
+an admin notice popup. The release is written by an admin in `/moderador` (tab "Novidades",
+`ReleaseNotesSection` over the DS `ReleaseNotesEditor`) and read from `GET /novidades/atual`; nothing
+on air means no popup. Its `updatedAt` is the version: the last seen one is kept in `localStorage`
+(`whats-new-seen`), so each browser shows a release once and a republish opens it again. It is
+separate from the platform notice (tab "Avisos", free HTML), which keeps working as before.
 
 ## `/notificacoes/preferencias` - Preferências de notificação (`src/routes/notificacoes.preferencias.tsx`)
 
