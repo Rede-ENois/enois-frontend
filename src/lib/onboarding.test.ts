@@ -16,8 +16,11 @@ describe("onboarding: para onde vai quem entra", () => {
     localStorage.clear();
   });
 
-  it("quem ainda não fez o onboarding vai para /boas-vindas uma vez por sessão", () => {
+  it("quem ainda não fez o onboarding vai para /boas-vindas até a tela ser vista", () => {
+    // Choosing the landing does not spend the session: only the screen mounting does.
     expect(landingPathFor({ onboardingCompleted: false })).toBe("/boas-vindas");
+    expect(landingPathFor({ onboardingCompleted: false })).toBe("/boas-vindas");
+    markOnboardingShown();
     expect(landingPathFor({ onboardingCompleted: false })).toBe("/feed");
   });
 

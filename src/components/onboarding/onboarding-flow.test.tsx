@@ -77,6 +77,7 @@ describe("onboarding: contêiner", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     mocks.profile = { skills: ["React"] };
     mocks.starterPack.mockResolvedValue(PACK);
     host = document.createElement("div");
@@ -92,6 +93,10 @@ describe("onboarding: contêiner", () => {
   });
 
   afterEach(() => act(() => root.unmount()));
+
+  it("marks the onboarding as shown only once the screen is on", () => {
+    expect(sessionStorage.getItem("onboarding-shown")).toBe("1");
+  });
 
   it("oferece os assuntos sem o filtro 'Todas', com rótulo, e semeia as habilidades do perfil", () => {
     expect(view().topics.some((topic) => topic.value === "Todas")).toBe(false);

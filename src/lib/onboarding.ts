@@ -5,7 +5,7 @@ import { ApiError } from "./api-client";
 
 export const ONBOARDING_PATH = "/boas-vindas";
 
-/** Marca que o onboarding já foi oferecido nesta aba: a pessoa pode sair dele e não volta presa. */
+/** Marks the onboarding as shown in this tab, so leaving it never traps the person. Written by the onboarding screen when it mounts, not before navigating: a lost navigation must not count as shown. */
 const SHOWN_KEY = "onboarding-shown";
 
 function readShown(): boolean {
@@ -31,14 +31,12 @@ function needsOnboarding(user: Pick<AuthUser, "onboardingCompleted"> | null | un
 
 /**
  * Para onde vai quem acabou de entrar (login, e-mail confirmado, retorno do OAuth): o onboarding
- * uma vez por sessão para quem ainda não o fez, senão o feed.
+ * uma vez por sessão para quem ainda não o fez, senão o feed. The screen itself marks it as shown.
  */
 export function landingPathFor(
   user: Pick<AuthUser, "onboardingCompleted"> | null | undefined,
 ): "/feed" | typeof ONBOARDING_PATH {
-  if (!needsOnboarding(user) || readShown()) return "/feed";
-  markOnboardingShown();
-  return ONBOARDING_PATH;
+  return needsOnboarding(user) && !readShown() ? ONBOARDING_PATH : "/feed";
 }
 
 /** O usuário gravado no login (`current_user`), que já traz o `onboardingCompleted`. */

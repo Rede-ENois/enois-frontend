@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -10,7 +10,7 @@ import { type OnboardingStep, OnboardingView } from "@rede-enois/design-system/d
 
 import { onboardingApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
-import { onboardingErrorMessage } from "@/lib/onboarding";
+import { markOnboardingShown, onboardingErrorMessage } from "@/lib/onboarding";
 
 const TOPIC_OPTIONS = TOPICS.filter((topic) => topic !== "Todas").map((topic) => ({
   value: topic,
@@ -41,6 +41,9 @@ export function OnboardingFlow() {
   const [editedSkills, setEditedSkills] = useState<string[] | null>(null);
   const [deselected, setDeselected] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Shown means seen: marked here, on mount, never by whoever navigates here.
+  useEffect(() => markOnboardingShown(), []);
 
   const skills = editedSkills ?? profile?.skills ?? [];
 
