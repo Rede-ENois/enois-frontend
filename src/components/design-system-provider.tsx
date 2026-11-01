@@ -15,10 +15,12 @@ function RouterLink({ href, onClick, ...props }: LinkProps) {
     onClick?.(e);
     // Já está na rota: o router não navega, então faz scroll pro topo manualmente.
     // Limpa o scroll restoration do feed para o effect não restaurar a posição antiga.
+    // startsWith cobre trailing slash de proxies. requestAnimationFrame garante que o
+    // scroll roda depois do router processar o clique.
     const [path] = href.split("?");
-    if (typeof window !== "undefined" && window.location.pathname === path) {
+    if (typeof window !== "undefined" && window.location.pathname.startsWith(path)) {
       clearFeedScroll();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     }
   };
 
