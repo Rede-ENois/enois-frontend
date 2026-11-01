@@ -45,4 +45,7 @@ export const reactionsApi = {
   /** Republica no próprio feed; `opinion` (até 600) transforma em repost com comentário. */
   repost: (postId: string, opinion?: string) =>
     api.post<unknown>(`/feed/posts/${postId}/repost`, opinion ? { opinion } : {}),
+
+  /** Desfaz o repost puro (remove o ponteiro, não o post original). */
+  undoRepost: (postId: string) => api.delete<unknown>(`/feed/posts/${postId}/repost`),
 };

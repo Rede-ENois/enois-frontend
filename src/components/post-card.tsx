@@ -234,6 +234,7 @@ function PostCardContainer({
         post: feedTab ? `/post/${post.id}?feedTab=${feedTab}` : `/post/${post.id}`,
         community: post.community ? `/comunidades/${post.community.id}` : null,
         repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
+        repostedBy: post.repostedByUsername ? `/perfil/${post.repostedByUsername}` : null,
         blog: `/blog/${post.authorUsername}/${post.id}`,
       }}
       timeLabel={formatTime(post.createdAt)}
