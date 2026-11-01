@@ -70,14 +70,30 @@ export function readStoredContext(): InterfaceContext {
   }
 }
 
+const SWITCHED_KEY = "connect-grow-context-switched";
+
 export function writeStoredContext(context: InterfaceContext) {
   if (typeof window === "undefined" || readStoredContext() === context) return;
   try {
     window.localStorage.setItem(STORAGE_KEY, context);
+    sessionStorage.setItem(SWITCHED_KEY, "1");
   } catch {
     // Private mode or blocked storage: the switch still works for this page view.
   }
   window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+/** True once after a route forced a context switch. Consumed on first read. */
+export function consumeContextSwitch(): boolean {
+  try {
+    if (sessionStorage.getItem(SWITCHED_KEY)) {
+      sessionStorage.removeItem(SWITCHED_KEY);
+      return true;
+    }
+  } catch {
+    // storage blocked
+  }
+  return false;
 }
 
 function subscribe(listener: () => void): () => void {
