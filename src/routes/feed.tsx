@@ -1496,7 +1496,7 @@ function Home() {
           aria-label={texts.feed.scrollToTop}
           title={texts.feed.scrollToTop}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:right-[calc((100vw-min(100vw-3rem,80rem))/2+344px)]"
+          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>
