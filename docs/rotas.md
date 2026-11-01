@@ -301,74 +301,74 @@ Página pública (qualquer um pode ver). Loader busca dados ou `notFound`.
 Todas as rotas do TanStack Router (arquivo em `src/routes/`). Detalhes por página vêm nas rodadas
 seguintes; aqui é o mapa completo.
 
-| Rota                             | Arquivo                                          | Descrição                                                                       |
-| -------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `/apoiar`                        | `apoiar.tsx`                                     | Página de apoio com Pix (BR Code gerado no cliente) e carta do manifesto.       |
-| `/auth/callback`                 | `auth.callback.tsx`                              | Callback de OAuth (Google/Apple/LinkedIn) e 2FA federado.                       |
-| `/auth/redefinir`                | `auth.reset.tsx`                                 | Redefinição de senha por token de e-mail.                                       |
-| `/auth/verificar`                | `auth.verify.tsx`                                | Verificação de e-mail do cadastro (token do link).                              |
-| `/blog/:username`                | `blog.$username.tsx`                             | Blog de um usuário.                                                             |
-| `/blog/:username/:postId`        | `blog.$username_.$postId.tsx`                    | Post de blog público (com assinatura).                                          |
-| `/blog/post/:postId`             | `blog.post.$postId.tsx`                          | Post por id (compartilhamento).                                                 |
-| `/blog/post/novo`                | `blog.post.new.tsx`                              | Editor de post de blog.                                                         |
-| `/blogs`                         | `blogs.tsx`                                      | Catálogo de blogs.                                                              |
-| `/bloqueados`                    | `bloqueados.tsx`                                 | Lista de usuários bloqueados (desbloquear).                                     |
-| `/boas-vindas`                   | `boas-vindas.tsx`                                | Onboarding: interesses e pacote inicial (uma vez por sessão até concluir).      |
-| `/carteira`                      | `carteira.tsx`                                   | Carteira em faíscas: saldo, transferências, contestações.                       |
-| `/comunidades`                   | `comunidades.tsx`                                | Catálogo de comunidades.                                                        |
-| `/comunidades/:id`               | `comunidades.$communityId.tsx`                   | Página da comunidade (posts, membros, regras).                                  |
-| `/comunidades/:id/canais/:canal` | `comunidades.$communityId.canais.$channelId.tsx` | Canal privado de uma comunidade; acessível somente a membros.                   |
-| `/contato`                       | `contato.tsx`                                    | Contato com o time (abre ticket de suporte).                                    |
-| `/denuncias`                     | `denuncias.tsx`                                  | Minhas denúncias e seus estados.                                                |
-| `/developers`                    | `developers.tsx`                                 | Portal de desenvolvedores da API pública (catálogo + casos de uso).             |
-| `/diretrizes`                    | `diretrizes.tsx`                                 | Diretrizes da comunidade.                                                       |
+| Rota                             | Arquivo                                          | Descrição                                                                                                                                    |
+| -------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/apoiar`                        | `apoiar.tsx`                                     | Página de apoio com Pix (BR Code gerado no cliente) e carta do manifesto.                                                                    |
+| `/auth/callback`                 | `auth.callback.tsx`                              | Callback de OAuth (Google/Apple/LinkedIn) e 2FA federado.                                                                                    |
+| `/auth/redefinir`                | `auth.reset.tsx`                                 | Redefinição de senha por token de e-mail.                                                                                                    |
+| `/auth/verificar`                | `auth.verify.tsx`                                | Verificação de e-mail do cadastro (token do link).                                                                                           |
+| `/blog/:username`                | `blog.$username.tsx`                             | Blog de um usuário.                                                                                                                          |
+| `/blog/:username/:postId`        | `blog.$username_.$postId.tsx`                    | Post de blog público (com assinatura).                                                                                                       |
+| `/blog/post/:postId`             | `blog.post.$postId.tsx`                          | Post por id (compartilhamento).                                                                                                              |
+| `/blog/post/novo`                | `blog.post.new.tsx`                              | Editor de post de blog.                                                                                                                      |
+| `/blogs`                         | `blogs.tsx`                                      | Catálogo de blogs.                                                                                                                           |
+| `/bloqueados`                    | `bloqueados.tsx`                                 | Lista de usuários bloqueados (desbloquear).                                                                                                  |
+| `/boas-vindas`                   | `boas-vindas.tsx`                                | Onboarding: interesses e pacote inicial (uma vez por sessão até concluir).                                                                   |
+| `/carteira`                      | `carteira.tsx`                                   | Carteira em faíscas: saldo, transferências, contestações, loja (cosméticos + marketplace) e as suas molduras.                                |
+| `/comunidades`                   | `comunidades.tsx`                                | Catálogo de comunidades.                                                                                                                     |
+| `/comunidades/:id`               | `comunidades.$communityId.tsx`                   | Página da comunidade (posts, membros, regras).                                                                                               |
+| `/comunidades/:id/canais/:canal` | `comunidades.$communityId.canais.$channelId.tsx` | Canal privado de uma comunidade; acessível somente a membros.                                                                                |
+| `/contato`                       | `contato.tsx`                                    | Contato com o time (abre ticket de suporte).                                                                                                 |
+| `/denuncias`                     | `denuncias.tsx`                                  | Minhas denúncias e seus estados.                                                                                                             |
+| `/developers`                    | `developers.tsx`                                 | Portal de desenvolvedores da API pública (catálogo + casos de uso).                                                                          |
+| `/diretrizes`                    | `diretrizes.tsx`                                 | Diretrizes da comunidade.                                                                                                                    |
 | `/empresa/:slug`                 | `empresa.$slug.tsx`                              | Página pública da empresa: vagas, microprojetos, avaliações e painel da equipe; gestores editam e removem projetos abertos sem candidaturas. |
-| `/empresas`                      | `empresas.tsx`                                   | Diretório: páginas da rede primeiro, empresas só com vagas em lista compacta.   |
-| `/entrar`                        | `entrar.tsx`                                     | Login e cadastro (e-mail + social + 2FA).                                       |
-| `/par-de-estudo`                 | `par-de-estudo.tsx`                              | Pares de estudo com check-in semanal.                                           |
-| `/eventos`                       | `eventos.tsx`                                    | Catálogo de eventos com RSVP.                                                   |
-| `/feed`                          | `feed.tsx`                                       | Feed principal: compositor, abas, feed infinito, sidebar.                       |
-| `/freelances`                    | `freelances.tsx`                                 | Freelances; visitante vê o aviso e o botão de candidatura.                      |
-| `/games`                         | `games.tsx`                                      | Catálogo de jogos da comunidade.                                                |
-| `/games/:username`               | `games.$username.tsx`                            | Página de criador de jogos.                                                     |
-| `/games/:username/:gameSlug`     | `games.$username.$gameSlug.tsx`                  | Página pública de um jogo (jogar no sandbox).                                   |
-| `/games/painel`                  | `games.painel.tsx`                               | Painel do criador: publicar/editar jogo, novidades, analíticos.                 |
-| `/grupos`                        | `grupos.tsx`                                     | Catálogo de grupos.                                                             |
-| `/grupos/:slug`                  | `grupos.$slug.tsx`                               | Página do grupo (posts, membros, tópicos).                                      |
-| `/`                              | `index.tsx`                                      | Landing page pública.                                                           |
-| `/jogos-diarios`                 | `jogos-diarios.tsx`                              | Jogos diários com recompensa em faíscas.                                        |
-| `/marketplace`                   | `marketplace.tsx`                                | Marketplace de itens digitais (compra com escrow).                              |
-| `/mensagens`                     | `mensagens.tsx`                                  | Mensagens diretas (conversas, exclusão para mim).                               |
-| `/mentoria`                      | `mentoria.tsx`                                   | Mentorias com agendamento.                                                      |
-| `/meus-servicos`                 | `meus-servicos.tsx`                              | Painel de gerenciar serviços (ofertas, contratos).                              |
-| `/moderacao`                     | `moderacao.tsx`                                  | Fila de recursos de penalidades e votação de punição.                           |
-| `/moderacao/:reportId`           | `moderacao.$reportId.tsx`                        | Decisão de recurso/fila filha da moderação.                                     |
-| `/moderador`                     | `moderador.tsx`                                  | Painel do moderador: todas as filas + monitoramento (candidatura é só admin).   |
-| `/notificacoes/preferencias`     | `notificacoes.preferencias.tsx`                  | Resumo semanal e categorias de push.                                            |
-| `/penalidades`                   | `penalidades.tsx`                                | Minhas penalidades e recursos.                                                  |
-| `/perfil/:username`              | `perfil.$username.tsx`                           | Perfil público (posts fixados, ranking de chegada, projetos).                   |
-| `/perfil`                        | `perfil.index.tsx`                               | Meu perfil (redireciona/edição).                                                |
-| `/post/:postId`                  | `post.$postId.tsx`                               | Post individual (compartilhamento público).                                     |
-| `/privacidade`                   | `privacidade.tsx`                                | Política de privacidade.                                                        |
-| `/profissional`                  | `profissional.tsx`                               | Perfil profissional (edição).                                                   |
-| `/profissional/:username`        | `profissional_.$username.tsx`                    | Perfil profissional público.                                                    |
-| `/projetos/:username`            | `projetos.$username.tsx`                         | Projetos de um usuário.                                                         |
-| `/projetos/:username/:slug`      | `projetos.$username.$projectSlug.tsx`            | Página de projeto da comunidade.                                                |
-| `/projetos`                      | `projetos.index.tsx`                             | Catálogo de projetos da comunidade.                                             |
-| `/projetos/painel`               | `projetos.painel.tsx`                            | Painel de projetos (criar/editar, fila de revisão).                             |
-| `/rede`                          | `rede.tsx`                                       | Minha rede (convites, sugestões e conexões).                                    |
-| `/responsavel`                   | `responsavel.tsx`                                | Fluxo de responsável parental (ECA).                                            |
-| `/salvos`                        | `salvos.tsx`                                     | Posts salvos.                                                                   |
-| `/seguranca`                     | `seguranca.tsx`                                  | Segurança da conta: senha, 2FA, sessões, contas vinculadas.                     |
-| `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                               |
-| `/sobre`                         | `sobre.tsx`                                      | Sobre o projeto.                                                                |
-| `/suporte`                       | `suporte.tsx`                                    | Central de suporte (tickets, FAQ).                                              |
-| `/sugestoes`                     | `sugestoes.tsx`                                  | Enviar sugestão (anônima na issue pública, após aprovação) e ver as minhas.     |
-| `/termos`                        | `termos.tsx`                                     | Termos de uso.                                                                  |
-| `/vagas`                         | `vagas.tsx`                                      | Catálogo de vagas com busca booleana.                                           |
-| `/vagas/:jobId`                  | `vagas.$jobId.tsx`                               | Detalhe da vaga (candidatar, salvar).                                           |
-| `/vagas/:jobId/candidaturas`     | `vagas.$jobId.candidaturas.tsx`                  | Candidaturas da vaga (painel do contratante).                                   |
-| `/vagas/minhas`                  | `vagas.minhas.tsx`                               | Minhas vagas (publicadas e candidaturas).                                       |
+| `/empresas`                      | `empresas.tsx`                                   | Diretório: páginas da rede primeiro, empresas só com vagas em lista compacta.                                                                |
+| `/entrar`                        | `entrar.tsx`                                     | Login e cadastro (e-mail + social + 2FA).                                                                                                    |
+| `/par-de-estudo`                 | `par-de-estudo.tsx`                              | Pares de estudo com check-in semanal.                                                                                                        |
+| `/eventos`                       | `eventos.tsx`                                    | Catálogo de eventos com RSVP.                                                                                                                |
+| `/feed`                          | `feed.tsx`                                       | Feed principal: compositor, abas, feed infinito, sidebar.                                                                                    |
+| `/freelances`                    | `freelances.tsx`                                 | Freelances; visitante vê o aviso e o botão de candidatura.                                                                                   |
+| `/games`                         | `games.tsx`                                      | Catálogo de jogos da comunidade.                                                                                                             |
+| `/games/:username`               | `games.$username.tsx`                            | Página de criador de jogos.                                                                                                                  |
+| `/games/:username/:gameSlug`     | `games.$username.$gameSlug.tsx`                  | Página pública de um jogo (jogar no sandbox).                                                                                                |
+| `/games/painel`                  | `games.painel.tsx`                               | Painel do criador: publicar/editar jogo, novidades, analíticos.                                                                              |
+| `/grupos`                        | `grupos.tsx`                                     | Catálogo de grupos.                                                                                                                          |
+| `/grupos/:slug`                  | `grupos.$slug.tsx`                               | Página do grupo (posts, membros, tópicos).                                                                                                   |
+| `/`                              | `index.tsx`                                      | Landing page pública.                                                                                                                        |
+| `/jogos-diarios`                 | `jogos-diarios.tsx`                              | Jogos diários com recompensa em faíscas.                                                                                                     |
+| `/marketplace`                   | `marketplace.tsx`                                | Redireciona para a aba Loja da Carteira (o marketplace vive dentro dela).                                                                    |
+| `/mensagens`                     | `mensagens.tsx`                                  | Mensagens diretas (conversas, exclusão para mim).                                                                                            |
+| `/mentoria`                      | `mentoria.tsx`                                   | Mentorias com agendamento.                                                                                                                   |
+| `/meus-servicos`                 | `meus-servicos.tsx`                              | Painel de gerenciar serviços (ofertas, contratos).                                                                                           |
+| `/moderacao`                     | `moderacao.tsx`                                  | Fila de recursos de penalidades e votação de punição.                                                                                        |
+| `/moderacao/:reportId`           | `moderacao.$reportId.tsx`                        | Decisão de recurso/fila filha da moderação.                                                                                                  |
+| `/moderador`                     | `moderador.tsx`                                  | Painel do moderador: todas as filas + monitoramento (candidatura é só admin).                                                                |
+| `/notificacoes/preferencias`     | `notificacoes.preferencias.tsx`                  | Resumo semanal e categorias de push.                                                                                                         |
+| `/penalidades`                   | `penalidades.tsx`                                | Minhas penalidades e recursos.                                                                                                               |
+| `/perfil/:username`              | `perfil.$username.tsx`                           | Perfil público (posts fixados, ranking de chegada, projetos).                                                                                |
+| `/perfil`                        | `perfil.index.tsx`                               | Meu perfil (redireciona/edição).                                                                                                             |
+| `/post/:postId`                  | `post.$postId.tsx`                               | Post individual (compartilhamento público).                                                                                                  |
+| `/privacidade`                   | `privacidade.tsx`                                | Política de privacidade.                                                                                                                     |
+| `/profissional`                  | `profissional.tsx`                               | Perfil profissional (edição).                                                                                                                |
+| `/profissional/:username`        | `profissional_.$username.tsx`                    | Perfil profissional público.                                                                                                                 |
+| `/projetos/:username`            | `projetos.$username.tsx`                         | Projetos de um usuário.                                                                                                                      |
+| `/projetos/:username/:slug`      | `projetos.$username.$projectSlug.tsx`            | Página de projeto da comunidade.                                                                                                             |
+| `/projetos`                      | `projetos.index.tsx`                             | Catálogo de projetos da comunidade.                                                                                                          |
+| `/projetos/painel`               | `projetos.painel.tsx`                            | Painel de projetos (criar/editar, fila de revisão).                                                                                          |
+| `/rede`                          | `rede.tsx`                                       | Minha rede (convites, sugestões e conexões).                                                                                                 |
+| `/responsavel`                   | `responsavel.tsx`                                | Fluxo de responsável parental (ECA).                                                                                                         |
+| `/salvos`                        | `salvos.tsx`                                     | Posts salvos.                                                                                                                                |
+| `/seguranca`                     | `seguranca.tsx`                                  | Segurança da conta: senha, 2FA, sessões, contas vinculadas.                                                                                  |
+| `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                                                                                            |
+| `/sobre`                         | `sobre.tsx`                                      | Sobre o projeto.                                                                                                                             |
+| `/suporte`                       | `suporte.tsx`                                    | Central de suporte (tickets, FAQ).                                                                                                           |
+| `/sugestoes`                     | `sugestoes.tsx`                                  | Enviar sugestão (anônima na issue pública, após aprovação) e ver as minhas.                                                                  |
+| `/termos`                        | `termos.tsx`                                     | Termos de uso.                                                                                                                               |
+| `/vagas`                         | `vagas.tsx`                                      | Catálogo de vagas com busca booleana.                                                                                                        |
+| `/vagas/:jobId`                  | `vagas.$jobId.tsx`                               | Detalhe da vaga (candidatar, salvar).                                                                                                        |
+| `/vagas/:jobId/candidaturas`     | `vagas.$jobId.candidaturas.tsx`                  | Candidaturas da vaga (painel do contratante).                                                                                                |
+| `/vagas/minhas`                  | `vagas.minhas.tsx`                               | Minhas vagas (publicadas e candidaturas).                                                                                                    |
 
 `?reacoes=1` em `/post/:postId` abre a lista de quem reagiu (vem da notificação agrupada "Ana e mais
 14 pessoas reagiram ao seu post"); o parâmetro sai do endereço depois de abrir.
