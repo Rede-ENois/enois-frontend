@@ -29,7 +29,7 @@ import { PushToggle } from "./push-toggle";
 const ACCOUNT_MENU_HREFS = {
   corporateProfile: "/profissional",
   wallet: "/carteira",
-  marketplace: "/carteira?tab=marketplace",
+  marketplace: "/carteira?tab=loja",
   support: "/suporte",
   security: "/seguranca",
   blockedUsers: "/bloqueados",

@@ -23,7 +23,6 @@ import {
   ShieldAlert,
   ShoppingBag,
   Sparkles,
-  Store,
   TrendingUp,
   User,
   Zap,
@@ -42,12 +41,16 @@ import { UserPicker } from "@/components/user-picker";
 import { CosmeticShop } from "@/components/wallet/cosmetic-shop";
 import { FrameShop } from "@/components/wallet/frame-shop";
 
-const WALLET_TABS: WalletTab[] = ["carteira", "marketplace", "loja", "minhas"];
+const WALLET_TABS: WalletTab[] = ["carteira", "loja", "minhas"];
 
 export const Route = createFileRoute("/carteira")({
   beforeLoad: requireAuth,
-  /** A aba vive na URL: /carteira?tab=marketplace (a rota antiga /marketplace redireciona para cá). */
+  /**
+   * A aba vive na URL: /carteira?tab=loja (as rotas antigas /marketplace e ?tab=marketplace
+   * caem na loja, que agora é uma aba só com os cosméticos e o marketplace da comunidade).
+   */
   validateSearch: (search: Record<string, unknown>): { tab?: WalletTab } => {
+    if (search.tab === "marketplace") return { tab: "loja" };
     const tab =
       typeof search.tab === "string" && WALLET_TABS.includes(search.tab as WalletTab)
         ? (search.tab as WalletTab)
@@ -184,11 +187,6 @@ function Carteira() {
               {texts.frameShop.walletTab}
             </TabsTrigger>
 
-            <TabsTrigger value="marketplace">
-              <Store className="h-4 w-4" aria-hidden="true" />
-              {texts.frameShop.marketplaceTab}
-            </TabsTrigger>
-
             <TabsTrigger value="loja">
               <ShoppingBag className="h-4 w-4" aria-hidden="true" />
               {texts.frameShop.storeTab}
@@ -300,12 +298,10 @@ function Carteira() {
             </section>
           </TabsContent>
 
-          <TabsContent value="marketplace" className="pt-5">
-            <MarketplaceSection />
-          </TabsContent>
-
-          <TabsContent value="loja" className="pt-5">
+          {/* Uma loja só: os cosméticos da plataforma e o que a comunidade vende em faíscas. */}
+          <TabsContent value="loja" className="space-y-10 pt-5">
             <CosmeticShop />
+            <MarketplaceSection />
           </TabsContent>
 
           <TabsContent value="minhas" className="pt-5">

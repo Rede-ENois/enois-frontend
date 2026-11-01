@@ -3030,7 +3030,6 @@ export const texts = {
     title: "Carteira & estilo",
     subtitle: "Suas faíscas, suas escolhas.",
     walletTab: "Carteira",
-    marketplaceTab: "Marketplace",
     storeTab: "Loja",
     ownedTab: "Minhas molduras",
     filters: {
@@ -3049,6 +3048,13 @@ export const texts = {
     lookBought: "Look comprado e vestido no seu perfil.",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
+    /** Loja: a aba que abre em todas as coleções, para nada do catálogo ficar escondido. */
+    shop: {
+      allTab: "Todas as coleções",
+      allTitle: "Todas as customizações",
+      allDescription:
+        "Molduras, emblemas, temas do cartão, nomes, placas, banners, efeitos e jardins de todas as coleções. O que está fora de temporada continua aqui: ele volta na data dele.",
+    },
     /** Shop banner name while the catalog is not at hand. */
     equippedBannerFallback: "equipado",
     /** One message per API error code of the shop, the status and the events. */

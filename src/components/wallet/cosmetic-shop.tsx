@@ -5,11 +5,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { LojaItem } from "@/types/application/loja/loja-item";
-import {
-  type CosmeticShopCollection,
-  type CosmeticShopItem,
-  type CosmeticShopLook,
-  CosmeticShop as CosmeticShopView,
+import type {
+  CosmeticShopCollection,
+  CosmeticShopItem,
+  CosmeticShopLook,
 } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
@@ -26,6 +25,7 @@ import { useCurrentUser } from "@/lib/current-user";
 import { formatFaisca } from "@/lib/faisca";
 
 import { SaciDuelPanel } from "@/components/events/saci-duel-panel";
+import { CosmeticCatalog } from "@/components/wallet/cosmetic-catalog";
 
 /** The seasonal cosmetics shop: items, collections with looks, try-on, buy and equip. */
 export function CosmeticShop() {
@@ -104,7 +104,7 @@ export function CosmeticShop() {
   }, [itemsById, collections.data]);
 
   return (
-    <CosmeticShopView
+    <CosmeticCatalog
       items={items}
       collections={shopCollections}
       user={me ? profileCardData(me) : { name: "" }}

@@ -17,9 +17,9 @@ vi.mock("@tanstack/react-router", () => ({
   }),
   Link: ({ children }: { children: ReactNode }) => <a>{children}</a>,
 }));
-// A vitrine do marketplace tem a própria suíte; aqui só a Carteira importa.
+// A vitrine do marketplace tem a própria suíte; aqui só interessa que ela vive na aba Loja.
 vi.mock("@/components/marketplace/marketplace-section", () => ({
-  MarketplaceSection: () => null,
+  MarketplaceSection: () => <div data-testid="marketplace" />,
 }));
 // Os eventos do Saci têm a própria cobertura (lib/cosmetics e lib/api/cosmetic-events).
 vi.mock("@/components/events/saci-spot", () => ({ SaciSpot: () => null }));
@@ -157,6 +157,11 @@ describe("Carteira e ordenação das molduras", () => {
 
   it("abre em Carteira e exibe ícones nas três abas", () => {
     const tabs = [...host.querySelectorAll("[role=tab]")];
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      texts.frameShop.walletTab,
+      texts.frameShop.storeTab,
+      texts.frameShop.ownedTab,
+    ]);
     expect(tabs[0].textContent).toBe(texts.frameShop.walletTab);
     expect(tabs[0].getAttribute("aria-selected")).toBe("true");
     expect(tabs[1].getAttribute("aria-selected")).toBe("false");
@@ -190,6 +195,22 @@ describe("Carteira e ordenação das molduras", () => {
 
   it("sem a sequência na resposta, a carteira fica como era", () => {
     expect(host.textContent).not.toMatch(/sequência/i);
+  });
+
+  it("a aba Loja junta os cosméticos e o marketplace", async () => {
+    await openTab(texts.frameShop.storeTab);
+    expect(host.querySelector("[data-testid=marketplace]")).not.toBeNull();
+    expect(host.querySelector(".cos-shop")).not.toBeNull();
+  });
+
+  it("o endereço antigo do marketplace cai na loja", () => {
+    const validate = Route.options.validateSearch as unknown as (
+      search: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    expect(validate({ tab: "marketplace" })).toEqual({ tab: "loja" });
+    expect(validate({ tab: "loja" })).toEqual({ tab: "loja" });
+    expect(validate({ tab: "minhas" })).toEqual({ tab: "minhas" });
+    expect(validate({ tab: "nao-existe" })).toEqual({});
   });
 
   it("abre a loja de cosméticos na aba Loja", async () => {
