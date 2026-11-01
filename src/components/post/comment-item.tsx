@@ -109,12 +109,8 @@ export function CommentItem({
     } catch {
       setDraft(postId, `${comment.authorName} `);
     }
+    // The form opens under this comment, focused and in view (PostComments does both).
     setReplyToId(postId, comment.id);
-    setTimeout(() => {
-      document
-        .getElementById(`comment-form-${postId}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 50);
   };
 
   const handleDelete = async () => {

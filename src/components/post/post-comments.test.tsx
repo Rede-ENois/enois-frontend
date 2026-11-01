@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PostComments } from "./post-comments";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn() }));
+const mocks = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), field: vi.fn() }));
 vi.mock("@/lib/api", () => ({ commentsApi: mocks }));
 vi.mock("@/lib/use-auth", () => ({ useAuth: () => ({ requireAuth: () => true }) }));
 vi.mock("@/lib/use-lite-mode", () => ({ useLiteMode: () => false }));
@@ -24,7 +24,12 @@ vi.mock("./comment-item", () => ({
     <div data-comment={comment.id}>{comment.content}</div>
   ),
 }));
-vi.mock("@/components/mention-textarea", () => ({ MentionTextarea: () => null }));
+vi.mock("@/components/mention-textarea", () => ({
+  MentionTextarea: (props: unknown) => {
+    mocks.field(props);
+    return null;
+  },
+}));
 // jsdom has no layout: the inline reply scrolls itself into view, a no-op here.
 Element.prototype.scrollIntoView = vi.fn();
 
@@ -118,4 +123,37 @@ describe("ordem após enviar comentários", () => {
       expect(order()).toEqual(["pinned", "root", "reply", "nested", "new"]);
     },
   );
+});
+
+describe("campo do comentário", () => {
+  const lastField = () =>
+    mocks.field.mock.calls.at(-1)![0] as {
+      placeholder: string;
+      showCounter: boolean;
+      toolbarVisible: boolean;
+      emoteInline: boolean;
+    };
+
+  it("fala com quem é respondido e só mostra o contador perto do limite", async () => {
+    mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    expect(lastField().placeholder).toBe("Comente com contexto, dúvida ou referência...");
+    expect(lastField().emoteInline).toBe(true);
+    expect(lastField().toolbarVisible).toBe(false);
+
+    await act(async () => usePostCardStore.getState().setDraft("post", "a".repeat(699)));
+    expect(lastField().showCounter).toBe(false);
+    await act(async () => usePostCardStore.getState().setDraft("post", "a".repeat(700)));
+    expect(lastField().showCounter).toBe(true);
+
+    await act(async () => usePostCardStore.getState().setReplyToId("post", "root"));
+    expect(lastField().placeholder).toBe("Responder Pessoa...");
+  });
 });

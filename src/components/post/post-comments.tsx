@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
+import { COMMENT_COUNTER_FROM, COMMENT_MAX_LENGTH } from "@/constants/post-content-limits";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { CommentView } from "@/types/application/comment/comment-view";
@@ -268,17 +269,26 @@ export function PostComments({
       onAddImages={addMediaFiles}
       onAddAudio={addAudio}
       onErrorChange={setError}
-      composerField={
+      composerField={({ toolsOpen, replyingTo }) => (
         <MentionTextarea
           value={draft}
           onChange={(value, ids) => {
             setDraft(postId, value);
             setCommentMentions(postId, ids);
           }}
-          placeholder={texts.posts.comments.placeholder}
-          className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm font-normal outline-none"
-          maxLength={800}
+          placeholder={
+            replyingTo
+              ? texts.posts.comments.replyPlaceholder(replyingTo)
+              : texts.posts.comments.placeholder
+          }
+          className="w-full resize-none border-0 bg-transparent px-2 py-1.5 text-sm font-normal outline-none"
+          rows={1}
+          maxLength={COMMENT_MAX_LENGTH}
+          // The counter speaks up near the limit only: a quiet field otherwise.
+          showCounter={draft.length >= COMMENT_COUNTER_FROM}
           toolbar
+          toolbarVisible={toolsOpen}
+          emoteInline
           onPasteImages={addMediaFiles}
           // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
           onSubmitShortcut={() =>
@@ -287,7 +297,7 @@ export function PostComments({
             )?.requestSubmit()
           }
         />
-      }
+      )}
       canSend={Boolean(draft.trim()) || media.length > 0}
       sending={sending}
       onSubmit={submit}
