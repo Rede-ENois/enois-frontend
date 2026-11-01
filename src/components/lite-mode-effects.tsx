@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { readForceMotion, readLiteMode, subscribeLiteFlags, writeLiteMode } from "@/lib/lite-mode";
+import {
+  readCardTilt,
+  readForceMotion,
+  readLiteMode,
+  subscribeLiteFlags,
+  writeLiteMode,
+} from "@/lib/lite-mode";
 import { usePersonalization } from "@/lib/use-personalization";
 
 /**
@@ -16,10 +22,11 @@ import { usePersonalization } from "@/lib/use-personalization";
 export function LiteModeEffects() {
   const queryClient = useQueryClient();
   const { data } = usePersonalization();
-  const [local, setLocal] = useState({ lite: false, forceMotion: false });
+  const [local, setLocal] = useState({ lite: false, forceMotion: false, cardTilt: true });
 
   useEffect(() => {
-    const read = () => setLocal({ lite: readLiteMode(), forceMotion: readForceMotion() });
+    const read = () =>
+      setLocal({ lite: readLiteMode(), forceMotion: readForceMotion(), cardTilt: readCardTilt() });
     read();
     return subscribeLiteFlags(read);
   }, []);
@@ -49,6 +56,13 @@ export function LiteModeEffects() {
     if (local.forceMotion && !lite) root.setAttribute("data-force-motion", "");
     else root.removeAttribute("data-force-motion");
   }, [local.forceMotion, lite]);
+
+  useEffect(() => {
+    // O design system lê este atributo a cada movimento do mouse no cartão de perfil.
+    const root = document.documentElement;
+    if (local.cardTilt) root.removeAttribute("data-no-tilt");
+    else root.setAttribute("data-no-tilt", "");
+  }, [local.cardTilt]);
 
   useEffect(() => {
     queryClient.setDefaultOptions({
