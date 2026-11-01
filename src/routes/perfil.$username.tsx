@@ -261,7 +261,9 @@ function Profile() {
 
   const updateProfile = useMutation({
     mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => profileApi.update(data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
+      // A new cover photo takes the shop banner off on the server: refresh the shop too.
+      if (data.banner !== undefined) queryClient.invalidateQueries({ queryKey: ["loja"] });
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
       queryClient.invalidateQueries({ queryKey: profileQueries.byId(user.id).queryKey });
@@ -1107,6 +1109,7 @@ function Profile() {
         open={bannerOpen}
         onOpenChange={setBannerOpen}
         initialHtml={user.bannerHtml ?? null}
+        bannerItem={user.bannerItem ?? null}
         onPickPhoto={() => bannerRef.current?.click()}
         onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ["me"] });
