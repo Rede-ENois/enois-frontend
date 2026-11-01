@@ -1131,6 +1131,7 @@ export const texts = {
         "Crie a página da sua empresa e publique vagas, projetos e serviços para a comunidade.",
       cta: "Criar página",
       dismiss: "Fechar",
+      contextSwitch: "Você está no modo profissional. Empresas, vagas e serviços ficam aqui.",
     },
   },
 
