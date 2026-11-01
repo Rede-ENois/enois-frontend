@@ -124,6 +124,7 @@ const POST_TYPE_FILTERS = [
   { value: "REVIEW", label: "Avaliações" },
   { value: "DIVERTIDO", label: "Diversão" },
   { value: "ARTICLE", label: "Artigos" },
+  { value: "POLL", label: "Enquetes" },
 ] as const;
 
 export const Route = createFileRoute("/feed")({
