@@ -1020,6 +1020,7 @@ export const texts = {
     endOfFeed: "Você chegou ao fim do feed.",
     loadMore: "Carregar mais",
     scrollToTop: "Voltar ao topo",
+    newPosts: "Novos posts",
     empty: "Nada por aqui ainda. Publicações da sua rede aparecem neste feed.",
     composer: {
       removeMedia: "Remover mídia",

@@ -204,7 +204,39 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
+    refetchInterval: 30_000,
   });
+}
+
+/**
+ * Detecta novos posts comparando o primeiro ID da pagina com o que estava visivel.
+ * Mostra o indicador quando o feed atualizou e o usuario scrollou pra baixo.
+ */
+function useNewPostsIndicator(feedPosts: { id: string }[]) {
+  const seenFirstId = useRef<string | null>(null);
+  const [hasNew, setHasNew] = useState(false);
+
+  const currentFirstId = feedPosts.length > 0 ? feedPosts[0].id : null;
+
+  useEffect(() => {
+    if (!currentFirstId) return;
+    if (seenFirstId.current === null) {
+      seenFirstId.current = currentFirstId;
+      return;
+    }
+    if (currentFirstId !== seenFirstId.current && window.scrollY > 200) {
+      setHasNew(true);
+    }
+  }, [currentFirstId]);
+
+  const dismiss = useCallback(() => {
+    seenFirstId.current = currentFirstId;
+    setHasNew(false);
+    clearFeedScroll();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentFirstId]);
+
+  return { hasNewPosts: hasNew, dismissNewPosts: dismiss };
 }
 
 function useProfile() {
@@ -587,6 +619,7 @@ function Home() {
     caughtUpTab ? (lastSeenAt ?? null) : null,
   );
   const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
+  const { hasNewPosts, dismissNewPosts } = useNewPostsIndicator(feedPosts);
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
@@ -1242,7 +1275,21 @@ function Home() {
             <QuestionStatusFilter value={questionStatus} onChange={setQuestionStatus} />
           )}
 
-          <div>
+          <div className="relative">
+            {hasNewPosts && (
+              <button
+                type="button"
+                onClick={dismissNewPosts}
+                className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
+              >
+                <span className="flex items-center gap-1.5">
+                  <ArrowUp className="h-3.5 w-3.5" />
+
+                  {texts.feed.newPosts}
+                </span>
+              </button>
+            )}
+
             {feedLoading && <PostCardSkeletons />}
 
             {!feedLoading && feedFetching && !isFetchingNextPage && (
