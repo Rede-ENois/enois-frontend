@@ -666,6 +666,8 @@ export const texts = {
       identityLoadError: "Não deu para carregar sua identidade profissional.",
       identityRetry: "Tentar de novo",
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
+      /** Pedido fechado sem escolha: não é negado, dá para tentar de novo. */
+      pushDismissed: "O pedido de permissão ficou sem resposta. Toque em ligar de novo.",
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
       pushError: "Não foi possível ativar as notificações. Tente novamente.",

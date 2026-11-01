@@ -19,7 +19,8 @@ import type { RootRouteContext } from "@/types/routes/root/root-route-context";
 import { navigateToHref } from "@/utils/navigation";
 import { ToastProvider, buttonVariants } from "@rede-enois/design-system/ui";
 
-import { hrefDoPush } from "@/lib/push-navigation";
+import { registerPushSubscription } from "@/lib/push";
+import { hrefDoPush, subscriptionDoPush } from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
 import { hasSession, isProtectedPath } from "@/lib/require-auth";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
@@ -225,6 +226,13 @@ function RootInsideProvider() {
     // clique abriria a API em vez do post.
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
     const onMessage = (event: MessageEvent) => {
+      // Inscricao renovada pelo worker: registra no backend para o envio nao ficar preso no
+      // endpoint antigo (o navegador pode trocar a inscricao sozinho).
+      const renewal = subscriptionDoPush(event.data);
+      if (renewal) {
+        void registerPushSubscription(renewal).catch(() => undefined);
+        return;
+      }
       const href = hrefDoPush(event.data as PushNavigateMessage | null);
       if (!href) return;
       navigateToHref(href, (opts) => void router.navigate(opts));

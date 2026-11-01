@@ -62,9 +62,13 @@ async function readyRegistration(): Promise<ServiceWorkerRegistration> {
  * Inscricao ativa neste aparelho E valida para a chave anunciada. Sem a chave, responde apenas se
  * existe inscricao. Uma inscricao presa a chave antiga conta como desligada — e e descartada, para
  * o proximo "ligar" criar uma valida em vez de reutilizar a morta.
+ *
+ * A permissao do navegador entra na conta: permicao revogada depois de ligado (o navegador limpa
+ * ao trocar de conta ou de configuracao) deixa a inscricao no aparelho, mas nenhuma notificacao
+ * consegue aparecer. A tela diria "ligado" sem nada chegar.
  */
 export async function isPushActive(publicKey?: string): Promise<boolean> {
-  if (!isPushSupported()) return false;
+  if (!isPushSupported() || Notification.permission !== "granted") return false;
   const registration = await navigator.serviceWorker.getRegistration();
   if (!registration) return false;
   const subscription = await registration.pushManager.getSubscription();
@@ -72,6 +76,34 @@ export async function isPushActive(publicKey?: string): Promise<boolean> {
   if (!publicKey || matchesCurrentKey(subscription, publicKey)) return true;
   await subscription.unsubscribe().catch(() => undefined);
   return false;
+}
+
+/** Envia ao backend uma inscricao do navegador (nova, ou renovada pelo service worker). */
+export async function registerPushSubscription(json: PushSubscriptionJSON): Promise<boolean> {
+  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return false;
+  try {
+    await pushApi.subscribe({
+      endpoint: json.endpoint,
+      keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Repoe no backend a inscricao que ja existe neste aparelho, sem pedir permissao e sem abrir o
+ * pedido do navegador. E o conserto de persistencia: o servidor pode ter perdido a linha (limpeza
+ * da base, inscricao removida apos um 410) enquanto a inscricao local continua valida — a tela
+ * mostrava "ligado" e nada chegava. Rodar isso a cada carga custa um POST idempotente.
+ */
+export async function syncPushSubscription(publicKey: string): Promise<boolean> {
+  if (!isPushSupported() || Notification.permission !== "granted") return false;
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription || !matchesCurrentKey(subscription, publicKey)) return false;
+  return registerPushSubscription(subscription.toJSON());
 }
 
 /** Pede permissao (so depois de um clique) e registra este dispositivo para receber push. */
@@ -104,8 +136,14 @@ export async function enablePush(): Promise<EnablePushResult> {
     return { ok: false, reason: error instanceof Error ? error.message : "permission-error" };
   }
 
-  if (permission !== "granted") {
+  // Fechar o pedido sem escolher mantem a permissao em "default": o navegador abre o dialogo de
+  // novo no proximo clique. Tratar isso como negacao trocava o botao por "libere nas configuracoes"
+  // e tirava da pessoa a unica acao que ainda funcionava.
+  if (permission === "denied") {
     return { ok: false, reason: "denied" };
+  }
+  if (permission !== "granted") {
+    return { ok: false, reason: "dismissed" };
   }
 
   try {
@@ -129,10 +167,9 @@ export async function enablePush(): Promise<EnablePushResult> {
       return { ok: false, reason: "bad-subscription" };
     }
 
-    await pushApi.subscribe({
-      endpoint: json.endpoint,
-      keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
-    });
+    if (!(await registerPushSubscription(json))) {
+      return { ok: false, reason: "register-failed" };
+    }
     return { ok: true };
   } catch (error) {
     return { ok: false, reason: error instanceof Error ? error.message : "subscribe-failed" };
@@ -158,6 +195,7 @@ export async function disablePush(): Promise<void> {
 /** Mensagem de tela para uma falha de `enablePush`. */
 export function pushErrorMessage(reason: string): string {
   if (reason === "denied") return texts.account.menu.pushDenied;
+  if (reason === "dismissed") return texts.account.menu.pushDismissed;
   if (reason === "unsupported") return texts.account.menu.pushUnavailable;
   if (reason === "server-disabled" || reason === "unreachable")
     return texts.account.menu.pushServerOff;
