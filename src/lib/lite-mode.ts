@@ -9,6 +9,7 @@
  */
 const LITE_STORAGE_KEY = "connect-grow-lite-mode";
 const FORCE_MOTION_STORAGE_KEY = "connect-grow-force-motion";
+const CARD_TILT_STORAGE_KEY = "connect-grow-card-tilt";
 const CHANGE_EVENT = "connect-grow-lite-flags-change";
 
 /** Cada lista pede isto de vezes mais itens por página em modo lite. */
@@ -62,6 +63,24 @@ export function writeForceMotion(on: boolean): boolean {
   return on;
 }
 
+/**
+ * Efeito 3D do cartão de perfil (inclinação e brilho ao passar o mouse). Ligado por padrão;
+ * quem desliga guarda "0". É escolha do aparelho, então fica só nele.
+ */
+export function readCardTilt(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(CARD_TILT_STORAGE_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+export function writeCardTilt(on: boolean): boolean {
+  store(CARD_TILT_STORAGE_KEY, on);
+  return on;
+}
+
 function store(key: string, on: boolean): void {
   if (typeof window === "undefined") return;
   try {
@@ -72,11 +91,17 @@ function store(key: string, on: boolean): void {
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-/** Avisa quando qualquer uma das duas chaves muda (na aba ou em outra). */
+/** Avisa quando qualquer uma das chaves muda (na aba ou em outra). */
 export function subscribeLiteFlags(listener: () => void): () => void {
   if (typeof window === "undefined") return () => undefined;
   const onStorage = (event: StorageEvent) => {
-    if (event.key === LITE_STORAGE_KEY || event.key === FORCE_MOTION_STORAGE_KEY) listener();
+    if (
+      event.key === LITE_STORAGE_KEY ||
+      event.key === FORCE_MOTION_STORAGE_KEY ||
+      event.key === CARD_TILT_STORAGE_KEY
+    ) {
+      listener();
+    }
   };
   window.addEventListener(CHANGE_EVENT, listener);
   window.addEventListener("storage", onStorage);
