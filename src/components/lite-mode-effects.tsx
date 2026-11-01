@@ -13,6 +13,15 @@ import {
 import { usePersonalization } from "@/lib/use-personalization";
 import { ensureWebFonts } from "@/lib/web-fonts";
 
+function readLocalFlags() {
+  return {
+    lite: readLiteMode(),
+    batata: readBatataMode(),
+    forceMotion: readForceMotion(),
+    cardTilt: readCardTilt(),
+  };
+}
+
 /**
  * Liga o Modo lite (e o BATATA) no documento inteiro — e a teimosia de animações, para quem pediu.
  *
@@ -32,24 +41,12 @@ import { ensureWebFonts } from "@/lib/web-fonts";
 export function LiteModeEffects() {
   const queryClient = useQueryClient();
   const { data } = usePersonalization();
-  const [local, setLocal] = useState({
-    lite: false,
-    batata: false,
-    forceMotion: false,
-    cardTilt: true,
-  });
+  // Read on the first render: starting at `false` made the first effect strip the `data-lite`
+  // the pre-paint script had set, so animations switched on for a frame and off again. O BATATA
+  // entra na mesma leitura — `data-batata` também é escrito antes da primeira tinta.
+  const [local, setLocal] = useState(readLocalFlags);
 
-  useEffect(() => {
-    const read = () =>
-      setLocal({
-        lite: readLiteMode(),
-        batata: readBatataMode(),
-        forceMotion: readForceMotion(),
-        cardTilt: readCardTilt(),
-      });
-    read();
-    return subscribeLiteFlags(read);
-  }, []);
+  useEffect(() => subscribeLiteFlags(() => setLocal(readLocalFlags())), []);
 
   const lite = data?.liteMode ?? local.lite;
   const batata = data?.batataMode ?? local.batata;
