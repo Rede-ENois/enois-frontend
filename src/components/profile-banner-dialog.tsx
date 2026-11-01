@@ -33,14 +33,18 @@ export function ProfileBannerDialog({
     queryFn: () => lojaApi.catalog(),
     enabled: open && bannerItem !== null,
   });
+  // Without the catalog (loading, failed, item gone) the notice still reads well, never a raw id.
   const shopBanner = bannerItem
-    ? (catalog.data?.find((item) => item.id === bannerItem)?.name ?? bannerItem)
+    ? (catalog.data?.find((item) => item.id === bannerItem)?.name ??
+      texts.cosmetics.equippedBannerFallback)
     : null;
 
   const save = useMutation({
     mutationFn: (value: string) => profileApi.update({ bannerHtml: value }),
     onSuccess: () => {
       onOpenChange(false);
+      // A new own cover takes the shop banner off on the server: the shop must not show it on.
+      invalidateCosmetics(queryClient);
       toast(texts.profile.bannerHtml.saved);
       onSaved();
     },
