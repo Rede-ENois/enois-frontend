@@ -117,6 +117,25 @@ describe("onboarding: contêiner", () => {
     expect(view().selectedPersonIds).toEqual(["p1", "p2"]);
   });
 
+  it("perfil com mais habilidades que o teto do backend: manda só as 20 mais recentes", async () => {
+    const many = Array.from({ length: 65 }, (_, index) => `Skill ${index + 1}`);
+    mocks.profile = { skills: many };
+    act(() => root.unmount());
+    root = createRoot(host);
+    act(() =>
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <OnboardingFlow />
+        </QueryClientProvider>,
+      ),
+    );
+    act(() => view().onStepChange("pack"));
+    await flush();
+
+    expect(view().skills).toHaveLength(65);
+    expect(mocks.starterPack).toHaveBeenCalledWith([], many.slice(-20));
+  });
+
   it("conclui com o que ficou marcado, atualiza a sessão e vai para o feed", async () => {
     queryClient.setQueryData(["auth-me"], { id: "u", onboardingCompleted: false });
     mocks.complete.mockResolvedValue({ onboardingCompleted: true });
