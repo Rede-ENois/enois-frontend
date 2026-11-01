@@ -32,6 +32,8 @@ const PAGE_SIZE = 20;
  * envia. Como a API devolve os mais recentes primeiro, "ver comentarios anteriores" carrega a
  * proxima pagina e acrescenta no fim.
  */
+const COMMENT_MAX_LENGTH = 800;
+
 export function PostComments({
   postId,
   postAuthorId,
@@ -268,17 +270,26 @@ export function PostComments({
       onAddImages={addMediaFiles}
       onAddAudio={addAudio}
       onErrorChange={setError}
-      composerField={
+      composerField={({ toolsOpen, replyingTo }) => (
         <MentionTextarea
           value={draft}
           onChange={(value, ids) => {
             setDraft(postId, value);
             setCommentMentions(postId, ids);
           }}
-          placeholder={texts.posts.comments.placeholder}
-          className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm font-normal outline-none"
-          maxLength={800}
+          placeholder={
+            replyingTo
+              ? texts.posts.comments.replyPlaceholder(replyingTo)
+              : texts.posts.comments.placeholder
+          }
+          className="w-full resize-none border-0 bg-transparent px-2 py-1.5 text-sm font-normal outline-none"
+          rows={1}
+          maxLength={COMMENT_MAX_LENGTH}
+          // The counter speaks up near the limit only: a quiet field otherwise.
+          showCounter={draft.length >= COMMENT_MAX_LENGTH - 100}
           toolbar
+          toolbarVisible={toolsOpen}
+          emoteInline
           onPasteImages={addMediaFiles}
           // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
           onSubmitShortcut={() =>
@@ -287,7 +298,7 @@ export function PostComments({
             )?.requestSubmit()
           }
         />
-      }
+      )}
       canSend={Boolean(draft.trim()) || media.length > 0}
       sending={sending}
       onSubmit={submit}
