@@ -663,6 +663,8 @@ export const texts = {
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",
+      identityLoadError: "Não deu para carregar sua identidade profissional.",
+      identityRetry: "Tentar de novo",
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
@@ -1084,6 +1086,10 @@ export const texts = {
       professionalSetupBody:
         "Aqui no Profissional, o que você publica sai pelo seu perfil profissional. Crie ou ative o seu para começar.",
       professionalSetupCta: "Configurar perfil profissional",
+      professionalLoadErrorTitle: "Não deu para carregar seu perfil profissional",
+      professionalLoadErrorBody:
+        "Sem ele não dá para saber como sua publicação sairia. Confira a conexão e tente de novo.",
+      professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) =>
         `Publicando como ${name}. Esta publicação vai para o feed profissional.`,
     },

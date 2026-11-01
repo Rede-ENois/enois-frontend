@@ -14,6 +14,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useRouterState } from "@tanstack/react-router";
 
 import type { CorporateProfileView } from "@/types/application/corporate/corporate-profile-view";
+import type { ProfessionalProfileState } from "@/types/application/corporate/professional-profile-state";
 import type { InterfaceContext } from "@rede-enois/design-system/domain";
 
 // Same key the old identity toggle used, so the last choice survives the upgrade.
@@ -125,6 +126,18 @@ export function destinationAfterSwitch(pathname: string, next: InterfaceContext)
 /** The professional profile can sign and act (applications, BUSINESS posts) only when ACTIVE. */
 export function professionalReady(profile: CorporateProfileView | null | undefined): boolean {
   return Boolean(profile?.exists && profile.status === "ACTIVE");
+}
+
+/**
+ * Reads the professional profile query without mistaking "unknown" for "none": data wins (even a
+ * stale copy while a refetch fails), then a failure is ERROR, otherwise it is still LOADING.
+ */
+export function professionalProfileState(query: {
+  data: CorporateProfileView | null | undefined;
+  isError: boolean;
+}): ProfessionalProfileState {
+  if (query.data !== undefined) return professionalReady(query.data) ? "ACTIVE" : "NOT_READY";
+  return query.isError ? "ERROR" : "LOADING";
 }
 
 /** The identity that signs what the person does here: professional only with an active profile. */
