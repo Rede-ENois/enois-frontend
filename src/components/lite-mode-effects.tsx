@@ -11,6 +11,10 @@ import {
 } from "@/lib/lite-mode";
 import { usePersonalization } from "@/lib/use-personalization";
 
+function readLocalFlags() {
+  return { lite: readLiteMode(), forceMotion: readForceMotion(), cardTilt: readCardTilt() };
+}
+
 /**
  * Liga o Modo lite no documento inteiro (e a teimosia de animações, para quem pediu).
  *
@@ -22,14 +26,11 @@ import { usePersonalization } from "@/lib/use-personalization";
 export function LiteModeEffects() {
   const queryClient = useQueryClient();
   const { data } = usePersonalization();
-  const [local, setLocal] = useState({ lite: false, forceMotion: false, cardTilt: true });
+  // Read on the first render: starting at `false` made the first effect strip the `data-lite`
+  // the pre-paint script had set, so animations switched on for a frame and off again.
+  const [local, setLocal] = useState(readLocalFlags);
 
-  useEffect(() => {
-    const read = () =>
-      setLocal({ lite: readLiteMode(), forceMotion: readForceMotion(), cardTilt: readCardTilt() });
-    read();
-    return subscribeLiteFlags(read);
-  }, []);
+  useEffect(() => subscribeLiteFlags(() => setLocal(readLocalFlags())), []);
 
   const lite = data?.liteMode ?? local.lite;
 
