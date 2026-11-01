@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -14,7 +14,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 
 import { companiesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
-import { readStoredContext } from "@/lib/interface-context";
+import { consumeContextSwitch } from "@/lib/interface-context";
 import { companyQueries } from "@/lib/query-options/companies";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
@@ -53,9 +53,8 @@ function Empresas() {
   const [sector, setSector] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const previousContext = useRef(readStoredContext());
   useEffect(() => {
-    if (previousContext.current === "SOCIAL") {
+    if (consumeContextSwitch()) {
       toast(texts.feed.companyPrompt.contextSwitch);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
