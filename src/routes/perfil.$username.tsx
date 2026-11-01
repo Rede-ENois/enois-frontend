@@ -1107,6 +1107,7 @@ function Profile() {
         open={bannerOpen}
         onOpenChange={setBannerOpen}
         initialHtml={user.bannerHtml ?? null}
+        bannerItem={user.bannerItem ?? null}
         onPickPhoto={() => bannerRef.current?.click()}
         onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ["me"] });
