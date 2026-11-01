@@ -6,6 +6,7 @@ import {
   contextOfPath,
   destinationAfterSwitch,
   effectiveIdentity,
+  professionalProfileState,
   readStoredContext,
   resolveContext,
   writeStoredContext,
@@ -110,6 +111,28 @@ describe("stored context", () => {
     expect(readStoredContext()).toBe("PROFESSIONAL");
     window.localStorage.setItem("connect-grow-active-identity", "CORPORATE");
     expect(readStoredContext()).toBe("PROFESSIONAL");
+  });
+});
+
+describe("professionalProfileState", () => {
+  it("não confunde falha ou carregamento com ausência de perfil", () => {
+    expect(professionalProfileState({ data: undefined, isError: false })).toBe("LOADING");
+    expect(professionalProfileState({ data: undefined, isError: true })).toBe("ERROR");
+  });
+
+  it("separa perfil ativo de perfil ausente ou em rascunho", () => {
+    expect(professionalProfileState({ data: active, isError: false })).toBe("ACTIVE");
+    expect(professionalProfileState({ data: { ...active, status: "DRAFT" }, isError: false })).toBe(
+      "NOT_READY",
+    );
+    expect(professionalProfileState({ data: { ...active, exists: false }, isError: false })).toBe(
+      "NOT_READY",
+    );
+    expect(professionalProfileState({ data: null, isError: false })).toBe("NOT_READY");
+  });
+
+  it("mantém a última resposta conhecida quando uma nova consulta falha", () => {
+    expect(professionalProfileState({ data: active, isError: true })).toBe("ACTIVE");
   });
 });
 

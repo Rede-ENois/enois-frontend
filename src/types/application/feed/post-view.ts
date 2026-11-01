@@ -60,6 +60,10 @@ export type PostView = {
   repostOfContent?: string | null;
   /** Mídias do original citado. */
   repostOfMediaIds?: string[] | null;
+  /** Repost puro: quem repostou (aparece como "X republicou" no topo do card). */
+  repostedByName?: string | null;
+  repostedByAvatar?: string | null;
+  repostedByUsername?: string | null;
   /** Enquete (só em posts do tipo POLL): alternativas, contagem e o voto de quem lê. */
   poll?: PollView | null;
   /** HTML já sanitizado da mini página (só em posts do tipo PAGE; nulo nos demais). */
@@ -79,9 +83,12 @@ export type PostView = {
     comments: number;
     saves: number;
     shares: number;
+    reposts: number;
   };
   status: "ACTIVE" | "DELETED";
   currentUserReaction?: ReactionType | null;
+  /** Se o viewer já republicou este post (backend batch check). */
+  currentUserReposted?: boolean;
   /**
    * Contagem por tipo de reação, calculada pelo backend em lote para a página inteira. Ausente
    * nas respostas que não calculam (publicar/editar, versões antigas): aí o card busca sozinho.

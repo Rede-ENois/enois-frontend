@@ -663,6 +663,8 @@ export const texts = {
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",
+      identityLoadError: "Não deu para carregar sua identidade profissional.",
+      identityRetry: "Tentar de novo",
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
@@ -1018,6 +1020,7 @@ export const texts = {
     endOfFeed: "Você chegou ao fim do feed.",
     loadMore: "Carregar mais",
     scrollToTop: "Voltar ao topo",
+    newPosts: "Novos posts",
     empty: "Nada por aqui ainda. Publicações da sua rede aparecem neste feed.",
     composer: {
       removeMedia: "Remover mídia",
@@ -1084,6 +1087,10 @@ export const texts = {
       professionalSetupBody:
         "Aqui no Profissional, o que você publica sai pelo seu perfil profissional. Crie ou ative o seu para começar.",
       professionalSetupCta: "Configurar perfil profissional",
+      professionalLoadErrorTitle: "Não deu para carregar seu perfil profissional",
+      professionalLoadErrorBody:
+        "Sem ele não dá para saber como sua publicação sairia. Confira a conexão e tente de novo.",
+      professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) =>
         `Publicando como ${name}. Esta publicação vai para o feed profissional.`,
     },
@@ -1118,6 +1125,14 @@ export const texts = {
       confirmed: (count: number) => `${count} ${count === 1 ? "confirmado" : "confirmados"}`,
       eventMeta: (date: string, format: string, confirmed: string) =>
         `${date} · ${format} · ${confirmed}`,
+    },
+    companyPrompt: {
+      title: "Sua empresa no Énóis",
+      description:
+        "Crie a página da sua empresa e publique vagas, projetos e serviços para a comunidade.",
+      cta: "Criar página",
+      dismiss: "Fechar",
+      contextSwitch: "Você está no modo profissional. Empresas, vagas e serviços ficam aqui.",
     },
   },
 
@@ -1206,11 +1221,13 @@ export const texts = {
     },
     reposted: "Republicado no seu perfil.",
     alreadyReposted: "Você já republicou este post.",
+    repostRemoved: "Republicação removida.",
     repostError: "Não foi possível republicar agora.",
     shareCopied: "Link da publicação copiado!",
     editPhoto: "Editar foto",
     comments: {
       placeholder: "Comente com contexto, dúvida ou referência...",
+      replyPlaceholder: (name: string) => `Responder ${name}...`,
       pinError: "Não foi possível fixar o comentário.",
       editError: "Não foi possível salvar a edição. Tente de novo.",
       acceptError: "Não foi possível atualizar a resposta da dúvida. Tente de novo.",
@@ -3032,6 +3049,8 @@ export const texts = {
     lookBought: "Look comprado e vestido no seu perfil.",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
+    /** Shop banner name while the catalog is not at hand. */
+    equippedBannerFallback: "equipado",
     /** One message per API error code of the shop, the status and the events. */
     errors: {
       ITEM_NOT_FOUND: "Esse item não existe mais na loja.",
@@ -3149,6 +3168,29 @@ export const texts = {
     created: "Página criada!",
     createError: "Não foi possível criar a página. Confira os dados e tente de novo.",
     published: "Microprojeto publicado!",
+    projectManagement: {
+      title: "Gerenciar microprojetos",
+      hint: "Só é possível editar ou remover projetos abertos sem candidaturas, para preservar os acordos com profissionais.",
+      edit: "Editar",
+      remove: "Remover",
+      editTitle: "Editar microprojeto",
+      editHint: "Atualize os detalhes do microprojeto.",
+      name: "Título",
+      problem: "Problema",
+      scope: "Escopo (opcional)",
+      deliverables: "Entregáveis",
+      acceptance: "Critérios de aceite",
+      budget: "Orçamento (opcional)",
+      deadline: "Prazo (opcional)",
+      save: "Salvar alterações",
+      cancel: "Cancelar",
+      confirmTitle: "Remover microprojeto?",
+      confirmHint: "O microprojeto deixará de aparecer na página e no catálogo.",
+      saved: "Microprojeto atualizado!",
+      removed: "Microprojeto removido!",
+      error:
+        "Não foi possível concluir. Confira os dados e atualize a página para verificar se há candidaturas.",
+    },
     projectError: "Não foi possível publicar. Revise os campos.",
     applySent: "Proposta enviada! A conversa com a empresa já está em Mensagens.",
     applyError: "Não foi possível enviar. Tente de novo.",

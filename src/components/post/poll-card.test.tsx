@@ -57,7 +57,7 @@ function render(poll: {
         mediaIds: [],
         createdAt: "2026-10-30T12:00:00Z",
         visibility: "PUBLIC",
-        counters: { reactions: 0, comments: 0, saves: 0, shares: 0 },
+        counters: { reactions: 0, comments: 0, saves: 0, shares: 0, reposts: 0 },
         status: "ACTIVE",
         poll,
       }}

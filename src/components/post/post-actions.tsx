@@ -144,9 +144,11 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       motionAllowed={motionAllowed}
       reactionCount={reactionCount}
       commentsCount={postCounters.comments}
+      repostsCount={postCounters.reposts ?? 0}
       savesCount={postCounters.saves}
       saved={saved}
       canRepost={canRepost}
+      reposted={post.currentUserReposted ?? false}
       onShowReactions={() => setShowReactions(post.id, true)}
       onComments={onComments}
       onRepost={() => {
@@ -159,7 +161,12 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       dialogs={
         <>
           {repostMounted && (
-            <RepostDialog postId={post.id} open={repostOpen} onOpenChange={setRepostOpen} />
+            <RepostDialog
+              postId={post.id}
+              reposted={post.currentUserReposted ?? false}
+              open={repostOpen}
+              onOpenChange={setRepostOpen}
+            />
           )}
           {reactionsMounted && <ReactionsDialog postId={post.id} />}
           {sealsMounted && <SealsDialog postId={post.id} />}

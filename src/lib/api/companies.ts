@@ -3,6 +3,7 @@ import type { CompanyDirectoryItem } from "@/types/application/companies/company
 import type { CompanyFollowState } from "@/types/application/companies/company-follow-state";
 import type { CompanyMember } from "@/types/application/companies/company-member";
 import type { CompanySummary } from "@/types/application/companies/company-summary";
+import type { MicroProjectFields } from "@/types/application/companies/micro-project-fields";
 import type { ProposalView } from "@/types/application/companies/proposal-view";
 
 import { api, buildQuery } from "../api-client";
@@ -43,18 +44,12 @@ export const companiesApi = {
   addMember: (companyId: string, userId: string, role: CompanyMember["role"]) =>
     api.post<CompanyMember>(`/empresas/${companyId}/members`, { userId, role }),
 
-  publishProject: (
-    companyId: string,
-    data: {
-      title: string;
-      problem: string;
-      scope?: string;
-      deliverables: string;
-      acceptanceCriteria: string;
-      budget?: string;
-      deadline?: string;
-    },
-  ) => api.post<{ id: string; status: string }>(`/empresas/${companyId}/microprojetos`, data),
+  publishProject: (companyId: string, data: MicroProjectFields) =>
+    api.post<{ id: string; status: string }>(`/empresas/${companyId}/microprojetos`, data),
+  editProject: (projectId: string, data: MicroProjectFields) =>
+    api.put<{ id: string; status: string }>(`/microprojetos/${projectId}`, data),
+  removeProject: (projectId: string) =>
+    api.delete<{ id: string; status: string }>(`/microprojetos/${projectId}`),
   project: (projectId: string) =>
     api.get<{ project: CompanyDetail["projects"][number]; proposals: ProposalView[] }>(
       `/microprojetos/${projectId}`,

@@ -18,7 +18,9 @@ import {
 } from "@/lib/healthy-usage";
 import {
   prefersReducedMotion,
+  readCardTilt,
   readForceMotion,
+  writeCardTilt,
   writeForceMotion,
   writeLiteMode,
 } from "@/lib/lite-mode";
@@ -36,6 +38,7 @@ function loadDeviceSettings() {
     enabled: config.enabled,
     minutes: config.minutes,
     forceMotion: readForceMotion(),
+    cardTilt: readCardTilt(),
     reducedMotion: prefersReducedMotion(),
   };
 }
@@ -71,6 +74,7 @@ export function HealthyUsageDialog({
       // preferência volta do servidor; o espelho no aparelho só adianta o próximo paint.
       writeLiteMode(values.liteMode);
       writeForceMotion(values.forceMotion);
+      writeCardTilt(values.cardTilt);
       void queryClient.invalidateQueries({ queryKey: ["personalization"] });
       toast(texts.personalization.saved, "success");
       onOpenChange(false);

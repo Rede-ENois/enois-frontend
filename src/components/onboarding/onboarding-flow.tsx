@@ -10,7 +10,7 @@ import { type OnboardingStep, OnboardingView } from "@rede-enois/design-system/d
 
 import { onboardingApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
-import { markOnboardingShown, onboardingErrorMessage } from "@/lib/onboarding";
+import { markOnboardingShown, onboardingErrorMessage, skillsForOnboarding } from "@/lib/onboarding";
 
 const TOPIC_OPTIONS = TOPICS.filter((topic) => topic !== "Todas").map((topic) => ({
   value: topic,
@@ -46,10 +46,12 @@ export function OnboardingFlow() {
   useEffect(() => markOnboardingShown(), []);
 
   const skills = editedSkills ?? profile?.skills ?? [];
+  // O backend recusa (400) mais que o teto de habilidades; o perfil pode ter mais.
+  const sentSkills = skillsForOnboarding(skills);
 
   const pack = useQuery({
-    queryKey: ["onboarding", "starter-pack", selectedTopics, skills],
-    queryFn: () => onboardingApi.starterPack(selectedTopics, skills),
+    queryKey: ["onboarding", "starter-pack", selectedTopics, sentSkills],
+    queryFn: () => onboardingApi.starterPack(selectedTopics, sentSkills),
     enabled: step === "pack",
     staleTime: 5 * 60_000,
   });
@@ -76,7 +78,7 @@ export function OnboardingFlow() {
     mutationFn: () =>
       onboardingApi.complete({
         topics: selectedTopics,
-        skills,
+        skills: sentSkills,
         communityIds: chosen(communities),
         groupIds: chosen(groups),
         connectUserIds: chosen(people),

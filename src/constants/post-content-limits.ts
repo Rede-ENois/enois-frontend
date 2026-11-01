@@ -29,6 +29,12 @@ const LIMITS: Record<PostView["type"], number> = {
   BLOG: 1200,
 };
 
+/** Longest new comment, as the backend accepts it (`PostInteractionService`: 800). */
+export const COMMENT_MAX_LENGTH = 800;
+
+/** The counter shows from here on: a quiet field until the limit is near. */
+export const COMMENT_COUNTER_FROM = COMMENT_MAX_LENGTH - 100;
+
 export function postContentLimit(type: PostView["type"]): number {
   return LIMITS[type] ?? 1200;
 }

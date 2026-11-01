@@ -27,6 +27,7 @@ import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 import { AppContainer } from "@/components/app-container";
 import { CompanyEditDialog } from "@/components/company-edit-dialog";
+import { MicroProjectManagement } from "@/components/micro-project-management";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 
@@ -301,6 +302,8 @@ function Empresa() {
           person: toPerson(review.person),
         }))}
       />
+      {canEdit && <MicroProjectManagement company={company} />}
+
       <MicroProjectProposalDialog
         open={proposalFor != null}
         onOpenChange={(open) => {

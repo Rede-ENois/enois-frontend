@@ -61,7 +61,12 @@ import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
-import { effectiveIdentity, professionalReady, useInterfaceContext } from "@/lib/interface-context";
+import { useFeedTab } from "@/lib/feed/use-feed-tab";
+import {
+  effectiveIdentity,
+  professionalProfileState,
+  useInterfaceContext,
+} from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
@@ -74,6 +79,8 @@ import { cn } from "@/lib/utils";
 import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
+import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
@@ -117,6 +124,7 @@ const POST_TYPE_FILTERS = [
   { value: "REVIEW", label: "Avaliações" },
   { value: "DIVERTIDO", label: "Diversão" },
   { value: "ARTICLE", label: "Artigos" },
+  { value: "POLL", label: "Enquetes" },
 ] as const;
 
 export const Route = createFileRoute("/feed")({
@@ -182,7 +190,7 @@ const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
   resolved: true,
 };
 
-function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean) {
+function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
   const lite = useLiteMode();
   const pageSize = litePageSize(FEED_PAGE_SIZE, lite);
@@ -194,9 +202,41 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean) {
         : feedApi.list(pageParam ?? null, pageSize, tab, typeFilter || undefined, resolved),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: authenticated,
+    enabled: authenticated && tabReady,
     staleTime: 20_000,
+    refetchInterval: 30_000,
   });
+}
+
+/**
+ * Detecta novos posts comparando o primeiro ID da pagina com o que estava visivel.
+ * Mostra o indicador quando o feed atualizou e o usuario scrollou pra baixo.
+ */
+function useNewPostsIndicator(feedPosts: { id: string }[]) {
+  const seenFirstId = useRef<string | null>(null);
+  const [hasNew, setHasNew] = useState(false);
+
+  const currentFirstId = feedPosts.length > 0 ? feedPosts[0].id : null;
+
+  useEffect(() => {
+    if (!currentFirstId) return;
+    if (seenFirstId.current === null) {
+      seenFirstId.current = currentFirstId;
+      return;
+    }
+    if (currentFirstId !== seenFirstId.current && window.scrollY > 200) {
+      setHasNew(true);
+    }
+  }, [currentFirstId]);
+
+  const dismiss = useCallback(() => {
+    seenFirstId.current = currentFirstId;
+    setHasNew(false);
+    clearFeedScroll();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentFirstId]);
+
+  return { hasNewPosts: hasNew, dismissNewPosts: dismiss };
 }
 
 function useProfile() {
@@ -242,15 +282,14 @@ function Home() {
   // o feed corporativo não aparece.
   const context = useInterfaceContext();
   const professional = context === "PROFESSIONAL";
-  const tab: HomeTab = professional
-    ? "CORPORATE"
-    : aba === "CORPORATE"
-      ? "FOR_YOU"
-      : (aba ?? "FOR_YOU");
-  const setTab = (next: HomeTab) => {
-    if (next === tab) return;
+  // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado, "Tudo".
+  const {
+    tab,
+    setTab,
+    ready: tabReady,
+  } = useFeedTab(aba, professional, (next) => {
     void navigate({ search: { aba: next }, replace: true });
-  };
+  });
   const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
@@ -259,7 +298,7 @@ function Home() {
   const questionsFeed = tab === "ALL" && typeFilter === "QUESTION";
   const {
     data: feedData,
-    isLoading: feedLoading,
+    isLoading: feedQueryLoading,
     isFetching: feedFetching,
     fetchNextPage,
     hasNextPage,
@@ -268,20 +307,30 @@ function Home() {
     tab,
     tab === "ALL" ? typeFilter : undefined,
     questionsFeed ? RESOLVED_FILTER[questionStatus] : undefined,
+    tabReady,
   );
+  // Enquanto a aba guardada não é lida, a tela mostra o carregando em vez de um feed vazio.
+  const feedLoading = feedQueryLoading || !tabReady;
   const { data: profile } = useProfile();
   const { data: suggestions } = useSuggestions();
   const { data: eventsData } = useEvents();
-  const { data: corporate } = useQuery({
+  const {
+    data: corporate,
+    isError: corporateError,
+    isFetching: corporateFetching,
+    refetch: refetchCorporate,
+  } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => corporateApi.me(),
     enabled: authenticated,
     staleTime: 120_000,
   });
   const identity = effectiveIdentity(context, corporate);
+  const corporateState = professionalProfileState({ data: corporate, isError: corporateError });
   // Na interface profissional só a identidade profissional publica: sem perfil ativo, o
-  // compositor dá lugar ao convite para criar/ativar (nada sai pelo perfil social daqui).
-  const composerLocked = professional && !professionalReady(corporate);
+  // compositor dá lugar ao convite para criar/ativar (nada sai pelo perfil social daqui). Se a
+  // consulta falhou ou ainda carrega, não se sabe: nada de convite, só o erro com "tentar de novo".
+  const composerLocked = professional && corporateState !== "ACTIVE";
 
   const [draft, setDraft] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
@@ -570,6 +619,7 @@ function Home() {
     caughtUpTab ? (lastSeenAt ?? null) : null,
   );
   const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
+  const { hasNewPosts, dismissNewPosts } = useNewPostsIndicator(feedPosts);
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
@@ -630,24 +680,12 @@ function Home() {
         <div className="min-w-0 space-y-4">
           <SaciDuelBanner />
 
-          {composerLocked && (
-            <div className="surface-card flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
-              <div className="min-w-0 space-y-1">
-                <p className="text-sm font-medium text-text-strong">
-                  {texts.feed.composer.professionalSetupTitle}
-                </p>
-
-                <p className="text-sm text-text-subtle">
-                  {texts.feed.composer.professionalSetupBody}
-                </p>
-              </div>
-
-              <Link to="/profissional">
-                <Button className="w-auto rounded-full">
-                  {texts.feed.composer.professionalSetupCta}
-                </Button>
-              </Link>
-            </div>
+          {composerLocked && (corporateState === "ERROR" || corporateState === "NOT_READY") && (
+            <ProfessionalComposerNotice
+              state={corporateState}
+              onRetry={() => void refetchCorporate()}
+              retrying={corporateFetching}
+            />
           )}
 
           {/* Composer */}
@@ -1237,7 +1275,21 @@ function Home() {
             <QuestionStatusFilter value={questionStatus} onChange={setQuestionStatus} />
           )}
 
-          <div>
+          <div className="relative">
+            {hasNewPosts && (
+              <button
+                type="button"
+                onClick={dismissNewPosts}
+                className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
+              >
+                <span className="flex items-center gap-1.5">
+                  <ArrowUp className="h-3.5 w-3.5" />
+
+                  {texts.feed.newPosts}
+                </span>
+              </button>
+            )}
+
             {feedLoading && <PostCardSkeletons />}
 
             {!feedLoading && feedFetching && !isFetchingNextPage && (
@@ -1271,6 +1323,7 @@ function Home() {
             cartões (o que está acontecendo agora) para fora da dobra. */}
         <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
           <ApoieCard />
+          <CompanyPromptCard />
           <PlatformSpacesCard />
           <TodayGamesCard />
 
@@ -1443,7 +1496,7 @@ function Home() {
           aria-label={texts.feed.scrollToTop}
           title={texts.feed.scrollToTop}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:right-[calc((100vw-min(100vw-3rem,80rem))/2+344px)]"
+          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>

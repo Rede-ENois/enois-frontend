@@ -6,9 +6,11 @@ import {
   liteInterval,
   litePageSize,
   prefersReducedMotion,
+  readCardTilt,
   readForceMotion,
   readLiteMode,
   subscribeLiteFlags,
+  writeCardTilt,
   writeForceMotion,
   writeLiteMode,
 } from "./lite-mode";
@@ -47,6 +49,22 @@ describe("modo lite", () => {
     stop();
     writeLiteMode(false);
     expect(avisos).toBe(2);
+  });
+
+  it("o efeito 3D do cartão vem ligado e só desliga por escolha do aparelho", () => {
+    let avisos = 0;
+    const stop = subscribeLiteFlags(() => {
+      avisos += 1;
+    });
+
+    expect(readCardTilt()).toBe(true);
+    writeCardTilt(false);
+    expect(readCardTilt()).toBe(false);
+    expect(avisos).toBe(1);
+
+    writeCardTilt(true);
+    expect(readCardTilt()).toBe(true);
+    stop();
   });
 
   it("sem suporte a matchMedia o aparelho não pede menos movimento", () => {

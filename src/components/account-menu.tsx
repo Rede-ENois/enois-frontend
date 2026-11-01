@@ -12,7 +12,7 @@ import { Briefcase, UsersRound } from "lucide-react";
 import { corporateApi } from "@/lib/api";
 import {
   destinationAfterSwitch,
-  professionalReady,
+  professionalProfileState,
   useInterfaceContext,
   writeStoredContext,
 } from "@/lib/interface-context";
@@ -53,13 +53,19 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const { toast } = useToast();
 
   const context = useInterfaceContext();
-  const { data: corporate } = useQuery({
+  const {
+    data: corporate,
+    isError: corporateError,
+    isFetching: corporateFetching,
+    refetch: refetchCorporate,
+  } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => corporateApi.me(),
     enabled: hasSessionFlag(),
     staleTime: 120_000,
   });
-  const showSwitch = professionalReady(corporate);
+  const corporateState = professionalProfileState({ data: corporate, isError: corporateError });
+  const showSwitch = corporateState === "ACTIVE";
 
   const choose = (next: InterfaceContext) => {
     writeStoredContext(next);
@@ -127,6 +133,20 @@ export function AccountMenu({ profile }: AccountMenuProps) {
                   </button>
                 );
               })}
+            </div>
+          ) : corporateState === "ERROR" ? (
+            // A failed request is not "no professional profile": say so and let the person retry.
+            <div className="flex items-center justify-between gap-2 text-xs text-text-subtle">
+              <span className="min-w-0">{texts.account.menu.identityLoadError}</span>
+
+              <button
+                type="button"
+                disabled={corporateFetching}
+                onClick={() => void refetchCorporate()}
+                className="shrink-0 rounded-full px-2 py-1 font-medium text-text-strong transition hover:text-primary disabled:opacity-50"
+              >
+                {texts.account.menu.identityRetry}
+              </button>
             </div>
           ) : undefined
         }
