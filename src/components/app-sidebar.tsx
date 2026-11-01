@@ -16,7 +16,10 @@ export function AppSidebar() {
 
   return (
     <AppSidebarView collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
-      <NavigationLinks collapsed={sidebarCollapsed} />
+      <NavigationLinks
+        collapsed={sidebarCollapsed}
+        onNavigate={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      />
     </AppSidebarView>
   );
 }
