@@ -3047,6 +3047,8 @@ export const texts = {
     lookBought: "Look comprado e vestido no seu perfil.",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
+    /** Shop banner name while the catalog is not at hand. */
+    equippedBannerFallback: "equipado",
     /** One message per API error code of the shop, the status and the events. */
     errors: {
       ITEM_NOT_FOUND: "Esse item não existe mais na loja.",

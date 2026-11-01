@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
 import { texts } from "@/texts";
@@ -6,7 +6,8 @@ import type { ProfileBannerDialogProps } from "@/types/components/profile/profil
 import { ProfileBannerDialog as ProfileBannerDialogView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
-import { profileApi } from "@/lib/api";
+import { lojaApi, profileApi } from "@/lib/api";
+import { cosmeticErrorMessage, invalidateCosmetics } from "@/lib/cosmetics";
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
@@ -22,17 +23,42 @@ export function ProfileBannerDialog({
   initialHtml,
   onPickPhoto,
   onSaved,
+  bannerItem = null,
 }: ProfileBannerDialogProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  // Same query as the shop: only read when a shop banner is on, for its display name.
+  const catalog = useQuery({
+    queryKey: ["loja", "oldest"],
+    queryFn: () => lojaApi.catalog(),
+    enabled: open && bannerItem !== null,
+  });
+  // Without the catalog (loading, failed, item gone) the notice still reads well, never a raw id.
+  const shopBanner = bannerItem
+    ? (catalog.data?.find((item) => item.id === bannerItem)?.name ??
+      texts.cosmetics.equippedBannerFallback)
+    : null;
 
   const save = useMutation({
     mutationFn: (value: string) => profileApi.update({ bannerHtml: value }),
     onSuccess: () => {
       onOpenChange(false);
+      // A new own cover takes the shop banner off on the server: the shop must not show it on.
+      invalidateCosmetics(queryClient);
       toast(texts.profile.bannerHtml.saved);
       onSaved();
     },
     onError: () => toast(texts.profile.bannerHtml.error, "error"),
+  });
+  const ownCover = useMutation({
+    mutationFn: (id: string) => lojaApi.unequip(id),
+    onSuccess: () => {
+      onOpenChange(false);
+      invalidateCosmetics(queryClient);
+      toast(texts.cosmetics.unequipped, "success");
+      onSaved();
+    },
+    onError: (error) => toast(cosmeticErrorMessage(error), "error"),
   });
 
   return (
@@ -42,8 +68,10 @@ export function ProfileBannerDialog({
       initialHtml={initialHtml}
       onPickPhoto={onPickPhoto}
       maxLength={PROFILE_HTML_MAX_LENGTH}
-      savePending={save.isPending}
+      savePending={save.isPending || ownCover.isPending}
       onSave={(value) => save.mutate(value)}
+      shopBanner={shopBanner}
+      onUseOwnCover={bannerItem ? () => ownCover.mutate(bannerItem) : undefined}
       renderHtmlFrame={(props) => <SandboxedHtmlFrame {...props} />}
     />
   );
