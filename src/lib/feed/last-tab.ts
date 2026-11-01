@@ -23,8 +23,9 @@ const REMEMBERABLE_TABS: readonly HomeTab[] = [
  * to "Tudo".
  */
 export function readLastFeedTab(): HomeTab {
-  if (typeof localStorage === "undefined") return DEFAULT_FEED_TAB;
   try {
+    // Dentro do try: com o armazenamento bloqueado, até ler `localStorage` pode lançar.
+    if (typeof localStorage === "undefined") return DEFAULT_FEED_TAB;
     const saved = localStorage.getItem(LAST_FEED_TAB_KEY);
     return REMEMBERABLE_TABS.find((tab) => tab === saved) ?? DEFAULT_FEED_TAB;
   } catch {

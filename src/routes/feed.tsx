@@ -60,8 +60,8 @@ import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } fro
 import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
-import { readLastFeedTab, rememberFeedTab } from "@/lib/feed/last-tab";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
   professionalProfileState,
@@ -188,7 +188,7 @@ const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
   resolved: true,
 };
 
-function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean) {
+function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
   const lite = useLiteMode();
   const pageSize = litePageSize(FEED_PAGE_SIZE, lite);
@@ -200,7 +200,7 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean) {
         : feedApi.list(pageParam ?? null, pageSize, tab, typeFilter || undefined, resolved),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: authenticated,
+    enabled: authenticated && tabReady,
     staleTime: 20_000,
   });
 }
@@ -249,19 +249,13 @@ function Home() {
   const context = useInterfaceContext();
   const professional = context === "PROFESSIONAL";
   // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado, "Tudo".
-  // O "Início" do menu leva para /feed sem `?aba=`: a aba escolhida nesta visita continua valendo.
-  const [lastTab, setLastTab] = useState<HomeTab>(() => readLastFeedTab());
-  const tab: HomeTab = professional
-    ? "CORPORATE"
-    : aba === "CORPORATE"
-      ? lastTab
-      : (aba ?? lastTab);
-  const setTab = (next: HomeTab) => {
-    if (next === tab) return;
-    rememberFeedTab(next);
-    setLastTab(next);
+  const {
+    tab,
+    setTab,
+    ready: tabReady,
+  } = useFeedTab(aba, professional, (next) => {
     void navigate({ search: { aba: next }, replace: true });
-  };
+  });
   const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
@@ -270,7 +264,7 @@ function Home() {
   const questionsFeed = tab === "ALL" && typeFilter === "QUESTION";
   const {
     data: feedData,
-    isLoading: feedLoading,
+    isLoading: feedQueryLoading,
     isFetching: feedFetching,
     fetchNextPage,
     hasNextPage,
@@ -279,7 +273,10 @@ function Home() {
     tab,
     tab === "ALL" ? typeFilter : undefined,
     questionsFeed ? RESOLVED_FILTER[questionStatus] : undefined,
+    tabReady,
   );
+  // Enquanto a aba guardada não é lida, a tela mostra o carregando em vez de um feed vazio.
+  const feedLoading = feedQueryLoading || !tabReady;
   const { data: profile } = useProfile();
   const { data: suggestions } = useSuggestions();
   const { data: eventsData } = useEvents();
