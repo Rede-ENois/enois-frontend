@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
+import { COMMENT_COUNTER_FROM, COMMENT_MAX_LENGTH } from "@/constants/post-content-limits";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { CommentView } from "@/types/application/comment/comment-view";
@@ -32,8 +33,6 @@ const PAGE_SIZE = 20;
  * envia. Como a API devolve os mais recentes primeiro, "ver comentarios anteriores" carrega a
  * proxima pagina e acrescenta no fim.
  */
-const COMMENT_MAX_LENGTH = 800;
-
 export function PostComments({
   postId,
   postAuthorId,
@@ -286,7 +285,7 @@ export function PostComments({
           rows={1}
           maxLength={COMMENT_MAX_LENGTH}
           // The counter speaks up near the limit only: a quiet field otherwise.
-          showCounter={draft.length >= COMMENT_MAX_LENGTH - 100}
+          showCounter={draft.length >= COMMENT_COUNTER_FROM}
           toolbar
           toolbarVisible={toolsOpen}
           emoteInline
