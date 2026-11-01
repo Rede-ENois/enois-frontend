@@ -3,7 +3,10 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import type { StreakCardProps } from "@rede-enois/design-system/domain";
+import type {
+  ProfileGamificationPanelProps as PanelViewProps,
+  StreakCardProps,
+} from "@rede-enois/design-system/domain";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   streak: vi.fn(),
   wallet: vi.fn(),
   card: null as StreakCardProps | null,
+  panel: null as PanelViewProps | null,
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -20,7 +24,11 @@ vi.mock("@/lib/api", () => ({
   walletApi: { wallet: mocks.wallet },
 }));
 vi.mock("@rede-enois/design-system/domain", () => ({
-  ProfileGamificationPanel: () => null,
+  ProfileGamificationPanel: (props: PanelViewProps) => {
+    mocks.panel = props;
+    return null;
+  },
+  gardenStyleOf: (id: string | null | undefined) => (id ? id.replace("garden-", "") : "quintal"),
   StreakCard: (props: StreakCardProps) => {
     mocks.card = props;
     return <section data-streak />;
@@ -57,12 +65,12 @@ describe("sequência no perfil", () => {
 
   afterEach(() => act(() => root.unmount()));
 
-  const mount = async (isOwner: boolean) => {
+  const mount = async (isOwner: boolean, profile: object = {}) => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     act(() =>
       root.render(
         <QueryClientProvider client={client}>
-          <ProfileGamificationPanel profile={{} as never} isOwner={isOwner} postsCount={0} />
+          <ProfileGamificationPanel profile={profile as never} isOwner={isOwner} postsCount={0} />
         </QueryClientProvider>,
       ),
     );
@@ -91,5 +99,13 @@ describe("sequência no perfil", () => {
 
     expect(host.querySelector("[data-streak]")).toBeNull();
     expect(mocks.streak).not.toHaveBeenCalled();
+  });
+
+  it("passes the reputation garden and the equipped style to the panel", async () => {
+    const garden = { trajectory: 2, relations: 1, contribution: 0, tenure: 3, health: 2 };
+    await mount(false, { garden, gardenStyle: "garden-cerrado" });
+
+    expect(mocks.panel?.garden).toEqual(garden);
+    expect(mocks.panel?.gardenStyle).toBe("cerrado");
   });
 });

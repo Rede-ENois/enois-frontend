@@ -4,6 +4,7 @@ import type { ProfileGamificationPanelProps } from "@/types/components/profile/p
 import {
   ProfileGamificationPanel as ProfileGamificationPanelView,
   StreakCard,
+  gardenStyleOf,
 } from "@rede-enois/design-system/domain";
 
 import { streakApi } from "@/lib/api";
@@ -40,6 +41,8 @@ export function ProfileGamificationPanel({
         postsCount={postsCount}
         walletBalance={wallet ? formatFaisca(wallet.balance) : null}
         walletHref="/carteira"
+        garden={profile.garden}
+        gardenStyle={gardenStyleOf(profile.gardenStyle)}
       />
 
       {isOwner && (

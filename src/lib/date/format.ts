@@ -23,6 +23,23 @@ export const FUSO_DO_APP = "America/Sao_Paulo";
 /** Deslocamento do fuso do app, usado para ler data sem fuso como hora de calendário. */
 const DESLOCAMENTO_DO_APP = "-03:00";
 
+/**
+ * Montar um `Intl.DateTimeFormat` custa caro (carrega os dados do locale e do fuso), e o feed
+ * formata datas em todo cartão que entra na tela. Cada combinação de locale e opções é montada
+ * uma vez só. ponytail: sem limite, mas as combinações são as poucas fixas deste arquivo.
+ */
+const formatadores = new Map<string, Intl.DateTimeFormat>();
+
+function formatador(locale: string, opcoes: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const chave = `${locale}|${JSON.stringify(opcoes)}`;
+  let pronto = formatadores.get(chave);
+  if (!pronto) {
+    pronto = new Intl.DateTimeFormat(locale, { ...opcoes, timeZone: FUSO_DO_APP });
+    formatadores.set(chave, pronto);
+  }
+  return pronto;
+}
+
 const DATA_SEM_FUSO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?$/;
 
 /**
@@ -64,7 +81,7 @@ export function formatarData(
   if (valor === null || valor === undefined || valor === "") return "";
   const data = paraData(valor);
   if (!data) return "";
-  return new Intl.DateTimeFormat("pt-BR", { ...opcoes, timeZone: FUSO_DO_APP }).format(data);
+  return formatador("pt-BR", opcoes).format(data);
 }
 
 /** "18/10/2026" */
@@ -130,11 +147,10 @@ export function partesDaData(
   if (valor === null || valor === undefined || valor === "") return null;
   const data = paraData(valor);
   if (!data) return null;
-  const partes = new Intl.DateTimeFormat("en-CA", {
+  const partes = formatador("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    timeZone: FUSO_DO_APP,
   }).formatToParts(data);
   const pega = (tipo: string) => Number(partes.find((parte) => parte.type === tipo)?.value ?? NaN);
   return { ano: pega("year"), mes: pega("month"), dia: pega("day") };
@@ -155,14 +171,13 @@ export function valorDeDataLocal(valor: string | number | Date | null | undefine
   if (valor === null || valor === undefined || valor === "") return "";
   const data = paraData(valor);
   if (!data) return "";
-  const partes = new Intl.DateTimeFormat("en-CA", {
+  const partes = formatador("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: FUSO_DO_APP,
   }).formatToParts(data);
   const pega = (tipo: string) => partes.find((parte) => parte.type === tipo)?.value ?? "";
   return `${pega("year")}-${pega("month")}-${pega("day")}T${pega("hour")}:${pega("minute")}`;

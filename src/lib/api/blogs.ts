@@ -11,7 +11,8 @@ import { api, buildQuery } from "../api-client";
  * compartilha); o resto é do dono. Inscrever-se é o que faz as novidades aparecerem no "Para você".
  */
 export const blogsApi = {
-  directory: (limit = 50) => api.get<BlogSummary[]>(`/blogs${buildQuery({ limit })}`),
+  directory: (limit = 50, query?: string) =>
+    api.get<BlogSummary[]>(`/blogs${buildQuery({ limit, query })}`),
 
   get: (slug: string) => api.get<Blog>(`/blogs/${encodeURIComponent(slug)}`),
 

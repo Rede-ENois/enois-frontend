@@ -3,6 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { MyStudyPairs } from "@/types/application/study-pairs/my-study-pairs";
 import type { StudyPairsViewProps } from "@rede-enois/design-system/domain";
 import { type Root, createRoot } from "react-dom/client";
@@ -19,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   api: {
     me: vi.fn(),
     popularGoals: vi.fn(),
+    search: vi.fn(),
     request: vi.fn(),
     cancelRequest: vi.fn(),
     checkin: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock("@rede-enois/design-system/domain", () => ({
 vi.mock("@rede-enois/design-system/ui", () => ({
   useToast: () => ({ toast: mocks.toast }),
   Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
 }));
 vi.mock("@/lib/api", () => ({ studyPairsApi: mocks.api, preferencesApi: mocks.prefs }));
 
@@ -152,6 +155,39 @@ describe("StudyPairs container", () => {
     await act(async () => props().onSaveCheckin("sp_1", "Capítulo 5"));
     await settle();
     expect(props().checkinStatus?.sp_1).toBe("error");
+  });
+
+  it("searches open goals by text and requests the chosen one", async () => {
+    mocks.api.search.mockResolvedValue({
+      items: [{ goal: "Aprender Rust", topic: null, createdAt: "2026-10-30T12:00:00Z" }],
+    });
+
+    const search = host.querySelector('input[type="search"]') as HTMLInputElement;
+    const type = (value: string) => {
+      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(search) as object, "value")!.set!.call(
+        search,
+        value,
+      );
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+
+    // Menos de 2 letras não consulta: não vale gastar request com uma letra.
+    await act(async () => type("r"));
+    await act(async () => new Promise<void>((done) => setTimeout(done, 350)));
+    expect(mocks.api.search).not.toHaveBeenCalled();
+
+    await act(async () => type("rust"));
+    await act(async () => new Promise<void>((done) => setTimeout(done, 350)));
+    await settle();
+    expect(mocks.api.search).toHaveBeenCalledWith("rust");
+
+    const chip = [...host.querySelectorAll("button")].find(
+      (b) => b.textContent === texts.studyPairs.search.action,
+    );
+    await act(async () => chip!.click());
+    await settle();
+
+    expect(mocks.api.request).toHaveBeenCalledWith("Aprender Rust", null);
   });
 
   it("warns when ending a pair fails", async () => {

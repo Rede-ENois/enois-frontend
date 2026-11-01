@@ -1,12 +1,4 @@
-import {
-  type ChangeEvent,
-  type FormEvent,
-  Fragment,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
@@ -14,7 +6,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { POST_TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
-import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
+import { ARTICLE_BODY_MAX_LENGTH, POLL_MIN_OPTIONS, POST_TYPES } from "@/constants/post-types";
 import { texts } from "@/texts";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { FeedPage } from "@/types/application/feed/feed-page";
@@ -25,7 +17,6 @@ import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
-  CaughtUpDivider,
   PostCardSkeletons,
   QuestionComposerHint,
   type QuestionStatus,
@@ -34,7 +25,6 @@ import {
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
-import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   EmptyState,
@@ -69,7 +59,8 @@ import {
 import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
 import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
-import { caughtUpIndex, isDateOrderedTab, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { effectiveIdentity, professionalReady, useInterfaceContext } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
@@ -83,13 +74,14 @@ import { cn } from "@/lib/utils";
 import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PlatformSpacesCard } from "@/components/platform-spaces-card";
-import { PostCard } from "@/components/post-card";
+import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Abas válidas da tela inicial (a URL carrega a escolhida). */
@@ -133,12 +125,14 @@ export const Route = createFileRoute("/feed")({
    * A aba vive na URL (`/feed?aba=ALL`): abrir uma publicação e voltar restaura a MESMA aba em que
    * a pessoa estava — antes o retorno caía sempre em "Para você".
    */
-  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab } => {
+  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab; compor?: "ARTICLE" } => {
     const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
         : undefined;
-    return aba ? { aba } : {};
+    // `compor=ARTICLE` opens the composer in article mode (the profile "Escrever artigo" shortcut).
+    const compor = search.compor === "ARTICLE" ? "ARTICLE" : undefined;
+    return { ...(aba ? { aba } : {}), ...(compor ? { compor } : {}) };
   },
   head: () => ({
     meta: [
@@ -242,13 +236,17 @@ function Home() {
   const authenticated = useIsAuthenticated();
   // A aba vem da URL; trocar de aba REPLACES o histórico (o "voltar" continua voltando para a
   // página anterior, e não passeando pelas abas).
-  const { aba } = Route.useSearch();
+  const { aba, compor } = Route.useSearch();
   const navigate = Route.useNavigate();
   // Interface profissional: o início É o feed corporativo (publicações de trabalho). Na social,
   // o feed corporativo não aparece.
   const context = useInterfaceContext();
   const professional = context === "PROFESSIONAL";
-  const tab: HomeTab = professional ? "CORPORATE" : aba === "CORPORATE" ? "ALL" : (aba ?? "ALL");
+  const tab: HomeTab = professional
+    ? "CORPORATE"
+    : aba === "CORPORATE"
+      ? "FOR_YOU"
+      : (aba ?? "FOR_YOU");
   const setTab = (next: HomeTab) => {
     if (next === tab) return;
     void navigate({ search: { aba: next }, replace: true });
@@ -287,7 +285,14 @@ function Home() {
 
   const [draft, setDraft] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
-  const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
+  const [postType, setPostType] = useState<PostView["type"]>(() =>
+    compor === "ARTICLE" ? "ARTICLE" : "INSIGHT",
+  );
+  // The article request is one-shot: drop it from the URL so a refresh opens the usual composer.
+  useEffect(() => {
+    if (compor)
+      void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
+  }, [compor, navigate]);
   // Assunto do post avulso (opcional): é o que liga o post a "O que quero ver"/"não gosto".
   // Em comunidade o post herda o assunto DELA — lá o compositor é outro.
   const [topic, setTopic] = useState<string>(() => readLastTopic());
@@ -321,6 +326,9 @@ function Home() {
 
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
+  // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
       ? POST_TYPES.filter((option) => option.id === "BUSINESS")
@@ -367,6 +375,8 @@ function Home() {
     const content = draft.trim();
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    const scheduledOptions = normalizePollOptions(pollOptions);
+    if (pollMode && scheduledOptions.length < POLL_MIN_OPTIONS) return;
     if (!scheduleAt) return;
 
     setPublishError(null);
@@ -391,6 +401,7 @@ function Home() {
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: scheduledOptions } : {}),
         // O assunto viaja com o agendado e vale quando ele entra no ar.
         ...(topic ? { topic } : {}),
         scheduledAt: new Date(scheduleAt).toISOString(),
@@ -402,6 +413,7 @@ function Home() {
       setMediaSpoiler(false);
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setTypePickerOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
@@ -421,6 +433,9 @@ function Home() {
     // precisa de titulo (o texto de cima) E do corpo. Nos demais, o texto de cima e o post.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
+    const options = normalizePollOptions(pollOptions);
+    if (pollMode && options.length < POLL_MIN_OPTIONS) return;
 
     const formData = new FormData(event.currentTarget);
     setPublishError(null);
@@ -436,6 +451,7 @@ function Home() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(topic ? { topic } : {}),
         website: String(formData.get("website") ?? ""),
@@ -460,9 +476,9 @@ function Home() {
       setPostType("INSIGHT");
       setMedia([]);
       setMediaSpoiler(false);
-      setPostType("INSIGHT");
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setTypePickerOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
@@ -540,17 +556,20 @@ function Home() {
 
   const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
 
-  const feedPosts = feedData?.pages.flatMap((page) => page.items) ?? [];
-  // O marcador vale como chegou na primeira página DESTA visita, por aba: depois do POST
-  // /feed/seen, um refetch traria o novo valor e o divisor pularia para o topo enquanto a pessoa
-  // lê. Por aba porque as ranqueadas recebem sempre null e não podem apagar o das cronológicas.
+  // "Você está em dia" lives only on "Para você". The marker counts as it arrived on the first page
+  // OF THIS VISIT: after POST /feed/seen a refetch would bring the new value and the divider would
+  // jump to the top while the person reads.
   const firstPage = feedData?.pages[0];
-  const [lastSeenByTab, setLastSeenByTab] = useState<Partial<Record<HomeTab, string | null>>>({});
-  if (!(tab in lastSeenByTab) && firstPage) {
-    setLastSeenByTab((current) => ({ ...current, [tab]: firstPage.lastSeenAt ?? null }));
+  const caughtUpTab = carriesCaughtUp(tab);
+  const [lastSeenAt, setLastSeenAt] = useState<string | null | undefined>(undefined);
+  if (lastSeenAt === undefined && caughtUpTab && firstPage) {
+    setLastSeenAt(firstPage.lastSeenAt ?? null);
   }
-  const caughtUpAt = caughtUpIndex(feedPosts, lastSeenByTab[tab] ?? null);
-  const firstPostRef = useMarkFeedSeen(feedPosts, isDateOrderedTab(tab));
+  const { posts: feedPosts, caughtUpAt } = caughtUpOrder(
+    feedData?.pages.flatMap((page) => page.items) ?? [],
+    caughtUpTab ? (lastSeenAt ?? null) : null,
+  );
+  const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
@@ -697,6 +716,8 @@ function Home() {
               </div>
 
               {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
+
+              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
 
               {pageMode && (
                 <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
@@ -1216,7 +1237,7 @@ function Home() {
             <QuestionStatusFilter value={questionStatus} onChange={setQuestionStatus} />
           )}
 
-          <div className="space-y-4">
+          <div>
             {feedLoading && <PostCardSkeletons />}
 
             {!feedLoading && feedFetching && !isFetchingNextPage && (
@@ -1227,30 +1248,21 @@ function Home() {
               </div>
             )}
 
-            {!feedLoading &&
-              feedPosts.map((p, index) => (
-                <Fragment key={p.id}>
-                  {index === caughtUpAt && <CaughtUpDivider />}
-
-                  {index === 0 ? (
-                    <div ref={firstPostRef}>
-                      <PostCard post={p} feedTab={tab} />
-                    </div>
-                  ) : (
-                    <PostCard post={p} feedTab={tab} />
-                  )}
-                </Fragment>
-              ))}
+            {!feedLoading && feedPosts.length > 0 && (
+              <VirtualizedFeedList
+                posts={feedPosts}
+                feedTab={tab}
+                caughtUpAt={caughtUpAt}
+                firstPostRef={firstPostRef}
+                hasMore={Boolean(hasNextPage)}
+                loadingMore={isFetchingNextPage}
+                onLoadMore={loadNextPage}
+                loadingLabel={texts.feed.loadingMore}
+                endLabel={texts.feed.endOfFeed}
+              />
+            )}
 
             {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
-
-            <InfiniteScroll
-              hasMore={Boolean(hasNextPage)}
-              loading={isFetchingNextPage}
-              onLoadMore={loadNextPage}
-              loadingLabel={texts.feed.loadingMore}
-              endLabel={feedPosts.length > 0 ? texts.feed.endOfFeed : undefined}
-            />
           </div>
         </div>
 

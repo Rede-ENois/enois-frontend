@@ -127,6 +127,7 @@ Card de post no feed, com todas as ações sociais.
 - Tags
 - Ações: reagir (popover com 8 emojis), comentar, salvar, compartilhar, denunciar
 - Seção de comentários com replies encadeadas
+- Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)
 
 **Componentes internos:**
@@ -309,3 +310,14 @@ Hook para detectar breakpoint mobile (< 768px).
 | Toggle         | Botão toggle                                                            |
 | ToggleGroup    | Grupo de toggles                                                        |
 | Tooltip        | Tooltip                                                                 |
+
+## Emblemas dos selos de contribuição
+
+Cada nível de selo de contribuição tem um emblema fixo em `public/seals/<emblema>.png` (256×256,
+fundo transparente): `ajudante`, `contribuinte-serio`, `hardcore`, `tryhard`, `get-a-life`,
+`beta-tester`, `exigente`, `esforco-maximo`, `plus-ultra`, `genkidama`. O nome vem do campo `emblem`
+que a API devolve em `/users/{username}/seals` e `/seals/criteria`; `sealEmblemSrc`
+(`src/lib/seal-emblem.ts`) valida o nome e monta a URL. O emblema aparece em `/selos` (cada nível) e
+no cartão do selo no perfil (`ProfileSeals`, via `emblemSrc` do design system). Não há escolha de
+emblema: ele é consequência do nível calculado pelo backend. Regras em `docs/CONTRIBUTION_SEALS.md`
+do backend.

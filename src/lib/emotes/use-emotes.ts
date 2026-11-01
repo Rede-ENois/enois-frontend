@@ -16,6 +16,31 @@ const SEIS_HORAS = 6 * 60 * 60 * 1000;
 /** O backend guarda a página por 10 minutos; o cliente segue a mesma validade. */
 const DEZ_MINUTOS = 10 * 60 * 1000;
 
+const NO_ENTRIES: Record<string, string> = {};
+
+// Shared by every RichText on screen: reading the localStorage copy (JSON.parse + validating each
+// entry) and building the Map used to cost a full pass over the catalog PER post, comment and
+// message mounted, which showed up as the hot path of the feed in a CPU profile.
+let storedIndex: ReturnType<typeof loadCachedIndex> | undefined;
+const indexByEntries = new WeakMap<Record<string, string>, Map<string, string>>();
+
+/** The localStorage copy, read once per page load (it only seeds the first paint). */
+function storedIndexOnce() {
+  if (typeof window === "undefined") return null;
+  if (storedIndex === undefined) storedIndex = loadCachedIndex();
+  return storedIndex;
+}
+
+/** One Map per entries object: every component reading the same query data shares it. */
+function sharedIndex(entries: Record<string, string>): Map<string, string> {
+  let index = indexByEntries.get(entries);
+  if (!index) {
+    index = emoteIndex(entries);
+    indexByEntries.set(entries, index);
+  }
+  return index;
+}
+
 /**
  * Índice código → imagem, para desenhar o texto dos posts.
  *
@@ -24,7 +49,7 @@ const DEZ_MINUTOS = 10 * 60 * 1000;
  * o texto continua saindo com o código cru — figurinha é enfeite, nunca bloqueio de leitura.
  */
 export function useEmoteIndex(): Map<string, string> {
-  const cached = useMemo(() => loadCachedIndex(), []);
+  const cached = storedIndexOnce();
   const { data } = useQuery({
     queryKey: ["emotes", "index"],
     queryFn: async () => {
@@ -39,7 +64,7 @@ export function useEmoteIndex(): Map<string, string> {
     retry: 1,
   });
 
-  return useMemo(() => emoteIndex(data ?? {}), [data]);
+  return sharedIndex(data ?? NO_ENTRIES);
 }
 
 /** Texto com os códigos de figurinha já trocados pela imagem do nosso proxy. */

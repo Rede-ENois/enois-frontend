@@ -1,5 +1,5 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { CorporateProfileView } from "@/types/application/corporate/corporate-profile-view";
@@ -7,11 +7,12 @@ import {
   PostCardSkeletons,
   ProfessionalProfile as ProfessionalProfileView,
 } from "@rede-enois/design-system/domain";
-import { Button, EmptyState } from "@rede-enois/design-system/ui";
-import { ArrowLeft, Globe, UserX } from "lucide-react";
+import { Button, EmptyState, useToast } from "@rede-enois/design-system/ui";
+import { ArrowLeft, Globe, MessageCircle, UserX } from "lucide-react";
 
-import { ApiError, corporateApi, feedApi } from "@/lib/api";
+import { ApiError, corporateApi, feedApi, messagesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { conversationErrorMessage } from "@/lib/conversation-error";
 import { monthsBetween, partesDaData, shortMonthYear } from "@/lib/date/format";
 import { litePageSize } from "@/lib/lite-mode";
 import { safeHref } from "@/lib/safe-url";
@@ -46,6 +47,9 @@ function ProfessionalProfile() {
   const lite = useLiteMode();
   const { username } = Route.useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const profile = useQuery({
     queryKey: ["corporate-public", username],
@@ -66,6 +70,15 @@ function ProfessionalProfile() {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: profile.isSuccess,
+  });
+
+  const openConversation = useMutation({
+    mutationFn: (userId: string) => messagesApi.openBusinessDirect(userId),
+    onSuccess: (conversation) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      navigate({ to: "/mensagens", search: { conversation: conversation.id } });
+    },
+    onError: (err) => toast(conversationErrorMessage(err), "error"),
   });
 
   if (profile.isLoading) {
@@ -151,34 +164,52 @@ function ProfessionalProfile() {
           credentialUrl: item.credentialUrl ? safeHref(item.credentialUrl) : null,
         }))}
         posts={
-          posts.isLoading ? (
-            <PostCardSkeletons />
-          ) : posts.isError ? (
-            <div className="surface-card">
-              <EmptyState icon={Globe} title={texts.corporate.saveError} />
-            </div>
-          ) : items.length === 0 ? (
-            <div className="surface-card">
-              <EmptyState icon={Globe} title={texts.corporate.publicProfile.empty} />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {items.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-
-              {posts.hasNextPage && (
+          <>
+            {!isMine && user && data.userId && (
+              <div className="mb-4 flex justify-end">
                 <Button
                   variant="outline"
-                  className="w-full rounded-full"
-                  disabled={posts.isFetchingNextPage}
-                  onClick={() => void posts.fetchNextPage()}
+                  size="sm"
+                  className="rounded-full gap-1.5"
+                  onClick={() => openConversation.mutate(data.userId!)}
+                  disabled={openConversation.isPending}
                 >
-                  {texts.feed.loadMore}
+                  <MessageCircle className="h-4 w-4" />
+
+                  <>{texts.profile.message}</>
                 </Button>
-              )}
-            </div>
-          )
+              </div>
+            )}
+
+            {posts.isLoading ? (
+              <PostCardSkeletons />
+            ) : posts.isError ? (
+              <div className="surface-card">
+                <EmptyState icon={Globe} title={texts.corporate.saveError} />
+              </div>
+            ) : items.length === 0 ? (
+              <div className="surface-card">
+                <EmptyState icon={Globe} title={texts.corporate.publicProfile.empty} />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {items.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+
+                {posts.hasNextPage && (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full"
+                    disabled={posts.isFetchingNextPage}
+                    onClick={() => void posts.fetchNextPage()}
+                  >
+                    {texts.feed.loadMore}
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
         }
       />
     </AppContainer>

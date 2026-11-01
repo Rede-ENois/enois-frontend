@@ -45,6 +45,10 @@ function Suporte() {
           />
         </div>
 
+        <Link to="/sugestoes" className="block text-sm text-primary-text hover:underline">
+          {texts.suggestions.link}
+        </Link>
+
         <MySupportRequests />
       </div>
     </AppContainer>

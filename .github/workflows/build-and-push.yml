@@ -211,8 +211,17 @@ jobs:
 
       - name: 🩺 Health check
         run: |
-          sleep 5
-          curl -sfI --max-time 15 https://enois-qa.b7cloud.tech | head -1
+          # `curl | head` hid every failure (no pipefail): a 500 on every page passed as healthy.
+          for i in $(seq 1 15); do
+            if curl -sf -o /dev/null --max-time 10 https://enois-qa.b7cloud.tech/feed; then
+              echo "OK na tentativa $i"
+              exit 0
+            fi
+            echo "tentativa $i falhou, aguardando..."
+            sleep 5
+          done
+          echo "health check nao respondeu apos 75s"
+          exit 1
 
   # ===========================================================================
   # Deploy PROD — SOMENTE branch main, SOMENTE push/workflow_dispatch, self-hosted

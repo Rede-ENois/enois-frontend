@@ -17,6 +17,10 @@ export const messagesApi = {
   /** Abre (ou reaproveita) a conversa direta com um usuario — botao "Mensagem" do perfil. */
   openDirect: (userId: string) => api.post<Conversation>("/conversations/direct", { userId }),
 
+  /** Abre (ou reaproveita) a DM corporativa — botao "Mensagem" do perfil profissional. */
+  openBusinessDirect: (userId: string) =>
+    api.post<Conversation>("/conversations/business-direct", { userId }),
+
   getConversation: (conversationId: string) =>
     api.get<Conversation>(`/conversations/${conversationId}`),
 

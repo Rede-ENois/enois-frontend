@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -77,7 +77,7 @@ function ChatDockInner() {
   const { data: unreadData } = useQuery({
     queryKey: ["conversations", "unread-count", context],
     queryFn: () => messagesApi.unreadCount(context),
-    refetchInterval: 15_000,
+    refetchInterval: expanded ? 15_000 : 60_000,
   });
 
   const totalUnread = unreadData?.count ?? 0;
@@ -106,11 +106,13 @@ function ChatDockInner() {
     },
   });
 
-  const conversations = [...(conversationsData?.pages.flatMap((p) => p.items) ?? [])].sort(
-    (a, b) => {
-      if (!a.time || !b.time) return 0;
-      return new Date(b.time).getTime() - new Date(a.time).getTime();
-    },
+  const conversations = useMemo(
+    () =>
+      [...(conversationsData?.pages.flatMap((p) => p.items) ?? [])].sort((a, b) => {
+        if (!a.time || !b.time) return 0;
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      }),
+    [conversationsData],
   );
 
   /*

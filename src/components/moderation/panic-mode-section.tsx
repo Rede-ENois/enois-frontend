@@ -18,7 +18,7 @@ export function PanicModeSection() {
   const status = useQuery({
     queryKey: ["moderation", "panic"],
     queryFn: () => moderationApi.panicStatus(),
-    refetchInterval: 5_000,
+    refetchInterval: () => (document.hidden ? false : 10_000),
   });
 
   const toggle = useMutation({

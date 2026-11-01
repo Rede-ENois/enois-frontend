@@ -16,8 +16,8 @@ import {
   MicroProjectProposalsDialog,
   NewMicroProjectDialog,
 } from "@rede-enois/design-system/domain";
-import { LoadingState, useToast } from "@rede-enois/design-system/ui";
-import { ArrowLeft } from "lucide-react";
+import { Button, LoadingState, useToast } from "@rede-enois/design-system/ui";
+import { ArrowLeft, Flag } from "lucide-react";
 
 import { companiesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
@@ -27,6 +27,7 @@ import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 import { AppContainer } from "@/components/app-container";
 import { CompanyEditDialog } from "@/components/company-edit-dialog";
+import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 
 export const Route = createFileRoute("/empresa/$slug")({
@@ -100,6 +101,7 @@ function Empresa() {
   const [proposalFor, setProposalFor] = useState<MicroProjectView | null>(null);
   const [proposalsFor, setProposalsFor] = useState<MicroProjectView | null>(null);
   const [completeFor, setCompleteFor] = useState<MicroProjectView | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: detailKey });
 
@@ -200,8 +202,27 @@ function Empresa() {
     company.projects.filter((project) => project.status === status).length;
   const delivered = projectDetail.data?.proposals.find((item) => item.status === "SELECTED");
 
+  // Denunciar: só quem tem sessão e NÃO é da equipe (a página não denuncia a si mesma). O anônimo
+  // é mandado ao login pelos próprios cards; denúncia exige conta.
+  const canReport = !role && company.canPropose !== "SIGN_IN";
+
   return (
     <AppContainer>
+      {canReport && (
+        <div className="mb-3 flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-full gap-1.5 text-text-subtle"
+            onClick={() => setReportOpen(true)}
+          >
+            <Flag className="h-4 w-4" aria-hidden />
+
+            <>{texts.empresa.report}</>
+          </Button>
+        </div>
+      )}
+
       <CompanyPageView
         company={{
           name: company.name,
@@ -351,6 +372,12 @@ function Empresa() {
             deadline: values.deadline ?? undefined,
           })
         }
+      />
+      <ReportDialog
+        targetId={company.id}
+        targetType="COMPANY"
+        open={reportOpen}
+        onOpenChange={setReportOpen}
       />
       <CompanyEditDialog
         company={company}

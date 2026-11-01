@@ -165,6 +165,9 @@ export const texts = {
     topicName: "Nome do tópico",
     topicNamePlaceholder: "Ex.: Avisos",
     topicCreateError: "Não foi possível criar o tópico.",
+    renameTopic: "Renomear tópico",
+    topicRenameSuccess: "Nome do tópico atualizado.",
+    topicRenameError: "Não foi possível renomear o tópico.",
     feedEmpty: "Nenhuma publicação ainda.",
     composerPlaceholder: "Escreva para o grupo...",
     publish: "Publicar",
@@ -209,6 +212,11 @@ export const texts = {
     removePostTitle: "Remover publicação?",
     removePostDescription: "Ela some do feed do grupo; a ação fica registrada na auditoria.",
     removePostError: "Não foi possível remover a publicação.",
+    editCommentLabel: "Editar comentário",
+    editCommentError: "Não foi possível editar o comentário.",
+    removeCommentTitle: "Remover comentário?",
+    removeCommentDescription: "Ele some da publicação; a ação fica registrada na auditoria.",
+    removeCommentError: "Não foi possível remover o comentário.",
   },
 
   appearance: {
@@ -509,6 +517,7 @@ export const texts = {
     warn: "Avisar o autor",
     deletePost: "Excluir o post",
     ban: "Banir o autor",
+    removeCompany: "Remover a página empresarial",
     applied: "Ação aplicada.",
     actionError: "Não foi possível aplicar a ação.",
     alreadyReviewed: "Esta denúncia já foi revisada.",
@@ -658,6 +667,10 @@ export const texts = {
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
       pushError: "Não foi possível ativar as notificações. Tente novamente.",
+      /** Rótulos do item de avisos no celular (o design system usa estes três estados). */
+      pushToggleOff: "Ligar avisos",
+      pushToggleOn: "Avisos ligados neste aparelho",
+      pushToggleWorking: "Ligando avisos...",
     },
     changeEmail: {
       error: "Não foi possível alterar o e-mail. Tente novamente.",
@@ -1038,6 +1051,8 @@ export const texts = {
         divertido: "Divertido",
         moment: "Momento",
         momentHint: "Momento se apaga sozinho em 24 horas.",
+        poll: "Enquete",
+        pollHint: "O campo de cima é o título da enquete; abaixo entram de 2 a 6 alternativas.",
       },
       typePicker: {
         label: "Tipo",
@@ -1109,6 +1124,22 @@ export const texts = {
   posts: {
     mediaSpoiler: {
       badge: "SPOILER",
+    },
+    /** Enquete: o voto é único e definitivo — a tela diz isso antes e depois de votar. */
+    poll: {
+      optionsLabel: "Alternativas",
+      optionPlaceholder: (position: number) => `Alternativa ${position}`,
+      addOption: "Adicionar alternativa",
+      removeOption: "Remover alternativa",
+      hint: "De 2 a 6 alternativas, até 120 caracteres cada.",
+      vote: "Votar",
+      voting: "Registrando seu voto...",
+      votes: (total: number) => (total === 1 ? "1 voto" : `${total} votos`),
+      noVotes: "Nenhum voto ainda",
+      yourVote: "Seu voto",
+      locked: "Voto único — não dá para trocar depois.",
+      error: "Não foi possível registrar o voto agora.",
+      alreadyVoted: "Você já votou nesta enquete — o voto não pode ser trocado.",
     },
     /** Fixar UM post no topo do feed da comunidade/grupo (a administração faz isso). */
     pin: {
@@ -1340,6 +1371,8 @@ export const texts = {
     subscribeHint: "As novidades deste blog aparecem no seu Para você — e só lá.",
     empty: "Nenhum post ainda.",
     emptyDirectory: "Ainda não há blogs por aqui. Crie o seu.",
+    searchPlaceholder: "Buscar blogs por título ou descrição...",
+    searchEmpty: "Nenhum blog encontrado para esta busca.",
     postsCount: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
     notFound: "Blog não encontrado.",
     backToBlogs: "Ver todos os blogs",
@@ -1742,6 +1775,17 @@ export const texts = {
     endError: "Não foi possível encerrar o par. Tente de novo.",
     reenable: "Ligar par de estudo",
     reenableError: "Não foi possível ligar o par de estudo. Tente de novo.",
+    search: {
+      title: "Procurar por assunto",
+      placeholder: "Ex.: Rust, inglês, entrevista",
+      hint: "Digite pelo menos 2 letras para ver quem procura par com o mesmo assunto.",
+      empty: "Ninguém procurando par com esse termo agora.",
+      error: "Não foi possível buscar agora. Tente de novo em instantes.",
+      results: (count: number) =>
+        count === 1 ? "1 objetivo aberto encontrado" : `${count} objetivos abertos encontrados`,
+      action: "Pedir par com esse objetivo",
+      noTopic: "Sem tema",
+    },
   },
 
   events: {
@@ -1760,6 +1804,18 @@ export const texts = {
     empty: "Nenhum evento por aqui ainda.",
     emptyRituals: "Nenhum ritual por aqui ainda.",
     createError: "Não foi possível criar o evento. Confira os dados e tente de novo.",
+    edit: "Editar evento",
+    editTitle: "Editar evento",
+    saveEdit: "Salvar alterações",
+    editSuccess: "Evento atualizado.",
+    editError: "Não foi possível salvar o evento. Confira os dados e tente de novo.",
+    editNotOwner: "Só quem criou o evento pode editar ou excluir.",
+    remove: "Excluir",
+    deleteTitle: "Excluir este evento?",
+    deleteDescription:
+      "O evento some da lista e quem confirmou presença perde a confirmação. Não dá para desfazer.",
+    deleteSuccess: "Evento excluído.",
+    deleteError: "Não foi possível excluir o evento.",
     recurrence: {
       timeRequired: "Eventos que se repetem precisam de horário.",
       notOwner: "Só quem criou o evento muda a repetição.",
@@ -1850,6 +1906,19 @@ export const texts = {
       submit: "Publicar",
       error: "Não foi possível salvar o freela.",
       saved: "Freela publicado.",
+      edit: "Editar freela",
+      editTitle: "Editar freela",
+      saveEdit: "Salvar alterações",
+      editSuccess: "Freela atualizado.",
+      editError: "Não foi possível salvar o freela. Confira os dados e tente de novo.",
+      editClosed: "Freela encerrado não pode ser editado.",
+      remove: "Excluir",
+      deleteTitle: "Excluir este freela?",
+      deleteDescription:
+        "Ele some da lista e das suas publicações. Propostas já abertas perdem a referência. Não dá para desfazer.",
+      deleteSuccess: "Freela excluído.",
+      deleteError: "Não foi possível excluir o freela.",
+      notOwner: "Só quem publicou pode editar ou excluir o freela.",
     },
     seoTitle: "Vagas · Énóis",
     title: "Oportunidades",
@@ -2034,6 +2103,8 @@ export const texts = {
   },
 
   mentoring: {
+    searchPlaceholder: "Buscar mentores por nome, usuário ou especialidade...",
+    searchEmpty: "Nenhum mentor encontrado para esta busca.",
     seoTitle: "Mentoria · Énóis",
     loadError: "Não foi possível carregar os mentores agora.",
     retry: "Tentar de novo",
@@ -2128,6 +2199,8 @@ export const texts = {
     mySessionsError: "Não foi possível carregar suas sessões.",
     mySessionsEmpty: "Você ainda não agendou nenhuma mentoria.",
     mySessionsButton: "Minhas sessões",
+    asMenteeTab: "Como mentorado",
+    asMentorTab: "Como mentor",
     mentorFallback: "Mentor",
     schedule: "Agendar",
     rating: "Avaliação",
@@ -2139,6 +2212,40 @@ export const texts = {
     meetingUrlPlaceholder: "https://meet.google.com/...",
     meetingUrlHint: "Google Meet, Jitsi ou outra sala externa. Quem agendar vê o link.",
     meetingUrlInvalid: "O link precisa começar com https://",
+    /** Sala da sessão: Jitsi por sessão (padrão), sala fixa do Jitsi ou sala própria. */
+    roomModeTitle: "Onde a sessão acontece",
+    roomModeHint:
+      "O Jitsi é o padrão: cada sessão ganha um link próprio, criado na hora do agendamento. Você pode usar uma sala fixa sua no Jitsi ou uma sala externa.",
+    roomModeSession: "Jitsi — uma sala por sessão",
+    roomModeSessionHint: "Nada para configurar. Quem agendar recebe o link da própria sessão.",
+    roomModePermanent: "Jitsi — sala fixa",
+    roomModePermanentHint:
+      "Um link só, que você guarda e repete. Ele não aparece na vitrine: só quem agendou recebe.",
+    roomModeCustom: "Minha própria sala",
+    roomModeCustomHint: "Google Meet, Zoom ou outra sala externa. Quem agendar vê o link.",
+    jitsiRoomName: "Nome da sala fixa (opcional)",
+    jitsiRoomNamePlaceholder: "mel-mentoria",
+    jitsiRoomNameHint:
+      "Letras, números e hífen, de 3 a 100 caracteres. Sem nome, a sala usa o seu identificador aqui.",
+    jitsiRoomNameInvalid: "Use só letras, números e hífen (3 a 100 caracteres).",
+    permanentRoomTitle: "Sala fixa do Jitsi",
+    permanentRoomHint: "As próximas sessões usam este link. Guarde para entrar quando precisar.",
+    permanentRoomCopy: "Copiar link",
+    permanentRoomCopied: "Link copiado.",
+    permanentRoomError: "Não foi possível carregar a sala agora.",
+    roomPerSessionNote: "A sala do Jitsi é criada no agendamento e o link aparece aqui.",
+    roomPermanentNote: "A sessão usa a sala fixa do Jitsi do mentor; o link aparece aqui.",
+    roomCustomNote: "A sessão usa a sala escolhida pelo mentor.",
+    enterRoom: "Entrar na sala",
+    dialIn: "Entrar por telefone",
+    dialInTitle: "Entrar na sala por telefone",
+    dialInHint:
+      "A sessão é no Jitsi: quando não houver internet, dá para participar por telefone com o PIN da conferência.",
+    dialInConference: "Conferência",
+    dialInPin: "PIN",
+    dialInNumbers: "Números para discar",
+    dialInEmpty: "O Jitsi não informou números agora. Entre pelo link da sala.",
+    dialInError: "Não foi possível carregar os números de discagem.",
     availabilityTitle: "Disponibilidade semanal",
     availabilityHint:
       "Marque os dias e horários em que você atende. Publicamos as próximas quatro semanas automaticamente — horário já reservado não é removido.",
@@ -2238,6 +2345,13 @@ export const texts = {
     deleteConfirm: "Apagar",
     deleted: "Conversas apagadas para você.",
     loadingOlder: "Carregando...",
+    professionalPrompt:
+      "Esta conversa é sobre uma oportunidade profissional. Deseja continuar com seu perfil social ou criar o profissional?",
+    professionalPromptCta: "Criar perfil profissional",
+    professionalPromptSocial: "Continuar com o social",
+    businessDirectError: "Não foi possível abrir a conversa profissional. Tente novamente.",
+    requireProfessionalProfile:
+      "Ative o seu perfil profissional para iniciar uma conversa de trabalho.",
   },
 
   developersChrome: {
@@ -2336,6 +2450,58 @@ export const texts = {
     contactEmailTitle: "Sem conta (ou prefere e-mail)",
     contactEmailDescription:
       "Escreva direto para o time de suporte. Conte o que aconteceu e informe o e-mail da sua conta, se tiver.",
+  },
+
+  suggestions: {
+    seoTitle: "Sugestões · Énóis",
+    title: "Sugestões",
+    subtitle:
+      "Tem uma ideia para o Énóis? Depois que o time aprova, ela vira uma issue pública no GitHub. Seu nome e seu e-mail nunca aparecem lá.",
+    target: "Onde a ideia se aplica",
+    targets: {
+      BACKEND: "Servidor e regras (backend)",
+      FRONTEND: "Telas e navegação (frontend)",
+      DESIGN_SYSTEM: "Visual e componentes (design system)",
+    } as Record<string, string>,
+    titleLabel: "Título",
+    titlePlaceholder: "Resuma a ideia em uma frase",
+    bodyLabel: "Descreva a ideia",
+    bodyPlaceholder: "O que você gostaria de ver e por quê?",
+    publicNotice:
+      "O texto vira público depois da aprovação. Não escreva dados pessoais, como e-mail, telefone ou endereço.",
+    validationTitle: "O título precisa ter pelo menos 5 caracteres.",
+    validationBody: "Descreva a ideia com pelo menos 20 caracteres.",
+    action: "Enviar sugestão",
+    sending: "Enviando...",
+    error: "Não foi possível enviar a sugestão. Tente novamente em instantes.",
+    successTitle: "Sugestão enviada",
+    successDescription:
+      "O time vai analisar. Se for aprovada, você acompanha o link da issue aqui embaixo.",
+    newSuggestion: "Enviar outra",
+    mineTitle: "Minhas sugestões",
+    mineEmpty: "Você ainda não enviou sugestões.",
+    mineError: "Não foi possível carregar suas sugestões.",
+    openIssue: "Ver issue no GitHub",
+    status: {
+      PENDING: "Em análise",
+      PUBLISHED: "Publicada",
+      REJECTED: "Não aprovada",
+    } as Record<string, string>,
+    link: "Quer sugerir uma melhoria? Envie uma sugestão",
+    admin: {
+      empty: "Nenhuma sugestão nesta fila.",
+      error: "Não foi possível carregar as sugestões.",
+      approve: "Aprovar e publicar",
+      reject: "Rejeitar",
+      approved: "Sugestão aprovada e issue aberta.",
+      rejected: "Sugestão rejeitada.",
+      actionError: "Não foi possível concluir a ação.",
+      publicWarning:
+        "Ao aprovar, o título e o texto abaixo viram uma issue pública. Confira se não há dado pessoal.",
+      filterPending: "Em análise",
+      filterPublished: "Publicadas",
+      filterRejected: "Rejeitadas",
+    },
   },
 
   myReports: {
@@ -2485,6 +2651,11 @@ export const texts = {
         "A postagem sai do ar e a denúncia é marcada como resolvida. O autor não é banido por esta ação.",
       removeDone: "Postagem removida; denúncia resolvida.",
       warnDone: "Aviso enviado ao autor; a postagem foi mantida.",
+      removeCompany: "Remover página empresarial",
+      removeCompanyTitle: "Remover a página empresarial denunciada",
+      removeCompanyBody:
+        "A página sai do diretório e deixa de existir para quem visita; a denúncia é marcada como resolvida. A conta do dono não é afetada — ele é avisado e pode recorrer.",
+      removeCompanyDone: "Página empresarial removida; denúncia resolvida.",
       actionError: "Não foi possível concluir a ação.",
       filterAll: "Todas",
       reasons: {
@@ -2508,6 +2679,7 @@ export const texts = {
         GAME: "Jogo",
         GROUP_POST: "Post de grupo",
         GROUP_COMMENT: "Comentário de grupo",
+        COMPANY: "Página empresarial",
       } as Record<string, string>,
     },
     tabs: {
@@ -2515,6 +2687,7 @@ export const texts = {
       games: "Jogos",
       projects: "Projetos",
       support: "Suporte",
+      suggestions: "Sugestões",
       issues: "Issues",
       history: "Histórico",
       appeals: "Recursos",
@@ -2530,6 +2703,7 @@ export const texts = {
       suspicious: "Contas suspeitas",
       suspiciousPosts: "Posts suspeitos",
       notices: "Avisos",
+      releaseNotes: "Novidades",
     },
     suspiciousPosts: {
       result: (deleted: number, failed: number) =>
@@ -2598,6 +2772,26 @@ export const texts = {
       published: "Aviso publicado.",
       retired: "Aviso tirado do ar.",
       error: "Não foi possível publicar o aviso.",
+    },
+    releaseNotes: {
+      published: "Novidades publicadas. O popup abre de novo para todo mundo.",
+      retired: "Novidades tiradas do ar.",
+      error: "Não foi possível publicar as novidades.",
+      readErrorTitle: "Não deu para ler as novidades no ar",
+      readErrorDescription:
+        "Sem saber o que está publicado, o formulário fica fechado para você não sobrescrever nada sem querer.",
+      retryRead: "Tentar de novo",
+      liveSince: (raw: string) => {
+        const at = new Date(raw);
+        return Number.isNaN(at.getTime())
+          ? ""
+          : at.toLocaleString("pt-BR", {
+              day: "numeric",
+              month: "long",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+      },
     },
     sanction: {
       title: "Punição por votação",
@@ -2963,6 +3157,9 @@ export const texts = {
     completed: "Microprojeto concluído!",
     completeError: "Não foi possível concluir. Tente de novo.",
     followError: "Não foi possível atualizar. Tente de novo.",
+    report: "Denunciar página",
+    reportHint:
+      "Conte o que há de errado nesta página. A denúncia vai para a moderação e pode levar à remoção dela.",
   },
 
   guidelines: {

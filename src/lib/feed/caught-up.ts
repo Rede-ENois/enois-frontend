@@ -7,27 +7,35 @@ import { feedApi } from "@/lib/api";
 
 const time = (iso: string) => new Date(iso).getTime();
 
-/** Abas ranqueadas: o backend manda `lastSeenAt` null e o post "mais novo" não é o mais novo. */
-const RANKED_TABS: readonly HomeTab[] = ["FOR_YOU", "TRENDING", "INTERACTED", "CORPORATE"];
-
-/** Só as abas por data (Tudo, Não vistos e as de tipo) mexem no marcador "Você está em dia". */
-export function isDateOrderedTab(tab: HomeTab): boolean {
-  return !RANKED_TABS.includes(tab);
+/** Only "Para você" carries the "Você está em dia" marker (the backend sends null on every other tab). */
+export function carriesCaughtUp(tab: HomeTab): boolean {
+  return tab === "FOR_YOU";
 }
 
 /**
- * Onde entra o divisor "Você está em dia": antes do primeiro post com `createdAt` até o
- * `lastSeenAt`. Só quando há marcador e pelo menos um post mais novo acima (divisor no topo não diz
- * nada). -1 quando não entra (ainda não chegou a página com posts antigos, por exemplo).
+ * "Para você" is ordered by relevance, so the divider cannot just sit before the first old post. The
+ * posts newer than `lastSeenAt` go first, newest first ("new since your last visit"), then the rest
+ * in API order. `caughtUpAt` is the divider index: only when there is a marker, at least one new post
+ * above and one old post loaded below; -1 otherwise. The backend pages "Para você" by date window, so
+ * a later page never brings a post newer than the loaded old ones and the list only grows at the end.
  */
-export function caughtUpIndex(posts: Pick<PostView, "createdAt">[], lastSeenAt: string | null) {
-  if (!lastSeenAt) return -1;
+export function caughtUpOrder<T extends Pick<PostView, "createdAt">>(
+  posts: T[],
+  lastSeenAt: string | null,
+): { posts: T[]; caughtUpAt: number } {
+  if (!lastSeenAt) return { posts, caughtUpAt: -1 };
   const seen = time(lastSeenAt);
-  const index = posts.findIndex((post) => time(post.createdAt) <= seen);
-  return index > 0 ? index : -1;
+  const fresh = posts
+    .filter((post) => time(post.createdAt) > seen)
+    .sort((a, b) => time(b.createdAt) - time(a.createdAt));
+  const old = posts.filter((post) => time(post.createdAt) <= seen);
+  return {
+    posts: [...fresh, ...old],
+    caughtUpAt: fresh.length > 0 && old.length > 0 ? fresh.length : -1,
+  };
 }
 
-/** O `createdAt` mais novo da lista (o feed "Para você" não é cronológico, então não é o primeiro). */
+/** The newest `createdAt` in the list (the API order of "Para você" is not chronological). */
 export function newestCreatedAt(posts: Pick<PostView, "createdAt">[]): string | null {
   return posts.reduce<string | null>(
     (newest, post) =>
@@ -37,9 +45,9 @@ export function newestCreatedAt(posts: Pick<PostView, "createdAt">[]): string | 
 }
 
 /**
- * Marca o feed como visto UMA vez por visita, quando o primeiro post sai pelo topo da tela (a
- * pessoa rolou além dele), e só numa aba por data (`enabled`). Devolve o ref para o invólucro do
- * primeiro post.
+ * Marks the feed as seen ONCE per visit, when the first post leaves through the top of the screen
+ * (the person scrolled past it), and only where the marker lives (`enabled`, "Para você"). Returns
+ * the ref for the first post's wrapper.
  */
 export function useMarkFeedSeen(posts: Pick<PostView, "createdAt">[], enabled: boolean) {
   const sent = useRef(false);

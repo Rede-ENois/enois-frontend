@@ -28,4 +28,11 @@ export const reportsAdminApi = {
     api.post<string>(`/admin/reports/${reportId}/approve`, { note }),
 
   ban: (reportId: string) => api.post<string>(`/admin/reports/${reportId}/ban`, {}),
+
+  /**
+   * Denúncia de página empresarial: fecha a página (sai do diretório) sem tocar na conta do dono.
+   * É a ação própria do alvo `COMPANY`; banir/penalizar o dono por causa da página é recusado.
+   */
+  removeCompany: (reportId: string) =>
+    api.post<string>(`/admin/reports/${reportId}/remove-company`, {}),
 };

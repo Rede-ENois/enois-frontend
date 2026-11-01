@@ -151,3 +151,13 @@ describe("Contrato das coleções, looks, equipar e status", () => {
     expect(api.put).toHaveBeenCalledWith("/me/status", { text: "Oi", icon: "cafe" });
   });
 });
+
+describe("garden items in the shop", () => {
+  beforeEach(() => vi.resetAllMocks());
+
+  it("accepts the GARDEN kind instead of rejecting the whole catalog", async () => {
+    const garden = { ...oldest, id: "garden-cerrado", kind: "GARDEN", releaseOrder: 251 };
+    vi.mocked(api.get).mockResolvedValue([oldest, garden]);
+    expect(await lojaApi.catalog()).toEqual([oldest, garden]);
+  });
+});

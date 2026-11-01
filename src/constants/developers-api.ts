@@ -113,7 +113,7 @@ export const apiSections: ApiSection[] = [
         path: "/feed/seen",
         access: "auth",
         description:
-          'Avança o marcador "Você está em dia" (só anda para frente; valor no futuro vira agora). O GET /feed devolve o marcador anterior em lastSeenAt, só na primeira página.',
+          'Avança o marcador "Você está em dia" (só anda para frente; valor no futuro vira agora). O GET /feed com tab=FOR_YOU devolve o marcador anterior em lastSeenAt, só na primeira página.',
         request: `curl -X POST ${P}/feed/seen \\
   -H "Content-Type: application/json" \\
   -H "X-Session-Token: $TOKEN" \\

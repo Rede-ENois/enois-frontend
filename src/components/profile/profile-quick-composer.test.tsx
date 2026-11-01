@@ -12,14 +12,22 @@ const mocks = vi.hoisted(() => ({
   toast: vi.fn(),
   uploadAll: vi.fn(),
   create: vi.fn(),
+  navigate: vi.fn(),
   // O composer visual vem do design system; aqui ele só expõe o onPublish para o teste acioná-lo.
   onPublish: null as null | ((payload: unknown) => Promise<boolean>),
+  onWriteArticle: null as null | (() => void),
 }));
+
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
 
 vi.mock("@rede-enois/design-system/ui", () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock("@rede-enois/design-system/domain", () => ({
-  ProfileQuickComposer: (props: { onPublish: (payload: unknown) => Promise<boolean> }) => {
+  ProfileQuickComposer: (props: {
+    onPublish: (payload: unknown) => Promise<boolean>;
+    onWriteArticle?: () => void;
+  }) => {
     mocks.onPublish = props.onPublish;
+    mocks.onWriteArticle = props.onWriteArticle ?? null;
     return null;
   },
 }));
@@ -44,6 +52,7 @@ describe("ProfileQuickComposer (perfil): falha de envio de mídia", () => {
     mocks.toast.mockReset();
     mocks.uploadAll.mockReset();
     mocks.create.mockReset();
+    mocks.navigate.mockReset();
     host = document.createElement("div");
     document.body.append(host);
     root = createRoot(host);
@@ -88,5 +97,29 @@ describe("ProfileQuickComposer (perfil): falha de envio de mídia", () => {
 
     expect(ok).toBe(true);
     expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ mediaIds: ["m1"] }));
+  });
+});
+
+describe("ProfileQuickComposer (perfil): atalho de artigo", () => {
+  it("opens the feed composer in article mode", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    const client = new QueryClient();
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <ProfileQuickComposer profile={{ id: "u1" } as never} />
+        </QueryClientProvider>,
+      ),
+    );
+
+    mocks.onWriteArticle!();
+
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/feed", search: { compor: "ARTICLE" } });
+    await act(async () => root.unmount());
+    host.remove();
+    vi.unstubAllGlobals();
   });
 });

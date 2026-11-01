@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
 import type { DesignSystemProviderProps } from "@/types/components/design-system-provider-props";
 import { EnoisProvider, type LinkProps } from "@rede-enois/design-system";
 
@@ -40,6 +41,13 @@ export function DesignSystemProvider({ children, resolveMediaUrl }: DesignSystem
       resolveMediaUrl={resolveMediaUrl ?? resolveCdnUrl}
       resolveMediaOriginalUrl={withImageKitOriginal}
       isOwnMediaUrl={isOwnMediaUrl}
+      messages={{
+        pushToggle: {
+          on: texts.account.menu.pushToggleOn,
+          off: texts.account.menu.pushToggleOff,
+          working: texts.account.menu.pushToggleWorking,
+        },
+      }}
     >
       {children}
     </EnoisProvider>

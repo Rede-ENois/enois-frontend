@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { authApi } from "@/lib/api";
-import { ONBOARDING_PATH, markOnboardingShown, shouldRedirectToOnboarding } from "@/lib/onboarding";
+import { ONBOARDING_PATH, shouldRedirectToOnboarding } from "@/lib/onboarding";
 import { hasSession } from "@/lib/require-auth";
 
 /**
@@ -25,8 +25,9 @@ export function OnboardingRedirect() {
   });
 
   useEffect(() => {
+    // No "shown" mark here: the onboarding screen writes it when it mounts, so a navigation that
+    // gets lost leaves the redirect armed for the next visit instead of silently spending it.
     if (!shouldRedirectToOnboarding(pathname, user)) return;
-    markOnboardingShown();
     void navigate({ to: ONBOARDING_PATH, replace: true });
   }, [pathname, user, navigate]);
 

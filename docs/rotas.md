@@ -27,14 +27,16 @@ Funcionalidades:
 
 - **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo)
 - **Identidade ativa:** escolhida no menu da conta; com a profissional, o compositor publica no feed corporativo (`BUSINESS`) e os tipos de página/artigo saem da seleção — regras em `componentes.md`
-- **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos
+- **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos. "Para você" is the default tab (the one that shows the "você está em dia" marker).
+- **`?compor=ARTICLE`:** opens the composer in article mode, then drops the param from the URL. The profile quick composer "Escrever artigo" shortcut links here.
 - **Feed infinito** de `PostCard` components
-- **"Você está em dia":** a primeira página das abas por data (Tudo, Não vistos e as de tipo) traz
-  `lastSeenAt`; as ranqueadas (Para você, Em alta, Interagidos) recebem sempre null e nunca chamam
-  `POST /feed/seen`. O valor é guardado por visita e por aba (um refetch não o move). O `CaughtUpDivider` entra antes do primeiro post com `createdAt` até ele,
-  só quando há marcador e um post mais novo acima. Quando o primeiro post sai pelo topo da tela,
-  `POST /feed/seen` vai uma vez por visita com o `createdAt` mais novo carregado
-  (`src/lib/feed/caught-up.ts`).
+- **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
+  other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
+  not move it). "Para você" is ordered by relevance, so the loaded posts newer than the marker go first,
+  newest first, then the `CaughtUpDivider`, then the rest in API order (`caughtUpOrder`). The divider
+  shows only with a marker, a new post above and an old post loaded below. The backend pages "Para
+  você" by date window, so the list only grows at the end. When the first post leaves through the top,
+  `POST /feed/seen` goes once per visit with the newest loaded `createdAt` (`src/lib/feed/caught-up.ts`).
 - **Dúvidas:** no "Tudo", o filtro de tipo "Dúvidas" (`type=QUESTION`) mostra o `QuestionStatusFilter` (Todas, Abertas, Resolvidas → `resolved` omitido, `false`, `true`). Com o tipo Pergunta no compositor aparece o `QuestionComposerHint`. Quem perguntou marca a resposta de outra pessoa nos comentários (otimista, desfaz se a API recusar); a resposta aceita sobe para o topo da lista
 - **Sidebar direita:** Mini-perfil, sugestões de conexão, eventos
 
@@ -117,6 +119,7 @@ Página pública de autenticação com duas abas.
 - Pedido em espera (cancelar) e formulário de pedido com assunto opcional e objetivos populares
 - Erros do pedido explicados pelo código do backend; `BIRTH_DATE_REQUIRED` leva a `/perfil` e `EMAIL_NOT_VERIFIED` a `/seguranca`
 - Módulo desativável `STUDY_PAIRS` (`disabledModules`): desligado, some do menu, a rota cai no `ModuleDisabledGate` e as notificações `STUDY_PAIR_*` ficam ocultas; um `409 STUDY_PAIRS_DISABLED` no pedido (módulo desligado em outra aba) mostra o erro no formulário com o botão "Ligar par de estudo", que religa o módulo (`useReenableModule`, o mesmo do gate) sem reenviar o pedido. Ligado, as notificações abrem esta rota pelo `navigateToHref`
+- Busca por assunto (`GoalSearch`, acima da lista): a partir de 2 letras consulta `GET /study-pairs/search` com espera de 300 ms e mostra os pedidos abertos com aquele termo (objetivo + tema, sem identificar ninguém); "Pedir par com esse objetivo" envia o pedido com o texto escolhido pela mesma rota de sempre
 
 ## `/eventos` - Eventos (`src/routes/eventos.tsx`)
 
@@ -128,13 +131,14 @@ Página pública de autenticação com duas abas.
 - Botão "Confirmar presença" / "Desconfirmar presença" (otimista em todas as listas em cache); card marcado com "Você vai" quando `attending`
 - Filtro `EventRitualsFilter` (Todos / Rituais → `GET /events?recurring=true`, chave `["events","recurring"]`)
 - Quem criou o evento (`canManageRecurrence`) vê o `EventRecurrenceControl` sob o card para trocar ou parar a série
+- O mesmo painel do criador tem "Editar evento" (`PATCH /events/{id}`, formulário pré-preenchido, sem tocar na repetição) e "Excluir" (`DELETE /events/{id}`, com confirmação)
 - Dialog de criação de evento (título, data, hora, realizador, formato, repetição); evento que se repete exige horário; presencial e híbrido
   pedem também cidade e UF estruturadas (`CityStateField`), além do local livre
 - `?evento=<id>` (notificação `EVENT_NEXT_OCCURRENCE`, via `navigateToHref`, que preserva a query string) rola até o card e o destaca por 4 s
 
 **Componentes auxiliares:**
 
-- `CreateEventForm()` - Formulário de criação de evento
+- `EventForm()` - Formulário de criação e de edição do evento (a repetição só aparece na criação)
 - `Field()` - Wrapper de campo
 
 ## `/mensagens` - Mensagens (`src/routes/mensagens.tsx`)
@@ -209,6 +213,16 @@ Página pública (mostra layout mesmo sem auth, mas sem funcionalidade).
   central `OnboardingRedirect` (montada no root) cobre quem abre o `/feed` por outro caminho. Nos
   dois casos o desvio acontece **uma vez por sessão** (`sessionStorage`): sair sem concluir nunca
   prende a pessoa fora do feed.
+
+### What's new popup
+
+`WhatsNewGate` (`src/components/whats-new/whats-new-gate.tsx`, mounted on the root) opens the DS
+`WhatsNewDialog` on `/feed` once per release, only after the onboarding is done and never on top of
+an admin notice popup. The release is written by an admin in `/moderador` (tab "Novidades",
+`ReleaseNotesSection` over the DS `ReleaseNotesEditor`) and read from `GET /novidades/atual`; nothing
+on air means no popup. Its `updatedAt` is the version: the last seen one is kept in `localStorage`
+(`whats-new-seen`), so each browser shows a release once and a republish opens it again. It is
+separate from the platform notice (tab "Avisos", free HTML), which keeps working as before.
 
 ## `/notificacoes/preferencias` - Preferências de notificação (`src/routes/notificacoes.preferencias.tsx`)
 
@@ -349,6 +363,7 @@ seguintes; aqui é o mapa completo.
 | `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                               |
 | `/sobre`                         | `sobre.tsx`                                      | Sobre o projeto.                                                                |
 | `/suporte`                       | `suporte.tsx`                                    | Central de suporte (tickets, FAQ).                                              |
+| `/sugestoes`                     | `sugestoes.tsx`                                  | Enviar sugestão (anônima na issue pública, após aprovação) e ver as minhas.     |
 | `/termos`                        | `termos.tsx`                                     | Termos de uso.                                                                  |
 | `/vagas`                         | `vagas.tsx`                                      | Catálogo de vagas com busca booleana.                                           |
 | `/vagas/:jobId`                  | `vagas.$jobId.tsx`                               | Detalhe da vaga (candidatar, salvar).                                           |
@@ -374,3 +389,7 @@ fim da URL pública, tem namespace próprio no backend e pode ser diferente do `
 com ação própria (não espera o resto do formulário); o formato é validado em
 `src/lib/corporate/nametag.ts`, o mesmo do backend. Trocar o nametag muda o endereço público — o
 antigo deixa de responder — sem tocar no perfil social.
+
+Em grupos, o dono pode selecionar um tópico e usar **Renomear tópico** para editar o nome
+pelo diálogo. O formulário aceita até 80 caracteres e usa o PATCH existente, mantendo a descrição,
+a seleção e o conteúdo do tópico. Após salvar, os rótulos do feed são atualizados.

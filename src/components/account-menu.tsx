@@ -56,7 +56,7 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const { data: corporate } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => corporateApi.me(),
-    enabled: hasSessionFlag() && menuOpen,
+    enabled: hasSessionFlag(),
     staleTime: 120_000,
   });
   const showSwitch = professionalReady(corporate);
@@ -87,7 +87,13 @@ export function AccountMenu({ profile }: AccountMenuProps) {
     <>
       <AccountMenuView
         profile={profile}
-        hrefs={{ ...ACCOUNT_MENU_HREFS, profile: `/perfil/${profile.username}` }}
+        hrefs={{
+          ...ACCOUNT_MENU_HREFS,
+          profile:
+            context === "PROFESSIONAL" && corporate?.username
+              ? `/profissional/${corporate.username}`
+              : `/perfil/${profile.username}`,
+        }}
         open={menuOpen}
         onOpenChange={setMenuOpen}
         onChangeEmail={openDialog(setShowChangeEmail)}

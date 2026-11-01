@@ -9,280 +9,81 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VagasRouteImport } from './routes/vagas'
-import { Route as TermosRouteImport } from './routes/termos'
-import { Route as SuporteRouteImport } from './routes/suporte'
-import { Route as SobreRouteImport } from './routes/sobre'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SilenciadosRouteImport } from './routes/silenciados'
-import { Route as ServicosRouteImport } from './routes/servicos'
-import { Route as SelosRouteImport } from './routes/selos'
-import { Route as SegurancaRouteImport } from './routes/seguranca'
-import { Route as SalvosRouteImport } from './routes/salvos'
-import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
-import { Route as ResponsavelRouteImport } from './routes/responsavel'
-import { Route as RedeRouteImport } from './routes/rede'
-import { Route as ProfissionalRouteImport } from './routes/profissional'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as PenalidadesRouteImport } from './routes/penalidades'
-import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
-import { Route as ModeradorRouteImport } from './routes/moderador'
-import { Route as ModeracaoRouteImport } from './routes/moderacao'
-import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
-import { Route as MentoriaRouteImport } from './routes/mentoria'
-import { Route as MensagensRouteImport } from './routes/mensagens'
-import { Route as MarketplaceRouteImport } from './routes/marketplace'
-import { Route as JogosDiariosRouteImport } from './routes/jogos-diarios'
-import { Route as HumansDottxtRouteImport } from './routes/humans[.]txt'
-import { Route as GruposRouteImport } from './routes/grupos'
-import { Route as GamesRouteImport } from './routes/games'
-import { Route as FreelancesRouteImport } from './routes/freelances'
-import { Route as FeedRouteImport } from './routes/feed'
-import { Route as EventosRouteImport } from './routes/eventos'
-import { Route as EntrarRouteImport } from './routes/entrar'
-import { Route as EmpresasRouteImport } from './routes/empresas'
-import { Route as DiretrizesRouteImport } from './routes/diretrizes'
-import { Route as DevelopersRouteImport } from './routes/developers'
-import { Route as DenunciasRouteImport } from './routes/denuncias'
-import { Route as ContatoRouteImport } from './routes/contato'
-import { Route as ComunidadesRouteImport } from './routes/comunidades'
-import { Route as CarteiraRouteImport } from './routes/carteira'
-import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
-import { Route as BloqueadosRouteImport } from './routes/bloqueados'
-import { Route as BlogsRouteImport } from './routes/blogs'
-import { Route as ApoiarRouteImport } from './routes/apoiar'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
-import { Route as PerfilIndexRouteImport } from './routes/perfil.index'
-import { Route as VagasMinhasRouteImport } from './routes/vagas.minhas'
-import { Route as VagasJobIdRouteImport } from './routes/vagas.$jobId'
-import { Route as ProjetosPainelRouteImport } from './routes/projetos.painel'
-import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$username'
-import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_.$username'
-import { Route as PostPostIdRouteImport } from './routes/post.$postId'
-import { Route as PerfilUsernameRouteImport } from './routes/perfil.$username'
-import { Route as NotificacoesPreferenciasRouteImport } from './routes/notificacoes.preferencias'
-import { Route as ModeracaoReportIdRouteImport } from './routes/moderacao.$reportId'
-import { Route as GruposSlugRouteImport } from './routes/grupos.$slug'
-import { Route as GamesPainelRouteImport } from './routes/games.painel'
-import { Route as GamesUsernameRouteImport } from './routes/games.$username'
-import { Route as EmpresaSlugRouteImport } from './routes/empresa.$slug'
-import { Route as ComunidadesCommunityIdRouteImport } from './routes/comunidades.$communityId'
-import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
-import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
-import { Route as AuthResetRouteImport } from './routes/auth.reset'
+import { Route as ApoiarRouteImport } from './routes/apoiar'
+import { Route as BlogsRouteImport } from './routes/blogs'
+import { Route as BloqueadosRouteImport } from './routes/bloqueados'
+import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
+import { Route as CarteiraRouteImport } from './routes/carteira'
+import { Route as ComunidadesRouteImport } from './routes/comunidades'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as DenunciasRouteImport } from './routes/denuncias'
+import { Route as DevelopersRouteImport } from './routes/developers'
+import { Route as DiretrizesRouteImport } from './routes/diretrizes'
+import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as EventosRouteImport } from './routes/eventos'
+import { Route as FeedRouteImport } from './routes/feed'
+import { Route as FreelancesRouteImport } from './routes/freelances'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as GruposRouteImport } from './routes/grupos'
+import { Route as HumansDottxtRouteImport } from './routes/humans[.]txt'
+import { Route as JogosDiariosRouteImport } from './routes/jogos-diarios'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as MensagensRouteImport } from './routes/mensagens'
+import { Route as MentoriaRouteImport } from './routes/mentoria'
+import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
+import { Route as ModeracaoRouteImport } from './routes/moderacao'
+import { Route as ModeradorRouteImport } from './routes/moderador'
+import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
+import { Route as PenalidadesRouteImport } from './routes/penalidades'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as ProfissionalRouteImport } from './routes/profissional'
+import { Route as RedeRouteImport } from './routes/rede'
+import { Route as ResponsavelRouteImport } from './routes/responsavel'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SalvosRouteImport } from './routes/salvos'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
+import { Route as SelosRouteImport } from './routes/selos'
+import { Route as ServicosRouteImport } from './routes/servicos'
+import { Route as SilenciadosRouteImport } from './routes/silenciados'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as SugestoesRouteImport } from './routes/sugestoes'
+import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as VagasJobIdCandidaturasRouteImport } from './routes/vagas.$jobId.candidaturas'
-import { Route as ProjetosUsernameProjectSlugRouteImport } from './routes/projetos.$username.$projectSlug'
-import { Route as GamesUsernameGameSlugRouteImport } from './routes/games.$username.$gameSlug'
-import { Route as BlogPostNewRouteImport } from './routes/blog.post.new'
-import { Route as BlogPostPostIdRouteImport } from './routes/blog.post.$postId'
+import { Route as AuthResetRouteImport } from './routes/auth.reset'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
+import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
+import { Route as ComunidadesCommunityIdRouteImport } from './routes/comunidades.$communityId'
+import { Route as EmpresaSlugRouteImport } from './routes/empresa.$slug'
+import { Route as GamesUsernameRouteImport } from './routes/games.$username'
+import { Route as GamesPainelRouteImport } from './routes/games.painel'
+import { Route as GruposSlugRouteImport } from './routes/grupos.$slug'
+import { Route as ModeracaoReportIdRouteImport } from './routes/moderacao.$reportId'
+import { Route as NotificacoesPreferenciasRouteImport } from './routes/notificacoes.preferencias'
+import { Route as PerfilIndexRouteImport } from './routes/perfil.index'
+import { Route as PerfilUsernameRouteImport } from './routes/perfil.$username'
+import { Route as PostPostIdRouteImport } from './routes/post.$postId'
+import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_.$username'
+import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
+import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$username'
+import { Route as ProjetosPainelRouteImport } from './routes/projetos.painel'
+import { Route as VagasJobIdRouteImport } from './routes/vagas.$jobId'
+import { Route as VagasMinhasRouteImport } from './routes/vagas.minhas'
 import { Route as BlogUsernamePostIdRouteImport } from './routes/blog.$username_.$postId'
+import { Route as BlogPostPostIdRouteImport } from './routes/blog.post.$postId'
+import { Route as BlogPostNewRouteImport } from './routes/blog.post.new'
+import { Route as GamesUsernameGameSlugRouteImport } from './routes/games.$username.$gameSlug'
+import { Route as ProjetosUsernameProjectSlugRouteImport } from './routes/projetos.$username.$projectSlug'
+import { Route as VagasJobIdCandidaturasRouteImport } from './routes/vagas.$jobId.candidaturas'
 import { Route as ComunidadesCommunityIdCanaisChannelIdRouteImport } from './routes/comunidades.$communityId.canais.$channelId'
 
-const VagasRoute = VagasRouteImport.update({
-  id: '/vagas',
-  path: '/vagas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermosRoute = TermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuporteRoute = SuporteRouteImport.update({
-  id: '/suporte',
-  path: '/suporte',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SobreRoute = SobreRouteImport.update({
-  id: '/sobre',
-  path: '/sobre',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SilenciadosRoute = SilenciadosRouteImport.update({
-  id: '/silenciados',
-  path: '/silenciados',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ServicosRoute = ServicosRouteImport.update({
-  id: '/servicos',
-  path: '/servicos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SelosRoute = SelosRouteImport.update({
-  id: '/selos',
-  path: '/selos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SegurancaRoute = SegurancaRouteImport.update({
-  id: '/seguranca',
-  path: '/seguranca',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalvosRoute = SalvosRouteImport.update({
-  id: '/salvos',
-  path: '/salvos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
-  id: '/robots.txt',
-  path: '/robots.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResponsavelRoute = ResponsavelRouteImport.update({
-  id: '/responsavel',
-  path: '/responsavel',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RedeRoute = RedeRouteImport.update({
-  id: '/rede',
-  path: '/rede',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfissionalRoute = ProfissionalRouteImport.update({
-  id: '/profissional',
-  path: '/profissional',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PenalidadesRoute = PenalidadesRouteImport.update({
-  id: '/penalidades',
-  path: '/penalidades',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
-  id: '/par-de-estudo',
-  path: '/par-de-estudo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ModeradorRoute = ModeradorRouteImport.update({
-  id: '/moderador',
-  path: '/moderador',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ModeracaoRoute = ModeracaoRouteImport.update({
-  id: '/moderacao',
-  path: '/moderacao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MeusServicosRoute = MeusServicosRouteImport.update({
-  id: '/meus-servicos',
-  path: '/meus-servicos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MentoriaRoute = MentoriaRouteImport.update({
-  id: '/mentoria',
-  path: '/mentoria',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MensagensRoute = MensagensRouteImport.update({
-  id: '/mensagens',
-  path: '/mensagens',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MarketplaceRoute = MarketplaceRouteImport.update({
-  id: '/marketplace',
-  path: '/marketplace',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JogosDiariosRoute = JogosDiariosRouteImport.update({
-  id: '/jogos-diarios',
-  path: '/jogos-diarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HumansDottxtRoute = HumansDottxtRouteImport.update({
-  id: '/humans.txt',
-  path: '/humans.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GruposRoute = GruposRouteImport.update({
-  id: '/grupos',
-  path: '/grupos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GamesRoute = GamesRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FreelancesRoute = FreelancesRouteImport.update({
-  id: '/freelances',
-  path: '/freelances',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedRoute = FeedRouteImport.update({
-  id: '/feed',
-  path: '/feed',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventosRoute = EventosRouteImport.update({
-  id: '/eventos',
-  path: '/eventos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EntrarRoute = EntrarRouteImport.update({
-  id: '/entrar',
-  path: '/entrar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmpresasRoute = EmpresasRouteImport.update({
-  id: '/empresas',
-  path: '/empresas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DiretrizesRoute = DiretrizesRouteImport.update({
-  id: '/diretrizes',
-  path: '/diretrizes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevelopersRoute = DevelopersRouteImport.update({
-  id: '/developers',
-  path: '/developers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DenunciasRoute = DenunciasRouteImport.update({
-  id: '/denuncias',
-  path: '/denuncias',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContatoRoute = ContatoRouteImport.update({
-  id: '/contato',
-  path: '/contato',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComunidadesRoute = ComunidadesRouteImport.update({
-  id: '/comunidades',
-  path: '/comunidades',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CarteiraRoute = CarteiraRouteImport.update({
-  id: '/carteira',
-  path: '/carteira',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BoasVindasRoute = BoasVindasRouteImport.update({
-  id: '/boas-vindas',
-  path: '/boas-vindas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BloqueadosRoute = BloqueadosRouteImport.update({
-  id: '/bloqueados',
-  path: '/bloqueados',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogsRoute = BlogsRouteImport.update({
-  id: '/blogs',
-  path: '/blogs',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApoiarRoute = ApoiarRouteImport.update({
@@ -290,105 +91,214 @@ const ApoiarRoute = ApoiarRouteImport.update({
   path: '/apoiar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const BlogsRoute = BlogsRouteImport.update({
+  id: '/blogs',
+  path: '/blogs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProjetosIndexRoute = ProjetosIndexRouteImport.update({
-  id: '/projetos/',
-  path: '/projetos/',
+const BloqueadosRoute = BloqueadosRouteImport.update({
+  id: '/bloqueados',
+  path: '/bloqueados',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilIndexRoute = PerfilIndexRouteImport.update({
-  id: '/perfil/',
-  path: '/perfil/',
+const BoasVindasRoute = BoasVindasRouteImport.update({
+  id: '/boas-vindas',
+  path: '/boas-vindas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VagasMinhasRoute = VagasMinhasRouteImport.update({
-  id: '/minhas',
-  path: '/minhas',
-  getParentRoute: () => VagasRoute,
-} as any)
-const VagasJobIdRoute = VagasJobIdRouteImport.update({
-  id: '/$jobId',
-  path: '/$jobId',
-  getParentRoute: () => VagasRoute,
-} as any)
-const ProjetosPainelRoute = ProjetosPainelRouteImport.update({
-  id: '/projetos/painel',
-  path: '/projetos/painel',
+const CarteiraRoute = CarteiraRouteImport.update({
+  id: '/carteira',
+  path: '/carteira',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProjetosUsernameRoute = ProjetosUsernameRouteImport.update({
-  id: '/projetos/$username',
-  path: '/projetos/$username',
+const ComunidadesRoute = ComunidadesRouteImport.update({
+  id: '/comunidades',
+  path: '/comunidades',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfissionalUsernameRoute = ProfissionalUsernameRouteImport.update({
-  id: '/profissional_/$username',
-  path: '/profissional/$username',
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PostPostIdRoute = PostPostIdRouteImport.update({
-  id: '/post/$postId',
-  path: '/post/$postId',
+const DenunciasRoute = DenunciasRouteImport.update({
+  id: '/denuncias',
+  path: '/denuncias',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerfilUsernameRoute = PerfilUsernameRouteImport.update({
-  id: '/perfil/$username',
-  path: '/perfil/$username',
+const DevelopersRoute = DevelopersRouteImport.update({
+  id: '/developers',
+  path: '/developers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NotificacoesPreferenciasRoute =
-  NotificacoesPreferenciasRouteImport.update({
-    id: '/notificacoes/preferencias',
-    path: '/notificacoes/preferencias',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ModeracaoReportIdRoute = ModeracaoReportIdRouteImport.update({
-  id: '/$reportId',
-  path: '/$reportId',
-  getParentRoute: () => ModeracaoRoute,
-} as any)
-const GruposSlugRoute = GruposSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => GruposRoute,
-} as any)
-const GamesPainelRoute = GamesPainelRouteImport.update({
-  id: '/painel',
-  path: '/painel',
-  getParentRoute: () => GamesRoute,
-} as any)
-const GamesUsernameRoute = GamesUsernameRouteImport.update({
-  id: '/$username',
-  path: '/$username',
-  getParentRoute: () => GamesRoute,
-} as any)
-const EmpresaSlugRoute = EmpresaSlugRouteImport.update({
-  id: '/empresa/$slug',
-  path: '/empresa/$slug',
+const DiretrizesRoute = DiretrizesRouteImport.update({
+  id: '/diretrizes',
+  path: '/diretrizes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ComunidadesCommunityIdRoute = ComunidadesCommunityIdRouteImport.update({
-  id: '/$communityId',
-  path: '/$communityId',
-  getParentRoute: () => ComunidadesRoute,
-} as any)
-const BlogUsernameRoute = BlogUsernameRouteImport.update({
-  id: '/blog/$username',
-  path: '/blog/$username',
+const EmpresasRoute = EmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyRoute = AuthVerifyRouteImport.update({
-  id: '/auth/verify',
-  path: '/auth/verify',
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthResetRoute = AuthResetRouteImport.update({
-  id: '/auth/reset',
-  path: '/auth/reset',
+const EventosRoute = EventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedRoute = FeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreelancesRoute = FreelancesRouteImport.update({
+  id: '/freelances',
+  path: '/freelances',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GruposRoute = GruposRouteImport.update({
+  id: '/grupos',
+  path: '/grupos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HumansDottxtRoute = HumansDottxtRouteImport.update({
+  id: '/humans.txt',
+  path: '/humans.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JogosDiariosRoute = JogosDiariosRouteImport.update({
+  id: '/jogos-diarios',
+  path: '/jogos-diarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MensagensRoute = MensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentoriaRoute = MentoriaRouteImport.update({
+  id: '/mentoria',
+  path: '/mentoria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeusServicosRoute = MeusServicosRouteImport.update({
+  id: '/meus-servicos',
+  path: '/meus-servicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModeracaoRoute = ModeracaoRouteImport.update({
+  id: '/moderacao',
+  path: '/moderacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModeradorRoute = ModeradorRouteImport.update({
+  id: '/moderador',
+  path: '/moderador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
+  id: '/par-de-estudo',
+  path: '/par-de-estudo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PenalidadesRoute = PenalidadesRouteImport.update({
+  id: '/penalidades',
+  path: '/penalidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfissionalRoute = ProfissionalRouteImport.update({
+  id: '/profissional',
+  path: '/profissional',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeRoute = RedeRouteImport.update({
+  id: '/rede',
+  path: '/rede',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResponsavelRoute = ResponsavelRouteImport.update({
+  id: '/responsavel',
+  path: '/responsavel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalvosRoute = SalvosRouteImport.update({
+  id: '/salvos',
+  path: '/salvos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SelosRoute = SelosRouteImport.update({
+  id: '/selos',
+  path: '/selos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicosRoute = ServicosRouteImport.update({
+  id: '/servicos',
+  path: '/servicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SilenciadosRoute = SilenciadosRouteImport.update({
+  id: '/silenciados',
+  path: '/silenciados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SugestoesRoute = SugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VagasRoute = VagasRouteImport.update({
+  id: '/vagas',
+  path: '/vagas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -396,25 +306,105 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VagasJobIdCandidaturasRoute = VagasJobIdCandidaturasRouteImport.update({
-  id: '/candidaturas',
-  path: '/candidaturas',
-  getParentRoute: () => VagasJobIdRoute,
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/auth/reset',
+  path: '/auth/reset',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ProjetosUsernameProjectSlugRoute =
-  ProjetosUsernameProjectSlugRouteImport.update({
-    id: '/$projectSlug',
-    path: '/$projectSlug',
-    getParentRoute: () => ProjetosUsernameRoute,
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/auth/verify',
+  path: '/auth/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogUsernameRoute = BlogUsernameRouteImport.update({
+  id: '/blog/$username',
+  path: '/blog/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComunidadesCommunityIdRoute = ComunidadesCommunityIdRouteImport.update({
+  id: '/$communityId',
+  path: '/$communityId',
+  getParentRoute: () => ComunidadesRoute,
+} as any)
+const EmpresaSlugRoute = EmpresaSlugRouteImport.update({
+  id: '/empresa/$slug',
+  path: '/empresa/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesUsernameRoute = GamesUsernameRouteImport.update({
+  id: '/$username',
+  path: '/$username',
+  getParentRoute: () => GamesRoute,
+} as any)
+const GamesPainelRoute = GamesPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => GamesRoute,
+} as any)
+const GruposSlugRoute = GruposSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => GruposRoute,
+} as any)
+const ModeracaoReportIdRoute = ModeracaoReportIdRouteImport.update({
+  id: '/$reportId',
+  path: '/$reportId',
+  getParentRoute: () => ModeracaoRoute,
+} as any)
+const NotificacoesPreferenciasRoute =
+  NotificacoesPreferenciasRouteImport.update({
+    id: '/notificacoes/preferencias',
+    path: '/notificacoes/preferencias',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const GamesUsernameGameSlugRoute = GamesUsernameGameSlugRouteImport.update({
-  id: '/$gameSlug',
-  path: '/$gameSlug',
-  getParentRoute: () => GamesUsernameRoute,
+const PerfilIndexRoute = PerfilIndexRouteImport.update({
+  id: '/perfil/',
+  path: '/perfil/',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const BlogPostNewRoute = BlogPostNewRouteImport.update({
-  id: '/blog/post/new',
-  path: '/blog/post/new',
+const PerfilUsernameRoute = PerfilUsernameRouteImport.update({
+  id: '/perfil/$username',
+  path: '/perfil/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostPostIdRoute = PostPostIdRouteImport.update({
+  id: '/post/$postId',
+  path: '/post/$postId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfissionalUsernameRoute = ProfissionalUsernameRouteImport.update({
+  id: '/profissional_/$username',
+  path: '/profissional/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosIndexRoute = ProjetosIndexRouteImport.update({
+  id: '/projetos/',
+  path: '/projetos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosUsernameRoute = ProjetosUsernameRouteImport.update({
+  id: '/projetos/$username',
+  path: '/projetos/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosPainelRoute = ProjetosPainelRouteImport.update({
+  id: '/projetos/painel',
+  path: '/projetos/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VagasJobIdRoute = VagasJobIdRouteImport.update({
+  id: '/$jobId',
+  path: '/$jobId',
+  getParentRoute: () => VagasRoute,
+} as any)
+const VagasMinhasRoute = VagasMinhasRouteImport.update({
+  id: '/minhas',
+  path: '/minhas',
+  getParentRoute: () => VagasRoute,
+} as any)
+const BlogUsernamePostIdRoute = BlogUsernamePostIdRouteImport.update({
+  id: '/blog/$username_/$postId',
+  path: '/blog/$username/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogPostPostIdRoute = BlogPostPostIdRouteImport.update({
@@ -422,10 +412,26 @@ const BlogPostPostIdRoute = BlogPostPostIdRouteImport.update({
   path: '/blog/post/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogUsernamePostIdRoute = BlogUsernamePostIdRouteImport.update({
-  id: '/blog/$username_/$postId',
-  path: '/blog/$username/$postId',
+const BlogPostNewRoute = BlogPostNewRouteImport.update({
+  id: '/blog/post/new',
+  path: '/blog/post/new',
   getParentRoute: () => rootRouteImport,
+} as any)
+const GamesUsernameGameSlugRoute = GamesUsernameGameSlugRouteImport.update({
+  id: '/$gameSlug',
+  path: '/$gameSlug',
+  getParentRoute: () => GamesUsernameRoute,
+} as any)
+const ProjetosUsernameProjectSlugRoute =
+  ProjetosUsernameProjectSlugRouteImport.update({
+    id: '/$projectSlug',
+    path: '/$projectSlug',
+    getParentRoute: () => ProjetosUsernameRoute,
+  } as any)
+const VagasJobIdCandidaturasRoute = VagasJobIdCandidaturasRouteImport.update({
+  id: '/candidaturas',
+  path: '/candidaturas',
+  getParentRoute: () => VagasJobIdRoute,
 } as any)
 const ComunidadesCommunityIdCanaisChannelIdRoute =
   ComunidadesCommunityIdCanaisChannelIdRouteImport.update({
@@ -475,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -547,6 +554,7 @@ export interface FileRoutesByTo {
   '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -620,6 +628,7 @@ export interface FileRoutesById {
   '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -694,6 +703,7 @@ export interface FileRouteTypes {
     | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -766,6 +776,7 @@ export interface FileRouteTypes {
     | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -838,6 +849,7 @@ export interface FileRouteTypes {
     | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -911,6 +923,7 @@ export interface RootRouteChildren {
   SilenciadosRoute: typeof SilenciadosRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
+  SugestoesRoute: typeof SugestoesRoute
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
@@ -934,291 +947,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vagas': {
-      id: '/vagas'
-      path: '/vagas'
-      fullPath: '/vagas'
-      preLoaderRoute: typeof VagasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/termos': {
-      id: '/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/suporte': {
-      id: '/suporte'
-      path: '/suporte'
-      fullPath: '/suporte'
-      preLoaderRoute: typeof SuporteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sobre': {
-      id: '/sobre'
-      path: '/sobre'
-      fullPath: '/sobre'
-      preLoaderRoute: typeof SobreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/silenciados': {
-      id: '/silenciados'
-      path: '/silenciados'
-      fullPath: '/silenciados'
-      preLoaderRoute: typeof SilenciadosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/servicos': {
-      id: '/servicos'
-      path: '/servicos'
-      fullPath: '/servicos'
-      preLoaderRoute: typeof ServicosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/selos': {
-      id: '/selos'
-      path: '/selos'
-      fullPath: '/selos'
-      preLoaderRoute: typeof SelosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/seguranca': {
-      id: '/seguranca'
-      path: '/seguranca'
-      fullPath: '/seguranca'
-      preLoaderRoute: typeof SegurancaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/salvos': {
-      id: '/salvos'
-      path: '/salvos'
-      fullPath: '/salvos'
-      preLoaderRoute: typeof SalvosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/robots.txt': {
-      id: '/robots.txt'
-      path: '/robots.txt'
-      fullPath: '/robots.txt'
-      preLoaderRoute: typeof RobotsDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/responsavel': {
-      id: '/responsavel'
-      path: '/responsavel'
-      fullPath: '/responsavel'
-      preLoaderRoute: typeof ResponsavelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rede': {
-      id: '/rede'
-      path: '/rede'
-      fullPath: '/rede'
-      preLoaderRoute: typeof RedeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profissional': {
-      id: '/profissional'
-      path: '/profissional'
-      fullPath: '/profissional'
-      preLoaderRoute: typeof ProfissionalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/penalidades': {
-      id: '/penalidades'
-      path: '/penalidades'
-      fullPath: '/penalidades'
-      preLoaderRoute: typeof PenalidadesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/par-de-estudo': {
-      id: '/par-de-estudo'
-      path: '/par-de-estudo'
-      fullPath: '/par-de-estudo'
-      preLoaderRoute: typeof ParDeEstudoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moderador': {
-      id: '/moderador'
-      path: '/moderador'
-      fullPath: '/moderador'
-      preLoaderRoute: typeof ModeradorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moderacao': {
-      id: '/moderacao'
-      path: '/moderacao'
-      fullPath: '/moderacao'
-      preLoaderRoute: typeof ModeracaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meus-servicos': {
-      id: '/meus-servicos'
-      path: '/meus-servicos'
-      fullPath: '/meus-servicos'
-      preLoaderRoute: typeof MeusServicosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mentoria': {
-      id: '/mentoria'
-      path: '/mentoria'
-      fullPath: '/mentoria'
-      preLoaderRoute: typeof MentoriaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mensagens': {
-      id: '/mensagens'
-      path: '/mensagens'
-      fullPath: '/mensagens'
-      preLoaderRoute: typeof MensagensRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketplace': {
-      id: '/marketplace'
-      path: '/marketplace'
-      fullPath: '/marketplace'
-      preLoaderRoute: typeof MarketplaceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jogos-diarios': {
-      id: '/jogos-diarios'
-      path: '/jogos-diarios'
-      fullPath: '/jogos-diarios'
-      preLoaderRoute: typeof JogosDiariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/humans.txt': {
-      id: '/humans.txt'
-      path: '/humans.txt'
-      fullPath: '/humans.txt'
-      preLoaderRoute: typeof HumansDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/grupos': {
-      id: '/grupos'
-      path: '/grupos'
-      fullPath: '/grupos'
-      preLoaderRoute: typeof GruposRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/games': {
-      id: '/games'
-      path: '/games'
-      fullPath: '/games'
-      preLoaderRoute: typeof GamesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/freelances': {
-      id: '/freelances'
-      path: '/freelances'
-      fullPath: '/freelances'
-      preLoaderRoute: typeof FreelancesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feed': {
-      id: '/feed'
-      path: '/feed'
-      fullPath: '/feed'
-      preLoaderRoute: typeof FeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/eventos': {
-      id: '/eventos'
-      path: '/eventos'
-      fullPath: '/eventos'
-      preLoaderRoute: typeof EventosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/entrar': {
-      id: '/entrar'
-      path: '/entrar'
-      fullPath: '/entrar'
-      preLoaderRoute: typeof EntrarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/empresas': {
-      id: '/empresas'
-      path: '/empresas'
-      fullPath: '/empresas'
-      preLoaderRoute: typeof EmpresasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/diretrizes': {
-      id: '/diretrizes'
-      path: '/diretrizes'
-      fullPath: '/diretrizes'
-      preLoaderRoute: typeof DiretrizesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/developers': {
-      id: '/developers'
-      path: '/developers'
-      fullPath: '/developers'
-      preLoaderRoute: typeof DevelopersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/denuncias': {
-      id: '/denuncias'
-      path: '/denuncias'
-      fullPath: '/denuncias'
-      preLoaderRoute: typeof DenunciasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contato': {
-      id: '/contato'
-      path: '/contato'
-      fullPath: '/contato'
-      preLoaderRoute: typeof ContatoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/comunidades': {
-      id: '/comunidades'
-      path: '/comunidades'
-      fullPath: '/comunidades'
-      preLoaderRoute: typeof ComunidadesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/carteira': {
-      id: '/carteira'
-      path: '/carteira'
-      fullPath: '/carteira'
-      preLoaderRoute: typeof CarteiraRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/boas-vindas': {
-      id: '/boas-vindas'
-      path: '/boas-vindas'
-      fullPath: '/boas-vindas'
-      preLoaderRoute: typeof BoasVindasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bloqueados': {
-      id: '/bloqueados'
-      path: '/bloqueados'
-      fullPath: '/bloqueados'
-      preLoaderRoute: typeof BloqueadosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blogs': {
-      id: '/blogs'
-      path: '/blogs'
-      fullPath: '/blogs'
-      preLoaderRoute: typeof BlogsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apoiar': {
@@ -1228,144 +961,298 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApoiarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/blogs': {
+      id: '/blogs'
+      path: '/blogs'
+      fullPath: '/blogs'
+      preLoaderRoute: typeof BlogsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/projetos/': {
-      id: '/projetos/'
-      path: '/projetos'
-      fullPath: '/projetos/'
-      preLoaderRoute: typeof ProjetosIndexRouteImport
+    '/bloqueados': {
+      id: '/bloqueados'
+      path: '/bloqueados'
+      fullPath: '/bloqueados'
+      preLoaderRoute: typeof BloqueadosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/': {
-      id: '/perfil/'
-      path: '/perfil'
-      fullPath: '/perfil/'
-      preLoaderRoute: typeof PerfilIndexRouteImport
+    '/boas-vindas': {
+      id: '/boas-vindas'
+      path: '/boas-vindas'
+      fullPath: '/boas-vindas'
+      preLoaderRoute: typeof BoasVindasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/vagas/minhas': {
-      id: '/vagas/minhas'
-      path: '/minhas'
-      fullPath: '/vagas/minhas'
-      preLoaderRoute: typeof VagasMinhasRouteImport
-      parentRoute: typeof VagasRoute
-    }
-    '/vagas/$jobId': {
-      id: '/vagas/$jobId'
-      path: '/$jobId'
-      fullPath: '/vagas/$jobId'
-      preLoaderRoute: typeof VagasJobIdRouteImport
-      parentRoute: typeof VagasRoute
-    }
-    '/projetos/painel': {
-      id: '/projetos/painel'
-      path: '/projetos/painel'
-      fullPath: '/projetos/painel'
-      preLoaderRoute: typeof ProjetosPainelRouteImport
+    '/carteira': {
+      id: '/carteira'
+      path: '/carteira'
+      fullPath: '/carteira'
+      preLoaderRoute: typeof CarteiraRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/projetos/$username': {
-      id: '/projetos/$username'
-      path: '/projetos/$username'
-      fullPath: '/projetos/$username'
-      preLoaderRoute: typeof ProjetosUsernameRouteImport
+    '/comunidades': {
+      id: '/comunidades'
+      path: '/comunidades'
+      fullPath: '/comunidades'
+      preLoaderRoute: typeof ComunidadesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profissional_/$username': {
-      id: '/profissional_/$username'
-      path: '/profissional/$username'
-      fullPath: '/profissional/$username'
-      preLoaderRoute: typeof ProfissionalUsernameRouteImport
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/post/$postId': {
-      id: '/post/$postId'
-      path: '/post/$postId'
-      fullPath: '/post/$postId'
-      preLoaderRoute: typeof PostPostIdRouteImport
+    '/denuncias': {
+      id: '/denuncias'
+      path: '/denuncias'
+      fullPath: '/denuncias'
+      preLoaderRoute: typeof DenunciasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perfil/$username': {
-      id: '/perfil/$username'
-      path: '/perfil/$username'
-      fullPath: '/perfil/$username'
-      preLoaderRoute: typeof PerfilUsernameRouteImport
+    '/developers': {
+      id: '/developers'
+      path: '/developers'
+      fullPath: '/developers'
+      preLoaderRoute: typeof DevelopersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/notificacoes/preferencias': {
-      id: '/notificacoes/preferencias'
-      path: '/notificacoes/preferencias'
-      fullPath: '/notificacoes/preferencias'
-      preLoaderRoute: typeof NotificacoesPreferenciasRouteImport
+    '/diretrizes': {
+      id: '/diretrizes'
+      path: '/diretrizes'
+      fullPath: '/diretrizes'
+      preLoaderRoute: typeof DiretrizesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/moderacao/$reportId': {
-      id: '/moderacao/$reportId'
-      path: '/$reportId'
-      fullPath: '/moderacao/$reportId'
-      preLoaderRoute: typeof ModeracaoReportIdRouteImport
-      parentRoute: typeof ModeracaoRoute
-    }
-    '/grupos/$slug': {
-      id: '/grupos/$slug'
-      path: '/$slug'
-      fullPath: '/grupos/$slug'
-      preLoaderRoute: typeof GruposSlugRouteImport
-      parentRoute: typeof GruposRoute
-    }
-    '/games/painel': {
-      id: '/games/painel'
-      path: '/painel'
-      fullPath: '/games/painel'
-      preLoaderRoute: typeof GamesPainelRouteImport
-      parentRoute: typeof GamesRoute
-    }
-    '/games/$username': {
-      id: '/games/$username'
-      path: '/$username'
-      fullPath: '/games/$username'
-      preLoaderRoute: typeof GamesUsernameRouteImport
-      parentRoute: typeof GamesRoute
-    }
-    '/empresa/$slug': {
-      id: '/empresa/$slug'
-      path: '/empresa/$slug'
-      fullPath: '/empresa/$slug'
-      preLoaderRoute: typeof EmpresaSlugRouteImport
+    '/empresas': {
+      id: '/empresas'
+      path: '/empresas'
+      fullPath: '/empresas'
+      preLoaderRoute: typeof EmpresasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/comunidades/$communityId': {
-      id: '/comunidades/$communityId'
-      path: '/$communityId'
-      fullPath: '/comunidades/$communityId'
-      preLoaderRoute: typeof ComunidadesCommunityIdRouteImport
-      parentRoute: typeof ComunidadesRoute
-    }
-    '/blog/$username': {
-      id: '/blog/$username'
-      path: '/blog/$username'
-      fullPath: '/blog/$username'
-      preLoaderRoute: typeof BlogUsernameRouteImport
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/verify': {
-      id: '/auth/verify'
-      path: '/auth/verify'
-      fullPath: '/auth/verify'
-      preLoaderRoute: typeof AuthVerifyRouteImport
+    '/eventos': {
+      id: '/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof EventosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/reset': {
-      id: '/auth/reset'
-      path: '/auth/reset'
-      fullPath: '/auth/reset'
-      preLoaderRoute: typeof AuthResetRouteImport
+    '/feed': {
+      id: '/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelances': {
+      id: '/freelances'
+      path: '/freelances'
+      fullPath: '/freelances'
+      preLoaderRoute: typeof FreelancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grupos': {
+      id: '/grupos'
+      path: '/grupos'
+      fullPath: '/grupos'
+      preLoaderRoute: typeof GruposRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/humans.txt': {
+      id: '/humans.txt'
+      path: '/humans.txt'
+      fullPath: '/humans.txt'
+      preLoaderRoute: typeof HumansDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jogos-diarios': {
+      id: '/jogos-diarios'
+      path: '/jogos-diarios'
+      fullPath: '/jogos-diarios'
+      preLoaderRoute: typeof JogosDiariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mensagens': {
+      id: '/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof MensagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentoria': {
+      id: '/mentoria'
+      path: '/mentoria'
+      fullPath: '/mentoria'
+      preLoaderRoute: typeof MentoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meus-servicos': {
+      id: '/meus-servicos'
+      path: '/meus-servicos'
+      fullPath: '/meus-servicos'
+      preLoaderRoute: typeof MeusServicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moderacao': {
+      id: '/moderacao'
+      path: '/moderacao'
+      fullPath: '/moderacao'
+      preLoaderRoute: typeof ModeracaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moderador': {
+      id: '/moderador'
+      path: '/moderador'
+      fullPath: '/moderador'
+      preLoaderRoute: typeof ModeradorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/par-de-estudo': {
+      id: '/par-de-estudo'
+      path: '/par-de-estudo'
+      fullPath: '/par-de-estudo'
+      preLoaderRoute: typeof ParDeEstudoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/penalidades': {
+      id: '/penalidades'
+      path: '/penalidades'
+      fullPath: '/penalidades'
+      preLoaderRoute: typeof PenalidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profissional': {
+      id: '/profissional'
+      path: '/profissional'
+      fullPath: '/profissional'
+      preLoaderRoute: typeof ProfissionalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rede': {
+      id: '/rede'
+      path: '/rede'
+      fullPath: '/rede'
+      preLoaderRoute: typeof RedeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/responsavel': {
+      id: '/responsavel'
+      path: '/responsavel'
+      fullPath: '/responsavel'
+      preLoaderRoute: typeof ResponsavelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salvos': {
+      id: '/salvos'
+      path: '/salvos'
+      fullPath: '/salvos'
+      preLoaderRoute: typeof SalvosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/selos': {
+      id: '/selos'
+      path: '/selos'
+      fullPath: '/selos'
+      preLoaderRoute: typeof SelosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servicos': {
+      id: '/servicos'
+      path: '/servicos'
+      fullPath: '/servicos'
+      preLoaderRoute: typeof ServicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/silenciados': {
+      id: '/silenciados'
+      path: '/silenciados'
+      fullPath: '/silenciados'
+      preLoaderRoute: typeof SilenciadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sugestoes': {
+      id: '/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/sugestoes'
+      preLoaderRoute: typeof SugestoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vagas': {
+      id: '/vagas'
+      path: '/vagas'
+      fullPath: '/vagas'
+      preLoaderRoute: typeof VagasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -1375,32 +1262,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/vagas/$jobId/candidaturas': {
-      id: '/vagas/$jobId/candidaturas'
-      path: '/candidaturas'
-      fullPath: '/vagas/$jobId/candidaturas'
-      preLoaderRoute: typeof VagasJobIdCandidaturasRouteImport
-      parentRoute: typeof VagasJobIdRoute
+    '/auth/reset': {
+      id: '/auth/reset'
+      path: '/auth/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/projetos/$username/$projectSlug': {
-      id: '/projetos/$username/$projectSlug'
-      path: '/$projectSlug'
-      fullPath: '/projetos/$username/$projectSlug'
-      preLoaderRoute: typeof ProjetosUsernameProjectSlugRouteImport
-      parentRoute: typeof ProjetosUsernameRoute
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/auth/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/games/$username/$gameSlug': {
-      id: '/games/$username/$gameSlug'
-      path: '/$gameSlug'
-      fullPath: '/games/$username/$gameSlug'
-      preLoaderRoute: typeof GamesUsernameGameSlugRouteImport
-      parentRoute: typeof GamesUsernameRoute
+    '/blog/$username': {
+      id: '/blog/$username'
+      path: '/blog/$username'
+      fullPath: '/blog/$username'
+      preLoaderRoute: typeof BlogUsernameRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/blog/post/new': {
-      id: '/blog/post/new'
-      path: '/blog/post/new'
-      fullPath: '/blog/post/new'
-      preLoaderRoute: typeof BlogPostNewRouteImport
+    '/comunidades/$communityId': {
+      id: '/comunidades/$communityId'
+      path: '/$communityId'
+      fullPath: '/comunidades/$communityId'
+      preLoaderRoute: typeof ComunidadesCommunityIdRouteImport
+      parentRoute: typeof ComunidadesRoute
+    }
+    '/empresa/$slug': {
+      id: '/empresa/$slug'
+      path: '/empresa/$slug'
+      fullPath: '/empresa/$slug'
+      preLoaderRoute: typeof EmpresaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/$username': {
+      id: '/games/$username'
+      path: '/$username'
+      fullPath: '/games/$username'
+      preLoaderRoute: typeof GamesUsernameRouteImport
+      parentRoute: typeof GamesRoute
+    }
+    '/games/painel': {
+      id: '/games/painel'
+      path: '/painel'
+      fullPath: '/games/painel'
+      preLoaderRoute: typeof GamesPainelRouteImport
+      parentRoute: typeof GamesRoute
+    }
+    '/grupos/$slug': {
+      id: '/grupos/$slug'
+      path: '/$slug'
+      fullPath: '/grupos/$slug'
+      preLoaderRoute: typeof GruposSlugRouteImport
+      parentRoute: typeof GruposRoute
+    }
+    '/moderacao/$reportId': {
+      id: '/moderacao/$reportId'
+      path: '/$reportId'
+      fullPath: '/moderacao/$reportId'
+      preLoaderRoute: typeof ModeracaoReportIdRouteImport
+      parentRoute: typeof ModeracaoRoute
+    }
+    '/notificacoes/preferencias': {
+      id: '/notificacoes/preferencias'
+      path: '/notificacoes/preferencias'
+      fullPath: '/notificacoes/preferencias'
+      preLoaderRoute: typeof NotificacoesPreferenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil/': {
+      id: '/perfil/'
+      path: '/perfil'
+      fullPath: '/perfil/'
+      preLoaderRoute: typeof PerfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil/$username': {
+      id: '/perfil/$username'
+      path: '/perfil/$username'
+      fullPath: '/perfil/$username'
+      preLoaderRoute: typeof PerfilUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post/$postId': {
+      id: '/post/$postId'
+      path: '/post/$postId'
+      fullPath: '/post/$postId'
+      preLoaderRoute: typeof PostPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profissional_/$username': {
+      id: '/profissional_/$username'
+      path: '/profissional/$username'
+      fullPath: '/profissional/$username'
+      preLoaderRoute: typeof ProfissionalUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos/': {
+      id: '/projetos/'
+      path: '/projetos'
+      fullPath: '/projetos/'
+      preLoaderRoute: typeof ProjetosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos/$username': {
+      id: '/projetos/$username'
+      path: '/projetos/$username'
+      fullPath: '/projetos/$username'
+      preLoaderRoute: typeof ProjetosUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos/painel': {
+      id: '/projetos/painel'
+      path: '/projetos/painel'
+      fullPath: '/projetos/painel'
+      preLoaderRoute: typeof ProjetosPainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vagas/$jobId': {
+      id: '/vagas/$jobId'
+      path: '/$jobId'
+      fullPath: '/vagas/$jobId'
+      preLoaderRoute: typeof VagasJobIdRouteImport
+      parentRoute: typeof VagasRoute
+    }
+    '/vagas/minhas': {
+      id: '/vagas/minhas'
+      path: '/minhas'
+      fullPath: '/vagas/minhas'
+      preLoaderRoute: typeof VagasMinhasRouteImport
+      parentRoute: typeof VagasRoute
+    }
+    '/blog/$username_/$postId': {
+      id: '/blog/$username_/$postId'
+      path: '/blog/$username/$postId'
+      fullPath: '/blog/$username/$postId'
+      preLoaderRoute: typeof BlogUsernamePostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/post/$postId': {
@@ -1410,12 +1409,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogPostPostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/$username_/$postId': {
-      id: '/blog/$username_/$postId'
-      path: '/blog/$username/$postId'
-      fullPath: '/blog/$username/$postId'
-      preLoaderRoute: typeof BlogUsernamePostIdRouteImport
+    '/blog/post/new': {
+      id: '/blog/post/new'
+      path: '/blog/post/new'
+      fullPath: '/blog/post/new'
+      preLoaderRoute: typeof BlogPostNewRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/games/$username/$gameSlug': {
+      id: '/games/$username/$gameSlug'
+      path: '/$gameSlug'
+      fullPath: '/games/$username/$gameSlug'
+      preLoaderRoute: typeof GamesUsernameGameSlugRouteImport
+      parentRoute: typeof GamesUsernameRoute
+    }
+    '/projetos/$username/$projectSlug': {
+      id: '/projetos/$username/$projectSlug'
+      path: '/$projectSlug'
+      fullPath: '/projetos/$username/$projectSlug'
+      preLoaderRoute: typeof ProjetosUsernameProjectSlugRouteImport
+      parentRoute: typeof ProjetosUsernameRoute
+    }
+    '/vagas/$jobId/candidaturas': {
+      id: '/vagas/$jobId/candidaturas'
+      path: '/candidaturas'
+      fullPath: '/vagas/$jobId/candidaturas'
+      preLoaderRoute: typeof VagasJobIdCandidaturasRouteImport
+      parentRoute: typeof VagasJobIdRoute
     }
     '/comunidades/$communityId/canais/$channelId': {
       id: '/comunidades/$communityId/canais/$channelId'
@@ -1577,6 +1597,7 @@ const rootRouteChildren: RootRouteChildren = {
   SilenciadosRoute: SilenciadosRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
+  SugestoesRoute: SugestoesRoute,
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,

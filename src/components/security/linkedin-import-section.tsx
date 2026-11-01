@@ -224,6 +224,8 @@ export function LinkedinImportSection({
         const payload = {
           title: project.title ?? atual?.title ?? "",
           description: project.description?.slice(0, 500) ?? atual?.description ?? null,
+          banner: atual?.banner ?? null,
+          icon: atual?.icon ?? null,
           stack: atual?.stack ?? [],
           repoUrl: project.url ?? atual?.repoUrl ?? null,
           status: atual?.status ?? null,

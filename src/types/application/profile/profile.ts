@@ -1,3 +1,5 @@
+import type { ProfileGardenData } from "@rede-enois/design-system/domain";
+
 export type Profile = {
   id: string;
   username: string;
@@ -35,6 +37,8 @@ export type Profile = {
   connectionsCount?: number;
   followersCount?: number;
   reputation?: number;
+  /** Reputation drawn as a garden; null where the read does not compute counts (search, ranking). */
+  garden?: ProfileGardenData | null;
   /** Total de publicações do perfil social. Ausente quando a leitura não calcula contagens. */
   postsCount?: number | null;
   /** Apelido: entra entre parênteses depois do nome (preferência da pessoa). */
@@ -67,6 +71,8 @@ export type Profile = {
   nameplate?: string | null;
   bannerItem?: string | null;
   profileEffect?: string | null;
+  /** Equipped GARDEN item id; null draws the default garden. */
+  gardenStyle?: string | null;
   /** Status bubble: up to 60 characters and a cosmetic icon key. */
   statusText?: string | null;
   statusIcon?: string | null;

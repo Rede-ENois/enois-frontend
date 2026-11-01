@@ -97,6 +97,9 @@ export const groupsApi = {
   removePost: (groupId: string, postId: string) =>
     api.delete<StatusResponse>(`/groups/${groupId}/posts/${postId}`),
 
+  editComment: (groupId: string, postId: string, commentId: string, data: { content: string }) =>
+    api.patch<GroupComment>(`/groups/${groupId}/posts/${postId}/comments/${commentId}`, data),
+
   removeComment: (groupId: string, postId: string, commentId: string) =>
     api.delete<StatusResponse>(`/groups/${groupId}/posts/${postId}/comments/${commentId}`),
 

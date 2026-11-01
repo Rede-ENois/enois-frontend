@@ -22,16 +22,19 @@ import {
   Banknote,
   CalendarClock,
   Handshake,
+  Pencil,
   Plus,
   Search,
   Send,
   ShieldCheck,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 
 import { freelancesApi } from "@/lib/api";
+import { ApiError } from "@/lib/api-client";
 import { dataCurta } from "@/lib/date/format";
-import { formatFaisca, parseFaiscaInput } from "@/lib/faisca";
+import { formatFaisca, parseBrlInput, parseFaiscaInput } from "@/lib/faisca";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
@@ -205,7 +208,7 @@ function Freelances() {
           </>
         )}
 
-        <CreateFreelanceDialog open={open} onOpenChange={setOpen} />
+        <FreelanceDialog open={open} onOpenChange={setOpen} />
       </div>
     </AppContainer>
   );
@@ -217,6 +220,17 @@ function FreelanceCard({ item, authenticated }: { item: FreelanceView; authentic
   const { toast } = useToast();
   const [applyOpen, setApplyOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const remove = useMutation({
+    mutationFn: () => freelancesApi.remove(item.id),
+    onSuccess: () => {
+      setDeleteOpen(false);
+      toast(texts.jobs.freelancePage.deleteSuccess, "success");
+      void queryClient.invalidateQueries({ queryKey: ["freelances"] });
+    },
+    onError: () => toast(texts.jobs.freelancePage.deleteError, "error"),
+  });
   const close = useMutation({
     mutationFn: () => freelancesApi.close(item.id),
     onSuccess: () => {
@@ -235,16 +249,44 @@ function FreelanceCard({ item, authenticated }: { item: FreelanceView; authentic
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 className="min-w-0 break-words font-semibold text-text-strong">{item.title}</h2>
 
-        {item.owned && item.status === "OPEN" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-auto rounded-full"
-            disabled={close.isPending}
-            onClick={() => setCloseOpen(true)}
-          >
-            {texts.jobs.freelancePage.close}
-          </Button>
+        {item.owned && (
+          <div className="flex shrink-0 flex-wrap gap-1.5">
+            {item.status === "OPEN" && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-auto rounded-full gap-1.5"
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+
+                  <>{texts.jobs.freelancePage.edit}</>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-auto rounded-full"
+                  disabled={close.isPending}
+                  onClick={() => setCloseOpen(true)}
+                >
+                  {texts.jobs.freelancePage.close}
+                </Button>
+              </>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-auto rounded-full gap-1.5 text-destructive"
+              onClick={() => setDeleteOpen(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+
+              <>{texts.jobs.freelancePage.remove}</>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -316,28 +358,52 @@ function FreelanceCard({ item, authenticated }: { item: FreelanceView; authentic
         pending={close.isPending}
         onConfirm={() => close.mutate()}
       />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={texts.jobs.freelancePage.deleteTitle}
+        description={texts.jobs.freelancePage.deleteDescription}
+        confirmLabel={texts.jobs.freelancePage.remove}
+        destructive
+        pending={remove.isPending}
+        onConfirm={() => remove.mutate()}
+      />
+      <FreelanceDialog open={editOpen} onOpenChange={setEditOpen} initial={item} />
     </li>
   );
 }
 
-function CreateFreelanceDialog({
+/**
+ * Formulário de freela, usado para publicar e para editar. Na edição os campos nascem com o
+ * conteúdo atual e o corpo é o mesmo da criação (o backend recusa editar freela encerrado).
+ */
+function FreelanceDialog({
   open,
   onOpenChange,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initial?: FreelanceView;
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [scope, setScope] = useState("");
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"FAISCAS" | "CASH">("FAISCAS");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [scope, setScope] = useState(initial?.scope ?? "");
+  // O valor gravado é reais inteiros (dinheiro) ou milésimos de faísca — o texto volta na unidade
+  // que a pessoa digitaria em cada caso.
+  const initialBudget = (value: number) =>
+    initial ? (initial.paymentMethod === "CASH" ? String(value) : formatFaisca(value)) : "";
+  const [budgetMin, setBudgetMin] = useState(initialBudget(initial?.budgetMin ?? 0));
+  const [budgetMax, setBudgetMax] = useState(initialBudget(initial?.budgetMax ?? 0));
+  const [deadline, setDeadline] = useState(initial?.deadline ?? "");
+  const [paymentMethod, setPaymentMethod] = useState<"FAISCAS" | "CASH">(
+    initial?.paymentMethod ?? "FAISCAS",
+  );
 
-  const min = parseFaiscaInput(budgetMin) ?? 0;
-  const max = parseFaiscaInput(budgetMax) ?? 0;
+  const parseBudget = paymentMethod === "CASH" ? parseBrlInput : parseFaiscaInput;
+  const min = parseBudget(budgetMin) ?? 0;
+  const max = parseBudget(budgetMax) ?? 0;
   const valid =
     title.trim().length >= 3 &&
     scope.trim().length >= 20 &&
@@ -346,35 +412,57 @@ function CreateFreelanceDialog({
     Boolean(deadline);
 
   const save = useMutation({
-    mutationFn: () =>
-      freelancesApi.create({
+    mutationFn: () => {
+      const body = {
         title: title.trim(),
         scope: scope.trim(),
         budgetMin: min,
         budgetMax: max,
         deadline,
         paymentMethod,
-      }),
+      };
+      return initial ? freelancesApi.update(initial.id, body) : freelancesApi.create(body);
+    },
     onSuccess: () => {
-      toast(texts.jobs.freelancePage.saved, "success");
+      toast(
+        initial ? texts.jobs.freelancePage.editSuccess : texts.jobs.freelancePage.saved,
+        "success",
+      );
       void queryClient.invalidateQueries({ queryKey: ["freelances"] });
-      setTitle("");
-      setScope("");
-      setBudgetMin("");
-      setBudgetMax("");
-      setDeadline("");
-      setPaymentMethod("FAISCAS");
+      if (!initial) {
+        setTitle("");
+        setScope("");
+        setBudgetMin("");
+        setBudgetMax("");
+        setDeadline("");
+        setPaymentMethod("FAISCAS");
+      }
       onOpenChange(false);
     },
-    onError: (error) =>
-      toast(error instanceof Error ? error.message : texts.jobs.freelancePage.error, "error"),
+    onError: (error) => {
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast(
+        code === "FREELANCE_CLOSED"
+          ? texts.jobs.freelancePage.editClosed
+          : code === "NOT_OWNER"
+            ? texts.jobs.freelancePage.notOwner
+            : error instanceof Error
+              ? error.message
+              : initial
+                ? texts.jobs.freelancePage.editError
+                : texts.jobs.freelancePage.error,
+        "error",
+      );
+    },
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-normal">{texts.jobs.freelancePage.createTitle}</DialogTitle>
+          <DialogTitle className="font-normal">
+            {initial ? texts.jobs.freelancePage.editTitle : texts.jobs.freelancePage.createTitle}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -454,7 +542,11 @@ function CreateFreelanceDialog({
               disabled={!valid || save.isPending}
               onClick={() => save.mutate()}
             >
-              {save.isPending ? texts.projects.editor.saving : texts.jobs.freelancePage.submit}
+              {save.isPending
+                ? texts.projects.editor.saving
+                : initial
+                  ? texts.jobs.freelancePage.saveEdit
+                  : texts.jobs.freelancePage.submit}
             </Button>
           </div>
         </div>

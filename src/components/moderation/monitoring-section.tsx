@@ -41,7 +41,7 @@ export function MonitoringSection() {
   const overview = useQuery({
     queryKey: ["monitoring", "overview"],
     queryFn: () => monitoringApi.overview(),
-    refetchInterval: paused ? false : 2_500,
+    refetchInterval: paused ? false : 10_000,
     retry: false,
   });
 

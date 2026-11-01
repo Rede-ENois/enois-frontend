@@ -15,6 +15,7 @@ const kindSchema = z.enum([
   "BANNER",
   "CARD_THEME",
   "PROFILE_EFFECT",
+  "GARDEN",
 ]);
 
 const catalogSchema = z.array(

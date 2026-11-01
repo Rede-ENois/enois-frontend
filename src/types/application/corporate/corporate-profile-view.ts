@@ -9,6 +9,7 @@ import type { Experience } from "@/types/application/profile/experience";
  */
 export type CorporateProfileView = {
   exists: boolean;
+  userId?: string;
   username: string;
   name: string;
   headline: string;

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   dataCurta,
@@ -122,5 +122,18 @@ describe("career timeline helpers", () => {
     expect(shortMonthYear("2023-01-15")).not.toContain(" de ");
     expect(monthsBetween("2024-01-10", "2024-03-01")).toBe(3);
     expect(monthsBetween("2024-03-10", "2024-03-20")).toBe(1);
+  });
+});
+
+describe("formatter reuse", () => {
+  it("builds each formatter once, however many dates the feed formats", () => {
+    dataSemAno("2026-10-01");
+    const construir = vi.spyOn(Intl, "DateTimeFormat");
+    try {
+      for (let dia = 10; dia < 30; dia++) dataSemAno(`2026-10-${dia}`);
+      expect(construir).not.toHaveBeenCalled();
+    } finally {
+      construir.mockRestore();
+    }
   });
 });

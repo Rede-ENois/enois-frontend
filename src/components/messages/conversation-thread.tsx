@@ -7,6 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
@@ -15,7 +16,8 @@ import {
   type ConversationSendValues,
   ConversationThread as ConversationThreadView,
 } from "@rede-enois/design-system/domain";
-import { useToast } from "@rede-enois/design-system/ui";
+import { Button, useToast } from "@rede-enois/design-system/ui";
+import { Briefcase } from "lucide-react";
 
 import { messagesApi, reportsApi, servicesApi } from "@/lib/api";
 import { conversationPeer } from "@/lib/conversation-peer";
@@ -197,6 +199,15 @@ export function ConversationThread({
 
   const { peer, profileHref } = conversationPeer(conversation, otherParticipantId, otherUser);
 
+  // Banner profissional: conversa profissional e o usuario nao tem identidade corporativa nela.
+  const isProfessional = conversation.context === "PROFESSIONAL";
+  const hasMyProfessionalIdentity = Boolean(
+    currentUserId && conversation.identities?.[currentUserId],
+  );
+  const [dismissedProfessionalBanner, setDismissedProfessionalBanner] = useState(false);
+  const showProfessionalBanner =
+    isProfessional && !hasMyProfessionalIdentity && !dismissedProfessionalBanner;
+
   /** O clique só marca no filão de verdade: no placeholder os ids são de outra conversa. */
   const toggleMessage = (messageId: string) =>
     setSelectedMessages((current) => {
@@ -212,6 +223,34 @@ export function ConversationThread({
       peer={peer}
       profileHref={profileHref}
       onBack={onBack}
+      banner={
+        showProfessionalBanner ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-border-soft bg-surface-2 p-4">
+            <div className="flex items-start gap-3">
+              <Briefcase className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+
+              <p className="text-sm text-text-strong">{texts.messages.professionalPrompt}</p>
+            </div>
+
+            <div className="flex items-center gap-2 pl-8">
+              <Link to="/profissional">
+                <Button size="sm" className="rounded-full">
+                  {texts.messages.professionalPromptCta}
+                </Button>
+              </Link>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full"
+                onClick={() => setDismissedProfessionalBanner(true)}
+              >
+                {texts.messages.professionalPromptSocial}
+              </Button>
+            </div>
+          </div>
+        ) : undefined
+      }
       loading={isLoadingMessages || decrypting}
       empty={messages.length === 0}
       newestMessageId={messages.length > 0 ? messages[messages.length - 1].id : null}

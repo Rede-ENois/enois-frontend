@@ -191,7 +191,7 @@ export function PostComments({
         website,
         mediaSpoiler,
       );
-      setComments((current) => [created, ...current]);
+      setComments((current) => oldestFirst([...current, created]));
       updatePostInQueryCache(queryClient, postId, (current) => ({
         ...current,
         counters: { ...current.counters, comments: current.counters.comments + 1 },

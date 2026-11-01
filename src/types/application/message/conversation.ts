@@ -2,7 +2,7 @@ import type { ConversationIdentity } from "./conversation-identity";
 
 export type Conversation = {
   id: string;
-  kind: "DIRECT" | "GROUP" | "JOB" | "FREELANCE" | "SERVICE";
+  kind: "DIRECT" | "GROUP" | "JOB" | "FREELANCE" | "SERVICE" | "BUSINESS_DIRECT";
   /** Inbox the conversation lives in: JOB, FREELANCE and SERVICE are professional. */
   context?: "SOCIAL" | "PROFESSIONAL";
   /**
