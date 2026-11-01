@@ -12,4 +12,10 @@ export type Personalization = {
    * bateria curta ou internet ruim. A interface é a mesma.
    */
   liteMode: boolean;
+  /**
+   * Modo BATATA: interface clássica e econômica para aparelho com pouca memória ou processador
+   * fraco. É independente do lite na conta (ligar um não mexe no outro); a apresentação soma os
+   * dois — BATATA implica os efeitos do lite.
+   */
+  batataMode: boolean;
 };

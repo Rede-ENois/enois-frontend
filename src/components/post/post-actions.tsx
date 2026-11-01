@@ -15,7 +15,7 @@ import {
   savedStateFromAction,
   syncSavedPostsCache,
 } from "@/lib/feed/saved-posts";
-import { prefersReducedMotion, readForceMotion, readLiteMode } from "@/lib/lite-mode";
+import { prefersReducedMotion, readEconomicMode, readForceMotion } from "@/lib/lite-mode";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
 import { useMountedOnce } from "@/lib/use-mounted-once";
@@ -25,8 +25,8 @@ import { ReportDialog } from "./report-dialog";
 import { RepostDialog } from "./repost-dialog";
 import { SealsDialog } from "./seals-dialog";
 
-/** O pulso da reação respeita o modo lite e o "reduzir movimento" do sistema. */
-const motionAllowed = () => !readLiteMode() && (readForceMotion() || !prefersReducedMotion());
+/** O pulso da reação respeita o modo econômico (lite ou BATATA) e o "reduzir movimento". */
+const motionAllowed = () => !readEconomicMode() && (readForceMotion() || !prefersReducedMotion());
 
 /**
  * A fileira de ações de um post: reagir, ver quem reagiu, comentar, compartilhar, salvar e
