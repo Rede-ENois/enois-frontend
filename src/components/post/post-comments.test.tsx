@@ -25,6 +25,8 @@ vi.mock("./comment-item", () => ({
   ),
 }));
 vi.mock("@/components/mention-textarea", () => ({ MentionTextarea: () => null }));
+// jsdom has no layout: the inline reply scrolls itself into view, a no-op here.
+Element.prototype.scrollIntoView = vi.fn();
 
 function comment(id: string, second: number, parentCommentId: string | null = null): CommentView {
   return {
