@@ -144,6 +144,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       motionAllowed={motionAllowed}
       reactionCount={reactionCount}
       commentsCount={postCounters.comments}
+      repostsCount={postCounters.reposts ?? 0}
       savesCount={postCounters.saves}
       saved={saved}
       canRepost={canRepost}

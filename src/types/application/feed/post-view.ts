@@ -83,6 +83,7 @@ export type PostView = {
     comments: number;
     saves: number;
     shares: number;
+    reposts: number;
   };
   status: "ACTIVE" | "DELETED";
   currentUserReaction?: ReactionType | null;

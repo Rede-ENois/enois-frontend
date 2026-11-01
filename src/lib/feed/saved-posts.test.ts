@@ -20,7 +20,7 @@ function post(id: string, saves: number): PostView {
     mediaIds: [],
     createdAt: "2026-10-23T00:00:00Z",
     visibility: "PUBLIC",
-    counters: { reactions: 1, comments: 2, saves, shares: 3 },
+    counters: { reactions: 1, comments: 2, saves, shares: 3, reposts: 0 },
     status: "ACTIVE",
   };
 }
@@ -33,7 +33,7 @@ function action(postId: string, status: string, saves: number): ActionResponse {
   return {
     postId,
     status,
-    counters: { reactions: 1, comments: 2, saves, shares: 3 },
+    counters: { reactions: 1, comments: 2, saves, shares: 3, reposts: 0 },
   };
 }
 
