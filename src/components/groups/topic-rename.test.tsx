@@ -89,6 +89,7 @@ function button(label: string) {
   );
 }
 async function click(label: string) {
+  for (let attempt = 0; attempt < 50 && !button(label); attempt++) await settle();
   await act(async () => button(label)!.click());
   await settle();
 }
