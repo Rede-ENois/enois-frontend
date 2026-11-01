@@ -322,7 +322,7 @@ seguintes; aqui é o mapa completo.
 | `/denuncias`                     | `denuncias.tsx`                                  | Minhas denúncias e seus estados.                                                |
 | `/developers`                    | `developers.tsx`                                 | Portal de desenvolvedores da API pública (catálogo + casos de uso).             |
 | `/diretrizes`                    | `diretrizes.tsx`                                 | Diretrizes da comunidade.                                                       |
-| `/empresa/:slug`                 | `empresa.$slug.tsx`                              | Página pública da empresa: vagas, microprojetos, avaliações e painel da equipe. |
+| `/empresa/:slug`                 | `empresa.$slug.tsx`                              | Página pública da empresa: vagas, microprojetos, avaliações e painel da equipe; gestores editam e removem projetos abertos sem candidaturas. |
 | `/empresas`                      | `empresas.tsx`                                   | Diretório: páginas da rede primeiro, empresas só com vagas em lista compacta.   |
 | `/entrar`                        | `entrar.tsx`                                     | Login e cadastro (e-mail + social + 2FA).                                       |
 | `/par-de-estudo`                 | `par-de-estudo.tsx`                              | Pares de estudo com check-in semanal.                                           |

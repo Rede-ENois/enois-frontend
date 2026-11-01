@@ -245,6 +245,8 @@ mostram os códigos `CITY_STATE_INCOMPLETE`, `INVALID_STATE` e `CITY_TOO_LONG` e
 | GET    | `/empresas/{id}/members`                            | Equipe (POST adiciona)                                                            |
 | POST   | `/empresas/{id}/microprojetos`                      | Publicar microprojeto                                                             |
 | GET    | `/microprojetos/{id}`                               | Microprojeto com propostas (só a equipe vê as propostas)                          |
+| PUT    | `/microprojetos/{id}`                               | Editar microprojeto aberto sem candidaturas (EDITOR ou superior)                |
+| DELETE | `/microprojetos/{id}`                               | Remover da vitrine microprojeto aberto sem candidaturas, mantendo o histórico      |
 | POST   | `/microprojetos/{id}/proposals`                     | Enviar proposta pela identidade profissional; devolve a conversa                  |
 | POST   | `/microprojetos/{id}/proposals/{proposalId}/select` | Escolher a proposta                                                               |
 | POST   | `/microprojetos/{id}/complete`                      | Concluir com avaliação opcional (nota e texto)                                    |

@@ -45,6 +45,9 @@ vi.mock("@/components/app-container", () => ({
   AppContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock("@/components/company-edit-dialog", () => ({ CompanyEditDialog: () => null }));
+vi.mock("@/components/micro-project-management", () => ({
+  MicroProjectManagement: () => <div data-testid="management" />,
+}));
 vi.mock("@/components/post/report-dialog", () => ({
   ReportDialog: (props: ReportDialogProps) => {
     mocks.report = props;
@@ -142,6 +145,17 @@ describe("/empresa/$slug", () => {
     expect(reportButton()).toBeUndefined();
     // O diálogo existe (montado fechado), mas ninguém o abre.
     expect(mocks.report?.open).toBe(false);
+  });
+
+  it("offers project management only to editors and administrators", async () => {
+    await render(company({ myRole: "EDITOR" }));
+    expect(host.querySelector('[data-testid="management"]')).not.toBeNull();
+    await render(company({ myRole: "RECRUITER" }));
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ["empresa", "empresa-testada"] });
+    });
+    await settle();
+    expect(host.querySelector('[data-testid="management"]')).toBeNull();
   });
 
   it("does not offer the report to someone without a session", async () => {
