@@ -60,6 +60,22 @@ export function shouldRedirectToOnboarding(
   return pathname === "/feed" && needsOnboarding(user) && !readShown();
 }
 
+/** Limites do backend em `/me/onboarding/*`: acima deles a resposta é 400 (TOO_MANY_SKILLS / SKILL_TOO_LONG). */
+export const ONBOARDING_MAX_SKILLS = 20;
+export const ONBOARDING_MAX_SKILL_LENGTH = 60;
+
+/**
+ * Habilidades que vão para o backend no onboarding. O perfil pode ter mais que o teto: mandamos as
+ * mais recentes (as que a pessoa acabou de adicionar ficam no fim), sem as longas demais.
+ */
+export function skillsForOnboarding(skills: string[]): string[] {
+  return skills
+    .filter(
+      (skill) => skill.trim().length > 0 && skill.trim().length <= ONBOARDING_MAX_SKILL_LENGTH,
+    )
+    .slice(-ONBOARDING_MAX_SKILLS);
+}
+
 /** Mensagem de tela para a falha de concluir ou pular (os textos do backend vêm sem acento). */
 export function onboardingErrorMessage(error: unknown): string {
   const code = error instanceof ApiError ? error.code : undefined;
