@@ -51,6 +51,21 @@ const SECURITY_HEADERS: Record<string, string> = {
 /** Pages whose URL carries a secret (OAuth `code`/`state`, reset or email-confirmation token). */
 const NO_REFERRER_PATHS = ["/auth/callback", "/auth/reset", "/auth/verify"];
 
+/**
+ * Quantas vezes cada resposta pode ser reaproveitada sem perguntar ao servidor.
+ *
+ * O HTML da aplicação nunca: ele traz um nonce de CSP de uso único e é a porta do app — servir um
+ * HTML guardado é servir um bundle de um deploy anterior. O service worker precisa ser conferido a
+ * cada abertura (`no-cache`), senão a correção demora um deploy inteiro para chegar. O resto do
+ * caminho (bundle com hash, favicon) já é versionado pelo nome do arquivo e pode ficar em cache
+ * longo — quem responde por esses arquivos é o servidor de estáticos, não este handler.
+ */
+function cacheControlFor(pathname: string, contentType: string): string | null {
+  if (contentType.includes("text/html")) return "no-store";
+  if (pathname === "/sw.js" || pathname === "/service-worker.js") return "no-cache";
+  return null;
+}
+
 export function withSecurityHeaders(
   response: Response,
   request: Request,
@@ -63,8 +78,14 @@ export function withSecurityHeaders(
   if (!headers.has("content-security-policy")) {
     headers.set("content-security-policy", contentSecurityPolicy(nonce));
   }
-  if (NO_REFERRER_PATHS.includes(new URL(request.url).pathname)) {
+  const { pathname } = new URL(request.url);
+  if (NO_REFERRER_PATHS.includes(pathname)) {
     headers.set("referrer-policy", "no-referrer");
+  }
+  // A rota que já definiu a política (robots/sitemap humanos com um dia) manda; o resto ganha aqui.
+  if (!headers.has("cache-control")) {
+    const policy = cacheControlFor(pathname, headers.get("content-type") ?? "");
+    if (policy) headers.set("cache-control", policy);
   }
   return new Response(response.body, {
     status: response.status,

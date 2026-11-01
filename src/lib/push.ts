@@ -54,7 +54,9 @@ export function matchesCurrentKey(subscription: PushSubscription, publicKey: str
 }
 
 async function readyRegistration(): Promise<ServiceWorkerRegistration> {
-  await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  // `updateViaCache: "none"` tira o sw.js do cache HTTP na hora de procurar versão nova: com o
+  // padrão o navegador pode reusar por até 24h o arquivo guardado e a correção só chegar depois.
+  await navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" });
   return navigator.serviceWorker.ready;
 }
 
