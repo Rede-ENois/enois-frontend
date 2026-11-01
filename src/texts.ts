@@ -1221,6 +1221,7 @@ export const texts = {
     },
     reposted: "Republicado no seu perfil.",
     alreadyReposted: "Você já republicou este post.",
+    repostRemoved: "Republicação removida.",
     repostError: "Não foi possível republicar agora.",
     shareCopied: "Link da publicação copiado!",
     editPhoto: "Editar foto",

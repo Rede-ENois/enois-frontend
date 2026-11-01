@@ -87,6 +87,8 @@ export type PostView = {
   };
   status: "ACTIVE" | "DELETED";
   currentUserReaction?: ReactionType | null;
+  /** Se o viewer já republicou este post (backend batch check). */
+  currentUserReposted?: boolean;
   /**
    * Contagem por tipo de reação, calculada pelo backend em lote para a página inteira. Ausente
    * nas respostas que não calculam (publicar/editar, versões antigas): aí o card busca sozinho.
