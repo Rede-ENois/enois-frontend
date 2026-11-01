@@ -3,6 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { Profile } from "@/types/application/profile/profile";
 import type { AccountMenuProps as AccountMenuViewProps } from "@rede-enois/design-system/domain";
 import { type Root, createRoot } from "react-dom/client";
@@ -10,7 +11,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountMenu } from "./account-menu";
 
-const mocks = vi.hoisted(() => ({ toast: vi.fn() }));
+const mocks = vi.hoisted(() => ({ toast: vi.fn(), me: vi.fn() }));
+
+vi.mock("@/lib/api", () => ({ corporateApi: { me: mocks.me } }));
 
 vi.mock("@/lib/logout", () => ({ logout: vi.fn() }));
 vi.mock("@rede-enois/design-system/ui", () => ({
@@ -19,8 +22,10 @@ vi.mock("@rede-enois/design-system/ui", () => ({
 
 // The DS menu is replaced by a probe: under test is the contract the app feeds into it.
 vi.mock("@rede-enois/design-system/domain", () => ({
-  AccountMenu: ({ open, onOpenChange, hrefs }: AccountMenuViewProps) => (
+  AccountMenu: ({ open, onOpenChange, hrefs, identitySlot }: AccountMenuViewProps) => (
     <div data-open={String(open)}>
+      {identitySlot}
+
       {hrefs.notificationPreferences && <a href={hrefs.notificationPreferences}>Notificações</a>}
 
       <a href={hrefs.corporateProfile}>Perfil profissional</a>
@@ -38,11 +43,11 @@ vi.mock("./delete-account-dialog", () => ({ DeleteAccountDialog: () => null }));
 vi.mock("./healthy-usage/healthy-usage-dialog", () => ({ HealthyUsageDialog: () => null }));
 vi.mock("./linked-accounts-dialog", () => ({ LinkedAccountsDialog: () => null }));
 vi.mock("./push-toggle", () => ({ PushToggle: () => null }));
-vi.mock("@/lib/interface-context", () => ({
+vi.mock("@/lib/interface-context", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/interface-context")>()),
   useInterfaceContext: () => "SOCIAL" as const,
   writeStoredContext: vi.fn(),
   destinationAfterSwitch: () => null,
-  professionalReady: () => false,
 }));
 vi.mock("@/lib/session", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/session")>()),
@@ -75,6 +80,8 @@ describe("menu da conta", () => {
 
   beforeEach(() => {
     mocks.toast.mockReset();
+    mocks.me.mockReset();
+    mocks.me.mockResolvedValue({ exists: false, status: "NONE" });
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
@@ -102,6 +109,36 @@ describe("menu da conta", () => {
 
     expect(host.querySelector('a[href="/notificacoes/preferencias"]')).not.toBeNull();
     expect(host.querySelector('a[href="/profissional"]')).not.toBeNull();
+  });
+
+  it("com perfil profissional ativo mostra a escolha de identidade", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    await montar();
+
+    expect(botao("Profissional")).toBeDefined();
+    expect(host.textContent).not.toContain(texts.account.menu.identityLoadError);
+  });
+
+  it("sem perfil profissional não mostra identidade nem erro", async () => {
+    await montar();
+
+    expect(botao("Profissional")).toBeUndefined();
+    expect(host.textContent).not.toContain(texts.account.menu.identityLoadError);
+  });
+
+  it("quando a consulta do perfil profissional falha avisa e deixa tentar de novo", async () => {
+    mocks.me.mockRejectedValueOnce(new Error("offline"));
+    await montar();
+
+    expect(host.textContent).toContain(texts.account.menu.identityLoadError);
+    expect(botao("Profissional")).toBeUndefined();
+
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    act(() => botao(texts.account.menu.identityRetry)?.click());
+    await flush();
+
+    expect(host.textContent).not.toContain(texts.account.menu.identityLoadError);
+    expect(botao("Profissional")).toBeDefined();
   });
 
   it("abre pelo gatilho", async () => {

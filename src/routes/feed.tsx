@@ -61,7 +61,11 @@ import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
-import { effectiveIdentity, professionalReady, useInterfaceContext } from "@/lib/interface-context";
+import {
+  effectiveIdentity,
+  professionalProfileState,
+  useInterfaceContext,
+} from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
@@ -74,6 +78,7 @@ import { cn } from "@/lib/utils";
 import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
@@ -272,16 +277,23 @@ function Home() {
   const { data: profile } = useProfile();
   const { data: suggestions } = useSuggestions();
   const { data: eventsData } = useEvents();
-  const { data: corporate } = useQuery({
+  const {
+    data: corporate,
+    isError: corporateError,
+    isFetching: corporateFetching,
+    refetch: refetchCorporate,
+  } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => corporateApi.me(),
     enabled: authenticated,
     staleTime: 120_000,
   });
   const identity = effectiveIdentity(context, corporate);
+  const corporateState = professionalProfileState({ data: corporate, isError: corporateError });
   // Na interface profissional só a identidade profissional publica: sem perfil ativo, o
-  // compositor dá lugar ao convite para criar/ativar (nada sai pelo perfil social daqui).
-  const composerLocked = professional && !professionalReady(corporate);
+  // compositor dá lugar ao convite para criar/ativar (nada sai pelo perfil social daqui). Se a
+  // consulta falhou ou ainda carrega, não se sabe: nada de convite, só o erro com "tentar de novo".
+  const composerLocked = professional && corporateState !== "ACTIVE";
 
   const [draft, setDraft] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
@@ -630,24 +642,12 @@ function Home() {
         <div className="min-w-0 space-y-4">
           <SaciDuelBanner />
 
-          {composerLocked && (
-            <div className="surface-card flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
-              <div className="min-w-0 space-y-1">
-                <p className="text-sm font-medium text-text-strong">
-                  {texts.feed.composer.professionalSetupTitle}
-                </p>
-
-                <p className="text-sm text-text-subtle">
-                  {texts.feed.composer.professionalSetupBody}
-                </p>
-              </div>
-
-              <Link to="/profissional">
-                <Button className="w-auto rounded-full">
-                  {texts.feed.composer.professionalSetupCta}
-                </Button>
-              </Link>
-            </div>
+          {composerLocked && (corporateState === "ERROR" || corporateState === "NOT_READY") && (
+            <ProfessionalComposerNotice
+              state={corporateState}
+              onRetry={() => void refetchCorporate()}
+              retrying={corporateFetching}
+            />
           )}
 
           {/* Composer */}
