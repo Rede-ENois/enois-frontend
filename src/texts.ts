@@ -1125,6 +1125,13 @@ export const texts = {
       eventMeta: (date: string, format: string, confirmed: string) =>
         `${date} · ${format} · ${confirmed}`,
     },
+    companyPrompt: {
+      title: "Sua empresa no Énóis",
+      description:
+        "Crie a página da sua empresa e publique vagas, projetos e serviços para a comunidade.",
+      cta: "Criar página",
+      dismiss: "Fechar",
+    },
   },
 
   posts: {
