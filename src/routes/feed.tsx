@@ -78,6 +78,7 @@ import { cn } from "@/lib/utils";
 import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
@@ -1271,6 +1272,7 @@ function Home() {
             cartões (o que está acontecendo agora) para fora da dobra. */}
         <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
           <ApoieCard />
+          <CompanyPromptCard />
           <PlatformSpacesCard />
           <TodayGamesCard />
 
