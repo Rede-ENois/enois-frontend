@@ -11,7 +11,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountMenu } from "./account-menu";
 
-const mocks = vi.hoisted(() => ({ toast: vi.fn(), me: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  toast: vi.fn(),
+  me: vi.fn(),
+  navigate: vi.fn(),
+  writeStoredContext: vi.fn(),
+  destination: null as string | null,
+}));
+
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
 
 vi.mock("@/lib/api", () => ({ corporateApi: { me: mocks.me } }));
 
@@ -43,8 +51,8 @@ vi.mock("./linked-accounts-dialog", () => ({ LinkedAccountsDialog: () => null })
 vi.mock("@/lib/interface-context", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/interface-context")>()),
   useInterfaceContext: () => "SOCIAL" as const,
-  writeStoredContext: vi.fn(),
-  destinationAfterSwitch: () => null,
+  writeStoredContext: mocks.writeStoredContext,
+  destinationAfterSwitch: () => mocks.destination,
 }));
 vi.mock("@/lib/session", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/session")>()),
@@ -78,6 +86,9 @@ describe("menu da conta", () => {
   beforeEach(() => {
     mocks.toast.mockReset();
     mocks.me.mockReset();
+    mocks.navigate.mockReset();
+    mocks.writeStoredContext.mockReset();
+    mocks.destination = null;
     mocks.me.mockResolvedValue({ exists: false, status: "NONE" });
     host = document.createElement("div");
     document.body.appendChild(host);
@@ -123,6 +134,28 @@ describe("menu da conta", () => {
 
     expect(host.textContent).toContain(texts.account.menu.activeIdentity.SOCIAL);
     expect(host.textContent).not.toContain(texts.account.menu.activeIdentity.PROFESSIONAL);
+  });
+
+  it("switching says the side menu changed and navigates without reloading the page", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    mocks.destination = "/feed";
+    await montar();
+
+    act(() => botao("Profissional")?.click());
+
+    expect(mocks.writeStoredContext).toHaveBeenCalledWith("PROFESSIONAL");
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/feed" });
+    expect(mocks.toast).toHaveBeenCalledWith(texts.account.menu.switchedTo.PROFESSIONAL);
+  });
+
+  it("choosing the interface already on does nothing", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    await montar();
+
+    act(() => botao("Social")?.click());
+
+    expect(mocks.writeStoredContext).not.toHaveBeenCalled();
+    expect(mocks.toast).not.toHaveBeenCalled();
   });
 
   it("sem perfil profissional não anuncia perfil social: não há o que alternar", async () => {

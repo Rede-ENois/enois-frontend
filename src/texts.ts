@@ -704,6 +704,11 @@ export const texts = {
         SOCIAL: "Você está no perfil Social. As opções abaixo mudam com ele.",
         PROFESSIONAL: "Você está no perfil Profissional. As opções abaixo mudam com ele.",
       },
+      /** After switching: the side menu now shows the other interface's items (#560). */
+      switchedTo: {
+        SOCIAL: "Perfil Social ativo. O menu agora mostra comunidades, grupos e eventos.",
+        PROFESSIONAL: "Perfil Profissional ativo. O menu agora mostra vagas, serviços e mentoria.",
+      },
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
       /** Pedido fechado sem escolha: não é negado, dá para tentar de novo. */
       pushDismissed: "O pedido de permissão ficou sem resposta. Toque em ligar de novo.",
