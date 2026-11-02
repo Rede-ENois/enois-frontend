@@ -94,6 +94,21 @@ li img[src^="https://cdn.frankerfacez.com/"] {
   }
 }
 
+/*
+ * Card de look aberto no marketplace não estica os vizinhos da linha (#572).
+ *
+ * A grade de "Looks prontos" do design system é um grid e, por padrão, todo item de uma linha
+ * estica até a altura do mais alto. Ao abrir as peças de um look, o vizinho sem peças à vista
+ * ganhava a mesma altura: o conteúdo dele ficava no topo com um vazio enorme embaixo.
+ *
+ * `align-items: start` deixa cada card com a altura do próprio conteúdo. Fica no CSS do app
+ * porque a regra vem do padrão do grid, não de um defeito do componente — vale para qualquer
+ * `cos-look`, com ou sem `<details>`.
+ */
+.cos-shop__look-grid {
+  align-items: start;
+}
+
 @keyframes slide-down {
   from {
     opacity: 0;
