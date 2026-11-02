@@ -1058,7 +1058,7 @@ export const texts = {
       article: {
         bodyLabel: "Texto do artigo",
         bodyPlaceholder: "Escreva o artigo. O campo de cima é o título.",
-        bodyHint: "Até 4.000 caracteres. Publicação comum aceita até 1.200.",
+        bodyHint: "Até 10.000 caracteres. Publicação comum aceita até 1.200.",
       },
       media: "Mídia",
       video: "Vídeo",
