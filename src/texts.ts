@@ -697,11 +697,12 @@ export const texts = {
       identityRetry: "Tentar de novo",
       /**
        * O menu muda por inteiro ao trocar de identidade; sem este aviso, quem acabou de conhecer a
-       * alternância lê a mudança como bug (issue #560).
+       * alternância lê a mudança como bug (issue #560). A segunda frase diz que as opções mudam
+       * junto, que é o que a troca faz de fato.
        */
       activeIdentity: {
-        SOCIAL: "Você está no perfil Social",
-        PROFESSIONAL: "Você está no perfil Profissional",
+        SOCIAL: "Você está no perfil Social. As opções abaixo mudam com ele.",
+        PROFESSIONAL: "Você está no perfil Profissional. As opções abaixo mudam com ele.",
       },
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
       /** Pedido fechado sem escolha: não é negado, dá para tentar de novo. */

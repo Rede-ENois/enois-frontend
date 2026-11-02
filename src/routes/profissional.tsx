@@ -12,6 +12,7 @@ import { ArrowLeft, Camera, Image as ImageIcon } from "lucide-react";
 import { corporateApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { isValidNametag, nametagPath, normalizeNametag } from "@/lib/corporate/nametag";
+import { writeStoredContext } from "@/lib/interface-context";
 import { requireAuth } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -89,9 +90,13 @@ function Profissional() {
 
   const create = useMutation({
     mutationFn: () => corporateApi.create(form.username.trim().toLowerCase(), form.name.trim()),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast(texts.corporate.saved, "success");
-      refresh();
+      // Quem cria o perfil profissional passa a usá-lo: entrar nele agora deixa o aviso do menu
+      // ("Você está no perfil Profissional") à vista em vez de aparecer depois, sem contexto
+      // (issue #560). Espera o perfil chegar para o menu saber que há o que alternar.
+      writeStoredContext("PROFESSIONAL");
+      await queryClient.invalidateQueries({ queryKey: ["business-profile"] });
     },
     onError: (error) =>
       toast(error instanceof Error ? error.message : texts.corporate.saveError, "error"),
