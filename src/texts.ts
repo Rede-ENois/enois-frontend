@@ -695,6 +695,14 @@ export const texts = {
       logoutRetry: "Tentar de novo",
       identityLoadError: "Não deu para carregar sua identidade profissional.",
       identityRetry: "Tentar de novo",
+      /**
+       * O menu muda por inteiro ao trocar de identidade; sem este aviso, quem acabou de conhecer a
+       * alternância lê a mudança como bug (issue #560).
+       */
+      activeIdentity: {
+        SOCIAL: "Você está no perfil Social",
+        PROFESSIONAL: "Você está no perfil Profissional",
+      },
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
       /** Pedido fechado sem escolha: não é negado, dá para tentar de novo. */
       pushDismissed: "O pedido de permissão ficou sem resposta. Toque em ligar de novo.",

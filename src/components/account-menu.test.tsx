@@ -117,6 +117,20 @@ describe("menu da conta", () => {
     expect(host.textContent).not.toContain(texts.account.menu.identityLoadError);
   });
 
+  it("diz em qual perfil o menu está, para a troca de opções não parecer bug", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    await montar();
+
+    expect(host.textContent).toContain(texts.account.menu.activeIdentity.SOCIAL);
+    expect(host.textContent).not.toContain(texts.account.menu.activeIdentity.PROFESSIONAL);
+  });
+
+  it("sem perfil profissional não anuncia perfil social: não há o que alternar", async () => {
+    await montar();
+
+    expect(host.textContent).not.toContain(texts.account.menu.activeIdentity.SOCIAL);
+  });
+
   it("sem perfil profissional não mostra identidade nem erro", async () => {
     await montar();
 
