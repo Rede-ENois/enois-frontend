@@ -57,6 +57,20 @@ function shopTabs(
   ];
 }
 
+/** A look's pieces that are in the catalog, grouped by kind in the shop's chip order. */
+function piecesByKind(
+  ids: readonly string[],
+  itemsById: ReadonlyMap<string, CosmeticShopItem>,
+): [CosmeticKind, CosmeticShopItem[]][] {
+  const pieces = ids
+    .map((id) => itemsById.get(id))
+    .filter((item): item is CosmeticShopItem => item !== undefined);
+  return COSMETIC_KINDS.map((kind): [CosmeticKind, CosmeticShopItem[]] => [
+    kind,
+    pieces.filter((item): boolean => item.kind === kind),
+  ]).filter(([, pieces]) => pieces.length > 0);
+}
+
 /** What the view lists: with a search text every collection, else the picked tab. */
 function shopPool(
   items: readonly CosmeticShopItem[],
@@ -172,6 +186,40 @@ export function CosmeticCatalog({
     );
   };
 
+  /**
+   * One piece of a look, sold on its own: the name tries it on the preview card and the pill
+   * buys, equips or unequips that piece alone — the way to take one part of a look and keep the
+   * rest of the profile as it is.
+   */
+  const pieceAction = (item: CosmeticShopItem) => {
+    if (item.owned) {
+      return (
+        <button
+          type="button"
+          className="shrink-0 rounded-full border border-border-soft px-2 py-0.5 font-medium text-text-subtle transition hover:border-primary hover:text-primary disabled:opacity-50"
+          disabled={actionPending}
+          onClick={() => (item.equipped ? onUnequip(item.id) : onEquip(item.id))}
+        >
+          {item.equipped ? messages.unequip : messages.equip}
+        </button>
+      );
+    }
+    if (!item.purchasable)
+      return <span className="shrink-0 text-text-subtle">{messages.reward}</span>;
+    if (!item.available)
+      return <span className="shrink-0 text-text-subtle">{messages.outOfSeason}</span>;
+    return (
+      <button
+        type="button"
+        className="shrink-0 rounded-full border border-primary/50 px-2 py-0.5 font-medium text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+        disabled={actionPending}
+        onClick={() => onBuy(item.id)}
+      >
+        {texts.cosmetics.buyPiece(item.priceLabel)}
+      </button>
+    );
+  };
+
   const look = (entry: CosmeticShopLook, available: boolean, collectionName: string) => {
     const missing = lookMissing(entry, itemsById);
     const themeId = entry.items.find((id) => itemsById.get(id)?.kind === "CARD_THEME");
@@ -179,6 +227,7 @@ export function CosmeticCatalog({
     const ofKind = (k: CosmeticKind) => entry.items.find((id) => itemsById.get(id)?.kind === k);
     const nameTheme = ofKind("NAME_STYLE");
     const on = tryOn.look === entry.id;
+    const groups = piecesByKind(entry.items, itemsById);
     return (
       <li
         key={entry.id}
@@ -233,6 +282,45 @@ export function CosmeticCatalog({
             <span className="cos-shop__note">{messages.outOfSeason}</span>
           )}
         </div>
+
+        {groups.length > 0 && (
+          <details className="cos-look__pieces border-t border-border-soft/60 px-3 pb-2 text-xs">
+            <summary className="cursor-pointer select-none py-1.5 font-medium text-text-subtle hover:text-text-strong">
+              {texts.cosmetics.lookPieces(entry.items.length)}
+            </summary>
+
+            <p className="pb-2 text-[11px] leading-snug text-text-subtle">
+              {texts.cosmetics.lookPiecesHint}
+            </p>
+
+            <div className="space-y-2">
+              {groups.map(([kind, pieces]) => (
+                <section key={kind}>
+                  <h4 className="text-[11px] font-semibold uppercase tracking-widest text-text-subtle">
+                    {messages.kinds[kind]}
+                  </h4>
+
+                  <ul className="mt-1 space-y-1">
+                    {pieces.map((item) => (
+                      <li key={item.id} className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 truncate text-left text-text-strong hover:underline"
+                          aria-pressed={tryOn.items[item.kind] === item.id}
+                          aria-label={messages.tryItem(item.name)}
+                          onClick={() => tryItem(item)}
+                        >
+                          {item.name}
+                        </button>
+                        {pieceAction(item)}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          </details>
+        )}
       </li>
     );
   };

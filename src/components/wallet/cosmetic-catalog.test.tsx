@@ -68,6 +68,23 @@ const shopCollections: CosmeticShopCollection[] = [
   { id: "natal", name: "Natal", available: true, looks: [] },
 ];
 
+/** Um look com peça à venda, peça já comprada e peça fora de temporada. */
+const lookCollections: CosmeticShopCollection[] = [
+  {
+    id: "saci",
+    name: "Dia do Saci",
+    available: true,
+    looks: [
+      {
+        id: "look-saci",
+        title: "Saci-pererê",
+        items: ["tema-noite", "moldura-redemoinho", "emblema-abobora"],
+        priceLabel: "30",
+      },
+    ],
+  },
+];
+
 const user = { name: "Ana" };
 
 describe("Catálogo da loja", () => {
@@ -203,6 +220,35 @@ describe("Catálogo da loja", () => {
     )!;
     await click(equip);
     expect(actions.onEquip).toHaveBeenCalledWith("tema-noite");
+  });
+
+  it("separa as peças do look por tipo, com compra e equipar individuais", async () => {
+    await render({ collections: lookCollections });
+    const look = host.querySelector(".cos-look")!;
+    expect(look.querySelector("summary")!.textContent).toBe("3 peças");
+
+    const groups = [...look.querySelectorAll("details section")].map(
+      (section) => section.querySelector("h4")!.textContent,
+    );
+    expect(groups).toEqual(["Temas", "Molduras", "Emblemas"]);
+
+    const row = (name: string) =>
+      [...look.querySelectorAll("details li")].find((element) =>
+        element.textContent?.includes(name),
+      )!;
+
+    // Já comprada: a peça se equipa sozinha, sem comprar o look inteiro.
+    expect(row("Noite de Natal").textContent).toContain("Equipar");
+
+    // À venda: o preço da peça aparece no botão e a compra é só dela.
+    const frame = row("Redemoinho");
+    expect(frame.textContent).toContain("Comprar · 30");
+    await click([...frame.querySelectorAll("button")].at(-1)!);
+    expect(actions.onBuy).toHaveBeenCalledWith("moldura-redemoinho");
+    expect(actions.onBuyLook).not.toHaveBeenCalled();
+
+    // Fora de temporada: aparece, mas não é vendida.
+    expect(row("Abóbora").textContent).toContain("Fora de temporada");
   });
 
   it("sem coleções cadastradas, a loja continua mostrando tudo", async () => {
