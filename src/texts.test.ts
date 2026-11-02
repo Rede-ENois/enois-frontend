@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { ARTICLE_BODY_MAX_LENGTH } from "./constants/post-types";
 import { texts } from "./texts";
 
 /**
@@ -85,5 +86,15 @@ describe("texts da interface", () => {
       }
     }
     expect(flagrados).toEqual([]);
+  });
+
+  /**
+   * O editor de artigo aceita `ARTICLE_BODY_MAX_LENGTH` caracteres, e o texto acima dele dizia
+   * 4.000 — número de quando o teto era esse. Quem escrevia lia um limite menor que o campo, e
+   * quem confiava no texto parava antes de precisar. O texto e o campo mostram o mesmo número.
+   */
+  it("diz no editor de artigo o mesmo teto que o campo aceita", () => {
+    const teto = ARTICLE_BODY_MAX_LENGTH.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    expect(texts.feed.composer.article.bodyHint).toContain(teto);
   });
 });
