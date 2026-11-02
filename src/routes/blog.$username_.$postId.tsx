@@ -216,6 +216,7 @@ function BlogPostPage() {
             <div className="p-5 sm:p-8">
               <RichText
                 content={post.body}
+                writtenAt={post.publishedAt}
                 className="whitespace-pre-line break-words text-base font-normal leading-relaxed text-text-strong"
               />
             </div>

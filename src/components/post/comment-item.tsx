@@ -196,7 +196,7 @@ export function CommentItem({
       editError={editError}
       onSaveEdit={saveEdit}
       onCancelEdit={() => setEditError(null)}
-      renderRichText={(props) => <RichText {...props} />}
+      renderRichText={(props) => <RichText {...props} writtenAt={comment.createdAt} />}
       renderMediaGrid={(props) => <MediaGrid {...props} />}
       renderAuthorTrigger={
         comment.authorUsername

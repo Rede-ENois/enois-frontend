@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { emotesApi } from "./api";
-import { applyEmotes, emoteIndex } from "./catalog";
+import { applyEmotes, emoteIndex, usesBareEmoteCodes } from "./catalog";
 import { loadCachedIndex, saveCachedIndex } from "./catalog-cache";
 
 /**
@@ -67,10 +67,14 @@ export function useEmoteIndex(): Map<string, string> {
   return sharedIndex(data ?? NO_ENTRIES);
 }
 
-/** Texto com os códigos de figurinha já trocados pela imagem do nosso proxy. */
-export function useEmoteText(content: string): string {
+/**
+ * Texto com os códigos de figurinha já trocados pela imagem do nosso proxy. `writtenAt` (ISO) só
+ * importa para texto anterior ao prefixo `:` (issue #556): sem ele, só `:KEKW:` vira figurinha.
+ */
+export function useEmoteText(content: string, writtenAt?: string): string {
   const index = useEmoteIndex();
-  return useMemo(() => applyEmotes(content, index), [content, index]);
+  const bareCodes = usesBareEmoteCodes(writtenAt);
+  return useMemo(() => applyEmotes(content, index, bareCodes), [content, index, bareCodes]);
 }
 
 /**

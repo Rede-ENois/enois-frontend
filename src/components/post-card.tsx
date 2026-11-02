@@ -375,7 +375,7 @@ function PostCardContainer({
           />
         ) : null
       }
-      renderRichText={(props) => <RichText {...props} />}
+      renderRichText={(props) => <RichText {...props} writtenAt={post.createdAt} />}
       renderMediaGrid={(props) => <MediaGrid {...props} />}
       // The mini card is the social profile; a corporate post keeps the link to its own page.
       renderAuthorTrigger={

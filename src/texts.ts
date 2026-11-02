@@ -32,7 +32,7 @@ export const texts = {
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
-    hint: "As mais usadas primeiro. O código entra no texto — quem lê vê a figurinha.",
+    hint: "As mais usadas primeiro. A figurinha entra no texto como :codigo:, e quem lê vê a imagem.",
     count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
     page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
     previous: "Página anterior",

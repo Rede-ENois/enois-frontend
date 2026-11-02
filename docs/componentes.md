@@ -217,8 +217,8 @@ Textarea com autocomplete de @menções.
 - Dropdown de resultados com navegação por setas, Tab/Enter para selecionar, Escape para fechar
 - Insere `@username` no texto e rastreia IDs dos mencionados
 - Mostra o contador interno quando há `maxLength`, exceto se `showCounter={false}` (padrão `true`)
-- Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido (`KEKW`) entra no texto como
-  palavra (ver abaixo)
+- Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido entra no texto como `:KEKW:`
+  (ver abaixo)
 - A inserção de figurinha passa pelo evento de edição do próprio campo. O design system mantém
   os IDs apenas das menções confirmadas que continuam no texto, inclusive depois de limpar o
   rascunho ou substituir uma menção pela figurinha; o wrapper não guarda outra lista de IDs
@@ -229,7 +229,14 @@ Textarea com autocomplete de @menções.
 `src/lib/emotes/` (`api`, `catalog`, `catalog-cache`, `use-emotes`) e
 `src/components/emotes/emote-picker-dialog.tsx` (seletor). O texto gravado continua sendo o CÓDIGO —
 a troca por imagem acontece na leitura (`useEmoteText` dentro do `RichText`), então quem edita vê
-`KEKW`, não um endereço de imagem.
+`:KEKW:`, não um endereço de imagem.
+
+- **Formato `:codigo:`** ([#556](https://github.com/Rede-ENois/enois-frontend/issues/556)): só
+  `:KEKW:` vira figurinha, para uma palavra comum que também é código ("Pedro") continuar sendo
+  palavra. Texto escrito antes do corte (`BARE_EMOTE_CODES_UNTIL` em `src/lib/emotes/catalog.ts`,
+  03/11/2026) também troca o código solto, para post antigo continuar como o autor viu: quem desenha
+  passa a data do texto em `RichText writtenAt` (post, comentário, mensagem, post e comentário de
+  grupo, artigo e post de blog). Sem `writtenAt` (bio, descrições), só vale `:codigo:`.
 
 - **Catálogo:** é do BACKEND, não do navegador. O backend fala com o BTTV e o FrankerFaceZ de 3 em 3
   horas, junta tudo em memória e serve três rotas: `GET /emotes?page&limit&q` (página do seletor),

@@ -67,14 +67,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function render(content: string) {
+async function render(content: string, writtenAt?: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   await act(async () => {
     root?.render(
       <QueryClientProvider client={client}>
         <EnoisProvider isOwnMediaUrl={isOwnMediaUrl}>
-          <RichText content={content} />
+          <RichText content={content} writtenAt={writtenAt} />
         </EnoisProvider>
       </QueryClientProvider>,
     );
@@ -90,7 +90,7 @@ async function render(content: string) {
 
 describe("RichText com figurinhas", () => {
   it("desenha a figurinha no meio da frase", async () => {
-    const html = await render("oi KEKW tudo bem?");
+    const html = await render("oi :KEKW: tudo bem?");
 
     expect(html).toContain(`src="${apiUrl(KEKW)}"`);
     expect(html).toContain("<p");
@@ -98,7 +98,7 @@ describe("RichText com figurinhas", () => {
   });
 
   it("pede a imagem ao nosso proxy, não ao CDN do provedor", async () => {
-    const html = await render("aí catJAM");
+    const html = await render("aí :catJAM:");
     // O atributo sai com `&amp;` no HTML, como qualquer `&` de URL.
     const src = /<img[^>]*src="([^"]+)"/.exec(html)?.[1]?.replace(/&amp;/g, "&");
 
@@ -108,7 +108,7 @@ describe("RichText com figurinhas", () => {
   });
 
   it("mantém a pontuação em volta da figurinha", async () => {
-    const html = await render("(KEKW)");
+    const html = await render("(:KEKW:)");
     const imagem = html.match(/<img[^>]*>/)?.[0];
 
     expect(imagem).toBeTruthy();
@@ -122,9 +122,22 @@ describe("RichText com figurinhas", () => {
     expect(html).toContain("kekw");
   });
 
+  it("new text: a bare code is just a word (#556)", async () => {
+    const html = await render("oi KEKW", "2026-11-10T12:00:00Z");
+
+    expect(html).not.toContain("<img");
+    expect(html).toContain("oi KEKW");
+  });
+
+  it("text written before the colon prefix keeps its bare-code stickers", async () => {
+    const html = await render("oi KEKW", "2026-10-30T12:00:00Z");
+
+    expect(html).toContain(`src="${apiUrl(KEKW)}"`);
+  });
+
   it("com o índice fora do ar o texto sai com o código cru, sem erro", async () => {
     indiceFora = true;
-    const html = await render("oi KEKW");
+    const html = await render("oi :KEKW:");
 
     expect(html).not.toContain("<img");
     expect(html).toContain("KEKW");

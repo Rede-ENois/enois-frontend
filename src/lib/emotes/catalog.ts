@@ -9,6 +9,29 @@ export function emoteIndex(entries: Record<string, string>): Map<string, string>
 }
 
 const WHITESPACE = /(\s+)/;
+/** `:KEKW:`. Same code shape the index cache accepts: no whitespace, colon, brackets or backtick. */
+const COLON_CODE = /:([^\s:[\]`]{1,64}):/gu;
+
+/**
+ * Until this instant a bare code (`KEKW`) also became a sticker. That caught ordinary words that
+ * happen to be codes ("Pedro"), so text written from here on needs `:KEKW:` (issue #556). Older
+ * posts, comments and messages keep rendering the way their authors saw them.
+ */
+export const BARE_EMOTE_CODES_UNTIL = Date.parse("2026-11-03T03:00:00Z");
+
+/** Whether text written at `writtenAt` (ISO) still uses the bare-code format. */
+export function usesBareEmoteCodes(writtenAt: string | undefined): boolean {
+  if (!writtenAt) return false;
+  const time = Date.parse(writtenAt);
+  return Number.isFinite(time) && time < BARE_EMOTE_CODES_UNTIL;
+}
+
+function replaceColonCodes(text: string, index: Map<string, string>): string {
+  return text.replace(COLON_CODE, (match, code: string) => {
+    const url = index.get(code);
+    return url ? marca(code, url) : match;
+  });
+}
 /** Caracteres que podem encostar na figurinha sem fazer parte do código (`(KEKW)`). */
 const TOKEN_BOUNDARY = /^([([{'"*_~]*)(.*?)([)\]}>.,;:!?'"*_~]*)$/;
 
@@ -28,7 +51,8 @@ function replaceToken(piece: string, index: Map<string, string>): string {
 }
 
 /**
- * Troca os códigos conhecidos por imagem, preservando o resto do texto EXATAMENTE como está.
+ * Troca os códigos conhecidos (`:KEKW:`, e o código solto quando `bareCodes`) por imagem,
+ * preservando o resto do texto EXATAMENTE como está.
  *
  * A saída já é o markdown que o RichText do design system desenha como imagem inline: o texto
  * gravado continua sendo o código (quem edita vê `KEKW`, não um endereço de CDN). Bloco e trecho
@@ -37,7 +61,11 @@ function replaceToken(piece: string, index: Map<string, string>): string {
  * O índice é o do BACKEND: só vira figurinha o código que existe no catálogo dele, então a mesma
  * imagem aparece para quem lê — inclusive em post público, sem sessão.
  */
-export function applyEmotes(content: string, index: Map<string, string>): string {
+export function applyEmotes(
+  content: string,
+  index: Map<string, string>,
+  bareCodes = false,
+): string {
   if (!content || index.size === 0) return content;
 
   let emBloco = false;
@@ -54,10 +82,12 @@ export function applyEmotes(content: string, index: Map<string, string>): string
         .map((pedaco, posicao) =>
           posicao % 2 === 1
             ? pedaco
-            : pedaco
-                .split(WHITESPACE)
-                .map((token) => (WHITESPACE.test(token) ? token : replaceToken(token, index)))
-                .join(""),
+            : bareCodes
+              ? replaceColonCodes(pedaco, index)
+                  .split(WHITESPACE)
+                  .map((token) => (WHITESPACE.test(token) ? token : replaceToken(token, index)))
+                  .join("")
+              : replaceColonCodes(pedaco, index),
         )
         .join("");
     })
