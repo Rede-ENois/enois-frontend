@@ -16,4 +16,7 @@ export type Community = {
   avatar: string | null;
   /** Capa em HTML/CSS sanitizado (igual à do perfil); nulo = usa a foto da capa. */
   bannerHtml?: string | null;
+  /** Cidade e UF (sigla); ausentes quando a comunidade não tem lugar. */
+  city?: string | null;
+  state?: string | null;
 };

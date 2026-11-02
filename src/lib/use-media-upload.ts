@@ -25,6 +25,30 @@ export function uploadError(err: unknown): unknown {
       err.path,
     );
   }
+  if (err instanceof ApiError && err.code === "IMAGE_CONTENT_NOT_ALLOWED") {
+    return new ApiError(
+      err.status,
+      err.code,
+      texts.errors.knownCodes.IMAGE_CONTENT_NOT_ALLOWED,
+      err.path,
+    );
+  }
+  if (err instanceof ApiError && err.code === "IMAGE_CANNOT_BE_VERIFIED") {
+    return new ApiError(
+      err.status,
+      err.code,
+      texts.errors.knownCodes.IMAGE_CANNOT_BE_VERIFIED,
+      err.path,
+    );
+  }
+  if (err instanceof ApiError && err.code === "IMAGE_MODERATION_UNAVAILABLE") {
+    return new ApiError(
+      err.status,
+      err.code,
+      texts.errors.knownCodes.IMAGE_MODERATION_UNAVAILABLE,
+      err.path,
+    );
+  }
   return err;
 }
 

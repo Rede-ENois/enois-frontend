@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useChatDockStore } from "@/stores/chat-dock.store";
+import { texts } from "@/texts";
 import { ChatDock as ChatDockView } from "@rede-enois/design-system/domain";
 
 import { authApi, messagesApi } from "@/lib/api";
 import { janelasQueCabem } from "@/lib/chat-dock/chat-dock-layout";
 import { useLarguraDaJanela } from "@/lib/chat-dock/use-largura-da-janela";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
+import { useInterfaceContext } from "@/lib/interface-context";
 import { hasSession } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
@@ -57,36 +59,45 @@ function ChatDockInner() {
   const expand = useChatDockStore((s) => s.expand);
   const openChat = useChatDockStore((s) => s.openChat);
 
+  const context = useInterfaceContext();
   const {
     data: conversationsData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["conversations", "inbox"],
-    queryFn: ({ pageParam }) => messagesApi.listConversations(pageParam, 20),
+    // The dock follows the active interface: work conversations never pop up in the social one.
+    queryKey: ["conversations", "inbox", context],
+    queryFn: ({ pageParam }) => messagesApi.listConversations(pageParam, 20, context),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: 120_000,
   });
 
   const { data: unreadData } = useQuery({
-    queryKey: ["conversations", "unread-count"],
-    queryFn: () => messagesApi.unreadCount(),
-    refetchInterval: 15_000,
+    queryKey: ["conversations", "unread-count", context],
+    queryFn: () => messagesApi.unreadCount(context),
+    refetchInterval: expanded ? 15_000 : 60_000,
   });
 
   const totalUnread = unreadData?.count ?? 0;
-  // -1 = ainda nao leu o primeiro valor; so reage a partir da segunda leitura pra nao
-  // expandir o dock toda vez que a pagina carrega com mensagens nao lidas pendentes.
-  const prevUnreadRef = useRef(-1);
+  const contextLabel =
+    context === "PROFESSIONAL"
+      ? texts.navigation.context.professional
+      : texts.navigation.context.social;
+  // The dock opens by itself only when a NEW message arrives: the first reading of each interface
+  // is the baseline (unread messages pending on page load, or in the inbox one switches to, are
+  // not news). The count of the other interface never counts as the baseline of this one.
+  const baselineRef = useRef<{ context: string; count: number } | null>(null);
   useEffect(() => {
-    if (prevUnreadRef.current >= 0 && totalUnread > prevUnreadRef.current) {
+    if (unreadData === undefined) return;
+    const baseline = baselineRef.current;
+    if (baseline?.context === context && unreadData.count > baseline.count) {
       expand();
-      queryClient.invalidateQueries({ queryKey: ["conversations", "inbox"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations", "inbox", context] });
     }
-    prevUnreadRef.current = totalUnread;
-  }, [totalUnread, expand, queryClient]);
+    baselineRef.current = { context, count: unreadData.count };
+  }, [unreadData, context, expand, queryClient]);
 
   const markAsRead = useMutation({
     mutationFn: (id: string) => messagesApi.markAsRead(id),
@@ -95,11 +106,13 @@ function ChatDockInner() {
     },
   });
 
-  const conversations = [...(conversationsData?.pages.flatMap((p) => p.items) ?? [])].sort(
-    (a, b) => {
-      if (!a.time || !b.time) return 0;
-      return new Date(b.time).getTime() - new Date(a.time).getTime();
-    },
+  const conversations = useMemo(
+    () =>
+      [...(conversationsData?.pages.flatMap((p) => p.items) ?? [])].sort((a, b) => {
+        if (!a.time || !b.time) return 0;
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      }),
+    [conversationsData],
   );
 
   /*
@@ -122,8 +135,11 @@ function ChatDockInner() {
         expanded={expanded}
         onToggleExpanded={toggleExpanded}
         unreadCount={0}
+        contextLabel={contextLabel}
         windows={[]}
-        empty
+        // Not "empty": the list is replaced by the key setup. Saying "Nenhuma conversa ainda" here
+        // hid both the conversations and the setup banner (the view draws one or the other).
+        empty={false}
         hasMore={false}
         loadingMore={false}
         onLoadMore={() => {}}
@@ -145,6 +161,7 @@ function ChatDockInner() {
       expanded={expanded}
       onToggleExpanded={toggleExpanded}
       unreadCount={totalUnread}
+      contextLabel={contextLabel}
       windows={janelasVisiveis.map((id) => (
         <ChatDockWindow key={id} conversationId={id} />
       ))}

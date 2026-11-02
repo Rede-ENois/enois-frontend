@@ -19,6 +19,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 import { gamesApi, mediaApi } from "@/lib/api";
 import { formatarData } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
+import { walletQueries } from "@/lib/query-options/wallet";
 import { getSessionKey, useSessionKey } from "@/lib/session-key";
 import { isAuthenticated, useAuth } from "@/lib/use-auth";
 
@@ -93,7 +94,7 @@ function GameDetailContent({ username, gameSlug }: { username: string; gameSlug:
     onSuccess: (_resposta, pedido) => {
       setGasto((atual) => (atual?.requestId === pedido.requestId ? null : atual));
       toast(t.spend.done, "success");
-      void queryClient.invalidateQueries({ queryKey: ["carteira"] });
+      void queryClient.invalidateQueries({ queryKey: walletQueries.wallet().queryKey });
     },
     onError: () => toast(t.spend.error, "error"),
   });

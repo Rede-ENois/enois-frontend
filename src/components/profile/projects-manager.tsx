@@ -9,6 +9,7 @@ import {
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { projectsApi } from "@/lib/api";
+import { projectQueries } from "@/lib/query-options/projects";
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
@@ -22,8 +23,7 @@ export function ProjectsManager({ open, onOpenChange, onSaved }: ProjectsManager
   const { toast } = useToast();
 
   const { data: projects = [] } = useQuery({
-    queryKey: ["projects", "mine"],
-    queryFn: () => projectsApi.mine(),
+    ...projectQueries.profileMine(),
     enabled: open,
   });
 
@@ -32,7 +32,7 @@ export function ProjectsManager({ open, onOpenChange, onSaved }: ProjectsManager
       id ? projectsApi.update(id, input) : projectsApi.create(input),
     onSuccess: () => {
       toast(texts.profile.projects.saved);
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: projectQueries.all });
       onSaved();
     },
     onError: (error) => {
@@ -48,7 +48,7 @@ export function ProjectsManager({ open, onOpenChange, onSaved }: ProjectsManager
   const excluir = useMutation({
     mutationFn: (id: string) => projectsApi.remove(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: projectQueries.all });
       onSaved();
     },
   });

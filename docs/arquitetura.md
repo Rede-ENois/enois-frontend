@@ -63,6 +63,18 @@ O limite da navegação é único: 1024px (`lg`). Abaixo dele o menu abre pelo h
 - **localStorage** para sessão (session_token, refresh_token, current_user)
 - **Estado local (useState)** para UI components (modais, abas, formulários)
 
+As consultas compartilhadas ficam em `src/lib/query-options/` por domínio. A chave inclui os
+parâmetros que alteram a resposta, como os limites de comunidades próprias e de convites da rede.
+Projetos pessoais de perfil e projetos comunitários têm identidades diferentes; operações de cache
+reutilizam as chaves ou os prefixos dessas definições. A carteira usa a mesma consulta no perfil e
+na página da carteira. A edição de empresa invalida o detalhe, as empresas próprias e os filtros do
+diretório. Consultas de perfil por ID compartilham a definição individual, inclusive nos diálogos.
+A consulta de aviso ativo converte a resposta sem conteúdo em `null`, um resultado válido para o
+TanStack Query.
+
+Condições de interface, polling e exceções de frescor continuam nos consumidores. Loaders de SSR,
+revalidação de dados associados à sessão e paginação por cursor conservam suas regras próprias.
+
 ### 7. Autenticação
 
 Fluxo:

@@ -30,6 +30,7 @@ export function SaciDuelPanel() {
   return (
     <SaciHalloweenDuel
       active={duel.data.active}
+      upcoming={Date.now() < Date.parse(duel.data.startsAt)}
       counts={duel.data.counts}
       myChoice={duel.data.myChoice}
       winner={duel.data.winner}

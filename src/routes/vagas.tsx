@@ -67,6 +67,7 @@ import { CURRENCIES, currencySymbol, formatSalary } from "@/lib/currency";
 import { useCurrentUser } from "@/lib/current-user";
 import { dataCurta } from "@/lib/date/format";
 import { canCreateJob, missingReputationToCreateJob } from "@/lib/job-permissions";
+import { companyQueries } from "@/lib/query-options/companies";
 import { requireAuth } from "@/lib/require-auth";
 import { safeHref } from "@/lib/safe-url";
 import { useIsAuthenticated } from "@/lib/use-auth";
@@ -121,17 +122,11 @@ export function JobsListPage({
   const isChildRoute = Boolean(
     matchRoute({ to: "/vagas/$jobId", fuzzy: true }) || matchRoute({ to: "/vagas/minhas" }),
   );
-  // Diretorio de empresas linka com ?query= preenchido (busca ja inicia com o nome).
+  // The company directory links here with ?query= (the search starts with the company name).
   const [query, setQuery] = useState(() => {
-    // Sem navegador (render no servidor) não há sessão nem endereço para ler: a busca começa vazia.
+    // Sem navegador (render no servidor) não há endereço para ler: a busca começa vazia.
     if (typeof window === "undefined") return "";
-    // Diretorio de empresas: o card gravou o nome e a busca ja inicia preenchida.
-    const fromDirectory = sessionStorage.getItem("empresas:query");
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get("query") ?? "";
-    const initial = fromDirectory ?? fromUrl;
-    if (fromDirectory) sessionStorage.removeItem("empresas:query");
-    return initial;
+    return new URLSearchParams(window.location.search).get("query") ?? "";
   });
   // Busca "debounced": sem isso, cada tecla disparava uma requisicao ao backend.
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -556,9 +551,18 @@ export function JobsListPage({
                         </span>
                       )}
 
-                      {j.company && (
-                        <p className="break-words text-sm text-muted-foreground">{j.company}</p>
-                      )}
+                      {j.company &&
+                        (j.companySlug ? (
+                          <Link
+                            to="/empresa/$slug"
+                            params={{ slug: j.companySlug }}
+                            className="break-words text-sm text-muted-foreground hover:text-foreground hover:underline"
+                          >
+                            {j.company}
+                          </Link>
+                        ) : (
+                          <p className="break-words text-sm text-muted-foreground">{j.company}</p>
+                        ))}
 
                       <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
@@ -748,6 +752,9 @@ function CreateJobDialog({
 
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
+  const [companyId, setCompanyId] = useState("");
+  // Pages the person is part of: publishing through one links the job to it.
+  const { data: myPages } = useQuery({ ...companyQueries.mine(), enabled: open });
   const [location, setLocation] = useState<string>(JOB_LOCATIONS[0]);
   const [type, setType] = useState<string>(lockedType ?? JOB_TYPES[0]);
   const [level, setLevel] = useState<string>(JOB_LEVELS[0]);
@@ -773,6 +780,7 @@ function CreateJobDialog({
   const reset = () => {
     setTitle("");
     setCompany("");
+    setCompanyId("");
     setLocation(JOB_LOCATIONS[0]);
     setType(lockedType ?? JOB_TYPES[0]);
     setLevel(JOB_LEVELS[0]);
@@ -792,6 +800,7 @@ function CreateJobDialog({
     create.mutate({
       title: title.trim(),
       company: company.trim(),
+      companyId: companyId || undefined,
       location,
       type,
       level,
@@ -886,8 +895,37 @@ function CreateJobDialog({
                 onChange={(e) => setCompany(e.target.value)}
                 placeholder={texts.jobs.fields.companyPlaceholder}
                 className="bg-muted"
+                disabled={companyId !== ""}
               />
             </div>
+
+            {(myPages?.length ?? 0) > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="job-company-page" className="text-xs font-normal text-text-subtle">
+                  {texts.jobs.fields.companyPage}
+                </Label>
+
+                <select
+                  id="job-company-page"
+                  value={companyId}
+                  onChange={(e) => {
+                    const page = myPages?.find((item) => item.id === e.target.value);
+                    setCompanyId(page?.id ?? "");
+                    if (page) setCompany(page.name);
+                  }}
+                  className={SELECT_CLASS}
+                >
+                  <option value="">{texts.jobs.fields.companyPageNone}</option>
+                  {myPages?.map((page) => (
+                    <option key={page.id} value={page.id}>
+                      {page.name}
+                    </option>
+                  ))}
+                </select>
+
+                <p className="text-xs text-text-subtle">{texts.jobs.fields.companyPageHint}</p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">

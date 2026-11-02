@@ -5,6 +5,8 @@ export type Job = {
   id: string;
   title: string;
   company: string;
+  /** Slug of the company page the job belongs to; null when it only carries a name. */
+  companySlug?: string | null;
   logo: string | null;
   location: string;
   type: string;

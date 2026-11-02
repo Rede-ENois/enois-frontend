@@ -7,13 +7,15 @@ import type { PostView } from "@/types/application/feed/post-view";
  * aceita — se aqui dissesse 1200 e o servidor recusasse em 401, a pessoa descobriria o limite
  * depois de escrever.
  *
- * O limite é por tipo porque o tipo é o formato da conversa: dúvida é pergunta curta, tutorial é
- * texto de leitura.
+ * O limite é por tipo porque o tipo é o formato da conversa: diversão é recado curto, tutorial é
+ * texto de leitura. Dúvida usa o teto padrão para caber um trecho de código.
  */
 const LIMITS: Record<PostView["type"], number> = {
-  QUESTION: 400,
+  QUESTION: 1200,
   DIVERTIDO: 400,
   MOMENT: 500,
+  // Enquete: o título da enquete (as alternativas têm limite próprio: 120 cada).
+  POLL: 400,
   REVIEW: 600,
   PROJECT: 2000,
   NEWS: 2000,
@@ -26,6 +28,12 @@ const LIMITS: Record<PostView["type"], number> = {
   BUSINESS: 2000,
   BLOG: 1200,
 };
+
+/** Longest new comment, as the backend accepts it (`PostInteractionService`: 800). */
+export const COMMENT_MAX_LENGTH = 800;
+
+/** The counter shows from here on: a quiet field until the limit is near. */
+export const COMMENT_COUNTER_FROM = COMMENT_MAX_LENGTH - 100;
 
 export function postContentLimit(type: PostView["type"]): number {
   return LIMITS[type] ?? 1200;

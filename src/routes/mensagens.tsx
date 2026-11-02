@@ -4,6 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { InboxTab } from "@/types/routes/messages/inbox-tab";
 import { ConversationListSkeletons, UserAvatar } from "@rede-enois/design-system/domain";
 import { Button, ConfirmDialog, Input, useToast } from "@rede-enois/design-system/ui";
 import { Search } from "lucide-react";
@@ -12,6 +13,7 @@ import { authApi, messagesApi, networkApi } from "@/lib/api";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { useCurrentUser } from "@/lib/current-user";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
+import { useInterfaceContext, writeStoredContext } from "@/lib/interface-context";
 import { liteInterval, litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
@@ -31,6 +33,14 @@ export const Route = createFileRoute("/mensagens")({
   head: () => ({ meta: [{ title: texts.messages.seoTitle }] }),
   component: Mensagens,
 });
+
+const SOCIAL_TABS: InboxTab[] = ["all", "archived"];
+const PROFESSIONAL_TABS: InboxTab[] = ["all", "jobs", "freelances", "services", "archived"];
+const TAB_KIND: Partial<Record<InboxTab, string>> = {
+  jobs: "JOB",
+  freelances: "FREELANCE",
+  services: "SERVICE",
+};
 
 /** Tamanho que o app sempre usou; em modo lite cada página vem maior (menos idas ao servidor). */
 const CONVERSATIONS_PAGE_SIZE = 20;
@@ -56,9 +66,14 @@ function Mensagens() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [inboxTab, setInboxTab] = useState<"all" | "jobs" | "services" | "people" | "archived">(
-    "all",
-  );
+  // Cada interface tem a sua caixa: a social é de pessoas e grupos; a profissional separa
+  // candidaturas, propostas de freela e contratações de serviço. O servidor filtra por contexto,
+  // então a paginação e o contador já vêm só da caixa certa.
+  const context = useInterfaceContext();
+  const professional = context === "PROFESSIONAL";
+  const inboxTabs = professional ? PROFESSIONAL_TABS : SOCIAL_TABS;
+  const [inboxTab, setInboxTab] = useState<InboxTab>("all");
+  useEffect(() => setInboxTab("all"), [context]);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -77,11 +92,19 @@ function Mensagens() {
     isFetchingNextPage: isLoadingMoreConversations,
     isLoading: isLoadingConversations,
   } = useInfiniteQuery({
-    queryKey: ["conversations", inboxTab === "archived" ? "archived" : "inbox"],
+    queryKey: ["conversations", inboxTab === "archived" ? "archived" : "inbox", context],
     queryFn: ({ pageParam }) =>
       inboxTab === "archived"
-        ? messagesApi.archivedConversations(pageParam, litePageSize(CONVERSATIONS_PAGE_SIZE, lite))
-        : messagesApi.listConversations(pageParam, litePageSize(CONVERSATIONS_PAGE_SIZE, lite)),
+        ? messagesApi.archivedConversations(
+            pageParam,
+            litePageSize(CONVERSATIONS_PAGE_SIZE, lite),
+            context,
+          )
+        : messagesApi.listConversations(
+            pageParam,
+            litePageSize(CONVERSATIONS_PAGE_SIZE, lite),
+            context,
+          ),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     refetchInterval: liteInterval(15_000, lite),
@@ -92,19 +115,25 @@ function Mensagens() {
   const conversations = [...(conversationsData?.pages.flatMap((page) => page.items) ?? [])].sort(
     (a, b) => (b.time ? Date.parse(b.time) : 0) - (a.time ? Date.parse(a.time) : 0),
   );
-  // Separa a caixa de entrada: vagas (candidatura), serviços (contratação) e pessoas.
   // Arquivadas não separa por tipo: é a lista de quem foi apagado "para mim", e ali a pessoa quer
   // reencontrar o que sumiu, não filtrar.
-  const visibleConversations = conversations.filter((c) =>
-    inboxTab === "archived" || inboxTab === "all"
-      ? true
-      : inboxTab === "jobs"
-        ? c.kind === "JOB"
-        : inboxTab === "services"
-          ? c.kind === "SERVICE"
-          : c.kind !== "JOB" && c.kind !== "SERVICE",
+  const visibleConversations = conversations.filter(
+    (c) => inboxTab === "all" || inboxTab === "archived" || c.kind === TAB_KIND[inboxTab],
   );
-  const activeConversation = activeId ? conversations.find((c) => c.id === activeId) : null;
+  // A conversa aberta por link (notificação, perfil) pode não estar na primeira página nem nesta
+  // caixa: ela é buscada direto, e a interface vai para a caixa a que a conversa pertence.
+  const listed = activeId ? conversations.find((c) => c.id === activeId) : undefined;
+  const { data: linkedConversation } = useQuery({
+    queryKey: ["conversation", activeId],
+    queryFn: () => messagesApi.getConversation(activeId!),
+    enabled: Boolean(activeId) && !listed && !isLoadingConversations,
+  });
+  const activeConversation = listed ?? linkedConversation ?? null;
+  useEffect(() => {
+    if (linkedConversation?.context && linkedConversation.context !== context) {
+      writeStoredContext(linkedConversation.context);
+    }
+  }, [linkedConversation, context]);
 
   const { data: searchResults } = useQuery({
     queryKey: ["network", "users", searchQuery],
@@ -203,19 +232,23 @@ function Mensagens() {
                   </Button>
                 )}
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => setShowSearch(!showSearch)}
-                >
-                  {showSearch ? texts.messages.back : texts.messages.new}
-                </Button>
+                {/* Nova conversa é DM social: na caixa profissional as conversas nascem dos
+                    fluxos de trabalho (candidatura, proposta, contratação). */}
+                {!professional && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => setShowSearch(!showSearch)}
+                  >
+                    {showSearch ? texts.messages.back : texts.messages.new}
+                  </Button>
+                )}
 
                 <SaciSpot spot="mensagens" />
               </div>
             </div>
-            {showSearch ? (
+            {showSearch && !professional ? (
               <div className="space-y-3">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -266,7 +299,7 @@ function Mensagens() {
 
           {/* `flex-wrap`: com cinco abas o rótulo maior ("Arquivadas") estoura a coluna no celular. */}
           <div className="flex flex-wrap gap-1 border-b border-border px-3 pb-2 pt-2">
-            {(["all", "jobs", "services", "people", "archived"] as const).map((tab) => (
+            {inboxTabs.map((tab) => (
               <button
                 key={tab}
                 type="button"

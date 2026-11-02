@@ -10,7 +10,7 @@ import { api } from "../api-client";
  * backend — o painel so mostra a aba para quem `moderationApi.me()` respondeu `admin`.
  */
 export const noticesApi = {
-  current: () => api.get<AdminNotice | null>("/avisos/ativo"),
+  current: async () => (await api.get<AdminNotice | null | undefined>("/avisos/ativo")) ?? null,
 
   publish: (data: NoticePublishInput) => api.put<AdminNotice>("/admin/avisos", data),
 

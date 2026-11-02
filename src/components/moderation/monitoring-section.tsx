@@ -3,10 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import type { MonitoringDailyUsers } from "@/types/application/monitoring/monitoring-daily-users";
 import type { MonitoringEconomy } from "@/types/application/monitoring/monitoring-economy";
+import type { MonitoringUsers } from "@/types/application/monitoring/monitoring-users";
 import { MonitoringSection as MonitoringSectionView } from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
-import { Coins, RefreshCw } from "lucide-react";
+import { Coins, RefreshCw, Users } from "lucide-react";
 
 import { monitoringApi } from "@/lib/api";
 import { hora, valorDeDataLocal } from "@/lib/date/format";
@@ -39,7 +41,7 @@ export function MonitoringSection() {
   const overview = useQuery({
     queryKey: ["monitoring", "overview"],
     queryFn: () => monitoringApi.overview(),
-    refetchInterval: paused ? false : 2_500,
+    refetchInterval: paused ? false : 10_000,
     retry: false,
   });
 
@@ -48,6 +50,15 @@ export function MonitoringSection() {
     queryKey: ["monitoring", "supply"],
     queryFn: () => monitoringApi.supply(),
     refetchInterval: paused ? false : 30_000,
+    retry: false,
+  });
+
+  // Contas da comunidade: muda devagar, então um minuto de polling basta (o backend também
+  // guarda um minuto de cache).
+  const users = useQuery({
+    queryKey: ["monitoring", "users"],
+    queryFn: () => monitoringApi.users(),
+    refetchInterval: paused ? false : 60_000,
     retry: false,
   });
 
@@ -162,6 +173,8 @@ export function MonitoringSection() {
         onLoadMore={() => void events.fetchNextPage()}
       />
 
+      {users.data && <UsersCard users={users.data} />}
+
       {economy.data && (
         <EconomyCard
           economy={economy.data}
@@ -169,6 +182,111 @@ export function MonitoringSection() {
           onRecalculate={() => recalcular.mutate()}
         />
       )}
+    </div>
+  );
+}
+
+const numero = (valor: number) =>
+  new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(valor);
+
+const percentual = (valor: number) =>
+  `${valor > 0 ? "+" : ""}${new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(valor)}%`;
+
+/**
+ * Contas da comunidade: total, entradas do dia, ritmo de crescimento e projeção. O cartão fica
+ * acima da economia porque a curva de cadastros é o primeiro número que se olha pela manhã.
+ */
+export function UsersCard({ users }: { users: MonitoringUsers }) {
+  const celulas: [string, string][] = [
+    [texts.userMetrics.total, numero(users.total)],
+    [texts.userMetrics.newToday, numero(users.newToday)],
+    [texts.userMetrics.new7, numero(users.newLast7Days)],
+    [texts.userMetrics.new30, numero(users.newLast30Days)],
+    [texts.userMetrics.growthToday, percentual(users.growthTodayPercent)],
+    [texts.userMetrics.growth7, percentual(users.growth7DaysPercent)],
+    [texts.userMetrics.growth30, percentual(users.growth30DaysPercent)],
+    [texts.userMetrics.average7, numero(users.averageDailyNew7Days)],
+    [texts.userMetrics.average30, numero(users.averageDailyNew30Days)],
+  ];
+
+  return (
+    <section className="surface-card min-w-0 p-4">
+      <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+        <Users className="h-3.5 w-3.5" />
+        {texts.userMetrics.title}
+      </p>
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {celulas.map(([label, value]) => (
+          <div
+            key={label}
+            className="min-w-0 rounded-xl border border-border-soft bg-surface-card p-2"
+          >
+            <p className="truncate text-[10px] uppercase tracking-wide text-text-subtle">{label}</p>
+
+            <p className="text-sm font-semibold text-text-strong">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <UsersSeries series={users.series} />
+
+      <p className="mt-3 text-[10px] uppercase tracking-wide text-text-subtle">
+        {texts.userMetrics.projection}
+      </p>
+
+      <div className="mt-1 grid grid-cols-3 gap-2">
+        {users.projections.map((projecao) => (
+          <div
+            key={projecao.days}
+            className="min-w-0 rounded-xl border border-border-soft bg-surface-card p-2"
+          >
+            <p className="truncate text-[10px] uppercase tracking-wide text-text-subtle">
+              {texts.userMetrics.inDays(projecao.days)}
+            </p>
+
+            <p className="text-sm font-semibold text-text-strong">{numero(projecao.total)}</p>
+
+            <p className="text-[11px] text-text-subtle">{percentual(projecao.growthPercent)}</p>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-2 text-[11px] leading-relaxed text-text-subtle">{texts.userMetrics.hint}</p>
+    </section>
+  );
+}
+
+/** Barras dos últimos 30 dias: a altura é relativa ao dia mais movimentado da janela. */
+function UsersSeries({ series }: { series: MonitoringDailyUsers[] }) {
+  const maximo = Math.max(1, ...series.map((ponto) => ponto.newUsers));
+
+  return (
+    <div className="mt-3">
+      <p className="text-[10px] uppercase tracking-wide text-text-subtle">
+        {texts.userMetrics.seriesTitle}
+      </p>
+
+      <div className="mt-1 flex h-16 items-end gap-[2px]">
+        {series.map((ponto) => (
+          <div
+            key={ponto.date}
+            className={cn(
+              "min-w-0 flex-1 rounded-sm bg-primary/70",
+              ponto.newUsers === 0 && "opacity-30",
+            )}
+            style={{ height: `${Math.max(3, (ponto.newUsers / maximo) * 100)}%` }}
+            title={texts.userMetrics.chartLabel(
+              ponto.date,
+              numero(ponto.newUsers),
+              numero(ponto.total),
+            )}
+          />
+        ))}
+      </div>
     </div>
   );
 }

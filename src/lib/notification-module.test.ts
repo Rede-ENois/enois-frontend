@@ -16,6 +16,18 @@ describe("moduleForNotification", () => {
     expect(moduleForNotification("NEW_GROUP_COMMENT")).toBe("GROUPS");
   });
 
+  it("study pair notifications belong to STUDY_PAIRS", () => {
+    for (const kind of [
+      "STUDY_PAIR_MATCHED",
+      "STUDY_PAIR_CHECKIN",
+      "STUDY_PAIR_ENDED",
+      "STUDY_PAIR_REMINDER",
+    ]) {
+      expect(moduleForNotification(kind)).toBe("STUDY_PAIRS");
+      expect(isNotificationHidden(kind, new Set(["STUDY_PAIRS"]))).toBe(true);
+    }
+  });
+
   it("notificação de área não desativável fica visível", () => {
     expect(moduleForNotification("NEW_COMMENT")).toBeNull();
     expect(moduleForNotification("CONNECTION_REQUEST")).toBeNull();

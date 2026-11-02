@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Outlet, createFileRoute, useMatchRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useMatchRoute, useNavigate } from "@tanstack/react-router";
 
 import { COMMUNITY_FAVORITES_KEY } from "@/constants/community-favorites";
 import { TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
@@ -9,7 +9,12 @@ import { texts } from "@/texts";
 import type { Community } from "@/types/application/community/community";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
 import type { CreateCommunityDialogProps } from "@/types/routes/communities/create-community-dialog-props";
-import { CommunityCardSkeletons } from "@rede-enois/design-system/domain";
+import {
+  CommunityCardSkeletons,
+  CommunityLocationFilter,
+  LocalCommunitiesSection,
+} from "@rede-enois/design-system/domain";
+import { CityStateField } from "@rede-enois/design-system/patterns";
 import {
   Button,
   ConfirmDialog,
@@ -29,17 +34,22 @@ import {
 } from "@rede-enois/design-system/ui";
 import { Loader2, Plus, Search, Star, Users } from "lucide-react";
 
-import { communitiesApi } from "@/lib/api";
-import { resolveCdnUrl } from "@/lib/api/media";
+import { ApiError, communitiesApi } from "@/lib/api";
+import { parseCommunityLocationSearch } from "@/lib/community-location-search";
+import { useCurrentUser } from "@/lib/current-user";
 import { litePageSize } from "@/lib/lite-mode";
+import { communityQueries } from "@/lib/query-options/communities";
 import { useAuth, useIsAuthenticated } from "@/lib/use-auth";
+import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
 import { CommunityCard } from "@/components/community-card";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { ProfileCityDialog } from "@/components/profile/profile-city-dialog";
 
 export const Route = createFileRoute("/comunidades")({
+  validateSearch: parseCommunityLocationSearch,
   head: () => ({ meta: [{ title: texts.communities.seoTitle }] }),
   component: Comunidades,
 });
@@ -60,6 +70,10 @@ function Comunidades() {
   const [open, setOpen] = useState(false);
   const [leaveTarget, setLeaveTarget] = useState<Community | null>(null);
   const [ownerBlockedId, setOwnerBlockedId] = useState<string | null>(null);
+  const [cityDialogOpen, setCityDialogOpen] = useState(false);
+  const { uf = "", cidade = "" } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { data: me } = useCurrentUser();
   // Esta rota também é mãe do detalhe e dos canais; o catálogo só ocupa o caminho exato.
   const isCommunityIndex = Boolean(matchRoute({ to: "/comunidades", fuzzy: false }));
 
@@ -79,14 +93,16 @@ function Comunidades() {
     isFetchingNextPage,
     isLoading: communitiesLoading,
   } = useInfiniteQuery({
-    queryKey: ["communities", topic, query],
+    queryKey: ["communities", topic, query, uf, cidade],
     queryFn: ({ pageParam }) =>
-      communitiesApi.list(
+      communitiesApi.list({
         topic,
-        pageParam,
-        litePageSize(COMMUNITIES_PAGE_SIZE, lite),
-        query || undefined,
-      ),
+        cursor: pageParam,
+        limit: litePageSize(COMMUNITIES_PAGE_SIZE, lite),
+        q: query || undefined,
+        city: cidade || undefined,
+        state: uf || undefined,
+      }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: isCommunityIndex,
@@ -104,9 +120,16 @@ function Comunidades() {
   // As comunidades em que a pessoa já está vêm ANTES de tudo (pedido de quem usa: as primeiras
   // exibidas são as nossas). Mesmo padrão das favoritas: seção fixa e fora do fluxo comum.
   const { data: mineData } = useQuery({
-    queryKey: ["my-communities"],
-    queryFn: () => communitiesApi.mine(50),
+    ...communityQueries.mine(50),
     enabled: isCommunityIndex && isAuthenticated,
+  });
+
+  // "Perto de você": só com sessão e com cidade no perfil (sem cidade a seção convida a informar).
+  const viewerCity = me?.city ?? null;
+  const local = useQuery({
+    queryKey: ["communities", "local"],
+    queryFn: () => communitiesApi.local(),
+    enabled: isCommunityIndex && isAuthenticated && Boolean(viewerCity),
   });
 
   // Um item pode reaparecer na página seguinte se a lista mudar entre as buscas; fica o primeiro.
@@ -124,13 +147,18 @@ function Comunidades() {
     );
   };
   // Com um tópico ativo, as seções fixas mostram só o daquele tópico.
+  // Com filtro de local, as seções fixas também respeitam o lugar escolhido.
+  const matchesLocation = (community: Community) =>
+    (!uf || community.state === uf) &&
+    (!cidade ||
+      (community.city ?? "").localeCompare(cidade, "pt-BR", { sensitivity: "base" }) === 0);
   const pinnedFavorites = (favoritesData?.items ?? [])
-    .filter((c) => (!topic || c.topic === topic) && matchesSearch(c))
+    .filter((c) => (!topic || c.topic === topic) && matchesSearch(c) && matchesLocation(c))
     .map((c) => byId.get(c.id) ?? c);
   // Aqui vale o item de /mine: ele é a fonte da participação e não depende da lista paginada
   // já ter sido rebuscada depois de entrar/sair.
   const mineItems = (mineData?.items ?? []).filter(
-    (c) => (!topic || c.topic === topic) && matchesSearch(c),
+    (c) => (!topic || c.topic === topic) && matchesSearch(c) && matchesLocation(c),
   );
   const pinnedIds = new Set([...mineItems, ...pinnedFavorites].map((c) => c.id));
   const gridItems = allItems.filter((c) => !pinnedIds.has(c.id));
@@ -149,8 +177,7 @@ function Comunidades() {
     mutationFn: (id: string) => communitiesApi.join(id),
     onSuccess: () => {
       toast(texts.communities.joined);
-      queryClient.invalidateQueries({ queryKey: ["communities"] });
-      queryClient.invalidateQueries({ queryKey: ["my-communities"] });
+      queryClient.invalidateQueries({ queryKey: communityQueries.all });
     },
     onError: () => toast(texts.communities.actionError, "error"),
   });
@@ -160,8 +187,7 @@ function Comunidades() {
     onSuccess: () => {
       setLeaveTarget(null);
       toast(texts.communities.left);
-      queryClient.invalidateQueries({ queryKey: ["communities"] });
-      queryClient.invalidateQueries({ queryKey: ["my-communities"] });
+      queryClient.invalidateQueries({ queryKey: communityQueries.all });
     },
     onError: () => {
       // Dono não sai sem transferir: orientamos a abrir a comunidade para transferir.
@@ -203,6 +229,26 @@ function Comunidades() {
           }
         />
 
+        {isAuthenticated && me && (
+          <LocalCommunitiesSection
+            viewerCity={viewerCity}
+            viewerState={me.state ?? null}
+            items={(local.data?.items ?? []).map((c) => ({
+              id: c.id,
+              name: c.name,
+              avatar: c.avatar,
+              members: c.members,
+              city: c.city,
+              state: c.state,
+              href: `/comunidades/${c.id}`,
+            }))}
+            loading={local.isLoading}
+            error={local.isError}
+            onRetry={() => void local.refetch()}
+            onSetCity={() => setCityDialogOpen(true)}
+          />
+        )}
+
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           {/* Sem `maxLength`: o contador que ele acende abaixo do campo cresce este container e
@@ -227,6 +273,14 @@ function Comunidades() {
             </Pill>
           ))}
         </PillRow>
+
+        <CommunityLocationFilter
+          value={{ city: cidade, state: uf }}
+          onApply={({ city, state }) =>
+            void navigate({ search: { uf: state, cidade: city || undefined }, replace: true })
+          }
+          onClear={() => void navigate({ search: {}, replace: true })}
+        />
 
         {mineItems.length > 0 && (
           <section className="space-y-3">
@@ -285,7 +339,7 @@ function Comunidades() {
         {communitiesLoading && <CommunityCardSkeletons />}
 
         {!communitiesLoading && allItems.length === 0 && (
-          <EmptyState title={texts.communities.empty} />
+          <EmptyState title={uf ? texts.communities.emptyFiltered : texts.communities.empty} />
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -332,6 +386,7 @@ function Comunidades() {
         pending={leave.isPending}
         onConfirm={() => leaveTarget && leave.mutate(leaveTarget.id)}
       />
+      <ProfileCityDialog open={cityDialogOpen} onOpenChange={setCityDialogOpen} />
     </AppContainer>
   );
 }
@@ -344,18 +399,25 @@ function CreateCommunityDialog({ children, open, onOpenChange }: CreateCommunity
   const [topic, setTopic] = useState<CommunityTopic>("TECNOLOGIA");
 
   const create = useMutation({
-    mutationFn: () =>
-      communitiesApi.create({ name, description: description.trim() || null, topic }),
+    mutationFn: (place: { city: string; state: string }) =>
+      communitiesApi.create({ name, description: description.trim() || null, topic, ...place }),
+    onError: (error) => {
+      // Erro de cidade/UF aparece embaixo do campo; o resto vira aviso (antes falhava calado).
+      if (!cityStateErrorCode(error)) {
+        toast(error instanceof ApiError ? error.message : texts.errors.unexpected, "error");
+      }
+    },
     onSuccess: () => {
       toast(texts.communities.created);
-      queryClient.invalidateQueries({ queryKey: ["communities"] });
-      queryClient.invalidateQueries({ queryKey: ["my-communities"] });
+      queryClient.invalidateQueries({ queryKey: communityQueries.all });
       onOpenChange(false);
       setName("");
       setDescription("");
       setTopic("TECNOLOGIA");
+      place.reset();
     },
   });
+  const place = useCityState(null, create.error);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -410,10 +472,18 @@ function CreateCommunityDialog({ children, open, onOpenChange }: CreateCommunity
             </select>
           </div>
 
+          <CityStateField
+            idPrefix="community-create"
+            disabled={create.isPending}
+            {...place.field}
+          />
+
           <Button
             className="w-full rounded-full"
             disabled={!name.trim() || create.isPending}
-            onClick={() => create.mutate()}
+            onClick={() => {
+              if (place.validate()) create.mutate(place.payload);
+            }}
           >
             {create.isPending ? texts.common.creating : texts.common.create}
           </Button>

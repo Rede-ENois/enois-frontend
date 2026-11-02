@@ -113,6 +113,28 @@ export async function hasLocalKeys(): Promise<boolean> {
   return pk !== null;
 }
 
+/**
+ * Sincroniza as chaves locais com o servidor: se a chave publica local difere da ativa no
+ * servidor, restaura do backup. Chamado no login com a senha disponivel — garante que todos
+ * os devices compartilhem o mesmo keypair sem forcar o usuario a configurar de novo.
+ */
+export async function syncKeysOnLogin(password: string): Promise<void> {
+  try {
+    const serverKeypair = await e2eApi.myKeypair();
+    const localPub = await getLocalPublicKey();
+
+    if (localPub === serverKeypair.publicKey) return; // já sincronizado
+
+    // Chave diferente ou ausente: restaura do servidor com a senha do login.
+    await restoreFromBackup(password);
+  } catch {
+    // Servidor sem keypair (primeiro setup): gera.
+    if (!(await hasLocalKeys())) {
+      await generateAndUpload(password);
+    }
+  }
+}
+
 /** Re-cifra a chave privada com nova senha e re-upload (pra troca de senha). */
 export async function reEncryptAndUpload(newPassword: string): Promise<void> {
   const privateKeyBase64 = await readLocal(PRIVATE_KEY_ID);

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import { QueryClientProvider } from "@tanstack/react-query";
 import {
+  type ErrorComponentProps,
   HeadContent,
   Link,
   Outlet,
@@ -15,15 +15,22 @@ import {
 import { texts } from "@/texts";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 import type { PushNavigateMessage } from "@/types/push/push-navigate-message";
-import type { ErrorComponentProps } from "@/types/routes/root/error-component-props";
 import type { RootRouteContext } from "@/types/routes/root/root-route-context";
 import { navigateToHref } from "@/utils/navigation";
 import { ToastProvider, buttonVariants } from "@rede-enois/design-system/ui";
 
-import { hrefDoPush } from "@/lib/push-navigation";
+import { registerPushSubscription } from "@/lib/push";
+import {
+  hrefDaQueryDePush,
+  hrefDoPush,
+  searchSemPush,
+  subscriptionDoPush,
+} from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
 import { hasSession, isProtectedPath } from "@/lib/require-auth";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
+import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
 
 import { AgeGate } from "@/components/age-gate";
 import { AppContainer } from "@/components/app-container";
@@ -34,43 +41,40 @@ import { InstallPwaBanner } from "@/components/install-pwa-banner";
 import { LiteModeEffects } from "@/components/lite-mode-effects";
 import { ModuleDisabledGate } from "@/components/module-disabled-gate";
 import { AdminNoticeDialog } from "@/components/notices/admin-notice";
+import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
+import { RouteErrorBoundary } from "@/components/route-error-boundary";
+import { WhatsNewGate } from "@/components/whats-new/whats-new-gate";
 
 import appCss from "../styles.css?url";
 
 /**
  * 404 dentro da casca do app (cabeçalho e menu), e não numa página solta: quem caiu num link
- * quebrado continua com a navegação à mão. O provider vem junto porque o notFound da raiz
- * substitui o RootComponent inteiro — e a casca logada usa react-query.
+ * quebrado continua com a navegação à mão. The design system provider comes along because the root
+ * notFound replaces the whole RootComponent; react-query comes from the router `Wrap`.
  */
 function NotFoundComponent() {
-  const { queryClient } = Route.useRouteContext();
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <DesignSystemProvider>
-        <AppContainer>
-          <div className="flex min-h-[60vh] items-center justify-center px-4">
-            <div className="max-w-md text-center">
-              <p className="text-7xl font-bold text-primary">{texts.root.notFound.code}</p>
+    <DesignSystemProvider>
+      <AppContainer>
+        <div className="flex min-h-[60vh] items-center justify-center px-4">
+          <div className="max-w-md text-center">
+            <p className="text-7xl font-bold text-primary">{texts.root.notFound.code}</p>
 
-              <h1 className="mt-4 text-xl font-semibold text-foreground">
-                {texts.root.notFound.title}
-              </h1>
+            <h1 className="mt-4 text-xl font-semibold text-foreground">
+              {texts.root.notFound.title}
+            </h1>
 
-              <p className="mt-2 text-sm text-muted-foreground">
-                {texts.root.notFound.description}
-              </p>
+            <p className="mt-2 text-sm text-muted-foreground">{texts.root.notFound.description}</p>
 
-              <div className="mt-6">
-                <Link to="/" className={buttonVariants({ size: "lg" })}>
-                  {texts.root.notFound.home}
-                </Link>
-              </div>
+            <div className="mt-6">
+              <Link to="/" className={buttonVariants({ size: "lg" })}>
+                {texts.root.notFound.home}
+              </Link>
             </div>
           </div>
-        </AppContainer>
-      </DesignSystemProvider>
-    </QueryClientProvider>
+        </div>
+      </AppContainer>
+    </DesignSystemProvider>
   );
 }
 
@@ -144,12 +148,9 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "16x16 32x32 48x48" },
       { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Press+Start+2P&family=UnifrakturCook:wght@700&family=Creepster&family=Mountains+of+Christmas:wght@700&family=Pacifico&family=Rye&family=Gochi+Hand&display=swap",
-      },
+      // As fontes do Google entram pelo script de arranque, e só quando o aparelho não está em
+      // modo econômico: em BATATA a tipografia é a do sistema e o pedido nem sai. Sem JS, o
+      // `<noscript>` do shell devolve o `<link>` de sempre (src/lib/web-fonts.ts).
     ],
   }),
   shellComponent: RootShell,
@@ -157,29 +158,6 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-/**
- * Aplica o tema guardado antes do primeiro paint — e, junto, o Modo lite e a teimosia de
- * animações (as chaves espelham src/lib/lite-mode.ts): aparelho em modo lite não deve nem
- * começar a animar para depois parar.
- *
- * Sem isso o app nasce claro (e na cor padrão) e só depois de hidratar assume o
- * tema do usuário — aquele flash. O CSS já vem resolvido do `localStorage`, então
- * o script só injeta o texto, sem repetir a matemática de cor. A coleção temática
- * também entra aqui: o atributo `data-theme` precisa existir antes do paint,
- * porque o CSS estrutural do tema é escopado por ele.
- */
-const THEME_BOOTSTRAP_SCRIPT = `(function(){try{
-var raw=localStorage.getItem("connect-grow-preferences");
-if(raw){var parsed=JSON.parse(raw);if(parsed&&parsed.state&&parsed.state.theme==="dark"){document.documentElement.classList.add("dark");}}
-var collection=localStorage.getItem("connect-grow-theme-collection");
-if(collection){document.documentElement.setAttribute("data-theme",collection);}
-var lite=localStorage.getItem("connect-grow-lite-mode")==="1";
-if(lite){document.documentElement.setAttribute("data-lite","");}
-else if(localStorage.getItem("connect-grow-force-motion")==="1"){document.documentElement.setAttribute("data-force-motion","");}
-var css=localStorage.getItem("connect-grow-theme-css");
-if(css){var style=document.createElement("style");style.id="app-theme";style.textContent=css;document.head.appendChild(style);}
-}catch(error){}})();`;
 
 function RootShell({ children }: WithRequiredChildren) {
   // Browsers blank the nonce attribute after parsing, so hydration would see a mismatch.
@@ -193,6 +171,10 @@ function RootShell({ children }: WithRequiredChildren) {
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }}
         />
+        {/* Sem JS o script de arranque não roda: o `<link>` das fontes volta a ser fixo. */}
+        <noscript>
+          <link rel="stylesheet" href={WEB_FONT_STYLESHEET} />
+        </noscript>
       </head>
 
       <body>
@@ -204,17 +186,11 @@ function RootShell({ children }: WithRequiredChildren) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
-  // O provider precisa ENVOLVER quem usa react-query: useThemeSync tem um useQuery
-  // (tema da conta) e, fora daqui, derrubava o SSR de todas as paginas
-  // ("No QueryClient set" — o RootComponent roda FORA do proprio provider).
+  // react-query comes from the router `Wrap` (src/router.tsx), around every root component.
   return (
-    <QueryClientProvider client={queryClient}>
-      <DesignSystemProvider>
-        <RootInsideProvider />
-      </DesignSystemProvider>
-    </QueryClientProvider>
+    <DesignSystemProvider>
+      <RootInsideProvider />
+    </DesignSystemProvider>
   );
 }
 
@@ -235,12 +211,35 @@ function RootInsideProvider() {
     // clique abriria a API em vez do post.
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
     const onMessage = (event: MessageEvent) => {
+      // Inscricao renovada pelo worker: registra no backend para o envio nao ficar preso no
+      // endpoint antigo (o navegador pode trocar a inscricao sozinho).
+      const renewal = subscriptionDoPush(event.data);
+      if (renewal) {
+        void registerPushSubscription(renewal).catch(() => undefined);
+        return;
+      }
       const href = hrefDoPush(event.data as PushNavigateMessage | null);
       if (!href) return;
       navigateToHref(href, (opts) => void router.navigate(opts));
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [router]);
+
+  useEffect(() => {
+    // Clique na notificacao PUSH sem nenhuma aba do app aberta: o worker nao conhece as rotas,
+    // entao deixa o href na query (`/?push=...`) e a traducao acontece aqui — pela mesma tabela
+    // que a notificacao interna usa. Sem isso, um href que nao e rota do front
+    // ("/configuracoes/seguranca") abria a pagina de erro.
+    const href = hrefDaQueryDePush(window.location.search);
+    if (!href) return;
+    const resto = searchSemPush(window.location.search);
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${resto ? `?${resto}` : ""}${window.location.hash}`,
+    );
+    navigateToHref(href, (opts) => void router.navigate(opts));
   }, [router]);
 
   useEffect(() => {
@@ -256,13 +255,17 @@ function RootInsideProvider() {
   return (
     <ToastProvider>
       <ModuleDisabledGate>
-        <Outlet />
+        <RouteErrorBoundary key={pathname} onReset={() => router.invalidate()}>
+          <Outlet />
+        </RouteErrorBoundary>
       </ModuleDisabledGate>
 
       <ChatDock />
       <InstallPwaBanner />
       <LiteModeEffects />
       <HealthyUsageGuard />
+      <OnboardingRedirect />
+      <WhatsNewGate />
       <AgeGate />
       <AdminNoticeDialog />
     </ToastProvider>

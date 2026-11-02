@@ -15,6 +15,7 @@ import {
 import { ArrowLeft, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import { communityProjectsApi } from "@/lib/api";
+import { projectQueries } from "@/lib/query-options/projects";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -34,11 +35,10 @@ function ProjectsPanel() {
   const [removing, setRemoving] = useState<CommunityProjectView | null>(null);
 
   const mine = useQuery({
-    queryKey: ["projects", "mine"],
-    queryFn: () => communityProjectsApi.mine(),
+    ...projectQueries.communityMine(),
   });
 
-  const refresh = () => void queryClient.invalidateQueries({ queryKey: ["projects"] });
+  const refresh = () => void queryClient.invalidateQueries({ queryKey: projectQueries.all });
 
   const resubmit = useMutation({
     mutationFn: (projectId: string) => communityProjectsApi.resubmit(projectId),

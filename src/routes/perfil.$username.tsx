@@ -16,7 +16,12 @@ import {
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
-import { ImageCropDialog, InfiniteScroll } from "@rede-enois/design-system/patterns";
+import {
+  ImageCropDialog,
+  InfiniteScroll,
+  LocationLine,
+  formatLocation,
+} from "@rede-enois/design-system/patterns";
 import {
   Button,
   Dialog,
@@ -64,14 +69,17 @@ import { authApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { profileCardData } from "@/lib/cosmetics";
+import { connectionAction } from "@/lib/network/connection-action";
 import { buildShareTags } from "@/lib/open-graph";
 import { authorNameStyle } from "@/lib/profile-name-style";
+import { profileQueries } from "@/lib/query-options/profiles";
 import { isApprovedSoundCloudEmbed } from "@/lib/soundcloud-embed";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { SaciSpot } from "@/components/events/saci-spot";
@@ -85,6 +93,7 @@ import { ProfileBioDialog } from "@/components/profile-bio-dialog";
 import { ProfileResumeDialog } from "@/components/profile-resume-dialog";
 import { ProfileSeals } from "@/components/profile-seals";
 import { ProfileExperiencesSection } from "@/components/profile/experiences-section";
+import { ProfileCityDialog } from "@/components/profile/profile-city-dialog";
 import { ProfileCommunityShelf } from "@/components/profile/profile-community-shelf";
 import { ProfileExplorePanel } from "@/components/profile/profile-explore-panel";
 import { ProfileGamificationPanel } from "@/components/profile/profile-gamification-panel";
@@ -171,6 +180,7 @@ function Profile() {
   const [statusOpen, setStatusOpen] = useState(false);
   // A capa tem duas formas (foto ou HTML/CSS): o dialogo escolhe, e o clique na capa abre ele.
   const [bannerOpen, setBannerOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
   const [networkDialogKind, setNetworkDialogKind] = useState<"connections" | "followers" | null>(
     null,
   );
@@ -247,15 +257,18 @@ function Profile() {
     enabled: !isOwnProfile && !!me,
   });
 
-  const connectionStatus = connectionData?.status ?? null;
+  const connectionOffer = connectionAction(connectionData);
   const blocked = connectionData?.blocked ?? false;
   const muted = connectionData?.muted ?? false;
 
   const updateProfile = useMutation({
     mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => profileApi.update(data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
+      // A new cover photo takes the shop banner off on the server: refresh the shop too.
+      if (data.banner !== undefined) queryClient.invalidateQueries({ queryKey: ["loja"] });
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
+      queryClient.invalidateQueries({ queryKey: profileQueries.byId(user.id).queryKey });
     },
   });
 
@@ -290,6 +303,18 @@ function Profile() {
     queryFn: () => recommendationsApi.listReceived(user.id),
   });
 
+  const refreshConnection = () => {
+    queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
+    queryClient.invalidateQueries({ queryKey: ["network"] });
+    queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
+  };
+
+  // A outra pessoa pode ter cancelado o pedido com a tela aberta: além de avisar, relê o estado.
+  const connectionFailed = (err: unknown) => {
+    toast(err instanceof ApiError ? err.message : texts.errors.unexpected, "error");
+    refreshConnection();
+  };
+
   const connect = useMutation({
     mutationFn: () => networkApi.connect(user.id),
     onSuccess: () => {
@@ -298,18 +323,24 @@ function Profile() {
     onError: (err: unknown) => {
       if (err instanceof ApiError && err.code === "CONNECTION_ALREADY_REQUESTED") {
         queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
+        return;
       }
+      connectionFailed(err);
     },
+  });
+
+  const accept = useMutation({
+    mutationFn: () => networkApi.accept(user.id),
+    onSuccess: refreshConnection,
+    onError: connectionFailed,
   });
 
   // Desconectar/cancelar sem precisar BLOQUEAR: bloquear é definitivo e esconde a pessoa de
   // todo o app; para só desfazer a conexão este endpoint deixa o caminho aberto para reconectar.
   const disconnect = useMutation({
     mutationFn: () => networkApi.remove(user.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
-      queryClient.invalidateQueries({ queryKey: ["network"] });
-    },
+    onSuccess: refreshConnection,
+    onError: connectionFailed,
   });
 
   const toggleMute = useMutation({
@@ -427,11 +458,10 @@ function Profile() {
           bannerSlot={
             user.bannerHtml ? (
               // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
-              <SandboxedHtmlFrame
+              <BannerHtmlFrame
                 html={user.bannerHtml}
                 title={texts.profile.bannerHtml.frameTitle}
                 className="h-full w-full rounded-none border-0 shadow-none"
-                autoHeight={false}
                 allowSoundCloudPlayer={isApprovedSoundCloudEmbed(user.bannerHtml)}
               />
             ) : undefined
@@ -491,6 +521,28 @@ function Profile() {
 
                     <>{user.location}</>
                   </span>
+                )}
+                {/* Cidade estruturada: o dono vê a sua (vinda de /me, mesmo privada) e edita;
+                    quem visita só recebe a cidade quando o dono escolheu mostrar. */}
+                {isOwnProfile ? (
+                  <button
+                    type="button"
+                    onClick={() => setCityOpen(true)}
+                    aria-label={
+                      myProfile?.city
+                        ? texts.profile.city.edit(formatLocation(myProfile.city, myProfile.state))
+                        : texts.profile.city.add
+                    }
+                    className="inline-flex min-w-0 items-center gap-1.5 rounded-full underline-offset-4 transition hover:text-text-strong hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+
+                    <span className="truncate">
+                      {formatLocation(myProfile?.city, myProfile?.state) || texts.profile.city.add}
+                    </span>
+                  </button>
+                ) : (
+                  <LocationLine city={user.city} state={user.state} />
                 )}
                 <span>{texts.profile.connectionsMeta(user.connectionsCount ?? 0)}</span>
                 {(user.reputation ?? 0) > 0 && (
@@ -574,6 +626,9 @@ function Profile() {
                     onSaved={() => {
                       queryClient.invalidateQueries({ queryKey: ["me"] });
                       queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
+                      queryClient.invalidateQueries({
+                        queryKey: profileQueries.byId(user.id).queryKey,
+                      });
                       queryClient.invalidateQueries({ queryKey: ["auth-me"] });
                     }}
                   />
@@ -617,7 +672,36 @@ function Profile() {
                     <>{texts.profile.message}</>
                   </Button>
 
-                  {connectionStatus === "ACCEPTED" || connectionStatus === "PENDING" ? (
+                  {connectionOffer === "respond" && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="rounded-full gap-1.5"
+                        disabled={accept.isPending || disconnect.isPending}
+                        onClick={() => {
+                          if (!requireAuth()) return;
+                          accept.mutate();
+                        }}
+                      >
+                        {texts.network.accept}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full gap-1.5"
+                        disabled={accept.isPending || disconnect.isPending}
+                        onClick={() => {
+                          if (!requireAuth()) return;
+                          disconnect.mutate();
+                        }}
+                      >
+                        {texts.network.reject}
+                      </Button>
+                    </>
+                  )}
+
+                  {(connectionOffer === "cancel" || connectionOffer === "disconnect") && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -628,11 +712,13 @@ function Profile() {
                         disconnect.mutate();
                       }}
                     >
-                      {connectionStatus === "PENDING"
+                      {connectionOffer === "cancel"
                         ? texts.profile.cancelRequest
                         : texts.profile.removeConnection}
                     </Button>
-                  ) : (
+                  )}
+
+                  {connectionOffer === "connect" && (
                     <Button
                       size="sm"
                       className="rounded-full gap-1.5"
@@ -783,7 +869,7 @@ function Profile() {
                  do iframe eram o que parecia "borda branca". */
               <section
                 id="sobre"
-                className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
+                className="scroll-mt-20 overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
               >
                 {/* Sem canto no card: a bio em HTML vai até as bordas (o raio do card recortava os
                     cantos dela — era o que sobrava de arredondamento). */}
@@ -817,7 +903,7 @@ function Profile() {
 
             {/* Projetos: cards abaixo da bio — estruturados (stack, repo, status, diário)
                 ou o HTML próprio do autor. O dono gerencia por aqui mesmo. */}
-            <div id="projetos">
+            <div id="projetos" className="scroll-mt-20">
               <ProfileProjectsSection username={user.username} isOwner={isOwnProfile} />
             </div>
 
@@ -1026,10 +1112,12 @@ function Profile() {
         open={bannerOpen}
         onOpenChange={setBannerOpen}
         initialHtml={user.bannerHtml ?? null}
+        bannerItem={user.bannerItem ?? null}
         onPickPhoto={() => bannerRef.current?.click()}
         onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ["me"] });
           queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
+          queryClient.invalidateQueries({ queryKey: profileQueries.byId(user.id).queryKey });
           queryClient.invalidateQueries({ queryKey: ["auth-me"] });
         }}
       />
@@ -1048,10 +1136,12 @@ function Profile() {
           open={statusOpen}
           onOpenChange={setStatusOpen}
           username={user.username}
+          userId={user.id}
           statusText={user.statusText}
           statusIcon={user.statusIcon}
         />
       )}
+      {isOwnProfile && <ProfileCityDialog open={cityOpen} onOpenChange={setCityOpen} />}
       <ProfileNetworkDialog
         username={user.username}
         name={user.name}
@@ -1069,7 +1159,7 @@ function Section({ title, icon: Icon, children, id }: SectionProps & { id?: stri
   return (
     <section
       id={id}
-      className="rounded-2xl border border-border-soft bg-surface-card p-4 shadow-[0_18px_50px_-44px_color-mix(in_oklab,var(--primary)_85%,transparent)] sm:p-6"
+      className="scroll-mt-20 rounded-2xl border border-border-soft bg-surface-card p-4 shadow-[0_18px_50px_-44px_color-mix(in_oklab,var(--primary)_85%,transparent)] sm:p-6"
     >
       <h2 className="mb-4 flex items-center gap-2 text-base font-normal text-text-strong">
         {Icon && (
@@ -1086,8 +1176,7 @@ function Section({ title, icon: Icon, children, id }: SectionProps & { id?: stri
 
 function RecommendationItem({ recommendation }: RecommendationItemProps) {
   const { data: recommender } = useQuery({
-    queryKey: ["profile", "by-id", recommendation.recommenderId],
-    queryFn: () => profileApi.getById(recommendation.recommenderId),
+    ...profileQueries.byId(recommendation.recommenderId),
   });
 
   return (

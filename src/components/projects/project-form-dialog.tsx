@@ -9,6 +9,7 @@ import {
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { communityProjectsApi } from "@/lib/api";
+import { projectQueries } from "@/lib/query-options/projects";
 
 /** Criar/editar projeto: mesma ficha do card e da página, sem mexer nos campos de jogo. */
 export function ProjectFormDialog({
@@ -44,7 +45,7 @@ export function ProjectFormDialog({
     },
     onSuccess: (saved) => {
       toast(project ? texts.projects.editor.updated : texts.projects.editor.sent, "success");
-      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+      void queryClient.invalidateQueries({ queryKey: projectQueries.all });
       onSaved?.(saved);
       onOpenChange(false);
     },

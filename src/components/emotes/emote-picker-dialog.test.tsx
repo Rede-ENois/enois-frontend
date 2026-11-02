@@ -138,6 +138,7 @@ afterEach(() => {
   host.remove();
   root = null;
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 describe("Seletor de figurinhas", () => {
@@ -196,6 +197,31 @@ describe("Seletor de figurinhas", () => {
 
     expect(grade()).toHaveLength(EMOTES_POR_PAGINA);
     expect(document.body.textContent).toContain(texts.emotes.page(1, 2));
+  });
+
+  it("trocar de página logo ao abrir não é desfeito pela espera da busca", async () => {
+    // Relógio controlado: o clique cai dentro da espera da busca (250ms) em qualquer máquina. Com o
+    // relógio real, este caso só aparecia sob carga, como falha intermitente do teste de navegação.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const avancar = (ms: number) => act(async () => vi.advanceTimersByTimeAsync(ms));
+
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={new QueryClient()}>
+          <EmotePickerDialog open onOpenChange={() => {}} onSelect={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+    await avancar(50);
+    expect(grade()).toHaveLength(EMOTES_POR_PAGINA);
+
+    await act(async () => botao(texts.emotes.next)?.click());
+    await avancar(50);
+    expect(document.body.textContent).toContain(texts.emotes.page(2, 2));
+
+    await avancar(1_000);
+    expect(document.body.textContent).toContain(texts.emotes.page(2, 2));
+    expect(grade()).toHaveLength(TOTAL - EMOTES_POR_PAGINA);
   });
 
   it("a busca vai ao backend, volta para a primeira página e reduz o resultado", async () => {

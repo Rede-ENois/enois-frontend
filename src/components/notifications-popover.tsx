@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
 import type { Notification } from "@/types/application/notification/notification";
@@ -8,10 +8,11 @@ import { navigateToHref } from "@/utils/navigation";
 import { formatNotificationTime } from "@/utils/notification-time";
 import { NotificationsPopover as NotificationsPopoverView } from "@rede-enois/design-system/domain";
 
-import { networkApi, notificationsApi, profileApi } from "@/lib/api";
-import { getCurrentUserId } from "@/lib/current-user";
+import { networkApi, notificationsApi } from "@/lib/api";
 import { formatarData } from "@/lib/date/format";
+import { useInterfaceContext } from "@/lib/interface-context";
 import { isNotificationHidden } from "@/lib/notification-module";
+import { networkQueries } from "@/lib/query-options/network";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useDisabledModules } from "@/lib/use-personalization";
 
@@ -19,7 +20,11 @@ import { useDisabledModules } from "@/lib/use-personalization";
 function toNotificationData(notification: Notification) {
   return {
     ...notification,
-    actorHref: notification.actorUsername ? `/perfil/${notification.actorUsername}` : null,
+    actorHref: notification.actorUsername
+      ? notification.actorIdentity === "CORPORATE"
+        ? `/profissional/${notification.actorUsername}`
+        : `/perfil/${notification.actorUsername}`
+      : null,
     timeLabel: formatNotificationTime(notification.createdAt),
   };
 }
@@ -32,9 +37,12 @@ export function NotificationsPopover() {
   const disabledModules = useDisabledModules();
   const authenticated = useIsAuthenticated();
 
+  // The bell follows the active interface: work notices in the professional one, community ones in
+  // the social one, account-wide ones (security, moderation) in both.
+  const context = useInterfaceContext();
   const { data: notificationsData } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => notificationsApi.list(),
+    queryKey: ["notifications", context],
+    queryFn: () => notificationsApi.list(null, 20, context),
     enabled: authenticated,
     staleTime: 30_000,
   });
@@ -60,16 +68,15 @@ export function NotificationsPopover() {
   const acceptConnection = useMutation({
     mutationFn: (actorId: string) => networkApi.accept(actorId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network"] });
+      queryClient.invalidateQueries({ queryKey: networkQueries.all });
     },
   });
 
   // Quem AINDA tem pedido pendente. A notificação não guarda o estado do pedido: sem esta lista,
   // o botão "Aceitar" continuava ativo no Histórico depois de aceito (e clicar de novo não tinha
-  // mais o que fazer). A chave é a mesma da página /rede, então as duas telas compartilham o cache.
+  // mais o que fazer). O limite faz parte da chave para não misturar listas diferentes.
   const pendingRequests = useQuery({
-    queryKey: ["network", "requests"],
-    queryFn: () => networkApi.requests(null, 50),
+    ...networkQueries.requests(50),
     enabled: open,
   });
   const pendingActorIds = pendingRequests.data
@@ -92,40 +99,16 @@ export function NotificationsPopover() {
       notification.kind.toLowerCase() !== "new_message",
   );
 
-  const currentUserId = getCurrentUserId();
-  const rawIncoming = (pendingRequests.data?.items ?? []).filter(
-    (r) => r.status === "PENDING" && r.fromUserId !== currentUserId,
+  // The server already resolves the other person and leaves out blocked or removed accounts
+  // (`peer` is missing only on a backend older than that).
+  const incomingRequests = (pendingRequests.data?.items ?? []).filter(
+    (r) => r.status === "PENDING" && r.direction === "INCOMING" && r.peer,
   );
-
-  // Busca perfis em batch — so depois de carregar filtramos os removidos/inexistentes.
-  const profileQueries = useQueries({
-    queries: rawIncoming.map((r) => ({
-      queryKey: ["profile", "by-id", r.fromUserId],
-      queryFn: () => profileApi.getById(r.fromUserId),
-      retry: 1,
-      staleTime: 60_000,
-    })),
-  });
-  const profilesLoading = rawIncoming.length > 0 && profileQueries.some((q) => q.isLoading);
-  const profilesByUserId = new Map(
-    profileQueries.filter((q) => q.data).map((q) => [q.data!.id, q.data!]),
-  );
-
-  // Filtra removidos/banidos/inexistentes ANTES de contar — badge e lista ja nascem corretos.
-  const incomingRequests = profilesLoading
-    ? []
-    : rawIncoming.filter((r) => {
-        const p = profilesByUserId.get(r.fromUserId);
-        if (!p) return false;
-        if (p.username?.startsWith("removed-")) return false;
-        if (p.name === "Usuario removido") return false;
-        return true;
-      });
 
   const rejectConnection = useMutation({
     mutationFn: (targetUserId: string) => networkApi.remove(targetUserId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["network"] });
+      queryClient.invalidateQueries({ queryKey: networkQueries.all });
     },
   });
 
@@ -133,21 +116,19 @@ export function NotificationsPopover() {
     <NotificationsPopoverView
       open={open}
       onOpenChange={setOpen}
+      preferencesHref="/notificacoes/preferencias"
       notifications={notificationList.map(toNotificationData)}
-      requests={incomingRequests.map((request) => {
-        const profile = profilesByUserId.get(request.fromUserId) ?? null;
-        return {
-          id: request.id,
-          fromUserId: request.fromUserId,
-          dateLabel: formatarData(request.createdAt, {
-            day: "numeric",
-            month: "short",
-          }),
-          profileHref: profile?.username ? `/perfil/${profile.username}` : null,
-          profile,
-        };
-      })}
-      requestsLoading={profilesLoading}
+      requests={incomingRequests.map((request) => ({
+        id: request.id,
+        fromUserId: request.fromUserId,
+        dateLabel: formatarData(request.createdAt, {
+          day: "numeric",
+          month: "short",
+        }),
+        profileHref: `/perfil/${request.peer.username}`,
+        profile: request.peer,
+      }))}
+      requestsLoading={pendingRequests.isLoading}
       stillPendingActorIds={pendingActorIds}
       acceptingActorId={acceptConnection.isPending ? acceptConnection.variables : null}
       rejectingActorId={rejectConnection.isPending ? rejectConnection.variables : null}

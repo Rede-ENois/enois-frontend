@@ -33,6 +33,7 @@ export function CommentItem({
   postAuthorId,
   onPinChanged,
   onDeleted,
+  acceptance,
 }: CommentItemProps) {
   const { toast } = useToast();
   const { requireAuth } = useAuth();
@@ -50,6 +51,13 @@ export function CommentItem({
     Boolean(currentUserId) &&
     comment.parentCommentId == null &&
     (currentUserId === postAuthorId || isOwner);
+  // Only the asker accepts, and never their own comment (the backend refuses it too).
+  const canAccept =
+    Boolean(acceptance) &&
+    comment.status === "ACTIVE" &&
+    currentUserId != null &&
+    currentUserId === postAuthorId &&
+    !isOwner;
   const [pinning, setPinning] = useState(false);
   const [commentReaction, setCommentReaction] = useState<ReactionType | null>(
     comment.currentUserReaction ?? null,
@@ -101,12 +109,8 @@ export function CommentItem({
     } catch {
       setDraft(postId, `${comment.authorName} `);
     }
+    // The form opens under this comment, focused and in view (PostComments does both).
     setReplyToId(postId, comment.id);
-    setTimeout(() => {
-      document
-        .getElementById(`comment-form-${postId}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 50);
   };
 
   const handleDelete = async () => {
@@ -174,6 +178,10 @@ export function CommentItem({
       isOwner={isOwner}
       canPin={canPin}
       pinning={pinning}
+      canAccept={canAccept}
+      acceptPending={acceptance?.pending}
+      onAccept={acceptance?.onAccept}
+      onUnaccept={acceptance?.onUnaccept}
       emojis={REACTION_EMOJIS}
       reaction={commentReaction}
       onReact={handleCommentReaction}

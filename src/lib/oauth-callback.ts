@@ -1,3 +1,5 @@
+import type { AuthUser } from "@/types/application/auth/auth-user";
+
 import { apiUrl, renewSession } from "./api-client";
 import { authApi } from "./api/auth";
 import { storeSession } from "./session";
@@ -19,15 +21,16 @@ export function oauthCallbackUrl(provider: string, code: string, state: string):
 /**
  * Completes the OAuth return: the redirect set the session cookies (no token in the URL).
  * /auth/me confirms the session and fills the header with name and photo; one refresh records the
- * expiry the redirect does not carry. False when the session did not hold (me failed or the
- * refresh was refused), so the page shows the login error instead of entering the app.
+ * expiry the redirect does not carry. Returns the user (the page picks the landing from it), or null
+ * when the session did not hold (me failed or the refresh was refused), so the page shows the
+ * login error instead of entering the app.
  */
-export async function finishOAuthLogin(): Promise<boolean> {
+export async function finishOAuthLogin(): Promise<AuthUser | null> {
   try {
     const user = await authApi.me();
     storeSession({ user });
-    return (await renewSession()) !== "refused";
+    return (await renewSession()) !== "refused" ? user : null;
   } catch {
-    return false;
+    return null;
   }
 }

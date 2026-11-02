@@ -9,16 +9,25 @@ modificar a escolha. O status de texto e ícone do perfil continua separado.
 
 ## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
 
-Seasonal cosmetics shop in the `Loja` tab of `/carteira`, drawn by the design system
-`CosmeticShop`.
+The cosmetics shop in the `Loja` tab of `/carteira`, together with the community marketplace.
+It is drawn by `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`), a copy of the
+design system shop with one addition: the `Todas as coleções` tab. The published design system
+only filters one collection per tab, so a seasonal tab used to hide the rest of the catalog —
+**when the package ships that tab, `CosmeticCatalog` goes away and the wrapper points back at
+`CosmeticShop` from the design system.**
 
 - Reads `GET /loja` and `GET /loja/colecoes` (Zod-validated in `src/lib/api/loja.ts`); prices are
   formatted with `formatFaisca`, and each look shows the price of the pieces still missing
   (`lookPriceMf` in `src/lib/cosmetics.ts`: 75% of their sum, rounded to whole faíscas, the
   backend arithmetic)
+- Opens on `Todas as coleções`: every item of every collection, including out-of-season ones
+  (listed, tagged `Fora de temporada`, not sellable). The collection chips stay one click away,
+  in-season first, then the classics, then the out-of-season collections
 - Buy, buy look, equip and unequip invalidate `loja`, `carteira`, `profile`, `me` and `feed`;
   every API error code has its own pt-BR toast (`texts.cosmetics.errors`)
 - The `saci` and `halloween` collections show the Saci × Halloween duel (`SaciDuelPanel`)
+- The album of a collection only exists inside the collection tab (the catalog-wide tab has no
+  album)
 
 ## `FrameShop` (`src/components/wallet/frame-shop.tsx`)
 
@@ -101,6 +110,31 @@ gravada no aparelho; fora do feed, o efeito visível é o toast de confirmação
 - É conveniência de interface, **não autorização**: o backend decide a autoria de cada publicação e
   valida permissões em toda requisição.
 
+## Sequência diária (`StreakCard` do design system)
+
+- **Carteira** (`src/routes/carteira.tsx`): o cartão completo acima do extrato, com o `streak` que
+  já vem em `/carteira` (sem pedido extra). Backend sem o campo não desenha nada.
+- **Perfil, só do dono** (`src/components/profile/profile-gamification-panel.tsx`): o cartão
+  completo logo abaixo do painel de presença, de `GET /me/streak`; visitante não vê nem busca.
+- Nunca fica fixo no cabeçalho: sempre à vista, a sequência vira cobrança diária.
+- `today` vem de `hojeNoApp()` (`src/lib/date/format.ts`), o dia no fuso do app, o mesmo em que o
+  backend conta.
+
+## Jogos diários: compartilhar o resultado
+
+`DailyWord`, `DailyMaze` e `DailyBlocks` (`src/components/daily-*.tsx`) compartilham pelo
+`useDailyShare` (`src/lib/daily-share.ts`): o texto vem do `buildDailyShareText` do design system
+(sem a resposta nem o tabuleiro) e termina em `https://enois.ia.br/games?categoria=diarios`. Usa
+`navigator.share` quando existe (fechar o menu é "idle", não erro); senão copia. O `shareStatus` volta
+a "idle" depois de 3 s.
+
+Em Palavras e Labirinto, a pessoa pode alternar entre hoje e o desafio de ontem enquanto uma
+jogada aguarda resposta. O resultado atualiza o cache do desafio enviado, mesmo que outro esteja
+aberto. Iniciar uma partida sempre atualiza hoje; confirmação de linha e erro de palpite aparecem
+somente no desafio correspondente, sem apagar um rascunho digitado na outra data. Os testes
+`daily-games-request-cache.test.tsx` cobrem as duas direções de troca, o início e a recusa de um
+palpite (issue #532).
+
 ## `PostCard` (`src/components/post-card.tsx`)
 
 Card de post no feed, com todas as ações sociais.
@@ -116,6 +150,7 @@ Card de post no feed, com todas as ações sociais.
 - Tags
 - Ações: reagir (popover com 8 emojis), comentar, salvar, compartilhar, denunciar
 - Seção de comentários com replies encadeadas
+- Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)
 
 **Componentes internos:**
@@ -131,6 +166,15 @@ Card de post no feed, com todas as ações sociais.
 - `linkifyText()` - Converte @menções e URLs em links
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
+
+## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
+
+Post do feed de um grupo, com reações, comentários e ações de moderação.
+
+- Comentários: no mobile, o campo ocupa a linha toda e o rodapé põe o contador à esquerda e o botão
+  à direita; em telas maiores, campo e botão ficam lado a lado e o contador volta à direita, abaixo
+  do campo. O contador interno do `MentionTextarea` fica desativado nesse formulário, que renderiza
+  o mesmo `CharCounter` no rodapé.
 
 ## `EditProfileDialog` (`src/components/edit-profile-dialog.tsx`)
 
@@ -164,7 +208,7 @@ variações estão no Storybook de lá.
 
 Textarea com autocomplete de @menções.
 
-**Props:** `{ value, onChange, placeholder?, className?, maxLength?, rows? }`
+**Props:** `{ value, onChange, placeholder?, className?, maxLength?, showCounter?, rows? }`
 
 **Funcionalidades:**
 
@@ -172,8 +216,13 @@ Textarea com autocomplete de @menções.
 - Query na API de search de usuários (mínimo 2 caracteres)
 - Dropdown de resultados com navegação por setas, Tab/Enter para selecionar, Escape para fechar
 - Insere `@username` no texto e rastreia IDs dos mencionados
+- Mostra o contador interno quando há `maxLength`, exceto se `showCounter={false}` (padrão `true`)
 - Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido (`KEKW`) entra no texto como
   palavra (ver abaixo)
+- A inserção de figurinha passa pelo evento de edição do próprio campo. O design system mantém
+  os IDs apenas das menções confirmadas que continuam no texto, inclusive depois de limpar o
+  rascunho ou substituir uma menção pela figurinha; o wrapper não guarda outra lista de IDs
+  ([#534](https://github.com/Rede-ENois/enois-frontend/issues/534)).
 
 ## Figurinhas
 
@@ -298,3 +347,14 @@ Hook para detectar breakpoint mobile (< 768px).
 | Toggle         | Botão toggle                                                            |
 | ToggleGroup    | Grupo de toggles                                                        |
 | Tooltip        | Tooltip                                                                 |
+
+## Emblemas dos selos de contribuição
+
+Cada nível de selo de contribuição tem um emblema fixo em `public/seals/<emblema>.png` (256×256,
+fundo transparente): `ajudante`, `contribuinte-serio`, `hardcore`, `tryhard`, `get-a-life`,
+`beta-tester`, `exigente`, `esforco-maximo`, `plus-ultra`, `genkidama`. O nome vem do campo `emblem`
+que a API devolve em `/users/{username}/seals` e `/seals/criteria`; `sealEmblemSrc`
+(`src/lib/seal-emblem.ts`) valida o nome e monta a URL. O emblema aparece em `/selos` (cada nível) e
+no cartão do selo no perfil (`ProfileSeals`, via `emblemSrc` do design system). Não há escolha de
+emblema: ele é consequência do nível calculado pelo backend. Regras em `docs/CONTRIBUTION_SEALS.md`
+do backend.

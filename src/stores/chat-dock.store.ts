@@ -7,7 +7,8 @@ import { MAX_OPEN_CHATS } from "@/lib/chat-dock/chat-dock-layout";
 export const useChatDockStore = create<ChatDockState>()(
   persist(
     (set) => ({
-      expanded: true,
+      // Starts closed: the list opened by itself over the right column on the first visit.
+      expanded: false,
       openChats: [],
 
       toggleExpanded: () => set((s) => ({ expanded: !s.expanded })),

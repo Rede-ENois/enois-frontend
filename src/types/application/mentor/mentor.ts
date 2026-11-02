@@ -1,3 +1,5 @@
+import type { MentorRoomMode } from "./mentor-room-mode";
+
 export type Mentor = {
   id: string;
   userId: string;
@@ -7,6 +9,16 @@ export type Mentor = {
   price: string;
   /** Banner/capa do perfil de mentor (URL do CDN). */
   banner: string | null;
+  /**
+   * Preço da sessão em **milésimos de faísca** (`null` quando o mentor não aceita faíscas). A
+   * conversão para texto está em `@/lib/faisca`.
+   */
+  sparksPrice: number | null;
+  /**
+   * De onde vem a sala: Jitsi por sessão (padrão), sala fixa do Jitsi ou sala própria.
+   * O link em si não vem na vitrine: é privado e só o dono o recebe por `GET /mentors/{id}/room`.
+   */
+  roomMode: MentorRoomMode;
   /**
    * Próxima vaga livre — **nulo** quando o mentor não tem nenhuma vaga futura (é o que a API
    * devolve: `nextAvailableSlot` termina em `orElse(null)`). Medido na QA em 2026-10-24: 2 de

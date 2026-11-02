@@ -102,11 +102,23 @@ export const apiSections: ApiSection[] = [
         path: "/feed",
         access: "auth",
         description:
-          "Feed pessoal por aba: FOR_YOU (comunidades que você participa + posts fora de comunidade), FOLLOWING, ALL, DISCUSSIONS, RECENT, PROJECTS. Pagina por cursor.",
+          "Feed pessoal por aba: FOR_YOU (comunidades que você participa + posts fora de comunidade), FOLLOWING, ALL, DISCUSSIONS, RECENT, PROJECTS. Pagina por cursor. Com tab=ALL, type filtra o tipo (ex.: QUESTION) e resolved=true|false separa dúvidas resolvidas das abertas.",
         request: `curl "${P}/feed?tab=FOR_YOU&limit=20" \\
   -H "X-Session-Token: $TOKEN"`,
         response: `200 OK
-{"items":[{"id":"post_…","type":"INSIGHT","content":"…","counters":{"reactions":26,"comments":23,"saves":3,"shares":4},"createdAt":"2026-10-15T02:16:48Z"}],"nextCursor":"2026-10-15T02:16:48Z"}`,
+{"items":[{"id":"post_…","type":"INSIGHT","content":"…","counters":{"reactions":26,"comments":23,"saves":3,"shares":4},"createdAt":"2026-10-15T02:16:48Z"}],"nextCursor":"2026-10-15T02:16:48Z","lastSeenAt":"2026-10-14T21:03:10Z"}`,
+      },
+      {
+        method: "POST",
+        path: "/feed/seen",
+        access: "auth",
+        description:
+          'Avança o marcador "Você está em dia" (só anda para frente; valor no futuro vira agora). O GET /feed com tab=FOR_YOU devolve o marcador anterior em lastSeenAt, só na primeira página.',
+        request: `curl -X POST ${P}/feed/seen \\
+  -H "Content-Type: application/json" \\
+  -H "X-Session-Token: $TOKEN" \\
+  -d '{"seenUntil":"2026-10-15T02:16:48Z"}'`,
+        response: "204 No Content",
       },
       {
         method: "GET",
@@ -166,6 +178,18 @@ export const apiSections: ApiSection[] = [
   -d '{"content":"Concordo!","parentCommentId":null,"mediaIds":[],"mentionedUserIds":[]}'`,
         response: `201 Created
 {"id":"comment_…","postId":"post_…","content":"Concordo!","mediaIds":[],"createdAt":"…"}`,
+      },
+      {
+        method: "POST",
+        path: "/feed/posts/{postId}/accepted-answer",
+        access: "auth",
+        description:
+          "Quem publicou a dúvida (type QUESTION) marca o comentário de outra pessoa como resposta. DELETE na mesma rota reabre a dúvida. Erros: NOT_A_QUESTION, INVALID_ANSWER_COMMENT, OWN_ANSWER, NOT_QUESTION_AUTHOR, POST_NOT_FOUND.",
+        request: `curl -X POST ${P}/feed/posts/$POST_ID/accepted-answer \\
+  -H "X-Session-Token: $TOKEN" -H "Idempotency-Key: a-1" \\
+  -H "Content-Type: application/json" -d '{"commentId":"comment_…"}'`,
+        response: `200 OK
+{"postId":"post_…","acceptedCommentId":"comment_…","resolved":true}`,
       },
       {
         method: "GET",
@@ -264,7 +288,7 @@ export const apiSections: ApiSection[] = [
         path: "/me/profile",
         access: "auth",
         description:
-          "Edita o próprio perfil (nome, headline, skills, bio, bioHtml, bannerHtml, emblema…). Experiências, educação e certificações têm CRUD próprio em /me/experiences, /me/education, /me/certifications.",
+          "Edita o próprio perfil (nome, headline, skills, bio, bioHtml, bannerHtml, emblema, city + state + showCity…). A cidade só aparece no perfil público com showCity. Experiências, educação e certificações têm CRUD próprio em /me/experiences, /me/education, /me/certifications.",
       },
     ],
   },
@@ -279,11 +303,18 @@ export const apiSections: ApiSection[] = [
         path: "/communities",
         access: "public",
         description:
-          "Lista comunidades (topic para filtrar, cursor para paginar). Com sessão, joined reflete participação.",
+          "Lista comunidades (topic para filtrar, cursor para paginar). state (sigla da UF) filtra o estado; city só vale junto com state e compara sem acento. Com sessão, joined reflete participação. city e state vêm no item quando a comunidade tem lugar.",
         request: `curl "${P}/communities?limit=10"`,
         response: `200 OK
 {"items":[{"id":"community_…","name":"Muita IA pouco $","description":"…","members":1,
  "topic":"TECNOLOGIA","cover":null,"bannerHtml":null,"joined":false}],"nextCursor":null}`,
+      },
+      {
+        method: "GET",
+        path: "/communities/local",
+        access: "auth",
+        description:
+          "Perto de você: comunidades da cidade do próprio perfil primeiro, depois o resto da UF (limit até 50). Perfil sem cidade devolve lista vazia.",
       },
       {
         method: "GET",
@@ -315,7 +346,7 @@ export const apiSections: ApiSection[] = [
         path: "/communities",
         access: "auth",
         description:
-          "Cria comunidade (o criador vira ADMIN). PATCH edita; /transfer passa a administração; /favorite + /favorites para favoritas.",
+          "Cria comunidade (o criador vira ADMIN), com city e state opcionais (os dois ou nenhum). PATCH edita (city e state vazios limpam); /transfer passa a administração; /favorite + /favorites para favoritas.",
       },
     ],
   },
@@ -370,9 +401,9 @@ export const apiSections: ApiSection[] = [
         path: "/events",
         access: "public",
         description:
-          "Lista eventos (vitrine). Com sessão, attending reflete se o viewer confirmou presença.",
+          "Lista eventos (vitrine). city + state (ou só state) listam os encontros presenciais e híbridos do lugar. Com sessão, attending reflete se o viewer confirmou presença. recurring=true lista só eventos recorrentes (rituais); recurrence, seriesId, nextOccurrenceDate e canManageRecurrence descrevem a série.",
         response: `200 OK
-{"items":[{"id":"event_…","title":"…","date":"2029-12-31","time":"23:59","format":"ONLINE","attendees":2,"attending":false,"expired":false}]}`,
+{"items":[{"id":"event_…","title":"…","date":"2029-12-31","time":"23:59","format":"ONLINE","attendees":2,"attending":false,"expired":false,"recurrence":"WEEKLY","seriesId":"event_…","nextOccurrenceDate":"2030-01-07","canManageRecurrence":false}]}`,
       },
       {
         method: "GET",
@@ -380,12 +411,80 @@ export const apiSections: ApiSection[] = [
         access: "public",
         description: "Detalhe do evento (attending do viewer quando autenticado).",
       },
-      { method: "POST", path: "/events", access: "auth", description: "Cria evento." },
+      {
+        method: "POST",
+        path: "/events",
+        access: "auth",
+        description:
+          "Cria evento. city e state opcionais, só para presencial ou híbrido. recurrence: NONE (padrão) | WEEKLY | BIWEEKLY | MONTHLY; evento recorrente precisa de horário HH:MM (400 INVALID_RECURRENCE / INVALID_EVENT_TIME).",
+      },
+      {
+        method: "PATCH",
+        path: "/events/{eventId}/recurrence",
+        access: "auth",
+        description:
+          "Liga, troca ou encerra (NONE) a recorrência da série. Só quem criou (403 NOT_EVENT_OWNER).",
+        request: `curl -X PATCH ${P}/events/$EVENT_ID/recurrence \\
+  -H "X-Session-Token: $TOKEN" -H "Idempotency-Key: rec-1" \\
+  -H "Content-Type: application/json" -d '{"recurrence":"WEEKLY"}'`,
+      },
       {
         method: "POST",
         path: "/events/{eventId}/attendees",
         access: "auth",
         description: "Confirma presença (DELETE cancela).",
+      },
+    ],
+  },
+  {
+    id: "par-de-estudo",
+    title: "Par de estudo",
+    description:
+      "Duas pessoas adultas com o mesmo objetivo e um check-in curto por semana. Tudo exige sessão; escritas exigem Idempotency-Key. Até 2 pares ativos e um pedido aberto por pessoa.",
+    endpoints: [
+      {
+        method: "POST",
+        path: "/study-pairs/requests",
+        access: "auth",
+        description:
+          "Pede um par para um objetivo (goal até 120, topic opcional da taxonomia). Casa na hora (MATCHED) ou fica na fila (OPEN). Erros: STUDY_GOAL_REQUIRED, STUDY_GOAL_TOO_LONG, INVALID_TOPIC, STUDY_PAIRS_ADULTS_ONLY, BIRTH_DATE_REQUIRED, EMAIL_NOT_VERIFIED, ACCOUNT_RESTRICTED, STUDY_REQUEST_ALREADY_OPEN, STUDY_PAIR_LIMIT, STUDY_PAIRS_DISABLED (módulo desligado em /me/preferences).",
+        request: `curl -X POST ${P}/study-pairs/requests \\
+  -H "X-Session-Token: $TOKEN" -H "Idempotency-Key: sp-1" \\
+  -H "Content-Type: application/json" -d '{"goal":"Aprender Rust","topic":null}'`,
+        response: `201 Created
+{"requestId":"spr_…","status":"OPEN","pairId":null}`,
+      },
+      {
+        method: "DELETE",
+        path: "/study-pairs/requests/current",
+        access: "auth",
+        description: "Cancela o pedido aberto.",
+      },
+      {
+        method: "GET",
+        path: "/study-pairs/me",
+        access: "auth",
+        description:
+          "Pedido aberto, pares ativos e check-ins da semana atual e das 3 anteriores (semana ISO, ex.: 2026-W44).",
+      },
+      {
+        method: "POST",
+        path: "/study-pairs/{pairId}/checkins",
+        access: "auth",
+        description:
+          "Check-in da semana (note até 500, pode ser vazia). Repetir na mesma semana edita.",
+      },
+      {
+        method: "POST",
+        path: "/study-pairs/{pairId}/end",
+        access: "auth",
+        description: "Encerra o par (qualquer membro).",
+      },
+      {
+        method: "GET",
+        path: "/study-pairs/goals/popular",
+        access: "auth",
+        description: "Até 10 objetivos com pedidos abertos, sem dado pessoal.",
       },
     ],
   },
@@ -461,7 +560,8 @@ export const apiSections: ApiSection[] = [
         method: "POST",
         path: "/network/connections/{targetUserId}",
         access: "auth",
-        description: "Pedir conexão (PUT …/accept aceita; GET …/status consulta; DELETE desfaz).",
+        description:
+          "Pedir conexão (PUT …/accept aceita; DELETE desfaz). GET …/status consulta: `status` é igual para os dois lados e `requestedByMe` diz se o pedido pendente foi enviado por você.",
       },
       {
         method: "POST",
@@ -520,6 +620,26 @@ export const apiSections: ApiSection[] = [
         path: "/notifications",
         access: "auth",
         description: "Notificações do usuário (cursor).",
+      },
+      {
+        method: "GET",
+        path: "/me/notification-preferences",
+        access: "auth",
+        description:
+          "O que chega fora do app: resumo semanal por e-mail e as categorias de push (social, mensagens, grupos, vagas, sistema). Padrão: tudo ligado.",
+        response: `200 OK
+{"weeklyDigest":true,"pushSocial":true,"pushMessages":true,"pushGroups":true,"pushJobs":true,"pushSystem":true,"updatedAt":null}`,
+      },
+      {
+        method: "PUT",
+        path: "/me/notification-preferences",
+        access: "auth",
+        description:
+          "Atualização parcial: só os campos enviados mudam. Devolve todas as preferências.",
+        request: `curl -X PUT ${P}/me/notification-preferences \
+  -H "Content-Type: application/json" \
+  -H "X-Session-Token: $TOKEN" \
+  -d '{"weeklyDigest":false}'`,
       },
       {
         method: "GET",
@@ -646,6 +766,34 @@ export const apiSections: ApiSection[] = [
         description: "Abre pedido de suporte (vai por e-mail ao time + fila /admin/support).",
       },
       {
+        method: "GET",
+        path: "/me/onboarding/starter-pack?topics=TECNOLOGIA&skills=react",
+        access: "auth",
+        description:
+          "Pacote inicial do onboarding: até 6 comunidades, 6 grupos abertos e 8 pessoas que combinam com os assuntos e habilidades informados.",
+        response: `200 OK
+{"communities":[{"id":"com_…","name":"Café com Código","description":null,"topic":"TECNOLOGIA","avatar":null,"memberCount":42}],"groups":[],"people":[{"id":"user_…","username":"ada","name":"Ada","headline":null,"avatar":null}]}`,
+      },
+      {
+        method: "POST",
+        path: "/me/onboarding/complete",
+        access: "auth",
+        description:
+          "Conclui o onboarding: soma os assuntos e habilidades, entra nas comunidades e grupos e pede as conexões escolhidas. Devolve o que ficou valendo.",
+        request: `curl -X POST ${P}/me/onboarding/complete \
+  -H "Content-Type: application/json" \
+  -H "X-Session-Token: $TOKEN" \
+  -d '{"topics":["TECNOLOGIA"],"skills":["React"],"communityIds":[],"groupIds":[],"connectUserIds":[]}'`,
+        response: `200 OK
+{"onboardingCompleted":true,"joinedCommunityIds":[],"joinedGroupIds":[],"requestedUserIds":[]}`,
+      },
+      {
+        method: "POST",
+        path: "/me/onboarding/skip",
+        access: "auth",
+        description: "Marca o onboarding como visto sem escolher nada.",
+      },
+      {
         method: "PUT",
         path: "/me/theme",
         access: "auth",
@@ -761,10 +909,18 @@ export const apiSections: ApiSection[] = [
         path: "/carteira",
         access: "auth",
         description:
-          "Saldo, chave (username) e extrato. A primeira abertura executa o genesis idempotente (100 faíscas) e marca a presença do dia.",
+          "Saldo, chave (username), extrato e a sequência diária (streak, o mesmo objeto de /me/streak). A primeira abertura executa o genesis idempotente (100 faíscas) e marca a presença do dia.",
         response: `{"balance":105000,"escala":1000,"cotacaoBrlCents":1,"cotacaoBrlMicros":10000,"chave":"ada-silva",
  "entries":[{"amount":5000,"kind":"REWARD","message":"Presença diária","createdAt":"2026-10-18T10:00:00Z"},
  {"amount":100000,"kind":"AIRDROP","message":"Distribuição inicial","createdAt":"2026-10-18T09:59:59Z"}]}`,
+      },
+      {
+        method: "GET",
+        path: "/me/streak",
+        access: "auth",
+        description:
+          "Sequência diária: dias seguidos, recorde, se hoje já contou e o descanso da semana (um dia perdido por semana é coberto sozinho).",
+        response: `{"currentDays":4,"longestDays":9,"todayDone":true,"freezesAvailable":1,"lastFrozenDay":null}`,
       },
       {
         method: "POST",

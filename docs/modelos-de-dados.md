@@ -24,6 +24,16 @@ interface UserProfile {
   connectionsCount?: number;
   followersCount?: number;
   reputation?: number;
+  /** Reputation drawn as a garden (stages 0..3, health 0..2); null in search and ranking. */
+  garden?: {
+    trajectory: number;
+    relations: number;
+    contribution: number;
+    tenure: number;
+    health: number;
+  } | null;
+  /** Equipped GARDEN shop item id; null draws the default garden ("quintal"). */
+  gardenStyle?: string | null;
 }
 ```
 
@@ -327,10 +337,24 @@ interface ConnectionRequest {
   toUserId: string;
   status: "PENDING" | "ACCEPTED" | "REJECTED";
   createdAt: string;
+  direction: "INCOMING" | "OUTGOING";
+  peer: NetworkUser; // a pessoa do outro lado
 }
 
 type ConnectionStatusResultStatus = "NONE" | "PENDING" | "ACCEPTED" | "REMOVED" | "BLOCKED";
+
+interface ConnectionStatusResult {
+  targetUserId: string;
+  status: ConnectionStatusResultStatus;
+  requestedByMe: boolean; // pedido pendente enviado por mim; false se recebi e nos demais status
+  blocked: boolean;
+  muted: boolean;
+}
 ```
+
+O `status` é igual para os dois lados da conexão. O perfil usa `requestedByMe` para oferecer
+"Cancelar solicitação" a quem pediu e "Aceitar"/"Rejeitar" a quem recebeu
+(`src/lib/network/connection-action.ts`).
 
 ## Mídia
 

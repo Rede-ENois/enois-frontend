@@ -3,6 +3,8 @@ import type { JobApplicationFieldInput } from "./job-application-field-input";
 export type CreateJobInput = {
   title: string;
   company: string;
+  /** Company page the job is published by; the poster must be on its team (recruiter and up). */
+  companyId?: string;
   location: string;
   type: string;
   level: string;

@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 import { ReactionsDialog as ReactionsDialogView } from "@rede-enois/design-system/domain";
 
-import { profileApi } from "@/lib/api";
+import { profileQueries } from "@/lib/query-options/profiles";
 import { reactionsQueryOptions } from "@/lib/reactions/query-options";
 import { useAuth } from "@/lib/use-auth";
 
@@ -30,16 +30,16 @@ export function ReactionsDialog({ postId }: PostIdProps) {
   const reactions = data?.reactions ?? [];
 
   const uniqueUserIds = [...new Set(reactions.map((r) => r.userId))];
-  const { data: users } = useQuery({
-    queryKey: ["profiles", "by-ids", uniqueUserIds.sort().join(",")],
-    queryFn: async () => {
-      const results = await Promise.all(
-        uniqueUserIds.map((id) => profileApi.getById(id).catch(() => null)),
-      );
-      return Object.fromEntries(results.filter(Boolean).map((u) => [u!.id, u!]));
-    },
-    enabled: open && uniqueUserIds.length > 0,
+  const profiles = useQueries({
+    queries: uniqueUserIds.map((id) => ({
+      ...profileQueries.byId(id),
+      enabled: open,
+      retry: false,
+    })),
   });
+  const users = Object.fromEntries(
+    profiles.flatMap((query) => (query.data ? [[query.data.id, query.data]] : [])),
+  );
 
   return (
     <ReactionsDialogView

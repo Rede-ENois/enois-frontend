@@ -1,30 +1,25 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 
 import { PageSkeleton } from "@/components/skeletons/page-skeleton";
 
 import { readCspNonce } from "./lib/csp";
-import { registerBrowserQueryClient } from "./lib/query-client";
+import { createAppQueryClient, registerBrowserQueryClient } from "./lib/query-client";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Voltando a aba, o TanStack so refaz a busca se os dados estiverem "velhos". Com staleTime 0
-        // (o default) ele considerava tudo velho e recarregava o feed a cada troca de aba — o
-        // incomodo relatado. Uma janela curta mantem o frescor sem recarregar sem motivo.
-        staleTime: 30_000,
-        refetchOnWindowFocus: true,
-        retry: 1,
-      },
-    },
-  });
+  const queryClient = createAppQueryClient();
   registerBrowserQueryClient(queryClient);
 
   const router = createRouter({
     routeTree,
     context: { queryClient },
+    // One provider for the whole tree: the root shell, pending, notFound and error components all
+    // render outside the RootComponent, and any `useQuery` there (the app shell has several) took the
+    // SSR down with "No QueryClient set".
+    Wrap: ({ children }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    ),
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     // Rota lenta (internet fraca, loader demorado): mostra a casca com skeleton em vez de deixar

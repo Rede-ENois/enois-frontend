@@ -12,4 +12,6 @@ export type NetworkUser = {
   connections: number;
   followers: number;
   connected: boolean;
+  /** Only on suggestions: connections the viewer and this person share. */
+  mutualConnections?: number | null;
 };

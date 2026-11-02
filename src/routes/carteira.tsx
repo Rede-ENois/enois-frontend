@@ -5,6 +5,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { WalletTab } from "@/types/routes/wallet/wallet-tab";
+import { StreakCard } from "@rede-enois/design-system/domain";
 import {
   Button,
   Input,
@@ -22,15 +23,15 @@ import {
   ShieldAlert,
   ShoppingBag,
   Sparkles,
-  Store,
   TrendingUp,
   User,
   Zap,
 } from "lucide-react";
 
 import { walletApi } from "@/lib/api";
-import { dataHora } from "@/lib/date/format";
+import { dataHora, hojeNoApp } from "@/lib/date/format";
 import { faiscaToBrlMicros, formatBrlMicros, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
+import { walletQueries } from "@/lib/query-options/wallet";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -38,14 +39,18 @@ import { SaciSpot } from "@/components/events/saci-spot";
 import { MarketplaceSection } from "@/components/marketplace/marketplace-section";
 import { UserPicker } from "@/components/user-picker";
 import { CosmeticShop } from "@/components/wallet/cosmetic-shop";
-import { FrameShop } from "@/components/wallet/frame-shop";
+import { OwnedItems } from "@/components/wallet/owned-items";
 
-const WALLET_TABS: WalletTab[] = ["carteira", "marketplace", "loja", "minhas"];
+const WALLET_TABS: WalletTab[] = ["carteira", "loja", "minhas"];
 
 export const Route = createFileRoute("/carteira")({
   beforeLoad: requireAuth,
-  /** A aba vive na URL: /carteira?tab=marketplace (a rota antiga /marketplace redireciona para cá). */
+  /**
+   * A aba vive na URL: /carteira?tab=loja (as rotas antigas /marketplace e ?tab=marketplace
+   * caem na loja, que agora é uma aba só com os cosméticos e o marketplace da comunidade).
+   */
   validateSearch: (search: Record<string, unknown>): { tab?: WalletTab } => {
+    if (search.tab === "marketplace") return { tab: "loja" };
     const tab =
       typeof search.tab === "string" && WALLET_TABS.includes(search.tab as WalletTab)
         ? (search.tab as WalletTab)
@@ -75,8 +80,7 @@ function Carteira() {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["carteira"],
-    queryFn: () => walletApi.wallet(),
+    ...walletQueries.wallet(),
   });
   const { data: cotacao } = useQuery({
     queryKey: ["cotacao"],
@@ -94,7 +98,7 @@ function Carteira() {
       setPayOpen(false);
       setForm({ toUsername: "", amount: "", message: "" });
       toast(texts.wallet.sent, "success");
-      void queryClient.invalidateQueries({ queryKey: ["carteira"] });
+      void queryClient.invalidateQueries({ queryKey: walletQueries.wallet().queryKey });
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string; message?: string };
@@ -125,7 +129,7 @@ function Carteira() {
     onSuccess: () => {
       setContestar(null);
       toast("Contestação enviada: a moderação vai analisar os dois lados.", "success");
-      void queryClient.invalidateQueries({ queryKey: ["carteira"] });
+      void queryClient.invalidateQueries({ queryKey: walletQueries.wallet().queryKey });
     },
     onError: (error: unknown) => {
       const code = (error as { code?: string }).code;
@@ -141,6 +145,14 @@ function Carteira() {
   });
 
   const entries = wallet?.entries ?? [];
+  /** Trocar de aba pela interface ou de dentro de uma aba (o "Ir para a loja" dos itens). */
+  const openTab = (tab: WalletTab) => {
+    setActiveTab(tab);
+    void navigate({
+      search: tab === "carteira" ? {} : { tab },
+      replace: true,
+    });
+  };
 
   return (
     <AppContainer>
@@ -166,26 +178,11 @@ function Carteira() {
           <SaciSpot spot="carteira" className="shrink-0" />
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => {
-            const tab = value as WalletTab;
-            setActiveTab(tab);
-            void navigate({
-              search: tab === "carteira" ? {} : { tab },
-              replace: true,
-            });
-          }}
-        >
+        <Tabs value={activeTab} onValueChange={(value) => openTab(value as WalletTab)}>
           <TabsList className="wallet-shop-tabs">
             <TabsTrigger value="carteira">
               <Zap className="h-4 w-4" aria-hidden="true" />
               {texts.frameShop.walletTab}
-            </TabsTrigger>
-
-            <TabsTrigger value="marketplace">
-              <Store className="h-4 w-4" aria-hidden="true" />
-              {texts.frameShop.marketplaceTab}
             </TabsTrigger>
 
             <TabsTrigger value="loja">
@@ -247,6 +244,9 @@ function Carteira() {
 
             <CotacaoCard mf={wallet?.balance ?? 0} />
 
+            {/* Vem junto com a carteira (sem pedido extra); backend sem o campo não desenha nada. */}
+            {wallet?.streak && <StreakCard streak={wallet.streak} today={hojeNoApp()} />}
+
             <section className="space-y-3">
               <h2 className="text-sm font-semibold uppercase tracking-widest text-text-subtle">
                 {texts.wallet.history}
@@ -296,16 +296,14 @@ function Carteira() {
             </section>
           </TabsContent>
 
-          <TabsContent value="marketplace" className="pt-5">
+          {/* Uma loja só: os cosméticos da plataforma e o que a comunidade vende em faíscas. */}
+          <TabsContent value="loja" className="space-y-10 pt-5">
+            <CosmeticShop />
             <MarketplaceSection />
           </TabsContent>
 
-          <TabsContent value="loja" className="pt-5">
-            <CosmeticShop />
-          </TabsContent>
-
           <TabsContent value="minhas" className="pt-5">
-            <FrameShop onlyOwned />
+            <OwnedItems onGoToStore={() => openTab("loja")} />
           </TabsContent>
         </Tabs>
 

@@ -3,6 +3,7 @@ import type { MonitoringEconomyRecalculation } from "@/types/application/monitor
 import type { MonitoringEvent } from "@/types/application/monitoring/monitoring-event";
 import type { MonitoringOverview } from "@/types/application/monitoring/monitoring-overview";
 import type { MonitoringSupply } from "@/types/application/monitoring/monitoring-supply";
+import type { MonitoringUsers } from "@/types/application/monitoring/monitoring-users";
 
 import { api } from "../api-client";
 
@@ -11,6 +12,9 @@ export const monitoringApi = {
   overview: () => api.get<MonitoringOverview>("/admin/monitoring/overview"),
 
   supply: () => api.get<MonitoringSupply>("/admin/carteira/supply"),
+
+  /** Contas da comunidade: total, entradas por dia, crescimento e projeção. */
+  users: () => api.get<MonitoringUsers>("/admin/monitoring/users"),
 
   /** Métricas do cálculo automático da cotação (admin). */
   economy: () => api.get<MonitoringEconomy>("/admin/carteira/economia"),

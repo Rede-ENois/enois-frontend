@@ -2,16 +2,15 @@ import { useCallback, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { WordMark } from "@/types/application/daily-games/word-mark";
 import {
   DailyWord as DailyWordView,
   type UserWordStats,
   WORD_LENGTH,
-  WORD_MAX_GUESSES,
 } from "@rede-enois/design-system/domain";
 
 import { randomUUID } from "@/lib/api-client";
 import { dailyWordsApi, previousChallengeDate } from "@/lib/api/daily-games";
+import { dailyDateLabel, useDailyShare } from "@/lib/daily-share";
 
 // ─── Estatísticas e Persistência Local ─────────────────────────────────────────
 
@@ -83,17 +82,16 @@ export function DailyWord() {
     queryFn: dailyWordsApi.leaderboard,
   });
 
-  const queryKey = showPrevious
-    ? ["daily-games", "words", "previous", previousDate]
-    : ["daily-games", "words", "today"];
   const state = showPrevious ? previous.data : today.data;
 
   const start = useMutation({
     mutationFn: dailyWordsApi.start,
     onSuccess: (data) => {
       client.setQueryData(["daily-games", "words", "today"], data);
-      setDraft("");
-      setLastConfirmedRow(null);
+      if (data.date === state?.date) {
+        setDraft("");
+        setLastConfirmedRow(null);
+      }
     },
     onError: () => void today.refetch(),
   });
@@ -101,10 +99,15 @@ export function DailyWord() {
   const guess = useMutation({
     mutationFn: ({ word, requestId, date }: { word: string; requestId: string; date?: string }) =>
       dailyWordsApi.guess(word, requestId, date),
-    onSuccess: (data) => {
-      client.setQueryData(queryKey, data);
-      setLastConfirmedRow(data.guesses.length - 1);
-      setDraft("");
+    onSuccess: (data, { date }) => {
+      client.setQueryData(
+        date ? ["daily-games", "words", "previous", date] : ["daily-games", "words", "today"],
+        data,
+      );
+      if (data.date === state?.date) {
+        setLastConfirmedRow(data.guesses.length - 1);
+        setDraft("");
+      }
       requestIdRef.current = randomUUID();
       if (data.status === "WON" || data.status === "LOST") {
         void client.invalidateQueries({ queryKey: ["daily-games", "words", "leaderboard"] });
@@ -113,7 +116,9 @@ export function DailyWord() {
         window.setTimeout(() => setStatsOpen(true), 1200);
       }
     },
-    onError: (error) => {
+    onError: (error, { date }) => {
+      requestIdRef.current = randomUUID();
+      if (date !== (showPrevious ? previousDate : undefined)) return;
       // Traduz erros do servidor para mensagens amigáveis
       let msg = "Não foi possível registrar o palpite.";
       if (error instanceof Error) {
@@ -129,7 +134,6 @@ export function DailyWord() {
       }
       setLocalError(msg);
       triggerShake(state?.guesses.length ?? 0);
-      requestIdRef.current = randomUUID();
     },
   });
 
@@ -175,28 +179,16 @@ export function DailyWord() {
 
   const confirmedGuesses = state?.guesses ?? [];
 
-  // Resultado para compartilhar
-  function buildShareText(): string {
-    const emojiMap: Record<WordMark, string> = {
-      CORRECT: "🟩",
-      PRESENT: "🟨",
-      ABSENT: "⬛",
-    };
-    const lines = confirmedGuesses
-      .map(({ marks }) => marks.map((m) => emojiMap[m]).join(""))
-      .join("\n");
-    return `Palavras Énois · ${confirmedGuesses.length}/${WORD_MAX_GUESSES}\n\n${lines}`;
-  }
-
-  async function share() {
-    const text = buildShareText();
-    if (navigator.share) {
-      await navigator.share({ text });
-    } else {
-      await navigator.clipboard.writeText(text);
-      showError("Resultado copiado!");
-    }
-  }
+  const dailyShare = useDailyShare();
+  const share = () => {
+    if (!state || (state.status !== "WON" && state.status !== "LOST")) return;
+    void dailyShare.share({
+      game: "word",
+      dateLabel: dailyDateLabel(state.date),
+      won: state.status === "WON",
+      marks: confirmedGuesses.map(({ marks }) => marks),
+    });
+  };
 
   return (
     <DailyWordView
@@ -224,7 +216,8 @@ export function DailyWord() {
       stats={stats}
       statsOpen={statsOpen}
       onStatsOpenChange={setStatsOpen}
-      onShare={() => void share()}
+      onShare={share}
+      shareStatus={dailyShare.status}
       ranking={{
         loading: ranking.isPending,
         error: ranking.isError,

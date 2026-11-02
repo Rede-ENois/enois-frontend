@@ -1,10 +1,27 @@
+import { texts } from "@/texts";
 import type { MediaAsset } from "@/types/application/media/media-asset";
 import type { MediaUploadResponse } from "@/types/application/media/media-upload-response";
 
-import { api, apiUrl, sessionHeaders } from "../api-client";
+import { ApiError, api, apiUrl, sessionHeaders } from "../api-client";
 
 const IMAGEKIT_URL_ENDPOINT =
   import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT ?? "https://ik.imagekit.io/socialcoisa";
+
+export function mediaUploadResponseError(status: number, body: string, path: string): ApiError {
+  let payload: { code?: string; message?: string } | null = null;
+  try {
+    payload = JSON.parse(body) as { code?: string; message?: string };
+  } catch {
+    // Proxy or gateway returned a non-JSON body.
+  }
+  const code = payload?.code;
+  const message = code
+    ? (texts.errors.apiMessages[code] ??
+      texts.errors.knownCodes[code as keyof typeof texts.errors.knownCodes] ??
+      payload?.message)
+    : payload?.message;
+  return new ApiError(status, code, message ?? `Upload falhou: ${status}`, path);
+}
 
 export function resolveCdnUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
@@ -120,6 +137,10 @@ export const mediaApi = {
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      if (toApi) {
+        const path = new URL(signedUrl, window.location.href).pathname;
+        throw mediaUploadResponseError(response.status, body, path);
+      }
       throw new Error(`Upload falhou: ${response.status} ${body}`);
     }
   },

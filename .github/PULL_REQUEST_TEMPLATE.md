@@ -28,3 +28,4 @@ Pelo terminal: gh pr create --template feature.md
 - [ ] Build de produção (`npm run build`) passa
 - [ ] A mudança aparece na tela (ou é só código sem superfície visível)
 - [ ] Sem dado pessoal, token ou print de conversa privada no diff
+- [ ] AI tools helped write this change (check if yes; no tool name or attribution line needed)

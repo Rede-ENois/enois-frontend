@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import type { ConversationItemProps } from "@/types/routes/messages/conversation-item-props";
 import { ConversationItem as ConversationItemView } from "@rede-enois/design-system/domain";
 
-import { profileApi } from "@/lib/api";
+import { conversationPeer } from "@/lib/conversation-peer";
 import { useCurrentUser } from "@/lib/current-user";
 import { decryptReceived } from "@/lib/e2e/conversation";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
-import { authorNameStyle } from "@/lib/profile-name-style";
+import { profileQueries } from "@/lib/query-options/profiles";
 
 import { formatTime } from "@/components/post/format-time";
 
@@ -25,8 +25,7 @@ export function ConversationItem({
   const currentUserId = currentUser?.id ?? null;
   const otherId = conversation.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
-    queryKey: ["profile", "by-id", otherId],
-    queryFn: () => profileApi.getById(otherId ?? ""),
+    ...profileQueries.byId(otherId ?? ""),
     enabled: !!otherId,
   });
 
@@ -55,12 +54,19 @@ export function ConversationItem({
         text: conversation.lastMessage!,
         iv: conversation.lastMessageIv!,
         conversationId: conversation.id,
-      } as Parameters<typeof decryptReceived>[0]).then((plain) => {
-        if (!cancelled) {
-          setPreview(plain);
-          setDecryptingPreview(false);
-        }
-      });
+      } as Parameters<typeof decryptReceived>[0])
+        .then((plain) => {
+          if (!cancelled) {
+            setPreview(plain);
+            setDecryptingPreview(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setPreview("[Mensagem cifrada]");
+            setDecryptingPreview(false);
+          }
+        });
     });
     return () => {
       cancelled = true;
@@ -72,11 +78,13 @@ export function ConversationItem({
     conversation.id,
   ]);
 
+  const { peer, profileHref } = conversationPeer(conversation, otherId, otherUser);
+
   return (
     <ConversationItemView
       conversation={{ ...conversation, lastMessage: preview }}
-      peer={otherUser && { ...otherUser, nameStyle: authorNameStyle(otherUser) }}
-      profileHref={`/perfil/${otherUser?.username ?? otherId ?? ""}`}
+      peer={peer}
+      profileHref={profileHref}
       timeLabel={conversation.time ? formatTime(conversation.time) : ""}
       isActive={isActive}
       onSelect={onSelect}

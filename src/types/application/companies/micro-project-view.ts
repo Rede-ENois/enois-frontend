@@ -10,4 +10,8 @@ export type MicroProjectView = {
   deadline: string | null;
   status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   createdAt: string;
+  /** The viewer's proposal on this project, if any. */
+  myProposal: "SENT" | "SELECTED" | "DECLINED" | null;
+  /** Only for whoever manages the page. */
+  proposalCount: number | null;
 };

@@ -1,6 +1,5 @@
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { StatusResponse } from "@/types/application/api/status-response";
-import type { CompanyDirectoryEntry } from "@/types/application/job/company-directory-entry";
 import type { CreateExternalJobInput } from "@/types/application/job/create-external-job-input";
 import type { CreateJobInput } from "@/types/application/job/create-job-input";
 import type { DeleteJobResult } from "@/types/application/job/delete-job-result";
@@ -13,9 +12,6 @@ import type { MyApplication } from "@/types/application/job/my-application";
 import { api, buildQuery } from "../api-client";
 
 export const jobsApi = {
-  companies: (query?: string, limit = 60) =>
-    api.get<CompanyDirectoryEntry[]>(`/jobs/companies${buildQuery({ query, limit })}`),
-
   list: (params?: ListJobsParams) =>
     api.get<PageResponse<Job>>(
       `/jobs${buildQuery({ ...params, cursor: params?.cursor ?? undefined, limit: params?.limit ?? 20 })}`,

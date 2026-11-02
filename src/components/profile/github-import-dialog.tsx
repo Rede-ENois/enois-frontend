@@ -8,7 +8,9 @@ import { GithubImportDialog as GithubImportDialogView } from "@rede-enois/design
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, githubProfileApi } from "@/lib/api";
+import { getCurrentUserId } from "@/lib/current-user";
 import { dataCurta } from "@/lib/date/format";
+import { profileQueries } from "@/lib/query-options/profiles";
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
@@ -57,6 +59,9 @@ export function GithubImportDialog({ open, onOpenChange, username }: GithubImpor
     mutationFn: () => githubProfileApi.importReadme(),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["profile", username] });
+      const userId = getCurrentUserId();
+      if (userId)
+        void queryClient.invalidateQueries({ queryKey: profileQueries.byId(userId).queryKey });
       void queryClient.invalidateQueries({ queryKey: ["me"] });
       toast(texts.profile.githubImport.readmeSaved);
     },

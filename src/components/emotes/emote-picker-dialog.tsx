@@ -44,15 +44,18 @@ export function EmotePickerDialog({
 
   // A busca só vai ao backend depois de uma pausa: cada tecla dispararia uma página nova. O termo
   // e a página voltam ao começo JUNTOS — separados, o app pediria a página atual com o termo novo
-  // e logo em seguida a primeira página, dois pedidos para o mesmo resultado.
+  // e logo em seguida a primeira página, dois pedidos para o mesmo resultado. Sem termo novo não há
+  // o que recomeçar: abrir o seletor também rodava esta espera e desfazia a troca de página.
   useEffect(() => {
     if (!open) return;
+    const proximoTermo = busca.trim();
+    if (proximoTermo === termo) return;
     const timer = setTimeout(() => {
-      setTermo(busca.trim());
+      setTermo(proximoTermo);
       setPagina(1);
     }, ESPERA_DA_BUSCA);
     return () => clearTimeout(timer);
-  }, [busca, open]);
+  }, [busca, open, termo]);
 
   // Fechou: da próxima vez começa do começo, não no meio de uma busca antiga.
   useEffect(() => {

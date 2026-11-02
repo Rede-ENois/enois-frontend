@@ -50,14 +50,6 @@ describe("login longo não pode estourar a tela", () => {
     expect(classeDoLogin).toContain("break-words");
   });
 
-  it("o perfil profissional quebra o login", () => {
-    const classeDoLogin = classe(
-      "src/routes/profissional_.$username.tsx",
-      /<p className="([^"]*)"[^>]*>@?\{data\.username\}/,
-    );
-    expect(classeDoLogin).toContain("break-words");
-  });
-
   it("o perfil de quem faz jogos quebra o login", () => {
     const classeDoLogin = classe(
       "src/routes/games.$username.tsx",
