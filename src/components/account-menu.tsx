@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { AccountMenuProps } from "@/types/components/account/account-menu-props";
@@ -51,6 +52,7 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const { toast } = useToast();
 
   const context = useInterfaceContext();
+  const navigate = useNavigate();
   const {
     data: corporate,
     isError: corporateError,
@@ -65,11 +67,15 @@ export function AccountMenu({ profile }: AccountMenuProps) {
   const corporateState = professionalProfileState({ data: corporate, isError: corporateError });
   const showSwitch = corporateState === "ACTIVE";
 
+  // The side menu swaps its items with the interface: the toast says so, or the old items look
+  // gone (#560). Client-side navigation keeps the toast, which a full page load would drop.
   const choose = (next: InterfaceContext) => {
+    if (next === context) return;
     writeStoredContext(next);
     setMenuOpen(false);
     const destination = destinationAfterSwitch(window.location.pathname, next);
-    if (destination) window.location.assign(destination);
+    if (destination) void navigate({ to: destination });
+    toast(texts.account.menu.switchedTo[next]);
   };
 
   const openDialog = (show: (open: boolean) => void) => () => {
