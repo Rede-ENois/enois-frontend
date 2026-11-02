@@ -96,6 +96,9 @@ BACKEND_TARGET=http://localhost:8081 npm run dev
 Sem o `context-path=/api` o backend responde só em `/push/config`, `/notifications`, etc., e o proxy devolve
 404 em tudo.
 
+Os loaders do SSR (ex.: o perfil em `/perfil/$username`) rodam no servidor, onde não há proxy: com
+`/api` relativo eles chamam o mesmo `BACKEND_TARGET` direto (`serverBaseUrl` em `src/lib/api-client.ts`).
+
 **Sessão no dev**: a sessão vive em cookies HttpOnly (`enois_session`/`enois_refresh`) que a API grava. No
 dev o navegador fala só com o Vite (`/api` relativo, via proxy), então os cookies são do próprio
 `localhost` e chegam sem configuração de CORS. Eles saem com `Secure`: o navegador aceita isso em
