@@ -205,7 +205,10 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
-    refetchInterval: 30_000,
+    // "Ainda não vi" não se renova sozinha: o servidor tira o post da lista assim que ele tem
+    // reação ou comentário meu, e a pessoa perderia o que está lendo no meio da leitura. A lista
+    // se atualiza quando ela volta para a aba (issue #559).
+    refetchInterval: tab === "UNSEEN" ? false : 30_000,
   });
 }
 
