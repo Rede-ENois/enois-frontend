@@ -80,6 +80,8 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
   soft news dot when the item's notification module (`notifies`) has unread notices. The counts come
   from one source: `GET /notifications/unread-summary`, the messages unread count and pending
   connection requests (`useNavigationCounts`).
+- Phone menu button: a news dot when an entry behind the menu (not on the dock) has a signal
+  (`useMenuHasNews`, `src/components/use-menu-has-news.ts`).
 - Mobile dock (< 1024px, `src/components/mobile-dock.tsx`): Início, Explorar, Publicar
   (`/feed?compor=POST`), Mensagens and Avisos, with the same signals.
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links

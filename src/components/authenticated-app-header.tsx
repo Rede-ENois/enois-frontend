@@ -9,6 +9,7 @@ import { AccountMenu } from "@/components/account-menu";
 
 import { GlobalSearch } from "./global-search";
 import { NotificationsPopover } from "./notifications-popover";
+import { useMenuHasNews } from "./use-menu-has-news";
 
 /** Wires the design system header to the shell store, the session and its nested containers. */
 export function AuthenticatedAppHeader() {
@@ -17,6 +18,7 @@ export function AuthenticatedAppHeader() {
   // has the user: a parent route can fill the cache before this header hydrates, and drawing the
   // menu on that first render breaks hydration (seen on /comunidades/$id and /vagas/$id).
   const { data: profile } = useCurrentUser();
+  const menuHasNews = useMenuHasNews();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -24,6 +26,7 @@ export function AuthenticatedAppHeader() {
     <AuthenticatedAppHeaderView
       homeHref="/feed"
       onOpenNavigation={openMobileNavigation}
+      navigationHasNews={mounted && menuHasNews}
       search={<GlobalSearch />}
       actions={
         <>
