@@ -44,7 +44,7 @@ Funcionalidades:
   você" by date window, so the list only grows at the end. When the first post leaves through the top,
   `POST /feed/seen` goes once per visit with the newest loaded `createdAt` (`src/lib/feed/caught-up.ts`).
 - **Dúvidas:** no "Tudo", o filtro de tipo "Dúvidas" (`type=QUESTION`) mostra o `QuestionStatusFilter` (Todas, Abertas, Resolvidas → `resolved` omitido, `false`, `true`). Com o tipo Pergunta no compositor aparece o `QuestionComposerHint`. Quem perguntou marca a resposta de outra pessoa nos comentários (otimista, desfaz se a API recusar); a resposta aceita sobe para o topo da lista
-- **Right rail:** events, today's games, connection suggestions, company prompt and the support card, all as `surface-card` soft tables. The old platform spaces card is gone: those rooms live in `/explorar`.
+- **Right rail:** events (each with its `EventTicket`, amber when it is today, via `ingressoDeEvento`), today's games, connection suggestions, company prompt and the support card, all as `surface-card` soft tables. The old platform spaces card is gone: those rooms live in `/explorar`.
 
 **Componentes auxiliares:**
 

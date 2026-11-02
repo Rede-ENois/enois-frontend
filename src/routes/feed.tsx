@@ -29,6 +29,7 @@ import {
 import {
   Button,
   EmptyState,
+  EventTicket,
   Input,
   LoadingState,
   Popover,
@@ -52,14 +53,13 @@ import {
   Image,
   Loader2,
   RefreshCw,
-  TrendingUp,
   UserPlus,
   X,
 } from "lucide-react";
 
 import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
 import { takeComposerFiles } from "@/lib/composer-handoff";
-import { dataHora, valorDeDataLocal } from "@/lib/date/format";
+import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
@@ -712,6 +712,18 @@ function Home() {
             />
           )}
 
+          {/* Outside the composer so the launcher's media button can open it in the same tap. */}
+          {!composerLocked && (
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              className="hidden"
+              onChange={handleMediaSelect}
+            />
+          )}
+
           {/* Composer at rest: one line with the signer's photo; the full form only once opened. */}
           {!composerLocked && !composerExpanded && (
             <ComposerLauncher
@@ -726,9 +738,9 @@ function Home() {
               }
               onOpen={() => setComposerOpen(true)}
               onAddMedia={() => {
+                // Inside the tap: Safari only opens a file picker from the user's gesture.
+                fileRef.current?.click();
                 setComposerOpen(true);
-                // The file input lives in the form, which renders on this open.
-                setTimeout(() => fileRef.current?.click(), 0);
               }}
             />
           )}
@@ -915,15 +927,6 @@ function Home() {
                   )}
                 </div>
               )}
-
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                className="hidden"
-                onChange={handleMediaSelect}
-              />
 
               <div
                 data-composer-toolbar=""
@@ -1157,7 +1160,7 @@ function Home() {
           )}
 
           {scheduledList.length > 0 && (
-            <section className="rounded-2xl border border-border-soft bg-surface-card p-4">
+            <section className="surface-card p-4">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-text-strong">
                 <CalendarClock className="h-4 w-4 text-primary" />
 
@@ -1335,42 +1338,50 @@ function Home() {
               every room) and so did the profile card (the account menu carries it). */}
           {eventList.length > 0 && (
             <div className="surface-card p-4 sm:p-5">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-
-                <h2 className="text-sm font-normal text-text-strong">
-                  {texts.feed.sidebar.happeningNow}
-                </h2>
-              </div>
+              <h2 className="text-sm font-extrabold text-text-strong">
+                {texts.feed.sidebar.happeningNow}
+              </h2>
 
               <ul className="mt-3 space-y-3">
-                {eventList.slice(0, 3).map((e) => (
-                  <li key={e.id}>
-                    {/* O item inteiro é o link para o evento. A seta é o que diz isso: sem ela, o
+                {eventList.slice(0, 3).map((e) => {
+                  const ticket = ingressoDeEvento(e.date);
+                  return (
+                    <li key={e.id}>
+                      {/* O item inteiro é o link para o evento. A seta é o que diz isso: sem ela, o
                         título só reagia no hover e a linha parecia texto solto. */}
-                    <Link
-                      to="/eventos"
-                      search={{ evento: e.id }}
-                      className="group/ev flex items-start gap-2"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <p className="text-sm font-normal text-text-strong underline-offset-2 group-hover/ev:underline">
-                          {e.title}
-                        </p>
+                      <Link
+                        to="/eventos"
+                        search={{ evento: e.id }}
+                        className="group/ev flex items-center gap-3"
+                      >
+                        {/* An event is a ticket: amber when it happens today. */}
+                        {ticket && (
+                          <EventTicket
+                            day={ticket.day}
+                            month={ticket.month}
+                            tone={ticket.today ? "today" : "primary"}
+                          />
+                        )}
 
-                        <p className="text-xs font-normal text-text-subtle">
-                          {texts.feed.sidebar.eventMeta(
-                            e.date,
-                            e.format,
-                            texts.feed.sidebar.confirmed(e.attendees),
-                          )}
-                        </p>
-                      </span>
+                        <span className="min-w-0 flex-1">
+                          <p className="text-sm font-normal text-text-strong underline-offset-2 group-hover/ev:underline">
+                            {e.title}
+                          </p>
 
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle transition group-hover/ev:translate-x-0.5 group-hover/ev:text-primary" />
-                    </Link>
-                  </li>
-                ))}
+                          <p className="text-xs font-normal text-text-subtle">
+                            {texts.feed.sidebar.eventMeta(
+                              e.date,
+                              e.format,
+                              texts.feed.sidebar.confirmed(e.attendees),
+                            )}
+                          </p>
+                        </span>
+
+                        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle transition group-hover/ev:translate-x-0.5 group-hover/ev:text-primary" />
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
 
               <Link

@@ -11,6 +11,7 @@ import {
   formatarData,
   hojeNoApp,
   hora,
+  ingressoDeEvento,
   mesAno,
   monthsBetween,
   paraData,
@@ -135,5 +136,18 @@ describe("formatter reuse", () => {
     } finally {
       construir.mockRestore();
     }
+  });
+});
+
+describe("ingressoDeEvento", () => {
+  it("prints day and month for the ticket and marks today in the app time zone", () => {
+    const agora = new Date("2026-11-02T15:00:00Z");
+    expect(ingressoDeEvento("2026-11-02T22:00:00Z", agora)).toEqual({
+      day: "02",
+      month: "NOV",
+      today: true,
+    });
+    expect(ingressoDeEvento("2026-11-14", agora)).toMatchObject({ day: "14", today: false });
+    expect(ingressoDeEvento("", agora)).toBeNull();
   });
 });
