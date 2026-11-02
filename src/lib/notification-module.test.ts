@@ -18,8 +18,8 @@ describe("moduleForNotification", () => {
 
   it("a publicação nova no grupo entra no módulo GRUPOS, para o sino respeitar a escolha", () => {
     expect(moduleForNotification("GROUP_NEW_POST")).toBe("GROUPS");
-    expect(isNotificationHidden("GROUP_NEW_POST", new Set(["GROUPS"]))).toBe(true);
-    expect(isNotificationHidden("GROUP_NEW_POST", new Set(["MESSAGES"]))).toBe(false);
+    expect(isNotificationHidden({ kind: "GROUP_NEW_POST" }, new Set(["GROUPS"]))).toBe(true);
+    expect(isNotificationHidden({ kind: "GROUP_NEW_POST" }, new Set(["MESSAGES"]))).toBe(false);
   });
 
   it("study pair notifications belong to STUDY_PAIRS", () => {
