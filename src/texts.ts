@@ -130,6 +130,19 @@ export const texts = {
     publish: "Publicar",
   },
 
+  featureSearch: {
+    menuSubtitle: "No menu",
+    wallet: { label: "Carteira", description: "Faíscas, extrato e loja" },
+    account: {
+      label: "Conta e segurança",
+      description: "E-mail, senha, privacidade e preferências",
+    },
+    support: { label: "Ajuda e suporte", description: "Fale com a equipe" },
+    notificationPreferences: {
+      label: "Preferências de aviso",
+      description: "Resumo semanal e categorias de push",
+    },
+  },
   explore: {
     seoTitle: "Explorar · Énóis",
     sections: {
