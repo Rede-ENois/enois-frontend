@@ -17,6 +17,7 @@ vi.mock("@/lib/query-options/profiles", () => ({
     }),
   },
 }));
+vi.mock("@/lib/e2e/key-manager", () => ({ hasLocalKeys: () => Promise.resolve(false) }));
 vi.mock("@rede-enois/design-system/domain", () => ({
   ConversationItem: ({ conversation }: { conversation: { lastMessage: string } }) => (
     <p>{conversation.lastMessage}</p>
@@ -36,7 +37,11 @@ describe("conversation preview", () => {
 
   afterEach(() => act(() => root.unmount()));
 
-  const render = async (lastMessageFrom: string, kind: "DIRECT" | "GROUP" = "DIRECT") => {
+  const render = async (
+    lastMessageFrom: string,
+    kind: "DIRECT" | "GROUP" = "DIRECT",
+    e2e = false,
+  ) => {
     const client = new QueryClient();
     act(() =>
       root.render(
@@ -51,6 +56,8 @@ describe("conversation preview", () => {
               lastMessage: "teste 2",
               unread: 0,
               lastMessageFrom,
+              lastMessageE2e: e2e,
+              lastMessageIv: e2e ? "iv" : null,
             }}
             isActive={false}
             onSelect={() => {}}
@@ -75,5 +82,12 @@ describe("conversation preview", () => {
 
   it("names the sender by first name in a group", async () => {
     expect(await render("user_ana", "GROUP")).toBe("Ana: teste 2");
+  });
+
+  // The prefix follows the author, not the decryption: an own E2E message on a device without the
+  // key is still the viewer's, so it reads "Você: 🔒"; the peer's stays a bare lock.
+  it("keeps the author on an E2E preview this device cannot decrypt", async () => {
+    expect(await render("user_me", "DIRECT", true)).toBe("Você: 🔒");
+    expect(await render("user_peer", "DIRECT", true)).toBe("🔒");
   });
 });
