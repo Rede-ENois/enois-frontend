@@ -257,4 +257,18 @@ describe("Seletor de figurinhas", () => {
     expect(grade()).toHaveLength(0);
     expect(vi.mocked(globalThis.fetch)).not.toHaveBeenCalled();
   });
+
+  it("a figurinha responde ao toque, onde o hover não aparece", async () => {
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+
+    // `hover:bg-surface-2` fica no mesmo lugar, e o estado apertado é o que confirma a escolha no
+    // telefone — medido pelo nome da classe.
+    const classes = grade()[0]!.className.split(/\s+/);
+
+    expect(classes).toContain("hover:bg-surface-2");
+    expect(classes).toContain("active:bg-surface-2");
+    expect(classes).toContain("active:ring-2");
+    expect(classes).toContain("active:ring-ring");
+  });
 });
