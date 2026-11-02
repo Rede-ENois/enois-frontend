@@ -640,7 +640,10 @@ function CommunityDetail() {
 
             {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div
+              data-composer-toolbar=""
+              className="mt-3 flex flex-wrap items-center justify-between gap-2"
+            >
               <div className="flex flex-wrap items-center gap-1.5">
                 <PostTypePicker
                   options={POST_TYPES}

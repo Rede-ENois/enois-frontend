@@ -879,7 +879,10 @@ function Home() {
                 onChange={handleMediaSelect}
               />
 
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle">
+              <div
+                data-composer-toolbar=""
+                className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle"
+              >
                 <div className="flex flex-wrap items-center gap-1.5">
                   {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
                   <Popover open={menuTopic} onOpenChange={setMenuTopic}>
