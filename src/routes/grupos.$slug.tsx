@@ -55,12 +55,12 @@ import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { formatTime } from "@/components/post/format-time";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 export const Route = createFileRoute("/grupos/$slug")({
@@ -156,11 +156,10 @@ function GrupoPage() {
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
           {group.bannerHtml ? (
-            <SandboxedHtmlFrame
+            <BannerHtmlFrame
               html={group.bannerHtml}
               title={group.name}
               className="h-40 w-full rounded-none border-0 shadow-none"
-              autoHeight={false}
             />
           ) : group.banner ? (
             <img src={resolveCdnUrl(group.banner)} alt="" className="h-40 w-full object-cover" />
