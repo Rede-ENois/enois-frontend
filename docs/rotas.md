@@ -32,7 +32,8 @@ Funcionalidades:
 - **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo)
 - **Identidade ativa:** escolhida no menu da conta; com a profissional, o compositor publica no feed corporativo (`BUSINESS`) e os tipos de página/artigo saem da seleção — regras em `componentes.md`
 - **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos. "Para você" is the default tab (the one that shows the "você está em dia" marker).
-- **`?compor=ARTICLE`:** opens the composer in article mode, then drops the param from the URL. The profile quick composer "Escrever artigo" shortcut links here.
+- **Topic is required** on every post published here (standalone posts): there is no "Sem assunto" option, and publish/schedule stay disabled until one is picked. The last topic used is preselected. The backend answers `400 TOPIC_REQUIRED` otherwise.
+- **Profile shortcuts:** the profile composer never publishes; it opens this composer. `?compor=ARTICLE` opens it in article mode; `?compor=MEDIA` attaches the photos/video picked on the profile (handed over in memory by `lib/composer-handoff`). Both params are dropped from the URL after use.
 - **Feed infinito** de `PostCard` components
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
