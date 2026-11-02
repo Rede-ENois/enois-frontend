@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { ConversationItemProps } from "@/types/routes/messages/conversation-item-props";
 import { ConversationItem as ConversationItemView } from "@rede-enois/design-system/domain";
 
@@ -79,10 +80,14 @@ export function ConversationItem({
   ]);
 
   const { peer, profileHref } = conversationPeer(conversation, otherId, otherUser);
+  const mine = !!preview && !!currentUserId && conversation.lastMessageFrom === currentUserId;
 
   return (
     <ConversationItemView
-      conversation={{ ...conversation, lastMessage: preview }}
+      conversation={{
+        ...conversation,
+        lastMessage: mine ? texts.messages.ownPreview(preview) : preview,
+      }}
       peer={peer}
       profileHref={profileHref}
       timeLabel={conversation.time ? formatTime(conversation.time) : ""}

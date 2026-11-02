@@ -2360,6 +2360,8 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    /** Inbox preview of a message the viewer sent: without it the peer seems to be the author. */
+    ownPreview: (text: string) => `Você: ${text}`,
     e2eRequired:
       "Ative a criptografia ponta a ponta para enviar e ler mensagens. Suas conversas ficam protegidas e só você e o destinatário podem ler.",
     loadMoreConversations: "Carregar conversas antigas",

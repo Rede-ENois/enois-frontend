@@ -11,6 +11,7 @@ export type ConversationItemProps = {
     | "unread"
     | "lastMessageE2e"
     | "lastMessageIv"
+    | "lastMessageFrom"
     | "identities"
   >;
   isActive: boolean;
