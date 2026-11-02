@@ -2,7 +2,7 @@ import type { AutoplayEntry } from "@/types/lib/feed/autoplay-entry";
 import type { AutoplayEnvironment } from "@/types/lib/feed/autoplay-environment";
 import type { AutoplayVideo } from "@/types/lib/feed/autoplay-video";
 
-import { readLiteMode } from "@/lib/lite-mode";
+import { readEconomicMode } from "@/lib/lite-mode";
 
 /** Fração mínima visível para um vídeo ficar elegível a começar a tocar. */
 export const ENTER_VISIBLE = 0.6;
@@ -301,11 +301,11 @@ let shared: ReturnType<typeof createVideoAutoplay> | undefined;
 /**
  * Ref callback (React 19) para o `<video>`: registra no coordenador único e devolve o cleanup.
  *
- * Em modo lite não registra nada: vídeo que toca sozinho é justamente o "acontecendo sozinho"
- * que o aparelho fraco não aguenta — a pessoa aperta play quando quiser.
+ * Em modo econômico (lite ou BATATA) não registra nada: vídeo que toca sozinho é justamente o
+ * "acontecendo sozinho" que o aparelho fraco não aguenta — a pessoa aperta play quando quiser.
  */
 export function autoplayVideoRef(el: HTMLVideoElement | null) {
-  if (!el || readLiteMode()) return;
+  if (!el || readEconomicMode()) return;
   shared ??= createVideoAutoplay(browserEnvironment());
   return shared.register(el);
 }

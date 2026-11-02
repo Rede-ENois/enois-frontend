@@ -6,6 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 
+import { writeLiteMode } from "@/lib/lite-mode";
+import { WEB_FONT_LINK_ID } from "@/lib/web-fonts";
+
 import { LiteModeEffects } from "./lite-mode-effects";
 
 vi.mock("@/lib/use-personalization", () => ({ usePersonalization: () => ({ data: undefined }) }));
@@ -37,5 +40,65 @@ describe("LiteModeEffects", () => {
 
     expect(oldValues).not.toContain(null);
     expect(root.hasAttribute("data-lite")).toBe(true);
+  });
+
+  it("keeps the pre-paint data-batata on mount and turns data-lite on with it", async () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    localStorage.setItem("connect-grow-lite-mode", "0");
+    localStorage.setItem("connect-grow-batata-mode", "1");
+    const root = document.documentElement;
+    root.setAttribute("data-lite", "");
+    root.setAttribute("data-batata", "");
+    const oldValues: (string | null)[] = [];
+    const observer = new MutationObserver((records) =>
+      oldValues.push(...records.map((record) => record.oldValue)),
+    );
+    observer.observe(root, {
+      attributeFilter: ["data-lite", "data-batata"],
+      attributeOldValue: true,
+    });
+
+    const host = document.createElement("div");
+    await act(async () => {
+      createRoot(host).render(
+        <QueryClientProvider client={new QueryClient()}>
+          <LiteModeEffects />
+        </QueryClientProvider>,
+      );
+    });
+    await Promise.resolve();
+    observer.disconnect();
+
+    // `null` = o atributo chegou a ser removido: no BATATA os dois continuam de pé desde o paint.
+    expect(oldValues).not.toContain(null);
+    expect(root.hasAttribute("data-batata")).toBe(true);
+    expect(root.hasAttribute("data-lite")).toBe(true);
+    localStorage.setItem("connect-grow-batata-mode", "0");
+  });
+
+  it("brings the web fonts back when the lite is turned off with the screen open", async () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    localStorage.setItem("connect-grow-lite-mode", "1");
+    localStorage.setItem("connect-grow-batata-mode", "0");
+    document.getElementById(WEB_FONT_LINK_ID)?.remove();
+
+    const host = document.createElement("div");
+    await act(async () => {
+      createRoot(host).render(
+        <QueryClientProvider client={new QueryClient()}>
+          <LiteModeEffects />
+        </QueryClientProvider>,
+      );
+    });
+    await Promise.resolve();
+    expect(document.getElementById(WEB_FONT_LINK_ID)).toBeNull();
+
+    // Só o lite estava ligado: o BATATA nunca entrou, então é a saída do modo econômico que devolve
+    // a folha do Google — sem recarregar a página.
+    await act(async () => {
+      writeLiteMode(false);
+    });
+
+    expect(document.getElementById(WEB_FONT_LINK_ID)).not.toBeNull();
   });
 });

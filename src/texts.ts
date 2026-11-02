@@ -553,6 +553,9 @@ export const texts = {
   personalization: {
     saved: "Preferências salvas.",
     saveError: "Não foi possível salvar as preferências. Tente novamente.",
+    // O BATATA liga no clique (sem esperar o "Salvar"); se a gravação falhar, a tela volta e
+    // a pessoa precisa saber por quê.
+    batataError: "Não foi possível aplicar o Modo BATATA. Tente novamente.",
   },
   corporate: {
     seoTitle: "Perfil profissional · Énóis",

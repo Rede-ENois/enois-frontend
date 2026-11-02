@@ -25,3 +25,4 @@
 | `temas.md` (novo)                | 60 coleções × 2 modos         | ✅                                          |
 | `push.md` (novo)                 | Web push e service worker     | ✅                                          |
 | `monitoramento-painel.md` (novo) | Abas, filtros, logs           | ✅                                          |
+| `modo-batata.md` (novo)          | Modo econômico e precedência  | ✅ (medições do build de produção)          |

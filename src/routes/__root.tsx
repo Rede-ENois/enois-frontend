@@ -23,7 +23,9 @@ import { registerPushSubscription } from "@/lib/push";
 import { hrefDoPush, subscriptionDoPush } from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
 import { hasSession, isProtectedPath } from "@/lib/require-auth";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
+import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
 
 import { AgeGate } from "@/components/age-gate";
 import { AppContainer } from "@/components/app-container";
@@ -141,12 +143,9 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "16x16 32x32 48x48" },
       { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Press+Start+2P&family=UnifrakturCook:wght@700&family=Creepster&family=Mountains+of+Christmas:wght@700&family=Pacifico&family=Rye&family=Gochi+Hand&display=swap",
-      },
+      // As fontes do Google entram pelo script de arranque, e só quando o aparelho não está em
+      // modo econômico: em BATATA a tipografia é a do sistema e o pedido nem sai. Sem JS, o
+      // `<noscript>` do shell devolve o `<link>` de sempre (src/lib/web-fonts.ts).
     ],
   }),
   shellComponent: RootShell,
@@ -154,29 +153,6 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-/**
- * Aplica o tema guardado antes do primeiro paint — e, junto, o Modo lite e a teimosia de
- * animações (as chaves espelham src/lib/lite-mode.ts): aparelho em modo lite não deve nem
- * começar a animar para depois parar.
- *
- * Sem isso o app nasce claro (e na cor padrão) e só depois de hidratar assume o
- * tema do usuário — aquele flash. O CSS já vem resolvido do `localStorage`, então
- * o script só injeta o texto, sem repetir a matemática de cor. A coleção temática
- * também entra aqui: o atributo `data-theme` precisa existir antes do paint,
- * porque o CSS estrutural do tema é escopado por ele.
- */
-const THEME_BOOTSTRAP_SCRIPT = `(function(){try{
-var raw=localStorage.getItem("connect-grow-preferences");
-if(raw){var parsed=JSON.parse(raw);if(parsed&&parsed.state&&parsed.state.theme==="dark"){document.documentElement.classList.add("dark");}}
-var collection=localStorage.getItem("connect-grow-theme-collection");
-if(collection){document.documentElement.setAttribute("data-theme",collection);}
-var lite=localStorage.getItem("connect-grow-lite-mode")==="1";
-if(lite){document.documentElement.setAttribute("data-lite","");}
-else if(localStorage.getItem("connect-grow-force-motion")==="1"){document.documentElement.setAttribute("data-force-motion","");}
-var css=localStorage.getItem("connect-grow-theme-css");
-if(css){var style=document.createElement("style");style.id="app-theme";style.textContent=css;document.head.appendChild(style);}
-}catch(error){}})();`;
 
 function RootShell({ children }: WithRequiredChildren) {
   // Browsers blank the nonce attribute after parsing, so hydration would see a mismatch.
@@ -190,6 +166,10 @@ function RootShell({ children }: WithRequiredChildren) {
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }}
         />
+        {/* Sem JS o script de arranque não roda: o `<link>` das fontes volta a ser fixo. */}
+        <noscript>
+          <link rel="stylesheet" href={WEB_FONT_STYLESHEET} />
+        </noscript>
       </head>
 
       <body>
