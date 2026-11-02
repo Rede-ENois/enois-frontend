@@ -14,9 +14,10 @@ export type Mentor = {
    * conversão para texto está em `@/lib/faisca`.
    */
   sparksPrice: number | null;
-  /** Sala externa da sessão (Google Meet, Jitsi...) — link https público para quem agenda. */
-  meetingUrl: string | null;
-  /** De onde vem a sala: Jitsi por sessão (padrão), sala fixa do Jitsi ou sala própria. */
+  /**
+   * De onde vem a sala: Jitsi por sessão (padrão), sala fixa do Jitsi ou sala própria.
+   * O link em si não vem na vitrine: é privado e só o dono o recebe por `GET /mentors/{id}/room`.
+   */
   roomMode: MentorRoomMode;
   /**
    * Próxima vaga livre — **nulo** quando o mentor não tem nenhuma vaga futura (é o que a API

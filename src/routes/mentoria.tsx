@@ -204,7 +204,7 @@ function Mentoria() {
                     initialExpertise={myMentor?.expertise.join(", ")}
                     initialPrice={myMentor?.price}
                     initialBanner={myMentor?.banner ?? undefined}
-                    initialMeetingUrl={myMentor?.meetingUrl ?? undefined}
+                    initialMeetingUrl={myMentorRoom?.meetingUrl ?? undefined}
                     initialRoomMode={myMentor?.roomMode}
                     initialJitsiRoom={myMentorRoom?.jitsiRoom}
                     initialSparksPrice={myMentor?.sparksPrice ?? undefined}
@@ -598,7 +598,6 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
             <BookSessionDialog
               mentorId={mentor.id}
               mentorName={user?.name ?? texts.mentoring.mentorFallback}
-              meetingUrl={mentor.meetingUrl}
               roomMode={mentor.roomMode}
               sparksPrice={mentor.sparksPrice}
             />
@@ -672,13 +671,11 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
 function BookSessionDialog({
   mentorId,
   mentorName,
-  meetingUrl,
   roomMode,
   sparksPrice,
 }: {
   mentorId: string;
   mentorName: string;
-  meetingUrl?: string | null;
   roomMode?: MentorRoomMode;
   /** Preço em milésimos de faísca; `null`/`undefined` quando o mentor não cobra em faíscas. */
   sparksPrice?: number | null;
@@ -807,23 +804,9 @@ function BookSessionDialog({
               </div>
             )}
 
-            {roomMode === "CUSTOM" && meetingUrl ? (
-              <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                {texts.mentoring.meetingRoom}:{" "}
-                <a
-                  href={meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="break-all text-primary underline"
-                >
-                  {meetingUrl}
-                </a>
-              </p>
-            ) : (
-              <div className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                <RoomNote mode={roomMode ?? "JITSI_SESSION"} />
-              </div>
-            )}
+            <div className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+              <RoomNote mode={roomMode ?? "JITSI_SESSION"} />
+            </div>
 
             {slots.length > 0 && (
               <div className="space-y-2">
