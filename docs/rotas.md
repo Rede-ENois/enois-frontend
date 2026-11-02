@@ -4,7 +4,11 @@ As rotas são geradas pelo TanStack Router com SSR — o índice completo está 
 
 ## `/` - Landing Page (`src/routes/index.tsx`)
 
-Página de marketing pública. Sem autenticação necessária.
+Página de marketing pública. Sem autenticação necessária — e quem **tem** sessão não fica aqui:
+o `beforeLoad` da rota manda para `/feed`, e o fallback do cliente em `__root.tsx`
+(`shouldLeaveLanding`, `src/lib/require-auth.ts`) repete a regra quando o SSR entrega um deep link e
+o `beforeLoad` não roda (fechar a aba e reabrir o site). Um destino de push pendente na query
+(`/?push=...`) vence a home e é navegado primeiro.
 
 **Componente:** `Landing()`
 

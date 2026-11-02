@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import {
   type ErrorComponentProps,
@@ -27,7 +27,7 @@ import {
   subscriptionDoPush,
 } from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
-import { hasSession, isProtectedPath } from "@/lib/require-auth";
+import { hasSession, isProtectedPath, shouldLeaveLanding } from "@/lib/require-auth";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
 import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
@@ -199,12 +199,26 @@ function RootComponent() {
 function RootInsideProvider() {
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // Lido uma vez, na montagem: o efeito de push apaga a query antes de navegar, e um segundo
+  // passe (StrictMode) nao pode confundir "sem push" com "home de quem tem sessao".
+  const [pushTargetAtLoad] = useState(() =>
+    typeof window === "undefined" ? null : hrefDaQueryDePush(window.location.search),
+  );
 
   useThemeSync();
 
   useEffect(() => {
     registerServiceWorker();
   }, []);
+
+  useEffect(() => {
+    // A landing so aparece para visitante. O `beforeLoad` dela nao roda no SSR de um deep link,
+    // entao quem reabre o site logado (e o proprio service worker) ve a home em vez do feed.
+    // Declarado antes dos efeitos de push de proposito: eles consomem a query antes de navegar.
+    if (shouldLeaveLanding(pathname, hasSession(), Boolean(pushTargetAtLoad))) {
+      void router.navigate({ to: "/feed", replace: true });
+    }
+  }, [pathname, router, pushTargetAtLoad]);
 
   useEffect(() => {
     // Clique na notificacao PUSH: o service worker nao conhece as rotas do app (a tabela esta em
