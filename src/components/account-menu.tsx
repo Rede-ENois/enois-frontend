@@ -109,27 +109,35 @@ export function AccountMenu({ profile }: AccountMenuProps) {
         loggingOut={loggingOut}
         identitySlot={
           showSwitch ? (
-            <div className="flex rounded-full border border-border-soft p-0.5">
-              {(["SOCIAL", "PROFESSIONAL"] as const).map((option) => {
-                const selected = context === option;
-                const Icon = option === "SOCIAL" ? UsersRound : Briefcase;
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => choose(option)}
-                    className={`flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-medium transition ${
-                      selected
-                        ? "bg-primary text-primary-foreground"
-                        : "text-text-subtle hover:text-text-strong"
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
+            <div className="flex flex-col gap-1.5">
+              {/* O menu troca inteiro ao alternar: dizer em qual perfil a pessoa está evita que a
+                  troca de opções seja lida como bug (issue #560). */}
+              <p className="text-xs text-text-subtle">
+                {texts.account.menu.activeIdentity[context]}
+              </p>
 
-                    <>{option === "SOCIAL" ? "Social" : "Profissional"}</>
-                  </button>
-                );
-              })}
+              <div className="flex rounded-full border border-border-soft p-0.5">
+                {(["SOCIAL", "PROFESSIONAL"] as const).map((option) => {
+                  const selected = context === option;
+                  const Icon = option === "SOCIAL" ? UsersRound : Briefcase;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => choose(option)}
+                      className={`flex flex-1 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-medium transition ${
+                        selected
+                          ? "bg-primary text-primary-foreground"
+                          : "text-text-subtle hover:text-text-strong"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+
+                      <>{option === "SOCIAL" ? "Social" : "Profissional"}</>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           ) : corporateState === "ERROR" ? (
             // A failed request is not "no professional profile": say so and let the person retry.
