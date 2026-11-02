@@ -30,7 +30,12 @@ const CODIGOS = Array.from(
 function fakeFetch(input: RequestInfo | URL) {
   const url = new URL(String(input), "http://localhost");
   if (url.pathname.endsWith("/emotes/index")) {
-    return resposta({ entries: {}, generatedAt: "2026-10-29T00:00:00Z" });
+    return resposta({
+      entries: Object.fromEntries(
+        CODIGOS.map((codigo) => [codigo, `/emotes/image/BTTV/${codigo}?variant=full`]),
+      ),
+      generatedAt: "2026-10-29T00:00:00Z",
+    });
   }
 
   const page = Number(url.searchParams.get("page") ?? 1);
@@ -249,6 +254,29 @@ describe("Seletor de figurinhas", () => {
 
     expect(grade()).toHaveLength(0);
     expect(document.body.textContent).toContain(texts.emotes.empty);
+  });
+
+  it("opens on Recentes with the last picked stickers and searching shows the full list", async () => {
+    window.localStorage.setItem("rede:emotes:recent:v1", JSON.stringify(["EMOTE07", "EMOTE03"]));
+    await renderizar();
+    await esperarAte(() => titulos().length === 2);
+
+    expect(titulos()).toEqual(["EMOTE07", "EMOTE03"]);
+    expect(document.body.textContent).toContain(texts.emotes.tabRecent);
+
+    await digitar("EMOTE1");
+    await esperarAte(() => titulos().length === 10);
+    expect(titulos()).toEqual(CODIGOS.filter((codigo) => codigo.startsWith("EMOTE1")));
+  });
+
+  it("picking a sticker moves it to the front of Recentes", async () => {
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+    await act(async () => grade()[5]!.click());
+
+    expect(JSON.parse(window.localStorage.getItem("rede:emotes:recent:v1") ?? "[]")).toEqual([
+      "EMOTE05",
+    ]);
   });
 
   it("fechado não busca nada no backend", async () => {
