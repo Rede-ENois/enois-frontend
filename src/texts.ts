@@ -690,6 +690,7 @@ export const texts = {
           : "Contatos importados do LinkedIn.";
       },
     },
+    settingsSeoTitle: "Conta e segurança",
     menu: {
       blockedUsers: "Usuários bloqueados",
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */

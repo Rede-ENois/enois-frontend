@@ -20,21 +20,16 @@ import {
 import { logout } from "@/lib/logout";
 import { hasSessionFlag } from "@/lib/session";
 
-import { ChangeEmailDialog } from "./change-email-dialog";
-import { ChangePasswordDialog } from "./change-password-dialog";
-import { DeleteAccountDialog } from "./delete-account-dialog";
 import { HealthyUsageDialog } from "./healthy-usage/healthy-usage-dialog";
-import { LinkedAccountsDialog } from "./linked-accounts-dialog";
 
 const ACCOUNT_MENU_HREFS = {
   corporateProfile: "/profissional",
   wallet: "/carteira",
   marketplace: "/carteira?tab=loja",
   support: "/suporte",
-  security: "/seguranca",
-  blockedUsers: "/bloqueados",
-  myReports: "/denuncias",
-  sanctions: "/penalidades",
+  // E-mail, password, linked logins, security, blocks, reports, sanctions and account deletion
+  // live on this page; the menu keeps one entry for it (issue #562).
+  account: "/conta",
   guardian: "/responsavel",
   moderator: "/moderador",
   apoie: "/apoiar",
@@ -43,10 +38,6 @@ const ACCOUNT_MENU_HREFS = {
 /** Account menu: identity switcher, logout and the account dialogs. */
 export function AccountMenu({ profile }: AccountMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showChangeEmail, setShowChangeEmail] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [showLinkedAccounts, setShowLinkedAccounts] = useState(false);
   const [showHealthyUsage, setShowHealthyUsage] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const { toast } = useToast();
@@ -106,11 +97,7 @@ export function AccountMenu({ profile }: AccountMenuProps) {
         }}
         open={menuOpen}
         onOpenChange={setMenuOpen}
-        onChangeEmail={openDialog(setShowChangeEmail)}
-        onChangePassword={openDialog(setShowChangePassword)}
-        onOpenLinkedAccounts={openDialog(setShowLinkedAccounts)}
         onOpenHealthyUsage={openDialog(setShowHealthyUsage)}
-        onDeleteAccount={openDialog(setShowDeleteAccount)}
         onLogout={() => void handleLogout()}
         loggingOut={loggingOut}
         identitySlot={
@@ -162,14 +149,6 @@ export function AccountMenu({ profile }: AccountMenuProps) {
           ) : undefined
         }
       />
-      <ChangeEmailDialog
-        open={showChangeEmail}
-        onOpenChange={setShowChangeEmail}
-        currentEmail={profile.email}
-      />
-      <ChangePasswordDialog open={showChangePassword} onOpenChange={setShowChangePassword} />
-      <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
-      <LinkedAccountsDialog open={showLinkedAccounts} onOpenChange={setShowLinkedAccounts} />
       <HealthyUsageDialog open={showHealthyUsage} onOpenChange={setShowHealthyUsage} />
     </>
   );

@@ -46,6 +46,7 @@ import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
 import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as CarteiraRouteImport } from './routes/carteira'
 import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
@@ -266,6 +267,11 @@ const ContatoRoute = ContatoRouteImport.update({
   path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContaRoute = ContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComunidadesRoute = ComunidadesRouteImport.update({
   id: '/comunidades',
   path: '/comunidades',
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/contato': typeof ContatoRoute
+  '/conta': typeof ContaRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
@@ -522,6 +529,7 @@ export interface FileRoutesByTo {
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/contato': typeof ContatoRoute
+  '/conta': typeof ContaRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
@@ -596,6 +604,7 @@ export interface FileRoutesById {
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/contato': typeof ContatoRoute
+  '/conta': typeof ContaRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
@@ -671,6 +680,7 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/comunidades'
     | '/contato'
+    | '/conta'
     | '/denuncias'
     | '/developers'
     | '/diretrizes'
@@ -744,6 +754,7 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/comunidades'
     | '/contato'
+    | '/conta'
     | '/denuncias'
     | '/developers'
     | '/diretrizes'
@@ -817,6 +828,7 @@ export interface FileRouteTypes {
     | '/carteira'
     | '/comunidades'
     | '/contato'
+    | '/conta'
     | '/denuncias'
     | '/developers'
     | '/diretrizes'
@@ -891,6 +903,7 @@ export interface RootRouteChildren {
   CarteiraRoute: typeof CarteiraRoute
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
   ContatoRoute: typeof ContatoRoute
+  ContaRoute: typeof ContaRoute
   DenunciasRoute: typeof DenunciasRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
@@ -1204,6 +1217,13 @@ declare module '@tanstack/react-router' {
       path: '/contato'
       fullPath: '/contato'
       preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conta': {
+      id: '/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof ContaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comunidades': {
@@ -1565,6 +1585,7 @@ const rootRouteChildren: RootRouteChildren = {
   CarteiraRoute: CarteiraRoute,
   ComunidadesRoute: ComunidadesRouteWithChildren,
   ContatoRoute: ContatoRoute,
+  ContaRoute: ContaRoute,
   DenunciasRoute: DenunciasRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
