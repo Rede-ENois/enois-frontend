@@ -3070,7 +3070,8 @@ export const texts = {
     /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */
     lookPieces: (count: number) => `${count} ${count === 1 ? "peça" : "peças"}`,
     lookPiecesHint: "Cada peça é vendida separada: compre só a que falta e monte o seu jeito.",
-    buyPiece: (price: string) => `Comprar · ${price}`,
+    /** O botão mostra só a faísca e o preço; quem lê em voz alta ouve a peça e o valor. */
+    buyPiece: (name: string, price: string) => `Comprar ${name} por ${price}`,
     /** Loja: a aba que abre em todas as coleções, para nada do catálogo ficar escondido. */
     shop: {
       allTab: "Todas as coleções",

@@ -242,8 +242,10 @@ describe("Catálogo da loja", () => {
 
     // À venda: o preço da peça aparece no botão e a compra é só dela.
     const frame = row("Redemoinho");
-    expect(frame.textContent).toContain("Comprar · 30");
-    await click([...frame.querySelectorAll("button")].at(-1)!);
+    const buyPiece = [...frame.querySelectorAll("button")].at(-1)!;
+    expect(buyPiece.getAttribute("aria-label")).toBe("Comprar Redemoinho por 30");
+    expect(buyPiece.textContent).toContain("30");
+    await click(buyPiece);
     expect(actions.onBuy).toHaveBeenCalledWith("moldura-redemoinho");
     expect(actions.onBuyLook).not.toHaveBeenCalled();
 
