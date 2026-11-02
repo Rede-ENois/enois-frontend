@@ -61,6 +61,7 @@ import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -208,7 +209,7 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     // "Ainda não vi" não se renova sozinha: o servidor tira o post da lista assim que ele tem
     // reação ou comentário meu, e a pessoa perderia o que está lendo no meio da leitura. A lista
     // se atualiza quando ela volta para a aba (issue #559).
-    refetchInterval: tab === "UNSEEN" ? false : 30_000,
+    ...feedRefreshOptions(tab),
   });
 }
 

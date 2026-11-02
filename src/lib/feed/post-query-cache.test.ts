@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 
 import type { PostView } from "@/types/application/feed/post-view";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { updatePostInQueryCache } from "./post-query-cache";
+import { feedRefreshOptions, isUnseenFeedQuery, updatePostInQueryCache } from "./post-query-cache";
 
 const post = (id: string, reactions = 0): PostView =>
   ({ id, counters: { reactions, comments: 0, saves: 0, shares: 0 } }) as PostView;
@@ -43,5 +43,26 @@ describe("updatePostInQueryCache", () => {
       counters: { ...current.counters, reactions: 9 },
     }));
     expect((client.getQueryData(["post", "p2"]) as PostView).counters.reactions).toBe(9);
+  });
+});
+
+describe("renovação automática do feed", () => {
+  it("só a aba 'Ainda não vi' fica fora das duas rotas automáticas", () => {
+    expect(feedRefreshOptions("UNSEEN")).toEqual({
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+    });
+    for (const tab of ["ALL", "FOR_YOU", "TRENDING", "CORPORATE"]) {
+      expect(feedRefreshOptions(tab)).toEqual({
+        refetchInterval: 30_000,
+        refetchOnWindowFocus: true,
+      });
+    }
+  });
+
+  it("reconhece a chave que o useFeed monta", () => {
+    expect(isUnseenFeedQuery(["feed", "UNSEEN", "", ""])).toBe(true);
+    expect(isUnseenFeedQuery(["feed", "ALL", "", ""])).toBe(false);
+    expect(isUnseenFeedQuery(["post", "UNSEEN"])).toBe(false);
   });
 });

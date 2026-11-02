@@ -125,6 +125,49 @@ describe("ordem após enviar comentários", () => {
   );
 });
 
+/**
+ * A aba "Ainda não vi" some com o post assim que ele tem comentário meu, então comentar não pode
+ * revalidar o feed: o contador é atualizado no cache e a lista fica como está (issue #559).
+ */
+describe("comentar não revalida o feed", () => {
+  it("atualiza só o contador do post, sem pedir a lista de novo", async () => {
+    mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
+    mocks.create.mockResolvedValue(comment("new", 2));
+    const pagina = {
+      pages: [{ items: [{ id: "post", counters: { comments: 1 } }], nextCursor: null }],
+      pageParams: [null],
+    };
+    client.setQueryData(["feed", "UNSEEN", "", ""], pagina);
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    await act(async () => usePostCardStore.getState().setDraft("post", "Comentário"));
+    await act(async () =>
+      container
+        .querySelector("form")!
+        .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
+    );
+    await settle();
+
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(invalidate).not.toHaveBeenCalled();
+    const feed = client.getQueryData<{ pages: { items: { counters: { comments: number } }[] }[] }>([
+      "feed",
+      "UNSEEN",
+      "",
+      "",
+    ]);
+    expect(feed?.pages[0].items[0].counters.comments).toBe(2);
+  });
+});
+
 describe("campo do comentário", () => {
   const lastField = () =>
     mocks.field.mock.calls.at(-1)![0] as {
