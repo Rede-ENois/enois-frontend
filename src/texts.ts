@@ -674,10 +674,6 @@ export const texts = {
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
       pushError: "Não foi possível ativar as notificações. Tente novamente.",
-      /** Rótulos do item de avisos no celular (o design system usa estes três estados). */
-      pushToggleOff: "Ligar avisos",
-      pushToggleOn: "Avisos ligados neste aparelho",
-      pushToggleWorking: "Ligando avisos...",
     },
     changeEmail: {
       error: "Não foi possível alterar o e-mail. Tente novamente.",
