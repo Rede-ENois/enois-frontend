@@ -689,11 +689,11 @@ export const texts = {
 
   landing: {
     seo: {
-      title: "Énóis, uma rede social feita de gente, não de atenção",
+      title: "Énóis, rede social gratuita, sem anúncios e com feed que termina",
       description:
-        "Rede social gratuita feita por gente: conversas, trabalho, brincadeira e vizinhança no mesmo lugar. Sem anúncios, sem planos pagos e com um feed que termina quando o conteúdo acaba.",
+        "Rede social gratuita com conversas, comunidades, vagas, mentoria e jogos. Sem anúncios, sem plano pago, e o feed termina quando o conteúdo acaba.",
       ogDescription:
-        "Sem anúncio, sem paywall e sem esteira infinita. Uma rede humana em construção com as pessoas, e aberta para quem quiser ajudar.",
+        "Sem anúncio, sem paywall e sem rolagem infinita. Rede social em construção com quem usa, de código aberto.",
       ogImageAlt: "Identidade visual do Énóis com seu símbolo e slogan.",
     },
     /**
@@ -716,81 +716,79 @@ export const texts = {
       contribute: "Contribuir",
     },
     hero: {
-      badge: "A rede é nossa",
-      title: "Uma rede social não precisa viver da sua atenção.",
+      badge: "Rede social gratuita",
+      title: "Uma rede social que não vive da sua atenção.",
       description:
-        "O énóis é uma rede humana: um lugar para conversar, trabalhar, aprender, brincar e construir junto. Sem anúncios, sem planos pagos e sem nada tentando prender você: quem decide quando a visita acaba é você.",
+        "No énóis você publica, entra em comunidades, procura vaga, faz mentoria e joga. Não tem anúncio nem plano pago, e o feed avisa quando acaba.",
       join: "Entrar no énóis",
-      proposal: "Conhecer a proposta",
+      proposal: "Ver a proposta",
       facts: {
         free: "Gratuita, sem plano pago",
-        noAds: "Sem anúncio em nenhum canto",
-        feedEnds: "O feed acaba, e avisa quando acaba",
+        noAds: "Sem anúncio",
+        feedEnds: "O feed acaba e avisa",
       },
     },
     problem: {
-      eyebrow: "De onde a gente veio",
-      title: "Você entrou para conversar. A plataforma quer que você fique.",
+      eyebrow: "O problema",
+      title: "Você entra para conversar. A plataforma quer que você fique.",
       paragraphs: [
-        "Quando a receita de uma rede vem da sua atenção, cada detalhe do produto empurra para o mesmo lado: mais tempo de tela, mais reação, mais retorno. Não é maldade de ninguém, é o modelo funcionando como foi desenhado.",
-        "O énóis nasce de uma pergunta incômoda: e se a plataforma não precisasse ganhar quando você perde seu tempo? É essa pergunta que organiza o que a gente constrói aqui, e o que a gente se recusa a construir.",
+        "Quando a receita vem da sua atenção, o produto é desenhado para render mais tempo de tela, mais reação e mais retorno.",
+        "O énóis parte de outra conta: sem anúncio, a plataforma não ganha quando você perde tempo. Isso decide o que a gente constrói e o que recusa construir.",
       ],
-      standardTitle: "O modelo que a gente questiona",
+      standardTitle: "Como costuma ser",
       standardPoints: [
-        "Tempo de tela como a métrica que manda.",
-        "Notificação desenhada para trazer você de volta.",
-        "Alcance disputado em leilão de anúncio.",
-        "Pessoa tratada como inventário publicitário.",
+        "Tempo de tela é a métrica principal.",
+        "Notificação feita para trazer você de volta.",
+        "Alcance decidido em leilão de anúncio.",
+        "Pessoa vira inventário de publicidade.",
       ],
-      oursTitle: "A aposta do énóis",
+      oursTitle: "Como é no énóis",
       oursPoints: [
-        "A conta não fecha com publicidade, por isso não existe anúncio aqui.",
-        "O que existe é para todo mundo: sem plano pago esperando na esquina.",
-        "O feed termina quando o conteúdo acaba, e diz isso na sua cara.",
-        "Gente de verdade moderando, com regras escritas antes de qualquer punição.",
-        "A rede é humana antes de ser profissional: a foto do almoço e a vaga da empresa cabem no mesmo perfil.",
+        "Não há anúncio.",
+        "Todo mundo usa os mesmos recursos, sem plano pago.",
+        "O feed termina quando o conteúdo acaba, e mostra o aviso.",
+        "Pessoas moderam, com regras escritas antes de qualquer punição.",
+        "A foto do almoço e a vaga da empresa cabem no mesmo perfil.",
       ],
     },
     principles: {
       eyebrow: "Na prática",
-      title: "Filosofia sem prática vira frase de parede.",
-      description:
-        "Estes são compromissos que dá para conferir no produto, não promessas para um futuro distante.",
+      title: "O que dá para conferir no produto",
+      description: "Seis compromissos que já valem hoje.",
       items: [
         {
-          title: "Gratuito de verdade",
-          text: "Sem anúncio, sem plano pago e sem versão premium que destrava o que a gratuita esconde. Todo mundo usa a mesma plataforma, com os mesmos recursos.",
+          title: "Gratuito",
+          text: "Sem anúncio, sem plano pago e sem versão premium. Todo mundo tem os mesmos recursos.",
         },
         {
           title: "O feed acaba",
-          text: "Quando as publicações terminam, aparece o aviso: “Você viu tudo por enquanto.” A visita acaba quando você quiser, não quando o site decidir.",
+          text: "Quando as publicações terminam, aparece o aviso “Você viu tudo por enquanto.” Não há rolagem sem fim.",
         },
         {
-          title: "A mídia não sequestra a tela",
-          text: "Vídeo toca sem som e só enquanto está à vista; quando você rola para longe, ele para. Nada de som automático atrás do que você está lendo.",
+          title: "Vídeo sem som automático",
+          text: "O vídeo toca sem som e só enquanto está à vista. Ao rolar para longe, ele para.",
         },
         {
-          title: "Sua presença, do seu jeito",
-          text: "Bio, capa e páginas aceitam HTML e CSS escritos por você; a cor do tema é escolhida por quem usa, não imposta pelo produto.",
+          title: "Perfil do seu jeito",
+          text: "Bio, capa e páginas aceitam HTML e CSS escritos por você. A cor do tema é você quem escolhe.",
         },
         {
-          title: "Regras escritas, moderação real",
-          text: "As diretrizes são públicas e valem para todo mundo, inclusive para quem denuncia. Denúncia pode ser acompanhada e é revisada por gente, não engavetada.",
+          title: "Regras escritas, moderação por pessoas",
+          text: "As diretrizes são públicas e valem para todo mundo, inclusive para quem denuncia. Você acompanha a denúncia, e uma pessoa a revisa.",
         },
         {
-          title: "Construção aberta",
-          text: "Uma API pública documentada, um canal de suporte de verdade e um produto que muda com o que a comunidade aponta.",
+          title: "Desenvolvimento aberto",
+          text: "API pública documentada, canal de suporte com registro e resposta, e um produto que muda conforme a comunidade aponta.",
         },
       ],
     },
     product: {
-      eyebrow: "Sem maquete",
-      title: "O que já está no ar",
-      description:
-        "Nada aqui é mockup nem promessa de roadmap: é o que existe hoje, funcionando. Parte abre sem conta nenhuma; o resto pede só um cadastro gratuito.",
+      eyebrow: "Já funciona",
+      title: "O que existe hoje",
+      description: "Parte abre sem conta. O resto pede só um cadastro gratuito.",
       capture: {
         alt: "Captura da página pública de vagas do énóis, com filtros por nível, local e tipo e cartões de vagas abertas",
-        caption: "Captura real da página de vagas, enois.ia.br/vagas, aberta sem login.",
+        caption: "Página de vagas, enois.ia.br/vagas, aberta sem login.",
       },
       groups: [
         {
@@ -845,7 +843,7 @@ export const texts = {
           ],
         },
         {
-          label: "O dinheiro é interno",
+          label: "Moeda interna",
           items: [
             "Faíscas: a moeda circula entre as pessoas, sem dinheiro real",
             "Carteira com extrato, transferências instantâneas e resgate em bens",
@@ -860,47 +858,46 @@ export const texts = {
     },
     build: {
       eyebrow: "Em construção",
-      title: "Nada aqui é definitivo, de propósito.",
+      title: "Ainda está em construção.",
       paragraphs: [
-        "O énóis não é um produto lacrado. É software vivo, feito e refeito a partir do que a comunidade aponta: o que confunde, o que trava, o que falta.",
-        "A gente não promete perfeição, promete evolução e transparência sobre o que ainda não está resolvido, incluindo o que esta página ainda não conta.",
+        "O énóis muda com o que a comunidade aponta: o que confunde, o que trava, o que falta.",
+        "O que ainda não está resolvido a gente diz, inclusive o que esta página não conta.",
       ],
       channels: {
         contact: {
-          label: "Falar com a gente",
-          description:
-            "Um canal de suporte de verdade, com registro e resposta, não um formulário que some.",
+          label: "Falar com a equipe",
+          description: "Suporte com registro e resposta.",
         },
         guidelines: {
           label: "Ler as diretrizes",
-          description: "As regras da comunidade, escritas e públicas, valem para todo mundo.",
+          description: "As regras da comunidade, públicas e iguais para todos.",
         },
         api: {
-          label: "Construir em cima",
-          description: "A API é pública e documentada: dá para integrar, automatizar e criar.",
+          label: "Integrar pela API",
+          description: "API pública e documentada, para integrar e automatizar.",
         },
       },
     },
     contribute: {
-      eyebrow: "Código aberto, processo combinado",
-      title: "Contribuir não é bagunça.",
+      eyebrow: "Código aberto",
+      title: "Como contribuir com o código",
       description:
-        "O código do Énóis é aberto, mas o processo é combinado. Antes de abrir um PR, a gente quer saber quem você é, o que quer resolver e se você leu as regras. Isso não é burocracia: é o que mantém o projeto saudável para quem usa e para quem mantém.",
-      rulesTitle: "Como a gente trabalha",
+        "O código do Énóis é aberto e segue um processo. Antes de abrir um PR, conte quem você é, o que quer resolver e confirme que leu as regras.",
+      rulesTitle: "Passo a passo",
       rules: [
         "Leia o guia de contribuição e o código de conduta antes de escrever código.",
         "Abra ou assuma uma issue: mudanças grandes precisam de conversa antes do PR.",
         "Mande mudanças pequenas, com teste e a descrição do problema que resolvem.",
-        "A revisão é conversa técnica, não concurso. O merge é decisão de quem mantém.",
+        "A revisão é uma conversa técnica. Quem mantém o projeto decide o merge.",
       ],
       guide: "Ler o guia de contribuição",
       guideUrl: "https://github.com/Rede-ENois/enois-backend/blob/main/CONTRIBUTING.md",
       formTitle: "Quero contribuir",
       formDescription:
-        "Deixe seus dados básicos. O GitHub é o canal do trabalho; o e-mail serve só para falar sobre a contribuição.",
+        "Informe seus dados. O trabalho acontece no GitHub; o e-mail é só para falar sobre a contribuição.",
       fields: {
         name: "Nome",
-        namePlaceholder: "Como podemos te chamar",
+        namePlaceholder: "Como devemos chamar você",
         github: "GitHub",
         githubPlaceholder: "@usuario ou https://github.com/usuario",
         email: "E-mail",
@@ -911,7 +908,7 @@ export const texts = {
         experiencePlaceholder: "Escolha uma faixa",
         message: "O que você quer contribuir?",
         messagePlaceholder:
-          "Conte o que você já fez, o que quer aprender ou qual problema do projeto quer atacar.",
+          "O que você já fez, o que quer aprender ou qual problema quer resolver.",
       },
       areas: {
         engineering: "Engenharia",
@@ -937,7 +934,7 @@ export const texts = {
       sending: "Enviando...",
       successTitle: "Recebemos sua candidatura",
       successDescription:
-        "O registro fica na fila interna do projeto. Se houver uma issue ou um próximo passo para a sua área, a gente fala com você pelo GitHub ou pelo e-mail informado.",
+        "Seu registro entrou na fila do projeto. Se houver uma issue ou um próximo passo para a sua área, entramos em contato pelo GitHub ou pelo e-mail informado.",
       verifiedGithubHint:
         "O GitHub vem do seu vínculo verificado; ele não pode ser alterado por aqui.",
       verifiedSuccessTitle: "Dados confirmados",
@@ -951,28 +948,24 @@ export const texts = {
       validationTerms: "Para enviar, aceite as regras e os termos.",
     },
     finalCta: {
-      eyebrow: "Chega junto",
-      title: "A internet também é feita das escolhas da gente.",
-      description:
-        "O énóis ainda está evoluindo, e é agora que dá para ajudar a definir o que ele vai ser. Criar conta é gratuito, leva um minuto e não pede cartão.",
-      free: "Acesso gratuito é princípio, não promoção: sem anúncio, sem plano pago e sem versão premium pela metade.",
-      createAccount: "Fazer parte do énóis",
+      eyebrow: "Crie sua conta",
+      title: "Entre agora e ajude a definir o que o énóis vai ser.",
+      description: "Criar conta é gratuito, leva um minuto e não pede cartão.",
+      free: "Gratuito é regra do projeto, não promoção.",
+      createAccount: "Criar minha conta",
       existingAccount: "Já tenho conta",
       finePrint: "Sem cartão de crédito · Sem anúncios · Sem plano premium",
     },
     securityNote: {
       eyebrow: "Aviso a quem testa segurança",
       title: "Testem na sandbox, não contra a nossa API.",
-      body: "Pedimos, por favor, que os testes de segurança sejam realizados em ambiente de sandbox, e não contra a nossa API. Temos os repositórios abertos, tudo é 100% open source, e damos autorização apenas para testes realizados em ambiente simulado. Todo teste executado contra a nossa API será encarado como crime cibernético e denunciado como tal.",
-      closing:
-        "Somos uma rede social sem fins lucrativos que quer ser melhor junto da comunidade. Pedimos que não tentem destruir ideias livres e gratuitas que apenas querem trazer o bem.",
+      body: "Faça testes de segurança só no ambiente de sandbox, nunca contra a nossa API. Os repositórios são abertos, e só autorizamos testes em ambiente simulado. Teste executado contra a nossa API será tratado como crime cibernético e denunciado.",
+      closing: "Somos uma rede social sem fins lucrativos, construída junto com a comunidade.",
       repoLink: "Ver os repositórios abertos",
     },
     footer: {
-      copyright: (year: number) =>
-        `© ${year} Énóis · Uma rede feita com as pessoas, todos os dias.`,
-      tagline:
-        "Uma rede social gratuita feita por gente, sem anúncios, sem paywall, em construção com quem usa.",
+      copyright: (year: number) => `© ${year} Énóis · Rede social gratuita e em construção.`,
+      tagline: "Rede social gratuita, sem anúncios e sem paywall, em construção com quem usa.",
       sectionsLabel: "Nesta página",
       projectLabel: "O projeto",
       privacy: "Privacidade",

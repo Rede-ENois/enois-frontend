@@ -125,7 +125,7 @@ function Landing() {
       <main>
         <section aria-labelledby="hero-title" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20">
-            <p className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary-soft/60 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+            <p className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary-soft/60 px-3 py-1 text-xs font-medium uppercase tracking-widest text-primary">
               {texts.landing.hero.badge}
             </p>
 
@@ -182,7 +182,7 @@ function Landing() {
             <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
               <h2
                 id="community-numbers"
-                className="text-xs font-semibold uppercase tracking-widest text-primary-foreground/70"
+                className="text-xs font-medium uppercase tracking-widest text-primary-foreground/70"
               >
                 {texts.landing.community.eyebrow}
               </h2>
@@ -218,7 +218,7 @@ function Landing() {
 
         <section id="proposta" className="scroll-mt-20 border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+            <p className="text-xs font-medium uppercase tracking-widest text-primary">
               {texts.landing.problem.eyebrow}
             </p>
 
@@ -226,7 +226,7 @@ function Landing() {
               {texts.landing.problem.title}
             </h2>
 
-            <div className="mt-8 grid max-w-3xl gap-5 text-base font-normal leading-relaxed text-muted-foreground">
+            <div className="mt-8 grid max-w-3xl gap-5 text-base font-normal leading-relaxed text-pretty text-muted-foreground">
               {texts.landing.problem.paragraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
@@ -234,11 +234,11 @@ function Landing() {
 
             <div className="mt-16 grid gap-12 border-t border-border pt-12 md:grid-cols-2 md:gap-16">
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                   {texts.landing.problem.standardTitle}
                 </h3>
 
-                <ul className="mt-6 space-y-3.5 text-base font-normal leading-relaxed text-muted-foreground">
+                <ul className="mt-6 space-y-3.5 text-base font-normal leading-relaxed text-pretty text-muted-foreground">
                   {texts.landing.problem.standardPoints.map((point) => (
                     <li key={point} className="flex items-start gap-3">
                       <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-border" />
@@ -250,7 +250,7 @@ function Landing() {
               </div>
 
               <div className="md:border-l md:border-border md:pl-16">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-primary">
+                <h3 className="text-xs font-medium uppercase tracking-widest text-primary">
                   {texts.landing.problem.oursTitle}
                 </h3>
 
@@ -273,15 +273,15 @@ function Landing() {
         <section id="pratica" className="scroll-mt-20 border-b border-border bg-muted/30">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
             <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              <p className="text-xs font-medium uppercase tracking-widest text-primary">
                 {texts.landing.principles.eyebrow}
               </p>
 
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                 {texts.landing.principles.title}
               </h2>
 
-              <p className="mt-5 text-base font-normal leading-relaxed text-muted-foreground">
+              <p className="mt-5 text-base font-normal leading-relaxed text-pretty text-muted-foreground">
                 {texts.landing.principles.description}
               </p>
             </div>
@@ -300,7 +300,7 @@ function Landing() {
                     <div>
                       <h3 className="text-lg font-semibold sm:text-xl">{principle.title}</h3>
 
-                      <p className="mt-2 max-w-2xl text-base font-normal leading-relaxed text-muted-foreground">
+                      <p className="mt-2 max-w-2xl text-base font-normal leading-relaxed text-pretty text-muted-foreground">
                         {principle.text}
                       </p>
                     </div>
@@ -315,22 +315,22 @@ function Landing() {
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
             <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-20">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+                <p className="text-xs font-medium uppercase tracking-widest text-primary">
                   {texts.landing.product.eyebrow}
                 </p>
 
-                <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+                <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                   {texts.landing.product.title}
                 </h2>
 
-                <p className="mt-5 max-w-xl text-base font-normal leading-relaxed text-muted-foreground">
+                <p className="mt-5 max-w-xl text-base font-normal leading-relaxed text-pretty text-muted-foreground">
                   {texts.landing.product.description}
                 </p>
 
                 <div className="mt-10 space-y-9">
                   {texts.landing.product.groups.map((group) => (
                     <div key={group.label}>
-                      <h3 className="text-xs font-semibold uppercase tracking-widest text-primary">
+                      <h3 className="text-xs font-medium uppercase tracking-widest text-primary">
                         {group.label}
                       </h3>
 
@@ -399,15 +399,15 @@ function Landing() {
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
             <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+                <p className="text-xs font-medium uppercase tracking-widest text-primary">
                   {texts.landing.build.eyebrow}
                 </p>
 
-                <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+                <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                   {texts.landing.build.title}
                 </h2>
 
-                <div className="mt-6 grid gap-4 text-base font-normal leading-relaxed text-muted-foreground">
+                <div className="mt-6 grid gap-4 text-base font-normal leading-relaxed text-pretty text-muted-foreground">
                   {texts.landing.build.paragraphs.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
@@ -489,7 +489,7 @@ function Landing() {
         >
           <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
             <div>
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+              <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-primary">
                 <GitPullRequest className="h-4 w-4" aria-hidden />
 
                 <>{texts.landing.contribute.eyebrow}</>
@@ -497,7 +497,7 @@ function Landing() {
 
               <h2
                 id="contribuir-titulo"
-                className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl"
+                className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl"
               >
                 {texts.landing.contribute.title}
               </h2>
@@ -506,7 +506,7 @@ function Landing() {
                 {texts.landing.contribute.description}
               </p>
 
-              <h3 className="mt-8 text-sm font-semibold uppercase tracking-widest text-foreground">
+              <h3 className="mt-8 text-sm font-medium uppercase tracking-widest text-foreground">
                 {texts.landing.contribute.rulesTitle}
               </h3>
 
@@ -542,7 +542,7 @@ function Landing() {
                 {texts.landing.contribute.formTitle}
               </h3>
 
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-sm leading-relaxed text-pretty text-muted-foreground">
                 {texts.landing.contribute.formDescription}
               </p>
 
@@ -556,15 +556,15 @@ function Landing() {
         <section className="border-b border-border bg-primary-soft/40">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-center lg:gap-20">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              <p className="text-xs font-medium uppercase tracking-widest text-primary">
                 {texts.landing.finalCta.eyebrow}
               </p>
 
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
                 {texts.landing.finalCta.title}
               </h2>
 
-              <p className="mt-5 max-w-2xl text-base font-normal leading-relaxed text-muted-foreground">
+              <p className="mt-5 max-w-2xl text-base font-normal leading-relaxed text-pretty text-muted-foreground">
                 {texts.landing.finalCta.description}
               </p>
 
@@ -603,7 +603,7 @@ function Landing() {
               <ShieldAlert className="h-8 w-8 shrink-0 text-primary" aria-hidden />
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+                <p className="text-xs font-medium uppercase tracking-widest text-primary">
                   {texts.landing.securityNote.eyebrow}
                 </p>
 
@@ -614,11 +614,11 @@ function Landing() {
                   {texts.landing.securityNote.title}
                 </h2>
 
-                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
                   {texts.landing.securityNote.body}
                 </p>
 
-                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
                   {texts.landing.securityNote.closing}
                 </p>
 
@@ -658,7 +658,7 @@ function Landing() {
             </div>
 
             <nav aria-label={texts.landing.footer.sectionsLabel}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 {texts.landing.footer.sectionsLabel}
               </p>
 
@@ -677,7 +677,7 @@ function Landing() {
             </nav>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 {texts.landing.footer.projectLabel}
               </p>
 
@@ -756,7 +756,7 @@ function Landing() {
               deixar claro que a arte não é nossa, e o link de contato é a via de remoção.
             */}
             <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                 {texts.landing.footer.emotesTitle}
               </p>
 
