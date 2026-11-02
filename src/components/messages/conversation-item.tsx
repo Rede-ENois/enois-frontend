@@ -80,14 +80,25 @@ export function ConversationItem({
   ]);
 
   const { peer, profileHref } = conversationPeer(conversation, otherId, otherUser);
-  const mine = !!preview && !!currentUserId && conversation.lastMessageFrom === currentUserId;
+
+  // Who wrote the preview: "Você" for the viewer; in a group, the sender's first name, since the
+  // row shows the group and not the author.
+  const from = conversation.lastMessageFrom ?? undefined;
+  const mine = !!currentUserId && from === currentUserId;
+  const groupSenderId = conversation.kind === "GROUP" && !mine ? from : undefined;
+  const { data: groupSender } = useQuery({
+    ...profileQueries.byId(groupSenderId ?? ""),
+    enabled: !!groupSenderId,
+  });
+  const groupSenderName = groupSenderId
+    ? conversationPeer(conversation, groupSenderId, groupSender).peer?.name?.split(" ")[0]
+    : undefined;
+  const author = mine ? texts.messages.you : groupSenderName;
+  const lastMessage = preview && author ? texts.messages.authoredPreview(author, preview) : preview;
 
   return (
     <ConversationItemView
-      conversation={{
-        ...conversation,
-        lastMessage: mine ? texts.messages.ownPreview(preview) : preview,
-      }}
+      conversation={{ ...conversation, lastMessage }}
       peer={peer}
       profileHref={profileHref}
       timeLabel={conversation.time ? formatTime(conversation.time) : ""}

@@ -4,6 +4,7 @@ export type ConversationItemProps = {
   conversation: Pick<
     Conversation,
     | "id"
+    | "kind"
     | "participantIds"
     | "title"
     | "time"

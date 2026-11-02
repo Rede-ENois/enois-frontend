@@ -10,7 +10,12 @@ import { ConversationItem } from "./conversation-item";
 
 vi.mock("@/lib/current-user", () => ({ useCurrentUser: () => ({ data: { id: "user_me" } }) }));
 vi.mock("@/lib/query-options/profiles", () => ({
-  profileQueries: { byId: (id: string) => ({ queryKey: ["profile", id], queryFn: () => null }) },
+  profileQueries: {
+    byId: (id: string) => ({
+      queryKey: ["profile", id],
+      queryFn: () => ({ id, username: id, name: id === "user_ana" ? "Ana Souza" : "Mel Santos" }),
+    }),
+  },
 }));
 vi.mock("@rede-enois/design-system/domain", () => ({
   ConversationItem: ({ conversation }: { conversation: { lastMessage: string } }) => (
@@ -31,13 +36,15 @@ describe("conversation preview", () => {
 
   afterEach(() => act(() => root.unmount()));
 
-  const render = (lastMessageFrom: string) => {
+  const render = async (lastMessageFrom: string, kind: "DIRECT" | "GROUP" = "DIRECT") => {
+    const client = new QueryClient();
     act(() =>
       root.render(
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={client}>
           <ConversationItem
             conversation={{
               id: "conv_1",
+              kind,
               participantIds: ["user_me", "user_peer"],
               title: null,
               time: null,
@@ -51,14 +58,22 @@ describe("conversation preview", () => {
         </QueryClientProvider>,
       ),
     );
+    await act(async () => {
+      for (let i = 0; i < 5; i++) await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     return host.textContent;
   };
 
-  it("marks the viewer's own last message", () => {
-    expect(render("user_me")).toBe("Você: teste 2");
+  it("marks the viewer's own last message", async () => {
+    expect(await render("user_me")).toBe("Você: teste 2");
+    expect(await render("user_me", "GROUP")).toBe("Você: teste 2");
   });
 
-  it("shows the peer's last message as is", () => {
-    expect(render("user_peer")).toBe("teste 2");
+  it("shows the peer's last message as is in a direct conversation", async () => {
+    expect(await render("user_peer")).toBe("teste 2");
+  });
+
+  it("names the sender by first name in a group", async () => {
+    expect(await render("user_ana", "GROUP")).toBe("Ana: teste 2");
   });
 });
