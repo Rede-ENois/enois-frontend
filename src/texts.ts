@@ -1050,6 +1050,7 @@ export const texts = {
     loadMore: "Carregar mais",
     scrollToTop: "Voltar ao topo",
     newPosts: "Novos posts",
+    newPostsCount: (count: number) => (count === 1 ? "1 novo post" : `${count} novos posts`),
     empty: "Sem publicações por enquanto. As da sua rede aparecem aqui.",
     composer: {
       removeMedia: "Remover mídia",

@@ -59,8 +59,9 @@ import {
 import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, valorDeDataLocal } from "@/lib/date/format";
-import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
+import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
@@ -216,37 +217,6 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     // se atualiza quando ela volta para a aba (issue #559).
     ...feedRefreshOptions(tab),
   });
-}
-
-/**
- * Detecta novos posts comparando o primeiro ID da pagina com o que estava visivel.
- * Mostra o indicador quando o feed atualizou e o usuario scrollou pra baixo.
- */
-function useNewPostsIndicator(feedPosts: { id: string }[]) {
-  const seenFirstId = useRef<string | null>(null);
-  const [hasNew, setHasNew] = useState(false);
-
-  const currentFirstId = feedPosts.length > 0 ? feedPosts[0].id : null;
-
-  useEffect(() => {
-    if (!currentFirstId) return;
-    if (seenFirstId.current === null) {
-      seenFirstId.current = currentFirstId;
-      return;
-    }
-    if (currentFirstId !== seenFirstId.current && window.scrollY > 200) {
-      setHasNew(true);
-    }
-  }, [currentFirstId]);
-
-  const dismiss = useCallback(() => {
-    seenFirstId.current = currentFirstId;
-    setHasNew(false);
-    clearFeedScroll();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [currentFirstId]);
-
-  return { hasNewPosts: hasNew, dismissNewPosts: dismiss };
 }
 
 function useProfile() {
@@ -626,12 +596,18 @@ function Home() {
   if (lastSeenAt === undefined && caughtUpTab && firstPage) {
     setLastSeenAt(firstPage.lastSeenAt ?? null);
   }
+  // A primeira página que a atualização reescreveu espera fora da lista enquanto a pessoa lê: dentro
+  // dela, cada post novo empurraria todos os cartões para baixo.
+  const arrivals = useFeedArrivals(
+    feedData,
+    tab,
+    `${tab}|${typeFilter}|${questionsFeed ? questionStatus : ""}`,
+  );
   const { posts: feedPosts, caughtUpAt } = caughtUpOrder(
-    feedData?.pages.flatMap((page) => page.items) ?? [],
+    arrivals.pages.flatMap((page) => page.items),
     caughtUpTab ? (lastSeenAt ?? null) : null,
   );
   const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
-  const { hasNewPosts, dismissNewPosts } = useNewPostsIndicator(feedPosts);
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
@@ -640,6 +616,10 @@ function Home() {
     window.addEventListener("scroll", updateScrollTopVisibility, { passive: true });
     return () => window.removeEventListener("scroll", updateScrollTopVisibility);
   }, []);
+
+  // The saved position belongs to the pages the reader left, not to a first page a refresh rewrote.
+  // A held first page is a new list; the first post of the current one is a later page arriving.
+  const feedListSignature = `${arrivals.held === null ? "current" : "held"}|${feedPosts[0]?.id ?? ""}`;
 
   useEffect(() => {
     if (feedLoading || feedPosts.length === 0 || typeof window === "undefined") return;
@@ -655,6 +635,11 @@ function Home() {
       return;
     }
 
+    // The cards are measured as they arrive, so the page may not be tall enough for the saved
+    // position yet: written now, the scroll would stop on another post and the position would be
+    // lost. It stays saved and the next list change tries again.
+    if (!canReachScroll(savedScroll.scrollY)) return;
+
     clearFeedScroll();
     const restore = () => {
       window.scrollTo({ top: savedScroll.scrollY, behavior: "auto" });
@@ -662,8 +647,16 @@ function Home() {
     };
 
     requestAnimationFrame(() => requestAnimationFrame(restore));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length is the signal.
-  }, [feedLoading, feedPosts.length, fetchNextPage, hasNextPage, isFetchingNextPage, tab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length and which list it is are the signal.
+  }, [
+    feedLoading,
+    feedPosts.length,
+    feedListSignature,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    tab,
+  ]);
 
   const loadNextPage = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -1247,27 +1240,35 @@ function Home() {
           )}
 
           <div className="relative">
-            {hasNewPosts && (
+            {arrivals.notice && (
               <button
                 type="button"
-                onClick={dismissNewPosts}
+                onClick={arrivals.release}
                 className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
               >
                 <span className="flex items-center gap-1.5">
                   <ArrowUp className="h-3.5 w-3.5" />
 
-                  {texts.feed.newPosts}
+                  {arrivals.held
+                    ? texts.feed.newPostsCount(arrivals.held.count)
+                    : texts.feed.newPosts}
                 </span>
               </button>
             )}
 
             {feedLoading && <PostCardSkeletons />}
 
-            {!feedLoading && feedFetching && !isFetchingNextPage && (
-              <div className="flex items-center justify-center gap-2 py-3">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            {/* Reserves its row while it loads: above the list, a row that appears and disappears
+                would move every post by its height on each refresh. */}
+            {!feedLoading && (
+              <div className="flex h-10 items-center justify-center gap-2">
+                {feedFetching && !isFetchingNextPage && (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
 
-                <span className="text-sm text-text-subtle">{texts.feed.refreshing}</span>
+                    <span className="text-sm text-text-subtle">{texts.feed.refreshing}</span>
+                  </>
+                )}
               </div>
             )}
 
