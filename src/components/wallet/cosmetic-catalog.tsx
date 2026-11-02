@@ -41,20 +41,23 @@ const PAGE_SIZE = 24;
 const EVERYTHING = "*";
 
 /**
- * The collection tabs in shop order: what can be bought today comes first (collections in
- * season, then the year-round classics, `null`), and out-of-season collections close the row.
- * Same order as the design system's newer releases, which the published package does not
- * export yet.
+ * The collection tabs in shop order: the collections in season, then the year-round classics
+ * (`null`). A collection outside its window is not a tab at all — it is not in the shop.
  */
 function shopTabs(
   collections: readonly CosmeticShopCollection[],
   hasClassics: boolean,
 ): (CosmeticShopCollection | null)[] {
-  return [
-    ...collections.filter((c): boolean => c.available),
-    ...(hasClassics ? [null] : []),
-    ...collections.filter((c): boolean => !c.available),
-  ];
+  return [...collections.filter((c): boolean => c.available), ...(hasClassics ? [null] : [])];
+}
+
+/**
+ * What the shop may show: the pieces on sale today and the ones the person already owns — a
+ * bought piece stays at hand to be equipped after its season ends. A piece out of season that
+ * nobody owns is not in the shop, so it never shows up as a locked card.
+ */
+function onSale(items: readonly CosmeticShopItem[]): CosmeticShopItem[] {
+  return items.filter((item): boolean => item.available || Boolean(item.owned));
 }
 
 /** A look's pieces that are in the catalog, grouped by kind in the shop's chip order. */
@@ -121,10 +124,14 @@ export function CosmeticCatalog({
   const [replay, setReplay] = useState(0);
   const headingId = useId();
 
-  const catalog = useMemo(() => items ?? [], [items]);
+  const catalog = useMemo(() => onSale(items ?? []), [items]);
   const itemsById = useMemo(
     () => new Map(catalog.map((item): [string, CosmeticShopItem] => [item.id, item])),
     [catalog],
+  );
+  const listedCollections = useMemo(
+    () => collections.filter((collection): boolean => collection.available),
+    [collections],
   );
 
   if (loading) return <LoadingState />;
@@ -146,13 +153,15 @@ export function CosmeticCatalog({
   const pool = shopPool(catalog, collections, { collection, query });
   const counts = countByKind(pool);
   const listed = kind === "ALL" ? pool : pool.filter((item) => item.kind === kind);
-  const current = collections.find((c) => c.id === collection);
+  const current = listedCollections.find((c) => c.id === collection);
   const preview = previewProfile(user, tryOn);
   const tryingNames = Object.values(tryOn.items)
     .map((id) => itemsById.get(id)?.name)
     .filter(Boolean)
     .join(", ");
-  const lookTried = collections.flatMap((c) => c.looks).find((look) => look.id === tryOn.look);
+  const lookTried = listedCollections
+    .flatMap((c) => c.looks)
+    .find((look) => look.id === tryOn.look);
 
   const resetPage = () => setVisible(PAGE_SIZE);
   const tryItem = (item: CosmeticShopItem) => {
@@ -178,7 +187,8 @@ export function CosmeticCatalog({
       );
     }
     if (!item.purchasable) return <span className="cos-shop__note">{messages.reward}</span>;
-    if (!item.available) return <span className="cos-shop__note">{messages.outOfSeason}</span>;
+    // `available` não volta a faltar aqui: o que está fora da temporada e não é seu não entra na
+    // lista, e o que é seu cai no ramo de equipar acima.
     return (
       <Button size="sm" disabled={actionPending} onClick={() => onBuy(item.id)}>
         {messages.buy}
@@ -195,7 +205,6 @@ export function CosmeticCatalog({
   const pieceNote = (item: CosmeticShopItem): string | null => {
     if (item.owned) return null;
     if (!item.purchasable) return messages.reward;
-    if (!item.available) return messages.outOfSeason;
     return null;
   };
 
@@ -212,7 +221,7 @@ export function CosmeticCatalog({
         </button>
       );
     }
-    if (!item.purchasable || !item.available) return null;
+    if (!item.purchasable) return null;
     return (
       <button
         type="button"
@@ -228,7 +237,7 @@ export function CosmeticCatalog({
     );
   };
 
-  const look = (entry: CosmeticShopLook, available: boolean, collectionName: string) => {
+  const look = (entry: CosmeticShopLook, collectionName: string) => {
     const missing = lookMissing(entry, itemsById);
     const themeId = entry.items.find((id) => itemsById.get(id)?.kind === "CARD_THEME");
     const theme = cardTheme(themeId);
@@ -278,7 +287,7 @@ export function CosmeticCatalog({
           <span>{collectionName}</span>
           {missing.length === 0 ? (
             <span className="cos-shop__owned">{messages.lookOwned}</span>
-          ) : available ? (
+          ) : (
             <Button
               size="sm"
               disabled={actionPending}
@@ -288,8 +297,6 @@ export function CosmeticCatalog({
               <Sparkles aria-hidden />
               {entry.priceLabel}
             </Button>
-          ) : (
-            <span className="cos-shop__note">{messages.outOfSeason}</span>
           )}
         </div>
 
@@ -360,13 +367,10 @@ export function CosmeticCatalog({
           onClick={() => tryItem(item)}
         >
           <span className="cos-item__kind">{messages.kind[item.kind]}</span>
-          {item.owned ? (
+          {item.owned && (
             <span className="cos-item__tag is-owned">
               {item.equipped ? messages.equipped : messages.owned}
             </span>
-          ) : (
-            !item.available &&
-            item.purchasable && <span className="cos-item__tag">{messages.outOfSeason}</span>
           )}
           <CosmeticItemArt item={item} user={user} variant="stage" />
         </button>
@@ -394,11 +398,11 @@ export function CosmeticCatalog({
   };
 
   const album = current ? albumPage(catalog, current.id) : null;
-  const done = completedCollections(catalog, collections);
+  const done = completedCollections(catalog, listedCollections);
 
   return (
     <div className="cos-shop">
-      {collections.some((c) => c.looks.length > 0) && (
+      {listedCollections.some((c) => c.looks.length > 0) && (
         <section className="cos-shop__looks" aria-labelledby={`${headingId}-looks`}>
           <header className="cos-shop__head">
             <h2 id={`${headingId}-looks`}>{messages.looksTitle}</h2>
@@ -407,7 +411,7 @@ export function CosmeticCatalog({
           </header>
 
           <ul className="cos-shop__look-grid">
-            {collections.flatMap((c) => c.looks.map((entry) => look(entry, c.available, c.name)))}
+            {listedCollections.flatMap((c) => c.looks.map((entry) => look(entry, c.name)))}
           </ul>
         </section>
       )}
@@ -442,7 +446,7 @@ export function CosmeticCatalog({
                 {texts.cosmetics.shop.allTab}
               </button>
 
-              {shopTabs(collections, hasClassics).map((c) => (
+              {shopTabs(listedCollections, hasClassics).map((c) => (
                 <button
                   key={c?.id ?? "classics"}
                   type="button"
@@ -578,7 +582,7 @@ export function CosmeticCatalog({
               <header>
                 <h3 id={`${headingId}-album`}>{messages.albumTitle}</h3>
 
-                <span>{messages.albumProgress(done, collections.length)}</span>
+                <span>{messages.albumProgress(done, listedCollections.length)}</span>
               </header>
 
               <div className="cos-album__page">

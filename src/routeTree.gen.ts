@@ -454,8 +454,8 @@ export interface FileRoutesByFullPath {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
-  '/contato': typeof ContatoRoute
   '/conta': typeof ContaRoute
+  '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
@@ -528,8 +528,8 @@ export interface FileRoutesByTo {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
-  '/contato': typeof ContatoRoute
   '/conta': typeof ContaRoute
+  '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
@@ -603,8 +603,8 @@ export interface FileRoutesById {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
-  '/contato': typeof ContatoRoute
   '/conta': typeof ContaRoute
+  '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
@@ -679,8 +679,8 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/carteira'
     | '/comunidades'
-    | '/contato'
     | '/conta'
+    | '/contato'
     | '/denuncias'
     | '/developers'
     | '/diretrizes'
@@ -753,8 +753,8 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/carteira'
     | '/comunidades'
-    | '/contato'
     | '/conta'
+    | '/contato'
     | '/denuncias'
     | '/developers'
     | '/diretrizes'
@@ -827,8 +827,8 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/carteira'
     | '/comunidades'
-    | '/contato'
     | '/conta'
+    | '/contato'
     | '/denuncias'
     | '/developers'
     | '/diretrizes'
@@ -902,8 +902,8 @@ export interface RootRouteChildren {
   BoasVindasRoute: typeof BoasVindasRoute
   CarteiraRoute: typeof CarteiraRoute
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
-  ContatoRoute: typeof ContatoRoute
   ContaRoute: typeof ContaRoute
+  ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
@@ -1584,8 +1584,8 @@ const rootRouteChildren: RootRouteChildren = {
   BoasVindasRoute: BoasVindasRoute,
   CarteiraRoute: CarteiraRoute,
   ComunidadesRoute: ComunidadesRouteWithChildren,
-  ContatoRoute: ContatoRoute,
   ContaRoute: ContaRoute,
+  ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
