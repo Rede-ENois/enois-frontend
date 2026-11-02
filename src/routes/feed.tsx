@@ -17,6 +17,7 @@ import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
+  ComposerLauncher,
   PostCardSkeletons,
   QuestionComposerHint,
   type QuestionStatus,
@@ -91,7 +92,6 @@ import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
-import { PlatformSpacesCard } from "@/components/platform-spaces-card";
 import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
@@ -139,15 +139,18 @@ export const Route = createFileRoute("/feed")({
    */
   validateSearch: (
     search: Record<string, unknown>,
-  ): { aba?: HomeTab; compor?: "ARTICLE" | "MEDIA" } => {
+  ): { aba?: HomeTab; compor?: "ARTICLE" | "MEDIA" | "POST" } => {
     const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
         : undefined;
     // Profile shortcuts: `compor=ARTICLE` opens the composer in article mode, `compor=MEDIA` attaches
-    // the files picked on the profile (see `composer-handoff`).
+    // the files picked on the profile (see `composer-handoff`); `compor=POST` is the dock's
+    // "Publicar" and just opens the composer.
     const compor =
-      search.compor === "ARTICLE" || search.compor === "MEDIA" ? search.compor : undefined;
+      search.compor === "ARTICLE" || search.compor === "MEDIA" || search.compor === "POST"
+        ? search.compor
+        : undefined;
     return { ...(aba ? { aba } : {}), ...(compor ? { compor } : {}) };
   },
   head: () => ({
@@ -317,11 +320,19 @@ function Home() {
   const [postType, setPostType] = useState<PostView["type"]>(() =>
     compor === "ARTICLE" ? "ARTICLE" : "INSIGHT",
   );
+  // The composer rests as one line (ComposerLauncher) until the person starts; any shortcut opens it.
+  const [composerOpen, setComposerOpen] = useState(() => compor !== undefined);
+  const composerRef = useRef<HTMLFormElement>(null);
   // Shortcut requests are one-shot: drop them from the URL so a refresh opens the usual composer.
   useEffect(() => {
-    if (compor)
-      void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
+    if (!compor) return;
+    setComposerOpen(true);
+    void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
   }, [compor, navigate]);
+  // Opening puts the cursor in the field, so one tap on the launcher (or on "Publicar") is enough.
+  useEffect(() => {
+    if (composerOpen) composerRef.current?.querySelector("textarea")?.focus();
+  }, [composerOpen]);
   // Assunto do post avulso (obrigatório: sem ele o post fica fora dos filtros e de "O que quero
   // ver"/"não gosto"). Em comunidade o post herda o assunto DELA — lá o compositor é outro.
   const [topic, setTopic] = useState<string>(() => readLastTopic());
@@ -350,6 +361,9 @@ function Home() {
   }, [identity]);
 
   const pageMode = postType === "PAGE";
+  // Anything in progress keeps the full composer open (a draft, media, an article or a page).
+  const composerExpanded =
+    composerOpen || draft.trim() !== "" || media.length > 0 || postType !== "INSIGHT";
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
@@ -698,11 +712,33 @@ function Home() {
             />
           )}
 
+          {/* Composer at rest: one line with the signer's photo; the full form only once opened. */}
+          {!composerLocked && !composerExpanded && (
+            <ComposerLauncher
+              avatar={
+                identity === "CORPORATE" ? corporate?.avatar || undefined : profileUser?.avatar
+              }
+              avatarFrame={identity === "CORPORATE" ? undefined : profileUser?.avatarFrame}
+              name={
+                identity === "CORPORATE"
+                  ? (corporate?.name ?? texts.feed.you)
+                  : (profileUser?.name ?? texts.feed.you)
+              }
+              onOpen={() => setComposerOpen(true)}
+              onAddMedia={() => {
+                setComposerOpen(true);
+                // The file input lives in the form, which renders on this open.
+                setTimeout(() => fileRef.current?.click(), 0);
+              }}
+            />
+          )}
+
           {/* Composer */}
-          {!composerLocked && (
+          {!composerLocked && composerExpanded && (
             <form
+              ref={composerRef}
               onSubmit={publishPost}
-              className="relative rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
+              className="relative surface-card p-4 sm:p-5"
             >
               {/* Na borda de cima do compositor, dentro da folga: não cobre o campo nem botões. */}
               <SaciSpot spot="feed" className="absolute -top-4 right-4" />
@@ -1294,54 +1330,61 @@ function Home() {
             aqui — ele esticava até a altura da coluna inteira e empurrava/escondia os outros
             cartões (o que está acontecendo agora) para fora da dobra. */}
         <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
-          <ApoieCard />
-          <CompanyPromptCard />
-          <PlatformSpacesCard />
-          <TodayGamesCard />
+          {/* Three quiet tables at most: what happens today, people to meet, and support as one
+              line at the end. "Novidades para explorar" left (it repeated the menu; Explore has
+              every room) and so did the profile card (the account menu carries it). */}
+          {eventList.length > 0 && (
+            <div className="surface-card p-4 sm:p-5">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
 
-          {profileUser && (
-            <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
-              <div className="h-14" style={{ background: "var(--gradient-primary)" }} />
-
-              <div className="-mt-7 px-4 pb-4 text-center">
-                <UserAvatar
-                  frame={profileUser.avatarFrame}
-                  src={profileUser.avatar}
-                  alt={profileUser.name}
-                  className="mx-auto h-16 w-16 ring-4 ring-surface-card"
-                />
-
-                <Link
-                  to="/perfil/$username"
-                  params={{ username: profileUser.username }}
-                  className="mt-2 block text-sm font-normal text-text-strong hover:underline"
-                >
-                  {profileUser.name}
-                </Link>
-
-                <p className="line-clamp-2 text-xs font-normal text-text-subtle">
-                  {profileUser.headline}
-                </p>
-
-                <div className="mt-3 grid grid-cols-2 gap-1 border-t border-border-soft pt-3 text-xs">
-                  <div>
-                    <p className="font-normal text-text-strong">{profileUser.connectionsCount}</p>
-
-                    <p className="text-text-subtle">{texts.feed.sidebar.connections}</p>
-                  </div>
-
-                  <div>
-                    <p className="font-normal text-text-strong">{profileUser.followersCount}</p>
-
-                    <p className="text-text-subtle">{texts.feed.sidebar.followers}</p>
-                  </div>
-                </div>
+                <h2 className="text-sm font-normal text-text-strong">
+                  {texts.feed.sidebar.happeningNow}
+                </h2>
               </div>
+
+              <ul className="mt-3 space-y-3">
+                {eventList.slice(0, 3).map((e) => (
+                  <li key={e.id}>
+                    {/* O item inteiro é o link para o evento. A seta é o que diz isso: sem ela, o
+                        título só reagia no hover e a linha parecia texto solto. */}
+                    <Link
+                      to="/eventos"
+                      search={{ evento: e.id }}
+                      className="group/ev flex items-start gap-2"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <p className="text-sm font-normal text-text-strong underline-offset-2 group-hover/ev:underline">
+                          {e.title}
+                        </p>
+
+                        <p className="text-xs font-normal text-text-subtle">
+                          {texts.feed.sidebar.eventMeta(
+                            e.date,
+                            e.format,
+                            texts.feed.sidebar.confirmed(e.attendees),
+                          )}
+                        </p>
+                      </span>
+
+                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle transition group-hover/ev:translate-x-0.5 group-hover/ev:text-primary" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                to="/eventos"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                {texts.feed.sidebar.seeAllEvents}
+              </Link>
             </div>
           )}
+          <TodayGamesCard />
 
           {suggestionList.length > 0 && (
-            <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
+            <div className="surface-card p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-primary" />
 
@@ -1409,54 +1452,8 @@ function Home() {
             </div>
           )}
 
-          {eventList.length > 0 && (
-            <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-
-                <h2 className="text-sm font-normal text-text-strong">
-                  {texts.feed.sidebar.happeningNow}
-                </h2>
-              </div>
-
-              <ul className="mt-3 space-y-3">
-                {eventList.slice(0, 3).map((e) => (
-                  <li key={e.id}>
-                    {/* O item inteiro é o link para o evento. A seta é o que diz isso: sem ela, o
-                        título só reagia no hover e a linha parecia texto solto. */}
-                    <Link
-                      to="/eventos"
-                      search={{ evento: e.id }}
-                      className="group/ev flex items-start gap-2"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <p className="text-sm font-normal text-text-strong underline-offset-2 group-hover/ev:underline">
-                          {e.title}
-                        </p>
-
-                        <p className="text-xs font-normal text-text-subtle">
-                          {texts.feed.sidebar.eventMeta(
-                            e.date,
-                            e.format,
-                            texts.feed.sidebar.confirmed(e.attendees),
-                          )}
-                        </p>
-                      </span>
-
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle transition group-hover/ev:translate-x-0.5 group-hover/ev:text-primary" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                to="/eventos"
-                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                {texts.feed.sidebar.seeAllEvents}
-              </Link>
-            </div>
-          )}
+          <CompanyPromptCard />
+          <ApoieCard />
         </aside>
       </div>
 
@@ -1468,7 +1465,7 @@ function Home() {
           aria-label={texts.feed.scrollToTop}
           title={texts.feed.scrollToTop}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
+          className="fixed bottom-28 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>
