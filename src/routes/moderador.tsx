@@ -388,6 +388,7 @@ function ApplicationSection({ me }: { me: ModeratorMeView }) {
             </span>
 
             <Textarea
+              aria-label={texts.moderator.eligibility.motivationPlaceholder}
               value={motivation}
               onChange={(event) => setMotivation(event.target.value)}
               maxLength={2000}
@@ -402,6 +403,7 @@ function ApplicationSection({ me }: { me: ModeratorMeView }) {
             </span>
 
             <Textarea
+              aria-label={texts.moderator.eligibility.experiencePlaceholder}
               value={experience}
               onChange={(event) => setExperience(event.target.value)}
               maxLength={2000}
@@ -416,6 +418,7 @@ function ApplicationSection({ me }: { me: ModeratorMeView }) {
             </span>
 
             <Input
+              aria-label={texts.moderator.eligibility.availabilityPlaceholder}
               value={availability}
               onChange={(event) => setAvailability(event.target.value)}
               maxLength={500}
@@ -1274,6 +1277,7 @@ function DirectSanctionForm() {
           </span>
 
           <Input
+            aria-label={texts.moderator.admin.usernamePlaceholder}
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             maxLength={80}
@@ -1301,6 +1305,7 @@ function DirectSanctionForm() {
           </span>
 
           <Textarea
+            aria-label={texts.moderator.admin.reasonPlaceholder}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             maxLength={1000}
@@ -1378,6 +1383,7 @@ function SanctionVoting() {
           </span>
 
           <Input
+            aria-label={texts.moderator.sanction.targetPlaceholder}
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             maxLength={80}
@@ -1407,6 +1413,7 @@ function SanctionVoting() {
           </span>
 
           <Textarea
+            aria-label={texts.moderator.sanction.reasonPlaceholder}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             maxLength={1000}
@@ -1558,6 +1565,7 @@ function SanctionProposalCard({
       {me.moderator && votingEnabled && proposal.status === "PENDING" && (
         <div className="space-y-2">
           <Input
+            aria-label={texts.moderator.sanction.notePlaceholder}
             value={note}
             onChange={(event) => setNote(event.target.value)}
             maxLength={1000}

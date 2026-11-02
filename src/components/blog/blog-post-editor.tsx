@@ -137,6 +137,7 @@ export function BlogPostEditor({ post }: { post?: BlogPost | null }) {
 
         <div className="space-y-3">
           <Input
+            aria-label={texts.blog.editor.postTitle}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder={texts.blog.editor.postTitle}

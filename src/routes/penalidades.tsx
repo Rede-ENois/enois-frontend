@@ -95,6 +95,7 @@ function Penalidades() {
             <p className="text-xs text-text-subtle">{texts.sanctions.appealDescription}</p>
 
             <Textarea
+              aria-label={texts.sanctions.appealPlaceholder}
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               rows={4}

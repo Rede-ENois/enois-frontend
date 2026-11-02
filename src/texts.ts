@@ -20,6 +20,11 @@ const common = {
 export const texts = {
   common,
 
+  accessibility: {
+    skipToContent: "Pular para o conteúdo",
+    mainNavigation: "Navegação principal",
+  },
+
   emotes: {
     title: "Figurinhas",
     button: "Figurinhas",
@@ -3272,6 +3277,7 @@ export const texts = {
 
   post: {
     seoTitle: "Publicação · Énóis",
+    pageHeading: "Publicação",
     seoDescription: "Publicação no Énóis.",
     back: "Voltar",
     notFound: "Publicação não encontrada.",

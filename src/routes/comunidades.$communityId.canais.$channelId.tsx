@@ -164,6 +164,7 @@ function ChannelPage() {
         {authenticated && joined && (
           <form onSubmit={submit} className="surface-card p-5">
             <textarea
+              aria-label={texts.channelPage.composerPlaceholder}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder={texts.channelPage.composerPlaceholder}

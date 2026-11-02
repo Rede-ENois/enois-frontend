@@ -442,6 +442,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
         {/* O limite e o mesmo da coluna (`events.title varchar(255)`) e que a API recusa com 400
             dizendo o campo: sem ele no campo, a pessoa tomava 409 sem entender o motivo. */}
         <Input
+          aria-label={texts.events.form.title}
           value={title}
           maxLength={255}
           onChange={(e) => setTitle(e.target.value)}
@@ -452,6 +453,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <Field label={texts.events.form.date}>
           <Input
+            aria-label={texts.events.form.date}
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -461,6 +463,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
 
         <Field label={texts.events.form.time}>
           <Input
+            aria-label={texts.events.form.time}
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
@@ -471,6 +474,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
 
       <Field label={texts.events.form.host}>
         <Input
+          aria-label={texts.events.form.host}
           value={host}
           onChange={(e) => setHost(e.target.value)}
           placeholder={texts.events.form.hostPlaceholder}
@@ -527,6 +531,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
       {format !== "IN_PERSON" && (
         <Field label={texts.events.form.streamUrl}>
           <Input
+            aria-label={texts.events.form.streamUrl}
             value={streamUrl}
             onChange={(e) => setStreamUrl(e.target.value)}
             placeholder={texts.events.form.streamUrlPlaceholder}
@@ -538,6 +543,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
       {format !== "ONLINE" && (
         <Field label={texts.events.form.location}>
           <Input
+            aria-label={texts.events.form.location}
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder={texts.events.form.locationPlaceholder}
@@ -559,6 +565,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
 
       <Field label={texts.events.form.format}>
         <select
+          aria-label={texts.events.form.format}
           value={format}
           onChange={(e) => setFormat(e.target.value as CreateEventRequest["format"])}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10 border-transparent bg-muted"

@@ -43,6 +43,7 @@ import { ModuleDisabledGate } from "@/components/module-disabled-gate";
 import { AdminNoticeDialog } from "@/components/notices/admin-notice";
 import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
 import { RouteErrorBoundary } from "@/components/route-error-boundary";
+import { SkipLink } from "@/components/skip-link";
 import { WhatsNewGate } from "@/components/whats-new/whats-new-gate";
 
 import appCss from "../styles.css?url";
@@ -178,6 +179,7 @@ function RootShell({ children }: WithRequiredChildren) {
       </head>
 
       <body>
+        <SkipLink />
         {children}
         <Scripts />
       </body>

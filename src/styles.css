@@ -54,6 +54,25 @@ li img[src^="https://cdn.frankerfacez.com/"] {
  * `truncate`/`line-clamp` continuam valendo: quem corta o texto define a própria quebra.
  */
 @layer base {
+  /* Foco sempre visível para quem navega por teclado. Componentes com anel próprio
+     (`focus-visible:ring-*`) zeram o outline e mantêm o anel. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  /* Quem pede menos movimento no sistema não recebe animações nem rolagem suave. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   p,
   span,
   h1,
