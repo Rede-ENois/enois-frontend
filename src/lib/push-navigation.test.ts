@@ -3,7 +3,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { PUSH_NAVIGATE, hrefDoPush } from "./push-navigation";
+import {
+  PUSH_NAVIGATE,
+  PUSH_SUBSCRIPTION,
+  hrefDoPush,
+  subscriptionDoPush,
+} from "./push-navigation";
 
 /**
  * Clique na notificação PUSH tem que abrir a tela do app, não a API.
@@ -46,5 +51,31 @@ describe("clique na notificação push", () => {
     expect(versao).toBeTruthy();
     // O comentario do arquivo exige subir a versao a cada mudanca.
     expect(versao).not.toBe("enois-v7");
+    expect(versao).not.toBe("enois-v9");
+  });
+
+  it("inscrição renovada pelo worker é entregue à aba para registro", () => {
+    const json = {
+      endpoint: "https://push.example/device-1",
+      keys: { p256dh: "p", auth: "a" },
+    } as PushSubscriptionJSON;
+
+    expect(subscriptionDoPush({ type: PUSH_SUBSCRIPTION, subscription: json })).toEqual(json);
+    expect(subscriptionDoPush({ type: PUSH_NAVIGATE, href: "/api/x" })).toBeNull();
+    // Sem chaves completas não dá para registrar no backend.
+    expect(
+      subscriptionDoPush({ type: PUSH_SUBSCRIPTION, subscription: { endpoint: "https://x" } }),
+    ).toBeNull();
+    expect(subscriptionDoPush(null)).toBeNull();
+  });
+
+  it("o service worker renova a inscrição e avisa a aba com a mesma mensagem", () => {
+    const sw = readFileSync(join(process.cwd(), "public/sw.js"), "utf8");
+    expect(sw).toContain("pushsubscriptionchange");
+    expect(sw).toContain(PUSH_SUBSCRIPTION);
+    // O Chrome entrega a inscrição nova pronta: reaproveitar evita uma segunda assinatura.
+    expect(sw).toContain("event.newSubscription");
+    // A chave do servidor não é buscada daqui: em produção a API mora em outro host.
+    expect(sw).not.toContain('fetch("/api/push/config"');
   });
 });

@@ -553,6 +553,9 @@ export const texts = {
   personalization: {
     saved: "Preferências salvas.",
     saveError: "Não foi possível salvar as preferências. Tente novamente.",
+    // O BATATA liga no clique (sem esperar o "Salvar"); se a gravação falhar, a tela volta e
+    // a pessoa precisa saber por quê.
+    batataError: "Não foi possível aplicar o Modo BATATA. Tente novamente.",
   },
   corporate: {
     seoTitle: "Perfil profissional · Énóis",
@@ -666,6 +669,8 @@ export const texts = {
       identityLoadError: "Não deu para carregar sua identidade profissional.",
       identityRetry: "Tentar de novo",
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
+      /** Pedido fechado sem escolha: não é negado, dá para tentar de novo. */
+      pushDismissed: "O pedido de permissão ficou sem resposta. Toque em ligar de novo.",
       pushUnavailable: "Este dispositivo não suporta notificações no celular.",
       pushServerOff: "As notificações no celular ainda não estão disponíveis.",
       pushError: "Não foi possível ativar as notificações. Tente novamente.",
@@ -3030,17 +3035,30 @@ export const texts = {
     title: "Carteira & estilo",
     subtitle: "Suas faíscas, suas escolhas.",
     walletTab: "Carteira",
-    marketplaceTab: "Marketplace",
     storeTab: "Loja",
-    ownedTab: "Minhas molduras",
-    filters: {
-      all: "Todas",
-      simple: "Simples",
+    ownedTab: "Meus itens",
+    /** A aba dos itens: o que está em uso no topo e, abaixo, tudo o que já foi comprado. */
+    myItems: {
+      activeTitle: "Ativos no perfil",
+      activeHint: "O que está aparecendo agora no seu perfil.",
+      ownedTitle: "Seus itens",
+      empty: "Nada comprado ainda. O que você comprar na loja aparece aqui.",
+      emptyCta: "Ir para a loja",
+      loadError: "Não foi possível carregar os seus itens.",
+      retry: "Tentar de novo",
+      equip: "Equipar",
+      unequip: "Tirar",
+      kinds: {
+        FRAME: "Molduras",
+        BADGE: "Emblemas",
+        CARD_THEME: "Temas do cartão",
+        NAME_STYLE: "Nomes",
+        NAMEPLATE: "Placas",
+        BANNER: "Banners",
+        PROFILE_EFFECT: "Efeitos",
+        GARDEN: "Jardins",
+      } as Record<string, string>,
     },
-    showMore: "Mostrar mais molduras",
-    bought: "Moldura comprada. Agora você pode equipá-la.",
-    buyError: "Não foi possível comprar a moldura. Confira seu saldo e tente novamente.",
-    equipError: "Não foi possível atualizar a moldura. Tente novamente.",
   },
 
   /** Seasonal cosmetics: shop actions, status bubble, profile popover and the Saci events. */
@@ -3049,6 +3067,18 @@ export const texts = {
     lookBought: "Look comprado e vestido no seu perfil.",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
+    /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */
+    lookPieces: (count: number) => `${count} ${count === 1 ? "peça" : "peças"}`,
+    lookPiecesHint: "Cada peça é vendida separada: compre só a que falta e monte o seu jeito.",
+    /** O botão mostra só a faísca e o preço; quem lê em voz alta ouve a peça e o valor. */
+    buyPiece: (name: string, price: string) => `Comprar ${name} por ${price}`,
+    /** Loja: a aba que abre em todas as coleções, para nada do catálogo ficar escondido. */
+    shop: {
+      allTab: "Todas as coleções",
+      allTitle: "Todas as customizações",
+      allDescription:
+        "Molduras, emblemas, temas do cartão, nomes, placas, banners, efeitos e jardins de todas as coleções. O que está fora de temporada continua aqui: ele volta na data dele.",
+    },
     /** Shop banner name while the catalog is not at hand. */
     equippedBannerFallback: "equipado",
     /** One message per API error code of the shop, the status and the events. */

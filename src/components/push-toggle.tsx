@@ -11,6 +11,7 @@ import {
   isPushSupported,
   pushErrorMessage,
   pushPermission,
+  syncPushSubscription,
 } from "@/lib/push";
 
 /**
@@ -38,6 +39,10 @@ export function PushToggle({ onClose }: { onClose: () => void }) {
         if (cancelled || !config.enabled || !config.publicKey) return;
         // Inscreve so se a inscricao existente ainda vale para a chave que o servidor anuncia.
         const subscribed = await isPushActive(config.publicKey);
+        if (subscribed) {
+          // Inscricao local viva cuja linha sumiu do servidor: repoe antes de mostrar "ligado".
+          void syncPushSubscription(config.publicKey).catch(() => undefined);
+        }
         if (cancelled) return;
         setActive(subscribed);
         setBlocked(pushPermission() === "denied");

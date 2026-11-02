@@ -2,16 +2,25 @@
 
 ## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
 
-Seasonal cosmetics shop in the `Loja` tab of `/carteira`, drawn by the design system
-`CosmeticShop`.
+The cosmetics shop in the `Loja` tab of `/carteira`, together with the community marketplace.
+It is drawn by `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`), a copy of the
+design system shop with one addition: the `Todas as coleções` tab. The published design system
+only filters one collection per tab, so a seasonal tab used to hide the rest of the catalog —
+**when the package ships that tab, `CosmeticCatalog` goes away and the wrapper points back at
+`CosmeticShop` from the design system.**
 
 - Reads `GET /loja` and `GET /loja/colecoes` (Zod-validated in `src/lib/api/loja.ts`); prices are
   formatted with `formatFaisca`, and each look shows the price of the pieces still missing
   (`lookPriceMf` in `src/lib/cosmetics.ts`: 75% of their sum, rounded to whole faíscas, the
   backend arithmetic)
+- Opens on `Todas as coleções`: every item of every collection, including out-of-season ones
+  (listed, tagged `Fora de temporada`, not sellable). The collection chips stay one click away,
+  in-season first, then the classics, then the out-of-season collections
 - Buy, buy look, equip and unequip invalidate `loja`, `carteira`, `profile`, `me` and `feed`;
   every API error code has its own pt-BR toast (`texts.cosmetics.errors`)
 - The `saci` and `halloween` collections show the Saci × Halloween duel (`SaciDuelPanel`)
+- The album of a collection only exists inside the collection tab (the catalog-wide tab has no
+  album)
 
 ## `FrameShop` (`src/components/wallet/frame-shop.tsx`)
 

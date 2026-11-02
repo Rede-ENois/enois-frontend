@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   pushConfig: vi.fn(),
   enablePush: vi.fn(),
   isPushActive: vi.fn(),
+  syncPushSubscription: vi.fn(),
+  pushPermission: vi.fn<() => NotificationPermission>(() => "granted"),
   toast: vi.fn(),
   view: null as NotificationPreferencesProps | null,
 }));
@@ -30,7 +32,9 @@ vi.mock("@/lib/push", () => ({
   enablePush: mocks.enablePush,
   isPushActive: mocks.isPushActive,
   isPushSupported: () => true,
+  pushPermission: mocks.pushPermission,
   pushErrorMessage: (reason: string) => `erro:${reason}`,
+  syncPushSubscription: mocks.syncPushSubscription,
 }));
 vi.mock("@rede-enois/design-system/ui", () => ({ useToast: () => ({ toast: mocks.toast }) }));
 // A view só desenha; guardamos as props para conferir o contrato que o contêiner cumpre.
@@ -68,6 +72,8 @@ describe("preferências de notificação: contêiner", () => {
     mocks.preferences.mockResolvedValue(PREFS);
     mocks.pushConfig.mockResolvedValue({ enabled: true, publicKey: "k" });
     mocks.isPushActive.mockResolvedValue(false);
+    mocks.syncPushSubscription.mockResolvedValue(true);
+    mocks.pushPermission.mockReturnValue("granted");
     root = createRoot(document.createElement("div"));
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     act(() =>
@@ -139,17 +145,77 @@ describe("preferências de notificação: contêiner", () => {
     expect(view().values).toBeNull();
   });
 
-  it("ligar o push atualiza o estado; recusa vira aviso", async () => {
-    mocks.enablePush.mockResolvedValueOnce({ ok: false, reason: "denied" });
-    act(() => view().onEnablePush!());
-    await flush();
-    expect(mocks.toast).toHaveBeenCalledWith("erro:denied", "error");
-    expect(view().pushEnabled).toBe(false);
-
+  it("ligar o push atualiza o estado", async () => {
     mocks.enablePush.mockResolvedValueOnce({ ok: true });
     act(() => view().onEnablePush!());
     await flush();
+
     expect(view().pushEnabled).toBe(true);
     expect(view().pushBusy).toBe(false);
+    expect(mocks.toast).not.toHaveBeenCalled();
+  });
+
+  it("recusa vira aviso e tira o botao que nao teria efeito", async () => {
+    mocks.enablePush.mockResolvedValueOnce({ ok: false, reason: "denied" });
+    act(() => view().onEnablePush!());
+    await flush();
+
+    expect(mocks.toast).toHaveBeenCalledWith("erro:denied", "error");
+    expect(view().pushEnabled).toBe(false);
+    expect(view().onEnablePush).toBeUndefined();
+  });
+
+  it("pedido sem resposta mantem o botao para tentar de novo", async () => {
+    mocks.enablePush.mockResolvedValueOnce({ ok: false, reason: "dismissed" });
+    act(() => view().onEnablePush!());
+    await flush();
+
+    expect(view().pushEnabled).toBe(false);
+    expect(view().onEnablePush).toBeTypeOf("function");
+  });
+
+  it("confere a inscrição do aparelho contra a chave que o servidor anuncia", () => {
+    // Sem a chave, uma inscrição presa ao par VAPID antigo contava como "ligada" e escondia o
+    // botão "Ligar avisos" — nenhuma notificação chegava.
+    expect(mocks.isPushActive).toHaveBeenCalledWith("k");
+  });
+
+  it("inscrição viva é reposta no servidor, sem pedir permissão", async () => {
+    act(() => root.unmount());
+    mocks.isPushActive.mockResolvedValue(true);
+    root = createRoot(document.createElement("div"));
+    act(() =>
+      root.render(
+        <QueryClientProvider
+          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+        >
+          <NotificationPreferencesPanel />
+        </QueryClientProvider>,
+      ),
+    );
+    await flush();
+
+    expect(mocks.syncPushSubscription).toHaveBeenCalledWith("k");
+    // A reposição é silenciosa: nada de novo pedido de permissão por baixo do pano.
+    expect(mocks.enablePush).not.toHaveBeenCalled();
+    expect(view().pushEnabled).toBe(true);
+  });
+
+  it("permissão negada não oferece um botão que falha em silêncio", async () => {
+    act(() => root.unmount());
+    mocks.pushPermission.mockReturnValue("denied");
+    root = createRoot(document.createElement("div"));
+    act(() =>
+      root.render(
+        <QueryClientProvider
+          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+        >
+          <NotificationPreferencesPanel />
+        </QueryClientProvider>,
+      ),
+    );
+    await flush();
+
+    expect(view().onEnablePush).toBeUndefined();
   });
 });

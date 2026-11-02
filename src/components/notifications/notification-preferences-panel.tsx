@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { NotificationPreferences as Preferences } from "@/types/application/notification/notification-preferences";
 import {
   type NotificationPreferenceKey,
@@ -12,15 +13,23 @@ import { useToast } from "@rede-enois/design-system/ui";
 
 import { notificationsApi } from "@/lib/api";
 import { pushApi } from "@/lib/api/push";
-import { enablePush, isPushActive, isPushSupported, pushErrorMessage } from "@/lib/push";
+import {
+  enablePush,
+  isPushActive,
+  isPushSupported,
+  pushErrorMessage,
+  pushPermission,
+  syncPushSubscription,
+} from "@/lib/push";
 
 const PREFERENCES_KEY = ["me", "notification-preferences"] as const;
 
-/** Push neste aparelho: ativo, e se dá para ligar daqui (navegador suporta e o servidor tem VAPID). */
+/** Push neste aparelho: ativo, negado e se dá para ligar daqui (navegador suporta e servidor tem VAPID). */
 function usePushState() {
   const { toast } = useToast();
   const [enabled, setEnabled] = useState(false);
   const [available, setAvailable] = useState(false);
+  const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -29,9 +38,16 @@ function usePushState() {
     void (async () => {
       try {
         const config = await pushApi.config();
-        const active = await isPushActive();
+        // A inscrição vale para a chave que o servidor anuncia HOJE: uma presa à chave antiga
+        // conta como desligada (e é trocada no próximo "ligar") em vez de esconder o botão.
+        const active = await isPushActive(config.publicKey ?? undefined);
+        if (active && config.publicKey) {
+          // Conserta a persistência: inscrição local válida cuja linha sumiu do servidor.
+          void syncPushSubscription(config.publicKey).catch(() => undefined);
+        }
         if (cancelled) return;
         setEnabled(active);
+        setDenied(pushPermission() === "denied");
         setAvailable(config.enabled && !!config.publicKey);
       } catch {
         // Sem a configuração não dá para inscrever: a nota aparece sem o botão de ligar.
@@ -46,14 +62,23 @@ function usePushState() {
     setBusy(true);
     try {
       const result = await enablePush();
-      if (result.ok) setEnabled(true);
-      else toast(pushErrorMessage(result.reason), "error");
+      if (result.ok) {
+        setEnabled(true);
+      } else {
+        if (result.reason === "denied") setDenied(true);
+        toast(pushErrorMessage(result.reason), "error");
+      }
     } finally {
       setBusy(false);
     }
   };
 
-  return { enabled, busy, enable: available ? () => void enable() : undefined };
+  return {
+    enabled,
+    denied,
+    busy,
+    enable: available && !denied ? () => void enable() : undefined,
+  };
 }
 
 /**
@@ -102,28 +127,34 @@ export function NotificationPreferencesPanel() {
   const saving = Object.values(pending).some(Boolean);
 
   return (
-    <NotificationPreferences
-      values={
-        data
-          ? {
-              weeklyDigest: data.weeklyDigest,
-              pushSocial: data.pushSocial,
-              pushMessages: data.pushMessages,
-              pushGroups: data.pushGroups,
-              pushJobs: data.pushJobs,
-              pushSystem: data.pushSystem,
-            }
-          : null
-      }
-      loading={preferences.isPending}
-      loadError={preferences.isError && !data}
-      onRetry={() => void preferences.refetch()}
-      onChange={(key, value) => save.mutate({ key, value })}
-      pending={pending}
-      saveStatus={saving ? "saving" : lastResult}
-      pushEnabled={push.enabled}
-      onEnablePush={push.enable}
-      pushBusy={push.busy}
-    />
+    <div className="space-y-4">
+      {push.denied && (
+        <p className="surface-card p-4 text-sm text-text-subtle">{texts.account.menu.pushDenied}</p>
+      )}
+
+      <NotificationPreferences
+        values={
+          data
+            ? {
+                weeklyDigest: data.weeklyDigest,
+                pushSocial: data.pushSocial,
+                pushMessages: data.pushMessages,
+                pushGroups: data.pushGroups,
+                pushJobs: data.pushJobs,
+                pushSystem: data.pushSystem,
+              }
+            : null
+        }
+        loading={preferences.isPending}
+        loadError={preferences.isError && !data}
+        onRetry={() => void preferences.refetch()}
+        onChange={(key, value) => save.mutate({ key, value })}
+        pending={pending}
+        saveStatus={saving ? "saving" : lastResult}
+        pushEnabled={push.enabled}
+        onEnablePush={push.enable}
+        pushBusy={push.busy}
+      />
+    </div>
   );
 }

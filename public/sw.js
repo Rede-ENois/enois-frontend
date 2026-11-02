@@ -13,7 +13,7 @@
  * cliente recarrega sozinho quando o novo SW assume (ver src/lib/pwa.ts).
  */
 
-const VERSION = "enois-v9";
+const VERSION = "enois-v10";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const PRECACHE = [
@@ -78,6 +78,47 @@ self.addEventListener("push", (event) => {
       data: { url },
       tag: data.tag || undefined,
     }),
+  );
+});
+
+/**
+ * O navegador trocou a inscricao (limpeza do servico de push, troca de conta no aparelho). Recria
+ * e avisa a aba para registrar a nova no backend.
+ *
+ * A chave vem do proprio evento: o Chrome entrega a inscricao nova pronta (`newSubscription`) e o
+ * Firefox entrega a antiga, cuja chave ainda serve. Nao da para buscar a chave no servidor daqui:
+ * em producao a API mora em outro host (`VITE_API_BACKEND`) e este arquivo nao conhece a URL.
+ * Sem chave nenhuma nada e recriado — o proximo carregamento do app ve que nao ha inscricao, mostra
+ * "desligado" e a pessoa liga de novo (`syncPushSubscription` em src/lib/push.ts).
+ */
+self.addEventListener("pushsubscriptionchange", (event) => {
+  const renovada = event.newSubscription
+    ? Promise.resolve(event.newSubscription)
+    : Promise.resolve(event.oldSubscription?.options?.applicationServerKey).then((chave) =>
+        chave
+          ? self.registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: chave,
+            })
+          : null,
+      );
+
+  event.waitUntil(
+    renovada
+      .then((subscription) => {
+        if (!subscription) return undefined;
+        return self.clients
+          .matchAll({ type: "window", includeUncontrolled: true })
+          .then((clients) => {
+            for (const client of clients) {
+              client.postMessage({
+                type: "enois:push-subscription",
+                subscription: subscription.toJSON(),
+              });
+            }
+          });
+      })
+      .catch(() => undefined),
   );
 });
 

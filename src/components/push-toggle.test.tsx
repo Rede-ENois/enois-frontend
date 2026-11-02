@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   enable: vi.fn(),
   disable: vi.fn(),
   permission: vi.fn(),
+  sync: vi.fn(),
 }));
 
 vi.mock("@/lib/api/push", () => ({ pushApi: { config: () => mocks.config() } }));
@@ -23,8 +24,12 @@ vi.mock("@/lib/push", () => ({
   isPushActive: (key?: string) => mocks.isActive(key),
   enablePush: () => mocks.enable(),
   disablePush: () => mocks.disable(),
-  pushErrorMessage: (reason: string) =>
-    reason === "denied" ? texts.account.menu.pushDenied : texts.account.menu.pushError,
+  syncPushSubscription: (key: string) => mocks.sync(key),
+  pushErrorMessage: (reason: string) => {
+    if (reason === "denied") return texts.account.menu.pushDenied;
+    if (reason === "dismissed") return texts.account.menu.pushDismissed;
+    return texts.account.menu.pushError;
+  },
 }));
 
 // O componente do design system é um probe: o que se testa aqui é o estado que o app entrega.
@@ -61,6 +66,7 @@ describe("item de avisos no celular", () => {
     root = createRoot(container);
     mocks.permission.mockReturnValue("default");
     mocks.isActive.mockResolvedValue(false);
+    mocks.sync.mockResolvedValue(true);
   });
 
   afterEach(async () => {
@@ -126,8 +132,23 @@ describe("item de avisos no celular", () => {
     await render();
 
     expect(button()!.dataset.active).toBe("true");
+    // A inscricao viva e reposta no servidor: se a linha sumiu (limpeza da base, 410), o
+    // aparelho continuava "ligado" sem receber nada.
+    expect(mocks.sync).toHaveBeenCalledWith("chave-publica");
     await act(async () => button()!.click());
     expect(mocks.disable).toHaveBeenCalledTimes(1);
     expect(button()!.dataset.active).toBe("false");
+  });
+
+  it("pedido fechado sem escolha mantem o botao para tentar de novo", async () => {
+    mocks.config.mockResolvedValue({ enabled: true, publicKey: "chave-publica" });
+    // Fechar o dialogo deixa a permissao em "default": nao e negacao.
+    mocks.enable.mockResolvedValue({ ok: false, reason: "dismissed" });
+    await render();
+
+    await act(async () => button()!.click());
+
+    expect(container.textContent).toContain(texts.account.menu.pushDismissed);
+    expect(button()).not.toBeNull();
   });
 });
