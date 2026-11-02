@@ -29,8 +29,8 @@ Seções:
 
 Funcionalidades:
 
+- **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo). Imagens são verificadas ao serem selecionadas; quando a API rejeita por conteúdo sexual, a prévia fica borrada e mostra uma orientação. Falhas técnicas de verificação permanecem identificadas como erro, sem serem apresentadas como rejeição por conteúdo.
 - **Composer at rest:** the feed opens with a one-line `ComposerLauncher` (DS); tapping it, `?compor=POST` (the dock's "Publicar" button) or an existing draft, media or non-INSIGHT type expands the full composer and focuses it.
-- **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo)
 - **Identidade ativa:** escolhida no menu da conta; com a profissional, o compositor publica no feed corporativo (`BUSINESS`) e os tipos de página/artigo saem da seleção — regras em `componentes.md`
 - **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos. "Para você" is the default tab (the one that shows the "você está em dia" marker).
 - **Topic is required** on every post published here (standalone posts): there is no "Sem assunto" option, and publish/schedule stay disabled until one is picked. The last topic used is preselected. The backend answers `400 TOPIC_REQUIRED` otherwise.

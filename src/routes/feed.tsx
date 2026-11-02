@@ -50,6 +50,7 @@ import {
   EyeOff,
   FileText,
   Film,
+  Gift,
   Image,
   Loader2,
   RefreshCw,
@@ -57,7 +58,15 @@ import {
   X,
 } from "lucide-react";
 
-import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
+import {
+  ApiError,
+  authApi,
+  corporateApi,
+  eventsApi,
+  feedApi,
+  networkApi,
+  profileApi,
+} from "@/lib/api";
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
@@ -565,7 +574,10 @@ function Home() {
                 entry.preview === preview
                   ? {
                       ...entry,
-                      moderationStatus: "blocked",
+                      moderationStatus:
+                        error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED"
+                          ? "prohibited"
+                          : "blocked",
                       moderationError:
                         error instanceof Error
                           ? error.message
@@ -875,9 +887,28 @@ function Home() {
                             <img
                               src={item.preview}
                               alt=""
-                              className="h-48 w-full object-cover bg-surface-1"
+                              className={`h-48 w-full object-cover bg-surface-1 ${item.moderationStatus === "prohibited" ? "scale-105 blur-lg" : ""}`}
                             />
                           </SpoilerPreview>
+
+                          {item.moderationStatus === "prohibited" && (
+                            <div className="absolute inset-0 grid place-items-center bg-surface-card/75 p-3 text-center backdrop-blur-sm">
+                              <div className="max-w-xs">
+                                <Gift
+                                  aria-hidden
+                                  className="mx-auto mb-1 h-6 w-6 animate-bounce text-primary"
+                                />
+
+                                <p className="text-sm font-semibold text-text-strong">
+                                  {texts.feed.composer.imageProhibitedTitle}
+                                </p>
+
+                                <p className="mt-1 text-xs text-text-muted">
+                                  {texts.feed.composer.imageProhibitedMessage}
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
                           {item.moderationStatus === "checking" && (
                             <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">

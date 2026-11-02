@@ -1166,6 +1166,9 @@ export const texts = {
       uploadProgress: (progress: number) => `Enviando… ${progress}%`,
       imageChecking: "Verificando imagem…",
       imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",
+      imageProhibitedTitle: "Imagem ocultada",
+      imageProhibitedMessage:
+        "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
       publishError: "Não foi possível publicar. Tente de novo.",
       publishErrorTitle: "Não foi possível publicar:",
       page: "Página",
