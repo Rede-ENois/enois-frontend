@@ -10,7 +10,7 @@ import { isNoticeDismissed, noticeShowsModal } from "@/lib/notice-dismissal";
 import { hasSession } from "@/lib/require-auth";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/whats-new";
 
-import { useAdminNotice } from "@/components/notices/admin-notice";
+import { useAdminNotice } from "@/components/notices/use-admin-notice";
 
 /**
  * "O que há de novo" once per published release, mounted on the root next to the onboarding guard.
