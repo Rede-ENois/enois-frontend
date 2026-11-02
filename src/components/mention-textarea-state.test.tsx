@@ -113,21 +113,21 @@ describe("emote insertion through the real mention editor", () => {
     await selectMention();
     await act(async () => replaceValue(""));
     await chooseEmote();
-    expect(changed).toHaveBeenLastCalledWith("KEKW", []);
+    expect(changed).toHaveBeenLastCalledWith(":KEKW:", []);
   });
 
   it("removes the recipient when an emote replaces the selected mention", async () => {
     const textarea = await selectMention();
     textarea.setSelectionRange(0, "@ana-test".length);
     await chooseEmote();
-    expect(changed).toHaveBeenLastCalledWith("KEKW ", []);
+    expect(changed).toHaveBeenLastCalledWith(":KEKW: ", []);
   });
 
   it("keeps a confirmed mention when the emote is inserted after it", async () => {
     const textarea = await selectMention();
     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     await chooseEmote();
-    expect(changed).toHaveBeenLastCalledWith("@ana-test KEKW", ["user-a"]);
-    expect(textarea.selectionStart).toBe("@ana-test KEKW".length);
+    expect(changed).toHaveBeenLastCalledWith("@ana-test :KEKW:", ["user-a"]);
+    expect(textarea.selectionStart).toBe("@ana-test :KEKW:".length);
   });
 });

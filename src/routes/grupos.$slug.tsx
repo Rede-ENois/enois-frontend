@@ -683,6 +683,7 @@ export function GroupPostItem({
 
       <RichText
         content={post.content}
+        writtenAt={post.createdAt}
         className="mt-2 whitespace-pre-line wrap-anywhere text-sm text-text-strong"
       />
 
@@ -835,6 +836,7 @@ export function GroupPostItem({
                     ) : (
                       <RichText
                         content={item.content}
+                        writtenAt={item.createdAt}
                         className="whitespace-pre-line wrap-anywhere text-sm text-text-strong"
                       />
                     )}

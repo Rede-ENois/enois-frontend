@@ -37,7 +37,9 @@ export function MentionTextarea({
     enabled: mentionQuery.length >= 2,
   });
 
-  const insertEmote = (code: string) => {
+  const insertEmote = (emoteCode: string) => {
+    // `:KEKW:` is the only format that becomes a sticker in new text (issue #556).
+    const code = `:${emoteCode}:`;
     const value = props.value;
     const textarea = containerRef.current?.querySelector("textarea");
     if (!textarea) return;
@@ -46,7 +48,7 @@ export function MentionTextarea({
     const end = textarea.selectionEnd;
     const before = value.slice(0, start);
     const after = value.slice(end);
-    // O código precisa ficar separado por espaço para ser reconhecido na leitura do texto.
+    // Space around the code keeps the raw text readable for whoever edits it later.
     const prefix = before && !/\s$/.test(before) ? " " : "";
     const suffix = after && !/^\s/.test(after) ? " " : "";
     const next = `${before}${prefix}${code}${suffix}${after}`;

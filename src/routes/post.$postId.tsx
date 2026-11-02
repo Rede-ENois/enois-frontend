@@ -170,6 +170,7 @@ function PostDetail() {
 
                 <RichText
                   content={post.articleBody}
+                  writtenAt={post.createdAt}
                   className="whitespace-pre-line break-words text-base font-normal leading-relaxed text-text-strong"
                 />
               </article>

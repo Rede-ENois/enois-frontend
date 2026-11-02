@@ -113,7 +113,7 @@ describe("Seletor de figurinhas do campo de escrita", () => {
     await act(async () => figurinha?.click());
 
     expect(onChange).toHaveBeenCalled();
-    expect(onChange.mock.calls.at(-1)?.[0]).toBe("KEKW");
+    expect(onChange.mock.calls.at(-1)?.[0]).toBe(":KEKW:");
   });
 
   it("separa a figurinha do texto vizinho com espaço", async () => {
@@ -139,6 +139,6 @@ describe("Seletor de figurinhas do campo de escrita", () => {
       document.querySelector<HTMLButtonElement>(`button[title="KEKW"]`)?.click(),
     );
 
-    expect(onChange.mock.calls.at(-1)?.[0]).toBe("oi KEKW");
+    expect(onChange.mock.calls.at(-1)?.[0]).toBe("oi :KEKW:");
   });
 });
