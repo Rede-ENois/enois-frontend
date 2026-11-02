@@ -29,6 +29,7 @@ import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PollCard } from "@/components/post/poll-card";
+import { PresenceIndicator } from "@/components/presence-indicator";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 import { formatTime } from "./post/format-time";
@@ -380,10 +381,15 @@ function PostCardContainer({
       renderAuthorTrigger={
         post.authorIdentity === "CORPORATE"
           ? undefined
-          : (content) => (
-              <ProfilePeek username={post.authorUsername} name={post.authorName}>
-                {content}
-              </ProfilePeek>
+          : (content, part) => (
+              <span className="inline-flex max-w-full items-center gap-1">
+                <ProfilePeek username={post.authorUsername} name={post.authorName}>
+                  {content}
+                </ProfilePeek>
+                {part === "name" && (
+                  <PresenceIndicator username={post.authorUsername} isOwn={isOwner} />
+                )}
+              </span>
             )
       }
     />
