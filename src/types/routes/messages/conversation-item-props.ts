@@ -4,6 +4,7 @@ export type ConversationItemProps = {
   conversation: Pick<
     Conversation,
     | "id"
+    | "kind"
     | "participantIds"
     | "title"
     | "time"
@@ -11,6 +12,7 @@ export type ConversationItemProps = {
     | "unread"
     | "lastMessageE2e"
     | "lastMessageIv"
+    | "lastMessageFrom"
     | "identities"
   >;
   isActive: boolean;
