@@ -8,6 +8,7 @@ import {
   PUSH_SUBSCRIPTION,
   hrefDaQueryDePush,
   hrefDoPush,
+  notificationIdDoPush,
   searchSemPush,
   subscriptionDoPush,
 } from "./push-navigation";
@@ -100,5 +101,28 @@ describe("clique na notificação push", () => {
     expect(sw).toContain("event.newSubscription");
     // A chave do servidor não é buscada daqui: em produção a API mora em outro host.
     expect(sw).not.toContain('fetch("/api/push/config"');
+  });
+});
+
+describe("notificationIdDoPush", () => {
+  it("reads the tapped notification from the worker message and from the query", () => {
+    expect(
+      notificationIdDoPush({
+        type: PUSH_NAVIGATE,
+        href: "/feed",
+        notificationId: "notification_ab1",
+      }),
+    ).toBe("notification_ab1");
+    expect(notificationIdDoPush("?push=%2Ffeed&n=notification_ab1")).toBe("notification_ab1");
+  });
+
+  it("ignores other messages and anything that is not a plain id", () => {
+    expect(notificationIdDoPush({ type: "other", notificationId: "notification_1" })).toBeNull();
+    expect(notificationIdDoPush("?push=%2Ffeed&n=..%2Fadmin")).toBeNull();
+    expect(notificationIdDoPush("?push=%2Ffeed")).toBeNull();
+  });
+
+  it("drops the id from the address with the destination", () => {
+    expect(searchSemPush("?push=%2Ffeed&n=notification_1&aba=x")).toBe("aba=x");
   });
 });
