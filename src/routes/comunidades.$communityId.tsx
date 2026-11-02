@@ -44,6 +44,7 @@ import {
   Camera,
   Crown,
   EyeOff,
+  Gift,
   Paperclip,
   Send,
   Settings,
@@ -325,7 +326,10 @@ function CommunityDetail() {
                 entry.preview === preview
                   ? {
                       ...entry,
-                      moderationStatus: "blocked",
+                      moderationStatus:
+                        error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED"
+                          ? "prohibited"
+                          : "blocked",
                       moderationError:
                         error instanceof Error
                           ? error.message
@@ -741,8 +745,24 @@ function CommunityDetail() {
                       label={texts.posts.mediaSpoiler.badge}
                       className="h-full w-full"
                     >
-                      <img src={item.preview} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={item.preview}
+                        alt=""
+                        className={`h-full w-full object-cover ${item.moderationStatus === "prohibited" ? "scale-110 blur-md" : ""}`}
+                      />
                     </SpoilerPreview>
+                    {item.moderationStatus === "prohibited" && (
+                      <div
+                        className="absolute inset-0 grid place-items-center bg-surface-card/80"
+                        title={`${texts.feed.composer.imageProhibitedTitle}: ${texts.feed.composer.imageProhibitedMessage}`}
+                      >
+                        <Gift
+                          aria-label={texts.feed.composer.imageProhibitedTitle}
+                          className="h-6 w-6 animate-bounce text-primary"
+                        />
+                        <span className="sr-only">{texts.feed.composer.imageProhibitedMessage}</span>
+                      </div>
+                    )}
                     {item.moderationStatus === "checking" && (
                       <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
                         <span className="rounded-full bg-surface-card px-2 py-1 text-[10px] text-text-strong">
