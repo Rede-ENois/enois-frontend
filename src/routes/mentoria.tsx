@@ -556,6 +556,7 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
       {mentor.banner && (
         <MentorBanner
           src={mentor.banner}
+          alt={user?.name ?? texts.mentoring.mentorFallback}
           className="-mx-5 -mt-5 mb-1 w-[calc(100%+2.5rem)] max-w-none"
         />
       )}

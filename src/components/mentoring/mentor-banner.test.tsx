@@ -35,9 +35,15 @@ describe("MentorBanner", () => {
     expect(img.className).toContain("w-full");
     expect(img.className).toContain("object-contain");
     expect(img.className).toContain("max-h-");
-    // `h-36`/`object-cover` cortavam o cartaz em qualquer largura.
+    // `h-36`/`object-cover` cortavam o cartaz em qualquer largura. O `h-[...]` também conta.
     expect(img.className).not.toContain("object-cover");
-    expect(img.className).not.toMatch(/(^|\s)h-\d/);
+    expect(img.className).not.toMatch(/(^|\s)h-(\d|\[)/);
+  });
+
+  it("descreve o cartaz quando quem usa informa o nome do mentor", () => {
+    act(() => root!.render(<MentorBanner src="banner.png" alt="Erika Linares" />));
+
+    expect(container.querySelector("img")!.getAttribute("alt")).toBe("Erika Linares");
   });
 
   it("aceita a classe extra de quem usa", () => {
