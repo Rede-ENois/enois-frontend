@@ -20,7 +20,12 @@ import { navigateToHref } from "@/utils/navigation";
 import { ToastProvider, buttonVariants } from "@rede-enois/design-system/ui";
 
 import { registerPushSubscription } from "@/lib/push";
-import { hrefDoPush, subscriptionDoPush } from "@/lib/push-navigation";
+import {
+  hrefDaQueryDePush,
+  hrefDoPush,
+  searchSemPush,
+  subscriptionDoPush,
+} from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
 import { hasSession, isProtectedPath } from "@/lib/require-auth";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
@@ -219,6 +224,22 @@ function RootInsideProvider() {
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [router]);
+
+  useEffect(() => {
+    // Clique na notificacao PUSH sem nenhuma aba do app aberta: o worker nao conhece as rotas,
+    // entao deixa o href na query (`/?push=...`) e a traducao acontece aqui — pela mesma tabela
+    // que a notificacao interna usa. Sem isso, um href que nao e rota do front
+    // ("/configuracoes/seguranca") abria a pagina de erro.
+    const href = hrefDaQueryDePush(window.location.search);
+    if (!href) return;
+    const resto = searchSemPush(window.location.search);
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${resto ? `?${resto}` : ""}${window.location.hash}`,
+    );
+    navigateToHref(href, (opts) => void router.navigate(opts));
   }, [router]);
 
   useEffect(() => {
