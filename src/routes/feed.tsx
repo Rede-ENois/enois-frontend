@@ -80,6 +80,7 @@ import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
 import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
+import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
@@ -353,10 +354,6 @@ function Home() {
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
-  // Tipo de publicação e o que manda: Página mostra o editor de HTML, Artigo mostra o editor do
-  // texto longo, os demais usam o campo de cima. O seletor de tipos abre em painel recolhido — com
-  // dez tipos, uma fileira de botões ocupava o composer inteiro e empurrava o texto para longe.
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   // Agendamento: o post fica na fila do backend e só entra no feed na hora marcada.
@@ -463,7 +460,6 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
-      setTypePickerOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
     } catch {
@@ -528,7 +524,6 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
-      setTypePickerOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     }
@@ -954,53 +949,18 @@ function Home() {
                   </Popover>
 
                   {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setTypePickerOpen((open) => !open)}
-                      aria-expanded={typePickerOpen}
-                      title={texts.feed.composer.typePicker.change}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                        typePickerOpen
-                          ? "bg-primary text-primary-foreground"
-                          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                      }`}
-                    >
-                      <currentType.icon className="h-3.5 w-3.5" />
-
-                      <>
-                        {texts.feed.composer.typePicker.label}: {currentType.label}
-                      </>
-
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 transition ${typePickerOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
+                  <div>
+                    <PostTypePicker
+                      options={availableTypes}
+                      value={postType}
+                      onChange={(id) => setPostType(id as PostView["type"])}
+                    />
 
                     {currentType.id === "MOMENT" && (
                       <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
                         <Clock className="h-3.5 w-3.5" />
                         {currentType.hint}
                       </p>
-                    )}
-
-                    {typePickerOpen && (
-                      <div className="absolute bottom-full right-0 z-40 mb-1 max-h-[60vh] w-[min(22rem,80vw)] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg sm:left-0 sm:right-auto">
-                        <div className="flex flex-wrap gap-1.5">
-                          {availableTypes.map((option) => (
-                            <ComposerAction
-                              key={option.id}
-                              icon={option.icon}
-                              label={option.label}
-                              active={option.id === postType}
-                              onClick={() => {
-                                setPostType(option.id as PostView["type"]);
-                                setTypePickerOpen(false);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
                     )}
                   </div>
 

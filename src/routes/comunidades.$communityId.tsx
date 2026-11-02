@@ -42,7 +42,6 @@ import {
 import {
   ArrowLeft,
   Camera,
-  ChevronDown,
   Crown,
   EyeOff,
   Paperclip,
@@ -66,6 +65,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 import { AppContainer } from "@/components/app-container";
 import { CommunityChannels } from "@/components/communities/community-channels";
 import { CommunityFavoriteButton } from "@/components/community-favorite-button";
+import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
@@ -132,7 +132,6 @@ function CommunityDetail() {
   const [articleBody, setArticleBody] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [publishError, setPublishError] = useState<string | null>(null);
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
@@ -140,7 +139,6 @@ function CommunityDetail() {
   const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
-  const currentType = POST_TYPES.find((option) => option.id === postType) ?? POST_TYPES[0];
   const [editOpen, setEditOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -644,53 +642,11 @@ function CommunityDetail() {
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setTypePickerOpen((open) => !open)}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                      typePickerOpen
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                    }`}
-                  >
-                    <currentType.icon className="h-3.5 w-3.5" />
-
-                    <>
-                      {texts.feed.composer.typePicker.label}: {currentType.label}
-                    </>
-
-                    <ChevronDown
-                      className={`h-3.5 w-3.5 transition ${typePickerOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {typePickerOpen && (
-                    <div className="absolute bottom-full right-0 z-40 mb-1 max-h-[60vh] w-[min(22rem,80vw)] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg sm:left-0 sm:right-auto">
-                      <div className="flex flex-wrap gap-1.5">
-                        {POST_TYPES.map((option) => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => {
-                              setPostType(option.id as PostView["type"]);
-                              setTypePickerOpen(false);
-                            }}
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                              option.id === postType
-                                ? "bg-primary text-primary-foreground"
-                                : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                            }`}
-                          >
-                            <option.icon className="h-3.5 w-3.5" />
-
-                            <>{option.label}</>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <PostTypePicker
+                  options={POST_TYPES}
+                  value={postType}
+                  onChange={(id) => setPostType(id as PostView["type"])}
+                />
 
                 {/* Anexo: mesmo clipe do resto do composer, com a contagem quando já tem arquivo. */}
                 {!pageMode && (
