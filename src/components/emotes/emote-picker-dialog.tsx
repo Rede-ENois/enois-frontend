@@ -47,6 +47,14 @@ export function EmotePickerDialog({
   const [pagina, setPagina] = useState(1);
   const [recentes, setRecentes] = useState<string[]>([]);
   const [aba, setAba] = useState<"recent" | "all">("all");
+  // Closed, the picker only reads the cached index: opening the composer costs no request.
+  const index = useEmoteIndex(open);
+  // Only codes still in the catalog: one that left it would render a broken image. With none
+  // left, the picker falls back to the full list instead of an empty tab.
+  const recentesVisiveis = recentes.flatMap((code) => {
+    const src = index.get(code);
+    return src ? [{ code, src }] : [];
+  });
 
   // A busca só vai ao backend depois de uma pausa: cada tecla dispararia uma página nova. O termo
   // e a página voltam ao começo JUNTOS — separados, o app pediria a página atual com o termo novo
@@ -78,7 +86,7 @@ export function EmotePickerDialog({
   }, [open]);
 
   // Typing a search always shows the full list: "Recentes" is for browsing, not for finding.
-  const mostrandoRecentes = aba === "recent" && !busca.trim() && recentes.length > 0;
+  const mostrandoRecentes = aba === "recent" && !busca.trim() && recentesVisiveis.length > 0;
 
   const escolher = (code: string) => {
     setRecentes(rememberRecentEmote(code));
@@ -115,7 +123,7 @@ export function EmotePickerDialog({
           />
         </div>
 
-        {recentes.length > 0 && !busca.trim() && (
+        {recentesVisiveis.length > 0 && !busca.trim() && (
           <Tabs value={aba} onValueChange={(value) => setAba(value as "recent" | "all")}>
             <TabsList>
               <TabsTrigger value="recent">{texts.emotes.tabRecent}</TabsTrigger>
@@ -126,7 +134,7 @@ export function EmotePickerDialog({
         )}
 
         {mostrandoRecentes ? (
-          <RecentEmotesGrid codes={recentes} onSelect={escolher} />
+          <RecentEmotesGrid emotes={recentesVisiveis} onSelect={escolher} />
         ) : (
           <>
             <div
@@ -205,35 +213,20 @@ export function EmotePickerDialog({
   );
 }
 
-/**
- * Lives inside the dialog content, so the index is only read while the picker is open: a closed
- * picker in the composer costs no request.
- */
 function RecentEmotesGrid({
-  codes,
+  emotes,
   onSelect,
 }: {
-  codes: string[];
+  emotes: { code: string; src: string }[];
   onSelect: (code: string) => void;
 }) {
-  const index = useEmoteIndex();
-  // Only codes still in the catalog: one that left it would render a broken image.
-  const visible = codes.flatMap((code) => {
-    const src = index.get(code);
-    return src ? [{ code, src }] : [];
-  });
-
   return (
     <div className="max-h-[45vh] min-w-0 overflow-y-auto pr-1">
-      {visible.length === 0 ? (
-        <p className="py-8 text-center text-sm text-text-subtle">{texts.emotes.loading}</p>
-      ) : (
-        <div className="grid grid-cols-6 gap-1 sm:grid-cols-8">
-          {visible.map(({ code, src }) => (
-            <EmoteCell key={code} code={code} src={src} onSelect={onSelect} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-6 gap-1 sm:grid-cols-8">
+        {emotes.map(({ code, src }) => (
+          <EmoteCell key={code} code={code} src={src} onSelect={onSelect} />
+        ))}
+      </div>
     </div>
   );
 }

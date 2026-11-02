@@ -269,6 +269,15 @@ describe("Seletor de figurinhas", () => {
     expect(titulos()).toEqual(CODIGOS.filter((codigo) => codigo.startsWith("EMOTE1")));
   });
 
+  it("recents that left the catalog fall back to the full list, not an empty tab", async () => {
+    window.localStorage.setItem("rede:emotes:recent:v1", JSON.stringify(["GONE"]));
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+
+    expect(grade()).toHaveLength(EMOTES_POR_PAGINA);
+    expect(document.body.textContent).not.toContain(texts.emotes.tabRecent);
+  });
+
   it("picking a sticker moves it to the front of Recentes", async () => {
     await renderizar();
     await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
