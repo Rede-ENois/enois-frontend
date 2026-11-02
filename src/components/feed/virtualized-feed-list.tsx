@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
@@ -31,11 +31,34 @@ export function VirtualizedFeedList({
 }: VirtualizedFeedListProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
+  // A ref ainda é null no primeiro render, então a margem não pode ser lida durante o render:
+  // ela vem de um state atualizado antes da pintura. Distância até o topo do documento (e não
+  // offsetTop, que é relativo ao offsetParent); recalculada porque banners acima da lista
+  // (atualizando, novos posts) mudam essa distância.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
+    const element = listRef.current;
+    if (!element) return;
+    const update = () =>
+      setScrollMargin(Math.round(element.getBoundingClientRect().top + window.scrollY));
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(document.documentElement);
+    return () => observer.disconnect();
+  }, []);
+
+  // Tamanhos medidos ficam em cache pela chave do item. Sem chave estável o padrão é o índice:
+  // um post novo no topo (refetch a cada 30s) desloca todos os índices e cada card herda a
+  // altura medida de outro, o que faz a lista pular.
+  const getItemKey = useCallback((index: number) => posts[index]?.id ?? index, [posts]);
+
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
     estimateSize: () => ESTIMATE_SIZE,
     overscan: OVERSCAN,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin,
+    getItemKey,
   });
 
   const items = virtualizer.getVirtualItems();
