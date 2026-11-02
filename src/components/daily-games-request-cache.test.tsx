@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { MazeState } from "@/types/application/daily-games/maze-state";
 import type { WordState } from "@/types/application/daily-games/word-state";
-import type { DailyMaze as MazeView, DailyWord as WordView } from "@rede-enois/design-system/domain";
+import type {
+  DailyMaze as MazeView,
+  DailyWord as WordView,
+} from "@rede-enois/design-system/domain";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -93,7 +96,10 @@ describe("daily game responses keep their original challenge", () => {
     mocks.start.mockReset();
     localStorage.clear();
     client = new QueryClient({
-      defaultOptions: { queries: { staleTime: Infinity, retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { staleTime: Infinity, retry: false },
+        mutations: { retry: false },
+      },
     });
     host = document.createElement("div");
     document.body.append(host);
@@ -112,19 +118,28 @@ describe("daily game responses keep their original challenge", () => {
     const todayKey = ["daily-games", game, "today"];
     const previousKey = ["daily-games", game, "previous", PREVIOUS];
     const initial = game === "maze" ? mazeState : wordState;
-    const response = game === "maze"
-      ? { ...mazeState(TODAY), position: 1, moves: 1 }
-      : { ...wordState(TODAY), guesses: [{ word: "TERMO", marks: Array.from({ length: 5 }, () => "ABSENT" as const) }] };
+    const response =
+      game === "maze"
+        ? { ...mazeState(TODAY), position: 1, moves: 1 }
+        : {
+            ...wordState(TODAY),
+            guesses: [{ word: "TERMO", marks: Array.from({ length: 5 }, () => "ABSENT" as const) }],
+          };
 
     const render = async (notStarted = false) => {
-      client.setQueryData(todayKey, { ...initial(TODAY), ...(notStarted ? { status: "NOT_STARTED" } : {}) });
+      client.setQueryData(todayKey, {
+        ...initial(TODAY),
+        ...(notStarted ? { status: "NOT_STARTED" } : {}),
+      });
       client.setQueryData(previousKey, initial(PREVIOUS));
       client.setQueryData(["daily-games", game, "leaderboard"], { items: [] });
-      await act(async () => root.render(
-        <QueryClientProvider client={client}>
-          {game === "maze" ? <DailyMaze /> : <DailyWord />}
-        </QueryClientProvider>,
-      ));
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            {game === "maze" ? <DailyMaze /> : <DailyWord />}
+          </QueryClientProvider>,
+        ),
+      );
     };
 
     const submit = async () => {
@@ -153,8 +168,10 @@ describe("daily game responses keep their original challenge", () => {
           await act(async () => pending.resolve(result));
           await settle();
           expect(client.getQueryData(fromPrevious ? previousKey : todayKey)).toEqual(result);
-          expect(client.getQueryData(fromPrevious ? todayKey : previousKey)).toEqual(initial(fromPrevious ? TODAY : PREVIOUS));
-          expect(mocks[game].state?.date).toBe((fromPrevious !== switchDay) ? PREVIOUS : TODAY);
+          expect(client.getQueryData(fromPrevious ? todayKey : previousKey)).toEqual(
+            initial(fromPrevious ? TODAY : PREVIOUS),
+          );
+          expect(mocks[game].state?.date).toBe(fromPrevious !== switchDay ? PREVIOUS : TODAY);
           if (game === "words") expect(mocks.words.lastConfirmedRow).toBe(switchDay ? null : 0);
         });
       }
@@ -186,7 +203,13 @@ describe("daily game responses keep their original challenge", () => {
     client.setQueryData(["daily-games", "words", "leaderboard"], { items: [] });
     const pending = deferred<WordState>();
     mocks.guess.mockReturnValue(pending.promise);
-    await act(async () => root.render(<QueryClientProvider client={client}><DailyWord /></QueryClientProvider>));
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <DailyWord />
+        </QueryClientProvider>,
+      ),
+    );
     for (const letter of "TERMO") await act(async () => mocks.words.onKey(letter));
     await act(async () => mocks.words.onKey("ENTER"));
     await settle();

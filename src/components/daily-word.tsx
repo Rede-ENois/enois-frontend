@@ -82,17 +82,16 @@ export function DailyWord() {
     queryFn: dailyWordsApi.leaderboard,
   });
 
-  const queryKey = showPrevious
-    ? ["daily-games", "words", "previous", previousDate]
-    : ["daily-games", "words", "today"];
   const state = showPrevious ? previous.data : today.data;
 
   const start = useMutation({
     mutationFn: dailyWordsApi.start,
     onSuccess: (data) => {
       client.setQueryData(["daily-games", "words", "today"], data);
-      setDraft("");
-      setLastConfirmedRow(null);
+      if (data.date === state?.date) {
+        setDraft("");
+        setLastConfirmedRow(null);
+      }
     },
     onError: () => void today.refetch(),
   });
@@ -100,10 +99,15 @@ export function DailyWord() {
   const guess = useMutation({
     mutationFn: ({ word, requestId, date }: { word: string; requestId: string; date?: string }) =>
       dailyWordsApi.guess(word, requestId, date),
-    onSuccess: (data) => {
-      client.setQueryData(queryKey, data);
-      setLastConfirmedRow(data.guesses.length - 1);
-      setDraft("");
+    onSuccess: (data, { date }) => {
+      client.setQueryData(
+        date ? ["daily-games", "words", "previous", date] : ["daily-games", "words", "today"],
+        data,
+      );
+      if (data.date === state?.date) {
+        setLastConfirmedRow(data.guesses.length - 1);
+        setDraft("");
+      }
       requestIdRef.current = randomUUID();
       if (data.status === "WON" || data.status === "LOST") {
         void client.invalidateQueries({ queryKey: ["daily-games", "words", "leaderboard"] });
@@ -112,7 +116,9 @@ export function DailyWord() {
         window.setTimeout(() => setStatsOpen(true), 1200);
       }
     },
-    onError: (error) => {
+    onError: (error, { date }) => {
+      requestIdRef.current = randomUUID();
+      if (date !== (showPrevious ? previousDate : undefined)) return;
       // Traduz erros do servidor para mensagens amigáveis
       let msg = "Não foi possível registrar o palpite.";
       if (error instanceof Error) {
@@ -128,7 +134,6 @@ export function DailyWord() {
       }
       setLocalError(msg);
       triggerShake(state?.guesses.length ?? 0);
-      requestIdRef.current = randomUUID();
     },
   });
 
