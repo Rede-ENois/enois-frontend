@@ -45,6 +45,8 @@ import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect"
 import { RouteErrorBoundary } from "@/components/route-error-boundary";
 import { WhatsNewGate } from "@/components/whats-new/whats-new-gate";
 
+import { SkipLink } from "@/components/skip-link";
+
 import appCss from "../styles.css?url";
 
 /**
@@ -178,6 +180,7 @@ function RootShell({ children }: WithRequiredChildren) {
       </head>
 
       <body>
+        <SkipLink />
         {children}
         <Scripts />
       </body>
