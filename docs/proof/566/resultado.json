@@ -1,0 +1,151 @@
+{
+  "resultado": [
+    {
+      "width": 1280,
+      "comItens": true,
+      "abaItens": true,
+      "medida": {
+        "abas": [
+          "Tema global",
+          "Identidade",
+          "Itens"
+        ],
+        "ativa": "Itens",
+        "itens": [
+          "Aurora",
+          "Estrela",
+          "Noite"
+        ],
+        "botoes": [
+          "Tema global",
+          "Identidade",
+          "Itens",
+          "Tirar",
+          "Equipar",
+          "Restaurar padrão",
+          "Pronto",
+          "Fechar"
+        ],
+        "docWidth": 1280,
+        "clientWidth": 1280
+      },
+      "arquivo": "/tmp/verif/566/itens-1280-comitens.png"
+    },
+    {
+      "width": 1280,
+      "comItens": false,
+      "abaItens": true,
+      "medida": {
+        "abas": [
+          "Tema global",
+          "Identidade",
+          "Itens"
+        ],
+        "ativa": "Itens",
+        "itens": [],
+        "botoes": [
+          "Tema global",
+          "Identidade",
+          "Itens",
+          "Ir para a loja",
+          "Restaurar padrão",
+          "Pronto",
+          "Fechar"
+        ],
+        "docWidth": 1280,
+        "clientWidth": 1280
+      },
+      "arquivo": "/tmp/verif/566/itens-1280-semitens.png"
+    },
+    {
+      "width": 390,
+      "comItens": true,
+      "abaItens": true,
+      "medida": {
+        "abas": [
+          "Tema global",
+          "Identidade",
+          "Itens"
+        ],
+        "ativa": "Itens",
+        "itens": [
+          "Aurora",
+          "Estrela",
+          "Noite"
+        ],
+        "botoes": [
+          "Tema global",
+          "Identidade",
+          "Itens",
+          "Tirar",
+          "Equipar",
+          "Restaurar padrão",
+          "Pronto",
+          "Fechar"
+        ],
+        "docWidth": 390,
+        "clientWidth": 390
+      },
+      "arquivo": "/tmp/verif/566/itens-390-comitens.png"
+    },
+    {
+      "width": 390,
+      "comItens": false,
+      "abaItens": true,
+      "medida": {
+        "abas": [
+          "Tema global",
+          "Identidade",
+          "Itens"
+        ],
+        "ativa": "Itens",
+        "itens": [],
+        "botoes": [
+          "Tema global",
+          "Identidade",
+          "Itens",
+          "Ir para a loja",
+          "Restaurar padrão",
+          "Pronto",
+          "Fechar"
+        ],
+        "docWidth": 390,
+        "clientWidth": 390
+      },
+      "arquivo": "/tmp/verif/566/itens-390-semitens.png"
+    }
+  ],
+  "chamadas": [
+    "GET /api/users/melissa",
+    "GET /api/me/preferences",
+    "GET /api/avisos/ativo",
+    "GET /api/me/theme",
+    "GET /api/conversations?limit=20&context=SOCIAL",
+    "GET /api/conversations/unread-count?context=SOCIAL",
+    "GET /api/me/age-state",
+    "GET /api/conversations/stream",
+    "GET /api/auth/me",
+    "GET /api/notifications?limit=20&context=SOCIAL",
+    "GET /api/me",
+    "GET /api/communities/mine?limit=8",
+    "GET /api/communities/favorites?limit=50",
+    "POST /api/me/presence/heartbeat",
+    "GET /api/users/melissa/presence",
+    "GET /api/users/melissa/seals",
+    "GET /api/eventos/caca-saci",
+    "GET /api/users/melissa/projects",
+    "GET /api/users/melissa/experiences",
+    "GET /api/marketplace/compras",
+    "GET /api/games/melissa/profile",
+    "GET /api/users/user_1/posts?limit=10",
+    "GET /api/profile/ranking?limit=10",
+    "GET /api/recommendations/received/user_1",
+    "GET /api/me/business-profile",
+    "GET /api/me/presence",
+    "GET /api/contributors/me",
+    "GET /api/carteira",
+    "GET /api/me/streak",
+    "GET /api/communities/mine?limit=4",
+    "GET /api/loja?order=oldest"
+  ]
+}
