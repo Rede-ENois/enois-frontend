@@ -693,6 +693,8 @@ export const texts = {
     settingsSeoTitle: "Conta e segurança",
     menu: {
       blockedUsers: "Usuários bloqueados",
+      walletBalance: (balance: number) =>
+        `${balance.toLocaleString("pt-BR")} ${balance === 1 ? "faísca" : "faíscas"}`,
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",

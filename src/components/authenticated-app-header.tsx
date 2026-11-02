@@ -6,7 +6,6 @@ import { AuthenticatedAppHeader as AuthenticatedAppHeaderView } from "@rede-enoi
 import { useCurrentUser } from "@/lib/current-user";
 
 import { AccountMenu } from "@/components/account-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 import { GlobalSearch } from "./global-search";
 import { NotificationsPopover } from "./notifications-popover";
@@ -28,7 +27,6 @@ export function AuthenticatedAppHeader() {
       search={<GlobalSearch />}
       actions={
         <>
-          <ThemeToggle />
           <NotificationsPopover />
           {mounted && profile && <AccountMenu profile={profile} />}
         </>
