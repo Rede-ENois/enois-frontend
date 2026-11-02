@@ -167,11 +167,16 @@ describe("daily game responses keep their original challenge", () => {
       await act(async () => mocks[game].onStart());
       await settle();
       await act(async () => mocks[game].onTogglePrevious());
+      if (game === "words") {
+        for (const letter of "TER") await act(async () => mocks.words.onKey(letter));
+        expect(mocks.words.draft).toBe("TER");
+      }
       await act(async () => pending.resolve(initial(TODAY)));
       await settle();
       expect(client.getQueryData(todayKey)).toEqual(initial(TODAY));
       expect(client.getQueryData(previousKey)).toEqual(initial(PREVIOUS));
       expect(mocks[game].state?.date).toBe(PREVIOUS);
+      if (game === "words") expect(mocks.words.draft).toBe("TER");
     });
   }
 
