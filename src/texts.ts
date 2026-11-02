@@ -1213,8 +1213,9 @@ export const texts = {
       happeningNow: "Acontecendo agora",
       seeAllEvents: "Ver todos os eventos",
       confirmed: (count: number) => `${count} ${count === 1 ? "confirmado" : "confirmados"}`,
-      eventMeta: (date: string, format: string, confirmed: string) =>
-        `${date} · ${format} · ${confirmed}`,
+      /** The day is on the ticket: the line carries time, format and who is going. */
+      eventMeta: (time: string, format: string, confirmed: string) =>
+        `${time} · ${format} · ${confirmed}`,
     },
     companyPrompt: {
       title: "Sua empresa no Énóis",

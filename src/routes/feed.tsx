@@ -1297,17 +1297,18 @@ function Home() {
 
             {feedLoading && <PostCardSkeletons />}
 
-            {/* Reserves its row while it loads: above the list, a row that appears and disappears
-                would move every post by its height on each refresh. */}
-            {!feedLoading && (
-              <div className="flex h-10 items-center justify-center gap-2">
-                {feedFetching && !isFetchingNextPage && (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-
-                    <span className="text-sm text-text-subtle">{texts.feed.refreshing}</span>
-                  </>
-                )}
+            {/* Floats over the top of the list instead of taking a row: a row that appears and
+                disappears would move every post on each refresh, and a reserved one left an
+                empty band above the feed. */}
+            {!feedLoading && feedFetching && !isFetchingNextPage && (
+              <div
+                role="status"
+                className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center"
+              >
+                <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-surface-card px-3 py-1.5 text-sm text-text-subtle shadow-[var(--shadow-float)]">
+                  <Loader2 aria-hidden className="h-4 w-4 animate-spin text-primary" />
+                  {texts.feed.refreshing}
+                </span>
               </div>
             )}
 
@@ -1370,8 +1371,8 @@ function Home() {
 
                           <p className="text-xs font-normal text-text-subtle">
                             {texts.feed.sidebar.eventMeta(
-                              e.date,
-                              e.format,
+                              e.time,
+                              texts.events.formats[e.format],
                               texts.feed.sidebar.confirmed(e.attendees),
                             )}
                           </p>
