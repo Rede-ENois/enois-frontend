@@ -144,7 +144,7 @@ describe("campo do comentário", () => {
       ),
     );
     await settle();
-    expect(lastField().placeholder).toBe("Comente com contexto, dúvida ou referência...");
+    expect(lastField().placeholder).toBe("Escreva um comentário");
     expect(lastField().emoteInline).toBe(true);
     expect(lastField().toolbarVisible).toBe(false);
 
@@ -154,6 +154,6 @@ describe("campo do comentário", () => {
     expect(lastField().showCounter).toBe(true);
 
     await act(async () => usePostCardStore.getState().setReplyToId("post", "root"));
-    expect(lastField().placeholder).toBe("Responder Pessoa...");
+    expect(lastField().placeholder).toBe("Responder Pessoa…");
   });
 });
