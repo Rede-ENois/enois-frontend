@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as SugestoesRouteImport } from './routes/sugestoes'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SilenciadosRouteImport } from './routes/silenciados'
 import { Route as ServicosRouteImport } from './routes/servicos'
 import { Route as SelosRouteImport } from './routes/selos'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
@@ -24,6 +26,7 @@ import { Route as RedeRouteImport } from './routes/rede'
 import { Route as ProfissionalRouteImport } from './routes/profissional'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
+import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
 import { Route as ModeradorRouteImport } from './routes/moderador'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
@@ -45,6 +48,7 @@ import { Route as DenunciasRouteImport } from './routes/denuncias'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as CarteiraRouteImport } from './routes/carteira'
+import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
 import { Route as BloqueadosRouteImport } from './routes/bloqueados'
 import { Route as BlogsRouteImport } from './routes/blogs'
 import { Route as ApoiarRouteImport } from './routes/apoiar'
@@ -58,6 +62,7 @@ import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$usernam
 import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_.$username'
 import { Route as PostPostIdRouteImport } from './routes/post.$postId'
 import { Route as PerfilUsernameRouteImport } from './routes/perfil.$username'
+import { Route as NotificacoesPreferenciasRouteImport } from './routes/notificacoes.preferencias'
 import { Route as ModeracaoReportIdRouteImport } from './routes/moderacao.$reportId'
 import { Route as GruposSlugRouteImport } from './routes/grupos.$slug'
 import { Route as GamesPainelRouteImport } from './routes/games.painel'
@@ -91,6 +96,11 @@ const SuporteRoute = SuporteRouteImport.update({
   path: '/suporte',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SugestoesRoute = SugestoesRouteImport.update({
+  id: '/sugestoes',
+  path: '/sugestoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
@@ -99,6 +109,11 @@ const SobreRoute = SobreRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SilenciadosRoute = SilenciadosRouteImport.update({
+  id: '/silenciados',
+  path: '/silenciados',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicosRoute = ServicosRouteImport.update({
@@ -149,6 +164,11 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
 const PenalidadesRoute = PenalidadesRouteImport.update({
   id: '/penalidades',
   path: '/penalidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
+  id: '/par-de-estudo',
+  path: '/par-de-estudo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModeradorRoute = ModeradorRouteImport.update({
@@ -256,6 +276,11 @@ const CarteiraRoute = CarteiraRouteImport.update({
   path: '/carteira',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoasVindasRoute = BoasVindasRouteImport.update({
+  id: '/boas-vindas',
+  path: '/boas-vindas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BloqueadosRoute = BloqueadosRouteImport.update({
   id: '/bloqueados',
   path: '/bloqueados',
@@ -321,6 +346,12 @@ const PerfilUsernameRoute = PerfilUsernameRouteImport.update({
   path: '/perfil/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificacoesPreferenciasRoute =
+  NotificacoesPreferenciasRouteImport.update({
+    id: '/notificacoes/preferencias',
+    path: '/notificacoes/preferencias',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ModeracaoReportIdRoute = ModeracaoReportIdRouteImport.update({
   id: '/$reportId',
   path: '/$reportId',
@@ -414,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
+  '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/contato': typeof ContatoRoute
@@ -435,6 +467,7 @@ export interface FileRoutesByFullPath {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
   '/profissional': typeof ProfissionalRoute
@@ -445,8 +478,10 @@ export interface FileRoutesByFullPath {
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
   '/servicos': typeof ServicosRoute
+  '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -460,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional/$username': typeof ProfissionalUsernameRoute
@@ -482,6 +518,7 @@ export interface FileRoutesByTo {
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
+  '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/contato': typeof ContatoRoute
@@ -503,6 +540,7 @@ export interface FileRoutesByTo {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
   '/profissional': typeof ProfissionalRoute
@@ -513,8 +551,10 @@ export interface FileRoutesByTo {
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
   '/servicos': typeof ServicosRoute
+  '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -528,6 +568,7 @@ export interface FileRoutesByTo {
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional/$username': typeof ProfissionalUsernameRoute
@@ -551,6 +592,7 @@ export interface FileRoutesById {
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
+  '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/contato': typeof ContatoRoute
@@ -572,6 +614,7 @@ export interface FileRoutesById {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
   '/profissional': typeof ProfissionalRoute
@@ -582,8 +625,10 @@ export interface FileRoutesById {
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
   '/servicos': typeof ServicosRoute
+  '/silenciados': typeof SilenciadosRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
+  '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
@@ -597,6 +642,7 @@ export interface FileRoutesById {
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional_/$username': typeof ProfissionalUsernameRoute
@@ -621,6 +667,7 @@ export interface FileRouteTypes {
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
+    | '/boas-vindas'
     | '/carteira'
     | '/comunidades'
     | '/contato'
@@ -642,6 +689,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
     | '/profissional'
@@ -652,8 +700,10 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/selos'
     | '/servicos'
+    | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -667,6 +717,7 @@ export interface FileRouteTypes {
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
     | '/profissional/$username'
@@ -689,6 +740,7 @@ export interface FileRouteTypes {
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
+    | '/boas-vindas'
     | '/carteira'
     | '/comunidades'
     | '/contato'
@@ -710,6 +762,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
     | '/profissional'
@@ -720,8 +773,10 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/selos'
     | '/servicos'
+    | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -735,6 +790,7 @@ export interface FileRouteTypes {
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
     | '/profissional/$username'
@@ -757,6 +813,7 @@ export interface FileRouteTypes {
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
+    | '/boas-vindas'
     | '/carteira'
     | '/comunidades'
     | '/contato'
@@ -778,6 +835,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
     | '/profissional'
@@ -788,8 +846,10 @@ export interface FileRouteTypes {
     | '/seguranca'
     | '/selos'
     | '/servicos'
+    | '/silenciados'
     | '/sitemap.xml'
     | '/sobre'
+    | '/sugestoes'
     | '/suporte'
     | '/termos'
     | '/vagas'
@@ -803,6 +863,7 @@ export interface FileRouteTypes {
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
     | '/profissional_/$username'
@@ -826,6 +887,7 @@ export interface RootRouteChildren {
   ApoiarRoute: typeof ApoiarRoute
   BlogsRoute: typeof BlogsRoute
   BloqueadosRoute: typeof BloqueadosRoute
+  BoasVindasRoute: typeof BoasVindasRoute
   CarteiraRoute: typeof CarteiraRoute
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
   ContatoRoute: typeof ContatoRoute
@@ -847,6 +909,7 @@ export interface RootRouteChildren {
   MeusServicosRoute: typeof MeusServicosRoute
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
+  ParDeEstudoRoute: typeof ParDeEstudoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   ProfissionalRoute: typeof ProfissionalRoute
@@ -857,8 +920,10 @@ export interface RootRouteChildren {
   SegurancaRoute: typeof SegurancaRoute
   SelosRoute: typeof SelosRoute
   ServicosRoute: typeof ServicosRoute
+  SilenciadosRoute: typeof SilenciadosRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
+  SugestoesRoute: typeof SugestoesRoute
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
@@ -867,6 +932,7 @@ export interface RootRouteChildren {
   AuthVerifyRoute: typeof AuthVerifyRoute
   BlogUsernameRoute: typeof BlogUsernameRoute
   EmpresaSlugRoute: typeof EmpresaSlugRoute
+  NotificacoesPreferenciasRoute: typeof NotificacoesPreferenciasRoute
   PerfilUsernameRoute: typeof PerfilUsernameRoute
   PostPostIdRoute: typeof PostPostIdRoute
   ProfissionalUsernameRoute: typeof ProfissionalUsernameRoute
@@ -902,6 +968,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuporteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sugestoes': {
+      id: '/sugestoes'
+      path: '/sugestoes'
+      fullPath: '/sugestoes'
+      preLoaderRoute: typeof SugestoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre': {
       id: '/sobre'
       path: '/sobre'
@@ -914,6 +987,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/silenciados': {
+      id: '/silenciados'
+      path: '/silenciados'
+      fullPath: '/silenciados'
+      preLoaderRoute: typeof SilenciadosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/servicos': {
@@ -984,6 +1064,13 @@ declare module '@tanstack/react-router' {
       path: '/penalidades'
       fullPath: '/penalidades'
       preLoaderRoute: typeof PenalidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/par-de-estudo': {
+      id: '/par-de-estudo'
+      path: '/par-de-estudo'
+      fullPath: '/par-de-estudo'
+      preLoaderRoute: typeof ParDeEstudoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moderador': {
@@ -1133,6 +1220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarteiraRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boas-vindas': {
+      id: '/boas-vindas'
+      path: '/boas-vindas'
+      fullPath: '/boas-vindas'
+      preLoaderRoute: typeof BoasVindasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bloqueados': {
       id: '/bloqueados'
       path: '/bloqueados'
@@ -1222,6 +1316,13 @@ declare module '@tanstack/react-router' {
       path: '/perfil/$username'
       fullPath: '/perfil/$username'
       preLoaderRoute: typeof PerfilUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notificacoes/preferencias': {
+      id: '/notificacoes/preferencias'
+      path: '/notificacoes/preferencias'
+      fullPath: '/notificacoes/preferencias'
+      preLoaderRoute: typeof NotificacoesPreferenciasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moderacao/$reportId': {
@@ -1460,6 +1561,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApoiarRoute: ApoiarRoute,
   BlogsRoute: BlogsRoute,
   BloqueadosRoute: BloqueadosRoute,
+  BoasVindasRoute: BoasVindasRoute,
   CarteiraRoute: CarteiraRoute,
   ComunidadesRoute: ComunidadesRouteWithChildren,
   ContatoRoute: ContatoRoute,
@@ -1481,6 +1583,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeusServicosRoute: MeusServicosRoute,
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
+  ParDeEstudoRoute: ParDeEstudoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   ProfissionalRoute: ProfissionalRoute,
@@ -1491,8 +1594,10 @@ const rootRouteChildren: RootRouteChildren = {
   SegurancaRoute: SegurancaRoute,
   SelosRoute: SelosRoute,
   ServicosRoute: ServicosRoute,
+  SilenciadosRoute: SilenciadosRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
+  SugestoesRoute: SugestoesRoute,
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
@@ -1501,6 +1606,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthVerifyRoute: AuthVerifyRoute,
   BlogUsernameRoute: BlogUsernameRoute,
   EmpresaSlugRoute: EmpresaSlugRoute,
+  NotificacoesPreferenciasRoute: NotificacoesPreferenciasRoute,
   PerfilUsernameRoute: PerfilUsernameRoute,
   PostPostIdRoute: PostPostIdRoute,
   ProfissionalUsernameRoute: ProfissionalUsernameRoute,

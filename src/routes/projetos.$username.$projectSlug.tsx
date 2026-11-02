@@ -9,6 +9,7 @@ import { communityProjectsApi } from "@/lib/api";
 import { safeHref } from "@/lib/safe-url";
 
 import { AppContainer } from "@/components/app-container";
+import { ProjectCover } from "@/components/projects/project-cover";
 
 export const Route = createFileRoute("/projetos/$username/$projectSlug")({
   head: ({ params }) => ({
@@ -59,11 +60,10 @@ function ProjectDetail() {
         <BackLink />
 
         <article className="surface-card overflow-hidden">
-          {data.cover ? (
-            <img src={data.cover} alt="" className="h-56 w-full object-cover sm:h-72" />
-          ) : (
-            <div className="h-40 w-full" style={{ background: "var(--gradient-primary)" }} />
-          )}
+          <ProjectCover
+            src={data.cover}
+            className={data.cover ? "h-56 w-full sm:h-72" : "h-40 w-full"}
+          />
 
           <div className="space-y-4 p-5 sm:p-6">
             <div className="space-y-1">

@@ -5,17 +5,19 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { UserAvatar } from "@rede-enois/design-system/domain";
+import { ImageCropDialog } from "@rede-enois/design-system/patterns";
 import { Button, Input, LoadingState, Textarea, useToast } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Camera, Image as ImageIcon } from "lucide-react";
 
 import { corporateApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { isValidNametag, nametagPath, normalizeNametag } from "@/lib/corporate/nametag";
 import { requireAuth } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 
 export const Route = createFileRoute("/profissional")({
   beforeLoad: requireAuth,
@@ -51,6 +53,7 @@ function Profissional() {
   const bannerUpload = useMediaUpload();
   const avatarRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
+  const [crop, setCrop] = useState<{ src: string; purpose: "AVATAR" | "BANNER" } | null>(null);
 
   const authenticated = useIsAuthenticated();
 
@@ -117,6 +120,23 @@ function Profissional() {
       toast(error instanceof Error ? error.message : texts.corporate.saveError, "error"),
   });
 
+  /**
+   * O nametag tem ação própria: trocar o @ não depende (nem fica preso) ao resto do formulário —
+   * se o nametag escolhido estiver em uso, os outros campos não deixam de salvar.
+   */
+  const changeNametag = useMutation({
+    mutationFn: () => corporateApi.changeUsername(normalizeNametag(form.username)),
+    onSuccess: (updated) => {
+      setForm((current) => ({ ...current, username: updated.username }));
+      setLoadedFor(updated.username);
+      toast(texts.corporate.nametagChanged, "success");
+      void queryClient.invalidateQueries({ queryKey: ["business-profile"] });
+      void queryClient.invalidateQueries({ queryKey: ["corporate-public"] });
+    },
+    onError: (error) =>
+      toast(error instanceof Error ? error.message : texts.corporate.saveError, "error"),
+  });
+
   const activate = useMutation({
     mutationFn: () => corporateApi.activate(),
     onSuccess: () => {
@@ -138,10 +158,9 @@ function Profissional() {
   });
 
   /** Sobe a imagem e grava o perfil inteiro com o novo campo (o PATCH substitui tudo). */
-  const uploadImage = (file: File | undefined, purpose: "AVATAR" | "BANNER") => {
-    if (!file) return;
+  const uploadImage = (file: File, purpose: "AVATAR" | "BANNER") => {
     const upload = purpose === "AVATAR" ? avatarUpload : bannerUpload;
-    void upload
+    return upload
       .upload(file, purpose)
       .then(async (result) => {
         const nextAvatar = purpose === "AVATAR" ? result.cdnUrl : form.avatar;
@@ -161,6 +180,24 @@ function Profissional() {
         refresh();
       })
       .catch(() => toast(texts.corporate.uploadError, "error"));
+  };
+
+  // Same as the personal profile: the picture is framed before it goes up; a GIF goes as is,
+  // since cropping would flatten the animation.
+  const pickImage = (input: HTMLInputElement, purpose: "AVATAR" | "BANNER") => {
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    if (file.type === "image/gif" || file.name.toLowerCase().endsWith(".gif")) {
+      void uploadImage(file, purpose);
+      return;
+    }
+    setCrop({ src: URL.createObjectURL(file), purpose });
+  };
+
+  const closeCrop = () => {
+    if (crop) URL.revokeObjectURL(crop.src);
+    setCrop(null);
   };
 
   const { data: preview } = useQuery({
@@ -211,6 +248,11 @@ function Profissional() {
   const importable = preview
     ? (Object.entries(preview).filter(([, value]) => Boolean(value)) as [string, string][])
     : [];
+
+  const nametagDigitado = normalizeNametag(form.username);
+  const nametagValido = isValidNametag(form.username);
+  const nametagMudou =
+    Boolean(profile.exists) && nametagValido && nametagDigitado !== profile.username;
 
   return (
     <AppContainer>
@@ -280,7 +322,7 @@ function Profissional() {
           <>
             <div className="surface-card space-y-4 p-4 sm:p-6">
               {form.bannerHtml.trim() ? (
-                <SandboxedHtmlFrame
+                <BannerHtmlFrame
                   html={form.bannerHtml}
                   title={texts.corporate.bannerHtml}
                   className="h-28 w-full rounded-xl"
@@ -314,10 +356,7 @@ function Profissional() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(event) => {
-                      uploadImage(event.target.files?.[0], "AVATAR");
-                      event.target.value = "";
-                    }}
+                    onChange={(event) => pickImage(event.target, "AVATAR")}
                   />
 
                   <Button
@@ -338,10 +377,7 @@ function Profissional() {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(event) => {
-                      uploadImage(event.target.files?.[0], "BANNER");
-                      event.target.value = "";
-                    }}
+                    onChange={(event) => pickImage(event.target, "BANNER")}
                   />
 
                   <Button
@@ -368,6 +404,47 @@ function Profissional() {
                   onChange={(event) => setForm({ ...form, name: event.target.value })}
                   maxLength={160}
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">{texts.corporate.nametag}</label>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-1">
+                    <span className="text-sm text-text-subtle">@</span>
+
+                    <Input
+                      className={`${FIELD_CLASS} min-w-0`}
+                      value={form.username}
+                      onChange={(event) => setForm({ ...form, username: event.target.value })}
+                      maxLength={30}
+                      aria-label={texts.corporate.nametag}
+                    />
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-auto rounded-full"
+                    disabled={changeNametag.isPending || !nametagMudou}
+                    onClick={() => changeNametag.mutate()}
+                  >
+                    {texts.corporate.nametagChange}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-text-subtle">{texts.corporate.nametagHint}</p>
+
+                {nametagValido ? (
+                  <p className="text-xs text-text-subtle">
+                    <code>{nametagPath(nametagDigitado)}</code>
+                  </p>
+                ) : (
+                  <p className="text-xs text-text-subtle">{texts.corporate.nametagInvalid}</p>
+                )}
+
+                {nametagMudou && (
+                  <p className="text-xs text-text-subtle">{texts.corporate.nametagWarning}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -540,6 +617,22 @@ function Profissional() {
           </>
         )}
       </div>
+
+      {crop && (
+        <ImageCropDialog
+          open
+          onOpenChange={(open) => {
+            if (!open) closeCrop();
+          }}
+          imageSrc={crop.src}
+          aspect={crop.purpose === "AVATAR" ? 1 : 3}
+          title={crop.purpose === "AVATAR" ? texts.profile.cropAvatar : texts.profile.cropCover}
+          onCropComplete={async (blob) => {
+            await uploadImage(new File([blob], "crop.jpg", { type: "image/jpeg" }), crop.purpose);
+            closeCrop();
+          }}
+        />
+      )}
     </AppContainer>
   );
 }

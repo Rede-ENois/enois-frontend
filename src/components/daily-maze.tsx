@@ -7,6 +7,7 @@ import { DailyMaze as DailyMazeView } from "@rede-enois/design-system/domain";
 
 import { randomUUID } from "@/lib/api-client";
 import { dailyMazeApi, previousChallengeDate } from "@/lib/api/daily-games";
+import { dailyDateLabel, useDailyShare } from "@/lib/daily-share";
 
 export function DailyMaze() {
   const client = useQueryClient();
@@ -23,9 +24,6 @@ export function DailyMaze() {
     queryFn: () => dailyMazeApi.today(previousDate),
     enabled: Boolean(previousDate),
   });
-  const queryKey = showPrevious
-    ? ["daily-games", "maze", "previous", previousDate]
-    : ["daily-games", "maze", "today"];
   const ranking = useQuery({
     queryKey: ["daily-games", "maze", "leaderboard"],
     queryFn: dailyMazeApi.leaderboard,
@@ -35,7 +33,7 @@ export function DailyMaze() {
   const start = useMutation({
     mutationFn: dailyMazeApi.start,
     onSuccess: (data) => {
-      client.setQueryData(queryKey, data);
+      client.setQueryData(["daily-games", "maze", "today"], data);
     },
     onError: () => {
       void today.refetch();
@@ -43,11 +41,21 @@ export function DailyMaze() {
   });
 
   const move = useMutation({
-    mutationFn: ({ direction, requestId }: { direction: MazeDirection; requestId: string }) =>
-      dailyMazeApi.move(direction, requestId, showPrevious ? previousDate : undefined),
-    onSuccess: (data) => {
+    mutationFn: ({
+      direction,
+      requestId,
+      date,
+    }: {
+      direction: MazeDirection;
+      requestId: string;
+      date?: string;
+    }) => dailyMazeApi.move(direction, requestId, date),
+    onSuccess: (data, { date }) => {
       pending.current = null;
-      client.setQueryData(queryKey, data);
+      client.setQueryData(
+        date ? ["daily-games", "maze", "previous", date] : ["daily-games", "maze", "today"],
+        data,
+      );
       if (data.status === "WON")
         void client.invalidateQueries({ queryKey: ["daily-games", "maze", "leaderboard"] });
     },
@@ -61,8 +69,23 @@ export function DailyMaze() {
       return;
     if (!pending.current || pending.current.direction !== direction)
       pending.current = { direction, requestId: randomUUID() };
-    move.mutate(pending.current);
+    move.mutate({ ...pending.current, date: showPrevious ? previousDate : undefined });
   }
+
+  const dailyShare = useDailyShare();
+  const share = () => {
+    if (state?.status !== "WON") return;
+    const elapsed =
+      state.startedAt && state.completedAt
+        ? Date.parse(state.completedAt) - Date.parse(state.startedAt)
+        : 0;
+    void dailyShare.share({
+      game: "maze",
+      dateLabel: dailyDateLabel(state.date),
+      moves: state.moves,
+      elapsedMillis: Math.max(0, elapsed),
+    });
+  };
 
   return (
     <DailyMazeView
@@ -83,6 +106,8 @@ export function DailyMaze() {
       moveFailed={move.isError}
       moveErrorMessage={move.error instanceof Error ? move.error.message : null}
       onMove={attempt}
+      onShare={share}
+      shareStatus={dailyShare.status}
       ranking={{
         loading: ranking.isPending,
         error: ranking.isError,

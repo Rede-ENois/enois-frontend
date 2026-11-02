@@ -1,3 +1,4 @@
+import type { Streak } from "../streak/streak";
 import type { WalletEntry } from "./wallet-entry";
 
 export type Wallet = {
@@ -8,4 +9,6 @@ export type Wallet = {
   cotacaoBrlMicros: number;
   chave: string;
   entries: WalletEntry[];
+  /** Ausente em backend sem a sequência diária. */
+  streak?: Streak | null;
 };

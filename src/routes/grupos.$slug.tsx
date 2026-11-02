@@ -8,6 +8,7 @@ import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
 import type { GroupMember } from "@/types/application/group/group-member";
 import type { GroupPost } from "@/types/application/group/group-post";
+import type { GroupTopic } from "@/types/application/group/group-topic";
 import type { GroupView } from "@/types/application/group/group-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import {
@@ -37,6 +38,7 @@ import {
   Flag,
   Loader2,
   MessageCircle,
+  Pencil,
   Pin,
   PinOff,
   Plus,
@@ -54,12 +56,12 @@ import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { formatTime } from "@/components/post/format-time";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 export const Route = createFileRoute("/grupos/$slug")({
@@ -155,11 +157,10 @@ function GrupoPage() {
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
           {group.bannerHtml ? (
-            <SandboxedHtmlFrame
+            <BannerHtmlFrame
               html={group.bannerHtml}
               title={group.name}
               className="h-40 w-full rounded-none border-0 shadow-none"
-              autoHeight={false}
             />
           ) : group.banner ? (
             <img src={resolveCdnUrl(group.banner)} alt="" className="h-40 w-full object-cover" />
@@ -181,8 +182,8 @@ function GrupoPage() {
                 </span>
               )}
 
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-semibold tracking-tight text-text-strong">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h1 className="min-w-0 wrap-anywhere text-xl font-semibold tracking-tight text-text-strong">
                   {group.name}
                 </h1>
 
@@ -201,7 +202,9 @@ function GrupoPage() {
             </p>
 
             {group.description && (
-              <p className="whitespace-pre-line text-sm text-text-subtle">{group.description}</p>
+              <p className="whitespace-pre-line wrap-anywhere text-sm text-text-subtle">
+                {group.description}
+              </p>
             )}
 
             <div className="flex flex-wrap items-center gap-2">
@@ -278,6 +281,7 @@ function GroupFeed({ group }: { group: GroupView }) {
   const [content, setContent] = useState("");
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [topicName, setTopicName] = useState("");
+  const [editingTopic, setEditingTopic] = useState<GroupTopic | null>(null);
 
   const { data: topicsData } = useQuery({
     queryKey: ["group-topics", group.id],
@@ -337,6 +341,19 @@ function GroupFeed({ group }: { group: GroupView }) {
     onError: () => toast(texts.groups.topicCreateError, "error"),
   });
 
+  const renameTopic = useMutation({
+    mutationFn: () => groupsApi.updateTopic(group.id, editingTopic!.id, { name: topicName.trim() }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["group-topics", group.id] });
+      setNewTopicOpen(false);
+      setEditingTopic(null);
+      setTopicName("");
+      toast(texts.groups.topicRenameSuccess, "success");
+    },
+    onError: (error) => toast(error.message || texts.groups.topicRenameError, "error"),
+  });
+  const topicSaving = createTopic.isPending || renameTopic.isPending;
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -348,8 +365,8 @@ function GroupFeed({ group }: { group: GroupView }) {
             onClick={() => setTopicId(null)}
             className={
               topicId === null
-                ? "rounded-full border border-primary bg-primary-soft px-3 py-1 text-xs font-medium text-primary"
-                : "rounded-full border border-border-soft px-3 py-1 text-xs font-normal text-text-subtle transition hover:text-text-strong"
+                ? "max-w-full wrap-anywhere text-left rounded-full border border-primary bg-primary-soft px-3 py-1 text-xs font-medium text-primary"
+                : "max-w-full wrap-anywhere text-left rounded-full border border-border-soft px-3 py-1 text-xs font-normal text-text-subtle transition hover:text-text-strong"
             }
           >
             {texts.groups.allTopics}
@@ -363,8 +380,8 @@ function GroupFeed({ group }: { group: GroupView }) {
             onClick={() => setTopicId(topic.id)}
             className={
               activeTopicId === topic.id
-                ? "rounded-full border border-primary bg-primary-soft px-3 py-1 text-xs font-medium text-primary"
-                : "rounded-full border border-border-soft px-3 py-1 text-xs font-normal text-text-subtle transition hover:text-text-strong"
+                ? "max-w-full wrap-anywhere text-left rounded-full border border-primary bg-primary-soft px-3 py-1 text-xs font-medium text-primary"
+                : "max-w-full wrap-anywhere text-left rounded-full border border-border-soft px-3 py-1 text-xs font-normal text-text-subtle transition hover:text-text-strong"
             }
           >
             {topic.name}
@@ -377,11 +394,32 @@ function GroupFeed({ group }: { group: GroupView }) {
             variant="outline"
             size="sm"
             className="w-auto rounded-full gap-1.5"
-            onClick={() => setNewTopicOpen(true)}
+            onClick={() => {
+              setEditingTopic(null);
+              setTopicName("");
+              setNewTopicOpen(true);
+            }}
           >
             <Plus className="h-3.5 w-3.5" />
 
             <>{texts.groups.newTopic}</>
+          </Button>
+        )}
+
+        {group.viewerRole === "OWNER" && activeTopic && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-auto rounded-full gap-1.5"
+            onClick={() => {
+              setEditingTopic(activeTopic);
+              setTopicName(activeTopic.name);
+              setNewTopicOpen(true);
+            }}
+          >
+            <Pencil className="h-3.5 w-3.5" aria-hidden />
+
+            <>{texts.groups.renameTopic}</>
           </Button>
         )}
       </div>
@@ -452,10 +490,17 @@ function GroupFeed({ group }: { group: GroupView }) {
         </>
       )}
 
-      <Dialog open={newTopicOpen} onOpenChange={setNewTopicOpen}>
+      <Dialog
+        open={newTopicOpen}
+        onOpenChange={(open) => {
+          if (!topicSaving) setNewTopicOpen(open);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-normal">{texts.groups.newTopic}</DialogTitle>
+            <DialogTitle className="font-normal">
+              {editingTopic ? texts.groups.renameTopic : texts.groups.newTopic}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
@@ -468,15 +513,24 @@ function GroupFeed({ group }: { group: GroupView }) {
                 onChange={(event) => setTopicName(event.target.value)}
                 placeholder={texts.groups.topicNamePlaceholder}
                 maxLength={80}
+                disabled={topicSaving}
               />
             </div>
 
             <Button
               className="w-full rounded-full"
-              disabled={!topicName.trim() || createTopic.isPending}
-              onClick={() => createTopic.mutate()}
+              disabled={
+                !topicName.trim() ||
+                topicSaving ||
+                (editingTopic !== null && topicName.trim() === editingTopic.name)
+              }
+              onClick={() => (editingTopic ? renameTopic.mutate() : createTopic.mutate())}
             >
-              {texts.groups.createAction}
+              {topicSaving
+                ? texts.common.saving
+                : editingTopic
+                  ? texts.common.save
+                  : texts.groups.createAction}
             </Button>
           </div>
         </DialogContent>
@@ -485,7 +539,7 @@ function GroupFeed({ group }: { group: GroupView }) {
   );
 }
 
-function GroupPostItem({
+export function GroupPostItem({
   groupId,
   post,
   topicName,
@@ -503,6 +557,9 @@ function GroupPostItem({
   const [comment, setComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [commentToRemove, setCommentToRemove] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   // Inscrito na query do /me: o proprio post do grupo so mostrava "excluir" depois que outra
   // consulta redesenhava a tela.
@@ -516,6 +573,25 @@ function GroupPostItem({
       invalidate();
     },
     onError: () => toast(texts.groups.removePostError, "error"),
+  });
+
+  const editComment = useMutation({
+    mutationFn: (commentId: string) =>
+      groupsApi.editComment(groupId, post.id, commentId, { content: editDraft.trim() }),
+    onSuccess: () => {
+      setEditingId(null);
+      invalidate();
+    },
+    onError: () => toast(texts.groups.editCommentError, "error"),
+  });
+
+  const removeComment = useMutation({
+    mutationFn: (commentId: string) => groupsApi.removeComment(groupId, post.id, commentId),
+    onSuccess: () => {
+      setCommentToRemove(null);
+      invalidate();
+    },
+    onError: () => toast(texts.groups.removeCommentError, "error"),
   });
 
   // Um único fixado por grupo: fixar outro substitui o anterior no backend.
@@ -567,7 +643,7 @@ function GroupPostItem({
 
   return (
     <li className="rounded-2xl border border-border-soft bg-surface-card p-4">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <ProfilePeek
           username={post.authorUsername}
           userId={post.authorId}
@@ -581,7 +657,7 @@ function GroupPostItem({
             className="h-8 w-8 shrink-0"
           />
 
-          <span className="truncate text-sm font-medium text-text-strong">
+          <span className="min-w-0 wrap-anywhere text-sm font-medium text-text-strong">
             <StyledName name={post.authorName ?? ""} style={post.authorStyle} />
           </span>
         </ProfilePeek>
@@ -589,7 +665,7 @@ function GroupPostItem({
         <UserBadges badges={post.authorBadges} />
 
         {post.pinned && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary">
             <Pin className="h-3 w-3" aria-hidden />
 
             <>{texts.posts.pin.pinned}</>
@@ -602,12 +678,12 @@ function GroupPostItem({
           {`${formatTime(post.createdAt)} · ${createdTime}`}
         </time>
 
-        {topicName && <span className="break-words">{`· ${topicName}`}</span>}
+        {topicName && <span className="wrap-anywhere">{`· ${topicName}`}</span>}
       </div>
 
       <RichText
         content={post.content}
-        className="mt-2 whitespace-pre-line break-words text-sm text-text-strong"
+        className="mt-2 whitespace-pre-line wrap-anywhere text-sm text-text-strong"
       />
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-subtle">
@@ -701,12 +777,12 @@ function GroupPostItem({
                   </ProfilePeek>
 
                   <div className="min-w-0">
-                    <p className="flex items-center gap-1 text-xs font-medium text-text-strong">
+                    <p className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium text-text-strong">
                       <ProfilePeek
                         username={item.authorUsername}
                         userId={item.authorId}
                         name={item.authorName ?? ""}
-                        className="hover:underline"
+                        className="min-w-0 wrap-anywhere hover:underline"
                       >
                         <StyledName name={item.authorName ?? ""} style={item.authorStyle} />
                       </ProfilePeek>
@@ -722,10 +798,77 @@ function GroupPostItem({
                       {`${formatTime(item.createdAt)} · ${hora(item.createdAt)}`}
                     </time>
 
-                    <RichText
-                      content={item.content}
-                      className="whitespace-pre-line break-words text-sm text-text-strong"
-                    />
+                    {editingId === item.id ? (
+                      <div className="mt-1 space-y-2">
+                        <Textarea
+                          value={editDraft}
+                          onChange={(event) => setEditDraft(event.target.value)}
+                          aria-label={texts.groups.editCommentLabel}
+                          maxLength={1200}
+                          rows={2}
+                          className="min-h-10 rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
+                        />
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            className="w-auto rounded-full"
+                            disabled={!editDraft.trim() || editComment.isPending}
+                            onClick={() => {
+                              // Sem mudança nenhuma não há o que gravar nem auditar.
+                              if (editDraft.trim() === item.content) setEditingId(null);
+                              else editComment.mutate(item.id);
+                            }}
+                          >
+                            {editComment.isPending ? texts.common.saving : texts.common.save}
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            className="w-auto rounded-full"
+                            disabled={editComment.isPending}
+                            onClick={() => setEditingId(null)}
+                          >
+                            {texts.common.cancel}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <RichText
+                        content={item.content}
+                        className="whitespace-pre-line wrap-anywhere text-sm text-text-strong"
+                      />
+                    )}
+
+                    {editingId !== item.id && (
+                      <div className="flex flex-wrap items-center gap-x-3">
+                        {item.authorId === currentUserId && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditDraft(item.content);
+                              setEditingId(item.id);
+                            }}
+                            className="mt-1 inline-flex items-center gap-1 rounded-full py-1 text-xs text-text-subtle transition hover:text-text-strong"
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden />
+
+                            <>{texts.common.edit}</>
+                          </button>
+                        )}
+
+                        {(item.authorId === currentUserId || canModerate) && (
+                          <button
+                            type="button"
+                            onClick={() => setCommentToRemove(item.id)}
+                            className="mt-1 inline-flex items-center gap-1 rounded-full py-1 text-xs text-text-subtle transition hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden />
+
+                            <>{texts.groups.removeAction}</>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
@@ -743,6 +886,9 @@ function GroupPostItem({
                 className="min-h-10 rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                 rows={1}
                 toolbar
+                onSubmitShortcut={() => {
+                  if (comment.trim() && !sendComment.isPending) sendComment.mutate();
+                }}
               />
             </div>
 
@@ -772,6 +918,20 @@ function GroupPostItem({
         destructive
         pending={remove.isPending}
         onConfirm={() => remove.mutate()}
+      />
+      <ConfirmDialog
+        open={commentToRemove !== null}
+        onOpenChange={(open) => {
+          if (!open) setCommentToRemove(null);
+        }}
+        title={texts.groups.removeCommentTitle}
+        description={texts.groups.removeCommentDescription}
+        confirmLabel={texts.groups.removeAction}
+        destructive
+        pending={removeComment.isPending}
+        onConfirm={() => {
+          if (commentToRemove) removeComment.mutate(commentToRemove);
+        }}
       />
       <ReportDialog
         targetId={post.id}

@@ -11,6 +11,7 @@ export type ConversationItemProps = {
     | "unread"
     | "lastMessageE2e"
     | "lastMessageIv"
+    | "identities"
   >;
   isActive: boolean;
   onSelect: () => void;

@@ -14,6 +14,7 @@ describe("moduleForPath", () => {
     expect(moduleForPath("/mentoria")).toBe("MENTORING");
     expect(moduleForPath("/jogos-diarios")).toBe("DAILY_GAMES");
     expect(moduleForPath("/games/kof/jogo")).toBe("COMMUNITY_GAMES");
+    expect(moduleForPath("/par-de-estudo")).toBe("STUDY_PAIRS");
   });
 
   it("Eventos controla também o Acontecendo agora (dependência do plano)", () => {

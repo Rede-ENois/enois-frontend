@@ -25,5 +25,8 @@ export type UpdateProfileRequest = Partial<
     | "aka"
     | "resumeUrl"
     | "resumeName"
+    | "city"
+    | "state"
+    | "showCity"
   >
 >;

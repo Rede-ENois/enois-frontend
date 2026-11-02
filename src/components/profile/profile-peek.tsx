@@ -14,8 +14,8 @@ import {
   PopoverTrigger,
 } from "@rede-enois/design-system/ui";
 
-import { profileApi } from "@/lib/api";
 import { profileCardData } from "@/lib/cosmetics";
+import { profileQueries } from "@/lib/query-options/profiles";
 import { cn } from "@/lib/utils";
 
 const PEEK_STALE_MS = 60_000;
@@ -25,8 +25,7 @@ const PEEK_EDGE_PX = 16;
 /** Loads the public profile only when the popover opens; shares the profile page cache. */
 function ProfilePeekCard({ username, userId }: ProfilePeekCardProps) {
   const profile = useQuery({
-    queryKey: username ? ["profile", username] : ["profile", "by-id", userId],
-    queryFn: () => (username ? profileApi.get(username) : profileApi.getById(userId ?? "")),
+    ...profileQueries.byUsernameOrId(username, userId),
     staleTime: PEEK_STALE_MS,
   });
 

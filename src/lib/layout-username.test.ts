@@ -37,7 +37,7 @@ describe("login longo não pode estourar a tela", () => {
   it("a lista de freelas quebra o login", () => {
     const classeDoLogin = classe(
       "src/routes/freelances.tsx",
-      /<p className="([^"]*)"[^>]*>@?\{item\.username\}/,
+      /params=\{\{ username: item\.username \}\}\s+className="([^"]*)"/,
     );
     expect(classeDoLogin).toContain("break-words");
   });
@@ -46,14 +46,6 @@ describe("login longo não pode estourar a tela", () => {
     const classeDoLogin = classe(
       "src/routes/moderacao.tsx",
       /<p className="([^"]*)"[^>]*>\s*@\{g\.username/,
-    );
-    expect(classeDoLogin).toContain("break-words");
-  });
-
-  it("o perfil profissional quebra o login", () => {
-    const classeDoLogin = classe(
-      "src/routes/profissional_.$username.tsx",
-      /<p className="([^"]*)"[^>]*>@?\{data\.username\}/,
     );
     expect(classeDoLogin).toContain("break-words");
   });

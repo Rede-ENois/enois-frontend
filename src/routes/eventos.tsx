@@ -1,52 +1,82 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 import type { Event } from "@/types/application/event/event";
-import type { CreateEventFormProps } from "@/types/routes/events/create-event-form-props";
+import type { EventRecurrence } from "@/types/application/event/event-recurrence";
+import type { EventFormProps } from "@/types/routes/events/event-form-props";
+import type { EventListsSnapshot } from "@/types/routes/events/event-lists-snapshot";
 import type { FieldProps } from "@/types/routes/events/field-props";
 import {
-  Badge,
+  EventCard,
+  EventRecurrenceControl,
+  EventRecurrenceField,
+  EventRitualsFilter,
+} from "@rede-enois/design-system/domain";
+import { CityStateField, formatLocation } from "@rede-enois/design-system/patterns";
+import {
   Button,
+  ConfirmDialog,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  EmptyState,
   Input,
   Label,
+  LoadingState,
   PageHeader,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { Calendar, Check, ImagePlus, MapPin, Plus, Users, Video, X } from "lucide-react";
+import { Calendar, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { eventsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { requireAuth } from "@/lib/require-auth";
-import { safeHref } from "@/lib/safe-url";
+import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
+import { ErrorBanner } from "@/components/error-banner";
 
-function patchEventAttendance(
-  page: PageResponse<Event> | undefined,
-  eventId: string,
-  attending: boolean,
-): PageResponse<Event> | undefined {
-  if (!page) return page;
-  return {
-    ...page,
-    items: page.items.map((event) => {
-      if (event.id !== eventId || event.attending === attending) return event;
-      const attendees = Math.max(0, (event.attendees ?? 0) + (attending ? 1 : -1));
-      return { ...event, attending, attendees };
-    }),
-  };
+/** How long a deep-linked event (`?evento=id`) keeps its highlight ring. */
+const HIGHLIGHT_MS = 4000;
+
+/** Applies `update` to the event in every cached events list (all and rituals). */
+function patchEventInLists(queryClient: QueryClient, eventId: string, update: (e: Event) => Event) {
+  queryClient.setQueriesData<PageResponse<Event>>({ queryKey: ["events"] }, (page) =>
+    page && Array.isArray(page.items)
+      ? { ...page, items: page.items.map((e) => (e.id === eventId ? update(e) : e)) }
+      : page,
+  );
+}
+
+function withAttendance(event: Event, attending: boolean): Event {
+  if (event.attending === attending) return event;
+  const attendees = Math.max(0, (event.attendees ?? 0) + (attending ? 1 : -1));
+  return { ...event, attending, attendees };
+}
+
+/**
+ * The card has one place line: the free-text location plus the structured "Cidade, UF" when the
+ * event has one (the DS card does not read city/state on its own).
+ */
+function withPlace(event: Event): Event {
+  const place = [event.location, formatLocation(event.city, event.state)].filter(Boolean);
+  return place.length > 0 ? { ...event, location: place.join(" · ") } : event;
+}
+
+function recurrenceErrorMessage(error: unknown): string {
+  const code = error instanceof ApiError ? error.code : undefined;
+  if (code === "NOT_EVENT_OWNER") return texts.events.recurrence.notOwner;
+  if (code === "INVALID_EVENT_TIME") return texts.events.recurrence.timeRequired;
+  return texts.events.recurrence.updateError;
 }
 
 export const Route = createFileRoute("/eventos")({
@@ -62,22 +92,28 @@ function Eventos() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const { evento: eventoDestacado } = Route.useSearch();
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const [recemChegado, setRecemChegado] = useState(false);
+  const { evento: highlightedId } = Route.useSearch();
+  const cardRef = useRef<HTMLElement | null>(null);
+  const [highlightOn, setHighlightOn] = useState(false);
+  // "Rituais" lists only series. The unfiltered list keeps the `["events"]` key the feed rail uses.
+  const [ritualsOnly, setRitualsOnly] = useState(false);
+  const [recurrenceError, setRecurrenceError] = useState<{ id: string; message: string } | null>(
+    null,
+  );
+  // Dono do evento: editar (o formulário é o mesmo da criação) e excluir com confirmação.
+  const [editing, setEditing] = useState<Event | null>(null);
+  const [deleting, setDeleting] = useState<Event | null>(null);
 
-  const { data: eventsData } = useQuery({
-    queryKey: ["events"],
-    queryFn: () => eventsApi.list(),
+  const {
+    data: eventsData,
+    isLoading,
+    error: listError,
+  } = useQuery({
+    queryKey: ritualsOnly ? ["events", "recurring"] : ["events"],
+    queryFn: () => eventsApi.list(undefined, null, 20, ritualsOnly),
   });
 
   const events = eventsData?.items ?? [];
-
-  const setAttendance = (eventId: string, attending: boolean) => {
-    queryClient.setQueryData<PageResponse<Event>>(["events"], (prev) =>
-      patchEventAttendance(prev, eventId, attending),
-    );
-  };
 
   // Deep link (?evento=id): rola até o card e o destaca por alguns segundos.
   //
@@ -85,33 +121,45 @@ function Eventos() {
   // chegava antes dos eventos e não rolava para lugar nenhum (o destaque até aparecia, mas fora
   // da tela). Depender da lista faz o efeito rodar de novo quando ela chega — com o card no lugar.
   useEffect(() => {
-    if (!eventoDestacado || events.length === 0) return;
-    const rolar = setTimeout(() => {
-      cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      setRecemChegado(true);
+    if (!highlightedId || events.length === 0) return;
+    const scroll = setTimeout(() => {
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      cardRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "center",
+      });
+      setHighlightOn(true);
     }, 250);
-    const apagar = setTimeout(() => setRecemChegado(false), 4250);
+    const clear = setTimeout(() => setHighlightOn(false), 250 + HIGHLIGHT_MS);
     return () => {
-      clearTimeout(rolar);
-      clearTimeout(apagar);
+      clearTimeout(scroll);
+      clearTimeout(clear);
     };
-  }, [eventoDestacado, events.length]);
+  }, [highlightedId, events.length]);
+
+  // Optimistic attendance on every cached list; the snapshot rolls all of them back.
+  const optimisticAttendance = async (eventId: string, attending: boolean) => {
+    await queryClient.cancelQueries({ queryKey: ["events"] });
+    const previous: EventListsSnapshot = queryClient.getQueriesData<PageResponse<Event>>({
+      queryKey: ["events"],
+    });
+    patchEventInLists(queryClient, eventId, (e) => withAttendance(e, attending));
+    return { previous };
+  };
+
+  const rollback = (context: { previous: EventListsSnapshot } | undefined) =>
+    context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
 
   const attend = useMutation({
     mutationFn: (eventId: string) => eventsApi.attend(eventId),
-    onMutate: async (eventId) => {
-      await queryClient.cancelQueries({ queryKey: ["events"] });
-      const previous = queryClient.getQueryData<PageResponse<Event>>(["events"]);
-      setAttendance(eventId, true);
-      return { previous };
-    },
+    onMutate: (eventId) => optimisticAttendance(eventId, true),
     onError: (error, eventId, context) => {
       if (error instanceof ApiError && error.code === "ALREADY_ATTENDING") {
-        setAttendance(eventId, true);
+        patchEventInLists(queryClient, eventId, (e) => withAttendance(e, true));
         toast(texts.events.attendSuccess);
         return;
       }
-      if (context?.previous) queryClient.setQueryData(["events"], context.previous);
+      rollback(context);
       toast(texts.events.attendError, "error");
     },
     onSuccess: () => toast(texts.events.attendSuccess),
@@ -120,19 +168,14 @@ function Eventos() {
 
   const cancelAttendance = useMutation({
     mutationFn: (eventId: string) => eventsApi.cancelAttendance(eventId),
-    onMutate: async (eventId) => {
-      await queryClient.cancelQueries({ queryKey: ["events"] });
-      const previous = queryClient.getQueryData<PageResponse<Event>>(["events"]);
-      setAttendance(eventId, false);
-      return { previous };
-    },
+    onMutate: (eventId) => optimisticAttendance(eventId, false),
     onError: (error, eventId, context) => {
       if (error instanceof ApiError && error.code === "NOT_ATTENDING") {
-        setAttendance(eventId, false);
+        patchEventInLists(queryClient, eventId, (e) => withAttendance(e, false));
         toast(texts.events.cancelAttendanceSuccess);
         return;
       }
-      if (context?.previous) queryClient.setQueryData(["events"], context.previous);
+      rollback(context);
       toast(texts.events.cancelAttendanceError, "error");
     },
     onSuccess: () => toast(texts.events.cancelAttendanceSuccess),
@@ -141,11 +184,78 @@ function Eventos() {
 
   const attendancePending = attend.isPending || cancelAttendance.isPending;
 
+  const changeRecurrence = useMutation({
+    mutationFn: ({ eventId, recurrence }: { eventId: string; recurrence: EventRecurrence }) =>
+      eventsApi.setRecurrence(eventId, recurrence),
+    onMutate: () => setRecurrenceError(null),
+    onSuccess: (updated) => {
+      patchEventInLists(queryClient, updated.id, () => updated);
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: (error, { eventId }) =>
+      setRecurrenceError({ id: eventId, message: recurrenceErrorMessage(error) }),
+  });
+
   const createEvent = useMutation({
     mutationFn: (data: CreateEventRequest) => eventsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       setOpen(false);
+    },
+    // Cidade/UF aparece embaixo do campo; o resto vira aviso (antes a recusa passava calada).
+    onError: (error) => {
+      if (cityStateErrorCode(error)) return;
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast(
+        code === "INVALID_EVENT_TIME"
+          ? texts.events.recurrence.timeRequired
+          : error instanceof ApiError
+            ? error.message
+            : texts.events.createError,
+        "error",
+      );
+    },
+  });
+
+  const updateEvent = useMutation({
+    mutationFn: ({ eventId, data }: { eventId: string; data: CreateEventRequest }) => {
+      // A recorrência tem endpoint próprio: a edição do conteúdo não mexe na série.
+      const { recurrence: _ignored, ...content } = data;
+      return eventsApi.update(eventId, content);
+    },
+    onSuccess: (updated) => {
+      patchEventInLists(queryClient, updated.id, () => updated);
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
+      setEditing(null);
+      toast(texts.events.editSuccess, "success");
+    },
+    onError: (error) => {
+      if (cityStateErrorCode(error)) return;
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast(
+        code === "NOT_EVENT_OWNER"
+          ? texts.events.editNotOwner
+          : error instanceof ApiError
+            ? error.message
+            : texts.events.editError,
+        "error",
+      );
+    },
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: (eventId: string) => eventsApi.remove(eventId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
+      setDeleting(null);
+      toast(texts.events.deleteSuccess, "success");
+    },
+    onError: (error) => {
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast(
+        code === "NOT_EVENT_OWNER" ? texts.events.editNotOwner : texts.events.deleteError,
+        "error",
+      );
     },
   });
 
@@ -170,164 +280,148 @@ function Eventos() {
                   <DialogTitle>{texts.events.createEvent}</DialogTitle>
                 </DialogHeader>
 
-                <CreateEventForm
+                <EventForm
                   onSave={(data) => {
                     requireAuth();
                     createEvent.mutate(data);
                   }}
                   isPending={createEvent.isPending}
+                  error={createEvent.error}
                 />
               </DialogContent>
             </Dialog>
           }
         />
+        <EventRitualsFilter value={ritualsOnly} onChange={setRitualsOnly} />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((e) => {
-            const formatLabel = texts.events.formats[e.format] ?? e.format;
-            const Icon = e.format === "ONLINE" ? Video : MapPin;
-            const [, month, day] = (e.date ?? "").split("-");
-            const isAttending = e.attending === true;
-            return (
-              <article
-                key={e.id}
-                id={`evento-${e.id}`}
-                ref={e.id === eventoDestacado ? cardRef : undefined}
-                className={`surface-card overflow-hidden transition ${
-                  e.id === eventoDestacado && recemChegado
-                    ? "ring-2 ring-primary"
-                    : isAttending
-                      ? "ring-2 ring-primary/45"
-                      : ""
-                }`}
-              >
-                <div className="relative">
-                  {e.cover ? (
-                    <img src={resolveCdnUrl(e.cover)} alt="" className="h-40 w-full object-cover" />
-                  ) : (
-                    <div className="h-40 w-full bg-gradient-to-br from-primary/20 to-primary/5" />
-                  )}
-                  <div className="absolute left-4 top-4 rounded-xl bg-card/95 px-3 py-2 text-center shadow-md backdrop-blur">
-                    <p className="text-xs font-medium uppercase text-primary">
-                      {texts.events.months[Number(month)] ?? month}
-                    </p>
+        {isLoading ? (
+          <LoadingState label={texts.events.loading} />
+        ) : listError ? (
+          <ErrorBanner error={listError} showDetails={false} />
+        ) : events.length === 0 ? (
+          <EmptyState
+            icon={Calendar}
+            title={ritualsOnly ? texts.events.emptyRituals : texts.events.empty}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {events.map((e) => (
+              <div key={e.id} className="min-w-0 space-y-2">
+                <EventCard
+                  event={withPlace(e)}
+                  dateTimeLabel={texts.events.dateTime(e.date ?? "", e.time ?? "")}
+                  attendancePending={attendancePending}
+                  onAttend={() => {
+                    requireAuth();
+                    attend.mutate(e.id);
+                  }}
+                  onCancelAttend={() => {
+                    requireAuth();
+                    cancelAttendance.mutate(e.id);
+                  }}
+                  highlighted={e.id === highlightedId && highlightOn}
+                  ref={e.id === highlightedId ? cardRef : undefined}
+                />
 
-                    <p className="text-lg font-semibold leading-none">{day ?? ""}</p>
-                  </div>
-                </div>
-
-                <div className="p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="rounded-full bg-card font-normal">
-                      <Icon className="mr-1 h-3 w-3" />
-
-                      <>{formatLabel}</>
-                    </Badge>
-
-                    {isAttending && !e.expired ? (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-primary/30 bg-primary/10 font-normal text-primary"
-                      >
-                        <Check className="mr-1 h-3 w-3" />
-
-                        <>{texts.events.youAreGoing}</>
-                      </Badge>
-                    ) : null}
-
-                    {e.expired && (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full bg-muted font-normal text-text-subtle"
-                      >
-                        <>{texts.events.finished}</>
-                      </Badge>
-                    )}
-                  </div>
-
-                  <h3 className="mt-2 break-words font-semibold">{e.title}</h3>
-
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {texts.events.hostedBy(e.host)}
-                  </p>
-
-                  {e.location && (
-                    <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" />
-
-                      <>{e.location}</>
-                    </p>
-                  )}
-
-                  {e.streamUrl && !e.expired && (
-                    <a
-                      href={safeHref(e.streamUrl) ?? undefined}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                    >
-                      <Video className="h-3.5 w-3.5" />
-
-                      <>{texts.events.watchLive}</>
-                    </a>
-                  )}
-
-                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" />
-
-                      <>{texts.events.dateTime(e.date ?? "", e.time ?? "")}</>
-                    </span>
-
-                    <span className="inline-flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5" />
-
-                      <>{e.attendees ?? 0}</>
-                    </span>
-                  </div>
-
-                  {e.expired ? (
-                    <p className="mt-4 rounded-full bg-muted px-4 py-2 text-center text-xs font-normal text-text-subtle">
-                      {texts.events.finished}
-                    </p>
-                  ) : (
-                    <Button
-                      className="mt-4 w-full rounded-full"
-                      variant={isAttending ? "outline" : "default"}
-                      disabled={attendancePending}
-                      onClick={() => {
-                        requireAuth();
-                        if (isAttending) {
-                          cancelAttendance.mutate(e.id);
-                        } else {
-                          attend.mutate(e.id);
+                {e.canManageRecurrence && (
+                  <div className="surface-card space-y-3 p-4">
+                    {!e.expired && (
+                      <EventRecurrenceControl
+                        value={e.recurrence ?? "NONE"}
+                        onChange={(recurrence) =>
+                          changeRecurrence.mutate({ eventId: e.id, recurrence })
                         }
-                      }}
-                    >
-                      <>{isAttending ? texts.events.cancelAttend : texts.events.attend}</>
-                    </Button>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                        pending={
+                          changeRecurrence.isPending && changeRecurrence.variables?.eventId === e.id
+                        }
+                        error={recurrenceError?.id === e.id ? recurrenceError.message : null}
+                      />
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full gap-1.5"
+                        onClick={() => setEditing(e)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+
+                        <>{texts.events.edit}</>
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full gap-1.5 text-destructive"
+                        onClick={() => setDeleting(e)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+
+                        <>{texts.events.remove}</>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent className="max-h-[88vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{texts.events.editTitle}</DialogTitle>
+            </DialogHeader>
+
+            {editing && (
+              <EventForm
+                initial={editing}
+                onSave={(data) => {
+                  requireAuth();
+                  updateEvent.mutate({ eventId: editing.id, data });
+                }}
+                isPending={updateEvent.isPending}
+                error={updateEvent.error}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <ConfirmDialog
+          open={deleting !== null}
+          onOpenChange={(open) => !open && setDeleting(null)}
+          title={texts.events.deleteTitle}
+          description={texts.events.deleteDescription}
+          confirmLabel={texts.events.remove}
+          destructive
+          pending={deleteEvent.isPending}
+          onConfirm={() => deleting && deleteEvent.mutate(deleting.id)}
+        />
       </div>
     </AppContainer>
   );
 }
 
-function CreateEventForm({ onSave, isPending }: CreateEventFormProps) {
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [format, setFormat] = useState<CreateEventRequest["format"]>("ONLINE");
-  const [host, setHost] = useState("");
-  const [cover, setCover] = useState<string | null>(null);
-  const [streamUrl, setStreamUrl] = useState("");
-  const [location, setLocation] = useState("");
+function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [date, setDate] = useState(initial?.date ?? "");
+  const [time, setTime] = useState(initial?.time ?? "");
+  const [format, setFormat] = useState<CreateEventRequest["format"]>(initial?.format ?? "ONLINE");
+  const [host, setHost] = useState(initial?.host ?? "");
+  const [cover, setCover] = useState<string | null>(initial?.cover ?? null);
+  const [streamUrl, setStreamUrl] = useState(initial?.streamUrl ?? "");
+  const [location, setLocation] = useState(initial?.location ?? "");
+  // A recorrência só existe na criação: mudá-la depois é o controle próprio do card.
+  const [recurrence, setRecurrence] = useState<EventRecurrence>("NONE");
+  // The time rule shows only after a save attempt, not while the person is still filling the form.
+  const [triedSave, setTriedSave] = useState(false);
+  const timeMissing = recurrence !== "NONE" && !time;
   const coverInputRef = useRef<HTMLInputElement>(null);
   const coverUpload = useMediaUpload();
+  // Cidade/UF estruturadas só para encontro presencial ou híbrido (a API recusa no online).
+  const place = useCityState(initial ? { city: initial.city, state: initial.state } : null, error);
+  const inPerson = format !== "ONLINE";
 
   const handleCoverChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -452,6 +546,17 @@ function CreateEventForm({ onSave, isPending }: CreateEventFormProps) {
         </Field>
       )}
 
+      {inPerson && <CityStateField idPrefix="event-place" disabled={isPending} {...place.field} />}
+
+      {!initial && (
+        <EventRecurrenceField
+          value={recurrence}
+          onChange={setRecurrence}
+          error={triedSave && timeMissing ? texts.events.recurrence.timeRequired : null}
+          disabled={isPending}
+        />
+      )}
+
       <Field label={texts.events.form.format}>
         <select
           value={format}
@@ -469,7 +574,10 @@ function CreateEventForm({ onSave, isPending }: CreateEventFormProps) {
       <Button
         className="w-full rounded-full"
         disabled={!title.trim() || !date || !host.trim() || isPending}
-        onClick={() =>
+        onClick={() => {
+          setTriedSave(true);
+          if (timeMissing) return;
+          if (inPerson && !place.validate()) return;
           onSave({
             title,
             date,
@@ -479,10 +587,18 @@ function CreateEventForm({ onSave, isPending }: CreateEventFormProps) {
             cover: cover ?? undefined,
             streamUrl: streamUrl.trim() || undefined,
             location: location.trim() || undefined,
-          })
-        }
+            recurrence,
+            ...(inPerson && place.payload.state ? place.payload : {}),
+          });
+        }}
       >
-        {isPending ? texts.common.creating : texts.events.createEvent}
+        {isPending
+          ? initial
+            ? texts.common.saving
+            : texts.common.creating
+          : initial
+            ? texts.events.saveEdit
+            : texts.events.createEvent}
       </Button>
     </div>
   );

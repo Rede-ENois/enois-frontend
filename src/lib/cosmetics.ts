@@ -9,6 +9,8 @@ import type { AuthorNameStyle } from "@/types/application/profile/author-name-st
 import type { Profile } from "@/types/application/profile/profile";
 import { OFFICIAL_BADGE_ICONS, type ProfileCardData } from "@rede-enois/design-system/domain";
 
+import { walletQueries } from "@/lib/query-options/wallet";
+
 import { ApiError } from "./api-client";
 import { authorNameStyle } from "./profile-name-style";
 
@@ -111,7 +113,8 @@ export function profileCardData(
 
 /** Everything a purchase, equip or event reward can change on screen. */
 export function invalidateCosmetics(queryClient: QueryClient): void {
-  for (const key of ["loja", "carteira", "profile", "me", "feed"]) {
+  void queryClient.invalidateQueries({ queryKey: walletQueries.wallet().queryKey });
+  for (const key of ["loja", "profile", "me", "feed"]) {
     void queryClient.invalidateQueries({ queryKey: [key] });
   }
 }

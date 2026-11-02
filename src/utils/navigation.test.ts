@@ -47,6 +47,18 @@ describe("navigateToHref", () => {
     });
   });
 
+  it("abre a vaga na mudança de status da candidatura e mantém a lista para /vagas", () => {
+    expect(resolve("/vagas/job_1")).toHaveBeenCalledWith({
+      to: "/vagas/$jobId",
+      params: { jobId: "job_1" },
+    });
+    expect(resolve("/api/vagas/job_1/")).toHaveBeenCalledWith({
+      to: "/vagas/$jobId",
+      params: { jobId: "job_1" },
+    });
+    expect(resolve("/vagas")).toHaveBeenCalledWith({ to: "/vagas" });
+  });
+
   it("leva ao marketplace no pedido de desculpa da comunidade", () => {
     expect(resolve("/marketplace")).toHaveBeenCalledWith({ to: "/marketplace" });
   });
@@ -56,6 +68,27 @@ describe("navigateToHref", () => {
     // na notificacao nao levava a lugar nenhum.
     expect(resolve("/seguranca")).toHaveBeenCalledWith({ to: "/seguranca" });
     expect(resolve("/configuracoes/seguranca")).toHaveBeenCalledWith({ to: "/seguranca" });
+  });
+
+  it("opens the study pairs page from its notifications", () => {
+    expect(resolve("/par-de-estudo")).toHaveBeenCalledWith({ to: "/par-de-estudo" });
+  });
+
+  it("keeps the query string of the href (event notification highlights the event)", () => {
+    expect(resolve("/eventos?evento=ev-1")).toHaveBeenCalledWith({
+      to: "/eventos",
+      search: { evento: "ev-1" },
+    });
+    expect(resolve("/api/feed/posts/abc?x=1")).toHaveBeenCalledWith({
+      to: "/post/$postId",
+      params: { postId: "abc" },
+      search: { x: "1" },
+    });
+  });
+
+  it("does not send an empty search when the href has none", () => {
+    expect(resolve("/eventos")).toHaveBeenCalledWith({ to: "/eventos" });
+    expect(resolve("/eventos?")).toHaveBeenCalledWith({ to: "/eventos" });
   });
 
   it("nao navega para href desconhecido nem incompleto", () => {

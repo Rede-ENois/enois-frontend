@@ -15,4 +15,9 @@ export type AuthUser = {
    * pede para CRIAR a primeira em vez de confirmar a atual.
    */
   hasPassword: boolean;
+  /**
+   * A pessoa já concluiu ou pulou o onboarding. `false` manda para `/boas-vindas`; ausente (backend
+   * antigo) vale como concluído, para nunca prender ninguém fora do feed.
+   */
+  onboardingCompleted?: boolean;
 };

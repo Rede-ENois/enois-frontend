@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/lib/current-user";
 import { AppSidebar } from "./app-sidebar";
 import { AuthenticatedAppHeader } from "./authenticated-app-header";
 import { NavigationDrawer } from "./navigation-drawer";
+import { AdminNoticeBanner } from "./notices/admin-notice";
 
 export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
   useCurrentUser();
@@ -15,6 +16,8 @@ export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
       <AppLayout.Header>
         <AuthenticatedAppHeader />
       </AppLayout.Header>
+
+      <AdminNoticeBanner />
 
       <AppLayout.Content>
         <AppLayout.Sidebar>

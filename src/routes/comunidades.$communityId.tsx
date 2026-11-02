@@ -1,12 +1,19 @@
 import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  notFound,
+  useMatchRoute,
+  useNavigate,
+} from "@tanstack/react-router";
 
 import { TOPICS, TOPIC_LABELS, topicLabel } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
-import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
+import { ARTICLE_BODY_MAX_LENGTH, POLL_MIN_OPTIONS, POST_TYPES } from "@/constants/post-types";
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
 import { texts } from "@/texts";
 import type { CommunityTopic } from "@/types/application/community/community-topic";
@@ -16,7 +23,7 @@ import type { CommunityCropPurpose } from "@/types/routes/communities/community-
 import type { EditCommunityFormProps } from "@/types/routes/communities/edit-community-form-props";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import { SpoilerPreview, StyledName, UserAvatar } from "@rede-enois/design-system/domain";
-import { ImageCropDialog } from "@rede-enois/design-system/patterns";
+import { CityStateField, ImageCropDialog, LocationLine } from "@rede-enois/design-system/patterns";
 import {
   Badge,
   Button,
@@ -46,10 +53,14 @@ import {
   X,
 } from "lucide-react";
 
-import { communitiesApi, feedApi } from "@/lib/api";
+import { ApiError, communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { buildShareTags } from "@/lib/open-graph";
+import { communityQueries } from "@/lib/query-options/communities";
+import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useAuth } from "@/lib/use-auth";
+import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
@@ -58,6 +69,7 @@ import { CommunityFavoriteButton } from "@/components/community-favorite-button"
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
+import { PollComposer } from "@/components/post/poll-composer";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { ProfilePeek } from "@/components/profile/profile-peek";
@@ -84,8 +96,20 @@ export const Route = createFileRoute("/comunidades/$communityId")({
       }),
     };
   },
-  component: CommunityDetail,
+  component: CommunityRoute,
 });
+
+function CommunityRoute() {
+  const matchRoute = useMatchRoute();
+  const isCommunityDetail = Boolean(matchRoute({ to: "/comunidades/$communityId", fuzzy: false }));
+
+  // O canal é rota filha; esta tela só ocupa o caminho exato da comunidade.
+  if (!isCommunityDetail) {
+    return <Outlet />;
+  }
+
+  return <CommunityDetail />;
+}
 
 function CommunityDetail() {
   const queryClient = useQueryClient();
@@ -99,6 +123,10 @@ function CommunityDetail() {
   // comunidade só dava erro).
   const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const mediaReady = media.every(
+    (item) =>
+      item.type !== "image" || (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
+  );
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
@@ -107,6 +135,9 @@ function CommunityDetail() {
   const [typePickerOpen, setTypePickerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
+  // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
   const currentType = POST_TYPES.find((option) => option.id === postType) ?? POST_TYPES[0];
@@ -164,7 +195,7 @@ function CommunityDetail() {
       toast(texts.communities.joined);
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["community", community.id, "members"] });
-      queryClient.invalidateQueries({ queryKey: ["my-communities"] });
+      queryClient.invalidateQueries({ queryKey: communityQueries.mineKey });
     },
     onError: () => toast(texts.communities.actionError, "error"),
   });
@@ -175,7 +206,7 @@ function CommunityDetail() {
       setLeaveOpen(false);
       toast(texts.communities.left);
       invalidate();
-      queryClient.invalidateQueries({ queryKey: ["my-communities"] });
+      queryClient.invalidateQueries({ queryKey: communityQueries.mineKey });
     },
     onError: () => {
       // O dono não sai sem transferir: em vez de um erro seco, oferecemos a transferência.
@@ -197,7 +228,7 @@ function CommunityDetail() {
     mutationFn: () => communitiesApi.remove(community.id),
     onSuccess: () => {
       setDeleteOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["my-communities"] });
+      queryClient.invalidateQueries({ queryKey: communityQueries.mineKey });
       navigate({ to: "/comunidades" });
     },
   });
@@ -212,6 +243,7 @@ function CommunityDetail() {
       setMediaSpoiler(false);
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setMentionedUserIds([]);
       setPostType("INSIGHT");
       setPublishError(null);
@@ -222,18 +254,21 @@ function CommunityDetail() {
 
   const publish = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!mediaReady) return;
     const content = draft.trim();
     // Pagina e uma coisa OU outra (o HTML e o conteudo); artigo precisa do texto de cima E do corpo
     // — as mesmas regras do composer do feed.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
+    const options = normalizePollOptions(pollOptions);
+    if (pollMode && options.length < POLL_MIN_OPTIONS) return;
 
     setPublishError(null);
     try {
       let mediaIds: string[] = [];
       if (!pageMode && media.length > 0) {
-        const results = await upload.uploadAll(media.map((item) => ({ file: item.file })));
-        mediaIds = results.map((result) => result.mediaId);
+        mediaIds = await uploadComposerMedia(media, upload.uploadAll);
       }
       await createPost.mutateAsync({
         type: postType,
@@ -243,6 +278,7 @@ function CommunityDetail() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
       });
     } catch (error) {
@@ -266,7 +302,42 @@ function CommunityDetail() {
       if (isImage && media.length >= 4) break;
 
       const preview = URL.createObjectURL(file);
-      setMedia((current) => [...current, { type: isVideo ? "video" : "image", file, preview }]);
+      const item: MediaItem = {
+        type: isVideo ? "video" : "image",
+        file,
+        preview,
+        ...(isImage ? { moderationStatus: "checking" } : {}),
+      };
+      setMedia((current) => [...current, item]);
+      if (isImage) {
+        void upload
+          .upload(file, "POST_IMAGE")
+          .then((result) =>
+            setMedia((current) =>
+              current.map((entry) =>
+                entry.preview === preview
+                  ? { ...entry, mediaId: result.mediaId, moderationStatus: "allowed" }
+                  : entry,
+              ),
+            ),
+          )
+          .catch((error: unknown) =>
+            setMedia((current) =>
+              current.map((entry) =>
+                entry.preview === preview
+                  ? {
+                      ...entry,
+                      moderationStatus: "blocked",
+                      moderationError:
+                        error instanceof Error
+                          ? error.message
+                          : texts.feed.composer.imageCheckError,
+                    }
+                  : entry,
+              ),
+            ),
+          );
+      }
     }
     event.target.value = "";
   };
@@ -347,12 +418,14 @@ function CommunityDetail() {
                     />
                   )}
 
-                  <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Users className="h-4 w-4" />
 
                       <>{texts.communities.memberCount(live.members)}</>
                     </span>
+
+                    <LocationLine city={live.city} state={live.state} />
                     {admins.length > 0 && (
                       <span>
                         <>{texts.communities.detail.createdBy}</>
@@ -567,6 +640,8 @@ function CommunityDetail() {
               </div>
             )}
 
+            {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 <div className="relative">
@@ -677,8 +752,10 @@ function CommunityDetail() {
                 disabled={
                   (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                   (articleMode && !articleBody.trim()) ||
+                  (pollMode && normalizePollOptions(pollOptions).length < POLL_MIN_OPTIONS) ||
                   createPost.isPending ||
-                  upload.status === "uploading"
+                  upload.status === "uploading" ||
+                  !mediaReady
                 }
               >
                 <Send className="h-4 w-4" />
@@ -707,6 +784,18 @@ function CommunityDetail() {
                     >
                       <img src={item.preview} alt="" className="h-full w-full object-cover" />
                     </SpoilerPreview>
+                    {item.moderationStatus === "checking" && (
+                      <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                        <span className="rounded-full bg-surface-card px-2 py-1 text-[10px] text-text-strong">
+                          {texts.feed.composer.imageChecking}
+                        </span>
+                      </div>
+                    )}
+                    {item.moderationStatus === "blocked" && (
+                      <div className="absolute inset-x-1 bottom-1 rounded bg-destructive/90 px-1 py-0.5 text-[9px] leading-tight text-white">
+                        {item.moderationError ?? texts.feed.composer.imageCheckError}
+                      </div>
+                    )}
 
                     <button
                       type="button"
@@ -737,7 +826,7 @@ function CommunityDetail() {
           </form>
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">{texts.communities.detail.feed}</h2>
             {orderedPosts.length === 0 ? (
@@ -854,8 +943,9 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
   };
 
   const update = useMutation({
-    mutationFn: () =>
+    mutationFn: (place: { city: string; state: string }) =>
       communitiesApi.update(community.id, {
+        ...place,
         name: name !== community.name ? name : undefined,
         description: description !== community.description ? description : undefined,
         topic: topic !== community.topic ? topic : undefined,
@@ -869,6 +959,14 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
       onClose();
     },
   });
+  const place = useCityState(community, update.error);
+  // Cidade/UF aparece embaixo do campo; qualquer outra recusa aparece acima do salvar.
+  const generalError =
+    update.error && !cityStateErrorCode(update.error)
+      ? update.error instanceof ApiError
+        ? update.error.message
+        : texts.errors.unexpected
+      : null;
 
   return (
     <div className="space-y-4 pt-2">
@@ -1043,10 +1141,18 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
         />
       </div>
 
+      <CityStateField idPrefix="community-edit" disabled={update.isPending} {...place.field} />
+
+      <p role="alert" aria-live="polite" className="text-sm text-destructive empty:hidden">
+        {generalError}
+      </p>
+
       <Button
         className="w-full rounded-full"
         disabled={!name.trim() || update.isPending}
-        onClick={() => update.mutate()}
+        onClick={() => {
+          if (place.validate()) update.mutate(place.payload);
+        }}
       >
         {update.isPending ? texts.common.saving : texts.common.save}
       </Button>

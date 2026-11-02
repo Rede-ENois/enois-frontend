@@ -16,4 +16,8 @@ export type Message = {
   e2e?: boolean;
   /** IV usado na cifragem (base64). Presente quando e2e=true. */
   iv?: string | null;
+  /** Id da mensagem sendo respondida. */
+  replyToId?: string | null;
+  /** Dados da mensagem citada (preview do backend). */
+  replyTo?: { id: string; from: string; text: string; e2e: boolean } | null;
 };

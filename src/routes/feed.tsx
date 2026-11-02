@@ -6,23 +6,25 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { POST_TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
-import { ARTICLE_BODY_MAX_LENGTH, POST_TYPES } from "@/constants/post-types";
+import { ARTICLE_BODY_MAX_LENGTH, POLL_MIN_OPTIONS, POST_TYPES } from "@/constants/post-types";
 import { texts } from "@/texts";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
+import type { FeedPage } from "@/types/application/feed/feed-page";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 import type { PostView } from "@/types/application/feed/post-view";
-import type { ActiveIdentity } from "@/types/lib/active-identity";
 import type { ComposerActionProps } from "@/types/routes/feed/composer-action-props";
 import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
   PostCardSkeletons,
+  QuestionComposerHint,
+  type QuestionStatus,
+  QuestionStatusFilter,
   SpoilerPreview,
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
-import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   EmptyState,
@@ -54,17 +56,21 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  effectiveIdentity,
-  readActiveIdentity,
-  subscribeActiveIdentity,
-} from "@/lib/active-identity";
 import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
 import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
+import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { useFeedTab } from "@/lib/feed/use-feed-tab";
+import {
+  effectiveIdentity,
+  professionalProfileState,
+  useInterfaceContext,
+} from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
+import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -73,23 +79,27 @@ import { cn } from "@/lib/utils";
 import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
+import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
+import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PlatformSpacesCard } from "@/components/platform-spaces-card";
-import { PostCard } from "@/components/post-card";
+import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Abas válidas da tela inicial (a URL carrega a escolhida). */
-const HOME_TABS: HomeTab[] = ["ALL", "FOR_YOU", "UNSEEN", "TRENDING", "CORPORATE"];
+const HOME_TABS: HomeTab[] = ["ALL", "FOR_YOU", "UNSEEN", "TRENDING", "INTERACTED", "CORPORATE"];
 
 const TAB_LABELS: Record<HomeTab, string> = {
   ALL: texts.feed.tabs.all,
   FOR_YOU: texts.feed.tabs.forYou,
   UNSEEN: texts.feed.tabs.unseen,
   TRENDING: texts.feed.tabs.trending,
+  INTERACTED: texts.feed.tabs.interacted,
   CORPORATE: texts.feed.tabs.corporate,
   // Legado (backend aceita mas frontend não mostra).
   FOLLOWING: texts.feed.tabs.following,
@@ -106,7 +116,7 @@ const TAB_LABELS: Record<HomeTab, string> = {
 const POST_TYPE_FILTERS = [
   { value: "", label: texts.feed.tabs.allTypes },
   { value: "INSIGHT", label: "Insights" },
-  { value: "QUESTION", label: "Discussões" },
+  { value: "QUESTION", label: "Dúvidas" },
   { value: "PROJECT", label: "Projetos" },
   { value: "NEWS", label: "Notícias" },
   { value: "TUTORIAL", label: "Tutoriais" },
@@ -114,6 +124,7 @@ const POST_TYPE_FILTERS = [
   { value: "REVIEW", label: "Avaliações" },
   { value: "DIVERTIDO", label: "Diversão" },
   { value: "ARTICLE", label: "Artigos" },
+  { value: "POLL", label: "Enquetes" },
 ] as const;
 
 export const Route = createFileRoute("/feed")({
@@ -122,12 +133,14 @@ export const Route = createFileRoute("/feed")({
    * A aba vive na URL (`/feed?aba=ALL`): abrir uma publicação e voltar restaura a MESMA aba em que
    * a pessoa estava — antes o retorno caía sempre em "Para você".
    */
-  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab } => {
+  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab; compor?: "ARTICLE" } => {
     const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
         : undefined;
-    return aba ? { aba } : {};
+    // `compor=ARTICLE` opens the composer in article mode (the profile "Escrever artigo" shortcut).
+    const compor = search.compor === "ARTICLE" ? "ARTICLE" : undefined;
+    return { ...(aba ? { aba } : {}), ...(compor ? { compor } : {}) };
   },
   head: () => ({
     meta: [
@@ -170,21 +183,60 @@ function rememberTopic(value: string): void {
   }
 }
 
-function useFeed(tab: HomeTab, typeFilter?: string) {
+/** "open" and "resolved" filter the questions feed; "all" sends no filter. */
+const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
+  all: undefined,
+  open: false,
+  resolved: true,
+};
+
+function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
   const lite = useLiteMode();
   const pageSize = litePageSize(FEED_PAGE_SIZE, lite);
   return useInfiniteQuery({
-    queryKey: ["feed", tab, typeFilter ?? ""],
-    queryFn: ({ pageParam }) =>
+    queryKey: ["feed", tab, typeFilter ?? "", resolved ?? ""],
+    queryFn: ({ pageParam }): Promise<FeedPage> =>
       tab === "CORPORATE"
         ? feedApi.corporate(pageParam ?? null, pageSize)
-        : feedApi.list(pageParam ?? null, pageSize, tab, typeFilter || undefined),
+        : feedApi.list(pageParam ?? null, pageSize, tab, typeFilter || undefined, resolved),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: authenticated,
+    enabled: authenticated && tabReady,
     staleTime: 20_000,
+    refetchInterval: 30_000,
   });
+}
+
+/**
+ * Detecta novos posts comparando o primeiro ID da pagina com o que estava visivel.
+ * Mostra o indicador quando o feed atualizou e o usuario scrollou pra baixo.
+ */
+function useNewPostsIndicator(feedPosts: { id: string }[]) {
+  const seenFirstId = useRef<string | null>(null);
+  const [hasNew, setHasNew] = useState(false);
+
+  const currentFirstId = feedPosts.length > 0 ? feedPosts[0].id : null;
+
+  useEffect(() => {
+    if (!currentFirstId) return;
+    if (seenFirstId.current === null) {
+      seenFirstId.current = currentFirstId;
+      return;
+    }
+    if (currentFirstId !== seenFirstId.current && window.scrollY > 200) {
+      setHasNew(true);
+    }
+  }, [currentFirstId]);
+
+  const dismiss = useCallback(() => {
+    seenFirstId.current = currentFirstId;
+    setHasNew(false);
+    clearFeedScroll();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentFirstId]);
+
+  return { hasNewPosts: hasNew, dismissNewPosts: dismiss };
 }
 
 function useProfile() {
@@ -224,44 +276,80 @@ function Home() {
   const authenticated = useIsAuthenticated();
   // A aba vem da URL; trocar de aba REPLACES o histórico (o "voltar" continua voltando para a
   // página anterior, e não passeando pelas abas).
-  const { aba } = Route.useSearch();
+  const { aba, compor } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const tab: HomeTab = aba ?? "ALL";
-  const setTab = (next: HomeTab) => {
-    if (next === tab) return;
+  // Interface profissional: o início É o feed corporativo (publicações de trabalho). Na social,
+  // o feed corporativo não aparece.
+  const context = useInterfaceContext();
+  const professional = context === "PROFESSIONAL";
+  // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado, "Tudo".
+  const {
+    tab,
+    setTab,
+    ready: tabReady,
+  } = useFeedTab(aba, professional, (next) => {
     void navigate({ search: { aba: next }, replace: true });
-  };
+  });
   const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
+  const [questionStatus, setQuestionStatus] = useState<QuestionStatus>("all");
+  // The backend honors type (and resolved) only on the "Tudo" tab.
+  const questionsFeed = tab === "ALL" && typeFilter === "QUESTION";
   const {
     data: feedData,
-    isLoading: feedLoading,
+    isLoading: feedQueryLoading,
     isFetching: feedFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useFeed(tab, tab === "ALL" ? typeFilter : undefined);
+  } = useFeed(
+    tab,
+    tab === "ALL" ? typeFilter : undefined,
+    questionsFeed ? RESOLVED_FILTER[questionStatus] : undefined,
+    tabReady,
+  );
+  // Enquanto a aba guardada não é lida, a tela mostra o carregando em vez de um feed vazio.
+  const feedLoading = feedQueryLoading || !tabReady;
   const { data: profile } = useProfile();
   const { data: suggestions } = useSuggestions();
   const { data: eventsData } = useEvents();
-  const [chosenIdentity, setChosenIdentity] = useState<ActiveIdentity>(() => readActiveIdentity());
-  useEffect(() => subscribeActiveIdentity(() => setChosenIdentity(readActiveIdentity())), []);
-  const { data: corporate } = useQuery({
+  const {
+    data: corporate,
+    isError: corporateError,
+    isFetching: corporateFetching,
+    refetch: refetchCorporate,
+  } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => corporateApi.me(),
     enabled: authenticated,
     staleTime: 120_000,
   });
-  const identity = effectiveIdentity(chosenIdentity, corporate);
+  const identity = effectiveIdentity(context, corporate);
+  const corporateState = professionalProfileState({ data: corporate, isError: corporateError });
+  // Na interface profissional só a identidade profissional publica: sem perfil ativo, o
+  // compositor dá lugar ao convite para criar/ativar (nada sai pelo perfil social daqui). Se a
+  // consulta falhou ou ainda carrega, não se sabe: nada de convite, só o erro com "tentar de novo".
+  const composerLocked = professional && corporateState !== "ACTIVE";
 
   const [draft, setDraft] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
-  const [postType, setPostType] = useState<PostView["type"]>("INSIGHT");
+  const [postType, setPostType] = useState<PostView["type"]>(() =>
+    compor === "ARTICLE" ? "ARTICLE" : "INSIGHT",
+  );
+  // The article request is one-shot: drop it from the URL so a refresh opens the usual composer.
+  useEffect(() => {
+    if (compor)
+      void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
+  }, [compor, navigate]);
   // Assunto do post avulso (opcional): é o que liga o post a "O que quero ver"/"não gosto".
   // Em comunidade o post herda o assunto DELA — lá o compositor é outro.
   const [topic, setTopic] = useState<string>(() => readLastTopic());
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const mediaReady = media.every(
+    (item) =>
+      item.type !== "image" || (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
+  );
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
@@ -287,6 +375,9 @@ function Home() {
 
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
+  // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
       ? POST_TYPES.filter((option) => option.id === "BUSINESS")
@@ -329,9 +420,12 @@ function Home() {
   });
 
   const schedulePublish = async () => {
+    if (!mediaReady) return;
     const content = draft.trim();
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    const scheduledOptions = normalizePollOptions(pollOptions);
+    if (pollMode && scheduledOptions.length < POLL_MIN_OPTIONS) return;
     if (!scheduleAt) return;
 
     setPublishError(null);
@@ -339,8 +433,7 @@ function Home() {
       let mediaIds: string[] = [];
       let finalContent = content;
       if (!pageMode && media.length > 0) {
-        const results = await upload.uploadAll(media.map((m) => ({ file: m.file })));
-        mediaIds = results.map((r) => r.mediaId);
+        mediaIds = await uploadComposerMedia(media, upload.uploadAll);
         // Mídia NO MEIO do texto (item 9): pendentes viram ids reais no upload.
         finalContent = finalContent.replace(/\{\{media:pendente-(\d+)\}\}/g, (_mk, index) => {
           const uploaded = mediaIds[Number(index)];
@@ -357,6 +450,7 @@ function Home() {
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: scheduledOptions } : {}),
         // O assunto viaja com o agendado e vale quando ele entra no ar.
         ...(topic ? { topic } : {}),
         scheduledAt: new Date(scheduleAt).toISOString(),
@@ -368,6 +462,7 @@ function Home() {
       setMediaSpoiler(false);
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setTypePickerOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
@@ -381,19 +476,22 @@ function Home() {
 
   const publishPost = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!mediaReady) return;
     const content = draft.trim();
     // Pagina e uma coisa OU outra: o HTML e o conteudo e o texto do post nao e exigido. Artigo
     // precisa de titulo (o texto de cima) E do corpo. Nos demais, o texto de cima e o post.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
+    const options = normalizePollOptions(pollOptions);
+    if (pollMode && options.length < POLL_MIN_OPTIONS) return;
 
     const formData = new FormData(event.currentTarget);
     setPublishError(null);
     try {
       let mediaIds: string[] = [];
       if (!pageMode && media.length > 0) {
-        const results = await upload.uploadAll(media.map((m) => ({ file: m.file })));
-        mediaIds = results.map((r) => r.mediaId);
+        mediaIds = await uploadComposerMedia(media, upload.uploadAll);
       }
       const created = await createPost.mutateAsync({
         content: pageMode ? "" : content,
@@ -402,17 +500,18 @@ function Home() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
+        ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         ...(topic ? { topic } : {}),
         website: String(formData.get("website") ?? ""),
       });
-      // "Também no LinkedIn": com o LinkedIn vinculado, oferece o compartilhamento pelo
-      // diálogo oficial do LinkedIn com o link público do post (o OG preview completa o resto).
-      // A publicação via API do LinkedIn exige aprovação no programa de parceiros — o
-      // diálogo oficial é o caminho que já funciona hoje para qualquer perfil.
+      // "Também no LinkedIn": só para publicações da identidade PROFISSIONAL (o perfil pessoal
+      // nunca compartilha no LinkedIn). Com o LinkedIn vinculado, oferece o diálogo oficial com o
+      // link público do post (o OG preview completa o resto). A publicação via API do LinkedIn
+      // exige aprovação no programa de parceiros; o diálogo oficial já funciona para qualquer conta.
       try {
         const postId = (created as { id?: string })?.id;
-        if (postId) {
+        if (postId && postType === "BUSINESS") {
           const linked = await authApi.oauthProviders();
           if (linked.some((l) => l.provider === "LINKEDIN")) {
             setLinkedinUrl(`${texts.siteUrl}/post/${postId}`);
@@ -423,13 +522,12 @@ function Home() {
       }
       setDraft("");
       setMentionedUserIds([]);
-      setLinkedinUrl(null);
       setPostType("INSIGHT");
       setMedia([]);
       setMediaSpoiler(false);
-      setPostType("INSIGHT");
       setPageHtml("");
       setArticleBody("");
+      setPollOptions(["", ""]);
       setTypePickerOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
@@ -452,7 +550,42 @@ function Home() {
       if (isImage && media.length >= 4) break;
 
       const preview = URL.createObjectURL(file);
-      setMedia((prev) => [...prev, { type: isVideo ? "video" : "image", file, preview }]);
+      const item: MediaItem = {
+        type: isVideo ? "video" : "image",
+        file,
+        preview,
+        ...(isImage ? { moderationStatus: "checking" } : {}),
+      };
+      setMedia((prev) => [...prev, item]);
+      if (isImage) {
+        void upload
+          .upload(file, "POST_IMAGE")
+          .then((result) =>
+            setMedia((current) =>
+              current.map((entry) =>
+                entry.preview === preview
+                  ? { ...entry, mediaId: result.mediaId, moderationStatus: "allowed" }
+                  : entry,
+              ),
+            ),
+          )
+          .catch((error: unknown) =>
+            setMedia((current) =>
+              current.map((entry) =>
+                entry.preview === preview
+                  ? {
+                      ...entry,
+                      moderationStatus: "blocked",
+                      moderationError:
+                        error instanceof Error
+                          ? error.message
+                          : texts.feed.composer.imageCheckError,
+                    }
+                  : entry,
+              ),
+            ),
+          );
+      }
     }
   };
 
@@ -472,7 +605,21 @@ function Home() {
 
   const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
 
-  const feedPosts = feedData?.pages.flatMap((page) => page.items) ?? [];
+  // "Você está em dia" lives only on "Para você". The marker counts as it arrived on the first page
+  // OF THIS VISIT: after POST /feed/seen a refetch would bring the new value and the divider would
+  // jump to the top while the person reads.
+  const firstPage = feedData?.pages[0];
+  const caughtUpTab = carriesCaughtUp(tab);
+  const [lastSeenAt, setLastSeenAt] = useState<string | null | undefined>(undefined);
+  if (lastSeenAt === undefined && caughtUpTab && firstPage) {
+    setLastSeenAt(firstPage.lastSeenAt ?? null);
+  }
+  const { posts: feedPosts, caughtUpAt } = caughtUpOrder(
+    feedData?.pages.flatMap((page) => page.items) ?? [],
+    caughtUpTab ? (lastSeenAt ?? null) : null,
+  );
+  const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
+  const { hasNewPosts, dismissNewPosts } = useNewPostsIndicator(feedPosts);
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
@@ -488,8 +635,10 @@ function Home() {
     const savedScroll = readFeedScroll(tab);
     if (!savedScroll) return;
 
-    const postElement = document.getElementById(`feed-post-${savedScroll.postId}`);
-    if (!postElement && hasNextPage && !isFetchingNextPage) {
+    // The list is virtualized, so the post may be loaded but not mounted: look in the data, not
+    // the DOM, or every page gets fetched looking for a card that only mounts after the scroll.
+    const loaded = feedPosts.some((post) => post.id === savedScroll.postId);
+    if (!loaded && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
       return;
     }
@@ -497,10 +646,11 @@ function Home() {
     clearFeedScroll();
     const restore = () => {
       window.scrollTo({ top: savedScroll.scrollY, behavior: "auto" });
-      postElement?.focus({ preventScroll: true });
+      document.getElementById(`feed-post-${savedScroll.postId}`)?.focus({ preventScroll: true });
     };
 
     requestAnimationFrame(() => requestAnimationFrame(restore));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length is the signal.
   }, [feedLoading, feedPosts.length, fetchNextPage, hasNextPage, isFetchingNextPage, tab]);
 
   const loadNextPage = useCallback(() => {
@@ -533,439 +683,481 @@ function Home() {
         <div className="min-w-0 space-y-4">
           <SaciDuelBanner />
 
-          {/* Composer */}
-          <form
-            onSubmit={publishPost}
-            className="relative rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
-          >
-            {/* Na borda de cima do compositor, dentro da folga: não cobre o campo nem botões. */}
-            <SaciSpot spot="feed" className="absolute -top-4 right-4" />
-            <input
-              type="text"
-              name="website"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-              className="hidden"
+          {composerLocked && (corporateState === "ERROR" || corporateState === "NOT_READY") && (
+            <ProfessionalComposerNotice
+              state={corporateState}
+              onRetry={() => void refetchCorporate()}
+              retrying={corporateFetching}
             />
+          )}
 
-            {/* O aviso da identidade profissional fica ACIMA da linha do avatar/campo: como item
-                de flex dentro dela, ele ocupava a largura toda, espremia o textarea e empurrava a
-                toolbar para a borda (o relato do perfil profissional "quebrado"). */}
-            {identity === "CORPORATE" && (
-              <div className="mb-2 flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-xs text-text-strong">
-                <Briefcase className="h-3.5 w-3.5 shrink-0" />
-
-                <span className="min-w-0 break-words">
-                  {texts.feed.composer.corporateDestination(corporate?.name ?? "")}
-                </span>
-              </div>
-            )}
-
-            <div className="flex items-start gap-3">
-              <UserAvatar
-                frame={profileUser?.avatarFrame}
-                frameOverflow="hidden"
-                src={profileUser?.avatar}
-                alt={profileUser?.name ?? texts.feed.you}
-                className="h-11 w-11"
+          {/* Composer */}
+          {!composerLocked && (
+            <form
+              onSubmit={publishPost}
+              className="relative rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
+            >
+              {/* Na borda de cima do compositor, dentro da folga: não cobre o campo nem botões. */}
+              <SaciSpot spot="feed" className="absolute -top-4 right-4" />
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="hidden"
               />
 
-              {/* No modo pagina o campo de texto sai de cena: a pagina e o conteudo, e pedir um
+              {/* O aviso da identidade profissional fica ACIMA da linha do avatar/campo: como item
+                de flex dentro dela, ele ocupava a largura toda, espremia o textarea e empurrava a
+                toolbar para a borda (o relato do perfil profissional "quebrado"). */}
+              {identity === "CORPORATE" && (
+                <div className="mb-2 flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-xs text-text-strong">
+                  <Briefcase className="h-3.5 w-3.5 shrink-0" />
+
+                  <span className="min-w-0 break-words">
+                    {texts.feed.composer.corporateDestination(corporate?.name ?? "")}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3">
+                {/* Quem assina aparece no compositor: no profissional, a foto do perfil profissional. */}
+                <UserAvatar
+                  frame={identity === "CORPORATE" ? undefined : profileUser?.avatarFrame}
+                  frameOverflow="hidden"
+                  src={
+                    identity === "CORPORATE" ? corporate?.avatar || undefined : profileUser?.avatar
+                  }
+                  alt={
+                    identity === "CORPORATE"
+                      ? (corporate?.name ?? texts.feed.you)
+                      : (profileUser?.name ?? texts.feed.you)
+                  }
+                  className="h-11 w-11"
+                />
+
+                {/* No modo pagina o campo de texto sai de cena: a pagina e o conteudo, e pedir um
                   texto "de post" junto faria a publicacao ser as duas coisas ao mesmo tempo. Quem
                   quiser uma legenda escreve dentro do proprio HTML. */}
-              {!pageMode && (
-                <MentionTextarea
-                  value={draft}
-                  onChange={(val, ids) => {
-                    setDraft(val);
-                    setMentionedUserIds(ids);
-                  }}
-                  placeholder={texts.feed.composer.placeholder}
-                  className="flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-sm font-normal"
-                  maxLength={postContentLimit(postType)}
-                  toolbar
-                  onPasteImages={addMediaFiles}
-                />
-              )}
-            </div>
-
-            {pageMode && (
-              <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
-                {/* Mesmo editor da bio do perfil: um lugar só decide aviso de limite, ajuda e
-                    pré-visualização (que usa o mesmo quadro isolado do render final). */}
-                <HtmlEditor
-                  id="composer-page-html"
-                  value={pageHtml}
-                  onChange={setPageHtml}
-                  label={texts.feed.composer.pageLabel}
-                  description={texts.feed.composer.pageDescription}
-                  placeholder={texts.feed.composer.pagePlaceholder}
-                  emptyPreview={texts.feed.composer.pageEmpty}
-                  frameTitle={texts.posts.page.frameTitle}
-                  maxLength={PAGE_HTML_MAX_LENGTH}
-                  innerPadding={false}
-                  previewClassName="-mx-3 -mb-3 mt-3 h-[420px] w-full"
-                />
-              </div>
-            )}
-
-            {articleMode && (
-              <div className="mt-3 rounded-2xl border border-border-soft bg-surface-1 p-3">
-                <span className="mb-1 block text-sm font-normal text-text-subtle">
-                  {texts.feed.composer.article.bodyLabel}
-                </span>
-
-                <p className="mb-2 text-sm font-normal text-text-subtle">
-                  {texts.feed.composer.article.bodyHint}
-                </p>
-
-                <MentionTextarea
-                  value={articleBody}
-                  maxLength={ARTICLE_BODY_MAX_LENGTH}
-                  onChange={(value) => setArticleBody(value)}
-                  placeholder={texts.feed.composer.article.bodyPlaceholder}
-                  className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
-                  rows={8}
-                  toolbar
-                />
-              </div>
-            )}
-
-            {!pageMode && media.length > 0 && (
-              <div className="relative mt-3">
-                {mediaType === "image" ? (
-                  <div
-                    className={`grid gap-2 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-                  >
-                    {media.map((item, i) => (
-                      <div
-                        key={i}
-                        className="relative overflow-hidden rounded-xl border border-border-soft"
-                      >
-                        <SpoilerPreview
-                          active={mediaSpoiler}
-                          label={texts.posts.mediaSpoiler.badge}
-                        >
-                          <img
-                            src={item.preview}
-                            alt=""
-                            className="h-48 w-full object-cover bg-surface-1"
-                          />
-                        </SpoilerPreview>
-
-                        <button
-                          type="button"
-                          onClick={() => removeMedia(i)}
-                          aria-label={texts.feed.composer.removeMedia}
-                          title={texts.feed.composer.removeMedia}
-                          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="relative overflow-hidden rounded-xl border border-border-soft">
-                    <SpoilerPreview active={mediaSpoiler} label={texts.posts.mediaSpoiler.badge}>
-                      <video
-                        src={media[0].preview}
-                        controls
-                        className="max-h-64 w-full bg-surface-1"
-                      />
-                    </SpoilerPreview>
-
-                    <button
-                      type="button"
-                      onClick={() => removeMedia(0)}
-                      aria-label={texts.feed.composer.removeMedia}
-                      title={texts.feed.composer.removeMedia}
-                      className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                {!pageMode && (
+                  <MentionTextarea
+                    value={draft}
+                    onChange={(val, ids) => {
+                      setDraft(val);
+                      setMentionedUserIds(ids);
+                    }}
+                    placeholder={texts.feed.composer.placeholder}
+                    className="flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-sm font-normal"
+                    maxLength={postContentLimit(postType)}
+                    toolbar
+                    onPasteImages={addMediaFiles}
+                  />
                 )}
               </div>
-            )}
 
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              className="hidden"
-              onChange={handleMediaSelect}
-            />
+              {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
-                <Popover open={menuTopic} onOpenChange={setMenuTopic}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label={texts.feed.composer.topic}
-                      title={texts.feed.composer.topicHint}
-                      className={cn(
-                        "inline-flex max-w-[11rem] items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition",
-                        topic
-                          ? "border border-primary/40 bg-primary/10 text-primary"
-                          : "border border-border-soft text-text-subtle hover:border-primary",
-                      )}
+              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+
+              {pageMode && (
+                <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
+                  {/* Mesmo editor da bio do perfil: um lugar só decide aviso de limite, ajuda e
+                    pré-visualização (que usa o mesmo quadro isolado do render final). */}
+                  <HtmlEditor
+                    id="composer-page-html"
+                    value={pageHtml}
+                    onChange={setPageHtml}
+                    label={texts.feed.composer.pageLabel}
+                    description={texts.feed.composer.pageDescription}
+                    placeholder={texts.feed.composer.pagePlaceholder}
+                    emptyPreview={texts.feed.composer.pageEmpty}
+                    frameTitle={texts.posts.page.frameTitle}
+                    maxLength={PAGE_HTML_MAX_LENGTH}
+                    innerPadding={false}
+                    previewClassName="-mx-3 -mb-3 mt-3 h-[420px] w-full"
+                  />
+                </div>
+              )}
+
+              {articleMode && (
+                <div className="mt-3 rounded-2xl border border-border-soft bg-surface-1 p-3">
+                  <span className="mb-1 block text-sm font-normal text-text-subtle">
+                    {texts.feed.composer.article.bodyLabel}
+                  </span>
+
+                  <p className="mb-2 text-sm font-normal text-text-subtle">
+                    {texts.feed.composer.article.bodyHint}
+                  </p>
+
+                  <MentionTextarea
+                    value={articleBody}
+                    maxLength={ARTICLE_BODY_MAX_LENGTH}
+                    onChange={(value) => setArticleBody(value)}
+                    placeholder={texts.feed.composer.article.bodyPlaceholder}
+                    className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
+                    rows={8}
+                    toolbar
+                  />
+                </div>
+              )}
+
+              {!pageMode && media.length > 0 && (
+                <div className="relative mt-3">
+                  {mediaType === "image" ? (
+                    <div
+                      className={`grid gap-2 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                     >
-                      <span className="truncate">
-                        {topic
-                          ? (TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS] ?? topic)
-                          : texts.feed.composer.topicNone}
-                      </span>
+                      {media.map((item, i) => (
+                        <div
+                          key={i}
+                          className="relative overflow-hidden rounded-xl border border-border-soft"
+                        >
+                          <SpoilerPreview
+                            active={mediaSpoiler}
+                            label={texts.posts.mediaSpoiler.badge}
+                          >
+                            <img
+                              src={item.preview}
+                              alt=""
+                              className="h-48 w-full object-cover bg-surface-1"
+                            />
+                          </SpoilerPreview>
 
-                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
-                    </button>
-                  </PopoverTrigger>
+                          {item.moderationStatus === "checking" && (
+                            <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                              <span className="rounded-full bg-surface-card px-3 py-1 text-xs text-text-strong">
+                                {texts.feed.composer.imageChecking}
+                              </span>
+                            </div>
+                          )}
+                          {item.moderationStatus === "blocked" && (
+                            <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
+                              {item.moderationError ?? texts.feed.composer.imageCheckError}
+                            </div>
+                          )}
 
-                  <PopoverContent align="start" className="w-56 p-1">
-                    <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
+                          <button
+                            type="button"
+                            onClick={() => removeMedia(i)}
+                            aria-label={texts.feed.composer.removeMedia}
+                            title={texts.feed.composer.removeMedia}
+                            className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="relative overflow-hidden rounded-xl border border-border-soft">
+                      <SpoilerPreview active={mediaSpoiler} label={texts.posts.mediaSpoiler.badge}>
+                        <video
+                          src={media[0].preview}
+                          controls
+                          className="max-h-64 w-full bg-surface-1"
+                        />
+                      </SpoilerPreview>
+
                       <button
                         type="button"
-                        onClick={() => {
-                          setTopic("");
-                          rememberTopic("");
-                          setMenuTopic(false);
-                        }}
+                        onClick={() => removeMedia(0)}
+                        aria-label={texts.feed.composer.removeMedia}
+                        title={texts.feed.composer.removeMedia}
+                        className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="hidden"
+                onChange={handleMediaSelect}
+              />
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
+                  <Popover open={menuTopic} onOpenChange={setMenuTopic}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={texts.feed.composer.topic}
+                        title={texts.feed.composer.topicHint}
                         className={cn(
-                          "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                          topic === ""
-                            ? "bg-primary-soft text-primary-text"
-                            : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                          "inline-flex max-w-[11rem] items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition",
+                          topic
+                            ? "border border-primary/40 bg-primary/10 text-primary"
+                            : "border border-border-soft text-text-subtle hover:border-primary",
                         )}
                       >
-                        {texts.feed.composer.topicNone}
-                      </button>
+                        <span className="truncate">
+                          {topic
+                            ? (TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS] ?? topic)
+                            : texts.feed.composer.topicNone}
+                        </span>
 
-                      {POST_TOPICS.map((option) => (
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
+                      </button>
+                    </PopoverTrigger>
+
+                    <PopoverContent align="start" className="w-56 p-1">
+                      <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
                         <button
-                          key={option}
                           type="button"
                           onClick={() => {
-                            setTopic(option);
-                            rememberTopic(option);
+                            setTopic("");
+                            rememberTopic("");
                             setMenuTopic(false);
                           }}
-                          aria-pressed={topic === option}
                           className={cn(
                             "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                            topic === option
+                            topic === ""
                               ? "bg-primary-soft text-primary-text"
                               : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
                           )}
                         >
-                          {TOPIC_LABELS[option]}
+                          {texts.feed.composer.topicNone}
                         </button>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
 
-                {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setTypePickerOpen((open) => !open)}
-                    aria-expanded={typePickerOpen}
-                    title={texts.feed.composer.typePicker.change}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                      typePickerOpen
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                    }`}
-                  >
-                    <currentType.icon className="h-3.5 w-3.5" />
-
-                    <>
-                      {texts.feed.composer.typePicker.label}: {currentType.label}
-                    </>
-
-                    <ChevronDown
-                      className={`h-3.5 w-3.5 transition ${typePickerOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {currentType.id === "MOMENT" && (
-                    <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                      <Clock className="h-3.5 w-3.5" />
-                      {currentType.hint}
-                    </p>
-                  )}
-
-                  {typePickerOpen && (
-                    <div className="absolute bottom-full right-0 z-40 mb-1 max-h-[60vh] w-[min(22rem,80vw)] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg sm:left-0 sm:right-auto">
-                      <div className="flex flex-wrap gap-1.5">
-                        {availableTypes.map((option) => (
-                          <ComposerAction
-                            key={option.id}
-                            icon={option.icon}
-                            label={option.label}
-                            active={option.id === postType}
+                        {POST_TOPICS.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
                             onClick={() => {
-                              setPostType(option.id as PostView["type"]);
-                              setTypePickerOpen(false);
+                              setTopic(option);
+                              rememberTopic(option);
+                              setMenuTopic(false);
                             }}
-                          />
+                            aria-pressed={topic === option}
+                            className={cn(
+                              "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
+                              topic === option
+                                ? "bg-primary-soft text-primary-text"
+                                : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                            )}
+                          >
+                            {TOPIC_LABELS[option]}
+                          </button>
                         ))}
                       </div>
-                    </div>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setTypePickerOpen((open) => !open)}
+                      aria-expanded={typePickerOpen}
+                      title={texts.feed.composer.typePicker.change}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
+                        typePickerOpen
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
+                      }`}
+                    >
+                      <currentType.icon className="h-3.5 w-3.5" />
+
+                      <>
+                        {texts.feed.composer.typePicker.label}: {currentType.label}
+                      </>
+
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 transition ${typePickerOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    {currentType.id === "MOMENT" && (
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                        <Clock className="h-3.5 w-3.5" />
+                        {currentType.hint}
+                      </p>
+                    )}
+
+                    {typePickerOpen && (
+                      <div className="absolute bottom-full right-0 z-40 mb-1 max-h-[60vh] w-[min(22rem,80vw)] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg sm:left-0 sm:right-auto">
+                        <div className="flex flex-wrap gap-1.5">
+                          {availableTypes.map((option) => (
+                            <ComposerAction
+                              key={option.id}
+                              icon={option.icon}
+                              label={option.label}
+                              active={option.id === postType}
+                              onClick={() => {
+                                setPostType(option.id as PostView["type"]);
+                                setTypePickerOpen(false);
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mídia não existe em página (a página é o conteúdo dela). */}
+                  {!pageMode && (
+                    <ComposerAction
+                      icon={mediaType === "video" ? Film : Image}
+                      label={
+                        mediaType === "video"
+                          ? texts.feed.composer.video
+                          : media.length > 0
+                            ? texts.feed.composer.mediaCount(media.length)
+                            : texts.feed.composer.media
+                      }
+                      active={media.length > 0}
+                      onClick={() => fileRef.current?.click()}
+                    />
+                  )}
+                  {((!pageMode && media.length > 0) ||
+                    (pageMode && pageHtml.trim().length > 0)) && (
+                    <ComposerAction
+                      icon={EyeOff}
+                      label={
+                        mediaSpoiler
+                          ? texts.feed.composer.mediaSpoilerActive
+                          : texts.feed.composer.mediaSpoiler
+                      }
+                      active={mediaSpoiler}
+                      onClick={() => setMediaSpoiler((active) => !active)}
+                    />
                   )}
                 </div>
 
-                {/* Mídia não existe em página (a página é o conteúdo dela). */}
-                {!pageMode && (
-                  <ComposerAction
-                    icon={mediaType === "video" ? Film : Image}
-                    label={
-                      mediaType === "video"
-                        ? texts.feed.composer.video
-                        : media.length > 0
-                          ? texts.feed.composer.mediaCount(media.length)
-                          : texts.feed.composer.media
-                    }
-                    active={media.length > 0}
-                    onClick={() => fileRef.current?.click()}
-                  />
+                {linkedinUrl && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-primary-soft px-3 py-2">
+                    <span className="text-xs font-normal text-primary">
+                      {texts.feed.composer.publishedOffer}
+                    </span>
+
+                    <a
+                      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(linkedinUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setLinkedinUrl(null)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition hover:opacity-90"
+                    >
+                      {texts.feed.composer.linkedinShare} ↗
+                    </a>
+                  </div>
                 )}
-                {((!pageMode && media.length > 0) || (pageMode && pageHtml.trim().length > 0)) && (
-                  <ComposerAction
-                    icon={EyeOff}
-                    label={
-                      mediaSpoiler
-                        ? texts.feed.composer.mediaSpoilerActive
-                        : texts.feed.composer.mediaSpoiler
+
+                {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
+                  alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
+                <div className="ml-auto flex items-center gap-2">
+                  {/* O motivo da recusa fica na linha de baixo, inteiro: antes ele saía truncado em
+                    200px ao lado do botão e a publicação recusada parecia "não fazer nada". */}
+                  {publishError && (
+                    <span className="text-xs font-normal text-destructive">
+                      {texts.feed.composer.publishErrorTitle}
+                    </span>
+                  )}
+                  {!publishError && upload.status === "uploading" && (
+                    <span className="text-xs font-normal text-text-subtle">
+                      {texts.feed.composer.uploadProgress(upload.progress)}
+                    </span>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full gap-1.5"
+                    disabled={
+                      (pageMode ? !pageHtml.trim() : !draft.trim()) ||
+                      (articleMode && !articleBody.trim()) ||
+                      createPost.isPending ||
+                      upload.status === "uploading" ||
+                      !mediaReady
                     }
-                    active={mediaSpoiler}
-                    onClick={() => setMediaSpoiler((active) => !active)}
-                  />
-                )}
+                    onClick={() => setSchedulingOpen((open) => !open)}
+                    title={texts.feed.composer.scheduleHint}
+                  >
+                    <CalendarClock className="h-3.5 w-3.5" />
+
+                    <>{texts.feed.composer.schedule}</>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    disabled={
+                      (pageMode ? !pageHtml.trim() : !draft.trim()) ||
+                      (articleMode && !articleBody.trim()) ||
+                      createPost.isPending ||
+                      upload.status === "uploading" ||
+                      !mediaReady
+                    }
+                  >
+                    {createPost.isPending || upload.status === "uploading" ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+
+                        <>
+                          {upload.status === "uploading"
+                            ? texts.common.sending
+                            : texts.common.publishing}
+                        </>
+                      </>
+                    ) : (
+                      texts.common.publish
+                    )}
+                  </Button>
+                </div>
               </div>
 
-              {linkedinUrl && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-primary-soft px-3 py-2">
-                  <span className="text-xs font-normal text-primary">
-                    {texts.feed.composer.publishedOffer}
-                  </span>
+              {schedulingOpen && (
+                <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-border-soft bg-surface-1 p-3">
+                  <label className="text-xs font-normal text-text-subtle">
+                    {texts.feed.composer.scheduleDate}
+                    <Input
+                      type="datetime-local"
+                      value={scheduleAt}
+                      min={minScheduleAt}
+                      onChange={(event) => setScheduleAt(event.target.value)}
+                      className="mt-1"
+                    />
+                  </label>
 
-                  <a
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(linkedinUrl)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setLinkedinUrl(null)}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition hover:opacity-90"
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-full"
+                    disabled={
+                      !scheduleAt ||
+                      schedulePost.isPending ||
+                      upload.status === "uploading" ||
+                      !mediaReady
+                    }
+                    onClick={schedulePublish}
                   >
-                    {texts.feed.composer.linkedinShare} ↗
-                  </a>
+                    {schedulePost.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      texts.feed.composer.scheduleConfirm
+                    )}
+                  </Button>
+
+                  <p className="text-[11px] font-normal text-text-subtle">
+                    {texts.feed.composer.scheduleHint}
+                  </p>
                 </div>
               )}
 
-              {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
-                  alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
-              <div className="ml-auto flex items-center gap-2">
-                {/* O motivo da recusa fica na linha de baixo, inteiro: antes ele saía truncado em
-                    200px ao lado do botão e a publicação recusada parecia "não fazer nada". */}
-                {publishError && (
-                  <span className="text-xs font-normal text-destructive">
-                    {texts.feed.composer.publishErrorTitle}
-                  </span>
-                )}
-                {!publishError && upload.status === "uploading" && (
-                  <span className="text-xs font-normal text-text-subtle">
-                    {texts.feed.composer.uploadProgress(upload.progress)}
-                  </span>
-                )}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full gap-1.5"
-                  disabled={
-                    (pageMode ? !pageHtml.trim() : !draft.trim()) ||
-                    (articleMode && !articleBody.trim()) ||
-                    createPost.isPending ||
-                    upload.status === "uploading"
-                  }
-                  onClick={() => setSchedulingOpen((open) => !open)}
-                  title={texts.feed.composer.scheduleHint}
-                >
-                  <CalendarClock className="h-3.5 w-3.5" />
-
-                  <>{texts.feed.composer.schedule}</>
-                </Button>
-
-                <Button
-                  size="sm"
-                  className="rounded-full"
-                  disabled={
-                    (pageMode ? !pageHtml.trim() : !draft.trim()) ||
-                    (articleMode && !articleBody.trim()) ||
-                    createPost.isPending ||
-                    upload.status === "uploading"
-                  }
-                >
-                  {createPost.isPending || upload.status === "uploading" ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-
-                      <>
-                        {upload.status === "uploading"
-                          ? texts.common.sending
-                          : texts.common.publishing}
-                      </>
-                    </>
-                  ) : (
-                    texts.common.publish
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {schedulingOpen && (
-              <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-border-soft bg-surface-1 p-3">
-                <label className="text-xs font-normal text-text-subtle">
-                  {texts.feed.composer.scheduleDate}
-                  <Input
-                    type="datetime-local"
-                    value={scheduleAt}
-                    min={minScheduleAt}
-                    onChange={(event) => setScheduleAt(event.target.value)}
-                    className="mt-1"
-                  />
-                </label>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  className="rounded-full"
-                  disabled={!scheduleAt || schedulePost.isPending || upload.status === "uploading"}
-                  onClick={schedulePublish}
-                >
-                  {schedulePost.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    texts.feed.composer.scheduleConfirm
-                  )}
-                </Button>
-
-                <p className="text-[11px] font-normal text-text-subtle">
-                  {texts.feed.composer.scheduleHint}
+              {publishError && (
+                <p className="mt-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-normal text-destructive">
+                  {publishError}
                 </p>
-              </div>
-            )}
-
-            {publishError && (
-              <p className="mt-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-normal text-destructive">
-                {publishError}
-              </p>
-            )}
-          </form>
+              )}
+            </form>
+          )}
 
           {scheduledList.length > 0 && (
             <section className="rounded-2xl border border-border-soft bg-surface-card p-4">
@@ -1013,51 +1205,53 @@ function Home() {
 
           {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
               tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
-              escolhido e abre a lista. */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
+              escolhido e abre a lista. Na interface profissional o feed é um só (o corporativo):
+              o título diz isso no lugar do seletor. */}
+          {professional ? (
+            <h2 className="text-sm font-medium text-text-strong">{texts.feed.tabs.corporate}</h2>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
 
-            <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={texts.feed.tabs.openList}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
-                >
-                  {TAB_LABELS[tab]}
+              <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={texts.feed.tabs.openList}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
+                  >
+                    {TAB_LABELS[tab]}
 
-                  <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
-                </button>
-              </PopoverTrigger>
+                    <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
+                  </button>
+                </PopoverTrigger>
 
-              <PopoverContent align="start" className="w-56 p-1">
-                <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
-                  {HOME_TABS.filter(
-                    (opcao) =>
-                      opcao !== "CORPORATE" || (corporate?.exists && corporate.status === "ACTIVE"),
-                  ).map((opcao) => (
-                    <button
-                      key={opcao}
-                      type="button"
-                      onClick={() => {
-                        setTab(opcao);
-                        setMenuTipoFeed(false);
-                      }}
-                      aria-pressed={opcao === tab}
-                      className={cn(
-                        "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                        opcao === tab
-                          ? "bg-primary-soft text-primary"
-                          : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                      )}
-                    >
-                      {TAB_LABELS[opcao]}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                <PopoverContent align="start" className="w-56 p-1">
+                  <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
+                    {HOME_TABS.filter((opcao) => opcao !== "CORPORATE").map((opcao) => (
+                      <button
+                        key={opcao}
+                        type="button"
+                        onClick={() => {
+                          setTab(opcao);
+                          setMenuTipoFeed(false);
+                        }}
+                        aria-pressed={opcao === tab}
+                        className={cn(
+                          "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
+                          opcao === tab
+                            ? "bg-primary-soft text-primary"
+                            : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                        )}
+                      >
+                        {TAB_LABELS[opcao]}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           {tab === "ALL" && (
             <div className="flex flex-wrap gap-2 pb-2">
@@ -1066,6 +1260,7 @@ function Home() {
                   key={f.value}
                   type="button"
                   onClick={() => setTypeFilter(f.value)}
+                  aria-pressed={typeFilter === f.value}
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium transition",
                     typeFilter === f.value
@@ -1079,7 +1274,25 @@ function Home() {
             </div>
           )}
 
-          <div className="space-y-4">
+          {questionsFeed && (
+            <QuestionStatusFilter value={questionStatus} onChange={setQuestionStatus} />
+          )}
+
+          <div className="relative">
+            {hasNewPosts && (
+              <button
+                type="button"
+                onClick={dismissNewPosts}
+                className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
+              >
+                <span className="flex items-center gap-1.5">
+                  <ArrowUp className="h-3.5 w-3.5" />
+
+                  {texts.feed.newPosts}
+                </span>
+              </button>
+            )}
+
             {feedLoading && <PostCardSkeletons />}
 
             {!feedLoading && feedFetching && !isFetchingNextPage && (
@@ -1090,17 +1303,21 @@ function Home() {
               </div>
             )}
 
-            {!feedLoading && feedPosts.map((p) => <PostCard key={p.id} post={p} feedTab={tab} />)}
+            {!feedLoading && feedPosts.length > 0 && (
+              <VirtualizedFeedList
+                posts={feedPosts}
+                feedTab={tab}
+                caughtUpAt={caughtUpAt}
+                firstPostRef={firstPostRef}
+                hasMore={Boolean(hasNextPage)}
+                loadingMore={isFetchingNextPage}
+                onLoadMore={loadNextPage}
+                loadingLabel={texts.feed.loadingMore}
+                endLabel={texts.feed.endOfFeed}
+              />
+            )}
 
             {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
-
-            <InfiniteScroll
-              hasMore={Boolean(hasNextPage)}
-              loading={isFetchingNextPage}
-              onLoadMore={loadNextPage}
-              loadingLabel={texts.feed.loadingMore}
-              endLabel={feedPosts.length > 0 ? texts.feed.endOfFeed : undefined}
-            />
           </div>
         </div>
 
@@ -1109,6 +1326,7 @@ function Home() {
             cartões (o que está acontecendo agora) para fora da dobra. */}
         <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
           <ApoieCard />
+          <CompanyPromptCard />
           <PlatformSpacesCard />
           <TodayGamesCard />
 
@@ -1281,7 +1499,7 @@ function Home() {
           aria-label={texts.feed.scrollToTop}
           title={texts.feed.scrollToTop}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:right-[calc((100vw-min(100vw-3rem,80rem))/2+344px)]"
+          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>

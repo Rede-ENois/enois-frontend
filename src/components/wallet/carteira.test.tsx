@@ -17,9 +17,9 @@ vi.mock("@tanstack/react-router", () => ({
   }),
   Link: ({ children }: { children: ReactNode }) => <a>{children}</a>,
 }));
-// A vitrine do marketplace tem a própria suíte; aqui só a Carteira importa.
+// A vitrine do marketplace tem a própria suíte; aqui só interessa que ela vive na aba Loja.
 vi.mock("@/components/marketplace/marketplace-section", () => ({
-  MarketplaceSection: () => null,
+  MarketplaceSection: () => <div data-testid="marketplace" />,
 }));
 // Os eventos do Saci têm a própria cobertura (lib/cosmetics e lib/api/cosmetic-events).
 vi.mock("@/components/events/saci-spot", () => ({ SaciSpot: () => null }));
@@ -79,7 +79,7 @@ const catalog: LojaItem[] = [
   owned: index % 2 === 0,
   equipped: false,
 }));
-/** Owned, but not a frame: "Minhas molduras" must leave it out. */
+/** Owned, but not a frame: "Meus itens" lists it with the frames. */
 const ownedBadge: LojaItem = {
   ...catalog[0],
   id: "emblema-carapuca",
@@ -89,9 +89,7 @@ const ownedBadge: LojaItem = {
   releaseOrder: catalog.length + 1,
   owned: true,
 };
-const ownedCatalog = catalog.map((item): LojaItem => ({ ...item, owned: true }));
-
-describe("Carteira e ordenação das molduras", () => {
+describe("Carteira, loja e meus itens", () => {
   let root: Root;
   let host: HTMLDivElement;
   let client: QueryClient;
@@ -136,16 +134,16 @@ describe("Carteira e ordenação das molduras", () => {
     });
   }
 
-  async function changeOrder(value: string) {
-    const select = host.querySelector<HTMLSelectElement>("select")!;
-    await act(async () => {
-      select.value = value;
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+  /** Os itens da aba "Meus itens", na ordem em que aparecem na tela. */
+  function itemIds(): string[] {
+    return [...host.querySelectorAll<HTMLElement>("[data-item-id]")].map(
+      (element) => element.dataset.itemId!,
+    );
   }
 
-  function names() {
-    return [...host.querySelectorAll(".frame-shop-card h3")].map((element) => element.textContent);
+  /** Os títulos de seção da aba, na ordem em que aparecem. */
+  function headings(): string[] {
+    return [...host.querySelectorAll("h2, h3")].map((element) => element.textContent ?? "");
   }
 
   async function click(text: string) {
@@ -157,71 +155,123 @@ describe("Carteira e ordenação das molduras", () => {
 
   it("abre em Carteira e exibe ícones nas três abas", () => {
     const tabs = [...host.querySelectorAll("[role=tab]")];
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      texts.frameShop.walletTab,
+      texts.frameShop.storeTab,
+      texts.frameShop.ownedTab,
+    ]);
     expect(tabs[0].textContent).toBe(texts.frameShop.walletTab);
     expect(tabs[0].getAttribute("aria-selected")).toBe("true");
     expect(tabs[1].getAttribute("aria-selected")).toBe("false");
     expect(tabs[0].querySelector("svg.lucide-zap")).not.toBeNull();
     for (const tab of tabs) expect(tab.querySelector("svg[aria-hidden=true]")).not.toBeNull();
     expect(host.textContent).toContain(texts.wallet.history);
-    expect(host.querySelector(".frame-shop-grid")).toBeNull();
+  });
+
+  it("mostra a sequência que vem com a carteira antes do histórico", async () => {
+    await act(async () =>
+      client.setQueryData(["carteira"], {
+        balance: 0,
+        chave: "demonstracao",
+        entries: [],
+        streak: {
+          currentDays: 3,
+          longestDays: 8,
+          todayDone: false,
+          freezesAvailable: 1,
+          lastFrozenDay: null,
+        },
+      }),
+    );
+    // O react-query avisa os observadores no próximo tique.
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+    const text = host.textContent ?? "";
+    expect(text).toContain("Sua sequência");
+    expect(text.indexOf("Sua sequência")).toBeLessThan(text.indexOf(texts.wallet.history));
+  });
+
+  it("sem a sequência na resposta, a carteira fica como era", () => {
+    expect(host.textContent).not.toMatch(/sequência/i);
+  });
+
+  it("a aba Loja junta os cosméticos e o marketplace", async () => {
+    await openTab(texts.frameShop.storeTab);
+    expect(host.querySelector("[data-testid=marketplace]")).not.toBeNull();
+    expect(host.querySelector(".cos-shop")).not.toBeNull();
+  });
+
+  it("o endereço antigo do marketplace cai na loja", () => {
+    const validate = Route.options.validateSearch as unknown as (
+      search: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    expect(validate({ tab: "marketplace" })).toEqual({ tab: "loja" });
+    expect(validate({ tab: "loja" })).toEqual({ tab: "loja" });
+    expect(validate({ tab: "minhas" })).toEqual({ tab: "minhas" });
+    expect(validate({ tab: "nao-existe" })).toEqual({});
   });
 
   it("abre a loja de cosméticos na aba Loja", async () => {
     await openTab(texts.frameShop.storeTab);
-    expect(host.querySelector(".frame-shop-grid")).toBeNull();
     // Sem coleções, a loja abre nos clássicos (moldura sem coleção) com a prévia do perfil.
     expect(host.querySelector(".cos-card")).not.toBeNull();
     expect(host.textContent).toContain("galaxia");
   });
 
-  /** Com todas as molduras compradas, "Minhas molduras" mostra o catálogo inteiro na ordem da API. */
-  function ownAll() {
-    client.setQueryData(["loja", "oldest"], ownedCatalog);
-    client.setQueryData(
-      ["loja", "newest"],
-      [...ownedCatalog].sort((a, b) => b.releaseOrder - a.releaseOrder),
-    );
+  /** Troca o catálogo em cache e deixa o react-query avisar os observadores. */
+  async function setCatalog(items: LojaItem[]) {
+    await act(async () => {
+      client.setQueryData(["loja", "oldest"], items);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   }
 
-  it("exibe a ordem de cada resposta da API e pagina sem alterar o cache", async () => {
-    ownAll();
+  it("a aba Meus itens lista tudo o que foi comprado, não só molduras", async () => {
     await openTab(texts.frameShop.ownedTab);
-    expect(names()).toEqual(catalog.slice(0, 12).map((item) => item.name));
-    expect(host.querySelector("select")!.value).toBe("oldest");
-    await changeOrder("newest");
-    expect(names()).toEqual(
-      [...catalog]
-        .sort((a, b) => b.releaseOrder - a.releaseOrder)
-        .slice(0, 12)
-        .map((item) => item.name),
-    );
-    await click(texts.frameShop.showMore);
-    expect(names()).toEqual(
-      [...catalog].sort((a, b) => b.releaseOrder - a.releaseOrder).map((item) => item.name),
-    );
-    await changeOrder("oldest");
-    expect(names()).toEqual(catalog.slice(0, 12).map((item) => item.name));
-    expect(client.getQueryData(["loja", "oldest"])).toEqual(ownedCatalog);
+    const owned = [...catalog, ownedBadge].filter((item) => item.owned);
+    expect(itemIds()).toEqual(owned.map((item) => item.id));
+    // O emblema comprado aparece junto das molduras, na subcategoria dele.
+    const sections = headings().join(" ");
+    expect(sections).toContain(texts.frameShop.myItems.kinds.BADGE);
+    expect(sections).toContain(texts.frameShop.myItems.kinds.FRAME);
   });
 
-  it("preserva a ordenação ao filtrar e ao voltar para Todas", async () => {
-    ownAll();
+  it("deixa os ativos no topo, antes do resto", async () => {
+    const equipped = { ...catalog[1], owned: true, equipped: true };
+    await setCatalog([...catalog, ownedBadge, equipped]);
     await openTab(texts.frameShop.ownedTab);
-    await changeOrder("newest");
-    await click(texts.frameShop.filters.simple);
-    expect(names()).toEqual(["coral", "violeta", "esmeralda", "ambar"]);
-    await click(texts.frameShop.filters.all);
-    expect(names()[0]).toBe("galaxia");
-    expect(names()).toHaveLength(12);
+    expect(itemIds()[0]).toBe(equipped.id);
+    expect(headings()[0]).toBe(texts.frameShop.myItems.activeTitle);
+    expect(headings().indexOf(texts.frameShop.myItems.activeTitle)).toBeLessThan(
+      headings().indexOf(texts.frameShop.myItems.ownedTitle),
+    );
+    // O ativo não se repete na lista de baixo.
+    expect(itemIds().filter((id) => id === equipped.id)).toHaveLength(1);
   });
 
-  it("oferece as duas ordens também em Minhas molduras, sem incluir itens não comprados", async () => {
+  it("equipa e tira o item direto da lista", async () => {
+    const { lojaApi, walletApi } = await import("@/lib/api");
+    // A invalidação depois do equipar refaz as duas consultas: elas respondem, não `undefined`.
+    vi.mocked(lojaApi.catalog).mockResolvedValue([...catalog, ownedBadge]);
+    vi.mocked(walletApi.wallet).mockResolvedValue({
+      balance: 0,
+      escala: 1,
+      cotacaoBrlCents: 100,
+      cotacaoBrlMicros: 1_000_000,
+      chave: "demonstracao",
+      entries: [],
+    });
+    vi.mocked(lojaApi.equip).mockResolvedValue({ id: "moldura-ambar", equipped: true });
+    vi.mocked(lojaApi.unequip).mockResolvedValue({ id: "moldura-ambar", equipped: false });
     await openTab(texts.frameShop.ownedTab);
-    const owned = catalog.filter((item) => item.owned).map((item) => item.name);
-    expect(names()).toEqual(owned);
-    await changeOrder("newest");
-    expect(names()).toEqual([...owned].reverse());
-    await changeOrder("oldest");
-    expect(names()).toEqual(owned);
+    await click(texts.frameShop.myItems.equip);
+    expect(lojaApi.equip).toHaveBeenCalledWith("moldura-ambar");
+  });
+
+  it("sem nada comprado, explica e leva para a loja", async () => {
+    await setCatalog(catalog.map((item) => ({ ...item, owned: false })));
+    await openTab(texts.frameShop.ownedTab);
+    expect(host.textContent).toContain(texts.frameShop.myItems.empty);
+    await click(texts.frameShop.myItems.emptyCta);
+    expect(host.querySelector(".cos-shop")).not.toBeNull();
   });
 });

@@ -21,12 +21,15 @@ const PROTECTED_ROUTES = [
   // "/jogos-diarios" saiu de proposito: a rota virou um redirecionamento para a categoria
   // diaria dentro de /games, e o proprio painel e que pede a conta.
   "/feed",
+  "/boas-vindas",
   "/rede",
   "/salvos",
   "/mensagens",
   "/suporte",
   "/bloqueados",
   "/seguranca",
+  "/notificacoes",
+  "/par-de-estudo",
 ];
 
 export function hasSession(): boolean {

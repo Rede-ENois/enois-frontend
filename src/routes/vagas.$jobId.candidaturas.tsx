@@ -161,8 +161,13 @@ function JobApplications() {
 
                 <div className="flex shrink-0 gap-2">
                   {application.candidate?.username && (
+                    // Candidaturas antigas (retrato SOCIAL) continuam no perfil em que foram feitas.
                     <Link
-                      to="/perfil/$username"
+                      to={
+                        application.candidate.identity === "CORPORATE"
+                          ? "/profissional/$username"
+                          : "/perfil/$username"
+                      }
                       params={{ username: application.candidate.username }}
                     >
                       <Button variant="outline" size="sm" className="rounded-full">

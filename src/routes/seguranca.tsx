@@ -402,7 +402,7 @@ function TotpSection({ status, onError, onDone }: SectionProps) {
   );
 }
 
-function EmailOtpSection({ status, onError, onDone }: SectionProps) {
+export function EmailOtpSection({ status, onError, onDone }: SectionProps) {
   const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
   const [password, setPassword] = useState("");
@@ -469,16 +469,28 @@ function EmailOtpSection({ status, onError, onDone }: SectionProps) {
           <div className="flex flex-wrap gap-2">
             <Input
               value={code}
-              onChange={(event) => setCode(event.target.value)}
+              onChange={(event) => setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+              onPaste={(event) => {
+                event.preventDefault();
+                setCode(
+                  event.clipboardData
+                    .getData("text")
+                    .replace(/[^0-9]/g, "")
+                    .slice(0, 6),
+                );
+              }}
               inputMode="numeric"
+              autoComplete="one-time-code"
+              aria-label={texts.auth.twoFactor.email2faSection}
               maxLength={6}
+              showCounter={false}
               placeholder="000000"
               className="min-w-0 flex-1"
             />
 
             <Button
               className="shrink-0 rounded-full"
-              disabled={code.trim().length !== 6 || confirm.isPending}
+              disabled={!/^[0-9]{6}$/.test(code) || confirm.isPending}
               onClick={() => confirm.mutate()}
             >
               {texts.auth.twoFactor.email2faConfirm}

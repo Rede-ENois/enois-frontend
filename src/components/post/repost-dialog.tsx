@@ -5,17 +5,22 @@ import { RepostDialog as RepostDialogView } from "@rede-enois/design-system/doma
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, reactionsApi } from "@/lib/api";
+import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 
 /**
  * Republicar em duas portas: direto (cópia com o crédito) ou COM opinião — o comentário vira o
  * texto da publicação e o post original aparece citado embaixo, como um quote-repost.
+ *
+ * Quando o post já foi repostado, mostra a opção de desfazer.
  */
 export function RepostDialog({
   postId,
+  reposted,
   open,
   onOpenChange,
 }: {
   postId: string;
+  reposted: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -26,6 +31,11 @@ export function RepostDialog({
     mutationFn: (text?: string) => reactionsApi.repost(postId, text),
     onSuccess: () => {
       toast(texts.posts.reposted, "success");
+      updatePostInQueryCache(queryClient, postId, (current) => ({
+        ...current,
+        currentUserReposted: true,
+        counters: { ...current.counters, reposts: current.counters.reposts + 1 },
+      }));
       void queryClient.invalidateQueries({ queryKey: ["feed"] });
       onOpenChange(false);
     },
@@ -39,13 +49,32 @@ export function RepostDialog({
     },
   });
 
+  const undo = useMutation({
+    mutationFn: () => reactionsApi.undoRepost(postId),
+    onSuccess: () => {
+      toast(texts.posts.repostRemoved, "success");
+      updatePostInQueryCache(queryClient, postId, (current) => ({
+        ...current,
+        currentUserReposted: false,
+        counters: { ...current.counters, reposts: Math.max(0, current.counters.reposts - 1) },
+      }));
+      void queryClient.invalidateQueries({ queryKey: ["feed"] });
+      onOpenChange(false);
+    },
+    onError: () => {
+      toast(texts.posts.repostError, "error");
+    },
+  });
+
   return (
     <RepostDialogView
       postId={postId}
       open={open}
       onOpenChange={onOpenChange}
-      pending={repost.isPending}
+      pending={repost.isPending || undo.isPending}
+      reposted={reposted}
       onRepost={(opinion) => repost.mutate(opinion)}
+      onUndoRepost={() => undo.mutate()}
     />
   );
 }

@@ -4,7 +4,7 @@ import { topicLabel } from "@/constants/community-topics";
 import type { ProfileCommunityShelfProps } from "@/types/components/profile/profile-community-shelf-props";
 import { ProfileCommunityShelf as ProfileCommunityShelfView } from "@rede-enois/design-system/domain";
 
-import { communitiesApi } from "@/lib/api";
+import { communityQueries } from "@/lib/query-options/communities";
 
 /**
  * O perfil só consulta as comunidades da própria pessoa: a API não expõe os círculos de terceiros,
@@ -12,8 +12,7 @@ import { communitiesApi } from "@/lib/api";
  */
 export function ProfileCommunityShelf({ isOwner }: ProfileCommunityShelfProps) {
   const { data: communitiesData, isLoading } = useQuery({
-    queryKey: ["communities", "mine", "profile-shelf"],
-    queryFn: () => communitiesApi.mine(4),
+    ...communityQueries.mine(4),
     enabled: isOwner,
   });
 

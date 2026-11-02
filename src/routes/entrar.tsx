@@ -31,6 +31,7 @@ import { z } from "zod";
 
 import { ApiError, authApi, clearSession } from "@/lib/api";
 import { anoAtual } from "@/lib/date/format";
+import { landingPathForStoredUser } from "@/lib/onboarding";
 import { ogMetas } from "@/lib/seo";
 import { storeSession } from "@/lib/session";
 import { twoFactorLockedMessage } from "@/lib/two-factor-locked";
@@ -161,7 +162,7 @@ function Auth() {
               <SignupForm onDone={() => navigate({ to: "/feed" })} />
             ) : (
               <LoginForm
-                onDone={() => navigate({ to: "/feed" })}
+                onDone={() => navigate({ to: landingPathForStoredUser() })}
                 onForgot={() => setForgotOpen(true)}
               />
             )}
@@ -673,18 +674,11 @@ function LoginForm({ onDone, onForgot }: LoginFormProps) {
       }
 
       storeSession(result);
-      // E2E: se não tem keypair local, tenta setup ou restore (fire-and-forget).
-      import("@/lib/e2e/key-manager").then(
-        async ({ hasLocalKeys, generateAndUpload, restoreFromBackup }) => {
-          try {
-            if (await hasLocalKeys()) return;
-            await restoreFromBackup(parsed.data.password).catch(() =>
-              generateAndUpload(parsed.data.password),
-            );
-          } catch {
-            // E2E setup falhou — não impede o login.
-          }
-        },
+      // E2E: sincroniza as chaves locais com o servidor (fire-and-forget).
+      // Compara a chave publica local com a do servidor: se diferem, restaura do backup.
+      // Garante que todos os devices usem o mesmo keypair sem re-configurar.
+      import("@/lib/e2e/key-manager").then(({ syncKeysOnLogin }) =>
+        syncKeysOnLogin(parsed.data.password).catch(() => {}),
       );
       onDone();
     } catch (err) {

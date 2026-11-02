@@ -19,6 +19,7 @@ import {
 
 import { ApiError, randomUUID } from "@/lib/api-client";
 import { dailyBlocksApi, previousChallengeDate } from "@/lib/api/daily-games";
+import { dailyDateLabel, useDailyShare } from "@/lib/daily-share";
 
 // O motor da partida (espelho do BlocksEngine.java) mora no design system; aqui ficam o loop de
 // ticks, a fila de ações e a sincronização com o servidor.
@@ -240,6 +241,17 @@ export function DailyBlocks() {
     }
   }, [official, showPrevious, stateDate, stateStatus]);
 
+  const dailyShare = useDailyShare();
+  const share = () => {
+    if (!official) return;
+    void dailyShare.share({
+      game: "blocks",
+      dateLabel: dailyDateLabel(official.date),
+      score: official.score,
+      lines: official.lines,
+    });
+  };
+
   const game = gameRef.current;
   const pendingCount = queueRef.current.length + (sendingRef.current ? 1 : 0);
 
@@ -267,6 +279,8 @@ export function DailyBlocks() {
       syncError={syncError}
       onAction={perform}
       onRetrySync={retrySync}
+      onShare={share}
+      shareStatus={dailyShare.status}
       boardRef={boardRef}
       ranking={{
         loading: ranking.isPending,

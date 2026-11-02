@@ -1,14 +1,19 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { CorporateProfileView } from "@/types/application/corporate/corporate-profile-view";
-import { PostCardSkeletons, UserAvatar } from "@rede-enois/design-system/domain";
-import { Button, EmptyState } from "@rede-enois/design-system/ui";
-import { ArrowLeft, Building2, Globe, Link as LinkIcon, MapPin, UserX } from "lucide-react";
+import {
+  PostCardSkeletons,
+  ProfessionalProfile as ProfessionalProfileView,
+} from "@rede-enois/design-system/domain";
+import { Button, EmptyState, useToast } from "@rede-enois/design-system/ui";
+import { ArrowLeft, Globe, MessageCircle, UserX } from "lucide-react";
 
-import { ApiError, corporateApi, feedApi } from "@/lib/api";
+import { ApiError, corporateApi, feedApi, messagesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { conversationErrorMessage } from "@/lib/conversation-error";
+import { monthsBetween, partesDaData, shortMonthYear } from "@/lib/date/format";
 import { litePageSize } from "@/lib/lite-mode";
 import { safeHref } from "@/lib/safe-url";
 import { ogMetas } from "@/lib/seo";
@@ -16,9 +21,8 @@ import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { PostCard } from "@/components/post-card";
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
-import { ProfileSeals } from "@/components/profile-seals";
 import { PageSkeleton } from "@/components/skeletons/page-skeleton";
 
 export const Route = createFileRoute("/profissional_/$username")({
@@ -43,6 +47,9 @@ function ProfessionalProfile() {
   const lite = useLiteMode();
   const { username } = Route.useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const profile = useQuery({
     queryKey: ["corporate-public", username],
@@ -63,6 +70,15 @@ function ProfessionalProfile() {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: profile.isSuccess,
+  });
+
+  const openConversation = useMutation({
+    mutationFn: (userId: string) => messagesApi.openBusinessDirect(userId),
+    onSuccess: (conversation) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      navigate({ to: "/mensagens", search: { conversation: conversation.id } });
+    },
+    onError: (err) => toast(conversationErrorMessage(err), "error"),
   });
 
   if (profile.isLoading) {
@@ -93,133 +109,109 @@ function ProfessionalProfile() {
   const data = profile.data as CorporateProfileView;
   const items = posts.data?.pages.flatMap((page) => page.items) ?? [];
   const isMine = Boolean(myProfile.data?.exists && myProfile.data.username === data.username);
-  const links = splitLinks(data.externalLinks)
-    .map(safeHref)
-    .filter((link): link is string => link !== null);
 
   return (
     <AppContainer>
-      <div className="mx-auto w-full max-w-3xl space-y-6">
-        <BackToFeed />
-
-        <div className="surface-card overflow-hidden p-0">
-          {data.bannerHtml ? (
-            <SandboxedHtmlFrame
+      <ProfessionalProfileView
+        backHref="/feed"
+        editHref={isMine ? "/profissional" : null}
+        statusNote={data.status !== "ACTIVE" ? texts.corporate.status[data.status] : null}
+        banner={
+          data.bannerHtml ? (
+            <BannerHtmlFrame
               html={data.bannerHtml}
               title={texts.corporate.bannerHtml}
-              className="h-36 w-full sm:h-44"
+              className="h-full w-full"
             />
           ) : data.banner ? (
-            <div className="h-36 w-full bg-surface-2 sm:h-44">
-              <img src={resolveCdnUrl(data.banner)} alt="" className="h-full w-full object-cover" />
-            </div>
-          ) : (
-            <div className="h-24 w-full bg-gradient-to-r from-primary/20 via-surface-2 to-surface-1 sm:h-28" />
-          )}
-
-          <div className="space-y-4 p-4 sm:p-6">
-            <div className="-mt-12 flex flex-wrap items-end justify-between gap-3 sm:-mt-14">
-              <UserAvatar
-                src={data.avatar || undefined}
-                alt={data.name}
-                className="h-20 w-20 border-4 border-surface-card sm:h-24 sm:w-24"
-              />
-
-              {isMine && (
-                <Link to="/profissional">
-                  <Button className="w-auto rounded-full" variant="outline">
-                    {texts.corporate.publicProfile.editMine}
-                  </Button>
-                </Link>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <h1 className="break-words text-2xl font-semibold tracking-tight">{data.name}</h1>
-
-              <p className="break-words text-sm text-text-subtle">@{data.username}</p>
-
-              {data.headline && (
-                <p className="break-words text-sm text-text-strong">{data.headline}</p>
-              )}
-            </div>
-
-            <ProfileSeals username={data.username} />
-
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-subtle">
-              {data.location && (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {data.location}
-                </span>
-              )}
-
-              {data.industry && (
-                <span className="inline-flex items-center gap-1">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {data.industry}
-                </span>
-              )}
-            </div>
-
-            {data.bio && (
-              <p className="whitespace-pre-line break-words text-sm text-text-strong">{data.bio}</p>
-            )}
-
-            {links.length > 0 && (
-              <ul className="space-y-1">
-                {links.map((link) => (
-                  <li key={link} className="flex items-center gap-1.5 text-sm">
-                    <LinkIcon className="h-3.5 w-3.5 text-text-subtle" />
-
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="truncate text-primary hover:underline"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {data.status !== "ACTIVE" && (
-              <p className="text-xs text-text-subtle">{texts.corporate.status[data.status]}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">{texts.corporate.publicProfile.postsTitle}</h2>
-
-          {posts.isLoading ? (
-            <PostCardSkeletons />
-          ) : items.length === 0 ? (
-            <div className="surface-card">
-              <EmptyState icon={Globe} title={texts.corporate.publicProfile.empty} />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {items.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-
-              {posts.hasNextPage && (
+            <img src={resolveCdnUrl(data.banner)} alt="" className="h-full w-full object-cover" />
+          ) : null
+        }
+        profile={{
+          name: data.name,
+          username: data.username,
+          headline: data.headline,
+          bio: data.bio,
+          avatar: data.avatar,
+          location: data.location,
+          industry: data.industry,
+          identityVerified: data.identityVerified,
+          reputation: data.reputation ?? null,
+          memberSinceLabel: data.memberSince ? shortMonthYear(data.memberSince) : null,
+          skills: data.skills ?? [],
+          links: splitLinks(data.externalLinks)
+            .map(safeHref)
+            .filter((link): link is string => link !== null),
+        }}
+        experiences={sortCurrentFirst(data.experiences ?? []).map((item) => ({
+          ...item,
+          startLabel: item.startDate ? shortMonthYear(item.startDate) : null,
+          endLabel: item.endDate ? shortMonthYear(item.endDate) : null,
+          months: item.startDate ? monthsBetween(item.startDate, item.endDate) : null,
+        }))}
+        educations={sortCurrentFirst(data.educations ?? []).map((item) => ({
+          id: item.id,
+          school: item.school,
+          degree: item.degree,
+          field: item.field,
+          periodLabel: yearsLabel(item.startDate, item.currentlyHere ? null : item.endDate),
+        }))}
+        certifications={(data.certifications ?? []).map((item) => ({
+          id: item.id,
+          name: item.name,
+          issuer: item.issuer,
+          issuedLabel: item.issueDate ? shortMonthYear(item.issueDate) : null,
+          credentialUrl: item.credentialUrl ? safeHref(item.credentialUrl) : null,
+        }))}
+        posts={
+          <>
+            {!isMine && user && data.userId && (
+              <div className="mb-4 flex justify-end">
                 <Button
                   variant="outline"
-                  className="w-full rounded-full"
-                  disabled={posts.isFetchingNextPage}
-                  onClick={() => void posts.fetchNextPage()}
+                  size="sm"
+                  className="rounded-full gap-1.5"
+                  onClick={() => openConversation.mutate(data.userId!)}
+                  disabled={openConversation.isPending}
                 >
-                  {texts.feed.loadMore}
+                  <MessageCircle className="h-4 w-4" />
+
+                  <>{texts.profile.message}</>
                 </Button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            )}
+
+            {posts.isLoading ? (
+              <PostCardSkeletons />
+            ) : posts.isError ? (
+              <div className="surface-card">
+                <EmptyState icon={Globe} title={texts.corporate.saveError} />
+              </div>
+            ) : items.length === 0 ? (
+              <div className="surface-card">
+                <EmptyState icon={Globe} title={texts.corporate.publicProfile.empty} />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {items.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+
+                {posts.hasNextPage && (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-full"
+                    disabled={posts.isFetchingNextPage}
+                    onClick={() => void posts.fetchNextPage()}
+                  >
+                    {texts.feed.loadMore}
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
+        }
+      />
     </AppContainer>
   );
 }
@@ -235,6 +227,25 @@ function BackToFeed() {
       <>{texts.corporate.publicProfile.backToFeed}</>
     </Link>
   );
+}
+
+/** "2016 a 2020", "2024 até o momento" (sem fim) ou `null` sem datas. */
+function yearsLabel(start: string | null, end: string | null): string | null {
+  const from = start ? partesDaData(start)?.ano : undefined;
+  const to = end ? partesDaData(end)?.ano : undefined;
+  if (from && to) return from === to ? `${from}` : `${from} a ${to}`;
+  if (from) return `${from} até o momento`;
+  return to ? `${to}` : null;
+}
+
+/** "Atualmente aqui" primeiro; depois as mais recentes pela data de início. */
+function sortCurrentFirst<T extends { currentlyHere: boolean; startDate: string | null }>(
+  list: T[],
+): T[] {
+  return [...list].sort((a, b) => {
+    if (a.currentlyHere !== b.currentlyHere) return a.currentlyHere ? -1 : 1;
+    return (b.startDate ?? "").localeCompare(a.startDate ?? "");
+  });
 }
 
 /** O campo é texto livre separado por vírgula/linha; só vira link o que parece URL. */

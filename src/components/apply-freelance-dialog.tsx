@@ -7,11 +7,12 @@ import { texts } from "@/texts";
 import type { FreelanceView } from "@/types/application/freelance/freelance-view";
 import { ApplyFreelanceDialog as ApplyFreelanceDialogView } from "@rede-enois/design-system/domain";
 
-import { messagesApi } from "@/lib/api";
+import { freelancesApi } from "@/lib/api";
+import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 /**
- * Candidatura a um freela: não existe formulário — abre (ou reaproveita) a conversa direta com quem
- * publicou e manda a mensagem de apresentação, que é onde escopo, prazo e valor são combinados.
+ * Proposta para um freela: a mensagem de apresentação sai pela identidade profissional e cai na
+ * conversa profissional com quem publicou (o servidor decide as duas coisas).
  */
 export function ApplyFreelanceDialog({
   freelance,
@@ -27,15 +28,13 @@ export function ApplyFreelanceDialog({
   const [error, setError] = useState<string | null>(null);
   const [sentConversation, setSentConversation] = useState<string | null>(null);
 
+  const { applicant, professionalSetupHref } = useProfessionalIdentity();
+
   const send = useMutation({
-    mutationFn: async (message: string) => {
-      const conversation = await messagesApi.openDirect(freelance.userId);
-      await messagesApi.sendMessage(conversation.id, message);
-      return conversation;
-    },
-    onSuccess: (conversation) => {
+    mutationFn: (message: string) => freelancesApi.propose(freelance.id, message),
+    onSuccess: ({ conversationId }) => {
       setError(null);
-      setSentConversation(conversation.id);
+      setSentConversation(conversationId);
       void queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err) =>
@@ -60,6 +59,8 @@ export function ApplyFreelanceDialog({
       error={error}
       sent={sentConversation !== null}
       onSend={(message) => send.mutate(message)}
+      applicant={applicant}
+      professionalSetupHref={professionalSetupHref}
       onOpenChat={() =>
         void navigate({
           to: "/mensagens",

@@ -22,6 +22,7 @@ import { Ban } from "lucide-react";
 
 import { lojaApi } from "@/lib/api";
 import { MAX_STATUS_CHARS, cosmeticErrorMessage, statusIconChoices } from "@/lib/cosmetics";
+import { profileQueries } from "@/lib/query-options/profiles";
 import { cn } from "@/lib/utils";
 
 const ICON_BUTTON =
@@ -32,6 +33,7 @@ export function ProfileStatusDialog({
   open,
   onOpenChange,
   username,
+  userId,
   statusText,
   statusIcon,
 }: ProfileStatusDialogProps) {
@@ -62,6 +64,7 @@ export function ProfileStatusDialog({
         current ? { ...current, ...status } : current,
       );
       void queryClient.invalidateQueries({ queryKey: ["profile", username] });
+      void queryClient.invalidateQueries({ queryKey: profileQueries.byId(userId).queryKey });
       void queryClient.invalidateQueries({ queryKey: ["me"] });
       toast(texts.cosmetics.status.saved, "success");
       onOpenChange(false);

@@ -1,114 +1,30 @@
-import type { BttvEmote } from "@/types/application/emote/bttv-emote";
-import type { FfzEmote } from "@/types/application/emote/ffz-emote";
-import type { FfzGlobalResponse } from "@/types/application/emote/ffz-global-response";
-import type { GlobalEmote } from "@/types/application/emote/global-emote";
+import { emoteImageUrl } from "./api";
 
 /**
- * Figurinhas GLOBAIS do BetterTTV e do FrankerFaceZ.
- *
- * As duas APIs são públicas e liberam CORS; o catálogo é buscado pelo navegador e fica em cache
- * (react-query), sem passar pelo backend. O `code` (`KEKW`, `catJAM`) é o que a pessoa escreve no
- * texto — o mesmo contrato do Twitch — e na hora de desenhar ele vira a imagem do CDN do provedor.
+ * Índice código → endereço da imagem. É o mapa que o texto consulta a cada palavra: no backend ele
+ * vem compacto (`KEKW` → caminho do proxy) e aqui cada caminho vira URL absoluta.
  */
-const BTTV_GLOBAL = "https://api.betterttv.net/3/cached/emotes/global";
-const FFZ_GLOBAL = "https://api.frankerfacez.com/v1/set/global";
-
-/**
- * Escalas do BTTV: `1x` é 28px, `2x` 56px; a tela reduz por CSS, então `2x` fica nítido.
- *
- * O BTTV só publica animação em GIF (`1x.gif` ~300KB, `2x.gif` ~1MB) — não existe WebP nem o
- * caminho `/animated`. No chat a figurinha é desenhada em 28px, então o `1x` já é a resolução
- * certa. Na GRADE do seletor até a animada usa o PNG de 1x (o primeiro quadro, ~3KB): animar a
- * grade com centenas de KB de GIF é exatamente o que deixava o seletor lento.
- */
-function bttvUrls(id: string, animated: boolean): { url: string; preview: string } {
-  const base = `https://cdn.betterttv.net/emote/${id}`;
-  if (animated) return { url: `${base}/1x.gif`, preview: `${base}/1x.png` };
-  return { url: `${base}/2x.png`, preview: `${base}/1x.png` };
-}
-
-async function fetchBttv(signal?: AbortSignal): Promise<GlobalEmote[]> {
-  const response = await fetch(BTTV_GLOBAL, { signal });
-  if (!response.ok) throw new Error(`BTTV respondeu ${response.status}`);
-  const emotes = (await response.json()) as BttvEmote[];
-  if (!Array.isArray(emotes)) return [];
-  return emotes
-    .filter((emote) => Boolean(emote?.id && emote?.code))
-    .map((emote) => {
-      const animated = Boolean(emote.animated) || emote.imageType === "gif";
-      return { code: emote.code, ...bttvUrls(emote.id, animated), provider: "BTTV" as const };
-    });
-}
-
-/**
- * No FFZ a versão em movimento vive em `animated` (WebP animado, ~8KB na escala 1) e é o que dá
- * animação no chat; a estática em `urls` continua valendo para quem não publicou animação.
- */
-function ffzUrls(emoticon: FfzEmote): { url: string; preview: string } | null {
-  const animado = emoticon.animated?.["2"] ?? emoticon.animated?.["1"];
-  if (animado) return { url: animado, preview: emoticon.animated?.["1"] ?? animado };
-
-  const url = emoticon.urls?.["2"] ?? emoticon.urls?.["1"] ?? emoticon.urls?.["4"];
-  if (!url) return null;
-  return { url, preview: emoticon.urls?.["1"] ?? url };
-}
-
-async function fetchFfz(signal?: AbortSignal): Promise<GlobalEmote[]> {
-  const response = await fetch(FFZ_GLOBAL, { signal });
-  if (!response.ok) throw new Error(`FFZ respondeu ${response.status}`);
-  const data = (await response.json()) as FfzGlobalResponse;
-  const sets = data.sets ?? {};
-  const ids = data.default_sets ?? Object.keys(sets).map(Number);
-  const emotes: GlobalEmote[] = [];
-  for (const id of ids) {
-    for (const emoticon of sets[String(id)]?.emoticons ?? []) {
-      if (emoticon.hidden || !emoticon.name) continue;
-      const urls = ffzUrls(emoticon);
-      if (!urls) continue;
-      emotes.push({ code: emoticon.name, ...urls, provider: "FFZ" as const });
-    }
-  }
-  return emotes;
-}
-
-/**
- * As duas coleções globais, sem repetir código (o BTTV tem prioridade). Se um provedor cair, a
- * outra coleção continua valendo — figurinha de menos é melhor que seletor vazio.
- */
-export async function fetchGlobalEmotes(signal?: AbortSignal): Promise<GlobalEmote[]> {
-  const [bttv, ffz] = await Promise.allSettled([fetchBttv(signal), fetchFfz(signal)]);
-  const byCode = new Map<string, GlobalEmote>();
-  for (const result of [bttv, ffz]) {
-    if (result.status !== "fulfilled") continue;
-    for (const emote of result.value) {
-      if (!byCode.has(emote.code)) byCode.set(emote.code, emote);
-    }
-  }
-  return [...byCode.values()].sort((a, b) => a.code.localeCompare(b.code));
-}
-
-/** Índice código → figurinha, para desenhar o texto sem varrer a lista a cada token. */
-export function emoteIndex(emotes: GlobalEmote[]): Map<string, GlobalEmote> {
-  return new Map(emotes.map((emote) => [emote.code, emote]));
+export function emoteIndex(entries: Record<string, string>): Map<string, string> {
+  return new Map(Object.entries(entries).map(([code, path]) => [code, emoteImageUrl(path)]));
 }
 
 const WHITESPACE = /(\s+)/;
 /** Caracteres que podem encostar na figurinha sem fazer parte do código (`(KEKW)`). */
 const TOKEN_BOUNDARY = /^([([{'"*_~]*)(.*?)([)\]}>.,;:!?'"*_~]*)$/;
 
-function marca(emote: GlobalEmote): string {
-  return `![${emote.code}](${emote.url})`;
+function marca(code: string, url: string): string {
+  return `![${code}](${url})`;
 }
 
-function replaceToken(piece: string, index: Map<string, GlobalEmote>): string {
+function replaceToken(piece: string, index: Map<string, string>): string {
   const direto = index.get(piece);
-  if (direto) return marca(direto);
+  if (direto) return marca(piece, direto);
 
   const partes = TOKEN_BOUNDARY.exec(piece);
   if (!partes) return piece;
-  const emote = index.get(partes[2]);
-  if (!emote) return piece;
-  return `${partes[1]}${marca(emote)}${partes[3]}`;
+  const url = index.get(partes[2]);
+  if (!url) return piece;
+  return `${partes[1]}${marca(partes[2], url)}${partes[3]}`;
 }
 
 /**
@@ -117,8 +33,11 @@ function replaceToken(piece: string, index: Map<string, GlobalEmote>): string {
  * A saída já é o markdown que o RichText do design system desenha como imagem inline: o texto
  * gravado continua sendo o código (quem edita vê `KEKW`, não um endereço de CDN). Bloco e trecho
  * de código ficam intactos — lá dentro o código é código.
+ *
+ * O índice é o do BACKEND: só vira figurinha o código que existe no catálogo dele, então a mesma
+ * imagem aparece para quem lê — inclusive em post público, sem sessão.
  */
-export function applyEmotes(content: string, index: Map<string, GlobalEmote>): string {
+export function applyEmotes(content: string, index: Map<string, string>): string {
   if (!content || index.size === 0) return content;
 
   let emBloco = false;

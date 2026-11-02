@@ -37,4 +37,6 @@ export type CommentView = {
   reactionSummary?: ReactionSummary | null;
   /** Fixado no topo da lista do post (um por post). */
   pinned?: boolean;
+  /** Accepted answer of a QUESTION post. */
+  accepted?: boolean;
 };

@@ -1,3 +1,5 @@
+import type { ProfileGardenData } from "@rede-enois/design-system/domain";
+
 export type Profile = {
   id: string;
   username: string;
@@ -6,6 +8,14 @@ export type Profile = {
   email: string;
   company: string | null;
   location: string | null;
+  /**
+   * Cidade e UF estruturadas, separadas do `location` livre. `/me` sempre devolve; o perfil
+   * público só devolve quando `showCity` é verdadeiro.
+   */
+  city?: string | null;
+  state?: string | null;
+  /** Mostrar a cidade no perfil público (padrão false). Só vem em `/me`. */
+  showCity?: boolean;
   avatar: string | null;
   banner: string | null;
   /** Emblema (PNG pequeno) exibido ao lado do nome; URL de mídia, como avatar e banner. */
@@ -27,6 +37,8 @@ export type Profile = {
   connectionsCount?: number;
   followersCount?: number;
   reputation?: number;
+  /** Reputation drawn as a garden; null where the read does not compute counts (search, ranking). */
+  garden?: ProfileGardenData | null;
   /** Total de publicações do perfil social. Ausente quando a leitura não calcula contagens. */
   postsCount?: number | null;
   /** Apelido: entra entre parênteses depois do nome (preferência da pessoa). */
@@ -59,6 +71,8 @@ export type Profile = {
   nameplate?: string | null;
   bannerItem?: string | null;
   profileEffect?: string | null;
+  /** Equipped GARDEN item id; null draws the default garden. */
+  gardenStyle?: string | null;
   /** Status bubble: up to 60 characters and a cosmetic icon key. */
   statusText?: string | null;
   statusIcon?: string | null;

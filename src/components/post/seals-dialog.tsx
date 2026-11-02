@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 import { SealsDialog as SealsDialogView } from "@rede-enois/design-system/domain";
 
-import { profileApi, sealsApi } from "@/lib/api";
+import { sealsApi } from "@/lib/api";
+import { profileQueries } from "@/lib/query-options/profiles";
 
 /** Quem marcou o post, com o selo de cada um — o mesmo caminho do diálogo de quem reagiu. */
 export function SealsDialog({ postId }: PostIdProps) {
@@ -19,16 +20,16 @@ export function SealsDialog({ postId }: PostIdProps) {
 
   const people = data?.people ?? [];
   const userIds = [...new Set(people.map((person) => person.userId))].sort();
-  const { data: users } = useQuery({
-    queryKey: ["profiles", "by-ids", userIds.join(",")],
-    queryFn: async () => {
-      const results = await Promise.all(
-        userIds.map((id) => profileApi.getById(id).catch(() => null)),
-      );
-      return Object.fromEntries(results.filter(Boolean).map((user) => [user!.id, user!]));
-    },
-    enabled: open && userIds.length > 0,
+  const profiles = useQueries({
+    queries: userIds.map((id) => ({
+      ...profileQueries.byId(id),
+      enabled: open,
+      retry: false,
+    })),
   });
+  const users = Object.fromEntries(
+    profiles.flatMap((query) => (query.data ? [[query.data.id, query.data]] : [])),
+  );
 
   return (
     <SealsDialogView

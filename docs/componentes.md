@@ -2,16 +2,25 @@
 
 ## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
 
-Seasonal cosmetics shop in the `Loja` tab of `/carteira`, drawn by the design system
-`CosmeticShop`.
+The cosmetics shop in the `Loja` tab of `/carteira`, together with the community marketplace.
+It is drawn by `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`), a copy of the
+design system shop with one addition: the `Todas as coleções` tab. The published design system
+only filters one collection per tab, so a seasonal tab used to hide the rest of the catalog —
+**when the package ships that tab, `CosmeticCatalog` goes away and the wrapper points back at
+`CosmeticShop` from the design system.**
 
 - Reads `GET /loja` and `GET /loja/colecoes` (Zod-validated in `src/lib/api/loja.ts`); prices are
   formatted with `formatFaisca`, and each look shows the price of the pieces still missing
   (`lookPriceMf` in `src/lib/cosmetics.ts`: 75% of their sum, rounded to whole faíscas, the
   backend arithmetic)
+- Opens on `Todas as coleções`: every item of every collection, including out-of-season ones
+  (listed, tagged `Fora de temporada`, not sellable). The collection chips stay one click away,
+  in-season first, then the classics, then the out-of-season collections
 - Buy, buy look, equip and unequip invalidate `loja`, `carteira`, `profile`, `me` and `feed`;
   every API error code has its own pt-BR toast (`texts.cosmetics.errors`)
 - The `saci` and `halloween` collections show the Saci × Halloween duel (`SaciDuelPanel`)
+- The album of a collection only exists inside the collection tab (the catalog-wide tab has no
+  album)
 
 ## `FrameShop` (`src/components/wallet/frame-shop.tsx`)
 
@@ -72,6 +81,53 @@ O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, 
 - `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile
 - `formatTime(iso)` - Formata ISO timestamp para relativo em português
 
+## Menu da conta e identidade ativa (`src/components/account-menu.tsx`)
+
+Menu do avatar no header, renderizado pelo `AccountMenu` do design system. Além dos atalhos da
+conta, ele escolhe qual identidade o `/feed` usa: **social** ou **profissional**. A escolha fica
+gravada no aparelho; fora do feed, o efeito visível é o toast de confirmação.
+
+**Regras da troca:**
+
+- A seção "Identidade" só aparece com o perfil profissional **`ACTIVE`**. Em `DRAFT` (rascunho) ou
+  `DISABLED`, ela não é exibida — o controle ficaria desabilitado sem explicar o motivo. O item
+  "Perfil profissional" do menu leva a `/profissional` para criar ou ativar o perfil.
+- A escolha é gravada em `localStorage('connect-grow-active-identity')` (como o tema) e sincroniza
+  entre abas pelo evento `storage` — ver `src/lib/active-identity.ts`.
+- `effectiveIdentity()` faz o **fallback de leitura** para `SOCIAL` quando o perfil não existe ou
+  não está ativo: a interface nunca exibe um perfil inativo. A preferência continua gravada — se o
+  perfil voltar a ficar ativo, a identidade profissional volta a valer.
+- Ao escolher, o menu fecha e um toast confirma a identidade ativa. No `/feed`, a identidade
+  profissional deixa o compositor só com publicações `BUSINESS` (feed corporativo), removendo
+  também os tipos de página e artigo da seleção; a social remove o `BUSINESS`.
+- É conveniência de interface, **não autorização**: o backend decide a autoria de cada publicação e
+  valida permissões em toda requisição.
+
+## Sequência diária (`StreakCard` do design system)
+
+- **Carteira** (`src/routes/carteira.tsx`): o cartão completo acima do extrato, com o `streak` que
+  já vem em `/carteira` (sem pedido extra). Backend sem o campo não desenha nada.
+- **Perfil, só do dono** (`src/components/profile/profile-gamification-panel.tsx`): o cartão
+  completo logo abaixo do painel de presença, de `GET /me/streak`; visitante não vê nem busca.
+- Nunca fica fixo no cabeçalho: sempre à vista, a sequência vira cobrança diária.
+- `today` vem de `hojeNoApp()` (`src/lib/date/format.ts`), o dia no fuso do app, o mesmo em que o
+  backend conta.
+
+## Jogos diários: compartilhar o resultado
+
+`DailyWord`, `DailyMaze` e `DailyBlocks` (`src/components/daily-*.tsx`) compartilham pelo
+`useDailyShare` (`src/lib/daily-share.ts`): o texto vem do `buildDailyShareText` do design system
+(sem a resposta nem o tabuleiro) e termina em `https://enois.ia.br/games?categoria=diarios`. Usa
+`navigator.share` quando existe (fechar o menu é "idle", não erro); senão copia. O `shareStatus` volta
+a "idle" depois de 3 s.
+
+Em Palavras e Labirinto, a pessoa pode alternar entre hoje e o desafio de ontem enquanto uma
+jogada aguarda resposta. O resultado atualiza o cache do desafio enviado, mesmo que outro esteja
+aberto. Iniciar uma partida sempre atualiza hoje; confirmação de linha e erro de palpite aparecem
+somente no desafio correspondente, sem apagar um rascunho digitado na outra data. Os testes
+`daily-games-request-cache.test.tsx` cobrem as duas direções de troca, o início e a recusa de um
+palpite (issue #532).
+
 ## `PostCard` (`src/components/post-card.tsx`)
 
 Card de post no feed, com todas as ações sociais.
@@ -87,6 +143,7 @@ Card de post no feed, com todas as ações sociais.
 - Tags
 - Ações: reagir (popover com 8 emojis), comentar, salvar, compartilhar, denunciar
 - Seção de comentários com replies encadeadas
+- Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)
 
 **Componentes internos:**
@@ -128,7 +185,11 @@ Dialog multi-aba para edição completa do perfil.
 **Componentes internos:**
 
 - `Field()` - Wrapper de campo com label e erro
-- `SubList()` - Componente genérico de CRUD para listas aninhadas
+- `SubList()` - Componente genérico de CRUD para listas aninhadas. Antes de salvar, valida com
+  `subListErrors` (no design system, `src/domain/profile/sub-list-errors.ts`): campos obrigatórios, data que o
+  navegador recusou (ex.: 31/11) e, nas listas com "atualmente aqui", data de fim quando o item foi
+  encerrado — o backend deriva "atual" de `endDate == null` e não lê `currentlyHere`. Erro da API
+  aparece no formulário, que só fecha quando salvou.
 
 ## `ImageCropDialog` (`@rede-enois/design-system/patterns`)
 
@@ -151,31 +212,53 @@ Textarea com autocomplete de @menções.
 - Mostra o contador interno quando há `maxLength`, exceto se `showCounter={false}` (padrão `true`)
 - Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido (`KEKW`) entra no texto como
   palavra (ver abaixo)
+- A inserção de figurinha passa pelo evento de edição do próprio campo. O design system mantém
+  os IDs apenas das menções confirmadas que continuam no texto, inclusive depois de limpar o
+  rascunho ou substituir uma menção pela figurinha; o wrapper não guarda outra lista de IDs
+  ([#534](https://github.com/Rede-ENois/enois-frontend/issues/534)).
 
-## Figurinhas globais (BTTV + FrankerFaceZ)
+## Figurinhas
 
-`src/lib/emotes/` (catálogo, cache, paginação) e `src/components/emotes/emote-picker-dialog.tsx`
-(seletor). O texto gravado continua sendo o CÓDIGO — a troca por imagem acontece na leitura
-(`useEmoteText` dentro do `RichText`), então quem edita vê `KEKW`, não um endereço de CDN.
+`src/lib/emotes/` (`api`, `catalog`, `catalog-cache`, `use-emotes`) e
+`src/components/emotes/emote-picker-dialog.tsx` (seletor). O texto gravado continua sendo o CÓDIGO —
+a troca por imagem acontece na leitura (`useEmoteText` dentro do `RichText`), então quem edita vê
+`KEKW`, não um endereço de imagem.
 
-- **Catálogo:** as duas APIs públicas são chamadas pelo navegador (`fetch`), sem passar pelo
-  backend. Hoje são 78 figurinhas globais (65 do BTTV + 13 do FFZ; o código repetido fica com o
-  BTTV). Do FFZ só entram os `default_sets` — os outros sets da resposta não são a coleção global.
-  O `top`/`trending` do BTTV exige chave de API (responde 403 sem ela).
-- **Cache:** o catálogo montado vai para o `localStorage` (`rede:emotes:global`) e entra como dado
-  inicial do react-query. O JSON do FFZ responde `cache-control: private, must-revalidate`, então
-  sem essa cópia toda visita pagava a ida à API antes de desenhar figurinha nenhuma. O que vem do
-  armazenamento é revalidado item por item antes de virar imagem.
-- **Animação:** GIF do BTTV (`/emote/{id}/1x.gif`) e WebP animado do FFZ
-  (`/emote/{id}/animated/{escala}`, campo `animated` da API) quando o provedor publica a versão em
-  movimento; estático continua `2x.png` / `urls["2"]`. Na grade do seletor a figurinha do BTTV usa
-  o PNG de 1x mesmo quando é animada — GIF de ~300KB na grade é o que deixava o seletor lento.
-- **Grade:** `preview` (escala 1x) em páginas de 40 (`EMOTES_POR_PAGINA` em
-  `src/lib/emotes/pagination.ts`), com busca e filtro por provedor voltando para a página 1.
-- **Tamanho no chat:** `src/styles.css` casa pelo HOST do CDN (`cdn.betterttv.net`,
-  `cdn.frankerfacez.com`) e dá a toda figurinha a mesma caixa quadrada de 28px com
-  `object-fit: contain`. O seletor antigo só conhecia o caminho `/emoticon/` do FFZ, que a API não
-  usa mais (`/emote/{id}/...`), e por isso as figurinhas do FFZ saíam no tamanho original.
+- **Catálogo:** é do BACKEND, não do navegador. O backend fala com o BTTV e o FrankerFaceZ de 3 em 3
+  horas, junta tudo em memória e serve três rotas: `GET /emotes?page&limit&q` (página do seletor),
+  `GET /emotes/index` (mapa código → imagem, que o texto usa) e `GET /emotes/image/{provedor}/{id}`
+  (a imagem, por um cache próprio). O front só lê — abrir o seletor não faz o navegador falar com
+  API de terceiro, e por isso não existe mais "Carregando figurinhas..." interminável. Detalhes do
+  módulo em `enois-backend/docs/FIGURINHAS.md`.
+- **Uma lista só:** `GET /emotes` já volta na ordem do seletor — as mais usadas primeiro, o resto em
+  ordem alfabética —, sem aba nem filtro por provedor. Toda figurinha da lista existe no catálogo do
+  backend, então a escolhida aparece igual no texto de quem lê.
+- **Paginação:** uma página de 40 por vez (`EMOTES_POR_PAGINA` em `src/lib/emotes/use-emotes.ts`),
+  pedida ao backend a cada clique. A resposta anterior fica na tela (`placeholderData`) enquanto a
+  nova chega, e a busca é debounced (250 ms) antes de virar `q`.
+- **Cache:** o índice vai para o `localStorage` (`rede:emotes:index:v3`) e entra como dado inicial do
+  react-query, para o primeiro quadro já desenhar figurinha. O que vem do armazenamento é revalidado
+  entrada por entrada — só passa código válido e caminho do proxy de imagens.
+- **Animação:** decidida no catálogo do backend; o caminho da imagem carrega `&a=1` quando a
+  figurinha tem versão em movimento, então o cache do navegador não mistura animada com estática. Na
+  grade o seletor usa a miniatura (`variant=thumb`), que nunca é animada.
+- **Endereço da imagem:** `emoteImageUrl` prefixa o caminho com a base da API (`apiUrl`). Em produção
+  a API mora em outro host, então `isOwnMediaUrl` (`src/lib/api/media.ts`) libera o host da API
+  explicitamente — sem isso a figurinha viraria link no texto.
+- **Tamanho no chat:** `src/styles.css` casa pelo caminho `/emotes/image/` e dá a toda figurinha a
+  mesma caixa quadrada de 28px com `object-fit: contain` (os CDNs dos provedores continuam na regra
+  para texto antigo).
+- **Procedência e crédito:** as artes não são nossas. O BetterTTV e o FrankerFaceZ **não** licenciam
+  os emotes sob Creative Commons — os termos dos dois proíbem copiar, hospedar ou redistribuir sem
+  autorização expressa (FFZ: "users are forbidden from downloading, hosting, modifying, or
+  redistributing content hosted on FFZ servers without explicit permission from both FFZ and the
+  original owner(s)"; BetterTTV: "You may not distribute, modify, transmit, reuse, download, repost,
+  copy, or use said Content… for commercial purposes or for personal gain, without express advance
+  written permission"), e o uso da API do FFZ por aplicação não ligada ao Twitch também depende de
+  permissão. Por isso o rodapé da landing declara a origem (`texts.landing.footer.emotesTitle` /
+  `emotes`) e oferece a via de remoção pela página de contato; os Termos de Uso têm a seção
+  "15. Figurinhas de terceiros". O aviso não substitui a autorização dos provedores: enquanto ela não
+  existir, o uso é acessório e não comercial, sem venda nem licenciamento das imagens.
 
 ## `UserAvatar` (`@rede-enois/design-system/domain`)
 
@@ -257,3 +340,14 @@ Hook para detectar breakpoint mobile (< 768px).
 | Toggle         | Botão toggle                                                            |
 | ToggleGroup    | Grupo de toggles                                                        |
 | Tooltip        | Tooltip                                                                 |
+
+## Emblemas dos selos de contribuição
+
+Cada nível de selo de contribuição tem um emblema fixo em `public/seals/<emblema>.png` (256×256,
+fundo transparente): `ajudante`, `contribuinte-serio`, `hardcore`, `tryhard`, `get-a-life`,
+`beta-tester`, `exigente`, `esforco-maximo`, `plus-ultra`, `genkidama`. O nome vem do campo `emblem`
+que a API devolve em `/users/{username}/seals` e `/seals/criteria`; `sealEmblemSrc`
+(`src/lib/seal-emblem.ts`) valida o nome e monta a URL. O emblema aparece em `/selos` (cada nível) e
+no cartão do selo no perfil (`ProfileSeals`, via `emblemSrc` do design system). Não há escolha de
+emblema: ele é consequência do nível calculado pelo backend. Regras em `docs/CONTRIBUTION_SEALS.md`
+do backend.

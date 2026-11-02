@@ -10,6 +10,7 @@ import {
 } from "@rede-enois/design-system/domain";
 
 import { ApiError, jobsApi, resumeImportApi } from "@/lib/api";
+import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 /**
  * Candidatura: responde o formulário que o autor montou e envia o perfil.
@@ -23,6 +24,8 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
   const [done, setDone] = useState(false);
 
   const fields = job.applicationFields ?? [];
+  // A candidatura é SEMPRE da identidade profissional: o diálogo diz qual, ou leva a ativá-la.
+  const { applicant, professionalSetupHref } = useProfessionalIdentity();
 
   const apply = useMutation({
     mutationFn: ({ message, values }: JobApplicationValues) =>
@@ -66,6 +69,11 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
       done={done}
       error={errorMessage}
       verifyHref={error?.code === "EMAIL_NOT_VERIFIED" ? "/seguranca" : null}
+      applicant={applicant}
+      professionalSetupHref={
+        professionalSetupHref ??
+        (error?.code === "NO_ACTIVE_CORPORATE_PROFILE" ? "/profissional" : null)
+      }
       onSubmit={(values) => {
         setError(null);
         apply.mutate(values);

@@ -3,6 +3,7 @@ export type ModeratorTabId =
   | "games"
   | "projects"
   | "support"
+  | "suggestions"
   | "issues"
   | "history"
   | "appeals"
@@ -16,4 +17,6 @@ export type ModeratorTabId =
   | "contributors"
   | "githubContributions"
   | "pulls"
-  | "notes";
+  | "notes"
+  | "notices"
+  | "releaseNotes";

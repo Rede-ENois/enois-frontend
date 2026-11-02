@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   keepPreviousData,
@@ -7,6 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
@@ -15,19 +16,19 @@ import {
   type ConversationSendValues,
   ConversationThread as ConversationThreadView,
 } from "@rede-enois/design-system/domain";
-import { useToast } from "@rede-enois/design-system/ui";
+import { Button, useToast } from "@rede-enois/design-system/ui";
+import { Briefcase } from "lucide-react";
 
-import { messagesApi, profileApi, reportsApi, servicesApi } from "@/lib/api";
-import { authApi } from "@/lib/api/auth";
+import { messagesApi, reportsApi, servicesApi } from "@/lib/api";
+import { conversationPeer } from "@/lib/conversation-peer";
 import { encryptForSend } from "@/lib/e2e/conversation";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
 import { liteInterval, litePageSize } from "@/lib/lite-mode";
-import { authorNameStyle } from "@/lib/profile-name-style";
+import { profileQueries } from "@/lib/query-options/profiles";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
-import { E2eSetupBanner } from "./e2e-setup-banner";
 import { MessageBubble } from "./message-bubble";
 
 /** Tamanho que o app sempre usou; em modo lite cada página vem maior (menos idas ao servidor). */
@@ -51,6 +52,11 @@ export function ConversationThread({
   const [showServices, setShowServices] = useState(false);
   const [selectingMessages, setSelectingMessages] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
+  const [replyingTo, setReplyingTo] = useState<{
+    id: string;
+    from: string;
+    text: string;
+  } | null>(null);
 
   // Paginado por cursor: a primeira pagina so traz as mensagens mais recentes — sem carregar as
   // anteriores as de semanas atras ficavam inalcancaveis.
@@ -77,23 +83,21 @@ export function ConversationThread({
   const peerLastReadAt = conversation.otherLastReadAt
     ? new Date(conversation.otherLastReadAt).getTime()
     : null;
-  const { data: authMe } = useQuery({
-    queryKey: ["auth-me"],
-    queryFn: () => authApi.me(),
-  });
-  const [e2eReady, setE2eReady] = useState<boolean | null>(null);
-  useEffect(() => {
-    hasLocalKeys().then(setE2eReady);
-  }, []);
-
   const rawMessages = (messagesData?.pages.flatMap((page) => page.items) ?? []).sort(
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
   const { messages, decrypting } = useDecryptedMessages(rawMessages);
 
   const sendMessage = useMutation({
-    mutationFn: ({ conversationId, text, mediaIds, mediaSpoiler, e2e }: SendMessageInput) =>
-      messagesApi.sendMessage(conversationId, text, mediaIds, mediaSpoiler, e2e),
+    mutationFn: ({
+      conversationId,
+      text,
+      mediaIds,
+      mediaSpoiler,
+      e2e,
+      replyToId,
+    }: SendMessageInput) =>
+      messagesApi.sendMessage(conversationId, text, mediaIds, mediaSpoiler, e2e, replyToId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", conversation.id] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -163,7 +167,7 @@ export function ConversationThread({
   };
 
   /** Sobe as imagens (a falha volta para o compositor mostrar) e envia a mensagem. */
-  const send = async ({ text, files, mediaSpoiler }: ConversationSendValues) => {
+  const send = async ({ text, files, mediaSpoiler, replyToId }: ConversationSendValues) => {
     let mediaIds: string[] = [];
     if (files.length > 0) {
       const results = await upload.uploadAll(files.map((file) => ({ file })));
@@ -177,15 +181,32 @@ export function ConversationThread({
         // E2E falhou — envia em texto claro.
       }
     }
-    sendMessage.mutate({ conversationId: conversation.id, text, mediaIds, mediaSpoiler, e2e });
+    sendMessage.mutate({
+      conversationId: conversation.id,
+      text,
+      mediaIds,
+      mediaSpoiler,
+      e2e,
+      replyToId,
+    });
   };
 
   const otherParticipantId = conversation.participantIds.find((id) => id !== currentUserId);
   const { data: otherUser } = useQuery({
-    queryKey: ["profile", "by-id", otherParticipantId],
-    queryFn: () => profileApi.getById(otherParticipantId ?? ""),
+    ...profileQueries.byId(otherParticipantId ?? ""),
     enabled: !!otherParticipantId,
   });
+
+  const { peer, profileHref } = conversationPeer(conversation, otherParticipantId, otherUser);
+
+  // Banner profissional: conversa profissional e o usuario nao tem identidade corporativa nela.
+  const isProfessional = conversation.context === "PROFESSIONAL";
+  const hasMyProfessionalIdentity = Boolean(
+    currentUserId && conversation.identities?.[currentUserId],
+  );
+  const [dismissedProfessionalBanner, setDismissedProfessionalBanner] = useState(false);
+  const showProfessionalBanner =
+    isProfessional && !hasMyProfessionalIdentity && !dismissedProfessionalBanner;
 
   /** O clique só marca no filão de verdade: no placeholder os ids são de outra conversa. */
   const toggleMessage = (messageId: string) =>
@@ -199,18 +220,37 @@ export function ConversationThread({
   return (
     <ConversationThreadView
       conversationTitle={conversation.title}
-      peer={otherUser && { ...otherUser, nameStyle: authorNameStyle(otherUser) }}
-      profileHref={`/perfil/${otherUser?.username ?? otherParticipantId ?? ""}`}
+      peer={peer}
+      profileHref={profileHref}
       onBack={onBack}
       banner={
-        e2eReady === false && authMe ? (
-          <E2eSetupBanner
-            hasPassword={authMe.hasPassword}
-            onSetupComplete={() => setE2eReady(true)}
-          />
+        showProfessionalBanner ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-border-soft bg-surface-2 p-4">
+            <div className="flex items-start gap-3">
+              <Briefcase className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+
+              <p className="text-sm text-text-strong">{texts.messages.professionalPrompt}</p>
+            </div>
+
+            <div className="flex items-center gap-2 pl-8">
+              <Link to="/profissional">
+                <Button size="sm" className="rounded-full">
+                  {texts.messages.professionalPromptCta}
+                </Button>
+              </Link>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full"
+                onClick={() => setDismissedProfessionalBanner(true)}
+              >
+                {texts.messages.professionalPromptSocial}
+              </Button>
+            </div>
+          </div>
         ) : undefined
       }
-      e2eRequired={e2eReady === false}
       loading={isLoadingMessages || decrypting}
       empty={messages.length === 0}
       newestMessageId={messages.length > 0 ? messages[messages.length - 1].id : null}
@@ -236,6 +276,16 @@ export function ConversationThread({
         const origin = typeof window === "undefined" ? "" : window.location.origin;
         return `${origin}/servicos#oferta-${serviceId}`;
       }}
+      replyingTo={
+        replyingTo
+          ? {
+              id: replyingTo.id,
+              from: replyingTo.from === currentUserId ? "Você" : (peer?.name ?? "..."),
+              text: replyingTo.text,
+            }
+          : null
+      }
+      onCancelReply={() => setReplyingTo(null)}
     >
       {messages.map((m) => (
         <MessageBubble
@@ -247,8 +297,8 @@ export function ConversationThread({
             m.from === currentUserId &&
             new Date(m.time).getTime() <= peerLastReadAt
           }
-          otherUser={otherUser}
-          otherId={otherParticipantId}
+          peer={peer}
+          profileHref={profileHref}
           selecting={selectingMessages}
           selected={selectedMessages.has(m.id)}
           onToggleSelect={
@@ -263,6 +313,11 @@ export function ConversationThread({
             showingPreviousThread || m.from === currentUserId
               ? undefined
               : () => reportMessage(m.id, conversation.id)
+          }
+          onReply={
+            showingPreviousThread
+              ? undefined
+              : () => setReplyingTo({ id: m.id, from: m.from, text: m.text })
           }
         />
       ))}

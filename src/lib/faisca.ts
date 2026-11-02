@@ -29,6 +29,25 @@ export function parseFaiscaInput(text: string): number | null {
   return Math.round(value * FAIS_SCALE);
 }
 
+/**
+ * Reais digitados ("1.234", "1.234,50") → reais inteiros. O freela em dinheiro guarda reais
+ * inteiros; sem esta leitura o formulário multiplicava o valor por 1.000 (tratava como faísca).
+ */
+export function parseBrlInput(text: string): number | null {
+  const cleaned = text.trim().replace(/[R$\s]/g, "");
+  if (!cleaned) return null;
+  // Sem vírgula, "1.500" é milhar pt-BR (e não 1,5) — o padrão de grupo é o único caso em que o
+  // ponto sozinho conta como separador de milhar; "1500.50" continua decimal.
+  const normalized = cleaned.includes(",")
+    ? cleaned.replace(/\./g, "").replace(",", ".")
+    : /^\d{1,3}(\.\d{3})+$/.test(cleaned)
+      ? cleaned.replace(/\./g, "")
+      : cleaned;
+  const value = Number(normalized);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return Math.round(value);
+}
+
 /** Centavos de real → "R$ 1,00". */
 export function formatBrlCents(cents: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);

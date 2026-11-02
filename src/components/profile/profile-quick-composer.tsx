@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { ProfileQuickComposerProps } from "@/types/components/profile/profile-quick-composer-props";
@@ -13,6 +14,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const upload = useMediaUpload();
 
@@ -35,17 +37,29 @@ export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
   return (
     <ProfileQuickComposerView
       profile={profile}
+      onWriteArticle={() => void navigate({ to: "/feed", search: { compor: "ARTICLE" } })}
       publishPending={publish.isPending || upload.status === "uploading"}
       uploadProgress={
         upload.status === "uploading" ? texts.feed.composer.uploadProgress(upload.progress) : null
       }
       onPublish={async (payload: ProfileQuickComposerPublishPayload) => {
-        try {
-          let mediaIds: string[] = [];
-          if (payload.files.length > 0) {
+        let mediaIds: string[] = [];
+        if (payload.files.length > 0) {
+          try {
             const results = await upload.uploadAll(payload.files.map((file) => ({ file })));
             mediaIds = results.map((r) => r.mediaId);
+          } catch (err) {
+            // Sem isto a falha do envio sumia e a pessoa ficava num composer de texto, sem saber por quê.
+            toast(
+              err instanceof Error && err.message
+                ? err.message
+                : texts.profile.dashboard.composer.error,
+              "error",
+            );
+            return false;
           }
+        }
+        try {
           await publish.mutateAsync({
             content: payload.content,
             mediaIds,
@@ -53,6 +67,7 @@ export function ProfileQuickComposer({ profile }: ProfileQuickComposerProps) {
           });
           return true;
         } catch {
+          // O toast de erro da publicação já sai no onError da mutation.
           return false;
         }
       }}

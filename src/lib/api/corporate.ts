@@ -23,6 +23,13 @@ export const corporateApi = {
 
   rename: (name: string) => api.post<CorporateProfileView>("/me/business-profile/name", { name }),
 
+  /**
+   * Troca o nametag: o `@` E o fim da URL pública (`/profissional/{nametag}`). É independente do
+   * @ social, então pode ser diferente dele.
+   */
+  changeUsername: (username: string) =>
+    api.post<CorporateProfileView>("/me/business-profile/username", { username }),
+
   activate: () => api.post<CorporateProfileView>("/me/business-profile/activate", {}),
 
   deactivate: () => api.post<CorporateProfileView>("/me/business-profile/deactivate", {}),

@@ -1,9 +1,12 @@
 import type { PageResponse } from "@/types/application/api/page-response";
+import type { AcceptedAnswerView } from "@/types/application/feed/accepted-answer-view";
 import type { BulkDeleteInput } from "@/types/application/feed/bulk-delete-input";
 import type { BulkDeleteResult } from "@/types/application/feed/bulk-delete-result";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { DeleteResult } from "@/types/application/feed/delete-result";
+import type { FeedPage } from "@/types/application/feed/feed-page";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
+import type { PollView } from "@/types/application/feed/poll-view";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { ScheduledPostView } from "@/types/application/feed/scheduled-post-view";
 
@@ -22,12 +25,23 @@ export const feedApi = {
       `/corporate/${encodeURIComponent(username)}/posts${buildQuery({ cursor: cursor ?? undefined, limit })}`,
     ),
 
-  list: (cursor?: string | null, limit = 20, tab?: FeedTab, type?: string) =>
-    api.get<PageResponse<PostView>>(`/feed${buildQuery({ cursor, limit, tab, type })}`),
+  /** `type` and `resolved` are only honored by the backend with tab=ALL. */
+  list: (cursor?: string | null, limit = 20, tab?: FeedTab, type?: string, resolved?: boolean) =>
+    api.get<FeedPage>(`/feed${buildQuery({ cursor, limit, tab, type, resolved })}`),
+
+  /** Avança o marcador "Você está em dia" (só anda para frente; 204). */
+  markSeen: (seenUntil: string) => api.post<void>("/feed/seen", { seenUntil }),
 
   create: (data: CreatePostInput) => api.post<PostView>("/feed/posts", data),
 
   get: (postId: string) => api.get<PostView>(`/feed/posts/${postId}`),
+
+  /**
+   * Voto da enquete: uma alternativa, um voto por pessoa, sem troca. O backend responde 409
+   * `ALREADY_VOTED` no segundo voto — a tela não oferece votar de novo depois do primeiro.
+   */
+  votePoll: (postId: string, option: number) =>
+    api.post<PollView>(`/feed/posts/${postId}/poll/vote`, { option }),
 
   listByUser: (username: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<PostView>>(`/users/${username}/posts${buildQuery({ cursor, limit })}`),
@@ -50,6 +64,14 @@ export const feedApi = {
 
   /** Desfaz a exclusão do próprio post (soft delete reversível). */
   restore: (postId: string) => api.post<PostView>(`/feed/posts/${postId}/restore`),
+
+  /** The asker marks another person's comment as the answer to a QUESTION. */
+  acceptAnswer: (postId: string, commentId: string) =>
+    api.post<AcceptedAnswerView>(`/feed/posts/${postId}/accepted-answer`, { commentId }),
+
+  /** Reopens the question. */
+  unacceptAnswer: (postId: string) =>
+    api.delete<AcceptedAnswerView>(`/feed/posts/${postId}/accepted-answer`),
 
   delete: (postId: string) => api.delete<DeleteResult>(`/feed/posts/${postId}`),
 

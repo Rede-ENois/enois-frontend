@@ -8,6 +8,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { z } from "zod";
 
 import { finishOAuthLogin, oauthCallbackUrl } from "@/lib/oauth-callback";
+import { landingPathFor } from "@/lib/onboarding";
 
 const searchSchema = z.object({
   /** Cancelamento ou falha devolvidos pelo provedor (ver finishOAuthError no backend). */
@@ -51,8 +52,8 @@ function OAuthCallback() {
       return;
     }
 
-    void finishOAuthLogin().then((ok) => {
-      if (ok) void navigate({ to: "/feed", replace: true });
+    void finishOAuthLogin().then((user) => {
+      if (user) void navigate({ to: landingPathFor(user), replace: true });
       else setError(texts.auth.social.callbackError);
     });
   }, [search, navigate]);

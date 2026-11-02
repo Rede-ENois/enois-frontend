@@ -37,20 +37,30 @@ function ModeracaoDenuncia() {
       if (action === "penalizar") return reportsAdminApi.penalize(reportId);
       if (action === "avisar") return reportsAdminApi.warn(reportId);
       if (action === "banir") return reportsAdminApi.ban(reportId);
+      if (action === "empresa") return reportsAdminApi.removeCompany(reportId);
       return reportsAdminApi.deletePost(reportId, "Excluído pelo painel de revisão");
     },
   });
+
+  // Página empresarial tem ação própria: fechar a página, sem tocar na conta do dono. Banir ou
+  // penalizar o dono por algo que a página publicou é recusado pelo servidor.
+  const isCompany = data?.report.targetType === "COMPANY";
 
   const acoes: {
     id: ModeracaoAcao;
     label: string;
     variant: "default" | "outline" | "destructive";
-  }[] = [
-    { id: "penalizar", label: texts.moderacaoReview.penalize, variant: "default" },
-    { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
-    { id: "excluir", label: texts.moderacaoReview.deletePost, variant: "outline" },
-    { id: "banir", label: texts.moderacaoReview.ban, variant: "destructive" },
-  ];
+  }[] = isCompany
+    ? [
+        { id: "empresa", label: texts.moderacaoReview.removeCompany, variant: "destructive" },
+        { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
+      ]
+    : [
+        { id: "penalizar", label: texts.moderacaoReview.penalize, variant: "default" },
+        { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
+        { id: "excluir", label: texts.moderacaoReview.deletePost, variant: "outline" },
+        { id: "banir", label: texts.moderacaoReview.ban, variant: "destructive" },
+      ];
 
   return (
     <AppContainer>

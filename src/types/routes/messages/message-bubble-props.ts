@@ -1,14 +1,14 @@
 import type { Message } from "@/types/application/message/message";
-import type { Profile } from "@/types/application/profile/profile";
+import type { ConversationPeerData } from "@rede-enois/design-system/domain";
 
 export type MessageBubbleProps = {
   message: Message;
   /** A mensagem é de quem está olhando a tela: muda o lado, a cor e o canto do balão. */
   isMe: boolean;
-  /** Perfil do outro participante — avatar e link ao lado das mensagens dele. */
-  otherUser?: Profile;
-  /** Id do outro participante; segura o link enquanto o perfil ainda não chegou. */
-  otherId?: string;
+  /** O outro participante como ele aparece nesta conversa (identidade profissional em conversa de trabalho). */
+  peer?: ConversationPeerData;
+  /** Link do avatar dele (perfil social ou página profissional, conforme a conversa). */
+  profileHref: string;
   /** Modo de seleção de mensagens: o clique passa a marcar o balão. */
   selecting?: boolean;
   selected?: boolean;
@@ -20,4 +20,6 @@ export type MessageBubbleProps = {
   readByOther?: boolean;
   /** Denunciar esta mensagem. */
   onReport?: () => void;
+  /** Responder esta mensagem. */
+  onReply?: () => void;
 };

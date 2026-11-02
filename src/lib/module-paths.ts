@@ -18,6 +18,7 @@ export const MODULE_PATHS: { prefix: string; module: string }[] = [
   { prefix: "/jogos-diarios", module: "DAILY_GAMES" },
   { prefix: "/games", module: "COMMUNITY_GAMES" },
   { prefix: "/projetos", module: "COMMUNITY_PROJECTS" },
+  { prefix: "/par-de-estudo", module: "STUDY_PAIRS" },
 ];
 
 /** Módulo dono de um caminho, ou null quando a rota não pertence a um módulo desativável. */
