@@ -14,6 +14,8 @@ import { AccountMenu } from "./account-menu";
 const mocks = vi.hoisted(() => ({
   toast: vi.fn(),
   me: vi.fn(),
+  moderatorMe: vi.fn(),
+  wallet: vi.fn(),
   navigate: vi.fn(),
   writeStoredContext: vi.fn(),
   destination: null as string | null,
@@ -21,7 +23,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
 
-vi.mock("@/lib/api", () => ({ corporateApi: { me: mocks.me } }));
+vi.mock("@/lib/api", () => ({
+  corporateApi: { me: mocks.me },
+  moderationApi: { me: mocks.moderatorMe },
+  walletApi: { wallet: mocks.wallet },
+}));
+vi.mock("@/components/theme-toggle", () => ({ ThemeSwitch: () => <span>tema</span> }));
 
 vi.mock("@/lib/logout", () => ({ logout: vi.fn() }));
 vi.mock("@rede-enois/design-system/ui", () => ({
@@ -30,11 +37,13 @@ vi.mock("@rede-enois/design-system/ui", () => ({
 
 // The DS menu is replaced by a probe: under test is the contract the app feeds into it.
 vi.mock("@rede-enois/design-system/domain", () => ({
-  AccountMenu: ({ open, onOpenChange, hrefs, identitySlot }: AccountMenuViewProps) => (
+  AccountMenu: ({ open, onOpenChange, hrefs, identitySlot, walletLabel }: AccountMenuViewProps) => (
     <div data-open={String(open)}>
       {identitySlot}
 
-      <a href={hrefs.corporateProfile}>Perfil profissional</a>
+      <span data-wallet>{walletLabel}</span>
+
+      {hrefs.moderator && <a href={hrefs.moderator}>Painel de moderador</a>}
 
       <a href={hrefs.account}>Conta e segurança</a>
 
@@ -92,6 +101,10 @@ describe("menu da conta", () => {
     mocks.writeStoredContext.mockReset();
     mocks.destination = null;
     mocks.me.mockResolvedValue({ exists: false, status: "NONE" });
+    mocks.moderatorMe.mockReset();
+    mocks.moderatorMe.mockResolvedValue({ moderator: false, admin: false });
+    mocks.wallet.mockReset();
+    mocks.wallet.mockResolvedValue({ balance: 1240 });
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
@@ -114,12 +127,30 @@ describe("menu da conta", () => {
     await flush();
   };
 
-  it("leva ao perfil profissional sem repetir as preferências de notificação no menu", async () => {
-    await montar();
+  const abrir = async () => {
+    act(() => botao("Abrir menu")?.click());
+    await flush();
+  };
 
-    expect(host.querySelector('a[href="/profissional"]')).not.toBeNull();
-    // Avisos e preferências de notificação vivem dentro do "Uso saudável", não no menu lateral.
-    expect(host.querySelector('a[href="/notificacoes/preferencias"]')).toBeNull();
+  it("shows the moderator panel only to whoever moderates", async () => {
+    await montar();
+    await abrir();
+    expect(host.querySelector('a[href="/moderador"]')).toBeNull();
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    mocks.moderatorMe.mockResolvedValue({ moderator: true, admin: false });
+    await montar();
+    await abrir();
+    expect(host.querySelector('a[href="/moderador"]')).not.toBeNull();
+  });
+
+  it("shows the wallet balance once the menu opens", async () => {
+    await montar();
+    expect(mocks.wallet).not.toHaveBeenCalled();
+
+    await abrir();
+    expect(host.querySelector("[data-wallet]")?.textContent).toBe("1.240 faíscas");
   });
 
   it("sends the account items to the Conta e segurança page (#562)", async () => {

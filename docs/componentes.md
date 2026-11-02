@@ -74,9 +74,21 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
 **Funcionalidades:**
 
 - Header com logo "Conexão", `SearchBox`, `ThemeToggle`, sino de notificações, avatar do perfil
-- Sidebar de navegação (desktop, ≥ 1024px, 9 links) com destaque para rota ativa
+- Side menu (desktop, ≥ 1024px) in sections (you, community, work, explore) from
+  `src/components/navigation-items.ts`; each item may carry a signal from `signalFor`
+  (`src/lib/navigation-signals.ts`): unread messages as a balloon, pending requests as a count, and a
+  soft news dot when the item's notification module (`notifies`) has unread notices. The counts come
+  from one source: `GET /notifications/unread-summary`, the messages unread count and pending
+  connection requests (`useNavigationCounts`).
+  Eventos shows the amber "hoje" tag when the summary has `eventsToday`; Comunidades and each of
+  the person's communities light the news dot from `byCommunity`. Notices that come from a place
+  or an event carry `place` and `eventDate`, drawn as the community table or the event ticket.
+- Phone menu button: a news dot when an entry behind the menu (not on the dock) has a signal
+  (`useMenuHasNews`, `src/components/use-menu-has-news.ts`).
+- Mobile dock (< 1024px, `src/components/mobile-dock.tsx`): Início, Explorar, Publicar
+  (`/feed?compor=POST`), Mensagens and Avisos, with the same signals.
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
-- Popover de notificações com: lista, contador de não lidas, botão "Marcar lidas", ação "Aceitar" em convites
+- Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
 
 O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, sidebar.
 
@@ -85,13 +97,16 @@ O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, 
 **Funções auxiliares:**
 
 - `navigateToHref(href, navigate)` - Mapeia hrefs de notificações para rotas frontend
-- `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile
+- `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile. App features come first (`matchFeatures`, `src/lib/feature-search.ts`: Explore rooms, menu entries of the active interface and account pages, accent-insensitive, skipping turned-off modules), drawn as places with their icon
 - `formatTime(iso)` - Formata ISO timestamp para relativo em português
 
 ## Menu da conta e identidade ativa (`src/components/account-menu.tsx`)
 
-Menu do avatar no header, renderizado pelo `AccountMenu` do design system. Além dos atalhos da
-conta, ele escolhe qual identidade o `/feed` usa: **social** ou **profissional**. A escolha fica
+Avatar menu in the header, drawn by the DS `AccountMenu`. It is kept to six entries: profile, wallet
+(with the balance), account and security (`/conta`), support, the moderator panel (only for
+moderators and admins, from `moderationApi.me()`) and logout, plus the light/dark `ThemeSwitch`.
+Preferences (healthy usage, notification preferences, muted users, parental supervision, support us)
+moved to `/conta`. Besides the account shortcuts, ele escolhe qual identidade o `/feed` usa: **social** ou **profissional**. A escolha fica
 gravada no aparelho; fora do feed, o efeito visível é o toast de confirmação.
 
 **Regras da troca:**

@@ -113,8 +113,59 @@ export const texts = {
       marketplace: "Marketplace",
       services: "Contratar serviços",
       professionalProfile: "Perfil profissional",
+      explore: "Explorar",
     },
     context: { social: "Social", professional: "Profissional" },
+  },
+
+  notificationsPage: {
+    seoTitle: "Avisos · Énóis",
+    today: "Hoje",
+    yesterday: "Ontem",
+  },
+
+  /** The phone dock: daily destinations around the publish action. */
+  dock: {
+    notices: "Avisos",
+    publish: "Publicar",
+  },
+
+  featureSearch: {
+    menuSubtitle: "No menu",
+    wallet: { label: "Carteira", description: "Faíscas, extrato e loja" },
+    account: {
+      label: "Conta e segurança",
+      description: "E-mail, senha, privacidade e preferências",
+    },
+    support: { label: "Ajuda e suporte", description: "Fale com a equipe" },
+    notificationPreferences: {
+      label: "Preferências de aviso",
+      description: "Resumo semanal e categorias de push",
+    },
+  },
+  explore: {
+    seoTitle: "Explorar · Énóis",
+    sections: {
+      play: "Brincar",
+      build: "Construir",
+      community: "Comunidade",
+      work: "Trabalho",
+    },
+    items: {
+      games: { label: "Jogos", description: "Jogos indie feitos pela comunidade" },
+      dailyGames: { label: "Desafio do dia", description: "Um joguinho por dia, com a galera" },
+      projects: { label: "Projetos", description: "O que a comunidade está construindo" },
+      marketplace: { label: "Loja", description: "Cosméticos e itens com faíscas" },
+      developers: { label: "Developers", description: "API e integrações do Énóis" },
+      badges: { label: "Selos", description: "Conquistas e reconhecimentos" },
+      suggestions: { label: "Sugestões", description: "Ideias para o Énóis, votadas por todos" },
+      moderation: { label: "Moderação", description: "Ajude a cuidar da comunidade" },
+      jobs: { label: "Vagas", description: "Oportunidades de trabalho" },
+      freelances: { label: "Freelances", description: "Projetos curtos e pagos" },
+      services: { label: "Serviços", description: "Contrate quem é da comunidade" },
+      companies: { label: "Empresas", description: "Quem contrata e o que faz" },
+      mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+    },
   },
 
   groups: {
@@ -693,6 +744,8 @@ export const texts = {
     settingsSeoTitle: "Conta e segurança",
     menu: {
       blockedUsers: "Usuários bloqueados",
+      walletBalance: (balance: number) =>
+        `${balance.toLocaleString("pt-BR")} ${balance === 1 ? "faísca" : "faíscas"}`,
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",
@@ -1163,8 +1216,9 @@ export const texts = {
       happeningNow: "Acontecendo agora",
       seeAllEvents: "Ver todos os eventos",
       confirmed: (count: number) => `${count} ${count === 1 ? "confirmado" : "confirmados"}`,
-      eventMeta: (date: string, format: string, confirmed: string) =>
-        `${date} · ${format} · ${confirmed}`,
+      /** The day is on the ticket: the line carries time, format and who is going. */
+      eventMeta: (time: string, format: string, confirmed: string) =>
+        `${time} · ${format} · ${confirmed}`,
     },
     companyPrompt: {
       title: "Sua empresa no Énóis",
@@ -3161,6 +3215,32 @@ export const texts = {
     duelChosen: "Você entrou no time! O emblema já está no seu perfil.",
     huntFound: (found: number, total: number) => `Você achou o Saci! ${found} de ${total}.`,
     huntCompleted: "Você achou os 7 Sacis! O emblema Achei o Saci já é seu.",
+  },
+
+  /** Gerenciar serviços: publicar, editar e remover a própria oferta (#358). */
+  services: {
+    mine: {
+      newTitle: "Publicar serviço",
+      editTitle: "Editar serviço",
+      publish: "Publicar",
+      save: "Salvar",
+      saving: "Salvando…",
+      published: "Serviço publicado.",
+      saved: "Serviço atualizado.",
+      saveFailed: "Não foi possível salvar o serviço.",
+      edit: "Editar",
+      remove: "Remover",
+      removing: "Removendo…",
+      removed: "Serviço removido da vitrine.",
+      removeFailed: "Não foi possível remover o serviço.",
+      removeBlocked: "Há um contrato em andamento com este preço — finalize antes de mudar.",
+      priceLocked: "Há um contrato em andamento com este preço — finalize antes de mudar.",
+      removedHint: "Fora da vitrine",
+      removeTitle: "Remover serviço",
+      removeBody: (title: string) =>
+        `"${title}" sai da vitrine. Os contratos já abertos continuam valendo, e você pode editar e publicar de novo depois.`,
+      removeCancel: "Cancelar",
+    },
   },
 
   wallet: {
