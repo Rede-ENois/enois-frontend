@@ -3106,12 +3106,12 @@ export const texts = {
     lookPiecesHint: "Cada peça é vendida separada: compre só a que falta e monte o seu jeito.",
     /** O botão mostra só a faísca e o preço; quem lê em voz alta ouve a peça e o valor. */
     buyPiece: (name: string, price: string) => `Comprar ${name} por ${price}`,
-    /** Loja: a aba que abre em todas as coleções, para nada do catálogo ficar escondido. */
+    /** Loja: a aba que abre em todas as coleções da temporada, para nada dela ficar escondido. */
     shop: {
       allTab: "Todas as coleções",
       allTitle: "Todas as customizações",
       allDescription:
-        "Molduras, emblemas, temas do cartão, nomes, placas, banners, efeitos e jardins de todas as coleções. O que está fora de temporada continua aqui: ele volta na data dele.",
+        "Molduras, emblemas, temas do cartão, nomes, placas, banners, efeitos e jardins das coleções da temporada, com os clássicos e os essenciais. Cada coleção aparece na época certa e sai quando a data passa.",
     },
     /** Shop banner name while the catalog is not at hand. */
     equippedBannerFallback: "equipado",
