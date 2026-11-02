@@ -48,7 +48,7 @@ function sharedIndex(entries: Record<string, string>): Map<string, string> {
  * dado inicial para a primeira pintura já sair com figurinha, sem esperar rede. Se a busca falhar,
  * o texto continua saindo com o código cru — figurinha é enfeite, nunca bloqueio de leitura.
  */
-export function useEmoteIndex(): Map<string, string> {
+export function useEmoteIndex(enabled = true): Map<string, string> {
   const cached = storedIndexOnce();
   const { data } = useQuery({
     queryKey: ["emotes", "index"],
@@ -62,6 +62,8 @@ export function useEmoteIndex(): Map<string, string> {
     staleTime: SEIS_HORAS,
     gcTime: SEIS_HORAS * 4,
     retry: 1,
+    // `false` reads what is already cached without asking the network (a closed sticker picker).
+    enabled,
   });
 
   return sharedIndex(data ?? NO_ENTRIES);

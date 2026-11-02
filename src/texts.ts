@@ -29,6 +29,8 @@ export const texts = {
     title: "Figurinhas",
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
+    tabRecent: "Recentes",
+    tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",

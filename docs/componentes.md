@@ -245,8 +245,13 @@ a troca por imagem acontece na leitura (`useEmoteText` dentro do `RichText`), en
   API de terceiro, e por isso não existe mais "Carregando figurinhas..." interminável. Detalhes do
   módulo em `enois-backend/docs/FIGURINHAS.md`.
 - **Uma lista só:** `GET /emotes` já volta na ordem do seletor — as mais usadas primeiro, o resto em
-  ordem alfabética —, sem aba nem filtro por provedor. Toda figurinha da lista existe no catálogo do
+  ordem alfabética —, sem filtro por provedor. Toda figurinha da lista existe no catálogo do
   backend, então a escolhida aparece igual no texto de quem lê.
+- **Recentes** ([#555](https://github.com/Rede-ENois/enois-frontend/issues/555)): as últimas 24
+  figurinhas escolhidas no seletor ficam no `localStorage` deste aparelho
+  (`rede:emotes:recent:v1`, só os códigos; `src/lib/emotes/recent-emotes.ts`). Com algo salvo, o
+  seletor abre na aba "Recentes" e a lista do backend vira a aba "Todas"; digitar na busca sempre
+  mostra a lista completa. A imagem vem do índice, então código que saiu do catálogo some sozinho.
 - **Paginação:** uma página de 40 por vez (`EMOTES_POR_PAGINA` em `src/lib/emotes/use-emotes.ts`),
   pedida ao backend a cada clique. A resposta anterior fica na tela (`placeholderData`) enquanto a
   nova chega, e a busca é debounced (250 ms) antes de virar `q`.
