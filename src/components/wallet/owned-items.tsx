@@ -54,7 +54,9 @@ export function OwnedItems({ onGoToStore }: { onGoToStore?: () => void }) {
     rest.filter((item): boolean => item.kind === kind),
   ]).filter(([, items]) => items.length > 0);
   const preview = me ? profileCardData(me) : { name: "" };
-  const pending = equip.isPending || unequip.isPending;
+  /** Só a linha que está sendo equipada trava: o resto da lista continua respondendo. */
+  const busy = (id: string): boolean =>
+    (equip.isPending && equip.variables === id) || (unequip.isPending && unequip.variables === id);
 
   if (catalog.isPending) return <LoadingState />;
   if (catalog.isError) {
@@ -100,7 +102,10 @@ export function OwnedItems({ onGoToStore }: { onGoToStore?: () => void }) {
         data-item-id={item.id}
         className="flex items-center gap-3 rounded-2xl border border-border-soft bg-surface-card p-3"
       >
-        <CosmeticItemArt item={shopItem} user={preview} variant="thumb" />
+        {/* O thumb do DS herda o tamanho do pai (banner é absoluto, jardim usa a largura toda). */}
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border-soft">
+          <CosmeticItemArt item={shopItem} user={preview} variant="thumb" />
+        </span>
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-text-strong">{item.name}</p>
@@ -112,7 +117,7 @@ export function OwnedItems({ onGoToStore }: { onGoToStore?: () => void }) {
           size="sm"
           variant={item.equipped ? "outline" : "default"}
           className="shrink-0 rounded-full"
-          disabled={pending}
+          disabled={busy(item.id)}
           onClick={() => (item.equipped ? unequip.mutate(item.id) : equip.mutate(item.id))}
         >
           {item.equipped ? myItems.unequip : myItems.equip}

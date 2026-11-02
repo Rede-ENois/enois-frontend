@@ -191,6 +191,14 @@ export function CosmeticCatalog({
    * buys, equips or unequips that piece alone — the way to take one part of a look and keep the
    * rest of the profile as it is.
    */
+  /** O que impede a compra da peça, dito embaixo do nome para não espremer o próprio nome. */
+  const pieceNote = (item: CosmeticShopItem): string | null => {
+    if (item.owned) return null;
+    if (!item.purchasable) return messages.reward;
+    if (!item.available) return messages.outOfSeason;
+    return null;
+  };
+
   const pieceAction = (item: CosmeticShopItem) => {
     if (item.owned) {
       return (
@@ -204,18 +212,18 @@ export function CosmeticCatalog({
         </button>
       );
     }
-    if (!item.purchasable)
-      return <span className="shrink-0 text-text-subtle">{messages.reward}</span>;
-    if (!item.available)
-      return <span className="shrink-0 text-text-subtle">{messages.outOfSeason}</span>;
+    if (!item.purchasable || !item.available) return null;
     return (
       <button
         type="button"
-        className="shrink-0 rounded-full border border-primary/50 px-2 py-0.5 font-medium text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/50 px-2 py-0.5 font-medium text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+        aria-label={texts.cosmetics.buyPiece(item.name, item.priceLabel)}
+        title={texts.cosmetics.buyPiece(item.name, item.priceLabel)}
         disabled={actionPending}
         onClick={() => onBuy(item.id)}
       >
-        {texts.cosmetics.buyPiece(item.priceLabel)}
+        <Sparkles aria-hidden className="h-3 w-3" />
+        {item.priceLabel}
       </button>
     );
   };
@@ -228,6 +236,8 @@ export function CosmeticCatalog({
     const nameTheme = ofKind("NAME_STYLE");
     const on = tryOn.look === entry.id;
     const groups = piecesByKind(entry.items, itemsById);
+    // O rótulo conta o que está na tela: um id fora do catálogo não vira peça fantasma.
+    const pieceCount = groups.reduce((total, [, pieces]) => total + pieces.length, 0);
     return (
       <li
         key={entry.id}
@@ -283,10 +293,11 @@ export function CosmeticCatalog({
           )}
         </div>
 
+        {/* `min-w-0`: o card é um grid e, sem isso, a lista empurra a coluna além da borda. */}
         {groups.length > 0 && (
-          <details className="cos-look__pieces border-t border-border-soft/60 px-3 pb-2 text-xs">
+          <details className="cos-look__pieces min-w-0 border-t border-border-soft/60 px-3 pb-2 text-xs">
             <summary className="cursor-pointer select-none py-1.5 font-medium text-text-subtle hover:text-text-strong">
-              {texts.cosmetics.lookPieces(entry.items.length)}
+              {texts.cosmetics.lookPieces(pieceCount)}
             </summary>
 
             <p className="pb-2 text-[11px] leading-snug text-text-subtle">
@@ -301,20 +312,32 @@ export function CosmeticCatalog({
                   </h4>
 
                   <ul className="mt-1 space-y-1">
-                    {pieces.map((item) => (
-                      <li key={item.id} className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="min-w-0 flex-1 truncate text-left text-text-strong hover:underline"
-                          aria-pressed={tryOn.items[item.kind] === item.id}
-                          aria-label={messages.tryItem(item.name)}
-                          onClick={() => tryItem(item)}
-                        >
-                          {item.name}
-                        </button>
-                        {pieceAction(item)}
-                      </li>
-                    ))}
+                    {pieces.map((item) => {
+                      const note = pieceNote(item);
+                      return (
+                        <li key={item.id} className="flex items-center gap-2">
+                          <span className="min-w-0 flex-1">
+                            <button
+                              type="button"
+                              className="block w-full break-words text-left leading-snug text-text-strong hover:underline"
+                              aria-pressed={tryOn.items[item.kind] === item.id}
+                              aria-label={messages.tryItem(item.name)}
+                              onClick={() => tryItem(item)}
+                            >
+                              {item.name}
+                            </button>
+
+                            {note && (
+                              <span className="block text-[11px] leading-tight text-text-subtle">
+                                {note}
+                              </span>
+                            )}
+                          </span>
+
+                          {pieceAction(item)}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </section>
               ))}
