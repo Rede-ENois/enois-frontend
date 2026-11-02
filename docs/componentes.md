@@ -121,6 +121,13 @@ gravada no aparelho; fora do feed, o efeito visível é o toast de confirmação
 `navigator.share` quando existe (fechar o menu é "idle", não erro); senão copia. O `shareStatus` volta
 a "idle" depois de 3 s.
 
+Em Palavras e Labirinto, a pessoa pode alternar entre hoje e o desafio de ontem enquanto uma
+jogada aguarda resposta. O resultado atualiza o cache do desafio enviado, mesmo que outro esteja
+aberto. Iniciar uma partida sempre atualiza hoje; confirmação de linha e erro de palpite aparecem
+somente no desafio correspondente, sem apagar um rascunho digitado na outra data. Os testes
+`daily-games-request-cache.test.tsx` cobrem as duas direções de troca, o início e a recusa de um
+palpite (issue #532).
+
 ## `PostCard` (`src/components/post-card.tsx`)
 
 Card de post no feed, com todas as ações sociais.
