@@ -3295,6 +3295,17 @@ export const texts = {
     title: "Preferências de notificação",
     description:
       "Escolha o que chega até você fora do app: o resumo semanal e os avisos no navegador.",
+    deviceTitle: "Avisos neste aparelho",
+    deviceHint: "Liga as notificações no navegador deste aparelho.",
+    deviceOn: "Avisos ligados neste aparelho",
+    deviceOff: "Avisos desligados neste aparelho",
+  },
+
+  healthyUsage: {
+    tabs: {
+      wellbeing: "Bem-estar",
+      notifications: "Notificações e avisos",
+    },
   },
 
   saved: {

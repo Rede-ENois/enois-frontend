@@ -26,8 +26,6 @@ vi.mock("@rede-enois/design-system/domain", () => ({
     <div data-open={String(open)}>
       {identitySlot}
 
-      {hrefs.notificationPreferences && <a href={hrefs.notificationPreferences}>Notificações</a>}
-
       <a href={hrefs.corporateProfile}>Perfil profissional</a>
 
       <button type="button" onClick={() => onOpenChange(true)}>
@@ -42,7 +40,6 @@ vi.mock("./change-password-dialog", () => ({ ChangePasswordDialog: () => null })
 vi.mock("./delete-account-dialog", () => ({ DeleteAccountDialog: () => null }));
 vi.mock("./healthy-usage/healthy-usage-dialog", () => ({ HealthyUsageDialog: () => null }));
 vi.mock("./linked-accounts-dialog", () => ({ LinkedAccountsDialog: () => null }));
-vi.mock("./push-toggle", () => ({ PushToggle: () => null }));
 vi.mock("@/lib/interface-context", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/interface-context")>()),
   useInterfaceContext: () => "SOCIAL" as const,
@@ -104,11 +101,12 @@ describe("menu da conta", () => {
     await flush();
   };
 
-  it("leva às preferências de notificação e ao perfil profissional", async () => {
+  it("leva ao perfil profissional sem repetir as preferências de notificação no menu", async () => {
     await montar();
 
-    expect(host.querySelector('a[href="/notificacoes/preferencias"]')).not.toBeNull();
     expect(host.querySelector('a[href="/profissional"]')).not.toBeNull();
+    // Avisos e preferências de notificação vivem dentro do "Uso saudável", não no menu lateral.
+    expect(host.querySelector('a[href="/notificacoes/preferencias"]')).toBeNull();
   });
 
   it("com perfil profissional ativo mostra a escolha de identidade", async () => {
