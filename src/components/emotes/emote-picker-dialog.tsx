@@ -118,7 +118,9 @@ export function EmotePickerDialog({
                 title={emote.code}
                 aria-label={emote.code}
                 onClick={() => onSelect(emote.code)}
-                className="flex h-11 items-center justify-center rounded-lg p-1 transition hover:bg-surface-2"
+                // O clique é confirmado na própria célula: só `hover` não aparece no toque, e em
+                // telas pequenas a pessoa não sabia se pegou a certa.
+                className="flex h-11 items-center justify-center rounded-lg p-1 transition hover:bg-surface-2 active:bg-surface-2 active:ring-2 active:ring-ring"
               >
                 <img
                   src={emoteImageUrl(emote.thumb)}
