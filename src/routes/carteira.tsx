@@ -39,7 +39,7 @@ import { SaciSpot } from "@/components/events/saci-spot";
 import { MarketplaceSection } from "@/components/marketplace/marketplace-section";
 import { UserPicker } from "@/components/user-picker";
 import { CosmeticShop } from "@/components/wallet/cosmetic-shop";
-import { FrameShop } from "@/components/wallet/frame-shop";
+import { OwnedItems } from "@/components/wallet/owned-items";
 
 const WALLET_TABS: WalletTab[] = ["carteira", "loja", "minhas"];
 
@@ -145,6 +145,14 @@ function Carteira() {
   });
 
   const entries = wallet?.entries ?? [];
+  /** Trocar de aba pela interface ou de dentro de uma aba (o "Ir para a loja" dos itens). */
+  const openTab = (tab: WalletTab) => {
+    setActiveTab(tab);
+    void navigate({
+      search: tab === "carteira" ? {} : { tab },
+      replace: true,
+    });
+  };
 
   return (
     <AppContainer>
@@ -170,17 +178,7 @@ function Carteira() {
           <SaciSpot spot="carteira" className="shrink-0" />
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => {
-            const tab = value as WalletTab;
-            setActiveTab(tab);
-            void navigate({
-              search: tab === "carteira" ? {} : { tab },
-              replace: true,
-            });
-          }}
-        >
+        <Tabs value={activeTab} onValueChange={(value) => openTab(value as WalletTab)}>
           <TabsList className="wallet-shop-tabs">
             <TabsTrigger value="carteira">
               <Zap className="h-4 w-4" aria-hidden="true" />
@@ -305,7 +303,7 @@ function Carteira() {
           </TabsContent>
 
           <TabsContent value="minhas" className="pt-5">
-            <FrameShop onlyOwned />
+            <OwnedItems onGoToStore={() => openTab("loja")} />
           </TabsContent>
         </Tabs>
 

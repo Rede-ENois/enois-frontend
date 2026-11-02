@@ -3036,15 +3036,29 @@ export const texts = {
     subtitle: "Suas faíscas, suas escolhas.",
     walletTab: "Carteira",
     storeTab: "Loja",
-    ownedTab: "Minhas molduras",
-    filters: {
-      all: "Todas",
-      simple: "Simples",
+    ownedTab: "Meus itens",
+    /** A aba dos itens: o que está em uso no topo e, abaixo, tudo o que já foi comprado. */
+    myItems: {
+      activeTitle: "Ativos no perfil",
+      activeHint: "O que está aparecendo agora no seu perfil.",
+      ownedTitle: "Seus itens",
+      empty: "Nada comprado ainda. O que você comprar na loja aparece aqui.",
+      emptyCta: "Ir para a loja",
+      loadError: "Não foi possível carregar os seus itens.",
+      retry: "Tentar de novo",
+      equip: "Equipar",
+      unequip: "Tirar",
+      kinds: {
+        FRAME: "Molduras",
+        BADGE: "Emblemas",
+        CARD_THEME: "Temas do cartão",
+        NAME_STYLE: "Nomes",
+        NAMEPLATE: "Placas",
+        BANNER: "Banners",
+        PROFILE_EFFECT: "Efeitos",
+        GARDEN: "Jardins",
+      } as Record<string, string>,
     },
-    showMore: "Mostrar mais molduras",
-    bought: "Moldura comprada. Agora você pode equipá-la.",
-    buyError: "Não foi possível comprar a moldura. Confira seu saldo e tente novamente.",
-    equipError: "Não foi possível atualizar a moldura. Tente novamente.",
   },
 
   /** Seasonal cosmetics: shop actions, status bubble, profile popover and the Saci events. */
@@ -3053,6 +3067,10 @@ export const texts = {
     lookBought: "Look comprado e vestido no seu perfil.",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
+    /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */
+    lookPieces: (count: number) => `${count} ${count === 1 ? "peça" : "peças"}`,
+    lookPiecesHint: "Cada peça é vendida separada: compre só a que falta e monte o seu jeito.",
+    buyPiece: (price: string) => `Comprar · ${price}`,
     /** Loja: a aba que abre em todas as coleções, para nada do catálogo ficar escondido. */
     shop: {
       allTab: "Todas as coleções",
