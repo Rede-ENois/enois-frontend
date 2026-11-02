@@ -35,9 +35,13 @@ export function ConversationItem({
     conversation.lastMessageE2e ? "" : (conversation.lastMessage ?? ""),
   );
   const [decryptingPreview, setDecryptingPreview] = useState(!!conversation.lastMessageE2e);
+  // False while the preview is a placeholder (no local key, decryption failed): it is no one's
+  // text, so it gets no author either.
+  const [previewReadable, setPreviewReadable] = useState(true);
   useEffect(() => {
     if (!conversation.lastMessageE2e || !conversation.lastMessage || !conversation.lastMessageIv) {
       setPreview(conversation.lastMessage ?? "");
+      setPreviewReadable(true);
       setDecryptingPreview(false);
       return;
     }
@@ -47,6 +51,7 @@ export function ConversationItem({
       if (cancelled) return;
       if (!has) {
         setPreview("🔒");
+        setPreviewReadable(false);
         setDecryptingPreview(false);
         return;
       }
@@ -59,12 +64,14 @@ export function ConversationItem({
         .then((plain) => {
           if (!cancelled) {
             setPreview(plain);
+            setPreviewReadable(true);
             setDecryptingPreview(false);
           }
         })
         .catch(() => {
           if (!cancelled) {
             setPreview("[Mensagem cifrada]");
+            setPreviewReadable(false);
             setDecryptingPreview(false);
           }
         });
@@ -94,7 +101,10 @@ export function ConversationItem({
     ? conversationPeer(conversation, groupSenderId, groupSender).peer?.name?.split(" ")[0]
     : undefined;
   const author = mine ? texts.messages.you : groupSenderName;
-  const lastMessage = preview && author ? texts.messages.authoredPreview(author, preview) : preview;
+  const lastMessage =
+    preview && previewReadable && author
+      ? texts.messages.authoredPreview(author, preview)
+      : preview;
 
   return (
     <ConversationItemView

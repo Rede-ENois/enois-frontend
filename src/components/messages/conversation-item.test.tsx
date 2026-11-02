@@ -84,10 +84,10 @@ describe("conversation preview", () => {
     expect(await render("user_ana", "GROUP")).toBe("Ana: teste 2");
   });
 
-  // The prefix follows the author, not the decryption: an own E2E message on a device without the
-  // key is still the viewer's, so it reads "Você: 🔒"; the peer's stays a bare lock.
-  it("keeps the author on an E2E preview this device cannot decrypt", async () => {
-    expect(await render("user_me", "DIRECT", true)).toBe("Você: 🔒");
-    expect(await render("user_peer", "DIRECT", true)).toBe("🔒");
+  // Without the local key the preview is a placeholder, not anyone's text: "Você: 🔒" would read as
+  // if the viewer had sent a lock, so the placeholder goes without an author.
+  it("leaves the author out of an E2E preview this device cannot decrypt", async () => {
+    expect(await render("user_me", "DIRECT", true)).toBe("🔒");
+    expect(await render("user_bia", "GROUP", true)).toBe("🔒");
   });
 });
