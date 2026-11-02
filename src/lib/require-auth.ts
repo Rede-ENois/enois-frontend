@@ -41,6 +41,20 @@ export function isProtectedPath(pathname: string): boolean {
   return PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
+/**
+ * A home e a landing de visitante: com sessao, o destino e o feed. O `beforeLoad` da rota ja diz
+ * isso, mas ele nao roda quando o SSR entrega um deep link (fechar a aba e reabrir o site cai
+ * aqui), e a landing ficava com a casca de visitante para quem estava logado — junto com o dock de
+ * mensagens. O destino de um push pendente na query manda mais que a home.
+ */
+export function shouldLeaveLanding(
+  pathname: string,
+  authenticated: boolean,
+  hasPushTarget: boolean,
+): boolean {
+  return pathname === "/" && authenticated && !hasPushTarget;
+}
+
 /** Usado no `beforeLoad` das rotas: redireciona para o login quando nao ha sessao no cliente. */
 export function requireAuth() {
   if (typeof window === "undefined") return;
