@@ -763,7 +763,7 @@ export const texts = {
         },
         {
           title: "O feed acaba",
-          text: "Quando as publicações terminam, aparece o aviso: “Você chegou ao fim do feed.” A visita acaba quando você quiser, não quando o site decidir.",
+          text: "Quando as publicações terminam, aparece o aviso: “Você viu tudo por enquanto.” A visita acaba quando você quiser, não quando o site decidir.",
         },
         {
           title: "A mídia não sequestra a tela",
