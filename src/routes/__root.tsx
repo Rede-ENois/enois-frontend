@@ -39,6 +39,7 @@ import { DesignSystemProvider } from "@/components/design-system-provider";
 import { HealthyUsageGuard } from "@/components/healthy-usage/healthy-usage-guard";
 import { InstallPwaBanner } from "@/components/install-pwa-banner";
 import { LiteModeEffects } from "@/components/lite-mode-effects";
+import { MessageStream } from "@/components/messages/message-stream";
 import { ModuleDisabledGate } from "@/components/module-disabled-gate";
 import { AdminNoticeDialog } from "@/components/notices/admin-notice";
 import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
@@ -277,6 +278,7 @@ function RootInsideProvider() {
       </ModuleDisabledGate>
 
       <ChatDock />
+      <MessageStream />
       <InstallPwaBanner />
       <LiteModeEffects />
       <HealthyUsageGuard />

@@ -11,6 +11,7 @@ import { janelasQueCabem } from "@/lib/chat-dock/chat-dock-layout";
 import { useLarguraDaJanela } from "@/lib/chat-dock/use-largura-da-janela";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useInterfaceContext } from "@/lib/interface-context";
+import { useMessageStreamLive } from "@/lib/message-stream";
 import { hasSession } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
@@ -56,6 +57,7 @@ function ChatDockInner() {
   const expanded = useChatDockStore((s) => s.expanded);
   const openChats = useChatDockStore((s) => s.openChats);
   const toggleExpanded = useChatDockStore((s) => s.toggleExpanded);
+  const streamLive = useMessageStreamLive();
   const expand = useChatDockStore((s) => s.expand);
   const openChat = useChatDockStore((s) => s.openChat);
 
@@ -77,7 +79,8 @@ function ChatDockInner() {
   const { data: unreadData } = useQuery({
     queryKey: ["conversations", "unread-count", context],
     queryFn: () => messagesApi.unreadCount(context),
-    refetchInterval: expanded ? 15_000 : 60_000,
+    // The message stream refreshes the counter on every change; polling only covers it being down.
+    refetchInterval: streamLive ? false : expanded ? 15_000 : 60_000,
   });
 
   const totalUnread = unreadData?.count ?? 0;
