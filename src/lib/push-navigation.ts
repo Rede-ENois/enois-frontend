@@ -23,6 +23,28 @@ export function hrefDoPush(data: PushNavigateMessage | null | undefined): string
   return data.href;
 }
 
+/**
+ * Destino que o worker deixa na query quando a notificacao e aberta sem nenhuma aba do app
+ * (`/?push=<href>`): sem aba nao ha quem traduza o href, e navegar direto para ele pode cair num
+ * caminho do backend ("/api/...") ou num que nao existe. A traducao acontece no app, pela mesma
+ * tabela da notificacao interna.
+ *
+ * So aceita caminho do proprio site: o href vem de fora e nao pode virar navegacao para outro
+ * host.
+ */
+export function hrefDaQueryDePush(search: string): string | null {
+  const href = new URLSearchParams(search).get("push");
+  if (!href || !href.startsWith("/") || href.startsWith("//")) return null;
+  return href;
+}
+
+/** A mesma query sem o destino, para o endereco nao guardar o clique na notificacao. */
+export function searchSemPush(search: string): string {
+  const params = new URLSearchParams(search);
+  params.delete("push");
+  return params.toString();
+}
+
 /** Inscricao renovada que o worker mandou para a aba, ou `null` quando a mensagem e outra. */
 export function subscriptionDoPush(data: unknown): PushSubscriptionJSON | null {
   if (!data || typeof data !== "object") return null;
