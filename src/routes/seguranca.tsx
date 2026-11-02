@@ -486,7 +486,6 @@ export function EmailOtpSection({ status, onError, onDone }: SectionProps) {
               }}
               inputMode="numeric"
               autoComplete="one-time-code"
-              aria-label={texts.auth.twoFactor.email2faSection}
               maxLength={6}
               showCounter={false}
               placeholder="000000"
