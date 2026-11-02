@@ -3160,6 +3160,32 @@ export const texts = {
     huntCompleted: "Você achou os 7 Sacis! O emblema Achei o Saci já é seu.",
   },
 
+  /** Gerenciar serviços: publicar, editar e remover a própria oferta (#358). */
+  services: {
+    mine: {
+      newTitle: "Publicar serviço",
+      editTitle: "Editar serviço",
+      publish: "Publicar",
+      save: "Salvar",
+      saving: "Salvando…",
+      published: "Serviço publicado.",
+      saved: "Serviço atualizado.",
+      saveFailed: "Não foi possível salvar o serviço.",
+      edit: "Editar",
+      remove: "Remover",
+      removing: "Removendo…",
+      removed: "Serviço removido da vitrine.",
+      removeFailed: "Não foi possível remover o serviço.",
+      removeBlocked: "Há um contrato em andamento com este preço — finalize antes de mudar.",
+      priceLocked: "Há um contrato em andamento com este preço — finalize antes de mudar.",
+      removedHint: "Fora da vitrine",
+      removeTitle: "Remover serviço",
+      removeBody: (title: string) =>
+        `"${title}" sai da vitrine. Os contratos já abertos continuam valendo, e você pode editar e publicar de novo depois.`,
+      removeCancel: "Cancelar",
+    },
+  },
+
   wallet: {
     seoTitle: "Carteira · Énóis",
     back: "Voltar",
