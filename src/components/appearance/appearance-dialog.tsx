@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
@@ -17,6 +18,8 @@ import { resolveThemeCollection } from "@/lib/theme/resolve-theme-collection";
 import { syncThemeCollection } from "@/lib/theme/sync-theme-collection";
 import { THEME_FILE_EXTENSION, buildThemeFile, parseThemeFile } from "@/lib/theme/theme-file";
 import { useIsAuthenticated } from "@/lib/use-auth";
+
+import { OwnedItems } from "@/components/wallet/owned-items";
 
 import { ThemeSellDialog } from "./theme-sell-dialog";
 
@@ -55,6 +58,7 @@ export function AppearanceDialog({
   const displayNameTheme = usePreferencesStore((state) => state.displayNameTheme);
   const setDisplayNameTheme = usePreferencesStore((state) => state.setDisplayNameTheme);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [fileStatus, setFileStatus] = useState<AppearanceFileStatus | null>(null);
   const [sellOpen, setSellOpen] = useState(false);
   const [tagColor, setTagColor] = useState<string | null>(contributorTagColor);
@@ -221,6 +225,18 @@ export function AppearanceDialog({
       sellDialog={<ThemeSellDialog open={sellOpen} onOpenChange={setSellOpen} />}
       contributorTagColor={tagColor}
       onContributorTagColorChange={contributor ? updateContributorTag : undefined}
+      // Frames, badges and banners equip from here too, not only from the wallet (issue #566).
+      // Rendered only while the tab is open, so the catalog is fetched on demand.
+      itemsSlot={
+        authenticated ? (
+          <OwnedItems
+            onGoToStore={() => {
+              onOpenChange(false);
+              void navigate({ to: "/carteira", search: { tab: "loja" } });
+            }}
+          />
+        ) : undefined
+      }
     />
   );
 }
