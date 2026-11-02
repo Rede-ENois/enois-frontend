@@ -195,6 +195,10 @@ Textarea com autocomplete de @menções.
 - Insere `@username` no texto e rastreia IDs dos mencionados
 - Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido (`KEKW`) entra no texto como
   palavra (ver abaixo)
+- A inserção de figurinha passa pelo evento de edição do próprio campo. O design system mantém
+  os IDs apenas das menções confirmadas que continuam no texto, inclusive depois de limpar o
+  rascunho ou substituir uma menção pela figurinha; o wrapper não guarda outra lista de IDs
+  ([#534](https://github.com/Rede-ENois/enois-frontend/issues/534)).
 
 ## Figurinhas
 
