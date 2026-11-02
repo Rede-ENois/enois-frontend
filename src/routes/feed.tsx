@@ -898,9 +898,11 @@ function Home() {
                                   aria-hidden
                                   className="mx-auto mb-1 h-6 w-6 animate-bounce text-primary"
                                 />
+
                                 <p className="text-sm font-semibold text-text-strong">
                                   {texts.feed.composer.imageProhibitedTitle}
                                 </p>
+
                                 <p className="mt-1 text-xs text-text-muted">
                                   {texts.feed.composer.imageProhibitedMessage}
                                 </p>

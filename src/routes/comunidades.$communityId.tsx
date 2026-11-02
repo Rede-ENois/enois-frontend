@@ -760,7 +760,10 @@ function CommunityDetail() {
                           aria-label={texts.feed.composer.imageProhibitedTitle}
                           className="h-6 w-6 animate-bounce text-primary"
                         />
-                        <span className="sr-only">{texts.feed.composer.imageProhibitedMessage}</span>
+
+                        <span className="sr-only">
+                          {texts.feed.composer.imageProhibitedMessage}
+                        </span>
                       </div>
                     )}
                     {item.moderationStatus === "checking" && (
