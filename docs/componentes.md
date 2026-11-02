@@ -80,6 +80,9 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
   soft news dot when the item's notification module (`notifies`) has unread notices. The counts come
   from one source: `GET /notifications/unread-summary`, the messages unread count and pending
   connection requests (`useNavigationCounts`).
+  Eventos shows the amber "hoje" tag when the summary has `eventsToday`; Comunidades and each of
+  the person's communities light the news dot from `byCommunity`. Notices that come from a place
+  or an event carry `place` and `eventDate`, drawn as the community table or the event ticket.
 - Phone menu button: a news dot when an entry behind the menu (not on the dock) has a signal
   (`useMenuHasNews`, `src/components/use-menu-has-news.ts`).
 - Mobile dock (< 1024px, `src/components/mobile-dock.tsx`): Início, Explorar, Publicar
@@ -94,7 +97,7 @@ O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, 
 **Funções auxiliares:**
 
 - `navigateToHref(href, navigate)` - Mapeia hrefs de notificações para rotas frontend
-- `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile
+- `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile. App features come first (`matchFeatures`, `src/lib/feature-search.ts`: Explore rooms, menu entries of the active interface and account pages, accent-insensitive, skipping turned-off modules), drawn as places with their icon
 - `formatTime(iso)` - Formata ISO timestamp para relativo em português
 
 ## Menu da conta e identidade ativa (`src/components/account-menu.tsx`)

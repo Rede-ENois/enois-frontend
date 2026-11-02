@@ -284,14 +284,14 @@ mostram os códigos `CITY_STATE_INCOMPLETE`, `INVALID_STATE` e `CITY_TOO_LONG` e
 
 ## Módulo Notifications (`src/lib/api/notifications.ts`)
 
-| Método | Endpoint                        | Descrição                                                                        |
-| ------ | ------------------------------- | -------------------------------------------------------------------------------- |
-| GET    | `/notifications`                | Listar notificações                                                              |
-| GET    | `/notifications/unread-summary` | Unread total and count per module (`byModule`), behind the menu and dock signals |
-| POST   | `/notifications/{id}/read`      | Marcar como lida                                                                 |
-| POST   | `/notifications/read-all`       | Marcar todas como lidas                                                          |
-| GET    | `/me/notification-preferences`  | Resumo semanal e categorias de push                                              |
-| PUT    | `/me/notification-preferences`  | Atualização parcial (só os campos enviados)                                      |
+| Método | Endpoint                        | Descrição                                                                                                                     |
+| ------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/notifications`                | Listar notificações                                                                                                           |
+| GET    | `/notifications/unread-summary` | Unread total, per module (`byModule`) and per community (`byCommunity`), plus `eventsToday`: behind the menu and dock signals |
+| POST   | `/notifications/{id}/read`      | Marcar como lida                                                                                                              |
+| POST   | `/notifications/read-all`       | Marcar todas como lidas                                                                                                       |
+| GET    | `/me/notification-preferences`  | Resumo semanal e categorias de push                                                                                           |
+| PUT    | `/me/notification-preferences`  | Atualização parcial (só os campos enviados)                                                                                   |
 
 ---
 
