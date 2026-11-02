@@ -1013,7 +1013,7 @@ export const texts = {
   feed: {
     seo: {
       title: "Énóis · Início",
-      description: "Publicações, perguntas e projetos da sua rede profissional.",
+      description: "Publicações, perguntas e projetos da sua rede.",
     },
     you: "Você",
     refreshing: "Atualizando publicações…",
