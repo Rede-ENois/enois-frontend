@@ -36,7 +36,6 @@ import {
 } from "lucide-react";
 
 import { ApiError, mentorsApi, walletApi } from "@/lib/api";
-import { resolveCdnUrl } from "@/lib/api/media";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatarData } from "@/lib/date/format";
 import { FAIS_SCALE, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
@@ -46,6 +45,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { MentorAgendaDialog } from "@/components/mentoring/mentor-agenda-dialog";
+import { MentorBanner } from "@/components/mentoring/mentor-banner";
 import { MentorRoomDialog } from "@/components/mentoring/mentor-room-dialog";
 import { MySessionsSection } from "@/components/mentoring/my-sessions-section";
 import { RoomNote } from "@/components/mentoring/session-room";
@@ -330,8 +330,8 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.bannerLabel}</Label>
 
         {banner ? (
-          <div className="relative overflow-hidden rounded-xl border border-border-soft">
-            <img src={resolveCdnUrl(banner)} alt="" className="h-28 w-full object-cover" />
+          <div className="relative overflow-hidden rounded-xl border border-border-soft bg-muted/40">
+            <MentorBanner src={banner} className="max-h-40" />
 
             <button
               type="button"
@@ -554,10 +554,9 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
   return (
     <article className="surface-card mx-auto w-full max-w-5xl space-y-4 overflow-hidden p-5">
       {mentor.banner && (
-        <img
-          src={resolveCdnUrl(mentor.banner)}
-          alt=""
-          className="-mx-5 -mt-5 mb-1 h-36 w-[calc(100%+2.5rem)] max-w-none object-cover"
+        <MentorBanner
+          src={mentor.banner}
+          className="-mx-5 -mt-5 mb-1 w-[calc(100%+2.5rem)] max-w-none"
         />
       )}
 
