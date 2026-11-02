@@ -26,19 +26,34 @@ const perfil = {
 
 const chrome = spawn(
   "/usr/bin/google-chrome",
-  ["--headless=new", "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${PORT}`,
-   "--user-data-dir=/tmp/verif/profile560", "--hide-scrollbars", "about:blank"],
+  [
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-gpu",
+    `--remote-debugging-port=${PORT}`,
+    "--user-data-dir=/tmp/verif/profile560",
+    "--hide-scrollbars",
+    "about:blank",
+  ],
   { stdio: "ignore", detached: true },
 );
 chrome.unref();
 
 const http = async (path, init) => (await fetch(`http://127.0.0.1:${PORT}${path}`, init)).json();
 for (let i = 0; i < 60; i++) {
-  try { await http("/json/version"); break; } catch { await sleep(250); }
+  try {
+    await http("/json/version");
+    break;
+  } catch {
+    await sleep(250);
+  }
 }
 const target = await http("/json/new?about:blank", { method: "PUT" });
 const ws = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
+await new Promise((res, rej) => {
+  ws.onopen = res;
+  ws.onerror = rej;
+});
 
 let id = 0;
 const pending = new Map();
@@ -57,18 +72,23 @@ ws.onmessage = (event) => {
     let body = { code: "NOT_FOUND", message: "mock" };
     let status = 404;
     if (/\/api\/me$/.test(url) || /\/api\/v1\/me$/.test(url)) {
-      body = perfil; status = 200;
+      body = perfil;
+      status = 200;
     } else if (url.includes("/me/business-profile")) {
       body = { exists: true, status: "ACTIVE", username: "melissa-pro", name: "Melissa Pro" };
       status = 200;
     } else if (url.includes("/api/stats/community")) {
-      body = { activeUsers: 42 }; status = 200;
+      body = { activeUsers: 42 };
+      status = 200;
     } else if (url.endsWith("/api/feed") || url.includes("/api/feed?")) {
-      body = { items: [], nextCursor: null }; status = 200;
+      body = { items: [], nextCursor: null };
+      status = 200;
     } else if (url.includes("/api/notifications")) {
-      body = { items: [], unread: 0 }; status = 200;
+      body = { items: [], unread: 0 };
+      status = 200;
     } else if (url.includes("/api/auth/me") || url.includes("/api/auth/session")) {
-      body = perfil; status = 200;
+      body = perfil;
+      status = 200;
     }
     void send("Fetch.fulfillRequest", {
       requestId,
@@ -162,9 +182,17 @@ for (const width of [1280, 390]) {
   const arquivo = `${OUT}/menu-${width}.png`;
   writeFileSync(arquivo, Buffer.from(shot.data, "base64"));
   resultado.push({ width, rotulo, medida, arquivo });
-  debug.push({ width, texto: await evaluate(`document.body.innerText.slice(0, 300)`), botoes: await evaluate(`[...document.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") || b.textContent.trim()).slice(0, 25)`) });
+  debug.push({
+    width,
+    texto: await evaluate(`document.body.innerText.slice(0, 300)`),
+    botoes: await evaluate(
+      `[...document.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") || b.textContent.trim()).slice(0, 25)`,
+    ),
+  });
 }
 
-console.log(JSON.stringify({ resultado, debug, chamadas: [...new Set(seen)].slice(0, 20) }, null, 2));
+console.log(
+  JSON.stringify({ resultado, debug, chamadas: [...new Set(seen)].slice(0, 20) }, null, 2),
+);
 ws.close();
 chrome.kill();
