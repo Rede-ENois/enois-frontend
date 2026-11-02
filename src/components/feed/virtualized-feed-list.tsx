@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type VirtualItem, useWindowVirtualizer } from "@tanstack/react-virtual";
 
@@ -57,11 +57,6 @@ export function VirtualizedFeedList({
     return () => observer.disconnect();
   }, []);
 
-  // Tamanhos medidos ficam em cache pela chave do item. Sem chave estável o padrão é o índice:
-  // um post novo no topo (refetch a cada 30s) desloca todos os índices e cada card herda a
-  // altura medida de outro, o que faz a lista pular.
-  const getItemKey = useCallback((index: number) => posts[index]?.id ?? index, [posts]);
-
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
     // Sizes are cached by key: keyed by post, a new post on top does not shift every height.
@@ -70,7 +65,6 @@ export function VirtualizedFeedList({
     initialMeasurementsCache: measurementsByTab.get(feedTab),
     overscan: OVERSCAN,
     scrollMargin,
-    getItemKey,
   });
 
   const items = virtualizer.getVirtualItems();
