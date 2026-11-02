@@ -27,9 +27,13 @@ export default defineConfig({
           target: BACKEND_TARGET,
           changeOrigin: true,
           configure: (proxy) => {
-            proxy.on("proxyReq", (proxyReq) => {
+            proxy.on("proxyReq", (proxyReq, req) => {
               proxyReq.removeHeader("origin");
               proxyReq.removeHeader("referer");
+              // EventSource cannot set headers: declare the dev origin for it (the message stream).
+              if (!proxyReq.getHeader("x-client-origin") && req.headers.host) {
+                proxyReq.setHeader("x-client-origin", `http://${req.headers.host}`);
+              }
             });
           },
         },
