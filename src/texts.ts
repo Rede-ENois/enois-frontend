@@ -1046,8 +1046,8 @@ export const texts = {
     composer: {
       removeMedia: "Remover mídia",
       topic: "Assunto",
-      topicNone: "Sem assunto",
-      topicHint: "Usado para ajustar o que você vê no feed.",
+      topicRequired: "Escolha o assunto",
+      topicHint: "Obrigatório. Coloca o post nos filtros certos do feed.",
       schedule: "Agendar",
       scheduleDate: "Data e hora",
       scheduleConfirm: "Agendar publicação",
@@ -1364,10 +1364,6 @@ export const texts = {
       postsLabel: "publicações",
       connectionsLabel: "conexões",
       followersLabel: "seguidores",
-      composer: {
-        success: "Publicação enviada.",
-        error: "Não foi possível publicar agora. Tente novamente.",
-      },
     },
     /** O título continua "Ranking"; a linha abaixo dele diz QUEM está ali (chegada, não disputa). */
     newMembersHint: "Quem está chegando agora — os mais recentes primeiro.",
