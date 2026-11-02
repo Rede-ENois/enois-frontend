@@ -12,6 +12,11 @@ Notificações push no navegador, sem app nativo.
    inscrição ativa do usuário.
 4. O [service worker](../public/sw.js) recebe o push e mostra a notificação; o clique abre a URL
    da notificação (o mesmo mapeamento de href das notificações in-app).
+5. The payload carries `notificationId`. On click, an open tab gets it in the `push-navigate`
+   message; otherwise the app opens with `?push=<url>&n=<id>`. Either way `useMarkPushRead`
+   (`src/lib/notification-read-cache.ts`) marks that notification as read, so opening a push clears
+   it from the bell and the menu signals. `n` is validated (`notificationIdDoPush`) and dropped from
+   the URL after use.
 
 ## Estados
 

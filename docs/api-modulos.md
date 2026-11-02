@@ -245,8 +245,8 @@ mostram os códigos `CITY_STATE_INCOMPLETE`, `INVALID_STATE` e `CITY_TOO_LONG` e
 | GET    | `/empresas/{id}/members`                            | Equipe (POST adiciona)                                                            |
 | POST   | `/empresas/{id}/microprojetos`                      | Publicar microprojeto                                                             |
 | GET    | `/microprojetos/{id}`                               | Microprojeto com propostas (só a equipe vê as propostas)                          |
-| PUT    | `/microprojetos/{id}`                               | Editar microprojeto aberto sem candidaturas (EDITOR ou superior)                |
-| DELETE | `/microprojetos/{id}`                               | Remover da vitrine microprojeto aberto sem candidaturas, mantendo o histórico      |
+| PUT    | `/microprojetos/{id}`                               | Editar microprojeto aberto sem candidaturas (EDITOR ou superior)                  |
+| DELETE | `/microprojetos/{id}`                               | Remover da vitrine microprojeto aberto sem candidaturas, mantendo o histórico     |
 | POST   | `/microprojetos/{id}/proposals`                     | Enviar proposta pela identidade profissional; devolve a conversa                  |
 | POST   | `/microprojetos/{id}/proposals/{proposalId}/select` | Escolher a proposta                                                               |
 | POST   | `/microprojetos/{id}/complete`                      | Concluir com avaliação opcional (nota e texto)                                    |
@@ -284,13 +284,14 @@ mostram os códigos `CITY_STATE_INCOMPLETE`, `INVALID_STATE` e `CITY_TOO_LONG` e
 
 ## Módulo Notifications (`src/lib/api/notifications.ts`)
 
-| Método | Endpoint                       | Descrição                                   |
-| ------ | ------------------------------ | ------------------------------------------- |
-| GET    | `/notifications`               | Listar notificações                         |
-| POST   | `/notifications/{id}/read`     | Marcar como lida                            |
-| POST   | `/notifications/read-all`      | Marcar todas como lidas                     |
-| GET    | `/me/notification-preferences` | Resumo semanal e categorias de push         |
-| PUT    | `/me/notification-preferences` | Atualização parcial (só os campos enviados) |
+| Método | Endpoint                        | Descrição                                                                        |
+| ------ | ------------------------------- | -------------------------------------------------------------------------------- |
+| GET    | `/notifications`                | Listar notificações                                                              |
+| GET    | `/notifications/unread-summary` | Unread total and count per module (`byModule`), behind the menu and dock signals |
+| POST   | `/notifications/{id}/read`      | Marcar como lida                                                                 |
+| POST   | `/notifications/read-all`       | Marcar todas como lidas                                                          |
+| GET    | `/me/notification-preferences`  | Resumo semanal e categorias de push                                              |
+| PUT    | `/me/notification-preferences`  | Atualização parcial (só os campos enviados)                                      |
 
 ---
 
