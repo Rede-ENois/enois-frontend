@@ -75,14 +75,15 @@ export function LiteModeEffects() {
     }
   }, [economic, batata]);
 
-  // Sair do BATATA com a tela aberta precisa trazer a fonte de volta: o `<head>` só a pediu quando
-  // o aparelho não estava em modo econômico. Daqui para frente o efeito é o mesmo de antes.
-  const previousBatata = useRef<boolean | null>(null);
+  // Sair do modo econômico com a tela aberta precisa trazer a fonte de volta: o `<head>` só a pediu
+  // quando o aparelho não estava em modo econômico. A regra olha o modo somado — desligar o lite
+  // com o BATATA desligado também precisa da fonte, e desligar um com o outro ligado não.
+  const previousEconomic = useRef<boolean | null>(null);
   useEffect(() => {
-    const previous = previousBatata.current;
-    previousBatata.current = batata;
-    if (previous === true && !batata) ensureWebFonts();
-  }, [batata]);
+    const previous = previousEconomic.current;
+    previousEconomic.current = economic;
+    if (previous === true && !economic) ensureWebFonts();
+  }, [economic]);
 
   useEffect(() => {
     const root = document.documentElement;

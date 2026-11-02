@@ -70,9 +70,10 @@ Está no design system (`src/styles.css`, depois da camada do Lite), atrás de `
 ### JavaScript
 
 - **fonte do Google não é baixada**: o bootstrap inline (`src/lib/theme-bootstrap.ts`) só injeta a
-  folha de fontes quando não há modo econômico. Ao desligar o BATATA com a tela aberta,
-  `ensureWebFonts()` (`src/lib/web-fonts.ts`) traz a fonte de volta. Sem JS, um `<noscript>` no
-  `<head>` mantém a fonte.
+  folha de fontes quando não há modo econômico. Quando o **último** modo econômico é desligado — o
+  BATATA ou o lite, com a tela aberta —, `ensureWebFonts()` (`src/lib/web-fonts.ts`) traz a fonte de
+  volta; desligar um com o outro ligado não a pede. Sem JS, um `<noscript>` no `<head>` mantém a
+  fonte.
 - **reação de post** (`src/components/post/post-actions.tsx`) não toca animação em modo econômico;
   **autoplay** (`src/lib/feed/video-autoplay.ts`) não observa nem carrega vídeo.
 - **cache** mais folgado e **páginas maiores** vêm do efeito do Lite (ver precedência): menos
