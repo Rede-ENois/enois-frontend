@@ -24,12 +24,11 @@ import { ChangePasswordDialog } from "./change-password-dialog";
 import { DeleteAccountDialog } from "./delete-account-dialog";
 import { HealthyUsageDialog } from "./healthy-usage/healthy-usage-dialog";
 import { LinkedAccountsDialog } from "./linked-accounts-dialog";
-import { PushToggle } from "./push-toggle";
 
 const ACCOUNT_MENU_HREFS = {
   corporateProfile: "/profissional",
   wallet: "/carteira",
-  marketplace: "/carteira?tab=marketplace",
+  marketplace: "/carteira?tab=loja",
   support: "/suporte",
   security: "/seguranca",
   blockedUsers: "/bloqueados",
@@ -38,7 +37,6 @@ const ACCOUNT_MENU_HREFS = {
   guardian: "/responsavel",
   moderator: "/moderador",
   apoie: "/apoiar",
-  notificationPreferences: "/notificacoes/preferencias",
 };
 
 /** Account menu: identity switcher, logout and the account dialogs. */
@@ -109,7 +107,6 @@ export function AccountMenu({ profile }: AccountMenuProps) {
         onDeleteAccount={openDialog(setShowDeleteAccount)}
         onLogout={() => void handleLogout()}
         loggingOut={loggingOut}
-        pushToggle={<PushToggle onClose={() => setMenuOpen(false)} />}
         identitySlot={
           showSwitch ? (
             <div className="flex rounded-full border border-border-soft p-0.5">

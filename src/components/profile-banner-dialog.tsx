@@ -9,7 +9,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 import { lojaApi, profileApi } from "@/lib/api";
 import { cosmeticErrorMessage, invalidateCosmetics } from "@/lib/cosmetics";
 
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 
 /**
  * Capa do perfil: foto OU HTML/CSS, sempre com as duas opções na mão.
@@ -72,7 +72,8 @@ export function ProfileBannerDialog({
       onSave={(value) => save.mutate(value)}
       shopBanner={shopBanner}
       onUseOwnCover={bannerItem ? () => ownCover.mutate(bannerItem) : undefined}
-      renderHtmlFrame={(props) => <SandboxedHtmlFrame {...props} />}
+      // A prévia é a capa: mostra o mesmo recorte que a capa publicada, não o de uma página.
+      renderHtmlFrame={(props) => <BannerHtmlFrame {...props} />}
     />
   );
 }

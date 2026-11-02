@@ -79,6 +79,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { SaciSpot } from "@/components/events/saci-spot";
@@ -456,11 +457,10 @@ function Profile() {
           bannerSlot={
             user.bannerHtml ? (
               // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
-              <SandboxedHtmlFrame
+              <BannerHtmlFrame
                 html={user.bannerHtml}
                 title={texts.profile.bannerHtml.frameTitle}
                 className="h-full w-full rounded-none border-0 shadow-none"
-                autoHeight={false}
                 allowSoundCloudPlayer={isApprovedSoundCloudEmbed(user.bannerHtml)}
               />
             ) : undefined

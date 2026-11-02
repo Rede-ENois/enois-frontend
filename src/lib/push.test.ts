@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { enablePush, isPushActive, matchesCurrentKey, pushErrorMessage } from "./push";
+import {
+  enablePush,
+  isPushActive,
+  matchesCurrentKey,
+  pushErrorMessage,
+  syncPushSubscription,
+} from "./push";
 
 /**
  * O que a tela de avisos precisa garantir, além de "chamou a API":
@@ -130,6 +136,22 @@ describe("avisos no celular", () => {
     expect(valid.unsubscribe).not.toHaveBeenCalled();
   });
 
+  it("pedido fechado sem escolha nao vira negacao permanente", async () => {
+    // Fechar o dialogo deixa a permissao em "default" e o navegador pergunta de novo no proximo
+    // clique: dizer "negado" aqui mandaria liberar nas configuracoes sem precisar.
+    const { requestPermission } = installBrowser({
+      permission: "default",
+      grantedAfterRequest: "default",
+    });
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ enabled: true, publicKey: PUBLIC_KEY }), { status: 200 }),
+    );
+
+    expect(await enablePush()).toEqual({ ok: false, reason: "dismissed" });
+    expect(requestPermission).toHaveBeenCalledTimes(1);
+    expect(pushErrorMessage("dismissed")).toContain("sem resposta");
+  });
+
   it("mostra aparelho desligado quando o servidor esta sem VAPID", async () => {
     installBrowser({ permission: "default" });
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
@@ -153,5 +175,35 @@ describe("avisos no celular", () => {
   it("inscricao com a chave certa conta como ligada", async () => {
     installBrowser({ permission: "granted", subscription: subscriptionWith(PUBLIC_KEY) });
     expect(await isPushActive(PUBLIC_KEY)).toBe(true);
+  });
+
+  it("permissao revogada conta como desligada mesmo com inscricao no aparelho", async () => {
+    // O navegador pode limpar a permissao e deixar a inscricao; sem permissao nada aparece, entao
+    // a tela nao pode continuar dizendo "ligado".
+    installBrowser({ permission: "denied", subscription: subscriptionWith(PUBLIC_KEY) });
+    expect(await isPushActive(PUBLIC_KEY)).toBe(false);
+  });
+
+  it("repoe no servidor a inscricao viva, sem pedir permissao de novo", async () => {
+    const { requestPermission } = installBrowser({
+      permission: "granted",
+      subscription: subscriptionWith(PUBLIC_KEY),
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: "push_1" }), { status: 201 }));
+
+    expect(await syncPushSubscription(PUBLIC_KEY)).toBe(true);
+    expect(requestPermission).not.toHaveBeenCalled();
+    // Uma unica chamada: o POST da inscricao (sem consultar /push/config de novo).
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("nao repoe nada quando o aparelho nao tem inscricao para a chave atual", async () => {
+    installBrowser({ permission: "granted", subscription: subscriptionWith(PUBLIC_KEY) });
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+
+    expect(await syncPushSubscription(OTHER_KEY)).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

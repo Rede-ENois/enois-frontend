@@ -21,8 +21,8 @@ import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { PostCard } from "@/components/post-card";
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 import { PageSkeleton } from "@/components/skeletons/page-skeleton";
 
 export const Route = createFileRoute("/profissional_/$username")({
@@ -118,7 +118,7 @@ function ProfessionalProfile() {
         statusNote={data.status !== "ACTIVE" ? texts.corporate.status[data.status] : null}
         banner={
           data.bannerHtml ? (
-            <SandboxedHtmlFrame
+            <BannerHtmlFrame
               html={data.bannerHtml}
               title={texts.corporate.bannerHtml}
               className="h-full w-full"

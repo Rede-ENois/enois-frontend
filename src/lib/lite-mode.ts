@@ -1,3 +1,13 @@
+import { readBatataMode } from "./batata-mode";
+import {
+  CARD_TILT_STORAGE_KEY,
+  FORCE_MOTION_STORAGE_KEY,
+  LITE_STORAGE_KEY,
+  readDeviceFlag,
+  subscribeDeviceFlags,
+  writeDeviceFlag,
+} from "./device-flags";
+
 /**
  * Modo lite: a versão enxuta do Énóis para aparelho fraco, bateria curta ou internet ruim.
  *
@@ -6,11 +16,11 @@
  * `data-lite` no <html> (o CSS desliga animações e transições) mais os ajudantes daqui: páginas
  * maiores (menos idas ao servidor para rolar a mesma coisa), intervalos de recarga mais longos e
  * autoplay desligado.
+ *
+ * O BATATA entra como um **superconjunto**: quem liga o BATATA ganha os mesmos efeitos sem que a
+ * chave do lite mude. Por isso o resto do app usa `readEconomicMode()` — ou o `useLiteMode()`, que
+ * já soma os dois — em vez de `readLiteMode()`.
  */
-const LITE_STORAGE_KEY = "connect-grow-lite-mode";
-const FORCE_MOTION_STORAGE_KEY = "connect-grow-force-motion";
-const CARD_TILT_STORAGE_KEY = "connect-grow-card-tilt";
-const CHANGE_EVENT = "connect-grow-lite-flags-change";
 
 /** Cada lista pede isto de vezes mais itens por página em modo lite. */
 export const LITE_PAGE_MULTIPLIER = 3;
@@ -20,18 +30,23 @@ export const LITE_PAGE_MAX = 100;
 export const LITE_INTERVAL_MULTIPLIER = 4;
 
 export function readLiteMode(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(LITE_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readDeviceFlag(LITE_STORAGE_KEY);
 }
 
 /** Espelha a escolha no aparelho (o backend é a fonte; isto é para o próximo paint). */
 export function writeLiteMode(on: boolean): boolean {
-  store(LITE_STORAGE_KEY, on);
-  return on;
+  return writeDeviceFlag(LITE_STORAGE_KEY, on);
+}
+
+/**
+ * Algum modo econômico ligado neste aparelho? (lite ou BATATA)
+ *
+ * É o valor que a apresentação usa: o BATATA não é uma preferência separada de desempenho, ele
+ * soma os efeitos do lite. A chave do lite continua intacta — desligar o BATATA devolve a tela ao
+ * que o lite era antes.
+ */
+export function readEconomicMode(): boolean {
+  return readLiteMode() || readBatataMode();
 }
 
 export function litePageSize(base: number, lite: boolean): number {
@@ -50,17 +65,11 @@ export function liteInterval(baseMs: number, lite: boolean): number {
  * aparelho liga esta chave; é escolha do aparelho, então fica só nele.
  */
 export function readForceMotion(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(FORCE_MOTION_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readDeviceFlag(FORCE_MOTION_STORAGE_KEY);
 }
 
 export function writeForceMotion(on: boolean): boolean {
-  store(FORCE_MOTION_STORAGE_KEY, on);
-  return on;
+  return writeDeviceFlag(FORCE_MOTION_STORAGE_KEY, on);
 }
 
 /**
@@ -68,47 +77,16 @@ export function writeForceMotion(on: boolean): boolean {
  * quem desliga guarda "0". É escolha do aparelho, então fica só nele.
  */
 export function readCardTilt(): boolean {
-  if (typeof window === "undefined") return true;
-  try {
-    return window.localStorage.getItem(CARD_TILT_STORAGE_KEY) !== "0";
-  } catch {
-    return true;
-  }
+  return readDeviceFlag(CARD_TILT_STORAGE_KEY, true);
 }
 
 export function writeCardTilt(on: boolean): boolean {
-  store(CARD_TILT_STORAGE_KEY, on);
-  return on;
-}
-
-function store(key: string, on: boolean): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(key, on ? "1" : "0");
-  } catch {
-    /* armazenamento bloqueado: a escolha vale só nesta aba */
-  }
-  window.dispatchEvent(new Event(CHANGE_EVENT));
+  return writeDeviceFlag(CARD_TILT_STORAGE_KEY, on);
 }
 
 /** Avisa quando qualquer uma das chaves muda (na aba ou em outra). */
 export function subscribeLiteFlags(listener: () => void): () => void {
-  if (typeof window === "undefined") return () => undefined;
-  const onStorage = (event: StorageEvent) => {
-    if (
-      event.key === LITE_STORAGE_KEY ||
-      event.key === FORCE_MOTION_STORAGE_KEY ||
-      event.key === CARD_TILT_STORAGE_KEY
-    ) {
-      listener();
-    }
-  };
-  window.addEventListener(CHANGE_EVENT, listener);
-  window.addEventListener("storage", onStorage);
-  return () => {
-    window.removeEventListener(CHANGE_EVENT, listener);
-    window.removeEventListener("storage", onStorage);
-  };
+  return subscribeDeviceFlags(listener);
 }
 
 /** O aparelho está pedindo menos movimento? (falso no servidor e onde não há suporte) */

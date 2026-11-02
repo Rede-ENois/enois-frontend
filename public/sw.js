@@ -13,7 +13,7 @@
  * cliente recarrega sozinho quando o novo SW assume (ver src/lib/pwa.ts).
  */
 
-const VERSION = "enois-v9";
+const VERSION = "enois-v11";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const PRECACHE = [
@@ -81,32 +81,71 @@ self.addEventListener("push", (event) => {
   );
 });
 
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const url = event.notification.data?.url || "/notificacoes";
-
-  // O href que o backend manda na notificacao e um caminho de API ("/api/feed/posts/xxx"), e a
-  // rota do APP esta na tabela do front (src/utils/navigation.ts), que o service worker nao
-  // conhece. Navegar direto para o href abriria a API em vez do post. Entao o worker pergunta a
-  // aba: quem tem a tabela de rotas e traduz.
-  const ehCaminhoDeApi = url.startsWith("/api/");
+/**
+ * O navegador trocou a inscricao (limpeza do servico de push, troca de conta no aparelho). Recria
+ * e avisa a aba para registrar a nova no backend.
+ *
+ * A chave vem do proprio evento: o Chrome entrega a inscricao nova pronta (`newSubscription`) e o
+ * Firefox entrega a antiga, cuja chave ainda serve. Nao da para buscar a chave no servidor daqui:
+ * em producao a API mora em outro host (`VITE_API_BACKEND`) e este arquivo nao conhece a URL.
+ * Sem chave nenhuma nada e recriado — o proximo carregamento do app ve que nao ha inscricao, mostra
+ * "desligado" e a pessoa liga de novo (`syncPushSubscription` em src/lib/push.ts).
+ */
+self.addEventListener("pushsubscriptionchange", (event) => {
+  const renovada = event.newSubscription
+    ? Promise.resolve(event.newSubscription)
+    : Promise.resolve(event.oldSubscription?.options?.applicationServerKey).then((chave) =>
+        chave
+          ? self.registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: chave,
+            })
+          : null,
+      );
 
   event.waitUntil(
+    renovada
+      .then((subscription) => {
+        if (!subscription) return undefined;
+        return self.clients
+          .matchAll({ type: "window", includeUncontrolled: true })
+          .then((clients) => {
+            for (const client of clients) {
+              client.postMessage({
+                type: "enois:push-subscription",
+                subscription: subscription.toJSON(),
+              });
+            }
+          });
+      })
+      .catch(() => undefined),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/feed";
+
+  // O href do backend nao e sempre um caminho de API: ha hrefs do app ("/configuracoes/seguranca")
+  // que nao sao rota do front — a rota certa esta na tabela do app (src/utils/navigation.ts), que
+  // o service worker nao conhece. Navegar direto abriria a API ("/api/feed/posts/xxx") ou um
+  // caminho inexistente (404). Entao o worker nunca decide sozinho: entrega o href para a aba,
+  // que traduz pela mesma tabela da notificacao interna.
+  event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      // Se o app ja esta aberto, so foca e navega (evita abrir outra aba).
+      // Se o app ja esta aberto, so foca e entrega o href (evita abrir outra aba).
       for (const client of clients) {
         if ("focus" in client) {
           client.focus();
-          if (ehCaminhoDeApi && "postMessage" in client) {
+          if ("postMessage" in client) {
             client.postMessage({ type: "enois:navigate", href: url });
-          } else if ("navigate" in client) {
-            client.navigate(url).catch(() => {});
           }
           return undefined;
         }
       }
-      // Sem aba aberta: o caminho de API nao abre nada de util — abre as notificacoes do app.
-      return self.clients.openWindow(ehCaminhoDeApi ? "/notificacoes" : url);
+      // Sem aba aberta nao ha quem traduza: abre o app com o destino na query e ele navega pela
+      // tabela. O caminho sozinho nao serve porque pode nao ser rota do front.
+      return self.clients.openWindow(`/?push=${encodeURIComponent(url)}`);
     }),
   );
 });

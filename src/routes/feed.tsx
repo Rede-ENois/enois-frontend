@@ -635,8 +635,10 @@ function Home() {
     const savedScroll = readFeedScroll(tab);
     if (!savedScroll) return;
 
-    const postElement = document.getElementById(`feed-post-${savedScroll.postId}`);
-    if (!postElement && hasNextPage && !isFetchingNextPage) {
+    // The list is virtualized, so the post may be loaded but not mounted: look in the data, not
+    // the DOM, or every page gets fetched looking for a card that only mounts after the scroll.
+    const loaded = feedPosts.some((post) => post.id === savedScroll.postId);
+    if (!loaded && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
       return;
     }
@@ -644,10 +646,11 @@ function Home() {
     clearFeedScroll();
     const restore = () => {
       window.scrollTo({ top: savedScroll.scrollY, behavior: "auto" });
-      postElement?.focus({ preventScroll: true });
+      document.getElementById(`feed-post-${savedScroll.postId}`)?.focus({ preventScroll: true });
     };
 
     requestAnimationFrame(() => requestAnimationFrame(restore));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length is the signal.
   }, [feedLoading, feedPosts.length, fetchNextPage, hasNextPage, isFetchingNextPage, tab]);
 
   const loadNextPage = useCallback(() => {
