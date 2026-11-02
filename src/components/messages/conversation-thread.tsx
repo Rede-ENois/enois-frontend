@@ -24,7 +24,8 @@ import { conversationPeer } from "@/lib/conversation-peer";
 import { encryptForSend } from "@/lib/e2e/conversation";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
-import { liteInterval, litePageSize } from "@/lib/lite-mode";
+import { litePageSize } from "@/lib/lite-mode";
+import { useInboxPollInterval } from "@/lib/message-stream";
 import { profileQueries } from "@/lib/query-options/profiles";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -48,6 +49,7 @@ export function ConversationThread({
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const lite = useLiteMode();
+  const pollInterval = useInboxPollInterval(10_000, lite);
   const upload = useMediaUpload();
   const [showServices, setShowServices] = useState(false);
   const [selectingMessages, setSelectingMessages] = useState(false);
@@ -77,7 +79,8 @@ export function ConversationThread({
     // mensagens esvaziava e o skeleton piscava a cada clique da lista. Enquanto e o filao antigo
     // (placeholder) os botoes por mensagem estao inertes — aqueles ids nao sao da conversa aberta.
     placeholderData: keepPreviousData,
-    refetchInterval: liteInterval(10_000, lite),
+    // Off while the message stream is live: it signals every change to this thread.
+    refetchInterval: pollInterval,
   });
 
   const peerLastReadAt = conversation.otherLastReadAt
