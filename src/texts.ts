@@ -1065,8 +1065,7 @@ export const texts = {
       article: {
         bodyLabel: "Texto do artigo",
         bodyPlaceholder: "Escreva o artigo. O campo de cima é o título.",
-        bodyHint:
-          "Até 4.000 caracteres. Publicação comum aceita até 1.200.",
+        bodyHint: "Até 4.000 caracteres. Publicação comum aceita até 1.200.",
       },
       media: "Mídia",
       video: "Vídeo",
@@ -1092,8 +1091,7 @@ export const texts = {
       professionalLoadErrorBody:
         "Sem ele, não dá para saber como a publicação sairia. Confira a conexão e tente de novo.",
       professionalLoadErrorRetry: "Tentar de novo",
-      corporateDestination: (name: string) =>
-        `Publicando como ${name}, no feed profissional.`,
+      corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
     },
     tabs: {
       forYou: "Para você",
@@ -1129,8 +1127,7 @@ export const texts = {
     },
     companyPrompt: {
       title: "Sua empresa no Énóis",
-      description:
-        "Publique vagas, projetos e serviços na página da sua empresa.",
+      description: "Publique vagas, projetos e serviços na página da sua empresa.",
       cta: "Criar página",
       dismiss: "Fechar",
       contextSwitch: "Modo profissional: empresas, vagas e serviços.",

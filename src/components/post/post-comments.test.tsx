@@ -154,6 +154,6 @@ describe("campo do comentário", () => {
     expect(lastField().showCounter).toBe(true);
 
     await act(async () => usePostCardStore.getState().setReplyToId("post", "root"));
-    expect(lastField().placeholder).toBe("Responder Pessoa...");
+    expect(lastField().placeholder).toBe("Responder Pessoa…");
   });
 });
