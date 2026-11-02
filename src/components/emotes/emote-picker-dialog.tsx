@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { texts } from "@/texts";
+import type { RecentEmote } from "@/types/components/emotes/recent-emote";
 import {
   Button,
   Dialog,
@@ -45,16 +46,18 @@ export function EmotePickerDialog({
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(1);
-  const [recentes, setRecentes] = useState<string[]>([]);
+  const [recentes, setRecentes] = useState<RecentEmote[]>([]);
   const [aba, setAba] = useState<"recent" | "all">("all");
-  // Closed, the picker only reads the cached index: opening the composer costs no request.
+  // Closed, the picker only reads the cached index: opening the composer costs no request. The
+  // index is a FALLBACK for entries saved before the thumbnail was stored — the tab draws from
+  // what is on this device, so an empty index no longer hides it.
   const index = useEmoteIndex(open);
-  // Only codes still in the catalog: one that left it would render a broken image. With none
-  // left, the picker falls back to the full list instead of an empty tab.
-  const recentesVisiveis = recentes.flatMap((code) => {
-    const src = index.get(code);
-    return src ? [{ code, src }] : [];
-  });
+  // A figurinha que saiu do catálogo ainda é a que a pessoa usou: sem miniatura salva e sem índice,
+  // é a célula que fica sem imagem — a lista não some.
+  const recentesVisiveis = recentes.map((item) => ({
+    code: item.code,
+    src: item.thumb ?? index.get(item.code) ?? null,
+  }));
 
   // A busca só vai ao backend depois de uma pausa: cada tecla dispararia uma página nova. O termo
   // e a página voltam ao começo JUNTOS — separados, o app pediria a página atual com o termo novo
@@ -88,8 +91,8 @@ export function EmotePickerDialog({
   // Typing a search always shows the full list: "Recentes" is for browsing, not for finding.
   const mostrandoRecentes = aba === "recent" && !busca.trim() && recentesVisiveis.length > 0;
 
-  const escolher = (code: string) => {
-    setRecentes(rememberRecentEmote(code));
+  const escolher = (code: string, thumb?: string) => {
+    setRecentes(rememberRecentEmote({ code, thumb: thumb ?? null }));
     onSelect(code);
   };
 
@@ -161,7 +164,7 @@ export function EmotePickerDialog({
                     key={`${emote.provider}-${emote.id}`}
                     code={emote.code}
                     src={emoteImageUrl(emote.thumb)}
-                    onSelect={escolher}
+                    onSelect={() => escolher(emote.code, emote.thumb)}
                   />
                 ))}
               </div>
@@ -217,14 +220,19 @@ function RecentEmotesGrid({
   emotes,
   onSelect,
 }: {
-  emotes: { code: string; src: string }[];
+  emotes: { code: string; src: string | null }[];
   onSelect: (code: string) => void;
 }) {
   return (
     <div className="max-h-[45vh] min-w-0 overflow-y-auto pr-1">
       <div className="grid grid-cols-6 gap-1 sm:grid-cols-8">
         {emotes.map(({ code, src }) => (
-          <EmoteCell key={code} code={code} src={src} onSelect={onSelect} />
+          <EmoteCell
+            key={code}
+            code={code}
+            src={src ? emoteImageUrl(src) : undefined}
+            onSelect={onSelect}
+          />
         ))}
       </div>
     </div>
@@ -237,7 +245,8 @@ function EmoteCell({
   onSelect,
 }: {
   code: string;
-  src: string;
+  /** Sem imagem: a figurinha saiu do catálogo e não há miniatura guardada. */
+  src?: string;
   onSelect: (code: string) => void;
 }) {
   return (
@@ -250,13 +259,15 @@ function EmoteCell({
       // telas pequenas a pessoa não sabia se pegou a certa.
       className="flex h-11 items-center justify-center rounded-lg p-1 transition hover:bg-surface-2 active:bg-surface-2 active:ring-2 active:ring-ring"
     >
-      <img
-        src={src}
-        alt={code}
-        loading="lazy"
-        decoding="async"
-        className="h-8 w-8 object-contain"
-      />
+      {src && (
+        <img
+          src={src}
+          alt={code}
+          loading="lazy"
+          decoding="async"
+          className="h-8 w-8 object-contain"
+        />
+      )}
     </button>
   );
 }
