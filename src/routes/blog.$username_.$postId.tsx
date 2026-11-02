@@ -200,7 +200,7 @@ function BlogPostPage() {
               </span>
             </Link>
 
-            <p className="mt-2 text-xs font-normal text-secondary">
+            <p className="mt-2 text-xs font-normal text-text-subtle">
               {texts.blog.readingTime(blogReadingMinutes(post.body, post.bodyFormat))}
             </p>
           </header>

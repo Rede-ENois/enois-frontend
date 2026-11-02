@@ -212,11 +212,11 @@ function BlogPage() {
                   className="surface-card block p-4 transition hover:border-primary/40 sm:p-5"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-                    <p className="min-w-0 break-words text-base font-semibold text-text-strong">
+                    <p className="min-w-0 break-words text-base font-semibold text-text-strong sm:flex-1">
                       {post.title}
                     </p>
 
-                    <p className="text-xs font-normal text-secondary">
+                    <p className="text-xs font-normal text-text-subtle sm:shrink-0">
                       {texts.blog.readingTime(blogReadingMinutes(post.body, post.bodyFormat))}
                     </p>
                   </div>

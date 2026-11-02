@@ -26,4 +26,17 @@ describe("blogReadingMinutes", () => {
     expect(blogReadingMinutes(`<p>${"a&ccedil;&atilde;o&nbsp;".repeat(200)}</p>`, "HTML")).toBe(1);
     expect(blogReadingMinutes("<p>ação</p>".repeat(201), "HTML")).toBe(2);
   });
+
+  it("não confunde o `>` dentro de atributo com o fim da tag", () => {
+    expect(blogReadingMinutes(`<p title="a>b">${"palavra ".repeat(200)}</p>`, "HTML")).toBe(1);
+    // Se o `>` do atributo cortasse a tag, o resto do valor entraria como palavra.
+    expect(
+      blogReadingMinutes(`<div data-x='a>b c d'>${"palavra ".repeat(200)}</div>`, "HTML"),
+    ).toBe(1);
+  });
+
+  it("decodifica entidades em vez de contá-las como palavra", () => {
+    expect(blogReadingMinutes(`<p>${"palavra ".repeat(200)}&amp;</p>`, "HTML")).toBe(1);
+    expect(blogReadingMinutes(`<p>${"palavra ".repeat(201)}&amp;</p>`, "HTML")).toBe(2);
+  });
 });
