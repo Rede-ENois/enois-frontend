@@ -29,6 +29,16 @@ export function signalFor(
     const notices = (counts.summary?.total ?? 0) - (counts.summary?.byModule.MESSAGES ?? 0);
     return notices > 0 ? { kind: "count", count: notices } : null;
   }
+  // An event happening today is the one time-bound signal: it wins over the news dot.
+  if (target.href === "/eventos" && (counts.summary?.eventsToday ?? 0) > 0) {
+    return { kind: "today" };
+  }
+  if (
+    target.href === "/comunidades" &&
+    Object.values(counts.summary?.byCommunity ?? {}).some((count) => count > 0)
+  ) {
+    return { kind: "new" };
+  }
   const modules =
     target.href === "/explorar"
       ? EXPLORE_MODULES

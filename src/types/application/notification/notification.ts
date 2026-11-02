@@ -1,4 +1,5 @@
 import type { NotificationModule } from "@/types/application/notification/notification-module";
+import type { NotificationPlace } from "@/types/application/notification/notification-place";
 import type { AuthorNameStyle } from "@/types/application/profile/author-name-style";
 
 export type Notification = {
@@ -23,4 +24,8 @@ export type Notification = {
   read: boolean;
   href: string;
   ctaLabel: string;
+  /** The community or group it came from (absent on an older backend). */
+  place?: NotificationPlace | null;
+  /** Calendar day ("2026-11-02") of the event it is about. */
+  eventDate?: string | null;
 };

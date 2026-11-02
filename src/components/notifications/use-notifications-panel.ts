@@ -7,7 +7,7 @@ import { formatNotificationTime, notificationDayLabel } from "@/utils/notificati
 import type { NotificationsPanelProps } from "@rede-enois/design-system/domain";
 
 import { networkApi, notificationsApi } from "@/lib/api";
-import { formatarData } from "@/lib/date/format";
+import { formatarData, ingressoDeEvento } from "@/lib/date/format";
 import { isNotificationHidden } from "@/lib/notification-module";
 import { markReadInCache } from "@/lib/notification-read-cache";
 import { networkQueries } from "@/lib/query-options/network";
@@ -24,6 +24,7 @@ function toNotificationData(notification: Notification) {
       : null,
     timeLabel: formatNotificationTime(notification.createdAt),
     dayLabel: notificationDayLabel(notification.createdAt),
+    eventDay: ingressoDeEvento(notification.eventDate)?.day ?? null,
   };
 }
 

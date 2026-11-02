@@ -51,6 +51,7 @@ export function NavigationLinks({
     id: community.id,
     name: community.name,
     href: `/comunidades/${community.id}`,
+    hasNews: (counts.summary?.byCommunity?.[community.id] ?? 0) > 0,
   });
 
   return (

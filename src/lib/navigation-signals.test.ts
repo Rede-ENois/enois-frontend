@@ -33,6 +33,17 @@ describe("signalFor", () => {
     ).toBeNull();
   });
 
+  it("marks Eventos with the today tag when a confirmed event happens today", () => {
+    const today = counts({ summary: { total: 1, byModule: { EVENTS: 1 }, eventsToday: 1 } });
+    expect(signalFor({ href: "/eventos", notifies: "EVENTS" }, today)).toEqual({ kind: "today" });
+  });
+
+  it("lights Comunidades when one of the person's communities has unread news", () => {
+    const news = counts({ summary: { total: 1, byModule: {}, byCommunity: { c1: 1 } } });
+    expect(signalFor({ href: "/comunidades" }, news)).toEqual({ kind: "new" });
+    expect(signalFor({ href: "/comunidades" }, counts())).toBeNull();
+  });
+
   it("stays quiet before the counts arrive", () => {
     const empty = counts({ summary: undefined, unreadMessages: 0, pendingRequests: 0 });
     for (const href of ["/mensagens", "/rede", "/notificacoes", "/explorar"]) {
