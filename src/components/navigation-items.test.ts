@@ -20,19 +20,12 @@ describe("menus das duas interfaces", () => {
       expect(social).not.toContain(work);
       expect(professional).toContain(work);
     }
-    for (const community of [
-      "/rede",
-      "/comunidades",
-      "/grupos",
-      "/eventos",
-      "/games",
-      "/projetos",
-    ]) {
+    for (const community of ["/rede", "/comunidades", "/grupos", "/eventos"]) {
       expect(professional).not.toContain(community);
       expect(social).toContain(community);
     }
     // Início e mensagens existem nas duas (o conteúdo muda com a interface).
-    for (const shared of ["/feed", "/mensagens"]) {
+    for (const shared of ["/feed", "/mensagens", "/explorar"]) {
       expect(social).toContain(shared);
       expect(professional).toContain(shared);
     }
@@ -40,8 +33,7 @@ describe("menus das duas interfaces", () => {
 
   it("cada entrada exclusiva abre numa rota da mesma interface (link direto não troca de lado)", () => {
     for (const item of navigationItems) {
-      // /marketplace só redireciona para a aba da Carteira, que é da conta (compartilhada).
-      if (item.context === null || item.to === "/marketplace") continue;
+      if (item.context === null) continue;
       expect(contextOfPath(item.to), item.to).toBe(item.context);
     }
   });

@@ -7,6 +7,7 @@ import { NavigationLinks as NavigationLinksView } from "@rede-enois/design-syste
 
 import { communitiesApi } from "@/lib/api";
 import { useInterfaceContext } from "@/lib/interface-context";
+import { signalFor, useNavigationCounts } from "@/lib/navigation-signals";
 import { communityQueries } from "@/lib/query-options/communities";
 import { hasSessionFlag } from "@/lib/session";
 import { useDisabledModules } from "@/lib/use-personalization";
@@ -14,8 +15,8 @@ import { useDisabledModules } from "@/lib/use-personalization";
 import { navigationItemsFor } from "./navigation-items";
 
 /**
- * Resolves the menu of the active interface (Social or Profissional), the active route and, in the
- * social one, the account's communities for the view.
+ * Resolves the menu of the active interface (Social or Profissional), the active route, the signal
+ * of what is new in each entry and, in the social one, the account's communities for the view.
  */
 export function NavigationLinks({
   collapsed = false,
@@ -27,6 +28,7 @@ export function NavigationLinks({
   const social = context === "SOCIAL";
   // Módulos desativados nas preferências: a entrada some do menu (fonte única no backend).
   const disabledModules = useDisabledModules();
+  const counts = useNavigationCounts();
 
   // Comunidades do usuário no menu: sem isso a pessoa só encontrava as suas indo em /comunidades
   // e procurando na lista.
@@ -60,6 +62,8 @@ export function NavigationLinks({
           label: item.label,
           icon: item.icon,
           active: pathname === item.to || pathname.startsWith(`${item.to}/`),
+          section: item.section,
+          signal: signalFor({ href: item.to, notifies: item.notifies }, counts),
         }))}
       myCommunities={social ? myCommunities.map(toLink) : []}
       favoriteCommunities={social ? favoriteCommunities.map(toLink) : []}

@@ -30,6 +30,7 @@ const PROTECTED_ROUTES = [
   "/seguranca",
   "/conta",
   "/notificacoes",
+  "/explorar",
   "/par-de-estudo",
 ];
 
