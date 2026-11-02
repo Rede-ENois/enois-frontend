@@ -11,13 +11,15 @@ o mesmo componente (`MentorBanner`), com `max-h-40` na prévia.
 Medido no app real (Vite em 5174, API interceptada no Chrome headless), com um banner sintético de
 1200×400 (`banner-exemplo.png`) com texto nos quatro cantos:
 
-| Largura | Antes (`h-36 object-cover`) | Depois |
-| --- | --- | --- |
-| 374 | 348×144 — 84px de largura cortados | 348×116 — cartaz inteiro |
-| 764 | 704×144 — 99px de altura cortados | 704×235 — cartaz inteiro |
+| Largura | Antes (`h-36 object-cover`)        | Depois                   |
+| ------- | ---------------------------------- | ------------------------ |
+| 374     | 348×144 — 84px de largura cortados | 348×116 — cartaz inteiro |
+| 764     | 704×144 — 99px de altura cortados  | 704×235 — cartaz inteiro |
+| 1280    | 601×144 — 56px de altura cortados  | 601×200 — cartaz inteiro |
 
 - `antes-374.png` / `depois-374.png` — no telefone, o "TOPO ESQUERDO" aparecia como "SQUERDO".
-- `antes-764.png` / `depois-764.png` — no desktop, as faixas de cima e de baixo sumiam.
+- `antes-764.png` / `depois-764.png` — no tablet, as faixas de cima e de baixo sumiam.
+- `antes-1280.png` / `depois-1280.png` — no desktop, o mesmo recorte de altura.
 
 O "antes" foi capturado aplicando as classes antigas na árvore viva da mesma página, para a
 comparação ser do mesmo card.

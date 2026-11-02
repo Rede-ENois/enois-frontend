@@ -10,11 +10,11 @@ import { cn } from "@/lib/utils";
  * informação nas duas larguras. Agora a imagem manda na proporção e só um teto de altura evita que
  * um arquivo quadrado domine o card.
  */
-export function MentorBanner({ src, className }: MentorBannerProps) {
+export function MentorBanner({ src, alt = "", className }: MentorBannerProps) {
   return (
     <img
       src={resolveCdnUrl(src)}
-      alt=""
+      alt={alt}
       className={cn("max-h-[min(60vh,22rem)] w-full object-contain", className)}
     />
   );
