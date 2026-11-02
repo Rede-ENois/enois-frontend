@@ -1,6 +1,7 @@
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { Notification } from "@/types/application/notification/notification";
 import type { NotificationPreferences } from "@/types/application/notification/notification-preferences";
+import type { UnreadSummary } from "@/types/application/notification/unread-summary";
 import type { InterfaceContext } from "@rede-enois/design-system/domain";
 
 import { api, buildQuery } from "../api-client";
@@ -9,6 +10,10 @@ export const notificationsApi = {
   /** `context`: notifications of that interface plus the account-wide ones (omitted = all). */
   list: (cursor?: string | null, limit = 20, context?: InterfaceContext) =>
     api.get<PageResponse<Notification>>(`/notifications${buildQuery({ cursor, limit, context })}`),
+
+  /** Unread count per area, for the menu and dock signals (same `context` filter as `list`). */
+  unreadSummary: (context?: InterfaceContext) =>
+    api.get<UnreadSummary>(`/notifications/unread-summary${buildQuery({ context })}`),
 
   markAsRead: (notificationId: string) => api.post<void>(`/notifications/${notificationId}/read`),
 

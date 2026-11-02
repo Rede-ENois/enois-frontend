@@ -209,6 +209,25 @@ export function dataDeEvento(valor: string | null | undefined): string {
     .replace(/ de /g, " ");
 }
 
+/**
+ * The event ticket's face: day ("02"), short month ("NOV") and whether it is today, all in the app
+ * time zone. `agora` is injectable for tests.
+ */
+export function ingressoDeEvento(
+  valor: string | null | undefined,
+  agora: Date = new Date(),
+): { day: string; month: string; today: boolean } | null {
+  const partes = partesDaData(valor);
+  if (!partes || !valor) return null;
+  const data = paraData(valor);
+  if (!data) return null;
+  return {
+    day: String(partes.dia).padStart(2, "0"),
+    month: formatarData(data, { month: "short" }).replace(/\./g, "").toUpperCase(),
+    today: valorDeDataLocal(data).slice(0, 10) === hojeNoApp(agora),
+  };
+}
+
 /** "jan. de 2023" → "jan. 2023" (how career timelines show it, without the "de"). */
 export function shortMonthYear(iso: string): string {
   return mesAno(iso).replace(" de ", " ");

@@ -24,20 +24,34 @@ describe("moduleForNotification", () => {
       "STUDY_PAIR_REMINDER",
     ]) {
       expect(moduleForNotification(kind)).toBe("STUDY_PAIRS");
-      expect(isNotificationHidden(kind, new Set(["STUDY_PAIRS"]))).toBe(true);
+      expect(isNotificationHidden({ kind }, new Set(["STUDY_PAIRS"]))).toBe(true);
     }
   });
 
   it("notificação de área não desativável fica visível", () => {
     expect(moduleForNotification("NEW_COMMENT")).toBeNull();
     expect(moduleForNotification("CONNECTION_REQUEST")).toBeNull();
-    expect(isNotificationHidden("NEW_COMMENT", new Set(["MESSAGES"]))).toBe(false);
+    expect(isNotificationHidden({ kind: "NEW_COMMENT" }, new Set(["MESSAGES"]))).toBe(false);
   });
 
   it("esconde só o que pertence a um módulo desativado", () => {
     const disabled = new Set(["MESSAGES", "JOBS"]);
-    expect(isNotificationHidden("NEW_MESSAGE", disabled)).toBe(true);
-    expect(isNotificationHidden("JOB", disabled)).toBe(true);
-    expect(isNotificationHidden("EVENT", disabled)).toBe(false);
+    expect(isNotificationHidden({ kind: "NEW_MESSAGE" }, disabled)).toBe(true);
+    expect(isNotificationHidden({ kind: "JOB" }, disabled)).toBe(true);
+    expect(isNotificationHidden({ kind: "EVENT" }, disabled)).toBe(false);
+  });
+
+  it("hides the real event and job kinds (the old keys never matched them)", () => {
+    expect(isNotificationHidden({ kind: "EVENT_NEXT_OCCURRENCE" }, new Set(["EVENTS"]))).toBe(true);
+    expect(isNotificationHidden({ kind: "JOB_APPLICATION_STATUS" }, new Set(["JOBS"]))).toBe(true);
+  });
+
+  it("trusts the module the backend resolved", () => {
+    expect(isNotificationHidden({ kind: "ANYTHING", module: "BLOGS" }, new Set(["BLOGS"]))).toBe(
+      true,
+    );
+    expect(
+      isNotificationHidden({ kind: "NEW_MESSAGE", module: "OTHER" }, new Set(["MESSAGES"])),
+    ).toBe(false);
   });
 });

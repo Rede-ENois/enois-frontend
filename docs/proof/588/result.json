@@ -1,0 +1,128 @@
+[
+  {
+    "name": "feed-390-dark",
+    "path": "/feed",
+    "dark": true,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 7,
+    "today": true
+  },
+  {
+    "name": "avisos-390-dark",
+    "path": "/notificacoes",
+    "dark": true,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 11,
+    "today": true
+  },
+  {
+    "name": "explorar-390-dark",
+    "path": "/explorar",
+    "dark": true,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 7,
+    "today": false
+  },
+  {
+    "name": "menu-390-dark",
+    "path": "/feed",
+    "dark": true,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 10,
+    "today": true
+  },
+  {
+    "name": "feed-1280-dark",
+    "path": "/feed",
+    "dark": true,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "signals": 7,
+    "today": true
+  },
+  {
+    "name": "avisos-1280-dark",
+    "path": "/notificacoes",
+    "dark": true,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "signals": 11,
+    "today": true
+  },
+  {
+    "name": "explorar-1280-dark",
+    "path": "/explorar",
+    "dark": true,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "signals": 7,
+    "today": true
+  },
+  {
+    "name": "feed-390-light",
+    "path": "/feed",
+    "dark": false,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 7,
+    "today": true
+  },
+  {
+    "name": "avisos-390-light",
+    "path": "/notificacoes",
+    "dark": false,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 11,
+    "today": true
+  },
+  {
+    "name": "explorar-390-light",
+    "path": "/explorar",
+    "dark": false,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 7,
+    "today": false
+  },
+  {
+    "name": "menu-390-light",
+    "path": "/feed",
+    "dark": false,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "signals": 10,
+    "today": true
+  },
+  {
+    "name": "feed-1280-light",
+    "path": "/feed",
+    "dark": false,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "signals": 7,
+    "today": true
+  },
+  {
+    "name": "avisos-1280-light",
+    "path": "/notificacoes",
+    "dark": false,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "signals": 11,
+    "today": true
+  },
+  {
+    "name": "explorar-1280-light",
+    "path": "/explorar",
+    "dark": false,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "signals": 7,
+    "today": true
+  }
+]

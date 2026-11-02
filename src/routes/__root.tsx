@@ -19,10 +19,12 @@ import type { RootRouteContext } from "@/types/routes/root/root-route-context";
 import { navigateToHref } from "@/utils/navigation";
 import { ToastProvider, buttonVariants } from "@rede-enois/design-system/ui";
 
+import { useMarkPushRead } from "@/lib/notification-read-cache";
 import { registerPushSubscription } from "@/lib/push";
 import {
   hrefDaQueryDePush,
   hrefDoPush,
+  notificationIdDoPush,
   searchSemPush,
   subscriptionDoPush,
 } from "@/lib/push-navigation";
@@ -199,6 +201,7 @@ function RootComponent() {
 
 function RootInsideProvider() {
   const router = useRouter();
+  const markPushRead = useMarkPushRead();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   // Lido uma vez, na montagem: o efeito de push apaga a query antes de navegar, e um segundo
   // passe (StrictMode) nao pode confundir "sem push" com "home de quem tem sessao".
@@ -235,13 +238,15 @@ function RootInsideProvider() {
         void registerPushSubscription(renewal).catch(() => undefined);
         return;
       }
-      const href = hrefDoPush(event.data as PushNavigateMessage | null);
+      const message = event.data as PushNavigateMessage | null;
+      const href = hrefDoPush(message);
       if (!href) return;
+      markPushRead(notificationIdDoPush(message));
       navigateToHref(href, (opts) => void router.navigate(opts));
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);
-  }, [router]);
+  }, [router, markPushRead]);
 
   useEffect(() => {
     // Clique na notificacao PUSH sem nenhuma aba do app aberta: o worker nao conhece as rotas,
@@ -250,6 +255,7 @@ function RootInsideProvider() {
     // ("/configuracoes/seguranca") abria a pagina de erro.
     const href = hrefDaQueryDePush(window.location.search);
     if (!href) return;
+    markPushRead(notificationIdDoPush(window.location.search));
     const resto = searchSemPush(window.location.search);
     window.history.replaceState(
       null,
@@ -257,7 +263,7 @@ function RootInsideProvider() {
       `${window.location.pathname}${resto ? `?${resto}` : ""}${window.location.hash}`,
     );
     navigateToHref(href, (opts) => void router.navigate(opts));
-  }, [router]);
+  }, [router, markPushRead]);
 
   useEffect(() => {
     // Fallback de autenticacao: o `beforeLoad` das rotas roda no SSR (sem acesso ao
