@@ -36,6 +36,8 @@ vi.mock("@rede-enois/design-system/domain", () => ({
 
       <a href={hrefs.corporateProfile}>Perfil profissional</a>
 
+      <a href={hrefs.account}>Conta e segurança</a>
+
       <button type="button" onClick={() => onOpenChange(true)}>
         Abrir menu
       </button>
@@ -118,6 +120,12 @@ describe("menu da conta", () => {
     expect(host.querySelector('a[href="/profissional"]')).not.toBeNull();
     // Avisos e preferências de notificação vivem dentro do "Uso saudável", não no menu lateral.
     expect(host.querySelector('a[href="/notificacoes/preferencias"]')).toBeNull();
+  });
+
+  it("sends the account items to the Conta e segurança page (#562)", async () => {
+    await montar();
+
+    expect(host.querySelector('a[href="/conta"]')).not.toBeNull();
   });
 
   it("com perfil profissional ativo mostra a escolha de identidade", async () => {

@@ -28,6 +28,7 @@ const PROTECTED_ROUTES = [
   "/suporte",
   "/bloqueados",
   "/seguranca",
+  "/conta",
   "/notificacoes",
   "/par-de-estudo",
 ];
