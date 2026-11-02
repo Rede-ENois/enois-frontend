@@ -15,7 +15,7 @@ import {
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, reactionsApi } from "@/lib/api";
-import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
+import { isUnseenFeedQuery, updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAuth } from "@/lib/use-auth";
 
 import { reactionsQueryOptions } from "./query-options";
@@ -158,7 +158,12 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
       setIsPending(false);
       setReactionPending(postId, false);
       queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      // A aba "Ainda não vi" fica de fora: revalidá-la tiraria da tela o post em que a pessoa
+      // acabou de reagir (issue #559). O contador já foi atualizado no cache acima.
+      queryClient.invalidateQueries({
+        queryKey: ["feed"],
+        predicate: (query) => !isUnseenFeedQuery(query.queryKey),
+      });
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
     }
   };

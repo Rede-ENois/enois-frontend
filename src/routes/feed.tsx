@@ -57,10 +57,12 @@ import {
 } from "lucide-react";
 
 import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
+import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, valorDeDataLocal } from "@/lib/date/format";
 import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -134,13 +136,17 @@ export const Route = createFileRoute("/feed")({
    * A aba vive na URL (`/feed?aba=ALL`): abrir uma publicação e voltar restaura a MESMA aba em que
    * a pessoa estava — antes o retorno caía sempre em "Para você".
    */
-  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab; compor?: "ARTICLE" } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { aba?: HomeTab; compor?: "ARTICLE" | "MEDIA" } => {
     const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
         : undefined;
-    // `compor=ARTICLE` opens the composer in article mode (the profile "Escrever artigo" shortcut).
-    const compor = search.compor === "ARTICLE" ? "ARTICLE" : undefined;
+    // Profile shortcuts: `compor=ARTICLE` opens the composer in article mode, `compor=MEDIA` attaches
+    // the files picked on the profile (see `composer-handoff`).
+    const compor =
+      search.compor === "ARTICLE" || search.compor === "MEDIA" ? search.compor : undefined;
     return { ...(aba ? { aba } : {}), ...(compor ? { compor } : {}) };
   },
   head: () => ({
@@ -205,7 +211,10 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
-    refetchInterval: 30_000,
+    // "Ainda não vi" não se renova sozinha: o servidor tira o post da lista assim que ele tem
+    // reação ou comentário meu, e a pessoa perderia o que está lendo no meio da leitura. A lista
+    // se atualiza quando ela volta para a aba (issue #559).
+    ...feedRefreshOptions(tab),
   });
 }
 
@@ -338,13 +347,13 @@ function Home() {
   const [postType, setPostType] = useState<PostView["type"]>(() =>
     compor === "ARTICLE" ? "ARTICLE" : "INSIGHT",
   );
-  // The article request is one-shot: drop it from the URL so a refresh opens the usual composer.
+  // Shortcut requests are one-shot: drop them from the URL so a refresh opens the usual composer.
   useEffect(() => {
     if (compor)
       void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
   }, [compor, navigate]);
-  // Assunto do post avulso (opcional): é o que liga o post a "O que quero ver"/"não gosto".
-  // Em comunidade o post herda o assunto DELA — lá o compositor é outro.
+  // Assunto do post avulso (obrigatório: sem ele o post fica fora dos filtros e de "O que quero
+  // ver"/"não gosto"). Em comunidade o post herda o assunto DELA — lá o compositor é outro.
   const [topic, setTopic] = useState<string>(() => readLastTopic());
   const [media, setMedia] = useState<MediaItem[]>([]);
   const mediaReady = media.every(
@@ -421,6 +430,7 @@ function Home() {
     const content = draft.trim();
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    if (!topic) return;
     const scheduledOptions = normalizePollOptions(pollOptions);
     if (pollMode && scheduledOptions.length < POLL_MIN_OPTIONS) return;
     if (!scheduleAt) return;
@@ -449,7 +459,7 @@ function Home() {
         ...(articleMode ? { articleBody } : {}),
         ...(pollMode ? { pollOptions: scheduledOptions } : {}),
         // O assunto viaja com o agendado e vale quando ele entra no ar.
-        ...(topic ? { topic } : {}),
+        topic,
         scheduledAt: new Date(scheduleAt).toISOString(),
       });
       setDraft("");
@@ -478,6 +488,7 @@ function Home() {
     // precisa de titulo (o texto de cima) E do corpo. Nos demais, o texto de cima e o post.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    if (!topic) return;
     // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
     const options = normalizePollOptions(pollOptions);
     if (pollMode && options.length < POLL_MIN_OPTIONS) return;
@@ -498,7 +509,7 @@ function Home() {
         ...(articleMode ? { articleBody } : {}),
         ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
-        ...(topic ? { topic } : {}),
+        topic,
         website: String(formData.get("website") ?? ""),
       });
       // "Também no LinkedIn": só para publicações da identidade PROFISSIONAL (o perfil pessoal
@@ -583,6 +594,12 @@ function Home() {
       }
     }
   };
+
+  // Files picked on the profile shortcut arrive once, right after the navigation.
+  useEffect(() => {
+    if (compor === "MEDIA") addMediaFiles(takeComposerFiles());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot on arrival; addMediaFiles is rebuilt every render.
+  }, [compor]);
 
   const handleMediaSelect = (e: ChangeEvent<HTMLInputElement>) => {
     addMediaFiles(Array.from(e.target.files ?? []));
@@ -895,13 +912,13 @@ function Home() {
                           "inline-flex max-w-[11rem] items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition",
                           topic
                             ? "border border-primary/40 bg-primary/10 text-primary"
-                            : "border border-border-soft text-text-subtle hover:border-primary",
+                            : "border border-dashed border-primary/60 text-text-strong hover:border-primary",
                         )}
                       >
                         <span className="truncate">
                           {topic
                             ? (TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS] ?? topic)
-                            : texts.feed.composer.topicNone}
+                            : texts.feed.composer.topicRequired}
                         </span>
 
                         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
@@ -910,23 +927,6 @@ function Home() {
 
                     <PopoverContent align="start" className="w-56 p-1">
                       <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTopic("");
-                            rememberTopic("");
-                            setMenuTopic(false);
-                          }}
-                          className={cn(
-                            "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                            topic === ""
-                              ? "bg-primary-soft text-primary-text"
-                              : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                          )}
-                        >
-                          {texts.feed.composer.topicNone}
-                        </button>
-
                         {POST_TOPICS.map((option) => (
                           <button
                             key={option}
@@ -1038,6 +1038,7 @@ function Home() {
                     disabled={
                       (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                       (articleMode && !articleBody.trim()) ||
+                      !topic ||
                       createPost.isPending ||
                       upload.status === "uploading" ||
                       !mediaReady
@@ -1056,6 +1057,7 @@ function Home() {
                     disabled={
                       (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                       (articleMode && !articleBody.trim()) ||
+                      !topic ||
                       createPost.isPending ||
                       upload.status === "uploading" ||
                       !mediaReady
@@ -1097,6 +1099,7 @@ function Home() {
                     className="rounded-full"
                     disabled={
                       !scheduleAt ||
+                      !topic ||
                       schedulePost.isPending ||
                       upload.status === "uploading" ||
                       !mediaReady

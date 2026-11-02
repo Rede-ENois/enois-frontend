@@ -21,4 +21,6 @@ export type Conversation = {
   lastMessageE2e?: boolean;
   /** IV da última mensagem E2E (necessário pra decifrar). */
   lastMessageIv?: string | null;
+  /** Account id of whoever sent the last message (the inbox marks the viewer's own). */
+  lastMessageFrom?: string | null;
 };

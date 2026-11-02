@@ -1054,8 +1054,8 @@ export const texts = {
     composer: {
       removeMedia: "Remover mídia",
       topic: "Assunto",
-      topicNone: "Sem assunto",
-      topicHint: "Usado para ajustar o que você vê no feed.",
+      topicRequired: "Escolha o assunto",
+      topicHint: "Obrigatório. Coloca o post nos filtros certos do feed.",
       schedule: "Agendar",
       scheduleDate: "Data e hora",
       scheduleConfirm: "Agendar publicação",
@@ -1372,10 +1372,6 @@ export const texts = {
       postsLabel: "publicações",
       connectionsLabel: "conexões",
       followersLabel: "seguidores",
-      composer: {
-        success: "Publicação enviada.",
-        error: "Não foi possível publicar agora. Tente novamente.",
-      },
     },
     /** O título continua "Ranking"; a linha abaixo dele diz QUEM está ali (chegada, não disputa). */
     newMembersHint: "Quem está chegando agora — os mais recentes primeiro.",
@@ -2368,6 +2364,12 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    /**
+     * Inbox preview with its author: "Você" for the viewer (otherwise the peer seems to have
+     * written it) and the sender's first name in groups (the row shows the group, not the author).
+     */
+    you: "Você",
+    authoredPreview: (author: string, text: string) => `${author}: ${text}`,
     e2eRequired:
       "Ative a criptografia ponta a ponta para enviar e ler mensagens. Suas conversas ficam protegidas e só você e o destinatário podem ler.",
     loadMoreConversations: "Carregar conversas antigas",
