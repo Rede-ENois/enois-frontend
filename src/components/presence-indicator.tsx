@@ -45,6 +45,7 @@ export function PresenceIndicator({ username, isOwn }: PresenceIndicatorProps) {
     if (!presence.isError) return null;
     return (
       <span
+        role="img"
         className="inline-flex h-6 w-6 shrink-0 items-center justify-center"
         title={texts.presence.unavailable}
         aria-label={texts.presence.unavailable}
@@ -64,7 +65,12 @@ export function PresenceIndicator({ username, isOwn }: PresenceIndicatorProps) {
 
   if (!isOwn) {
     return (
-      <span className="inline-flex shrink-0 items-center" title={label} aria-label={label}>
+      <span
+        role="img"
+        className="inline-flex shrink-0 items-center"
+        title={label}
+        aria-label={label}
+      >
         {dot}
       </span>
     );

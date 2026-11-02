@@ -638,7 +638,7 @@ export const texts = {
       AWAY: { label: "Ausente", hint: "Você aparece como ausente." },
       DO_NOT_DISTURB: {
         label: "Não perturbar",
-        hint: "Notificações no dispositivo ficam silenciadas.",
+        hint: "Silencia os avisos no dispositivo, menos segurança e moderação.",
       },
       INVISIBLE: { label: "Invisível", hint: "Você aparece offline para outras pessoas." },
     },
