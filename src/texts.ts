@@ -754,8 +754,7 @@ export const texts = {
     principles: {
       eyebrow: "Na prática",
       title: "O que dá para conferir no produto",
-      description:
-        "Seis compromissos que já valem hoje.",
+      description: "Seis compromissos que já valem hoje.",
       items: [
         {
           title: "Gratuito",
@@ -786,8 +785,7 @@ export const texts = {
     product: {
       eyebrow: "Já funciona",
       title: "O que existe hoje",
-      description:
-        "Parte abre sem conta. O resto pede só um cadastro gratuito.",
+      description: "Parte abre sem conta. O resto pede só um cadastro gratuito.",
       capture: {
         alt: "Captura da página pública de vagas do énóis, com filtros por nível, local e tipo e cartões de vagas abertas",
         caption: "Página de vagas, enois.ia.br/vagas, aberta sem login.",
@@ -868,8 +866,7 @@ export const texts = {
       channels: {
         contact: {
           label: "Falar com a equipe",
-          description:
-            "Suporte com registro e resposta.",
+          description: "Suporte com registro e resposta.",
         },
         guidelines: {
           label: "Ler as diretrizes",
@@ -953,8 +950,7 @@ export const texts = {
     finalCta: {
       eyebrow: "Crie sua conta",
       title: "Entre agora e ajude a definir o que o énóis vai ser.",
-      description:
-        "Criar conta é gratuito, leva um minuto e não pede cartão.",
+      description: "Criar conta é gratuito, leva um minuto e não pede cartão.",
       free: "Gratuito é regra do projeto, não promoção.",
       createAccount: "Criar minha conta",
       existingAccount: "Já tenho conta",
@@ -964,15 +960,12 @@ export const texts = {
       eyebrow: "Aviso a quem testa segurança",
       title: "Testem na sandbox, não contra a nossa API.",
       body: "Faça testes de segurança só no ambiente de sandbox, nunca contra a nossa API. Os repositórios são abertos, e só autorizamos testes em ambiente simulado. Teste executado contra a nossa API será tratado como crime cibernético e denunciado.",
-      closing:
-        "Somos uma rede social sem fins lucrativos, construída junto com a comunidade.",
+      closing: "Somos uma rede social sem fins lucrativos, construída junto com a comunidade.",
       repoLink: "Ver os repositórios abertos",
     },
     footer: {
-      copyright: (year: number) =>
-        `© ${year} Énóis · Rede social gratuita e em construção.`,
-      tagline:
-        "Rede social gratuita, sem anúncios e sem paywall, em construção com quem usa.",
+      copyright: (year: number) => `© ${year} Énóis · Rede social gratuita e em construção.`,
+      tagline: "Rede social gratuita, sem anúncios e sem paywall, em construção com quem usa.",
       sectionsLabel: "Nesta página",
       projectLabel: "O projeto",
       privacy: "Privacidade",
