@@ -1,0 +1,141 @@
+{
+  "resultado": [
+    {
+      "width": 1280,
+      "pagina": {
+        "onde": "/conta",
+        "titulo": "Conta e segurança",
+        "secoes": [
+          "Acesso",
+          "Privacidade e moderação",
+          "Encerrar conta"
+        ],
+        "linhas": [
+          "Pular para o conteúdo",
+          "Énóis",
+          "Início",
+          "Mensagens",
+          "Rede",
+          "Comunidades",
+          "Grupos",
+          "Salvos",
+          "Blogs",
+          "Eventos",
+          "Par de estudo",
+          "Jogos",
+          "Projetos da comunidade",
+          "Marketplace",
+          "Alterar e-mail",
+          "Trocar senha",
+          "Contas vinculadas",
+          "Segurança e verificação",
+          "Usuários bloqueados",
+          "Minhas denúncias"
+        ],
+        "docWidth": 1280,
+        "clientWidth": 1280
+      },
+      "menu": {
+        "aberto": true,
+        "itens": [
+          "Ver perfil",
+          "Perfil profissional",
+          "Carteira",
+          "Marketplace",
+          "Conta e segurança",
+          "Ajuda e suporte",
+          "Uso saudável",
+          "Supervisão parental",
+          "Painel de moderador",
+          "Apoie o Énóis",
+          "Sair"
+        ],
+        "docWidth": 1280,
+        "clientWidth": 1280
+      },
+      "arquivoPagina": "/tmp/verif/562/conta-1280.png",
+      "arquivoMenu": "/tmp/verif/562/menu-1280.png"
+    },
+    {
+      "width": 390,
+      "pagina": {
+        "onde": "/conta",
+        "titulo": "Conta e segurança",
+        "secoes": [
+          "Acesso",
+          "Privacidade e moderação",
+          "Encerrar conta"
+        ],
+        "linhas": [
+          "Pular para o conteúdo",
+          "Énóis",
+          "Início",
+          "Mensagens",
+          "Rede",
+          "Comunidades",
+          "Grupos",
+          "Salvos",
+          "Blogs",
+          "Eventos",
+          "Par de estudo",
+          "Jogos",
+          "Projetos da comunidade",
+          "Marketplace",
+          "Alterar e-mail",
+          "Trocar senha",
+          "Contas vinculadas",
+          "Segurança e verificação",
+          "Usuários bloqueados",
+          "Minhas denúncias"
+        ],
+        "docWidth": 390,
+        "clientWidth": 390
+      },
+      "menu": {
+        "aberto": true,
+        "itens": [
+          "Ver perfil",
+          "Perfil profissional",
+          "Carteira",
+          "Marketplace",
+          "Conta e segurança",
+          "Ajuda e suporte",
+          "Uso saudável",
+          "Supervisão parental",
+          "Painel de moderador",
+          "Apoie o Énóis",
+          "Sair"
+        ],
+        "docWidth": 390,
+        "clientWidth": 390
+      },
+      "arquivoPagina": "/tmp/verif/562/conta-390.png",
+      "arquivoMenu": "/tmp/verif/562/menu-390.png"
+    }
+  ],
+  "chamadas": [
+    "GET /api/auth/me",
+    "GET /api/me/preferences",
+    "GET /api/avisos/ativo",
+    "GET /api/novidades/atual",
+    "GET /api/me/theme",
+    "GET /api/conversations?limit=20&context=SOCIAL",
+    "GET /api/conversations/unread-count?context=SOCIAL",
+    "GET /api/me/age-state",
+    "GET /api/conversations/stream",
+    "GET /api/notifications?limit=20&context=SOCIAL",
+    "GET /api/me",
+    "GET /api/communities/mine?limit=8",
+    "GET /api/communities/favorites?limit=50",
+    "GET /api/eventos/saci-halloween",
+    "GET /api/eventos/caca-saci",
+    "GET /api/games/hoje?limit=5",
+    "POST /api/me/presence/heartbeat",
+    "GET /api/network/suggestions?limit=12",
+    "GET /api/events?limit=20",
+    "GET /api/me/business-profile",
+    "GET /api/feed/scheduled",
+    "GET /api/empresas/mine",
+    "GET /api/feed?limit=20&tab=ALL"
+  ]
+}
