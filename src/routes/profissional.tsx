@@ -17,7 +17,7 @@ import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
-import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 
 export const Route = createFileRoute("/profissional")({
   beforeLoad: requireAuth,
@@ -322,7 +322,7 @@ function Profissional() {
           <>
             <div className="surface-card space-y-4 p-4 sm:p-6">
               {form.bannerHtml.trim() ? (
-                <SandboxedHtmlFrame
+                <BannerHtmlFrame
                   html={form.bannerHtml}
                   title={texts.corporate.bannerHtml}
                   className="h-28 w-full rounded-xl"

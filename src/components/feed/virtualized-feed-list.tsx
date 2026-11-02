@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { type VirtualItem, useWindowVirtualizer } from "@tanstack/react-virtual";
 
 import type { VirtualizedFeedListProps } from "@/types/components/feed/virtualized-feed-list-props";
+import type { HomeTab } from "@/types/routes/feed/home-tab";
 import { CaughtUpDivider } from "@rede-enois/design-system/domain";
 import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 
@@ -12,6 +13,14 @@ import { PostCard } from "@/components/post-card";
 const ESTIMATE_SIZE = 280;
 /** Extra items rendered above/below the viewport. */
 const OVERSCAN = 5;
+
+/**
+ * Measured card heights per feed tab, kept across unmounts. Opening a post unmounts the feed;
+ * without this the list comes back with every unseen card at the estimate, so the saved scroll
+ * offset lands on the wrong post and the list shifts as the cards measure again.
+ */
+// ponytail: module memory, lives for the tab session; sessionStorage if reloads must keep it.
+const measurementsByTab = new Map<HomeTab, VirtualItem[]>();
 
 /**
  * Feed list that only mounts PostCards visible in the viewport. Uses window-level scroll
@@ -31,23 +40,50 @@ export function VirtualizedFeedList({
 }: VirtualizedFeedListProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
+  // A ref ainda é null no primeiro render, então a margem não pode ser lida durante o render:
+  // ela vem de um state atualizado antes da pintura. Distância até o topo do documento (e não
+  // offsetTop, que é relativo ao offsetParent); recalculada porque banners acima da lista
+  // (atualizando, novos posts) mudam essa distância.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
+    const element = listRef.current;
+    if (!element) return;
+    const update = () =>
+      setScrollMargin(Math.round(element.getBoundingClientRect().top + window.scrollY));
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(document.documentElement);
+    return () => observer.disconnect();
+  }, []);
+
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
+    // Sizes are cached by key: keyed by post, a new post on top does not shift every height.
+    getItemKey: (index) => posts[index].id,
     estimateSize: () => ESTIMATE_SIZE,
+    initialMeasurementsCache: measurementsByTab.get(feedTab),
     overscan: OVERSCAN,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
+    scrollMargin,
   });
 
   const items = virtualizer.getVirtualItems();
 
+  useEffect(
+    () => () => {
+      measurementsByTab.set(feedTab, virtualizer.measurementsCache);
+    },
+    [feedTab, virtualizer],
+  );
+
   // Trigger load-more when the last virtual item is near the end.
-  const lastItem = items[items.length - 1];
+  const lastIndex = items.at(-1)?.index;
   useEffect(() => {
-    if (!lastItem) return;
-    if (lastItem.index >= posts.length - 3 && hasMore && !loadingMore) {
+    if (lastIndex === undefined) return;
+    if (lastIndex >= posts.length - 3 && hasMore && !loadingMore) {
       onLoadMore();
     }
-  }, [lastItem?.index, posts.length, hasMore, loadingMore, onLoadMore]);
+  }, [lastIndex, posts.length, hasMore, loadingMore, onLoadMore]);
 
   return (
     <div ref={listRef}>
@@ -78,10 +114,10 @@ export function VirtualizedFeedList({
 
                 {isFirst ? (
                   <div ref={firstPostRef}>
-                    <PostCard post={post} feedTab={feedTab} />
+                    <PostCard post={post} feedTab={feedTab} virtualized />
                   </div>
                 ) : (
-                  <PostCard post={post} feedTab={feedTab} />
+                  <PostCard post={post} feedTab={feedTab} virtualized />
                 )}
               </div>
             );

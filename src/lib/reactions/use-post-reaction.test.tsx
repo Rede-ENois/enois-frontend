@@ -45,7 +45,7 @@ const post: PostView = {
   createdAt: "2026-10-23T12:00:00Z",
   visibility: "PUBLIC",
   status: "ACTIVE",
-  counters: { reactions: 0, comments: 0, saves: 0, shares: 0 },
+  counters: { reactions: 0, comments: 0, saves: 0, shares: 0, reposts: 0 },
 };
 
 function deferredResponse() {

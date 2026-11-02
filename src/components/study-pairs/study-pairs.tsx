@@ -16,6 +16,8 @@ import { studyPairsApi } from "@/lib/api";
 import { studyPairsErrorCode, toStudyPair, topicLabel } from "@/lib/study-pairs/to-study-pair";
 import { useReenableModule } from "@/lib/use-personalization";
 
+import { GoalSearch } from "./goal-search";
+
 const ME_KEY = ["study-pairs", "me"] as const;
 const POPULAR_KEY = ["study-pairs", "popular"] as const;
 
@@ -86,43 +88,49 @@ export function StudyPairs() {
   const data = me.data;
 
   return (
-    <StudyPairsView
-      loading={me.isLoading}
-      loadError={me.isError}
-      onRetry={() => void me.refetch()}
-      pairs={(data?.pairs ?? []).map(toStudyPair)}
-      openRequest={
-        data?.openRequest
-          ? { goal: data.openRequest.goal, topicLabel: topicLabel(data.openRequest.topic) }
-          : null
-      }
-      topics={TOPIC_OPTIONS}
-      popularGoals={popular.data?.items ?? []}
-      onRequest={(input) => request.mutate(input)}
-      requesting={request.isPending}
-      requestError={requestError}
-      errorAction={
-        requestError === "STUDY_PAIRS_DISABLED" ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="rounded-full"
-            disabled={reenable.isPending}
-            onClick={turnModuleOn}
-          >
-            {texts.studyPairs.reenable}
-          </Button>
-        ) : undefined
-      }
-      birthDateHref="/perfil"
-      verifyEmailHref="/seguranca"
-      onCancelRequest={() => cancelRequest.mutate()}
-      cancelling={cancelRequest.isPending}
-      onSaveCheckin={(pairId, note) => checkin.mutate({ pairId, note })}
-      checkinStatus={checkinStatus}
-      onEndPair={(pairId) => endPair.mutate(pairId)}
-      endingPairId={endPair.isPending ? endPair.variables : null}
-    />
+    <div className="space-y-4">
+      <GoalSearch
+        disabled={request.isPending}
+        onRequest={(goal, topic) => request.mutate({ goal, topic })}
+      />
+      <StudyPairsView
+        loading={me.isLoading}
+        loadError={me.isError}
+        onRetry={() => void me.refetch()}
+        pairs={(data?.pairs ?? []).map(toStudyPair)}
+        openRequest={
+          data?.openRequest
+            ? { goal: data.openRequest.goal, topicLabel: topicLabel(data.openRequest.topic) }
+            : null
+        }
+        topics={TOPIC_OPTIONS}
+        popularGoals={popular.data?.items ?? []}
+        onRequest={(input) => request.mutate(input)}
+        requesting={request.isPending}
+        requestError={requestError}
+        errorAction={
+          requestError === "STUDY_PAIRS_DISABLED" ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="rounded-full"
+              disabled={reenable.isPending}
+              onClick={turnModuleOn}
+            >
+              {texts.studyPairs.reenable}
+            </Button>
+          ) : undefined
+        }
+        birthDateHref="/perfil"
+        verifyEmailHref="/seguranca"
+        onCancelRequest={() => cancelRequest.mutate()}
+        cancelling={cancelRequest.isPending}
+        onSaveCheckin={(pairId, note) => checkin.mutate({ pairId, note })}
+        checkinStatus={checkinStatus}
+        onEndPair={(pairId) => endPair.mutate(pairId)}
+        endingPairId={endPair.isPending ? endPair.variables : null}
+      />
+    </div>
   );
 }

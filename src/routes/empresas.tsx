@@ -14,6 +14,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 
 import { companiesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { consumeContextSwitch } from "@/lib/interface-context";
 import { companyQueries } from "@/lib/query-options/companies";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
@@ -51,6 +52,12 @@ function Empresas() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [sector, setSector] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+
+  useEffect(() => {
+    if (consumeContextSwitch()) {
+      toast(texts.feed.companyPrompt.contextSwitch);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // One request per pause in typing, not per key.
   useEffect(() => {

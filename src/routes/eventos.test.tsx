@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   list: vi.fn(),
   setRecurrence: vi.fn(),
   create: vi.fn(),
+  update: vi.fn(),
+  remove: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -27,6 +29,8 @@ vi.mock("@/lib/api", () => ({
     create: mocks.create,
     attend: vi.fn(),
     cancelAttendance: vi.fn(),
+    update: mocks.update,
+    remove: mocks.remove,
   },
 }));
 vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
@@ -165,6 +169,80 @@ describe("/eventos", () => {
 
     await act(async () => vi.advanceTimersByTimeAsync(4000));
     expect(card?.hasAttribute("data-highlighted")).toBe(false);
+  });
+
+  it("lets the creator edit the content without carrying the series", async () => {
+    mocks.list.mockResolvedValue({
+      items: [event({ recurrence: "WEEKLY", canManageRecurrence: true })],
+      nextCursor: null,
+    });
+    mocks.update.mockResolvedValue({ ...event({}), title: "Encontro renomeado" });
+    await render();
+
+    const edit = [...host.querySelectorAll("button")].find(
+      (b) => b.textContent === "Editar evento",
+    );
+    await act(async () => edit!.click());
+
+    const dialog = document.querySelector('[role="dialog"]')!;
+    // O formulário abre preenchido com o evento — e sem o campo de repetição (a série tem controle
+    // próprio no card).
+    expect(dialog.querySelector("input")?.value).toBe("Encontro de estudo");
+    expect(dialog.textContent).not.toContain("Repetição da série");
+
+    const fill = (element: HTMLInputElement, value: string) => {
+      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element) as object, "value")!.set!.call(
+        element,
+        value,
+      );
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    await act(async () => fill(dialog.querySelector("input")!, "Encontro renomeado"));
+
+    const submit = [...dialog.querySelectorAll("button")].find(
+      (b) => b.textContent === "Salvar alterações",
+    );
+    await act(async () => submit!.click());
+    await settle();
+
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    const [eventId, payload] = mocks.update.mock.calls[0];
+    expect(eventId).toBe("ev-1");
+    expect(payload).toMatchObject({ title: "Encontro renomeado", date: "2026-11-06" });
+    expect(payload).not.toHaveProperty("recurrence");
+    // Fechou o formulário: a edição foi aceita.
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it("deletes an event the creator confirmed, and keeps it on a refusal", async () => {
+    mocks.list.mockResolvedValue({
+      items: [event({ canManageRecurrence: true })],
+      nextCursor: null,
+    });
+    mocks.remove.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce({ status: "OK" });
+    await render();
+
+    const open = async () => {
+      const remove = [...host.querySelectorAll("button")].find((b) => b.textContent === "Excluir");
+      await act(async () => remove!.click());
+      const dialog = document.querySelector('[role="dialog"]')!;
+      expect(dialog.textContent).toContain("Excluir este evento?");
+      const confirm = [...dialog.querySelectorAll("button")].find(
+        (b) => b.textContent === "Excluir",
+      )!;
+      await act(async () => confirm.click());
+      await settle();
+    };
+
+    // Recusa do servidor: a pergunta continua aberta, nada some da lista por engano.
+    await open();
+    expect(mocks.remove).toHaveBeenCalledWith("ev-1");
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+
+    // Aceito: o diálogo fecha.
+    await open();
+    expect(mocks.remove).toHaveBeenCalledTimes(2);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it("does not create a recurring event without a time", async () => {

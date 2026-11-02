@@ -8,7 +8,17 @@ import {
   markOnboardingShown,
   onboardingErrorMessage,
   shouldRedirectToOnboarding,
+  skillsForOnboarding,
 } from "./onboarding";
+
+describe("onboarding: habilidades enviadas ao backend", () => {
+  it("mantém as 20 mais recentes e descarta vazias e longas demais", () => {
+    const many = Array.from({ length: 65 }, (_, index) => `Skill ${index + 1}`);
+    expect(skillsForOnboarding(many)).toEqual(many.slice(-20));
+    expect(skillsForOnboarding(["React", " ", "x".repeat(61), "Go"])).toEqual(["React", "Go"]);
+    expect(skillsForOnboarding([])).toEqual([]);
+  });
+});
 
 describe("onboarding: para onde vai quem entra", () => {
   beforeEach(() => {

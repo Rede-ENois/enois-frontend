@@ -14,6 +14,8 @@ const LIMITS: Record<PostView["type"], number> = {
   QUESTION: 1200,
   DIVERTIDO: 400,
   MOMENT: 500,
+  // Enquete: o título da enquete (as alternativas têm limite próprio: 120 cada).
+  POLL: 400,
   REVIEW: 600,
   PROJECT: 2000,
   NEWS: 2000,
@@ -26,6 +28,12 @@ const LIMITS: Record<PostView["type"], number> = {
   BUSINESS: 2000,
   BLOG: 1200,
 };
+
+/** Longest new comment, as the backend accepts it (`PostInteractionService`: 800). */
+export const COMMENT_MAX_LENGTH = 800;
+
+/** The counter shows from here on: a quiet field until the limit is near. */
+export const COMMENT_COUNTER_FROM = COMMENT_MAX_LENGTH - 100;
 
 export function postContentLimit(type: PostView["type"]): number {
   return LIMITS[type] ?? 1200;

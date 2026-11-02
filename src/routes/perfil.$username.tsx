@@ -79,6 +79,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { SaciSpot } from "@/components/events/saci-spot";
@@ -261,7 +262,9 @@ function Profile() {
 
   const updateProfile = useMutation({
     mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => profileApi.update(data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
+      // A new cover photo takes the shop banner off on the server: refresh the shop too.
+      if (data.banner !== undefined) queryClient.invalidateQueries({ queryKey: ["loja"] });
       queryClient.invalidateQueries({ queryKey: ["me"] });
       queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
       queryClient.invalidateQueries({ queryKey: profileQueries.byId(user.id).queryKey });
@@ -454,11 +457,10 @@ function Profile() {
           bannerSlot={
             user.bannerHtml ? (
               // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
-              <SandboxedHtmlFrame
+              <BannerHtmlFrame
                 html={user.bannerHtml}
                 title={texts.profile.bannerHtml.frameTitle}
                 className="h-full w-full rounded-none border-0 shadow-none"
-                autoHeight={false}
                 allowSoundCloudPlayer={isApprovedSoundCloudEmbed(user.bannerHtml)}
               />
             ) : undefined
@@ -1107,6 +1109,7 @@ function Profile() {
         open={bannerOpen}
         onOpenChange={setBannerOpen}
         initialHtml={user.bannerHtml ?? null}
+        bannerItem={user.bannerItem ?? null}
         onPickPhoto={() => bannerRef.current?.click()}
         onSaved={() => {
           queryClient.invalidateQueries({ queryKey: ["me"] });

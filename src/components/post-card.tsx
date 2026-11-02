@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { MentionTextarea } from "@/components/mention-textarea";
+import { PollCard } from "@/components/post/poll-card";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 import { formatTime } from "./post/format-time";
@@ -45,6 +46,7 @@ function PostCardContainer({
   post,
   feedTab,
   fullPost = false,
+  virtualized = false,
   pinned = false,
   onTogglePin,
   pinPending = false,
@@ -233,6 +235,7 @@ function PostCardContainer({
         post: feedTab ? `/post/${post.id}?feedTab=${feedTab}` : `/post/${post.id}`,
         community: post.community ? `/comunidades/${post.community.id}` : null,
         repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
+        repostedBy: post.repostedByUsername ? `/perfil/${post.repostedByUsername}` : null,
         blog: `/blog/${post.authorUsername}/${post.id}`,
       }}
       timeLabel={formatTime(post.createdAt)}
@@ -242,6 +245,7 @@ function PostCardContainer({
       }
       anchored={Boolean(feedTab)}
       fullPost={fullPost}
+      virtualized={virtualized}
       pinned={pinned}
       onTogglePin={onTogglePin}
       pinPending={pinPending}
@@ -283,6 +287,7 @@ function PostCardContainer({
           }
         />
       }
+      poll={post.type === "POLL" && post.poll ? <PollCard post={post} /> : undefined}
       reactionsSummary={<ReactionsSummary post={post} initialSummary={post.reactionSummary} />}
       notes={<PostNotes post={post} />}
       actions={

@@ -2,16 +2,25 @@
 
 ## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
 
-Seasonal cosmetics shop in the `Loja` tab of `/carteira`, drawn by the design system
-`CosmeticShop`.
+The cosmetics shop in the `Loja` tab of `/carteira`, together with the community marketplace.
+It is drawn by `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`), a copy of the
+design system shop with one addition: the `Todas as coleções` tab. The published design system
+only filters one collection per tab, so a seasonal tab used to hide the rest of the catalog —
+**when the package ships that tab, `CosmeticCatalog` goes away and the wrapper points back at
+`CosmeticShop` from the design system.**
 
 - Reads `GET /loja` and `GET /loja/colecoes` (Zod-validated in `src/lib/api/loja.ts`); prices are
   formatted with `formatFaisca`, and each look shows the price of the pieces still missing
   (`lookPriceMf` in `src/lib/cosmetics.ts`: 75% of their sum, rounded to whole faíscas, the
   backend arithmetic)
+- Opens on `Todas as coleções`: every item of every collection, including out-of-season ones
+  (listed, tagged `Fora de temporada`, not sellable). The collection chips stay one click away,
+  in-season first, then the classics, then the out-of-season collections
 - Buy, buy look, equip and unequip invalidate `loja`, `carteira`, `profile`, `me` and `feed`;
   every API error code has its own pt-BR toast (`texts.cosmetics.errors`)
 - The `saci` and `halloween` collections show the Saci × Halloween duel (`SaciDuelPanel`)
+- The album of a collection only exists inside the collection tab (the catalog-wide tab has no
+  album)
 
 ## `FrameShop` (`src/components/wallet/frame-shop.tsx`)
 
@@ -112,6 +121,13 @@ gravada no aparelho; fora do feed, o efeito visível é o toast de confirmação
 `navigator.share` quando existe (fechar o menu é "idle", não erro); senão copia. O `shareStatus` volta
 a "idle" depois de 3 s.
 
+Em Palavras e Labirinto, a pessoa pode alternar entre hoje e o desafio de ontem enquanto uma
+jogada aguarda resposta. O resultado atualiza o cache do desafio enviado, mesmo que outro esteja
+aberto. Iniciar uma partida sempre atualiza hoje; confirmação de linha e erro de palpite aparecem
+somente no desafio correspondente, sem apagar um rascunho digitado na outra data. Os testes
+`daily-games-request-cache.test.tsx` cobrem as duas direções de troca, o início e a recusa de um
+palpite (issue #532).
+
 ## `PostCard` (`src/components/post-card.tsx`)
 
 Card de post no feed, com todas as ações sociais.
@@ -127,6 +143,7 @@ Card de post no feed, com todas as ações sociais.
 - Tags
 - Ações: reagir (popover com 8 emojis), comentar, salvar, compartilhar, denunciar
 - Seção de comentários com replies encadeadas
+- Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)
 
 **Componentes internos:**
@@ -185,6 +202,10 @@ Textarea com autocomplete de @menções.
 - Insere `@username` no texto e rastreia IDs dos mencionados
 - Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido (`KEKW`) entra no texto como
   palavra (ver abaixo)
+- A inserção de figurinha passa pelo evento de edição do próprio campo. O design system mantém
+  os IDs apenas das menções confirmadas que continuam no texto, inclusive depois de limpar o
+  rascunho ou substituir uma menção pela figurinha; o wrapper não guarda outra lista de IDs
+  ([#534](https://github.com/Rede-ENois/enois-frontend/issues/534)).
 
 ## Figurinhas
 

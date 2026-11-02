@@ -12,6 +12,9 @@ export type PostCardProps = {
    */
   fullPost?: boolean;
 
+  /** The card lives in a virtualized list, which measures its real height (see the DS prop). */
+  virtualized?: boolean;
+
   /** É o post fixado no topo da comunidade (mostra o selo "Fixado"). */
   pinned?: boolean;
 

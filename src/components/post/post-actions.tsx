@@ -15,7 +15,7 @@ import {
   savedStateFromAction,
   syncSavedPostsCache,
 } from "@/lib/feed/saved-posts";
-import { prefersReducedMotion, readForceMotion, readLiteMode } from "@/lib/lite-mode";
+import { prefersReducedMotion, readEconomicMode, readForceMotion } from "@/lib/lite-mode";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
 import { useMountedOnce } from "@/lib/use-mounted-once";
@@ -25,8 +25,8 @@ import { ReportDialog } from "./report-dialog";
 import { RepostDialog } from "./repost-dialog";
 import { SealsDialog } from "./seals-dialog";
 
-/** O pulso da reação respeita o modo lite e o "reduzir movimento" do sistema. */
-const motionAllowed = () => !readLiteMode() && (readForceMotion() || !prefersReducedMotion());
+/** O pulso da reação respeita o modo econômico (lite ou BATATA) e o "reduzir movimento". */
+const motionAllowed = () => !readEconomicMode() && (readForceMotion() || !prefersReducedMotion());
 
 /**
  * A fileira de ações de um post: reagir, ver quem reagiu, comentar, compartilhar, salvar e
@@ -144,9 +144,11 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       motionAllowed={motionAllowed}
       reactionCount={reactionCount}
       commentsCount={postCounters.comments}
+      repostsCount={postCounters.reposts ?? 0}
       savesCount={postCounters.saves}
       saved={saved}
       canRepost={canRepost}
+      reposted={post.currentUserReposted ?? false}
       onShowReactions={() => setShowReactions(post.id, true)}
       onComments={onComments}
       onRepost={() => {
@@ -159,7 +161,12 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       dialogs={
         <>
           {repostMounted && (
-            <RepostDialog postId={post.id} open={repostOpen} onOpenChange={setRepostOpen} />
+            <RepostDialog
+              postId={post.id}
+              reposted={post.currentUserReposted ?? false}
+              open={repostOpen}
+              onOpenChange={setRepostOpen}
+            />
           )}
           {reactionsMounted && <ReactionsDialog postId={post.id} />}
           {sealsMounted && <SealsDialog postId={post.id} />}

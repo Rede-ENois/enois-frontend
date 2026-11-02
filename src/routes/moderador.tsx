@@ -476,17 +476,28 @@ function ReportsSection({ admin }: { admin: boolean }) {
   });
 
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [removeCompanyTarget, setRemoveCompanyTarget] = useState<string | null>(null);
 
   const adminAction = useMutation({
-    mutationFn: ({ reportId, action }: { reportId: string; action: "remove" | "warn" }) =>
-      action === "remove"
-        ? reportsAdminApi.deletePost(reportId, "Removido pelo painel de moderador")
-        : reportsAdminApi.warn(reportId),
+    mutationFn: ({
+      reportId,
+      action,
+    }: {
+      reportId: string;
+      action: "remove" | "warn" | "remove-company";
+    }) => {
+      if (action === "remove")
+        return reportsAdminApi.deletePost(reportId, "Removido pelo painel de moderador");
+      if (action === "remove-company") return reportsAdminApi.removeCompany(reportId);
+      return reportsAdminApi.warn(reportId);
+    },
     onSuccess: (_result, variables) => {
       toast(
         variables.action === "remove"
           ? texts.moderator.reports.removeDone
-          : texts.moderator.reports.warnDone,
+          : variables.action === "remove-company"
+            ? texts.moderator.reports.removeCompanyDone
+            : texts.moderator.reports.warnDone,
         "success",
       );
       void queryClient.invalidateQueries({ queryKey: ["moderator", "reports"] });
@@ -729,6 +740,18 @@ function ReportsSection({ admin }: { admin: boolean }) {
                         </Button>
                       )}
 
+                      {report.targetType === "COMPANY" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full"
+                          disabled={adminAction.isPending}
+                          onClick={() => setRemoveCompanyTarget(report.reportId)}
+                        >
+                          {texts.moderator.reports.removeCompany}
+                        </Button>
+                      )}
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -763,6 +786,22 @@ function ReportsSection({ admin }: { admin: boolean }) {
           if (!removeTarget) return;
           adminAction.mutate({ reportId: removeTarget, action: "remove" });
           setRemoveTarget(null);
+        }}
+      />
+      <ConfirmDialog
+        open={removeCompanyTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setRemoveCompanyTarget(null);
+        }}
+        title={texts.moderator.reports.removeCompanyTitle}
+        description={texts.moderator.reports.removeCompanyBody}
+        confirmLabel={texts.moderator.reports.removeCompany}
+        destructive
+        pending={adminAction.isPending}
+        onConfirm={() => {
+          if (!removeCompanyTarget) return;
+          adminAction.mutate({ reportId: removeCompanyTarget, action: "remove-company" });
+          setRemoveCompanyTarget(null);
         }}
       />
     </section>

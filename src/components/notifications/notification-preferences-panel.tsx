@@ -1,65 +1,69 @@
-import { useEffect, useState } from "react";
+import { useId, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { NotificationPreferences as Preferences } from "@/types/application/notification/notification-preferences";
+import type { PushState } from "@/types/components/notifications/push-state";
 import {
   type NotificationPreferenceKey,
   NotificationPreferences,
   type NotificationPreferencesSaveStatus,
 } from "@rede-enois/design-system/domain";
-import { useToast } from "@rede-enois/design-system/ui";
+import { Switch } from "@rede-enois/design-system/ui";
 
 import { notificationsApi } from "@/lib/api";
-import { pushApi } from "@/lib/api/push";
-import { enablePush, isPushActive, isPushSupported, pushErrorMessage } from "@/lib/push";
+
+import { usePushState } from "./use-push-state";
 
 const PREFERENCES_KEY = ["me", "notification-preferences"] as const;
 
-/** Push neste aparelho: ativo, e se dá para ligar daqui (navegador suporta e o servidor tem VAPID). */
-function usePushState() {
-  const { toast } = useToast();
-  const [enabled, setEnabled] = useState(false);
-  const [available, setAvailable] = useState(false);
-  const [busy, setBusy] = useState(false);
+/** Avisos no navegador deste aparelho: a chave que liga e desliga todas as categorias abaixo. */
+function PushDeviceRow({ push }: { push: PushState }) {
+  const id = useId();
 
-  useEffect(() => {
-    if (!isPushSupported()) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const config = await pushApi.config();
-        const active = await isPushActive();
-        if (cancelled) return;
-        setEnabled(active);
-        setAvailable(config.enabled && !!config.publicKey);
-      } catch {
-        // Sem a configuração não dá para inscrever: a nota aparece sem o botão de ligar.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  if (!push.available && !push.denied) return null;
 
-  const enable = async () => {
-    setBusy(true);
-    try {
-      const result = await enablePush();
-      if (result.ok) setEnabled(true);
-      else toast(pushErrorMessage(result.reason), "error");
-    } finally {
-      setBusy(false);
-    }
-  };
+  return (
+    <section className="surface-card p-4">
+      <h2 className="text-base font-medium text-text-strong">
+        {texts.notificationPreferences.deviceTitle}
+      </h2>
 
-  return { enabled, busy, enable: available ? () => void enable() : undefined };
+      <p className="mt-0.5 text-sm text-text-subtle">{texts.notificationPreferences.deviceHint}</p>
+
+      {push.denied ? (
+        // Com a permissão negada não há o que ligar daqui: o pedido não abre de novo.
+        <p className="mt-3 text-sm text-text-subtle">{texts.account.menu.pushDenied}</p>
+      ) : (
+        <div className="mt-1 flex items-center justify-between gap-4 py-3">
+          <div className="min-w-0">
+            <p id={`${id}-label`} className="text-sm font-medium text-text-strong">
+              {push.active
+                ? texts.notificationPreferences.deviceOn
+                : texts.notificationPreferences.deviceOff}
+            </p>
+          </div>
+
+          <Switch
+            checked={push.active}
+            disabled={push.busy}
+            aria-busy={push.busy}
+            aria-labelledby={`${id}-label`}
+            onCheckedChange={() => push.toggle()}
+          />
+        </div>
+      )}
+    </section>
+  );
 }
 
 /**
  * Preferências de notificação da conta sobre o `NotificationPreferences` do design system. Cada
  * switch salva sozinho com PUT parcial: o valor muda na hora e volta ao anterior se o servidor
  * recusar. A reversão é só da chave que falhou, para não desfazer outra que ainda está salvando.
+ *
+ * O mesmo bloco vive na página de preferências e dentro do "Uso saudável".
  */
 export function NotificationPreferencesPanel() {
   const queryClient = useQueryClient();
@@ -102,28 +106,30 @@ export function NotificationPreferencesPanel() {
   const saving = Object.values(pending).some(Boolean);
 
   return (
-    <NotificationPreferences
-      values={
-        data
-          ? {
-              weeklyDigest: data.weeklyDigest,
-              pushSocial: data.pushSocial,
-              pushMessages: data.pushMessages,
-              pushGroups: data.pushGroups,
-              pushJobs: data.pushJobs,
-              pushSystem: data.pushSystem,
-            }
-          : null
-      }
-      loading={preferences.isPending}
-      loadError={preferences.isError && !data}
-      onRetry={() => void preferences.refetch()}
-      onChange={(key, value) => save.mutate({ key, value })}
-      pending={pending}
-      saveStatus={saving ? "saving" : lastResult}
-      pushEnabled={push.enabled}
-      onEnablePush={push.enable}
-      pushBusy={push.busy}
-    />
+    <div className="space-y-4">
+      <PushDeviceRow push={push} />
+      <NotificationPreferences
+        values={
+          data
+            ? {
+                weeklyDigest: data.weeklyDigest,
+                pushSocial: data.pushSocial,
+                pushMessages: data.pushMessages,
+                pushGroups: data.pushGroups,
+                pushJobs: data.pushJobs,
+                pushSystem: data.pushSystem,
+              }
+            : null
+        }
+        loading={preferences.isPending}
+        loadError={preferences.isError && !data}
+        onRetry={() => void preferences.refetch()}
+        onChange={(key, value) => save.mutate({ key, value })}
+        pending={pending}
+        saveStatus={saving ? "saving" : lastResult}
+        pushEnabled={push.active}
+        pushBusy={push.busy}
+      />
+    </div>
   );
 }

@@ -5,14 +5,27 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { texts } from "@/texts";
 import type { MySession } from "@/types/application/mentor/my-session";
 import { UserAvatar } from "@rede-enois/design-system/domain";
-import { Badge, Button, ConfirmDialog, EmptyState, useToast } from "@rede-enois/design-system/ui";
-import { CalendarDays, Coins, X } from "lucide-react";
+import {
+  Badge,
+  Button,
+  ConfirmDialog,
+  EmptyState,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useToast,
+} from "@rede-enois/design-system/ui";
+import { CalendarDays, Coins, GraduationCap, User, X } from "lucide-react";
 
 import { mentorsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatarData } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
+
+import { MentorSessionsList } from "@/components/mentoring/mentor-sessions-list";
+import { SessionRoom } from "@/components/mentoring/session-room";
 
 const STATUS_LABELS: Record<MySession["status"], string> = {
   SCHEDULED: texts.mentoring.statusScheduled,
@@ -33,14 +46,16 @@ const formatWhen = (value: string | null) => {
 };
 
 /**
- * O outro lado da agenda: o que EU agendei. Antes o mentorado não tinha onde acompanhar a própria
- * sessão nem cancelar — o pedido sumia na conversa de mensagens.
+ * A agenda em um lugar só: o que EU agendei ("Como mentorado") e quem agendou comigo
+ * ("Como mentor"). Antes a agenda de mentor só existia escondida no diálogo do card, então
+ * parecia que a página só mostrava o lado de quem se inscreve.
  */
-export function MySessionsSection() {
+export function MySessionsSection({ mentorId }: { mentorId?: string | null }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: me } = useCurrentUser();
   const [pending, setPending] = useState<MySession | null>(null);
+  const [tab, setTab] = useState<"mentorado" | "mentor">("mentorado");
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-mentor-sessions"],
@@ -84,41 +99,67 @@ export function MySessionsSection() {
         </div>
       </div>
 
-      {isLoading && <p className="text-sm text-text-subtle">{texts.mentoring.mySessionsLoading}</p>}
+      <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
+        <TabsList>
+          <TabsTrigger value="mentorado">
+            <User className="h-4 w-4" aria-hidden="true" />
+            {texts.mentoring.asMenteeTab}
+          </TabsTrigger>
 
-      {!isLoading && isError && (
-        <div className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-          <p>{texts.mentoring.mySessionsError}</p>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 rounded-full"
-            onClick={() => refetch()}
-          >
-            {texts.mentoring.retry}
-          </Button>
-        </div>
-      )}
-
-      {!isLoading && !isError && sessions.length === 0 && (
-        <EmptyState icon={CalendarDays} title={texts.mentoring.mySessionsEmpty} />
-      )}
-
-      {!isLoading && !isError && sessions.length > 0 && (
-        <div className="space-y-3">
-          <SessionList
-            title={texts.mentoring.agendaUpcoming}
-            sessions={upcoming}
-            emptyLabel={texts.mentoring.agendaNoUpcoming}
-            onCancel={setPending}
-          />
-
-          {others.length > 0 && (
-            <SessionList title={texts.mentoring.agendaHistory} sessions={others} />
+          {mentorId && (
+            <TabsTrigger value="mentor">
+              <GraduationCap className="h-4 w-4" aria-hidden="true" />
+              {texts.mentoring.asMentorTab}
+            </TabsTrigger>
           )}
-        </div>
-      )}
+        </TabsList>
+
+        <TabsContent value="mentorado" className="space-y-3 pt-2">
+          {isLoading && (
+            <p className="text-sm text-text-subtle">{texts.mentoring.mySessionsLoading}</p>
+          )}
+
+          {!isLoading && isError && (
+            <div className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              <p>{texts.mentoring.mySessionsError}</p>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 rounded-full"
+                onClick={() => refetch()}
+              >
+                {texts.mentoring.retry}
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && !isError && sessions.length === 0 && (
+            <EmptyState icon={CalendarDays} title={texts.mentoring.mySessionsEmpty} />
+          )}
+
+          {!isLoading && !isError && sessions.length > 0 && (
+            <div className="space-y-3">
+              <SessionList
+                title={texts.mentoring.agendaUpcoming}
+                sessions={upcoming}
+                emptyLabel={texts.mentoring.agendaNoUpcoming}
+                onCancel={setPending}
+              />
+
+              {others.length > 0 && (
+                <SessionList title={texts.mentoring.agendaHistory} sessions={others} />
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        {mentorId && (
+          <TabsContent value="mentor" className="pt-2">
+            <MentorSessionsList mentorId={mentorId} />
+          </TabsContent>
+        )}
+      </Tabs>
 
       <ConfirmDialog
         open={pending != null}
@@ -200,16 +241,12 @@ function SessionList({
                 </Badge>
               </div>
 
-              {session.meetingUrl && (
-                <a
-                  href={session.meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="block break-all text-xs text-primary underline"
-                >
-                  {session.meetingUrl}
-                </a>
-              )}
+              <SessionRoom
+                mentorId={session.mentorId}
+                sessionId={session.id}
+                roomUrl={session.roomUrl}
+                roomMode={session.roomMode}
+              />
 
               {onCancel && session.status === "SCHEDULED" && (
                 <Button

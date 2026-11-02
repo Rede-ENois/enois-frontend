@@ -8,7 +8,7 @@ import type { PageResponse } from "@/types/application/api/page-response";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 import type { Event } from "@/types/application/event/event";
 import type { EventRecurrence } from "@/types/application/event/event-recurrence";
-import type { CreateEventFormProps } from "@/types/routes/events/create-event-form-props";
+import type { EventFormProps } from "@/types/routes/events/event-form-props";
 import type { EventListsSnapshot } from "@/types/routes/events/event-lists-snapshot";
 import type { FieldProps } from "@/types/routes/events/field-props";
 import {
@@ -20,6 +20,7 @@ import {
 import { CityStateField, formatLocation } from "@rede-enois/design-system/patterns";
 import {
   Button,
+  ConfirmDialog,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -32,7 +33,7 @@ import {
   PageHeader,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { Calendar, ImagePlus, Plus, X } from "lucide-react";
+import { Calendar, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { eventsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
@@ -99,6 +100,9 @@ function Eventos() {
   const [recurrenceError, setRecurrenceError] = useState<{ id: string; message: string } | null>(
     null,
   );
+  // Dono do evento: editar (o formulário é o mesmo da criação) e excluir com confirmação.
+  const [editing, setEditing] = useState<Event | null>(null);
+  const [deleting, setDeleting] = useState<Event | null>(null);
 
   const {
     data: eventsData,
@@ -213,6 +217,48 @@ function Eventos() {
     },
   });
 
+  const updateEvent = useMutation({
+    mutationFn: ({ eventId, data }: { eventId: string; data: CreateEventRequest }) => {
+      // A recorrência tem endpoint próprio: a edição do conteúdo não mexe na série.
+      const { recurrence: _ignored, ...content } = data;
+      return eventsApi.update(eventId, content);
+    },
+    onSuccess: (updated) => {
+      patchEventInLists(queryClient, updated.id, () => updated);
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
+      setEditing(null);
+      toast(texts.events.editSuccess, "success");
+    },
+    onError: (error) => {
+      if (cityStateErrorCode(error)) return;
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast(
+        code === "NOT_EVENT_OWNER"
+          ? texts.events.editNotOwner
+          : error instanceof ApiError
+            ? error.message
+            : texts.events.editError,
+        "error",
+      );
+    },
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: (eventId: string) => eventsApi.remove(eventId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
+      setDeleting(null);
+      toast(texts.events.deleteSuccess, "success");
+    },
+    onError: (error) => {
+      const code = error instanceof ApiError ? error.code : undefined;
+      toast(
+        code === "NOT_EVENT_OWNER" ? texts.events.editNotOwner : texts.events.deleteError,
+        "error",
+      );
+    },
+  });
+
   return (
     <AppContainer>
       <div className="space-y-6">
@@ -234,7 +280,7 @@ function Eventos() {
                   <DialogTitle>{texts.events.createEvent}</DialogTitle>
                 </DialogHeader>
 
-                <CreateEventForm
+                <EventForm
                   onSave={(data) => {
                     requireAuth();
                     createEvent.mutate(data);
@@ -277,38 +323,96 @@ function Eventos() {
                   ref={e.id === highlightedId ? cardRef : undefined}
                 />
 
-                {e.canManageRecurrence && !e.expired && (
-                  <div className="surface-card p-4">
-                    <EventRecurrenceControl
-                      value={e.recurrence ?? "NONE"}
-                      onChange={(recurrence) =>
-                        changeRecurrence.mutate({ eventId: e.id, recurrence })
-                      }
-                      pending={
-                        changeRecurrence.isPending && changeRecurrence.variables?.eventId === e.id
-                      }
-                      error={recurrenceError?.id === e.id ? recurrenceError.message : null}
-                    />
+                {e.canManageRecurrence && (
+                  <div className="surface-card space-y-3 p-4">
+                    {!e.expired && (
+                      <EventRecurrenceControl
+                        value={e.recurrence ?? "NONE"}
+                        onChange={(recurrence) =>
+                          changeRecurrence.mutate({ eventId: e.id, recurrence })
+                        }
+                        pending={
+                          changeRecurrence.isPending && changeRecurrence.variables?.eventId === e.id
+                        }
+                        error={recurrenceError?.id === e.id ? recurrenceError.message : null}
+                      />
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full gap-1.5"
+                        onClick={() => setEditing(e)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+
+                        <>{texts.events.edit}</>
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="rounded-full gap-1.5 text-destructive"
+                        onClick={() => setDeleting(e)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+
+                        <>{texts.events.remove}</>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
             ))}
           </div>
         )}
+
+        <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent className="max-h-[88vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{texts.events.editTitle}</DialogTitle>
+            </DialogHeader>
+
+            {editing && (
+              <EventForm
+                initial={editing}
+                onSave={(data) => {
+                  requireAuth();
+                  updateEvent.mutate({ eventId: editing.id, data });
+                }}
+                isPending={updateEvent.isPending}
+                error={updateEvent.error}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <ConfirmDialog
+          open={deleting !== null}
+          onOpenChange={(open) => !open && setDeleting(null)}
+          title={texts.events.deleteTitle}
+          description={texts.events.deleteDescription}
+          confirmLabel={texts.events.remove}
+          destructive
+          pending={deleteEvent.isPending}
+          onConfirm={() => deleting && deleteEvent.mutate(deleting.id)}
+        />
       </div>
     </AppContainer>
   );
 }
 
-function CreateEventForm({ onSave, isPending, error }: CreateEventFormProps) {
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [format, setFormat] = useState<CreateEventRequest["format"]>("ONLINE");
-  const [host, setHost] = useState("");
-  const [cover, setCover] = useState<string | null>(null);
-  const [streamUrl, setStreamUrl] = useState("");
-  const [location, setLocation] = useState("");
+function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [date, setDate] = useState(initial?.date ?? "");
+  const [time, setTime] = useState(initial?.time ?? "");
+  const [format, setFormat] = useState<CreateEventRequest["format"]>(initial?.format ?? "ONLINE");
+  const [host, setHost] = useState(initial?.host ?? "");
+  const [cover, setCover] = useState<string | null>(initial?.cover ?? null);
+  const [streamUrl, setStreamUrl] = useState(initial?.streamUrl ?? "");
+  const [location, setLocation] = useState(initial?.location ?? "");
+  // A recorrência só existe na criação: mudá-la depois é o controle próprio do card.
   const [recurrence, setRecurrence] = useState<EventRecurrence>("NONE");
   // The time rule shows only after a save attempt, not while the person is still filling the form.
   const [triedSave, setTriedSave] = useState(false);
@@ -316,7 +420,7 @@ function CreateEventForm({ onSave, isPending, error }: CreateEventFormProps) {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const coverUpload = useMediaUpload();
   // Cidade/UF estruturadas só para encontro presencial ou híbrido (a API recusa no online).
-  const place = useCityState(null, error);
+  const place = useCityState(initial ? { city: initial.city, state: initial.state } : null, error);
   const inPerson = format !== "ONLINE";
 
   const handleCoverChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -444,12 +548,14 @@ function CreateEventForm({ onSave, isPending, error }: CreateEventFormProps) {
 
       {inPerson && <CityStateField idPrefix="event-place" disabled={isPending} {...place.field} />}
 
-      <EventRecurrenceField
-        value={recurrence}
-        onChange={setRecurrence}
-        error={triedSave && timeMissing ? texts.events.recurrence.timeRequired : null}
-        disabled={isPending}
-      />
+      {!initial && (
+        <EventRecurrenceField
+          value={recurrence}
+          onChange={setRecurrence}
+          error={triedSave && timeMissing ? texts.events.recurrence.timeRequired : null}
+          disabled={isPending}
+        />
+      )}
 
       <Field label={texts.events.form.format}>
         <select
@@ -486,7 +592,13 @@ function CreateEventForm({ onSave, isPending, error }: CreateEventFormProps) {
           });
         }}
       >
-        {isPending ? texts.common.creating : texts.events.createEvent}
+        {isPending
+          ? initial
+            ? texts.common.saving
+            : texts.common.creating
+          : initial
+            ? texts.events.saveEdit
+            : texts.events.createEvent}
       </Button>
     </div>
   );

@@ -8,6 +8,8 @@ export type CreatePostInput = Pick<PostView, "type" | "content"> &
     topic?: string;
     /** Canal privado da comunidade (o tema vem do canal; o post não entra em feed). */
     channelId?: string;
+    /** Alternativas da enquete (2 a 6), só quando `type` é `POLL`; nos outros tipos é ignorado. */
+    pollOptions?: string[];
     /** Honeypot — humano nunca vê nem preenche; bot que preenche é banido no backend. */
     website?: string;
   };

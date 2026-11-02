@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 const SW_SOURCE = readFileSync(fileURLToPath(new URL("../public/sw.js", import.meta.url)), "utf8");
 
 /** Runs public/sw.js against a fake worker scope and returns its fetch handler and cache spies. */
-function loadWorker(network: () => Promise<Response>) {
+function loadWorker(network: () => Promise<Response>, windows: unknown[] = []) {
   const listeners: Record<
     string,
     (event: {
@@ -20,14 +20,16 @@ function loadWorker(network: () => Promise<Response>) {
     match: vi.fn(async (key: unknown) => (key === "/offline.html" ? offline : undefined)),
     keys: vi.fn(async () => []),
   };
+  const openWindow = vi.fn(async () => null);
   const self = {
     location: { origin: "https://enois.ia.br" },
     addEventListener: (type: string, handler: (typeof listeners)[string]) => {
       listeners[type] = handler;
     },
+    clients: { matchAll: vi.fn(async () => windows), openWindow },
   };
   new Function("self", "caches", "fetch", SW_SOURCE)(self, caches, vi.fn(network));
-  return { onFetch: listeners.fetch, caches, put, offline };
+  return { onFetch: listeners.fetch, listeners, caches, put, offline, openWindow };
 }
 
 function navigate(onFetch: ReturnType<typeof loadWorker>["onFetch"]): Promise<Response> {
@@ -59,5 +61,40 @@ describe("service worker navigations", () => {
     expect(await navigate(onFetch)).toBe(offline);
     expect(caches.match).toHaveBeenCalledTimes(1);
     expect(caches.match).toHaveBeenCalledWith("/offline.html");
+  });
+});
+
+describe("clique na notificação push", () => {
+  /** Dispara `notificationclick` e espera o trabalho do worker terminar. */
+  async function click(listener: (event: never) => void, url: string): Promise<void> {
+    let trabalho: Promise<unknown> | undefined;
+    listener({
+      notification: { close: vi.fn(), data: { url } },
+      waitUntil: (promise: Promise<unknown>) => {
+        trabalho = promise;
+      },
+    } as never);
+    await trabalho;
+  }
+
+  it("entrega o href do app para a aba traduzir, sem navegar sozinho", async () => {
+    const janela = { focus: vi.fn(), postMessage: vi.fn(), navigate: vi.fn() };
+    const { listeners } = loadWorker(async () => new Response(""), [janela]);
+
+    await click(listeners.notificationclick, "/configuracoes/seguranca");
+
+    expect(janela.postMessage).toHaveBeenCalledWith({
+      type: "enois:navigate",
+      href: "/configuracoes/seguranca",
+    });
+    expect(janela.navigate).not.toHaveBeenCalled();
+  });
+
+  it("sem aba aberta, abre o app com o destino na query", async () => {
+    const { listeners, openWindow } = loadWorker(async () => new Response(""), []);
+
+    await click(listeners.notificationclick, "/api/feed/posts/post_1");
+
+    expect(openWindow).toHaveBeenCalledWith("/?push=%2Fapi%2Ffeed%2Fposts%2Fpost_1");
   });
 });

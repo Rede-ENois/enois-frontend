@@ -5,6 +5,7 @@ import {
   faiscaToBrlMicros,
   formatBrlMicros,
   formatFaisca,
+  parseBrlInput,
   parseFaiscaInput,
 } from "./faisca";
 
@@ -32,5 +33,17 @@ describe("faísca fracionada", () => {
     expect(parseFaiscaInput("50,5")).toBe(50_500);
     expect(parseFaiscaInput("1.234,56")).toBe(1_234_560);
     expect(parseFaiscaInput("50.5")).toBe(50_500);
+  });
+
+  it("lê dinheiro em reais inteiros, sem confundir com milésimos de faísca", () => {
+    // O freela em dinheiro guarda R$ inteiro; a faísca guarda milésimo. Mesmo texto, números
+    // diferentes — trocar os dois inflava o valor em 1.000×.
+    expect(parseFaiscaInput("1500")).toBe(1_500_000);
+    expect(parseBrlInput("1500")).toBe(1_500);
+    expect(parseBrlInput("R$ 1.500")).toBe(1_500);
+    expect(parseBrlInput("2.000,50")).toBe(2_001);
+    expect(parseBrlInput("  ")).toBeNull();
+    expect(parseBrlInput("0")).toBeNull();
+    expect(parseBrlInput("abc")).toBeNull();
   });
 });
