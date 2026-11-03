@@ -1,0 +1,76 @@
+[
+  {
+    "name": "dialogo-1280",
+    "width": 1280,
+    "open": true,
+    "text": "Silenciar Fulana de Tal? | A pessoa some do seu feed, dos comentários e das notificações, mas continua vendo você normalmente — e não é avisada. A conexão continua. Escolha por quanto tempo: | 24 horas | 72 horas | 1 semana | Sempre (até remover) | Cancelar | Silenciar | Fechar",
+    "options": [
+      {
+        "label": "24 horas",
+        "checked": true,
+        "tabIndex": 0
+      },
+      {
+        "label": "72 horas",
+        "checked": false,
+        "tabIndex": -1
+      },
+      {
+        "label": "1 semana",
+        "checked": false,
+        "tabIndex": -1
+      },
+      {
+        "label": "Sempre (até remover)",
+        "checked": false,
+        "tabIndex": -1
+      }
+    ],
+    "overflow": 0
+  },
+  {
+    "name": "dialogo-390",
+    "width": 390,
+    "open": true,
+    "text": "Silenciar Fulana de Tal? | A pessoa some do seu feed, dos comentários e das notificações, mas continua vendo você normalmente — e não é avisada. A conexão continua. Escolha por quanto tempo: | 24 horas | 72 horas | 1 semana | Sempre (até remover) | Cancelar | Silenciar | Fechar",
+    "options": [
+      {
+        "label": "24 horas",
+        "checked": true,
+        "tabIndex": 0
+      },
+      {
+        "label": "72 horas",
+        "checked": false,
+        "tabIndex": -1
+      },
+      {
+        "label": "1 semana",
+        "checked": false,
+        "tabIndex": -1
+      },
+      {
+        "label": "Sempre (até remover)",
+        "checked": false,
+        "tabIndex": -1
+      }
+    ],
+    "overflow": 0
+  },
+  {
+    "name": "silenciada-1280",
+    "width": 1280,
+    "open": true,
+    "text": "Remover silêncio de Fulana de Tal? | Você silenciou esta pessoa até 09/11/2026. O conteúdo dela volta a aparecer sozinho nessa data. | Cancelar | Remover silêncio | Fechar",
+    "options": [],
+    "overflow": 0
+  },
+  {
+    "name": "silenciada-390",
+    "width": 390,
+    "open": true,
+    "text": "Remover silêncio de Fulana de Tal? | Você silenciou esta pessoa até 09/11/2026. O conteúdo dela volta a aparecer sozinho nessa data. | Cancelar | Remover silêncio | Fechar",
+    "options": [],
+    "overflow": 0
+  }
+]

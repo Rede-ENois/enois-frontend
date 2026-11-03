@@ -7,4 +7,6 @@ export type ConnectionStatusResult = {
   blocked: boolean;
   /** Se eu silenciei esta pessoa (ela some do meu feed, mensagens e notificações). */
   muted: boolean;
+  /** Quando o silêncio vence sozinho (ISO); `null` quando ele vale até remover. */
+  muteExpiresAt: string | null;
 };

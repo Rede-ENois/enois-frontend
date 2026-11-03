@@ -4,4 +4,6 @@ export type MutedUser = {
   name: string | null;
   avatar: string | null;
   mutedAt: string | null;
+  /** Quando o silenciamento vence sozinho (ISO); `null` = vale até remover. */
+  expiresAt: string | null;
 };
