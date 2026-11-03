@@ -108,6 +108,14 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+/**
+ * Whether a destination belongs to the interface: its own route context, or a page shared by both.
+ * A hub (Explore) lists only these, so a tap never switches the interface behind the person's back.
+ */
+export function isOfInterface(href: string, context: InterfaceContext): boolean {
+  return (contextOfPath(href) ?? context) === context;
+}
+
 /** The active interface: the route's own when it has one, otherwise the stored choice. */
 export function resolveContext(pathname: string, stored: InterfaceContext): InterfaceContext {
   return contextOfPath(pathname) ?? stored;
