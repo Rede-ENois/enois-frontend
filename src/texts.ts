@@ -1381,14 +1381,33 @@ export const texts = {
     blockedSince: (date: string | null) => (date ? `Bloqueado em ${dataCurta(date)}` : "Bloqueado"),
     mute: "Silenciar",
     unmute: "Remover silêncio",
+    muteTitle: (name: string) => `Silenciar ${name}?`,
+    unmuteTitle: (name: string) => `Remover silêncio de ${name}?`,
+    muteDescription:
+      "A pessoa some do seu feed, dos comentários e das notificações, mas continua vendo você normalmente — e não é avisada. A conexão continua. Escolha por quanto tempo:",
+    muteDurationLabel: "Por quanto tempo",
+    muteDurations: {
+      "24h": "24 horas",
+      "72h": "72 horas",
+      "7d": "1 semana",
+      forever: "Sempre (até remover)",
+    },
+    muteActiveDescription: (expiresAt: string | null) =>
+      expiresAt
+        ? `Você silenciou esta pessoa até ${dataCurta(expiresAt)}. O conteúdo dela volta a aparecer sozinho nessa data.`
+        : "Você silenciou esta pessoa até remover. O conteúdo dela continua escondido até você desfazer.",
+    muteError: "Não foi possível concluir. Tente novamente.",
+    mutedBadge: "Você silenciou esta pessoa. O conteúdo dela está escondido para você.",
     mutedTitle: "Usuários silenciados",
     mutedSeoTitle: "Usuários silenciados · Énóis",
     mutedDescription:
       "Estas pessoas estão silenciadas: os posts, mensagens e notificações delas não aparecem para você, mas elas não sabem.",
     mutedEmpty: "Você não silenciou ninguém.",
     mutedHint:
-      "O silêncio esconde o conteúdo da pessoa sem que ela saiba. Diferente do bloqueio, a pessoa ainda pode ver você. Remova o silêncio aqui quando quiser.",
+      "O silêncio esconde o conteúdo da pessoa sem que ela saiba. Diferente do bloqueio, a pessoa ainda pode ver você. Com prazo, ele vence sozinho; remova o silêncio aqui quando quiser.",
     mutedSince: (date: string | null) => (date ? `Silenciado em ${dataCurta(date)}` : "Silenciado"),
+    mutedUntil: (expiresAt: string | null) =>
+      expiresAt ? `Volta em ${dataCurta(expiresAt)}` : "Até remover",
     openToWork: "Aberto a oportunidades",
     mentorAvailable: "Mentor disponível",
     connectionsMeta: (count: number) => `· ${count} ${count === 1 ? "conexão" : "conexões"}`,
