@@ -15,6 +15,7 @@ import {
   EMPTY_PROFILE_LOOK,
   PostCardSkeletons,
   ProfileCard,
+  ProfileEditMenu,
   ProfileThemeScope,
   StyledName,
   UserAvatar,
@@ -192,6 +193,10 @@ function Profile() {
   // A capa tem duas formas (foto ou HTML/CSS): o dialogo escolhe, e o clique na capa abre ele.
   const [bannerOpen, setBannerOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
+  // Opened from the "Editar perfil" menu, which holds every profile edit behind one button.
+  const [editOpen, setEditOpen] = useState(false);
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const [bioOpen, setBioOpen] = useState(false);
   const [networkDialogKind, setNetworkDialogKind] = useState<"connections" | "followers" | null>(
     null,
   );
@@ -575,83 +580,32 @@ function Profile() {
               <div className="flex flex-wrap gap-2">
                 {isOwnProfile ? (
                   <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => avatarRef.current?.click()}
-                      disabled={avatarUpload.status === "uploading"}
-                    >
-                      <Camera className="h-4 w-4" />
-
-                      <>
-                        {avatarUpload.status === "uploading"
-                          ? texts.common.sending
-                          : texts.posts.editPhoto}
-                      </>
-                    </Button>
-
-                    <EditProfileDialog profile={user}>
-                      <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                        <Settings className="h-4 w-4" />
-
-                        <>{texts.profile.editProfile}</>
-                      </Button>
-                    </EditProfileDialog>
-
-                    {professional.applicant ? (
-                      <Link
-                        to="/profissional/$username"
-                        params={{ username: professional.applicant.username }}
-                      >
-                        <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                          <IdCard className="h-4 w-4" />
-
-                          <>{texts.profile.professionalProfile}</>
-                        </Button>
-                      </Link>
-                    ) : (
-                      professional.professionalSetupHref && (
-                        <Link to="/profissional">
-                          <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                            <IdCard className="h-4 w-4" />
-
-                            <>{texts.profile.professionalSetup}</>
-                          </Button>
-                        </Link>
-                      )
-                    )}
-
-                    {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
-                      Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setBannerOpen(true)}
-                      disabled={bannerUpload.status === "uploading"}
-                    >
-                      <ImageIcon className="h-4 w-4" />
-
-                      <>
-                        {bannerUpload.status === "uploading"
-                          ? texts.common.sending
-                          : texts.profile.bannerHtml.action}
-                      </>
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setStatusOpen(true)}
-                    >
-                      <MessageSquareText className="h-4 w-4" />
-
-                      <>{texts.cosmetics.status.action}</>
-                    </Button>
-
+                    <ProfileEditMenu
+                      onEditInfo={() => setEditOpen(true)}
+                      onEditPhoto={() => avatarRef.current?.click()}
+                      onEditCover={() => setBannerOpen(true)}
+                      onEditStatus={() => setStatusOpen(true)}
+                      onEditResume={() => setResumeOpen(true)}
+                      onEditBioHtml={() => setBioOpen(true)}
+                      onEditAppearance={() => setAppearanceOpen(true)}
+                      onEditLook={() => setLookOpen(true)}
+                      photoBusy={avatarUpload.status === "uploading"}
+                      coverBusy={bannerUpload.status === "uploading"}
+                      professional={
+                        professional.applicant
+                          ? {
+                              href: `/profissional/${encodeURIComponent(professional.applicant.username)}`,
+                              setup: false,
+                            }
+                          : professional.professionalSetupHref
+                            ? { href: professional.professionalSetupHref, setup: true }
+                            : null
+                      }
+                    />
+                    <EditProfileDialog profile={user} open={editOpen} onOpenChange={setEditOpen} />
                     <ProfileResumeDialog
+                      open={resumeOpen}
+                      onOpenChange={setResumeOpen}
                       resumeUrl={myProfile?.resumeUrl}
                       resumeName={myProfile?.resumeName}
                       onSaved={() => {
@@ -659,6 +613,8 @@ function Profile() {
                       }}
                     />
                     <ProfileBioDialog
+                      open={bioOpen}
+                      onOpenChange={setBioOpen}
                       initialHtml={user.bioHtml ?? null}
                       onSaved={() => {
                         queryClient.invalidateQueries({ queryKey: ["me"] });
@@ -669,32 +625,6 @@ function Profile() {
                         queryClient.invalidateQueries({ queryKey: ["auth-me"] });
                       }}
                     />
-
-                    {/* Personalização do tema: fica no próprio perfil, que é onde a pessoa
-                      cuida da conta. As cores valem só neste dispositivo. */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setAppearanceOpen(true)}
-                    >
-                      <Palette className="h-4 w-4" />
-
-                      <>{texts.appearance.action}</>
-                    </Button>
-
-                    {/* Aparência da vitrine: o tema que os VISITANTES veem. Fica ao lado da
-                      aparência da conta porque as duas são "como meu perfil se parece". */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => setLookOpen(true)}
-                    >
-                      <Sparkles className="h-4 w-4" />
-
-                      <>{texts.profile.lookAction}</>
-                    </Button>
 
                     {/* Sem identidade verificada a reputação é multiplicada por zero: o caminho para
                       resolver (confirmar e-mail ou ligar o 2FA) fica aqui, no próprio perfil. */}

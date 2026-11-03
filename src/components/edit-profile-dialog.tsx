@@ -61,7 +61,7 @@ function useListMutations<TData>(
   return { create, update, remove, pending: create.isPending || update.isPending };
 }
 
-export function EditProfileDialog({ profile: publicProfile, children }: Props) {
+export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }: Props) {
   // A página entrega o perfil público, que não traz a data de nascimento, de propósito: ela só
   // existe na projeção do dono (/me).
   const { data: me } = useCurrentUser();
@@ -69,7 +69,6 @@ export function EditProfileDialog({ profile: publicProfile, children }: Props) {
 
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<EditProfileTab>("info");
   const badgeUpload = useMediaUpload();
 
@@ -87,7 +86,7 @@ export function EditProfileDialog({ profile: publicProfile, children }: Props) {
           replace: true,
         });
       }
-      setOpen(false);
+      onOpenChange(false);
     },
   });
 
@@ -215,7 +214,7 @@ export function EditProfileDialog({ profile: publicProfile, children }: Props) {
         key={me ? "com-me" : "sem-me"}
         profile={profile}
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={onOpenChange}
         tab={tab}
         onTabChange={setTab}
         savePending={updateProfile.isPending}
@@ -232,9 +231,7 @@ export function EditProfileDialog({ profile: publicProfile, children }: Props) {
         onCreateItem={(kind: EditProfileListKind, data) => lists[kind].create.mutateAsync(data)}
         onUpdateItem={(kind, id, data) => lists[kind].update.mutateAsync({ id, data })}
         onDeleteItem={(kind, id) => lists[kind].remove.mutate(id)}
-      >
-        {children}
-      </EditProfileDialogView>
+      />
     </BadgeMediaProvider>
   );
 }

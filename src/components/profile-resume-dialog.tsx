@@ -14,7 +14,13 @@ import { useMediaUpload } from "@/lib/use-media-upload";
  * O arquivo vive no storage de mídia (como avatar e emblema) e o perfil guarda só o endereço e o
  * nome original — é o nome que faz o download sair como "curriculo-ana.pdf" em vez de um id do CDN.
  */
-export function ProfileResumeDialog({ resumeUrl, resumeName, onSaved }: ProfileResumeDialogProps) {
+export function ProfileResumeDialog({
+  open,
+  onOpenChange,
+  resumeUrl,
+  resumeName,
+  onSaved,
+}: ProfileResumeDialogProps) {
   const { toast } = useToast();
   const upload = useMediaUpload();
 
@@ -38,6 +44,8 @@ export function ProfileResumeDialog({ resumeUrl, resumeName, onSaved }: ProfileR
 
   return (
     <ProfileResumeDialogView
+      open={open}
+      onOpenChange={onOpenChange}
       resumeUrl={resumeUrl}
       resumeName={resumeName}
       busy={upload.status === "uploading" || save.isPending}

@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { useMutation } from "@tanstack/react-query";
 
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
@@ -19,14 +17,18 @@ import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
  * Deixar vazio é uma ação legítima: limpa o HTML e o perfil volta a mostrar a bio de texto — por
  * isso o botão de limpar existe, em vez de o campo "não deixar" apagar.
  */
-export function ProfileBioDialog({ initialHtml, onSaved }: ProfileBioDialogProps) {
+export function ProfileBioDialog({
+  open,
+  onOpenChange,
+  initialHtml,
+  onSaved,
+}: ProfileBioDialogProps) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
 
   const save = useMutation({
     mutationFn: (html: string) => profileApi.update({ bioHtml: html }),
     onSuccess: () => {
-      setOpen(false);
+      onOpenChange(false);
       toast(texts.profile.bioHtml.saved);
       onSaved();
     },
@@ -38,7 +40,8 @@ export function ProfileBioDialog({ initialHtml, onSaved }: ProfileBioDialogProps
   return (
     <ProfileBioDialogView
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={onOpenChange}
+      trigger={false}
       initialHtml={initialHtml}
       maxLength={PROFILE_HTML_MAX_LENGTH}
       savePending={save.isPending}
