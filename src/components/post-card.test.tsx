@@ -46,10 +46,8 @@ vi.mock("@rede-enois/design-system/domain", async (importOriginal) => {
       mocks.card = props;
       return (
         <div>
-          {props.renderMediaGrid?.({
-            mediaIds: props.post.mediaIds,
-            known: props.post.media,
-          } as never)}
+          {/* Called as the DS card calls it, with the ids only: `known` is what the container adds. */}
+          {props.renderMediaGrid?.({ mediaIds: props.post.mediaIds })}
         </div>
       );
     },
