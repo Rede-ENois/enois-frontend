@@ -87,6 +87,11 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
   (`useMenuHasNews`, `src/components/use-menu-has-news.ts`).
 - Mobile dock (< 1024px, `src/components/mobile-dock.tsx`): Início, Explorar, Publicar
   (`/feed?compor=POST`), Mensagens and Avisos, with the same signals.
+- Explorar (`src/routes/explorar.tsx`): lists only the rooms of the active interface plus the shared
+  ones (`isOfInterface`): Trabalho appears in the professional interface, Brincar and Comunidade
+  rooms in the social one. An empty section is left out. The menu switcher is the way across, so a
+  tap in Explorar never switches the interface. The header bell shows only from `lg`; below it the
+  dock carries Avisos.
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
 - Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
 
