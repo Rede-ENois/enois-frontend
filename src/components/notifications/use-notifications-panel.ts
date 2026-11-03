@@ -14,7 +14,7 @@ import { networkQueries } from "@/lib/query-options/network";
 import { useDisabledModules } from "@/lib/use-personalization";
 
 /** Maps an API notification into what the design system row shows. */
-function toNotificationData(notification: Notification) {
+export function toNotificationData(notification: Notification) {
   return {
     ...notification,
     actorHref: notification.actorUsername
