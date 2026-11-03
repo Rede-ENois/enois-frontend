@@ -54,6 +54,13 @@ export const messagesApi = {
 
   markAsRead: (conversationId: string) => api.post<void>(`/conversations/${conversationId}/read`),
 
+  /** Heartbeat da conversa aberta na tela: enquanto vale, mensagens dela não notificam quem olha. */
+  viewing: (conversationId: string) => api.post<void>(`/conversations/${conversationId}/viewing`),
+
+  /** A conversa saiu da tela: as próximas mensagens voltam a notificar. */
+  leftConversation: (conversationId: string) =>
+    api.delete<void>(`/conversations/${conversationId}/viewing`),
+
   /** "Apagar para mim" em massa: esconde as conversas só para quem chama. */
   hideConversations: (ids: string[]) =>
     api.post<{ hidden: number }>("/conversations/hide", { ids }),

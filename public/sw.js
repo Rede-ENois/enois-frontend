@@ -13,7 +13,7 @@
  * cliente recarrega sozinho quando o novo SW assume (ver src/lib/pwa.ts).
  */
 
-const VERSION = "enois-v12";
+const VERSION = "enois-v13";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const PRECACHE = [
@@ -77,7 +77,10 @@ self.addEventListener("push", (event) => {
       badge: "/icons/brand-icon-192.png",
       // The id lets the app mark the notification read when the person opens it from here.
       data: { url, notificationId: data.notificationId || null },
+      // Mensagens de uma conversa chegam com a mesma tag: o push novo substitui o anterior na
+      // bandeja em vez de empilhar, e `renotify` faz o substituto avisar de novo.
       tag: data.tag || undefined,
+      renotify: Boolean(data.tag),
     }),
   );
 });

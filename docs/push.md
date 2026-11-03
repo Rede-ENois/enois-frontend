@@ -18,6 +18,14 @@ Notificações push no navegador, sem app nativo.
    it from the bell and the menu signals. `n` is validated (`notificationIdDoPush`) and dropped from
    the URL after use.
 
+6. Mensagens: o backend manda um push por mensagem com `tag` = `conversation:{id}`; o service
+   worker mostra com essa tag e `renotify`, então o push novo substitui o anterior da mesma conversa
+   na bandeja em vez de empilhar. Com a conversa aberta e visível, o filão
+   ([`use-conversation-on-screen.ts`](../src/lib/use-conversation-on-screen.ts)) manda o heartbeat
+   `POST /conversations/{id}/viewing` a cada 20s (e `DELETE` ao sair da tela ou ir para o fundo):
+   enquanto vale, mensagens dela não viram notificação nem push. O mesmo hook marca a conversa como
+   lida (as notificações dela também) e fecha os pushes dela que ficaram na bandeja deste aparelho.
+
 ## Estados
 
 - Permissão negada no navegador → o toggle mostra como reativar nas configurações do site.
