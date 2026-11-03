@@ -5,4 +5,6 @@ export const useAppShellStore = create<AppShellState>()((set) => ({
   mobileNavigationOpen: false,
   openMobileNavigation: () => set({ mobileNavigationOpen: true }),
   closeMobileNavigation: () => set({ mobileNavigationOpen: false }),
+  conversationOpen: false,
+  setConversationOpen: (open) => set({ conversationOpen: open }),
 }));
