@@ -25,10 +25,13 @@ São 85 coleções prontas × 2 modos. Algumas têm nomes da cultura da comunida
 ([`scripts/theme-audit.mjs`](../scripts/theme-audit.mjs)) varre todas as coleções × modos × páginas
 medindo contraste real (WCAG) e overflow — é o teste de regressão visual do sistema.
 
-As quatro famílias novas (Java Swing, internet dos anos 2000, arcade e computação clássica) vivem no
-design system (`theme-collections-generations.ts`) e têm identidade estrutural, não só paleta. A
-galeria as mostra por categoria e carrega em lotes de 18 ("Mostrar mais"), porque montar as 85 de uma
-vez custava cerca de 1,5 s na abertura.
+As coleções de desktop clássico (Java Swing, Windows clássico), internet dos anos 2000, jogos e
+terminal vivem no design system (`theme-collections-generations.ts`) e têm identidade estrutural, não
+só paleta. Elas entram nas **seis famílias** que já existiam, cada uma com um jeito próprio de olhar a
+tela: `casa`, `retro` (sistemas com cara de desktop), `web2000`, `jogos`, `maquinas` e `papel` — uma
+categoria própria para cada geração só repetia o sentido das anteriores. A galeria mostra as famílias
+nessa ordem e carrega em lotes de 18 ("Mostrar mais"), porque montar as 85 de uma vez custava cerca de
+1,5 s na abertura.
 
 ## Aparência do perfil (vitrine)
 

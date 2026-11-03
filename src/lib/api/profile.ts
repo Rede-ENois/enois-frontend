@@ -10,7 +10,7 @@ import type { ProfileAppearance } from "@/types/application/profile/profile-appe
 import type { ProfileNetworkUser } from "@/types/application/profile/profile-network-user";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 
-import { api } from "../api-client";
+import { ApiError, api } from "../api-client";
 
 export const profileApi = {
   /** Liga/desliga a secao de ranking no perfil (preferencia da conta; padrao: mostrar). */
@@ -36,9 +36,26 @@ export const profileApi = {
   /**
    * Aparência da vitrine: um visual para o perfil social e outro para o profissional.
    * Não confundir com o tema da conta (`/me/theme`), que é a preferência de quem olha.
+   *
+   * Rota fora da superfície do servidor responde 200 com corpo vazio (anti-enumeração), não
+   * 404 — e um "salvo" vazio fecharia o diálogo sem gravar nada. Sem o objeto de volta, a
+   * escrita falhou; dizer isso é melhor do que fingir sucesso.
    */
-  setProfileAppearance: (appearance: ProfileAppearance) =>
-    api.put<ProfileAppearance>("/me/profile-appearance", appearance),
+  setProfileAppearance: async (appearance: ProfileAppearance) => {
+    const saved = await api.put<ProfileAppearance | undefined>(
+      "/me/profile-appearance",
+      appearance,
+    );
+    if (!saved || typeof saved !== "object") {
+      throw new ApiError(
+        0,
+        "PROFILE_APPEARANCE_UNAVAILABLE",
+        "A aparência do perfil não está disponível agora. Tente de novo em alguns minutos.",
+        "/me/profile-appearance",
+      );
+    }
+    return saved;
+  },
 
   experiences: {
     list: () => api.get<Experience[]>("/me/experiences"),

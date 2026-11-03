@@ -106,6 +106,23 @@ describe("resposta da operação após renovar a sessão", () => {
     expect(localStorage.getItem("session_active")).toBe("1");
   });
 
+  it("aceita 200 com corpo vazio em vez de estourar no json", async () => {
+    // É a resposta do catch-all para caminho fora da superfície: 200 e zero bytes. Tentar
+    // interpretar isso como JSON virava "Unexpected end of JSON input" na cara de quem salvava.
+    fetchMock.mockResolvedValueOnce(new Response("", { status: 200 }));
+
+    await expect(api.get("/recurso")).resolves.toBeUndefined();
+    expect(localStorage.getItem("session_active")).toBe("1");
+  });
+
+  it("aceita corpo em branco sem Content-Length declarado", async () => {
+    // Alguns proxies entregam o corpo vazio como stream sem `Content-Length`; o critério tem que
+    // ser o conteúdo lido, não o cabeçalho.
+    fetchMock.mockResolvedValueOnce(new Response("   ", { status: 200 }));
+
+    await expect(api.get("/recurso")).resolves.toBeUndefined();
+  });
+
   it("mantém o tratamento específico de permissão da operação", async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json({ code: "BIRTH_DATE_REQUIRED", message: "Informe a data" }, { status: 403 }),
