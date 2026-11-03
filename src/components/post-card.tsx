@@ -25,7 +25,6 @@ import { sealsApi } from "@/lib/api/seals";
 import { saveFeedScroll } from "@/lib/feed-scroll-restoration";
 import { savedPostsQueryOptions } from "@/lib/feed/saved-posts";
 import { useAuth } from "@/lib/use-auth";
-import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PollCard } from "@/components/post/poll-card";
@@ -53,8 +52,6 @@ function PostCardContainer({
   pinPending = false,
 }: PostCardProps) {
   const { requireAuth, user } = useAuth();
-  // Modo lite: nada de player de terceiro montando sozinho no feed.
-  const lite = useLiteMode();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isOwner = user?.id != null && user.id === post.authorId;
@@ -268,7 +265,6 @@ function PostCardContainer({
           saveFeedScroll({ tab: feedTab, postId: post.id, scrollY: window.scrollY });
         }
       }}
-      autoplayLinks={!lite}
       pageHtml={pageHtml}
       pageLoading={pageLoading}
       mediaSpoiler={mediaSpoiler}
