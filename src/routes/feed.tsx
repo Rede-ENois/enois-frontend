@@ -1464,7 +1464,9 @@ function Home() {
                       />
                     </ProfilePeek>
 
-                    <div className="min-w-0 flex-1">
+                    {/* `overflow-hidden` é a contenção de verdade: o nome personalizado pode vir
+                        com fonte maior e sombra, e sem isso ele pinta por cima do "Conectar". */}
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <ProfilePeek
                         username={u.username}
                         name={u.name}

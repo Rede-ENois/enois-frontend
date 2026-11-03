@@ -63,7 +63,10 @@ function ProfilePeekCard({ username, userId }: ProfilePeekCardProps) {
 /** Avatar or name of a person that opens their mini profile card in a popover. */
 export function ProfilePeek({ username, userId, name, children, className }: ProfilePeekProps) {
   const [open, setOpen] = useState(false);
-  if (!username && !userId) return <>{children}</>;
+  // Sem destino não há popover, mas o `className` continua sendo o contrato de layout de quem
+  // chamou (truncar, tamanho de fonte, alinhamento). Devolver só `children` o descartava e o nome
+  // vazava do card.
+  if (!username && !userId) return <span className={className}>{children}</span>;
   const label = texts.cosmetics.peek.open(name);
   return (
     <Popover open={open} onOpenChange={setOpen}>
