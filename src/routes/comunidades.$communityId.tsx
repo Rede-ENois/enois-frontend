@@ -65,6 +65,7 @@ import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useAuth } from "@/lib/use-auth";
 import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
+import { cn } from "@/lib/utils";
 
 import { AppContainer } from "@/components/app-container";
 import { CommunityChannels } from "@/components/communities/community-channels";
@@ -768,7 +769,9 @@ function CommunityDetail() {
                           <div className="flex flex-col items-center">
                             <AlertTriangle
                               aria-label={texts.feed.composer.imageProhibitedTitle}
-                              className="h-6 w-6 text-amber-500 dark:text-amber-400 animate-pulse"
+                              className={cn(
+                                "h-6 w-6 text-amber-500 animate-pulse dark:text-amber-400",
+                              )}
                             />
 
                             <button

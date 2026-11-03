@@ -898,7 +898,10 @@ function Home() {
                                 <div className="max-w-xs">
                                   <AlertTriangle
                                     aria-hidden
-                                    className="mx-auto mb-1.5 h-7 w-7 text-amber-500 dark:text-amber-400 animate-pulse"
+                                    className={cn(
+                                      "mx-auto mb-1.5 h-7 w-7 text-amber-500 animate-pulse",
+                                      "dark:text-amber-400",
+                                    )}
                                   />
 
                                   <p className="text-sm font-semibold text-text-strong">
