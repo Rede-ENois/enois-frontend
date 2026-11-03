@@ -47,7 +47,7 @@ export function ConductLessonDialog({ open, onOpenChange }: ConductLessonDialogP
             </div>
 
             <div className="min-w-0 flex-1 pr-6">
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
                 <ShieldAlert className="h-2.5 w-2.5" aria-hidden />
 
                 <>{texts.conductLesson.badge}</>
@@ -58,7 +58,7 @@ export function ConductLessonDialog({ open, onOpenChange }: ConductLessonDialogP
                   <>{texts.conductLesson.title}</>
                 </DialogTitle>
 
-                <DialogDescription className="truncate text-[11px] text-text-muted">
+                <DialogDescription className="truncate text-[11px] text-text-subtle">
                   <>{texts.conductLesson.description}</>
                 </DialogDescription>
               </DialogHeader>
@@ -67,7 +67,7 @@ export function ConductLessonDialog({ open, onOpenChange }: ConductLessonDialogP
         </div>
 
         <div className="space-y-2 p-3 sm:p-4">
-          <p className="text-[11px] leading-tight text-text-muted sm:text-xs">
+          <p className="text-[11px] leading-tight text-text-subtle sm:text-xs">
             <>{texts.conductLesson.intro}</>
           </p>
 
@@ -87,7 +87,7 @@ export function ConductLessonDialog({ open, onOpenChange }: ConductLessonDialogP
                   <strong className="text-text-strong">
                     <>{texts.conductLesson.rules[rule.key].title}</>
                   </strong>{" "}
-                  <span className="text-text-muted">
+                  <span className="text-text-subtle">
                     <>{texts.conductLesson.rules[rule.key].body}</>
                   </span>
                 </div>
