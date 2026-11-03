@@ -39,6 +39,7 @@ import {
   Clock,
   Flag,
   Gamepad2,
+  IdCard,
   Image as ImageIcon,
   Link as LinkIcon,
   MapPin,
@@ -76,6 +77,7 @@ import { profileQueries } from "@/lib/query-options/profiles";
 import { isApprovedSoundCloudEmbed } from "@/lib/soundcloud-embed";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
+import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
@@ -194,6 +196,8 @@ function Profile() {
 
   const user = liveProfile ?? loaderUser;
   const isOwnProfile = me?.id === user.id;
+  // The professional side is a separate interface: on the own profile this is the way across.
+  const professional = useProfessionalIdentity();
 
   const { data: contributorSeals } = useQuery({
     queryKey: ["contributor-seals", user.username],
@@ -579,6 +583,29 @@ function Profile() {
                       <>{texts.profile.editProfile}</>
                     </Button>
                   </EditProfileDialog>
+
+                  {professional.applicant ? (
+                    <Link
+                      to="/profissional/$username"
+                      params={{ username: professional.applicant.username }}
+                    >
+                      <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                        <IdCard className="h-4 w-4" />
+
+                        <>{texts.profile.professionalProfile}</>
+                      </Button>
+                    </Link>
+                  ) : (
+                    professional.professionalSetupHref && (
+                      <Link to="/profissional">
+                        <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                          <IdCard className="h-4 w-4" />
+
+                          <>{texts.profile.professionalSetup}</>
+                        </Button>
+                      </Link>
+                    )
+                  )}
 
                   {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
                       Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
