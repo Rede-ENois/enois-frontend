@@ -56,6 +56,7 @@ import {
 import { ApiError, communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -735,68 +736,72 @@ function CommunityDetail() {
 
             {media.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {media.map((item, index) => (
-                  <div
-                    key={index}
-                    className="relative h-20 w-20 overflow-hidden rounded-xl border border-border-soft"
-                  >
-                    <SpoilerPreview
-                      active={mediaSpoiler}
-                      label={texts.posts.mediaSpoiler.badge}
-                      className="h-full w-full"
+                {media.map((item, index) => {
+                  // A prévia é `blob:` do arquivo escolhido; o `src` só recebe esse esquema.
+                  const previewUrl = mediaPreviewUrl(item.preview);
+                  return (
+                    <div
+                      key={index}
+                      className="relative h-20 w-20 overflow-hidden rounded-xl border border-border-soft"
                     >
-                      <img
-                        src={item.preview}
-                        alt=""
-                        className={`h-full w-full object-cover ${item.moderationStatus === "prohibited" ? "scale-110 blur-md" : ""}`}
-                      />
-                    </SpoilerPreview>
-                    {item.moderationStatus === "prohibited" && (
-                      <div
-                        className="absolute inset-0 grid place-items-center bg-surface-card/80"
-                        title={`${texts.feed.composer.imageProhibitedTitle}: ${texts.feed.composer.imageProhibitedMessage}`}
+                      <SpoilerPreview
+                        active={mediaSpoiler}
+                        label={texts.posts.mediaSpoiler.badge}
+                        className="h-full w-full"
                       >
-                        <Gift
-                          aria-label={texts.feed.composer.imageProhibitedTitle}
-                          className="h-6 w-6 animate-bounce text-primary"
+                        <img
+                          src={previewUrl}
+                          alt=""
+                          className={`h-full w-full object-cover ${item.moderationStatus === "prohibited" ? "scale-110 blur-md" : ""}`}
                         />
+                      </SpoilerPreview>
+                      {item.moderationStatus === "prohibited" && (
+                        <div
+                          className="absolute inset-0 grid place-items-center bg-surface-card/80"
+                          title={`${texts.feed.composer.imageProhibitedTitle}: ${texts.feed.composer.imageProhibitedMessage}`}
+                        >
+                          <Gift
+                            aria-label={texts.feed.composer.imageProhibitedTitle}
+                            className="h-6 w-6 animate-bounce text-primary"
+                          />
 
-                        <span className="sr-only">
-                          {texts.feed.composer.imageProhibitedMessage}
-                        </span>
-                      </div>
-                    )}
-                    {item.moderationStatus === "checking" && (
-                      <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
-                        <span className="rounded-full bg-surface-card px-2 py-1 text-[10px] text-text-strong">
-                          {texts.feed.composer.imageChecking}
-                        </span>
-                      </div>
-                    )}
-                    {item.moderationStatus === "blocked" && (
-                      <div className="absolute inset-x-1 bottom-1 rounded bg-destructive/90 px-1 py-0.5 text-[9px] leading-tight text-white">
-                        {item.moderationError ?? texts.feed.composer.imageCheckError}
-                      </div>
-                    )}
+                          <span className="sr-only">
+                            {texts.feed.composer.imageProhibitedMessage}
+                          </span>
+                        </div>
+                      )}
+                      {item.moderationStatus === "checking" && (
+                        <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                          <span className="rounded-full bg-surface-card px-2 py-1 text-[10px] text-text-strong">
+                            {texts.feed.composer.imageChecking}
+                          </span>
+                        </div>
+                      )}
+                      {item.moderationStatus === "blocked" && (
+                        <div className="absolute inset-x-1 bottom-1 rounded bg-destructive/90 px-1 py-0.5 text-[9px] leading-tight text-white">
+                          {item.moderationError ?? texts.feed.composer.imageCheckError}
+                        </div>
+                      )}
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMedia((current) => {
-                          URL.revokeObjectURL(current[index].preview);
-                          const next = current.filter((_, i) => i !== index);
-                          if (next.length === 0) setMediaSpoiler(false);
-                          return next;
-                        })
-                      }
-                      aria-label={texts.common.remove}
-                      title={texts.common.remove}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-surface-card/80 text-text-strong"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMedia((current) => {
+                            URL.revokeObjectURL(current[index].preview);
+                            const next = current.filter((_, i) => i !== index);
+                            if (next.length === 0) setMediaSpoiler(false);
+                            return next;
+                          })
+                        }
+                        aria-label={texts.common.remove}
+                        title={texts.common.remove}
+                        className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-surface-card/80 text-text-strong"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
