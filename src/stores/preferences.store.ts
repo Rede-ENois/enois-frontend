@@ -193,6 +193,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       themeCollection: null,
       /** Quando a coleção foi escolhida AQUI (para resolver conflito com a conta). */
       themeCollectionUpdatedAt: null,
+      previewThemeCollection: null,
       widgetBackground: null,
       pageBackground: null,
       accentAlpha: 100,
@@ -211,6 +212,7 @@ export const usePreferencesStore = create<PreferencesState>()(
           themeSettings: DEFAULT_THEME_SETTINGS,
           themeCollection: null,
           themeCollectionUpdatedAt: Date.now(),
+          previewThemeCollection: null,
           widgetBackground: null,
           pageBackground: null,
           accentAlpha: 100,
@@ -219,6 +221,10 @@ export const usePreferencesStore = create<PreferencesState>()(
         }),
       setThemeCollection: (themeCollection: string | null) =>
         set({ themeCollection, themeCollectionUpdatedAt: Date.now() }),
+      // Prévia é transitória de propósito: não entra no `partialize`, então recarregar
+      // a página devolve o tema aplicado — experimentar nunca vira escolha por acidente.
+      setPreviewThemeCollection: (previewThemeCollection: string | null) =>
+        set({ previewThemeCollection }),
       setWidgetBackground: (widgetBackground: BackgroundStyle | null) => set({ widgetBackground }),
       setPageBackground: (pageBackground: BackgroundStyle | null) => set({ pageBackground }),
       setAccentAlpha: (accentAlpha: number) => set({ accentAlpha }),

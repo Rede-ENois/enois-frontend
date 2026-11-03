@@ -10,6 +10,12 @@ export type PreferencesState = {
   themeCollection: string | null;
   /** Quando a coleção foi escolhida neste dispositivo (conflito com a conta). */
   themeCollectionUpdatedAt: number | null;
+  /**
+   * Coleção em PRÉVIA (o "Experimentar" da galeria). Vale para o que está na tela,
+   * mas não é escolha: não vai para o armazenamento local nem para a conta, e
+   * fechar a galeria devolve o tema aplicado.
+   */
+  previewThemeCollection: string | null;
   /** Cor de widget escolhida (cartões/painéis/menus); `null` = do tema ou da marca. */
   widgetBackground: BackgroundStyle | null;
   /** Plano de fundo da página (atrás de tudo); `null` = do tema ou da marca. */
@@ -28,6 +34,7 @@ export type PreferencesState = {
   setThemeSettings: (settings: ThemeSettings) => void;
   resetThemeSettings: () => void;
   setThemeCollection: (collectionId: string | null) => void;
+  setPreviewThemeCollection: (collectionId: string | null) => void;
   setWidgetBackground: (style: BackgroundStyle | null) => void;
   setPageBackground: (style: BackgroundStyle | null) => void;
   setAccentAlpha: (alpha: number) => void;

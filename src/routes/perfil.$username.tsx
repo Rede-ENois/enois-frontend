@@ -5,14 +5,17 @@ import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-ro
 
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
+import type { ProfileAppearance } from "@/types/application/profile/profile-appearance";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-purpose";
 import type { RecommendationItemProps } from "@/types/routes/profile/recommendation-item-props";
 import type { SectionProps } from "@/types/routes/profile/section-props";
 import {
   ContributorTag,
+  EMPTY_PROFILE_LOOK,
   PostCardSkeletons,
   ProfileCard,
+  ProfileThemeScope,
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
@@ -49,6 +52,7 @@ import {
   Settings,
   ShieldCheck,
   ShieldOff,
+  Sparkles,
   Star,
   Target,
   ThumbsUp,
@@ -81,6 +85,7 @@ import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
+import { ProfileLookDialog } from "@/components/appearance/profile-look-dialog";
 import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
@@ -180,6 +185,9 @@ function Profile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [recommendComment, setRecommendComment] = useState("");
   const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [lookOpen, setLookOpen] = useState(false);
+  // Prévia da aparência do perfil: o rascunho do diálogo veste a página antes de salvar.
+  const [lookPreview, setLookPreview] = useState<ProfileAppearance | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
   // A capa tem duas formas (foto ou HTML/CSS): o dialogo escolhe, e o clique na capa abre ele.
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -432,692 +440,713 @@ function Profile() {
     setCropPurpose(null);
   }, [cropImageSrc]);
 
+  // Quem visita vê o visual que o DONO escolheu; a prévia do diálogo vence enquanto está aberta.
+  const socialLook =
+    (lookPreview ?? myProfile?.profileAppearance)?.social ?? user.profileLook ?? null;
+  const themeMode = usePreferencesStore((state) => state.theme);
+
   return (
     <AppContainer>
-      <div className="space-y-5 sm:space-y-6">
-        <input
-          ref={bannerRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleBannerUpload}
-        />
-        <input
-          ref={avatarRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleAvatarUpload}
-        />
+      <ProfileThemeScope look={socialLook} mode={themeMode}>
+        <div className="space-y-5 sm:space-y-6">
+          <input
+            ref={bannerRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleBannerUpload}
+          />
+          <input
+            ref={avatarRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
 
-        <h1 className="sr-only">{user.name}</h1>
+          <h1 className="sr-only">{user.name}</h1>
 
-        <ProfileCard
-          profile={{ ...profileCardData(user, renderedNameStyle), bio: null }}
-          bannerSlot={
-            user.bannerHtml ? (
-              // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
-              <BannerHtmlFrame
-                html={user.bannerHtml}
-                title={texts.profile.bannerHtml.frameTitle}
-                className="h-full w-full rounded-none border-0 shadow-none"
-                allowSoundCloudPlayer={isApprovedSoundCloudEmbed(user.bannerHtml)}
-              />
-            ) : undefined
-          }
-          nameAddon={
-            <>
-              <PresenceIndicator username={user.username} isOwn={isOwnProfile} />
+          <ProfileCard
+            profile={{ ...profileCardData(user, renderedNameStyle), bio: null }}
+            bannerSlot={
+              user.bannerHtml ? (
+                // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
+                <BannerHtmlFrame
+                  html={user.bannerHtml}
+                  title={texts.profile.bannerHtml.frameTitle}
+                  className="h-full w-full rounded-none border-0 shadow-none"
+                  allowSoundCloudPlayer={isApprovedSoundCloudEmbed(user.bannerHtml)}
+                />
+              ) : undefined
+            }
+            nameAddon={
+              <>
+                <PresenceIndicator username={user.username} isOwn={isOwnProfile} />
 
-              {/* Vulgo: etiqueta ao lado do nome, escolhida pela própria pessoa. */}
-              {user.aka && (
-                <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-text-subtle">
-                  {texts.profile.aka(user.aka)}
-                </span>
-              )}
-              {user.openToWork && (
-                <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-growth">
-                  {texts.profile.openToWork}
-                </span>
-              )}
-              {user.isMentor && (
-                <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary">
-                  {texts.profile.mentorAvailable}
-                </span>
-              )}
-              {temPaginaDeDev && (
-                <Link
-                  to="/games/$username"
-                  params={{ username: user.username }}
-                  className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary hover:underline"
-                >
-                  <Gamepad2 className="h-3 w-3" />
-
-                  <>{texts.games.developer.devChip}</>
-                </Link>
-              )}
-            </>
-          }
-          bio={
-            <div className="space-y-3">
-              {isContributor && <ContributorTag color={user.contributorTagColor} />}
-
-              {user.headline && (
-                <p className="break-words text-sm font-normal text-primary">{user.headline}</p>
-              )}
-
-              <p className="flex flex-wrap items-center gap-4 text-sm font-normal text-text-subtle">
-                {user.company && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Briefcase className="h-4 w-4" />
-
-                    <>{user.company}</>
+                {/* Vulgo: etiqueta ao lado do nome, escolhida pela própria pessoa. */}
+                {user.aka && (
+                  <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-text-subtle">
+                    {texts.profile.aka(user.aka)}
                   </span>
                 )}
-                {user.location && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4" />
-
-                    <>{user.location}</>
+                {user.openToWork && (
+                  <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-growth">
+                    {texts.profile.openToWork}
                   </span>
                 )}
-                {/* Cidade estruturada: o dono vê a sua (vinda de /me, mesmo privada) e edita;
-                    quem visita só recebe a cidade quando o dono escolheu mostrar. */}
-                {isOwnProfile ? (
-                  <button
-                    type="button"
-                    onClick={() => setCityOpen(true)}
-                    aria-label={
-                      myProfile?.city
-                        ? texts.profile.city.edit(formatLocation(myProfile.city, myProfile.state))
-                        : texts.profile.city.add
-                    }
-                    className="inline-flex min-w-0 items-center gap-1.5 rounded-full underline-offset-4 transition hover:text-text-strong hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                {user.isMentor && (
+                  <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary">
+                    {texts.profile.mentorAvailable}
+                  </span>
+                )}
+                {temPaginaDeDev && (
+                  <Link
+                    to="/games/$username"
+                    params={{ username: user.username }}
+                    className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary hover:underline"
                   >
-                    <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                    <Gamepad2 className="h-3 w-3" />
 
-                    <span className="truncate">
-                      {formatLocation(myProfile?.city, myProfile?.state) || texts.profile.city.add}
+                    <>{texts.games.developer.devChip}</>
+                  </Link>
+                )}
+              </>
+            }
+            bio={
+              <div className="space-y-3">
+                {isContributor && <ContributorTag color={user.contributorTagColor} />}
+
+                {user.headline && (
+                  <p className="break-words text-sm font-normal text-primary">{user.headline}</p>
+                )}
+
+                <p className="flex flex-wrap items-center gap-4 text-sm font-normal text-text-subtle">
+                  {user.company && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Briefcase className="h-4 w-4" />
+
+                      <>{user.company}</>
                     </span>
-                  </button>
-                ) : (
-                  <LocationLine city={user.city} state={user.state} />
-                )}
-                <span>{texts.profile.connectionsMeta(user.connectionsCount ?? 0)}</span>
-                {(user.reputation ?? 0) > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-opportunity/15 px-2 py-0.5 text-xs font-normal text-opportunity-foreground">
-                    {texts.profile.reputationMeta(user.reputation ?? 0)}
-                  </span>
-                )}
-              </p>
+                  )}
+                  {user.location && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
 
-              <ProfileSeals username={user.username} />
-
-              {isOwnProfile && <VerifiedContributorPrompt />}
-            </div>
-          }
-          actions={
-            <div className="flex flex-wrap gap-2">
-              {isOwnProfile ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => avatarRef.current?.click()}
-                    disabled={avatarUpload.status === "uploading"}
-                  >
-                    <Camera className="h-4 w-4" />
-
-                    <>
-                      {avatarUpload.status === "uploading"
-                        ? texts.common.sending
-                        : texts.posts.editPhoto}
-                    </>
-                  </Button>
-
-                  <EditProfileDialog profile={user}>
-                    <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                      <Settings className="h-4 w-4" />
-
-                      <>{texts.profile.editProfile}</>
-                    </Button>
-                  </EditProfileDialog>
-
-                  {professional.applicant ? (
-                    <Link
-                      to="/profissional/$username"
-                      params={{ username: professional.applicant.username }}
+                      <>{user.location}</>
+                    </span>
+                  )}
+                  {/* Cidade estruturada: o dono vê a sua (vinda de /me, mesmo privada) e edita;
+                    quem visita só recebe a cidade quando o dono escolheu mostrar. */}
+                  {isOwnProfile ? (
+                    <button
+                      type="button"
+                      onClick={() => setCityOpen(true)}
+                      aria-label={
+                        myProfile?.city
+                          ? texts.profile.city.edit(formatLocation(myProfile.city, myProfile.state))
+                          : texts.profile.city.add
+                      }
+                      className="inline-flex min-w-0 items-center gap-1.5 rounded-full underline-offset-4 transition hover:text-text-strong hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <Button variant="outline" size="sm" className="rounded-full gap-1.5">
-                        <IdCard className="h-4 w-4" />
+                      <MapPin className="h-4 w-4 shrink-0" aria-hidden />
 
-                        <>{texts.profile.professionalProfile}</>
-                      </Button>
-                    </Link>
+                      <span className="truncate">
+                        {formatLocation(myProfile?.city, myProfile?.state) ||
+                          texts.profile.city.add}
+                      </span>
+                    </button>
                   ) : (
-                    professional.professionalSetupHref && (
-                      <Link to="/profissional">
+                    <LocationLine city={user.city} state={user.state} />
+                  )}
+                  <span>{texts.profile.connectionsMeta(user.connectionsCount ?? 0)}</span>
+                  {(user.reputation ?? 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-opportunity/15 px-2 py-0.5 text-xs font-normal text-opportunity-foreground">
+                      {texts.profile.reputationMeta(user.reputation ?? 0)}
+                    </span>
+                  )}
+                </p>
+
+                <ProfileSeals username={user.username} />
+
+                {isOwnProfile && <VerifiedContributorPrompt />}
+              </div>
+            }
+            actions={
+              <div className="flex flex-wrap gap-2">
+                {isOwnProfile ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => avatarRef.current?.click()}
+                      disabled={avatarUpload.status === "uploading"}
+                    >
+                      <Camera className="h-4 w-4" />
+
+                      <>
+                        {avatarUpload.status === "uploading"
+                          ? texts.common.sending
+                          : texts.posts.editPhoto}
+                      </>
+                    </Button>
+
+                    <EditProfileDialog profile={user}>
+                      <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                        <Settings className="h-4 w-4" />
+
+                        <>{texts.profile.editProfile}</>
+                      </Button>
+                    </EditProfileDialog>
+
+                    {professional.applicant ? (
+                      <Link
+                        to="/profissional/$username"
+                        params={{ username: professional.applicant.username }}
+                      >
                         <Button variant="outline" size="sm" className="rounded-full gap-1.5">
                           <IdCard className="h-4 w-4" />
 
-                          <>{texts.profile.professionalSetup}</>
+                          <>{texts.profile.professionalProfile}</>
                         </Button>
                       </Link>
-                    )
-                  )}
+                    ) : (
+                      professional.professionalSetupHref && (
+                        <Link to="/profissional">
+                          <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                            <IdCard className="h-4 w-4" />
 
-                  {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
+                            <>{texts.profile.professionalSetup}</>
+                          </Button>
+                        </Link>
+                      )
+                    )}
+
+                    {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
                       Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setBannerOpen(true)}
-                    disabled={bannerUpload.status === "uploading"}
-                  >
-                    <ImageIcon className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => setBannerOpen(true)}
+                      disabled={bannerUpload.status === "uploading"}
+                    >
+                      <ImageIcon className="h-4 w-4" />
 
-                    <>
-                      {bannerUpload.status === "uploading"
-                        ? texts.common.sending
-                        : texts.profile.bannerHtml.action}
-                    </>
-                  </Button>
+                      <>
+                        {bannerUpload.status === "uploading"
+                          ? texts.common.sending
+                          : texts.profile.bannerHtml.action}
+                      </>
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setStatusOpen(true)}
-                  >
-                    <MessageSquareText className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => setStatusOpen(true)}
+                    >
+                      <MessageSquareText className="h-4 w-4" />
 
-                    <>{texts.cosmetics.status.action}</>
-                  </Button>
+                      <>{texts.cosmetics.status.action}</>
+                    </Button>
 
-                  <ProfileResumeDialog
-                    resumeUrl={myProfile?.resumeUrl}
-                    resumeName={myProfile?.resumeName}
-                    onSaved={() => {
-                      queryClient.invalidateQueries({ queryKey: ["me"] });
-                    }}
-                  />
-                  <ProfileBioDialog
-                    initialHtml={user.bioHtml ?? null}
-                    onSaved={() => {
-                      queryClient.invalidateQueries({ queryKey: ["me"] });
-                      queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
-                      queryClient.invalidateQueries({
-                        queryKey: profileQueries.byId(user.id).queryKey,
-                      });
-                      queryClient.invalidateQueries({ queryKey: ["auth-me"] });
-                    }}
-                  />
+                    <ProfileResumeDialog
+                      resumeUrl={myProfile?.resumeUrl}
+                      resumeName={myProfile?.resumeName}
+                      onSaved={() => {
+                        queryClient.invalidateQueries({ queryKey: ["me"] });
+                      }}
+                    />
+                    <ProfileBioDialog
+                      initialHtml={user.bioHtml ?? null}
+                      onSaved={() => {
+                        queryClient.invalidateQueries({ queryKey: ["me"] });
+                        queryClient.invalidateQueries({ queryKey: ["profile", user.username] });
+                        queryClient.invalidateQueries({
+                          queryKey: profileQueries.byId(user.id).queryKey,
+                        });
+                        queryClient.invalidateQueries({ queryKey: ["auth-me"] });
+                      }}
+                    />
 
-                  {/* Personalização do tema: fica no próprio perfil, que é onde a pessoa
+                    {/* Personalização do tema: fica no próprio perfil, que é onde a pessoa
                       cuida da conta. As cores valem só neste dispositivo. */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setAppearanceOpen(true)}
-                  >
-                    <Palette className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => setAppearanceOpen(true)}
+                    >
+                      <Palette className="h-4 w-4" />
 
-                    <>{texts.appearance.action}</>
-                  </Button>
+                      <>{texts.appearance.action}</>
+                    </Button>
 
-                  {/* Sem identidade verificada a reputação é multiplicada por zero: o caminho para
+                    {/* Aparência da vitrine: o tema que os VISITANTES veem. Fica ao lado da
+                      aparência da conta porque as duas são "como meu perfil se parece". */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => setLookOpen(true)}
+                    >
+                      <Sparkles className="h-4 w-4" />
+
+                      <>{texts.profile.lookAction}</>
+                    </Button>
+
+                    {/* Sem identidade verificada a reputação é multiplicada por zero: o caminho para
                       resolver (confirmar e-mail ou ligar o 2FA) fica aqui, no próprio perfil. */}
-                  {authMe && !authMe.identityVerified && (
-                    <Link to="/seguranca">
-                      <Button size="sm" className="rounded-full gap-1.5">
-                        <ShieldCheck className="h-4 w-4" />
+                    {authMe && !authMe.identityVerified && (
+                      <Link to="/seguranca">
+                        <Button size="sm" className="rounded-full gap-1.5">
+                          <ShieldCheck className="h-4 w-4" />
 
-                        <>{texts.auth.twoFactor.verifyIdentity}</>
-                      </Button>
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={handleMessage}
-                    disabled={openConversation.isPending}
-                  >
-                    <MessageCircle className="h-4 w-4" />
+                          <>{texts.auth.twoFactor.verifyIdentity}</>
+                        </Button>
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={handleMessage}
+                      disabled={openConversation.isPending}
+                    >
+                      <MessageCircle className="h-4 w-4" />
 
-                    <>{texts.profile.message}</>
-                  </Button>
+                      <>{texts.profile.message}</>
+                    </Button>
 
-                  {connectionOffer === "respond" && (
-                    <>
-                      <Button
-                        size="sm"
-                        className="rounded-full gap-1.5"
-                        disabled={accept.isPending || disconnect.isPending}
-                        onClick={() => {
-                          if (!requireAuth()) return;
-                          accept.mutate();
-                        }}
-                      >
-                        {texts.network.accept}
-                      </Button>
+                    {connectionOffer === "respond" && (
+                      <>
+                        <Button
+                          size="sm"
+                          className="rounded-full gap-1.5"
+                          disabled={accept.isPending || disconnect.isPending}
+                          onClick={() => {
+                            if (!requireAuth()) return;
+                            accept.mutate();
+                          }}
+                        >
+                          {texts.network.accept}
+                        </Button>
 
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full gap-1.5"
+                          disabled={accept.isPending || disconnect.isPending}
+                          onClick={() => {
+                            if (!requireAuth()) return;
+                            disconnect.mutate();
+                          }}
+                        >
+                          {texts.network.reject}
+                        </Button>
+                      </>
+                    )}
+
+                    {(connectionOffer === "cancel" || connectionOffer === "disconnect") && (
                       <Button
                         variant="outline"
                         size="sm"
                         className="rounded-full gap-1.5"
-                        disabled={accept.isPending || disconnect.isPending}
+                        disabled={disconnect.isPending}
                         onClick={() => {
                           if (!requireAuth()) return;
                           disconnect.mutate();
                         }}
                       >
-                        {texts.network.reject}
+                        {connectionOffer === "cancel"
+                          ? texts.profile.cancelRequest
+                          : texts.profile.removeConnection}
                       </Button>
-                    </>
-                  )}
+                    )}
 
-                  {(connectionOffer === "cancel" || connectionOffer === "disconnect") && (
+                    {connectionOffer === "connect" && (
+                      <Button
+                        size="sm"
+                        className="rounded-full gap-1.5"
+                        onClick={() => {
+                          if (!requireAuth()) return;
+                          connect.mutate();
+                        }}
+                        disabled={connect.isPending}
+                      >
+                        {texts.profile.connect}
+                      </Button>
+                    )}
+
+                    <BlockUserDialog
+                      userId={user.id}
+                      name={user.name}
+                      blocked={blocked}
+                      onDone={() =>
+                        queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
+                      }
+                    />
+                    <MuteUserDialog
+                      userId={user.id}
+                      name={user.name}
+                      muted={muted}
+                      expiresAt={muteExpiresAt}
+                      onDone={() =>
+                        queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
+                      }
+                    />
+
                     <Button
                       variant="outline"
                       size="sm"
                       className="rounded-full gap-1.5"
-                      disabled={disconnect.isPending}
-                      onClick={() => {
-                        if (!requireAuth()) return;
-                        disconnect.mutate();
-                      }}
+                      onClick={() => setReportOpen(true)}
                     >
-                      {connectionOffer === "cancel"
-                        ? texts.profile.cancelRequest
-                        : texts.profile.removeConnection}
+                      <Flag className="h-4 w-4" />
+
+                      <>{texts.posts.report.action}</>
                     </Button>
-                  )}
 
-                  {connectionOffer === "connect" && (
-                    <Button
-                      size="sm"
-                      className="rounded-full gap-1.5"
-                      onClick={() => {
-                        if (!requireAuth()) return;
-                        connect.mutate();
-                      }}
-                      disabled={connect.isPending}
-                    >
-                      {texts.profile.connect}
-                    </Button>
-                  )}
+                    <ReportDialog
+                      targetId={user.id}
+                      targetType="USER"
+                      open={reportOpen}
+                      onOpenChange={setReportOpen}
+                    />
+                  </>
+                )}
 
-                  <BlockUserDialog
-                    userId={user.id}
-                    name={user.name}
-                    blocked={blocked}
-                    onDone={() =>
-                      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
-                    }
-                  />
-                  <MuteUserDialog
-                    userId={user.id}
-                    name={user.name}
-                    muted={muted}
-                    expiresAt={muteExpiresAt}
-                    onDone={() =>
-                      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
-                    }
-                  />
+                {blocked && (
+                  <p className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
+                    <ShieldOff className="h-4 w-4 shrink-0" />
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => setReportOpen(true)}
-                  >
-                    <Flag className="h-4 w-4" />
+                    <>{texts.profile.blockedBadge}</>
+                  </p>
+                )}
 
-                    <>{texts.posts.report.action}</>
-                  </Button>
+                {muted && !blocked && (
+                  <p className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
+                    <BellOff className="h-4 w-4 shrink-0" />
 
-                  <ReportDialog
-                    targetId={user.id}
-                    targetType="USER"
-                    open={reportOpen}
-                    onOpenChange={setReportOpen}
-                  />
-                </>
-              )}
-
-              {blocked && (
-                <p className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
-                  <ShieldOff className="h-4 w-4 shrink-0" />
-
-                  <>{texts.profile.blockedBadge}</>
-                </p>
-              )}
-
-              {muted && !blocked && (
-                <p className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
-                  <BellOff className="h-4 w-4 shrink-0" />
-
-                  <>{texts.profile.mutedBadge}</>
-                </p>
-              )}
-            </div>
-          }
-        >
-          <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-border-soft bg-surface-1/70 sm:grid-cols-4">
-            <a
-              href="#atividade"
-              className="group border-b border-r border-border-soft px-4 py-3 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
-            >
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
-                {texts.profile.dashboard.postsLabel}
-              </dt>
-
-              <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
-                {postsCount}
-              </dd>
-            </a>
-
-            <button
-              type="button"
-              onClick={() => setNetworkDialogKind("connections")}
-              className="group border-b border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0 sm:border-r"
-            >
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
-                {texts.profile.dashboard.connectionsLabel}
-              </dt>
-
-              <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
-                {user.connectionsCount ?? 0}
-              </dd>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setNetworkDialogKind("followers")}
-              className="group border-b border-r border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
-            >
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
-                {texts.profile.dashboard.followersLabel}
-              </dt>
-
-              <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
-                {user.followersCount ?? 0}
-              </dd>
-            </button>
-
-            <div className="px-4 py-3">
-              <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle">
-                {texts.profile.dashboard.reputationLabel}
-              </dt>
-
-              <dd className="mt-1 text-xl font-medium tracking-tight text-primary">
-                {user.reputation ?? 0}
-              </dd>
-            </div>
-          </dl>
-
-          <nav
-            aria-label={texts.profile.dashboard.progressTitle}
-            className="mt-4 flex snap-x gap-2 overflow-x-auto border-t border-border-soft pt-4 scrollbar-hide"
+                    <>{texts.profile.mutedBadge}</>
+                  </p>
+                )}
+              </div>
+            }
           >
-            {[
-              texts.profile.sections.about,
-              texts.profile.projects.title,
-              texts.profile.sections.recentPosts,
-            ].map((label, index) => (
+            <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-border-soft bg-surface-1/70 sm:grid-cols-4">
               <a
-                key={label}
-                href={index === 0 ? "#sobre" : index === 1 ? "#projetos" : "#atividade"}
-                className="shrink-0 snap-start rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-xs font-medium text-text-subtle transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                href="#atividade"
+                className="group border-b border-r border-border-soft px-4 py-3 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
               >
-                {label}
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
+                  {texts.profile.dashboard.postsLabel}
+                </dt>
+
+                <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
+                  {postsCount}
+                </dd>
               </a>
-            ))}
 
-            <SaciSpot spot="perfil" className="ml-auto shrink-0" />
-          </nav>
-        </ProfileCard>
+              <button
+                type="button"
+                onClick={() => setNetworkDialogKind("connections")}
+                className="group border-b border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0 sm:border-r"
+              >
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
+                  {texts.profile.dashboard.connectionsLabel}
+                </dt>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-5 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-6">
-          <div className="space-y-6">
-            {isOwnProfile && <ProfileQuickComposer profile={user} />}
+                <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
+                  {user.connectionsCount ?? 0}
+                </dd>
+              </button>
 
-            {user.bioHtml ? (
-              /* Bio em HTML: card próprio, com o título "Sobre" só na linha de cima e o quadro
+              <button
+                type="button"
+                onClick={() => setNetworkDialogKind("followers")}
+                className="group border-b border-r border-border-soft px-4 py-3 text-left transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:border-b-0"
+              >
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle group-hover:text-primary">
+                  {texts.profile.dashboard.followersLabel}
+                </dt>
+
+                <dd className="mt-1 text-xl font-medium tracking-tight text-text-strong">
+                  {user.followersCount ?? 0}
+                </dd>
+              </button>
+
+              <div className="px-4 py-3">
+                <dt className="text-xs font-medium uppercase tracking-[0.14em] text-text-subtle">
+                  {texts.profile.dashboard.reputationLabel}
+                </dt>
+
+                <dd className="mt-1 text-xl font-medium tracking-tight text-primary">
+                  {user.reputation ?? 0}
+                </dd>
+              </div>
+            </dl>
+
+            <nav
+              aria-label={texts.profile.dashboard.progressTitle}
+              className="mt-4 flex snap-x gap-2 overflow-x-auto border-t border-border-soft pt-4 scrollbar-hide"
+            >
+              {[
+                texts.profile.sections.about,
+                texts.profile.projects.title,
+                texts.profile.sections.recentPosts,
+              ].map((label, index) => (
+                <a
+                  key={label}
+                  href={index === 0 ? "#sobre" : index === 1 ? "#projetos" : "#atividade"}
+                  className="shrink-0 snap-start rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-xs font-medium text-text-subtle transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                >
+                  {label}
+                </a>
+              ))}
+
+              <SaciSpot spot="perfil" className="ml-auto shrink-0" />
+            </nav>
+          </ProfileCard>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-5 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-6">
+            <div className="space-y-6">
+              {isOwnProfile && <ProfileQuickComposer profile={user} />}
+
+              {user.bioHtml ? (
+                /* Bio em HTML: card próprio, com o título "Sobre" só na linha de cima e o quadro
                  abaixo encostando nas três bordas. Antes usava o `Section` (que tem padding em
                  volta) com o quadro de celular centralizado — a sobra em volta e a moldura clara
                  do iframe eram o que parecia "borda branca". */
-              <section
-                id="sobre"
-                className="scroll-mt-20 overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
-              >
-                {/* Sem canto no card: a bio em HTML vai até as bordas (o raio do card recortava os
+                <section
+                  id="sobre"
+                  className="scroll-mt-20 overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
+                >
+                  {/* Sem canto no card: a bio em HTML vai até as bordas (o raio do card recortava os
                     cantos dela — era o que sobrava de arredondamento). */}
 
-                <h2 className="px-4 pb-3 pt-4 text-base font-normal text-text-strong sm:px-6 sm:pt-6">
-                  <>{texts.profile.sections.about}</>
-                </h2>
+                  <h2 className="px-4 pb-3 pt-4 text-base font-normal text-text-strong sm:px-6 sm:pt-6">
+                    <>{texts.profile.sections.about}</>
+                  </h2>
 
-                {/* Sem borda, sem cantos e sem folga interna do quadro: o card dá o acabamento e o
+                  {/* Sem borda, sem cantos e sem folga interna do quadro: o card dá o acabamento e o
                     HTML do autor usa todo o resto do espaço. O quadro cresce com o conteúdo, mas
                     com TETO: uma bio gigante — ou um `100vh` colado por engano — para de crescer
                     aqui em vez de empurrar a página inteira para baixo. */}
-                <SandboxedHtmlFrame
-                  html={user.bioHtml}
-                  title={texts.profile.bioHtml.frameTitle}
-                  className="h-[520px] w-full rounded-none border-0 bg-transparent shadow-none"
-                  innerPadding={false}
-                  maxHeight={1200}
-                />
-              </section>
-            ) : (
-              user.bio && (
-                <Section id="sobre" title={texts.profile.sections.about}>
-                  <RichText
-                    content={user.bio}
-                    className="break-words text-sm font-normal leading-relaxed text-text-subtle"
+                  <SandboxedHtmlFrame
+                    html={user.bioHtml}
+                    title={texts.profile.bioHtml.frameTitle}
+                    className="h-[520px] w-full rounded-none border-0 bg-transparent shadow-none"
+                    innerPadding={false}
+                    maxHeight={1200}
                   />
-                </Section>
-              )
-            )}
+                </section>
+              ) : (
+                user.bio && (
+                  <Section id="sobre" title={texts.profile.sections.about}>
+                    <RichText
+                      content={user.bio}
+                      className="break-words text-sm font-normal leading-relaxed text-text-subtle"
+                    />
+                  </Section>
+                )
+              )}
 
-            {/* Projetos: cards abaixo da bio — estruturados (stack, repo, status, diário)
+              {/* Projetos: cards abaixo da bio — estruturados (stack, repo, status, diário)
                 ou o HTML próprio do autor. O dono gerencia por aqui mesmo. */}
-            <div id="projetos" className="scroll-mt-20">
-              <ProfileProjectsSection username={user.username} isOwner={isOwnProfile} />
+              <div id="projetos" className="scroll-mt-20">
+                <ProfileProjectsSection username={user.username} isOwner={isOwnProfile} />
+              </div>
+
+              {/* Trajetória profissional logo abaixo dos projetos: cargo, empresa, período
+                (com "atual") e descrição, como no LinkedIn. */}
+              <ProfileExperiencesSection username={user.username} />
+
+              {user.skills.length > 0 && (
+                <Section title={texts.profile.sections.skills}>
+                  <div className="flex flex-wrap gap-1.5">
+                    {user.skills.map((s: string) => (
+                      <span
+                        key={s}
+                        className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {user.goals.length > 0 && (
+                <Section title={texts.profile.sections.goals} icon={Target}>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    {user.goals.map((goal: string) => (
+                      <div key={goal} className="rounded-xl border border-border-soft p-4">
+                        <p className="break-words text-sm font-normal text-text-strong">{goal}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              <Section id="atividade" title={texts.profile.sections.recentPosts}>
+                {userPostsLoading && <PostCardSkeletons count={2} />}
+
+                {!userPostsLoading && userPosts.length === 0 && (
+                  <p className="text-sm font-normal text-text-subtle">{texts.profile.noPosts}</p>
+                )}
+
+                {!userPostsLoading && userPosts.length > 0 && (
+                  <div className="space-y-4">
+                    {userPosts.map((p) => (
+                      <PostCard key={p.id} post={p} />
+                    ))}
+
+                    <InfiniteScroll
+                      hasMore={Boolean(hasMoreUserPosts)}
+                      loading={isLoadingMoreUserPosts}
+                      onLoadMore={() => void fetchMoreUserPosts()}
+                      loadingLabel={texts.feed.loadingMore}
+                    />
+                  </div>
+                )}
+              </Section>
             </div>
 
-            {/* Trajetória profissional logo abaixo dos projetos: cargo, empresa, período
-                (com "atual") e descrição, como no LinkedIn. */}
-            <ProfileExperiencesSection username={user.username} />
+            <aside className="self-start space-y-5">
+              <ProfileGamificationPanel
+                profile={user}
+                isOwner={isOwnProfile}
+                postsCount={postsCount}
+              />
+              <ProfileCommunityShelf isOwner={isOwnProfile} />
 
-            {user.skills.length > 0 && (
-              <Section title={texts.profile.sections.skills}>
-                <div className="flex flex-wrap gap-1.5">
-                  {user.skills.map((s: string) => (
-                    <span
-                      key={s}
-                      className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-normal text-primary"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {user.goals.length > 0 && (
-              <Section title={texts.profile.sections.goals} icon={Target}>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  {user.goals.map((goal: string) => (
-                    <div key={goal} className="rounded-xl border border-border-soft p-4">
-                      <p className="break-words text-sm font-normal text-text-strong">{goal}</p>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            <Section id="atividade" title={texts.profile.sections.recentPosts}>
-              {userPostsLoading && <PostCardSkeletons count={2} />}
-
-              {!userPostsLoading && userPosts.length === 0 && (
-                <p className="text-sm font-normal text-text-subtle">{texts.profile.noPosts}</p>
-              )}
-
-              {!userPostsLoading && userPosts.length > 0 && (
-                <div className="space-y-4">
-                  {userPosts.map((p) => (
-                    <PostCard key={p.id} post={p} />
-                  ))}
-
-                  <InfiniteScroll
-                    hasMore={Boolean(hasMoreUserPosts)}
-                    loading={isLoadingMoreUserPosts}
-                    onLoadMore={() => void fetchMoreUserPosts()}
-                    loadingLabel={texts.feed.loadingMore}
-                  />
-                </div>
-              )}
-            </Section>
-          </div>
-
-          <aside className="self-start space-y-5">
-            <ProfileGamificationPanel
-              profile={user}
-              isOwner={isOwnProfile}
-              postsCount={postsCount}
-            />
-            <ProfileCommunityShelf isOwner={isOwnProfile} />
-
-            <Section title={texts.profile.sections.availability} icon={Clock}>
-              <p className="break-words text-sm font-normal leading-relaxed text-text-subtle">
-                {user.availability ?? texts.profile.availabilityUnknown}
-              </p>
-            </Section>
-
-            {!isOwnProfile && (
-              <Section title={texts.profile.sections.recommend} icon={ThumbsUp}>
-                <p className="mb-3 text-sm font-normal text-text-subtle">
-                  {texts.profile.recommendDescription}
+              <Section title={texts.profile.sections.availability} icon={Clock}>
+                <p className="break-words text-sm font-normal leading-relaxed text-text-subtle">
+                  {user.availability ?? texts.profile.availabilityUnknown}
                 </p>
+              </Section>
 
-                <Dialog open={recommendOpen} onOpenChange={setRecommendOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="w-full rounded-full gap-1.5">
-                      <ThumbsUp className="h-4 w-4" />
+              {!isOwnProfile && (
+                <Section title={texts.profile.sections.recommend} icon={ThumbsUp}>
+                  <p className="mb-3 text-sm font-normal text-text-subtle">
+                    {texts.profile.recommendDescription}
+                  </p>
 
-                      <>{texts.profile.recommendAction}</>
-                    </Button>
-                  </DialogTrigger>
+                  <Dialog open={recommendOpen} onOpenChange={setRecommendOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="w-full rounded-full gap-1.5">
+                        <ThumbsUp className="h-4 w-4" />
 
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle className="font-normal">
-                        {texts.profile.recommendTitle(user.name)}
-                      </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4 pt-2">
-                      <Textarea
-                        aria-label={texts.profile.recommendPlaceholder}
-                        value={recommendComment}
-                        onChange={(e) => setRecommendComment(e.target.value)}
-                        placeholder={texts.profile.recommendPlaceholder}
-                        rows={3}
-                        className="border-border-soft bg-surface-1 text-sm font-normal"
-                      />
-
-                      <Button
-                        size="sm"
-                        className="w-full rounded-full"
-                        disabled={!recommendComment.trim() || recommend.isPending}
-                        onClick={() => recommend.mutate()}
-                      >
-                        {recommend.isPending
-                          ? texts.common.sending
-                          : texts.profile.sendRecommendation}
+                        <>{texts.profile.recommendAction}</>
                       </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </Section>
-            )}
+                    </DialogTrigger>
 
-            {recommendationsData && recommendationsData.length > 0 && (
-              <Section title={texts.profile.sections.recommendations} icon={Star}>
-                <div className="space-y-3">
-                  {recommendationsData.map((rec) => (
-                    <RecommendationItem key={rec.id} recommendation={rec} />
-                  ))}
-                </div>
-              </Section>
-            )}
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="font-normal">
+                          {texts.profile.recommendTitle(user.name)}
+                        </DialogTitle>
+                      </DialogHeader>
 
-            {/* A seção é OPCIONAL (pedido via suporte): quem desligou nas configurações não vê —
+                      <div className="space-y-4 pt-2">
+                        <Textarea
+                          aria-label={texts.profile.recommendPlaceholder}
+                          value={recommendComment}
+                          onChange={(e) => setRecommendComment(e.target.value)}
+                          placeholder={texts.profile.recommendPlaceholder}
+                          rows={3}
+                          className="border-border-soft bg-surface-1 text-sm font-normal"
+                        />
+
+                        <Button
+                          size="sm"
+                          className="w-full rounded-full"
+                          disabled={!recommendComment.trim() || recommend.isPending}
+                          onClick={() => recommend.mutate()}
+                        >
+                          {recommend.isPending
+                            ? texts.common.sending
+                            : texts.profile.sendRecommendation}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </Section>
+              )}
+
+              {recommendationsData && recommendationsData.length > 0 && (
+                <Section title={texts.profile.sections.recommendations} icon={Star}>
+                  <div className="space-y-3">
+                    {recommendationsData.map((rec) => (
+                      <RecommendationItem key={rec.id} recommendation={rec} />
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* A seção é OPCIONAL (pedido via suporte): quem desligou nas configurações não vê —
                 a preferência é de quem LÊ, não do perfil visitado. Desde 2026-10-20 a lista é de
                 CHEGADA (mais recentes primeiro), e o texto acima da lista diz isso. */}
-            {me?.showRanking !== false && rankingData && rankingData.length > 0 && (
-              <Section title={texts.profile.sections.ranking} icon={Trophy}>
-                <p className="-mt-1 mb-2 text-xs font-normal text-text-subtle">
-                  {texts.profile.newMembersHint}
-                </p>
+              {me?.showRanking !== false && rankingData && rankingData.length > 0 && (
+                <Section title={texts.profile.sections.ranking} icon={Trophy}>
+                  <p className="-mt-1 mb-2 text-xs font-normal text-text-subtle">
+                    {texts.profile.newMembersHint}
+                  </p>
 
-                <div className="space-y-2">
-                  {rankingData.slice(0, 5).map((u) => (
-                    <div key={u.id} className="flex items-center gap-3">
-                      <ProfilePeek username={u.username} name={u.name} className="shrink-0">
-                        <UserAvatar src={u.avatar} alt={u.name} className="h-8 w-8 shrink-0" />
-                      </ProfilePeek>
-
-                      <div className="min-w-0 flex-1">
-                        <ProfilePeek
-                          username={u.username}
-                          name={u.name}
-                          className="block max-w-full truncate text-sm font-normal text-text-strong hover:underline"
-                        >
-                          <StyledName name={u.name} style={authorNameStyle(u)} />
+                  <div className="space-y-2">
+                    {rankingData.slice(0, 5).map((u) => (
+                      <div key={u.id} className="flex items-center gap-3">
+                        <ProfilePeek username={u.username} name={u.name} className="shrink-0">
+                          <UserAvatar src={u.avatar} alt={u.name} className="h-8 w-8 shrink-0" />
                         </ProfilePeek>
-                      </div>
 
-                      {/* A coluna da direita é QUANDO chegou (o número de reputação não descreve
+                        <div className="min-w-0 flex-1">
+                          <ProfilePeek
+                            username={u.username}
+                            name={u.name}
+                            className="block max-w-full truncate text-sm font-normal text-text-strong hover:underline"
+                          >
+                            <StyledName name={u.name} style={authorNameStyle(u)} />
+                          </ProfilePeek>
+                        </div>
+
+                        {/* A coluna da direita é QUANDO chegou (o número de reputação não descreve
                           mais esta lista). */}
-                      {joinedLabel(u.joinedAt) && (
-                        <span className="shrink-0 text-xs font-normal text-text-subtle">
-                          {joinedLabel(u.joinedAt)}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            )}
+                        {joinedLabel(u.joinedAt) && (
+                          <span className="shrink-0 text-xs font-normal text-text-subtle">
+                            {joinedLabel(u.joinedAt)}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
 
-            {user.externalLinks.length > 0 && (
-              <Section title={texts.profile.sections.links}>
-                <ul className="space-y-2 text-sm font-normal">
-                  {user.externalLinks.map((link: string) => (
-                    <li key={link} className="flex items-center gap-2 text-text-subtle">
-                      <LinkIcon className="h-4 w-4" />
+              {user.externalLinks.length > 0 && (
+                <Section title={texts.profile.sections.links}>
+                  <ul className="space-y-2 text-sm font-normal">
+                    {user.externalLinks.map((link: string) => (
+                      <li key={link} className="flex items-center gap-2 text-text-subtle">
+                        <LinkIcon className="h-4 w-4" />
 
-                      <span className="truncate text-text-strong">{link}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-            )}
+                        <span className="truncate text-text-strong">{link}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
 
-            <ProfileExplorePanel />
-          </aside>
+              <ProfileExplorePanel />
+            </aside>
+          </div>
         </div>
-      </div>
+      </ProfileThemeScope>
 
       <div className="h-4 lg:hidden" />
 
@@ -1159,6 +1188,19 @@ function Profile() {
         contributor={isOwnProfile && isContributor}
         contributorTagColor={user.contributorTagColor ?? null}
       />
+      {isOwnProfile && (
+        <ProfileLookDialog
+          open={lookOpen}
+          onOpenChange={setLookOpen}
+          value={
+            myProfile?.profileAppearance ?? {
+              social: socialLook ?? EMPTY_PROFILE_LOOK,
+              professional: EMPTY_PROFILE_LOOK,
+            }
+          }
+          onPreview={setLookPreview}
+        />
+      )}
       {isOwnProfile && (
         <ProfileStatusDialog
           open={statusOpen}

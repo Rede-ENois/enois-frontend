@@ -1,11 +1,13 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { CorporateProfileView } from "@/types/application/corporate/corporate-profile-view";
 import {
   PostCardSkeletons,
   ProfessionalProfile as ProfessionalProfileView,
+  ProfileThemeScope,
 } from "@rede-enois/design-system/domain";
 import { Button, EmptyState, useToast } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Globe, MessageCircle, UserX } from "lucide-react";
@@ -45,6 +47,7 @@ const PAGE_SIZE = 20;
  */
 function ProfessionalProfile() {
   const lite = useLiteMode();
+  const themeMode = usePreferencesStore((state) => state.theme);
   const { username } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -110,108 +113,111 @@ function ProfessionalProfile() {
   const items = posts.data?.pages.flatMap((page) => page.items) ?? [];
   const isMine = Boolean(myProfile.data?.exists && myProfile.data.username === data.username);
 
+  // O lado profissional tem visual próprio: esta página veste o look dele, não o do social.
   return (
     <AppContainer>
-      <ProfessionalProfileView
-        backHref="/feed"
-        editHref={isMine ? "/profissional" : null}
-        statusNote={data.status !== "ACTIVE" ? texts.corporate.status[data.status] : null}
-        banner={
-          data.bannerHtml ? (
-            <BannerHtmlFrame
-              html={data.bannerHtml}
-              title={texts.corporate.bannerHtml}
-              className="h-full w-full"
-            />
-          ) : data.banner ? (
-            <img src={resolveCdnUrl(data.banner)} alt="" className="h-full w-full object-cover" />
-          ) : null
-        }
-        profile={{
-          name: data.name,
-          username: data.username,
-          headline: data.headline,
-          bio: data.bio,
-          avatar: data.avatar,
-          location: data.location,
-          industry: data.industry,
-          identityVerified: data.identityVerified,
-          reputation: data.reputation ?? null,
-          memberSinceLabel: data.memberSince ? shortMonthYear(data.memberSince) : null,
-          skills: data.skills ?? [],
-          links: splitLinks(data.externalLinks)
-            .map(safeHref)
-            .filter((link): link is string => link !== null),
-        }}
-        experiences={sortCurrentFirst(data.experiences ?? []).map((item) => ({
-          ...item,
-          startLabel: item.startDate ? shortMonthYear(item.startDate) : null,
-          endLabel: item.endDate ? shortMonthYear(item.endDate) : null,
-          months: item.startDate ? monthsBetween(item.startDate, item.endDate) : null,
-        }))}
-        educations={sortCurrentFirst(data.educations ?? []).map((item) => ({
-          id: item.id,
-          school: item.school,
-          degree: item.degree,
-          field: item.field,
-          periodLabel: yearsLabel(item.startDate, item.currentlyHere ? null : item.endDate),
-        }))}
-        certifications={(data.certifications ?? []).map((item) => ({
-          id: item.id,
-          name: item.name,
-          issuer: item.issuer,
-          issuedLabel: item.issueDate ? shortMonthYear(item.issueDate) : null,
-          credentialUrl: item.credentialUrl ? safeHref(item.credentialUrl) : null,
-        }))}
-        posts={
-          <>
-            {!isMine && user && data.userId && (
-              <div className="mb-4 flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full gap-1.5"
-                  onClick={() => openConversation.mutate(data.userId!)}
-                  disabled={openConversation.isPending}
-                >
-                  <MessageCircle className="h-4 w-4" />
-
-                  <>{texts.profile.message}</>
-                </Button>
-              </div>
-            )}
-
-            {posts.isLoading ? (
-              <PostCardSkeletons />
-            ) : posts.isError ? (
-              <div className="surface-card">
-                <EmptyState icon={Globe} title={texts.corporate.saveError} />
-              </div>
-            ) : items.length === 0 ? (
-              <div className="surface-card">
-                <EmptyState icon={Globe} title={texts.corporate.publicProfile.empty} />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {items.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-
-                {posts.hasNextPage && (
+      <ProfileThemeScope look={data.profileLook ?? null} mode={themeMode}>
+        <ProfessionalProfileView
+          backHref="/feed"
+          editHref={isMine ? "/profissional" : null}
+          statusNote={data.status !== "ACTIVE" ? texts.corporate.status[data.status] : null}
+          banner={
+            data.bannerHtml ? (
+              <BannerHtmlFrame
+                html={data.bannerHtml}
+                title={texts.corporate.bannerHtml}
+                className="h-full w-full"
+              />
+            ) : data.banner ? (
+              <img src={resolveCdnUrl(data.banner)} alt="" className="h-full w-full object-cover" />
+            ) : null
+          }
+          profile={{
+            name: data.name,
+            username: data.username,
+            headline: data.headline,
+            bio: data.bio,
+            avatar: data.avatar,
+            location: data.location,
+            industry: data.industry,
+            identityVerified: data.identityVerified,
+            reputation: data.reputation ?? null,
+            memberSinceLabel: data.memberSince ? shortMonthYear(data.memberSince) : null,
+            skills: data.skills ?? [],
+            links: splitLinks(data.externalLinks)
+              .map(safeHref)
+              .filter((link): link is string => link !== null),
+          }}
+          experiences={sortCurrentFirst(data.experiences ?? []).map((item) => ({
+            ...item,
+            startLabel: item.startDate ? shortMonthYear(item.startDate) : null,
+            endLabel: item.endDate ? shortMonthYear(item.endDate) : null,
+            months: item.startDate ? monthsBetween(item.startDate, item.endDate) : null,
+          }))}
+          educations={sortCurrentFirst(data.educations ?? []).map((item) => ({
+            id: item.id,
+            school: item.school,
+            degree: item.degree,
+            field: item.field,
+            periodLabel: yearsLabel(item.startDate, item.currentlyHere ? null : item.endDate),
+          }))}
+          certifications={(data.certifications ?? []).map((item) => ({
+            id: item.id,
+            name: item.name,
+            issuer: item.issuer,
+            issuedLabel: item.issueDate ? shortMonthYear(item.issueDate) : null,
+            credentialUrl: item.credentialUrl ? safeHref(item.credentialUrl) : null,
+          }))}
+          posts={
+            <>
+              {!isMine && user && data.userId && (
+                <div className="mb-4 flex justify-end">
                   <Button
                     variant="outline"
-                    className="w-full rounded-full"
-                    disabled={posts.isFetchingNextPage}
-                    onClick={() => void posts.fetchNextPage()}
+                    size="sm"
+                    className="rounded-full gap-1.5"
+                    onClick={() => openConversation.mutate(data.userId!)}
+                    disabled={openConversation.isPending}
                   >
-                    {texts.feed.loadMore}
+                    <MessageCircle className="h-4 w-4" />
+
+                    <>{texts.profile.message}</>
                   </Button>
-                )}
-              </div>
-            )}
-          </>
-        }
-      />
+                </div>
+              )}
+
+              {posts.isLoading ? (
+                <PostCardSkeletons />
+              ) : posts.isError ? (
+                <div className="surface-card">
+                  <EmptyState icon={Globe} title={texts.corporate.saveError} />
+                </div>
+              ) : items.length === 0 ? (
+                <div className="surface-card">
+                  <EmptyState icon={Globe} title={texts.corporate.publicProfile.empty} />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {items.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+
+                  {posts.hasNextPage && (
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full"
+                      disabled={posts.isFetchingNextPage}
+                      onClick={() => void posts.fetchNextPage()}
+                    >
+                      {texts.feed.loadMore}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
+          }
+        />
+      </ProfileThemeScope>
     </AppContainer>
   );
 }

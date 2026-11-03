@@ -1,6 +1,7 @@
 import type { Certification } from "@/types/application/profile/certification";
 import type { Education } from "@/types/application/profile/education";
 import type { Experience } from "@/types/application/profile/experience";
+import type { ProfileLook } from "@/types/application/profile/profile-appearance";
 
 /**
  * Estado do perfil profissional da conta (GET /me/business-profile) e a página pública
@@ -28,4 +29,6 @@ export type CorporateProfileView = {
   experiences?: Experience[];
   educations?: Education[];
   certifications?: Certification[];
+  /** Visual da vitrine PROFISSIONAL escolhido pelo dono (o social tem o seu). */
+  profileLook?: ProfileLook | null;
 };

@@ -47,6 +47,8 @@ export function AppearanceDialog({
   const resetThemeSettings = usePreferencesStore((state) => state.resetThemeSettings);
   const themeCollection = usePreferencesStore((state) => state.themeCollection);
   const setThemeCollection = usePreferencesStore((state) => state.setThemeCollection);
+  const previewThemeCollection = usePreferencesStore((state) => state.previewThemeCollection);
+  const setPreviewThemeCollection = usePreferencesStore((state) => state.setPreviewThemeCollection);
   const widgetBackground = usePreferencesStore((state) => state.widgetBackground);
   const setWidgetBackground = usePreferencesStore((state) => state.setWidgetBackground);
   const pageBackground = usePreferencesStore((state) => state.pageBackground);
@@ -128,12 +130,30 @@ export function AppearanceDialog({
 
   const activeCollection = resolveThemeCollection(themeCollection);
 
+  /**
+   * Experimentar: aplica o tema na tela sem gravá-lo.
+   *
+   * A prévia mora num campo transitório da store (não vai para o armazenamento local
+   * nem para a conta), então fechar a galeria devolve o tema aplicado — ninguém
+   * "aplica" um tema por engano só por ter passado o olho nele.
+   */
+  const handleCollectionPreview = (collectionId: string | null) => {
+    setPreviewThemeCollection(collectionId);
+  };
+
   const handleCollectionSelect = (collectionId: string | null) => {
+    setPreviewThemeCollection(null);
     setThemeCollection(collectionId);
     // O cache da conta acompanha a escolha na hora: sem isto, um refetch traria o
     // valor antigo do servidor e desfaria a troca em tela.
     queryClient.setQueryData(["me", "theme"], { theme: collectionId });
     void syncThemeCollection(collectionId);
+  };
+
+  /** Fechar a galeria encerra qualquer prévia pendente. */
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setPreviewThemeCollection(null);
+    onOpenChange(next);
   };
 
   /**
@@ -180,7 +200,7 @@ export function AppearanceDialog({
   return (
     <AppearanceDialogView
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       profileName={profileName}
       nameStyle={{
         theme: displayNameTheme ?? profileNameThemeId ?? null,
@@ -199,6 +219,8 @@ export function AppearanceDialog({
       onSettingsChange={setThemeSettings}
       collectionId={themeCollection}
       activeCollection={activeCollection}
+      previewCollectionId={previewThemeCollection}
+      onCollectionPreview={handleCollectionPreview}
       onCollectionSelect={handleCollectionSelect}
       purchasedThemes={
         authenticated

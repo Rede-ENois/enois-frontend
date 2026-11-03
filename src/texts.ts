@@ -1421,6 +1421,8 @@ export const texts = {
     recommendationQuote: (comment: string) => `"${comment}"`,
     imageUploadError: "Não foi possível enviar a imagem. Tente novamente.",
     avatarUnknown: "?",
+    /** Botão que abre a aparência da vitrine (o visual que quem visita vê). */
+    lookAction: "Aparência do perfil",
     bannerHtml: {
       action: "Mudar capa",
       frameTitle: "Capa em HTML do perfil",

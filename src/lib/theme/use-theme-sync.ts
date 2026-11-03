@@ -22,6 +22,7 @@ export function useThemeSync(): void {
   const theme = usePreferencesStore((state) => state.theme);
   const themeSettings = usePreferencesStore((state) => state.themeSettings);
   const themeCollection = usePreferencesStore((state) => state.themeCollection);
+  const previewThemeCollection = usePreferencesStore((state) => state.previewThemeCollection);
   const widgetBackground = usePreferencesStore((state) => state.widgetBackground);
   const pageBackground = usePreferencesStore((state) => state.pageBackground);
   const accentAlpha = usePreferencesStore((state) => state.accentAlpha);
@@ -37,7 +38,9 @@ export function useThemeSync(): void {
     applyThemeSettings(
       themeSettings,
       theme,
-      themeCollection,
+      // A prévia da galeria vence a coleção aplicada enquanto está ativa; ela não é
+      // persistida, então sair da galeria (que a limpa) devolve o tema aplicado.
+      previewThemeCollection ?? themeCollection,
       widgetBackground,
       pageBackground,
       accentAlpha,
@@ -48,6 +51,7 @@ export function useThemeSync(): void {
     theme,
     themeSettings,
     themeCollection,
+    previewThemeCollection,
     widgetBackground,
     pageBackground,
     accentAlpha,
