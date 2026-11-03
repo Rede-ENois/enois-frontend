@@ -1076,6 +1076,10 @@ export const texts = {
       emotes:
         "As figurinhas das conversas não são nossas nem foram feitas por nós: vêm do BetterTTV e do FrankerFaceZ, e cada uma continua pertencendo a quem a criou. O énóis não vende, não licencia e não usa essas imagens fora do site — mantém só uma cópia em cache, para elas abrirem na hora nas conversas. Se você é autor de uma figurinha e quer que ela saia do ar aqui, escreva pela página de contato e ela sai.",
       emotesRemoval: "Pedir a remoção de uma figurinha",
+      kenneyTitle: "Arte de cena dos looks",
+      kenney:
+        "Os cenários dos looks prontos da loja são feitos com sprites de Kenney (kenney.nl), doados ao domínio público sob a licença Creative Commons Zero (CC0 1.0). O crédito não é exigido pela licença — a arte pode ser copiada, modificada e usada à vontade —, mas fica aqui porque o desenho é de outra pessoa.",
+      kenneyCredit: "Kenney.nl · licença CC0 1.0",
     },
   },
 
@@ -3156,6 +3160,13 @@ export const texts = {
   cosmetics: {
     bought: "Item comprado. Agora é só equipar.",
     lookBought: "Look comprado e vestido no seu perfil.",
+    lookEquipped: "Look vestido no seu perfil.",
+    lookUnequipped: "Look guardado. As peças continuam suas.",
+    /** O card do look pronto: o clique veste, e o próximo clique guarda. */
+    equipLook: (title: string) => `Vestir o meu look ${title}`,
+    unequipLook: (title: string) => `Tirar o look ${title} do meu perfil`,
+    lookWearing: "Vestindo",
+    lookWear: "Vestir",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
     /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */
