@@ -1350,6 +1350,9 @@ export const texts = {
     backHome: "Voltar para o início",
     loadError: "Não foi possível carregar este perfil.",
     editProfile: "Editar perfil",
+    /** Own profile: the way to the professional side, which the social interface does not list. */
+    professionalProfile: "Perfil profissional",
+    professionalSetup: "Ativar perfil profissional",
     message: "Mensagem",
     city: {
       add: "Informar cidade",
