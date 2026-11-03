@@ -62,9 +62,13 @@ export type PostView = {
   /** Mídias do original citado. */
   repostOfMediaIds?: string[] | null;
   /** Repost puro: quem repostou (aparece como "X republicou" no topo do card). */
-  repostedByName?: string | null;
-  repostedByAvatar?: string | null;
-  repostedByUsername?: string | null;
+  repostedBy?: {
+    name: string;
+    username: string;
+    avatar: string | null;
+    /** Quando o repost aconteceu (ISO 8601). */
+    at: string | null;
+  } | null;
   /** Enquete (só em posts do tipo POLL): alternativas, contagem e o voto de quem lê. */
   poll?: PollView | null;
   /** HTML já sanitizado da mini página (só em posts do tipo PAGE; nulo nos demais). */
