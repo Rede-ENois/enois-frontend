@@ -253,7 +253,9 @@ export function AppearanceDialog({
         authenticated ? (
           <OwnedItems
             onGoToStore={() => {
-              onOpenChange(false);
+              // Fecha pelo mesmo caminho do botão de fechar: ir para a loja também encerra
+              // a prévia, senão o tema experimentado continua vestido na próxima tela.
+              handleOpenChange(false);
               void navigate({ to: "/carteira", search: { tab: "loja" } });
             }}
           />
