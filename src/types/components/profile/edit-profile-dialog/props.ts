@@ -1,6 +1,8 @@
 import type { Profile } from "@/types/application/profile/profile";
-import type { WithRequiredChildren } from "@/types/components/with-required-children";
 
-export type Props = WithRequiredChildren<{
+export type Props = {
   profile: Profile;
-}>;
+  /** Opened by the page (from the "Editar perfil" menu). */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};

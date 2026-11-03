@@ -45,7 +45,12 @@ describe("ProfileBioDialog", () => {
     await act(async () =>
       root.render(
         <QueryClientProvider client={client}>
-          <ProfileBioDialog initialHtml={null} onSaved={() => undefined} />
+          <ProfileBioDialog
+            open
+            onOpenChange={() => undefined}
+            initialHtml={null}
+            onSaved={() => undefined}
+          />
         </QueryClientProvider>,
       ),
     );

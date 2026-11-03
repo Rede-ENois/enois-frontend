@@ -104,9 +104,7 @@ async function montar() {
   await act(async () => {
     root.render(
       <QueryClientProvider client={client}>
-        <EditProfileDialog profile={perfilPublico}>
-          <button type="button">Editar</button>
-        </EditProfileDialog>
+        <EditProfileDialog profile={perfilPublico} open onOpenChange={() => undefined} />
       </QueryClientProvider>,
     );
   });
