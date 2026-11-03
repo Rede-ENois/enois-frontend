@@ -1,3 +1,4 @@
+import { BRAND_GROUND } from "@/constants/brand-ground";
 import type { GalleryPackage } from "@/types/lib/theme/gallery-package";
 import {
   type BackgroundStyle,
@@ -108,7 +109,7 @@ export function buildGalleryPackage(input: {
 }): GalleryPackage {
   const collection = resolveThemeCollection(input.collectionId);
   const tokens = collection?.tokens[input.mode] ?? collection?.tokens.light ?? {};
-  const fallbackBackground = input.mode === "dark" ? "#141420" : "#ffffff";
+  const fallbackBackground = BRAND_GROUND[input.mode];
   const accent = clampThemeSettings(input.settings).accent;
 
   const background =

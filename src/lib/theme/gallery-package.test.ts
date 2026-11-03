@@ -1,3 +1,4 @@
+import { BRAND_GROUND } from "@/constants/brand-ground";
 import { THEME_COLLECTIONS } from "@rede-enois/design-system/domain";
 import { describe, expect, it } from "vitest";
 
@@ -241,7 +242,7 @@ describe("buildGalleryPackage", () => {
 
     const palette = parse(packageJson).palette;
     expect(palette.background).toMatch(HEX_ONLY);
-    expect(palette.background).not.toBe("#141420");
+    expect(palette.background).not.toBe(BRAND_GROUND.dark);
   });
 
   it("sem coleção, cai nos tons da marca do modo atual", () => {
@@ -255,7 +256,7 @@ describe("buildGalleryPackage", () => {
         mode: "light",
       }).packageJson,
     ).palette;
-    expect(light.background).toBe("#ffffff");
+    expect(light.background).toBe(BRAND_GROUND.light);
     expect(light.text.strong).toBe("#111111");
   });
 });

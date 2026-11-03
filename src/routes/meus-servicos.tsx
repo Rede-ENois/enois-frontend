@@ -3,7 +3,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
 import type { ServiceListing } from "@/types/application/services/service-listing";
+import type { ServiceListingInput } from "@/types/application/services/service-listing-input";
 import {
   Button,
   Dialog,
@@ -17,9 +19,9 @@ import {
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { Plus, Search, Wrench } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, Wrench } from "lucide-react";
 
-import { servicesApi } from "@/lib/api";
+import { ApiError, servicesApi } from "@/lib/api";
 import { formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -33,8 +35,31 @@ export const Route = createFileRoute("/meus-servicos")({
 
 function MyServices() {
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<ServiceListing | null>(null);
+  const [removing, setRemoving] = useState<ServiceListing | null>(null);
   const [term, setTerm] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const mine = useQuery({ queryKey: ["services", "mine"], queryFn: () => servicesApi.mine() });
+
+  const remove = useMutation({
+    mutationFn: (offer: ServiceListing) => servicesApi.removeListing(offer.id),
+    onSuccess: () => {
+      toast(texts.services.mine.removed, "success");
+      setRemoving(null);
+      void queryClient.invalidateQueries({ queryKey: ["services"] });
+    },
+    onError: (error) => {
+      toast(
+        error instanceof ApiError && error.code === "SERVICE_HAS_OPEN_CONTRACTS"
+          ? texts.services.mine.removeBlocked
+          : error instanceof Error
+            ? error.message
+            : texts.services.mine.removeFailed,
+        "error",
+      );
+    },
+  });
 
   if (mine.isLoading) {
     return (
@@ -101,20 +126,87 @@ function MyServices() {
         ) : (
           <ul className="space-y-3">
             {offers.map((offer) => (
-              <ServiceRow key={offer.id} offer={offer} />
+              <ServiceRow
+                key={offer.id}
+                offer={offer}
+                onEdit={setEditing}
+                onRemove={setRemoving}
+                removing={remove.isPending}
+              />
             ))}
           </ul>
         )}
 
-        <NewServiceDialog open={open} onOpenChange={setOpen} />
+        <ServiceFormDialog
+          open={open}
+          onOpenChange={setOpen}
+          title={texts.services.mine.newTitle}
+          submit={texts.services.mine.publish}
+          onSave={(input) => servicesApi.publishListing(input)}
+          success={texts.services.mine.published}
+        />
+        <ServiceFormDialog
+          key={editing?.id ?? "nova"}
+          open={editing !== null}
+          onOpenChange={(next) => {
+            if (!next) setEditing(null);
+          }}
+          title={texts.services.mine.editTitle}
+          submit={texts.services.mine.save}
+          initial={editing}
+          onSave={(input) => servicesApi.editListing(editing!.id, input)}
+          success={texts.services.mine.saved}
+        />
+
+        <Dialog
+          open={removing !== null}
+          onOpenChange={(next) => {
+            if (!next) setRemoving(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-normal">{texts.services.mine.removeTitle}</DialogTitle>
+            </DialogHeader>
+
+            <p className="text-sm text-text-subtle">
+              {texts.services.mine.removeBody(removing?.title ?? "")}
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" className="rounded-full" onClick={() => setRemoving(null)}>
+                {texts.services.mine.removeCancel}
+              </Button>
+
+              <Button
+                className="rounded-full"
+                disabled={remove.isPending}
+                onClick={() => removing && remove.mutate(removing)}
+              >
+                {remove.isPending ? texts.services.mine.removing : texts.services.mine.remove}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppContainer>
   );
 }
 
-function ServiceRow({ offer }: { offer: ServiceListing }) {
+function ServiceRow({
+  offer,
+  onEdit,
+  onRemove,
+  removing,
+}: {
+  offer: ServiceListing;
+  onEdit: (offer: ServiceListing) => void;
+  onRemove: (offer: ServiceListing) => void;
+  removing: boolean;
+}) {
   const price =
     offer.currency === "BRL" ? formatBrlCents(offer.price) : `${formatFaisca(offer.price)} faíscas`;
+  const removed = offer.status !== "ACTIVE";
 
   return (
     <li className="surface-card flex flex-wrap items-center gap-3 p-4">
@@ -123,33 +215,87 @@ function ServiceRow({ offer }: { offer: ServiceListing }) {
 
         <p className="text-xs text-text-subtle">
           {offer.category} · entrega em {offer.deliveryDays} dia{offer.deliveryDays > 1 ? "s" : ""}{" "}
-          · {offer.status === "ACTIVE" ? "aberto" : "removido"}
+          · {removed ? "removido" : "aberto"}
         </p>
       </div>
 
       <span className="shrink-0 rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-primary-text">
         {price}
       </span>
+
+      {/* Remover tira da vitrine e não apaga o contrato: por isso editar continua valendo para
+          um serviço removido — é o caminho de corrigir o texto e publicar de novo. */}
+      <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+        {removed && (
+          <span className="mr-auto text-xs text-text-subtle sm:mr-0">
+            {texts.services.mine.removedHint}
+          </span>
+        )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-auto rounded-full gap-1.5"
+          disabled={removing}
+          onClick={() => onEdit(offer)}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+
+          <>{texts.services.mine.edit}</>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-auto rounded-full gap-1.5 text-destructive hover:text-destructive"
+          disabled={removing || removed}
+          onClick={() => onRemove(offer)}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+
+          <>{texts.services.mine.remove}</>
+        </Button>
+      </div>
     </li>
   );
 }
 
-function NewServiceDialog({
+function ServiceFormDialog({
   open,
   onOpenChange,
+  title: dialogTitle,
+  submit: submitLabel,
+  onSave,
+  success,
+  initial,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  title: string;
+  submit: string;
+  onSave: (input: ServiceListingInput) => Promise<unknown>;
+  success: string;
+  /** O serviço a editar; sem ele o formulário publica um novo. */
+  initial?: ServiceListing | null;
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("Desenvolvimento");
-  const [description, setDescription] = useState("");
-  const [deliverables, setDeliverables] = useState("");
-  const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState<"FAISCA" | "BRL">("FAISCA");
-  const [deliveryDays, setDeliveryDays] = useState("7");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [category, setCategory] = useState(initial?.category ?? "Desenvolvimento");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [deliverables, setDeliverables] = useState(initial?.deliverables ?? "");
+  const [currency, setCurrency] = useState<"FAISCA" | "BRL">(
+    initial?.currency === "BRL" ? "BRL" : "FAISCA",
+  );
+  // O preço volta para a mesma unidade do campo: faíscas em número, reais em centavos.
+  const [price, setPrice] = useState(
+    initial
+      ? initial.currency === "BRL"
+        ? (initial.price / 100).toFixed(2).replace(".", ",")
+        : formatFaisca(initial.price)
+      : "",
+  );
+  const [deliveryDays, setDeliveryDays] = useState(String(initial?.deliveryDays ?? 7));
 
   const amount =
     currency === "BRL"
@@ -166,7 +312,7 @@ function NewServiceDialog({
 
   const save = useMutation({
     mutationFn: () =>
-      servicesApi.publishListing({
+      onSave({
         category: category.trim(),
         title: title.trim(),
         description: description.trim(),
@@ -176,26 +322,26 @@ function NewServiceDialog({
         deliveryDays: days,
       }),
     onSuccess: () => {
-      toast("Serviço publicado.", "success");
+      toast(success, "success");
       void queryClient.invalidateQueries({ queryKey: ["services"] });
       onOpenChange(false);
-      setTitle("");
-      setDescription("");
-      setDeliverables("");
-      setPrice("");
     },
-    onError: (error) =>
-      toast(
-        error instanceof Error ? error.message : "Não foi possível publicar o serviço.",
-        "error",
-      ),
+    onError: (error) => {
+      const message =
+        error instanceof ApiError && error.code === "SERVICE_HAS_OPEN_CONTRACTS"
+          ? texts.services.mine.priceLocked
+          : error instanceof Error
+            ? error.message
+            : texts.services.mine.saveFailed;
+      toast(message, "error");
+    },
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-normal">Publicar serviço</DialogTitle>
+          <DialogTitle className="font-normal">{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -290,7 +436,7 @@ function NewServiceDialog({
               disabled={!valid || save.isPending}
               onClick={() => save.mutate()}
             >
-              {save.isPending ? "Publicando…" : "Publicar"}
+              {save.isPending ? texts.services.mine.saving : submitLabel}
             </Button>
           </div>
         </div>

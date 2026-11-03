@@ -1,3 +1,4 @@
+import { BRAND_GROUND } from "@/constants/brand-ground";
 import { texts } from "@/texts";
 import {
   type BackgroundStyle,
@@ -66,9 +67,7 @@ export function applyThemeSettings(
   // cor com alpha; o hex de dentro é o que a matemática de contraste consome.
   const pageBase = pageBackground
     ? pageRepresentative(pageBackground)
-    : (collection?.tokens[mode]?.["--background"] ??
-      collection?.surfaceHex ??
-      (mode === "dark" ? "#141420" : "#ffffff"));
+    : (collection?.tokens[mode]?.["--background"] ?? collection?.surfaceHex ?? BRAND_GROUND[mode]);
   const pageSolid = pageBase.startsWith("color-mix")
     ? (pageBase.match(/#[0-9a-fA-F]{3,6}/)?.[0] ?? pageBase)
     : pageBase;

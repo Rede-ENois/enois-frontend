@@ -6,4 +6,6 @@
 export type PushNavigateMessage = {
   type?: string;
   href?: string;
+  /** The notification that was tapped, so the app marks it read. */
+  notificationId?: string;
 };

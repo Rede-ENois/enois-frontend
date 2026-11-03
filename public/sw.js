@@ -13,7 +13,7 @@
  * cliente recarrega sozinho quando o novo SW assume (ver src/lib/pwa.ts).
  */
 
-const VERSION = "enois-v11";
+const VERSION = "enois-v12";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const PRECACHE = [
@@ -75,7 +75,8 @@ self.addEventListener("push", (event) => {
       body: data.body || "",
       icon: "/icons/brand-icon-192.png",
       badge: "/icons/brand-icon-192.png",
-      data: { url },
+      // The id lets the app mark the notification read when the person opens it from here.
+      data: { url, notificationId: data.notificationId || null },
       tag: data.tag || undefined,
     }),
   );
@@ -125,6 +126,7 @@ self.addEventListener("pushsubscriptionchange", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/feed";
+  const notificationId = event.notification.data?.notificationId || null;
 
   // O href do backend nao e sempre um caminho de API: ha hrefs do app ("/configuracoes/seguranca")
   // que nao sao rota do front — a rota certa esta na tabela do app (src/utils/navigation.ts), que
@@ -138,14 +140,19 @@ self.addEventListener("notificationclick", (event) => {
         if ("focus" in client) {
           client.focus();
           if ("postMessage" in client) {
-            client.postMessage({ type: "enois:navigate", href: url });
+            client.postMessage({
+              type: "enois:navigate",
+              href: url,
+              ...(notificationId ? { notificationId } : {}),
+            });
           }
           return undefined;
         }
       }
       // Sem aba aberta nao ha quem traduza: abre o app com o destino na query e ele navega pela
       // tabela. O caminho sozinho nao serve porque pode nao ser rota do front.
-      return self.clients.openWindow(`/?push=${encodeURIComponent(url)}`);
+      const read = notificationId ? `&n=${encodeURIComponent(notificationId)}` : "";
+      return self.clients.openWindow(`/?push=${encodeURIComponent(url)}${read}`);
     }),
   );
 });
