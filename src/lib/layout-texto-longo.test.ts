@@ -32,6 +32,26 @@ function cssSemComentario(): string {
 
 const CSS = "src/styles.css";
 
+/**
+ * O conteúdo da camada base, contando as chaves: a camada tem blocos aninhados (@media, por
+ * exemplo), e cortar no primeiro `}` devolveria só o começo dela.
+ */
+function camadaBase(css: string): string | null {
+  const inicio = css.indexOf("@layer base");
+  if (inicio === -1) return null;
+  const abre = css.indexOf("{", inicio);
+  if (abre === -1) return null;
+  let profundidade = 0;
+  for (let i = abre; i < css.length; i += 1) {
+    if (css[i] === "{") profundidade += 1;
+    else if (css[i] === "}") {
+      profundidade -= 1;
+      if (profundidade === 0) return css.slice(abre + 1, i);
+    }
+  }
+  return null;
+}
+
 describe("texto do usuário sem espaços não pode estourar a tela", () => {
   it("o CSS do app quebra a palavra que não cabe na linha", () => {
     const css = fonte(CSS);
@@ -40,10 +60,8 @@ describe("texto do usuário sem espaços não pode estourar a tela", () => {
 
   it("a regra vale para os elementos de texto (p, span, títulos, li, link)", () => {
     const css = fonte(CSS);
-    const bloco = css.match(/@layer base\s*\{([\s\S]*?)\}/);
-    expect(bloco, "a regra tem de estar na camada base").not.toBeNull();
-
-    const seletores = bloco![1];
+    const seletores = camadaBase(css);
+    expect(seletores, "a regra tem de estar na camada base").not.toBeNull();
     for (const tag of ["p", "span", "h1", "h2", "h3", "li", "a", "label", "strong"]) {
       expect(seletores).toMatch(new RegExp(`(^|[\\s,])${tag}([\\s,])`));
     }

@@ -38,10 +38,27 @@ export function hrefDaQueryDePush(search: string): string | null {
   return href;
 }
 
+/**
+ * The tapped notification, to mark it read: from the worker message (`notificationId`) or from the
+ * query the worker leaves when no tab was open (`n`). Ids are opaque, so only a plain token passes.
+ */
+export function notificationIdDoPush(
+  source: PushNavigateMessage | string | null | undefined,
+): string | null {
+  const id =
+    typeof source === "string"
+      ? new URLSearchParams(source).get("n")
+      : source?.type === PUSH_NAVIGATE
+        ? source.notificationId
+        : null;
+  return id && /^[\w-]{1,128}$/.test(id) ? id : null;
+}
+
 /** A mesma query sem o destino, para o endereco nao guardar o clique na notificacao. */
 export function searchSemPush(search: string): string {
   const params = new URLSearchParams(search);
   params.delete("push");
+  params.delete("n");
   return params.toString();
 }
 

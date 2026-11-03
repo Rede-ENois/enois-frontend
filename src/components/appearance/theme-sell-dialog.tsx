@@ -33,6 +33,7 @@ export function ThemeSellDialog({
   const theme = usePreferencesStore((state) => state.theme);
   const collectionId = usePreferencesStore((state) => state.themeCollection);
   const settings = usePreferencesStore((state) => state.themeSettings);
+  const widgetBackground = usePreferencesStore((state) => state.widgetBackground);
   const pageBackground = usePreferencesStore((state) => state.pageBackground);
 
   const activeCollection = resolveThemeCollection(collectionId);
@@ -46,6 +47,7 @@ export function ThemeSellDialog({
         collectionId,
         settings,
         mode: theme,
+        widget: widgetBackground,
         page: pageBackground,
       });
       const published = await themesApi.publish({

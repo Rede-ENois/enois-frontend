@@ -30,6 +30,7 @@ export function MessageBubble({ message, peer, profileHref, isMe, ...props }: Me
         message.text.trim().length > 0 && (
           <RichText
             content={message.text}
+            writtenAt={message.time}
             mediaSpoiler={message.mediaSpoiler}
             className="break-words"
             linkClassName="break-all underline underline-offset-2"

@@ -32,6 +32,15 @@ export function readFeedScroll(tab: HomeTab): FeedScrollState | null {
   }
 }
 
+/**
+ * Whether the page is already tall enough to scroll to `scrollY`. The feed is measured as it
+ * appears, so a saved position past the current height would be clamped onto another post: the
+ * position has to be kept, not dropped, until the page can reach it.
+ */
+export function canReachScroll(scrollY: number): boolean {
+  return document.documentElement.scrollHeight - window.innerHeight >= scrollY - 1;
+}
+
 export function clearFeedScroll(): void {
   try {
     sessionStorage.removeItem(STORAGE_KEY);

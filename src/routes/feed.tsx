@@ -17,6 +17,7 @@ import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
+  ComposerLauncher,
   PostCardSkeletons,
   QuestionComposerHint,
   type QuestionStatus,
@@ -28,6 +29,7 @@ import {
 import {
   Button,
   EmptyState,
+  EventTicket,
   Input,
   LoadingState,
   Popover,
@@ -48,19 +50,30 @@ import {
   EyeOff,
   FileText,
   Film,
+  Gift,
   Image,
   Loader2,
   RefreshCw,
-  TrendingUp,
   UserPlus,
   X,
 } from "lucide-react";
 
-import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
-import { dataHora, valorDeDataLocal } from "@/lib/date/format";
-import { clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
+import {
+  ApiError,
+  authApi,
+  corporateApi,
+  eventsApi,
+  feedApi,
+  networkApi,
+  profileApi,
+} from "@/lib/api";
+import { takeComposerFiles } from "@/lib/composer-handoff";
+import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
+import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -68,6 +81,7 @@ import {
   useInterfaceContext,
 } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
+import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -80,6 +94,7 @@ import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
 import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
+import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
@@ -87,7 +102,6 @@ import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { NightRestReminder } from "@/components/night-rest-reminder";
-import { PlatformSpacesCard } from "@/components/platform-spaces-card";
 import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
@@ -133,13 +147,20 @@ export const Route = createFileRoute("/feed")({
    * A aba vive na URL (`/feed?aba=ALL`): abrir uma publicação e voltar restaura a MESMA aba em que
    * a pessoa estava — antes o retorno caía sempre em "Para você".
    */
-  validateSearch: (search: Record<string, unknown>): { aba?: HomeTab; compor?: "ARTICLE" } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { aba?: HomeTab; compor?: "ARTICLE" | "MEDIA" | "POST" } => {
     const aba: HomeTab | undefined =
       typeof search.aba === "string" && HOME_TABS.includes(search.aba as HomeTab)
         ? (search.aba as HomeTab)
         : undefined;
-    // `compor=ARTICLE` opens the composer in article mode (the profile "Escrever artigo" shortcut).
-    const compor = search.compor === "ARTICLE" ? "ARTICLE" : undefined;
+    // Profile shortcuts: `compor=ARTICLE` opens the composer in article mode, `compor=MEDIA` attaches
+    // the files picked on the profile (see `composer-handoff`); `compor=POST` is the dock's
+    // "Publicar" and just opens the composer.
+    const compor =
+      search.compor === "ARTICLE" || search.compor === "MEDIA" || search.compor === "POST"
+        ? search.compor
+        : undefined;
     return { ...(aba ? { aba } : {}), ...(compor ? { compor } : {}) };
   },
   head: () => ({
@@ -204,39 +225,11 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
-    refetchInterval: 30_000,
+    // "Ainda não vi" não se renova sozinha: o servidor tira o post da lista assim que ele tem
+    // reação ou comentário meu, e a pessoa perderia o que está lendo no meio da leitura. A lista
+    // se atualiza quando ela volta para a aba (issue #559).
+    ...feedRefreshOptions(tab),
   });
-}
-
-/**
- * Detecta novos posts comparando o primeiro ID da pagina com o que estava visivel.
- * Mostra o indicador quando o feed atualizou e o usuario scrollou pra baixo.
- */
-function useNewPostsIndicator(feedPosts: { id: string }[]) {
-  const seenFirstId = useRef<string | null>(null);
-  const [hasNew, setHasNew] = useState(false);
-
-  const currentFirstId = feedPosts.length > 0 ? feedPosts[0].id : null;
-
-  useEffect(() => {
-    if (!currentFirstId) return;
-    if (seenFirstId.current === null) {
-      seenFirstId.current = currentFirstId;
-      return;
-    }
-    if (currentFirstId !== seenFirstId.current && window.scrollY > 200) {
-      setHasNew(true);
-    }
-  }, [currentFirstId]);
-
-  const dismiss = useCallback(() => {
-    seenFirstId.current = currentFirstId;
-    setHasNew(false);
-    clearFeedScroll();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [currentFirstId]);
-
-  return { hasNewPosts: hasNew, dismissNewPosts: dismiss };
 }
 
 function useProfile() {
@@ -337,13 +330,21 @@ function Home() {
   const [postType, setPostType] = useState<PostView["type"]>(() =>
     compor === "ARTICLE" ? "ARTICLE" : "INSIGHT",
   );
-  // The article request is one-shot: drop it from the URL so a refresh opens the usual composer.
+  // The composer rests as one line (ComposerLauncher) until the person starts; any shortcut opens it.
+  const [composerOpen, setComposerOpen] = useState(() => compor !== undefined);
+  const composerRef = useRef<HTMLFormElement>(null);
+  // Shortcut requests are one-shot: drop them from the URL so a refresh opens the usual composer.
   useEffect(() => {
-    if (compor)
-      void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
+    if (!compor) return;
+    setComposerOpen(true);
+    void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
   }, [compor, navigate]);
-  // Assunto do post avulso (opcional): é o que liga o post a "O que quero ver"/"não gosto".
-  // Em comunidade o post herda o assunto DELA — lá o compositor é outro.
+  // Opening puts the cursor in the field, so one tap on the launcher (or on "Publicar") is enough.
+  useEffect(() => {
+    if (composerOpen) composerRef.current?.querySelector("textarea")?.focus();
+  }, [composerOpen]);
+  // Assunto do post avulso (obrigatório: sem ele o post fica fora dos filtros e de "O que quero
+  // ver"/"não gosto"). Em comunidade o post herda o assunto DELA — lá o compositor é outro.
   const [topic, setTopic] = useState<string>(() => readLastTopic());
   const [media, setMedia] = useState<MediaItem[]>([]);
   const mediaReady = media.every(
@@ -353,10 +354,6 @@ function Home() {
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
-  // Tipo de publicação e o que manda: Página mostra o editor de HTML, Artigo mostra o editor do
-  // texto longo, os demais usam o campo de cima. O seletor de tipos abre em painel recolhido — com
-  // dez tipos, uma fileira de botões ocupava o composer inteiro e empurrava o texto para longe.
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   // Agendamento: o post fica na fila do backend e só entra no feed na hora marcada.
@@ -374,6 +371,9 @@ function Home() {
   }, [identity]);
 
   const pageMode = postType === "PAGE";
+  // Anything in progress keeps the full composer open (a draft, media, an article or a page).
+  const composerExpanded =
+    composerOpen || draft.trim() !== "" || media.length > 0 || postType !== "INSIGHT";
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
@@ -424,6 +424,7 @@ function Home() {
     const content = draft.trim();
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    if (!topic) return;
     const scheduledOptions = normalizePollOptions(pollOptions);
     if (pollMode && scheduledOptions.length < POLL_MIN_OPTIONS) return;
     if (!scheduleAt) return;
@@ -452,7 +453,7 @@ function Home() {
         ...(articleMode ? { articleBody } : {}),
         ...(pollMode ? { pollOptions: scheduledOptions } : {}),
         // O assunto viaja com o agendado e vale quando ele entra no ar.
-        ...(topic ? { topic } : {}),
+        topic,
         scheduledAt: new Date(scheduleAt).toISOString(),
       });
       setDraft("");
@@ -463,7 +464,6 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
-      setTypePickerOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
     } catch {
@@ -482,6 +482,7 @@ function Home() {
     // precisa de titulo (o texto de cima) E do corpo. Nos demais, o texto de cima e o post.
     if (pageMode ? !pageHtml.trim() : !content) return;
     if (articleMode && !articleBody.trim()) return;
+    if (!topic) return;
     // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
     const options = normalizePollOptions(pollOptions);
     if (pollMode && options.length < POLL_MIN_OPTIONS) return;
@@ -502,7 +503,7 @@ function Home() {
         ...(articleMode ? { articleBody } : {}),
         ...(pollMode ? { pollOptions: options } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
-        ...(topic ? { topic } : {}),
+        topic,
         website: String(formData.get("website") ?? ""),
       });
       // "Também no LinkedIn": só para publicações da identidade PROFISSIONAL (o perfil pessoal
@@ -528,7 +529,6 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
-      setTypePickerOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     }
@@ -575,7 +575,10 @@ function Home() {
                 entry.preview === preview
                   ? {
                       ...entry,
-                      moderationStatus: "blocked",
+                      moderationStatus:
+                        error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED"
+                          ? "prohibited"
+                          : "blocked",
                       moderationError:
                         error instanceof Error
                           ? error.message
@@ -588,6 +591,12 @@ function Home() {
       }
     }
   };
+
+  // Files picked on the profile shortcut arrive once, right after the navigation.
+  useEffect(() => {
+    if (compor === "MEDIA") addMediaFiles(takeComposerFiles());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot on arrival; addMediaFiles is rebuilt every render.
+  }, [compor]);
 
   const handleMediaSelect = (e: ChangeEvent<HTMLInputElement>) => {
     addMediaFiles(Array.from(e.target.files ?? []));
@@ -614,12 +623,18 @@ function Home() {
   if (lastSeenAt === undefined && caughtUpTab && firstPage) {
     setLastSeenAt(firstPage.lastSeenAt ?? null);
   }
+  // A primeira página que a atualização reescreveu espera fora da lista enquanto a pessoa lê: dentro
+  // dela, cada post novo empurraria todos os cartões para baixo.
+  const arrivals = useFeedArrivals(
+    feedData,
+    tab,
+    `${tab}|${typeFilter}|${questionsFeed ? questionStatus : ""}`,
+  );
   const { posts: feedPosts, caughtUpAt } = caughtUpOrder(
-    feedData?.pages.flatMap((page) => page.items) ?? [],
+    arrivals.pages.flatMap((page) => page.items),
     caughtUpTab ? (lastSeenAt ?? null) : null,
   );
   const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
-  const { hasNewPosts, dismissNewPosts } = useNewPostsIndicator(feedPosts);
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
@@ -628,6 +643,10 @@ function Home() {
     window.addEventListener("scroll", updateScrollTopVisibility, { passive: true });
     return () => window.removeEventListener("scroll", updateScrollTopVisibility);
   }, []);
+
+  // The saved position belongs to the pages the reader left, not to a first page a refresh rewrote.
+  // A held first page is a new list; the first post of the current one is a later page arriving.
+  const feedListSignature = `${arrivals.held === null ? "current" : "held"}|${feedPosts[0]?.id ?? ""}`;
 
   useEffect(() => {
     if (feedLoading || feedPosts.length === 0 || typeof window === "undefined") return;
@@ -643,6 +662,11 @@ function Home() {
       return;
     }
 
+    // The cards are measured as they arrive, so the page may not be tall enough for the saved
+    // position yet: written now, the scroll would stop on another post and the position would be
+    // lost. It stays saved and the next list change tries again.
+    if (!canReachScroll(savedScroll.scrollY)) return;
+
     clearFeedScroll();
     const restore = () => {
       window.scrollTo({ top: savedScroll.scrollY, behavior: "auto" });
@@ -650,8 +674,16 @@ function Home() {
     };
 
     requestAnimationFrame(() => requestAnimationFrame(restore));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length is the signal.
-  }, [feedLoading, feedPosts.length, fetchNextPage, hasNextPage, isFetchingNextPage, tab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length and which list it is are the signal.
+  }, [
+    feedLoading,
+    feedPosts.length,
+    feedListSignature,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    tab,
+  ]);
 
   const loadNextPage = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -674,6 +706,8 @@ function Home() {
 
   return (
     <AppContainer>
+      <h1 className="sr-only">{texts.navigation.items.feed}</h1>
+
       <NightRestReminder />
 
       {/* Pergunta única ao voltar do vínculo com o LinkedIn (flag gravada pelo diálogo de contas). */}
@@ -691,11 +725,45 @@ function Home() {
             />
           )}
 
-          {/* Composer */}
+          {/* Outside the composer so the launcher's media button can open it in the same tap. */}
           {!composerLocked && (
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              className="hidden"
+              onChange={handleMediaSelect}
+            />
+          )}
+
+          {/* Composer at rest: one line with the signer's photo; the full form only once opened. */}
+          {!composerLocked && !composerExpanded && (
+            <ComposerLauncher
+              avatar={
+                identity === "CORPORATE" ? corporate?.avatar || undefined : profileUser?.avatar
+              }
+              avatarFrame={identity === "CORPORATE" ? undefined : profileUser?.avatarFrame}
+              name={
+                identity === "CORPORATE"
+                  ? (corporate?.name ?? texts.feed.you)
+                  : (profileUser?.name ?? texts.feed.you)
+              }
+              onOpen={() => setComposerOpen(true)}
+              onAddMedia={() => {
+                // Inside the tap: Safari only opens a file picker from the user's gesture.
+                fileRef.current?.click();
+                setComposerOpen(true);
+              }}
+            />
+          )}
+
+          {/* Composer */}
+          {!composerLocked && composerExpanded && (
             <form
+              ref={composerRef}
               onSubmit={publishPost}
-              className="relative rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5"
+              className="relative surface-card p-4 sm:p-5"
             >
               {/* Na borda de cima do compositor, dentro da folga: não cobre o campo nem botões. */}
               <SaciSpot spot="feed" className="absolute -top-4 right-4" />
@@ -808,52 +876,76 @@ function Home() {
                     <div
                       className={`grid gap-2 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                     >
-                      {media.map((item, i) => (
-                        <div
-                          key={i}
-                          className="relative overflow-hidden rounded-xl border border-border-soft"
-                        >
-                          <SpoilerPreview
-                            active={mediaSpoiler}
-                            label={texts.posts.mediaSpoiler.badge}
+                      {media.map((item, i) => {
+                        // A prévia é `blob:` do arquivo que a própria pessoa escolheu; o `src`
+                        // só recebe esse esquema.
+                        const previewUrl = mediaPreviewUrl(item.preview);
+                        return (
+                          <div
+                            key={i}
+                            className="relative overflow-hidden rounded-xl border border-border-soft"
                           >
-                            <img
-                              src={item.preview}
-                              alt=""
-                              className="h-48 w-full object-cover bg-surface-1"
-                            />
-                          </SpoilerPreview>
+                            <SpoilerPreview
+                              active={mediaSpoiler}
+                              label={texts.posts.mediaSpoiler.badge}
+                            >
+                              <img
+                                src={previewUrl}
+                                alt=""
+                                className={`h-48 w-full object-cover bg-surface-1 ${item.moderationStatus === "prohibited" ? "scale-105 blur-lg" : ""}`}
+                              />
+                            </SpoilerPreview>
 
-                          {item.moderationStatus === "checking" && (
-                            <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
-                              <span className="rounded-full bg-surface-card px-3 py-1 text-xs text-text-strong">
-                                {texts.feed.composer.imageChecking}
-                              </span>
-                            </div>
-                          )}
-                          {item.moderationStatus === "blocked" && (
-                            <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
-                              {item.moderationError ?? texts.feed.composer.imageCheckError}
-                            </div>
-                          )}
+                            {item.moderationStatus === "prohibited" && (
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/75 p-3 text-center backdrop-blur-sm">
+                                <div className="max-w-xs">
+                                  <Gift
+                                    aria-hidden
+                                    className="mx-auto mb-1 h-6 w-6 animate-bounce text-primary"
+                                  />
 
-                          <button
-                            type="button"
-                            onClick={() => removeMedia(i)}
-                            aria-label={texts.feed.composer.removeMedia}
-                            title={texts.feed.composer.removeMedia}
-                            className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
+                                  <p className="text-sm font-semibold text-text-strong">
+                                    {texts.feed.composer.imageProhibitedTitle}
+                                  </p>
+
+                                  <p className="mt-1 text-xs text-text-subtle">
+                                    {texts.feed.composer.imageProhibitedMessage}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {item.moderationStatus === "checking" && (
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                                <span className="rounded-full bg-surface-card px-3 py-1 text-xs text-text-strong">
+                                  {texts.feed.composer.imageChecking}
+                                </span>
+                              </div>
+                            )}
+                            {item.moderationStatus === "blocked" && (
+                              <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
+                                {item.moderationError ?? texts.feed.composer.imageCheckError}
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => removeMedia(i)}
+                              aria-label={texts.feed.composer.removeMedia}
+                              title={texts.feed.composer.removeMedia}
+                              className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="relative overflow-hidden rounded-xl border border-border-soft">
                       <SpoilerPreview active={mediaSpoiler} label={texts.posts.mediaSpoiler.badge}>
                         <video
-                          src={media[0].preview}
+                          src={mediaPreviewUrl(media[0].preview)}
                           controls
                           className="max-h-64 w-full bg-surface-1"
                         />
@@ -873,16 +965,10 @@ function Home() {
                 </div>
               )}
 
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                className="hidden"
-                onChange={handleMediaSelect}
-              />
-
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle">
+              <div
+                data-composer-toolbar=""
+                className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle"
+              >
                 <div className="flex flex-wrap items-center gap-1.5">
                   {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
                   <Popover open={menuTopic} onOpenChange={setMenuTopic}>
@@ -895,13 +981,13 @@ function Home() {
                           "inline-flex max-w-[11rem] items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition",
                           topic
                             ? "border border-primary/40 bg-primary/10 text-primary"
-                            : "border border-border-soft text-text-subtle hover:border-primary",
+                            : "border border-dashed border-primary/60 text-text-strong hover:border-primary",
                         )}
                       >
                         <span className="truncate">
                           {topic
                             ? (TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS] ?? topic)
-                            : texts.feed.composer.topicNone}
+                            : texts.feed.composer.topicRequired}
                         </span>
 
                         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
@@ -910,23 +996,6 @@ function Home() {
 
                     <PopoverContent align="start" className="w-56 p-1">
                       <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTopic("");
-                            rememberTopic("");
-                            setMenuTopic(false);
-                          }}
-                          className={cn(
-                            "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                            topic === ""
-                              ? "bg-primary-soft text-primary-text"
-                              : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                          )}
-                        >
-                          {texts.feed.composer.topicNone}
-                        </button>
-
                         {POST_TOPICS.map((option) => (
                           <button
                             key={option}
@@ -952,53 +1021,18 @@ function Home() {
                   </Popover>
 
                   {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setTypePickerOpen((open) => !open)}
-                      aria-expanded={typePickerOpen}
-                      title={texts.feed.composer.typePicker.change}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                        typePickerOpen
-                          ? "bg-primary text-primary-foreground"
-                          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                      }`}
-                    >
-                      <currentType.icon className="h-3.5 w-3.5" />
-
-                      <>
-                        {texts.feed.composer.typePicker.label}: {currentType.label}
-                      </>
-
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 transition ${typePickerOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
+                  <div>
+                    <PostTypePicker
+                      options={availableTypes}
+                      value={postType}
+                      onChange={(id) => setPostType(id as PostView["type"])}
+                    />
 
                     {currentType.id === "MOMENT" && (
                       <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
                         <Clock className="h-3.5 w-3.5" />
                         {currentType.hint}
                       </p>
-                    )}
-
-                    {typePickerOpen && (
-                      <div className="absolute bottom-full right-0 z-40 mb-1 max-h-[60vh] w-[min(22rem,80vw)] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg sm:left-0 sm:right-auto">
-                        <div className="flex flex-wrap gap-1.5">
-                          {availableTypes.map((option) => (
-                            <ComposerAction
-                              key={option.id}
-                              icon={option.icon}
-                              label={option.label}
-                              active={option.id === postType}
-                              onClick={() => {
-                                setPostType(option.id as PostView["type"]);
-                                setTypePickerOpen(false);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
                     )}
                   </div>
 
@@ -1073,6 +1107,7 @@ function Home() {
                     disabled={
                       (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                       (articleMode && !articleBody.trim()) ||
+                      !topic ||
                       createPost.isPending ||
                       upload.status === "uploading" ||
                       !mediaReady
@@ -1091,6 +1126,7 @@ function Home() {
                     disabled={
                       (pageMode ? !pageHtml.trim() : !draft.trim()) ||
                       (articleMode && !articleBody.trim()) ||
+                      !topic ||
                       createPost.isPending ||
                       upload.status === "uploading" ||
                       !mediaReady
@@ -1132,6 +1168,7 @@ function Home() {
                     className="rounded-full"
                     disabled={
                       !scheduleAt ||
+                      !topic ||
                       schedulePost.isPending ||
                       upload.status === "uploading" ||
                       !mediaReady
@@ -1160,7 +1197,7 @@ function Home() {
           )}
 
           {scheduledList.length > 0 && (
-            <section className="rounded-2xl border border-border-soft bg-surface-card p-4">
+            <section className="surface-card p-4">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-text-strong">
                 <CalendarClock className="h-4 w-4 text-primary" />
 
@@ -1279,27 +1316,36 @@ function Home() {
           )}
 
           <div className="relative">
-            {hasNewPosts && (
+            {arrivals.notice && (
               <button
                 type="button"
-                onClick={dismissNewPosts}
+                onClick={arrivals.release}
                 className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
               >
                 <span className="flex items-center gap-1.5">
                   <ArrowUp className="h-3.5 w-3.5" />
 
-                  {texts.feed.newPosts}
+                  {arrivals.held
+                    ? texts.feed.newPostsCount(arrivals.held.count)
+                    : texts.feed.newPosts}
                 </span>
               </button>
             )}
 
             {feedLoading && <PostCardSkeletons />}
 
+            {/* Floats over the top of the list instead of taking a row: a row that appears and
+                disappears would move every post on each refresh, and a reserved one left an
+                empty band above the feed. */}
             {!feedLoading && feedFetching && !isFetchingNextPage && (
-              <div className="flex items-center justify-center gap-2 py-3">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-
-                <span className="text-sm text-text-subtle">{texts.feed.refreshing}</span>
+              <div
+                role="status"
+                className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center"
+              >
+                <span className="mt-2 inline-flex items-center gap-2 rounded-full bg-surface-card px-3 py-1.5 text-sm text-text-subtle shadow-[var(--shadow-float)]">
+                  <Loader2 aria-hidden className="h-4 w-4 animate-spin text-primary" />
+                  {texts.feed.refreshing}
+                </span>
               </div>
             )}
 
@@ -1325,60 +1371,75 @@ function Home() {
             aqui — ele esticava até a altura da coluna inteira e empurrava/escondia os outros
             cartões (o que está acontecendo agora) para fora da dobra. */}
         <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
-          <ApoieCard />
-          <CompanyPromptCard />
-          <PlatformSpacesCard />
-          <TodayGamesCard />
+          {/* Three quiet tables at most: what happens today, people to meet, and support as one
+              line at the end. "Novidades para explorar" left (it repeated the menu; Explore has
+              every room) and so did the profile card (the account menu carries it). */}
+          {eventList.length > 0 && (
+            <div className="surface-card p-4 sm:p-5">
+              <h2 className="text-sm font-extrabold text-text-strong">
+                {texts.feed.sidebar.happeningNow}
+              </h2>
 
-          {profileUser && (
-            <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface-card">
-              <div className="h-14" style={{ background: "var(--gradient-primary)" }} />
+              <ul className="mt-3 space-y-3">
+                {eventList.slice(0, 3).map((e) => {
+                  const ticket = ingressoDeEvento(e.date);
+                  return (
+                    <li key={e.id}>
+                      {/* O item inteiro é o link para o evento. A seta é o que diz isso: sem ela, o
+                        título só reagia no hover e a linha parecia texto solto. */}
+                      <Link
+                        to="/eventos"
+                        search={{ evento: e.id }}
+                        className="group/ev flex items-center gap-3"
+                      >
+                        {/* An event is a ticket: amber when it happens today. */}
+                        {ticket && (
+                          <EventTicket
+                            day={ticket.day}
+                            month={ticket.month}
+                            tone={ticket.today ? "today" : "primary"}
+                          />
+                        )}
 
-              <div className="-mt-7 px-4 pb-4 text-center">
-                <UserAvatar
-                  frame={profileUser.avatarFrame}
-                  src={profileUser.avatar}
-                  alt={profileUser.name}
-                  className="mx-auto h-16 w-16 ring-4 ring-surface-card"
-                />
+                        <span className="min-w-0 flex-1">
+                          <p className="text-sm font-normal text-text-strong underline-offset-2 group-hover/ev:underline">
+                            {e.title}
+                          </p>
 
-                <Link
-                  to="/perfil/$username"
-                  params={{ username: profileUser.username }}
-                  className="mt-2 block text-sm font-normal text-text-strong hover:underline"
-                >
-                  {profileUser.name}
-                </Link>
+                          <p className="text-xs font-normal text-text-subtle">
+                            {texts.feed.sidebar.eventMeta(
+                              e.time,
+                              texts.events.formats[e.format],
+                              texts.feed.sidebar.confirmed(e.attendees),
+                            )}
+                          </p>
+                        </span>
 
-                <p className="line-clamp-2 text-xs font-normal text-text-subtle">
-                  {profileUser.headline}
-                </p>
+                        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle transition group-hover/ev:translate-x-0.5 group-hover/ev:text-primary" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
 
-                <div className="mt-3 grid grid-cols-2 gap-1 border-t border-border-soft pt-3 text-xs">
-                  <div>
-                    <p className="font-normal text-text-strong">{profileUser.connectionsCount}</p>
-
-                    <p className="text-text-subtle">{texts.feed.sidebar.connections}</p>
-                  </div>
-
-                  <div>
-                    <p className="font-normal text-text-strong">{profileUser.followersCount}</p>
-
-                    <p className="text-text-subtle">{texts.feed.sidebar.followers}</p>
-                  </div>
-                </div>
-              </div>
+              <Link
+                to="/eventos"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                {texts.feed.sidebar.seeAllEvents}
+              </Link>
             </div>
           )}
+          <TodayGamesCard />
 
           {suggestionList.length > 0 && (
-            <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
+            <div className="surface-card p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-primary" />
 
-                <h3 className="text-sm font-normal text-text-strong">
+                <h2 className="text-sm font-normal text-text-strong">
                   {texts.feed.sidebar.suggestions}
-                </h3>
+                </h2>
 
                 {suggestionList.length > 4 && (
                   <button
@@ -1409,7 +1470,9 @@ function Home() {
                       />
                     </ProfilePeek>
 
-                    <div className="min-w-0 flex-1">
+                    {/* `overflow-hidden` é a contenção de verdade: o nome personalizado pode vir
+                        com fonte maior e sombra, e sem isso ele pinta por cima do "Conectar". */}
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <ProfilePeek
                         username={u.username}
                         name={u.name}
@@ -1440,54 +1503,8 @@ function Home() {
             </div>
           )}
 
-          {eventList.length > 0 && (
-            <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-
-                <h3 className="text-sm font-normal text-text-strong">
-                  {texts.feed.sidebar.happeningNow}
-                </h3>
-              </div>
-
-              <ul className="mt-3 space-y-3">
-                {eventList.slice(0, 3).map((e) => (
-                  <li key={e.id}>
-                    {/* O item inteiro é o link para o evento. A seta é o que diz isso: sem ela, o
-                        título só reagia no hover e a linha parecia texto solto. */}
-                    <Link
-                      to="/eventos"
-                      search={{ evento: e.id }}
-                      className="group/ev flex items-start gap-2"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <p className="text-sm font-normal text-text-strong underline-offset-2 group-hover/ev:underline">
-                          {e.title}
-                        </p>
-
-                        <p className="text-xs font-normal text-text-subtle">
-                          {texts.feed.sidebar.eventMeta(
-                            e.date,
-                            e.format,
-                            texts.feed.sidebar.confirmed(e.attendees),
-                          )}
-                        </p>
-                      </span>
-
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle transition group-hover/ev:translate-x-0.5 group-hover/ev:text-primary" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                to="/eventos"
-                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                {texts.feed.sidebar.seeAllEvents}
-              </Link>
-            </div>
-          )}
+          <CompanyPromptCard />
+          <ApoieCard />
         </aside>
       </div>
 
@@ -1499,7 +1516,7 @@ function Home() {
           aria-label={texts.feed.scrollToTop}
           title={texts.feed.scrollToTop}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
+          className="fixed bottom-28 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>

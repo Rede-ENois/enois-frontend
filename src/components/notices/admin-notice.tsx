@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { useQuery } from "@tanstack/react-query";
-
 import { texts } from "@/texts";
-import type { AdminNotice } from "@/types/application/notices/admin-notice";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +10,6 @@ import {
 } from "@rede-enois/design-system/ui";
 import { X } from "lucide-react";
 
-import { noticesApi } from "@/lib/api";
 import {
   dismissNotice,
   isNoticeDismissed,
@@ -23,24 +19,7 @@ import {
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
-/**
- * O aviso da plataforma escrito por um admin, no dois formatos: faixa embaixo do cabecalho e popup.
- *
- * O HTML entra sempre pelo `SandboxedHtmlFrame` — e o mesmo quadro do post de pagina, sem
- * `allow-scripts`. Nao ha atalho aqui: o conteudo vem do painel de admin, e painel confiavel nao e
- * fonte de HTML confiavel.
- */
-export function useAdminNotice(): AdminNotice | null {
-  const { data } = useQuery({
-    queryKey: ["avisos", "ativo"],
-    queryFn: () => noticesApi.current(),
-    // O aviso e raro e muda por publicacao, nao por tempo: uma leitura por visita basta.
-    staleTime: 5 * 60_000,
-    retry: false,
-  });
-
-  return data ?? null;
-}
+import { useAdminNotice } from "./use-admin-notice";
 
 /** Faixa: aparece em toda tela ate a pessoa fechar, porque quem nao rola a pagina nao ve o popup. */
 export function AdminNoticeBanner() {

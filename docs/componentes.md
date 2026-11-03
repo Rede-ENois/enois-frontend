@@ -1,5 +1,12 @@
 # Componentes
 
+## `PresenceIndicator` (`src/components/presence-indicator.tsx`)
+
+A bolinha aparece junto ao nome no perfil e no post do feed. Para o titular, abre as
+opções Disponível, Ausente, Não perturbar e Invisível. Para outras pessoas, mostra
+somente o estado público. O heartbeat da área autenticada atualiza a atividade sem
+modificar a escolha. O status de texto e ícone do perfil continua separado.
+
 ## `CosmeticShop` (`src/components/wallet/cosmetic-shop.tsx`)
 
 The cosmetics shop in the `Loja` tab of `/carteira`, together with the community marketplace.
@@ -67,9 +74,21 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
 **Funcionalidades:**
 
 - Header com logo "Conexão", `SearchBox`, `ThemeToggle`, sino de notificações, avatar do perfil
-- Sidebar de navegação (desktop, ≥ 1024px, 9 links) com destaque para rota ativa
+- Side menu (desktop, ≥ 1024px) in sections (you, community, work, explore) from
+  `src/components/navigation-items.ts`; each item may carry a signal from `signalFor`
+  (`src/lib/navigation-signals.ts`): unread messages as a balloon, pending requests as a count, and a
+  soft news dot when the item's notification module (`notifies`) has unread notices. The counts come
+  from one source: `GET /notifications/unread-summary`, the messages unread count and pending
+  connection requests (`useNavigationCounts`).
+  Eventos shows the amber "hoje" tag when the summary has `eventsToday`; Comunidades and each of
+  the person's communities light the news dot from `byCommunity`. Notices that come from a place
+  or an event carry `place` and `eventDate`, drawn as the community table or the event ticket.
+- Phone menu button: a news dot when an entry behind the menu (not on the dock) has a signal
+  (`useMenuHasNews`, `src/components/use-menu-has-news.ts`).
+- Mobile dock (< 1024px, `src/components/mobile-dock.tsx`): Início, Explorar, Publicar
+  (`/feed?compor=POST`), Mensagens and Avisos, with the same signals.
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
-- Popover de notificações com: lista, contador de não lidas, botão "Marcar lidas", ação "Aceitar" em convites
+- Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
 
 O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, sidebar.
 
@@ -78,13 +97,16 @@ O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, 
 **Funções auxiliares:**
 
 - `navigateToHref(href, navigate)` - Mapeia hrefs de notificações para rotas frontend
-- `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile
+- `SearchBox()` - Input de busca global com debounce (250ms), resultados em popover, suporte mobile. App features come first (`matchFeatures`, `src/lib/feature-search.ts`: Explore rooms, menu entries of the active interface and account pages, accent-insensitive, skipping turned-off modules), drawn as places with their icon
 - `formatTime(iso)` - Formata ISO timestamp para relativo em português
 
 ## Menu da conta e identidade ativa (`src/components/account-menu.tsx`)
 
-Menu do avatar no header, renderizado pelo `AccountMenu` do design system. Além dos atalhos da
-conta, ele escolhe qual identidade o `/feed` usa: **social** ou **profissional**. A escolha fica
+Avatar menu in the header, drawn by the DS `AccountMenu`. It is kept to six entries: profile, wallet
+(with the balance), account and security (`/conta`), support, the moderator panel (only for
+moderators and admins, from `moderationApi.me()`) and logout, plus the light/dark `ThemeSwitch`.
+Preferences (healthy usage, notification preferences, muted users, parental supervision, support us)
+moved to `/conta`. Besides the account shortcuts, ele escolhe qual identidade o `/feed` usa: **social** ou **profissional**. A escolha fica
 gravada no aparelho; fora do feed, o efeito visível é o toast de confirmação.
 
 **Regras da troca:**
@@ -160,6 +182,15 @@ Card de post no feed, com todas as ações sociais.
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
 
+## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
+
+Post do feed de um grupo, com reações, comentários e ações de moderação.
+
+- Comentários: no mobile, o campo ocupa a linha toda e o rodapé põe o contador à esquerda e o botão
+  à direita; em telas maiores, campo e botão ficam lado a lado e o contador volta à direita, abaixo
+  do campo. O contador interno do `MentionTextarea` fica desativado nesse formulário, que renderiza
+  o mesmo `CharCounter` no rodapé.
+
 ## `EditProfileDialog` (`src/components/edit-profile-dialog.tsx`)
 
 Dialog multi-aba para edição completa do perfil.
@@ -192,7 +223,7 @@ variações estão no Storybook de lá.
 
 Textarea com autocomplete de @menções.
 
-**Props:** `{ value, onChange, placeholder?, className?, maxLength?, rows? }`
+**Props:** `{ value, onChange, placeholder?, className?, maxLength?, showCounter?, rows? }`
 
 **Funcionalidades:**
 
@@ -200,15 +231,27 @@ Textarea com autocomplete de @menções.
 - Query na API de search de usuários (mínimo 2 caracteres)
 - Dropdown de resultados com navegação por setas, Tab/Enter para selecionar, Escape para fechar
 - Insere `@username` no texto e rastreia IDs dos mencionados
-- Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido (`KEKW`) entra no texto como
-  palavra (ver abaixo)
+- Mostra o contador interno quando há `maxLength`, exceto se `showCounter={false}` (padrão `true`)
+- Com `toolbar`, mostra o botão `Figurinhas`: o código escolhido entra no texto como `:KEKW:`
+  (ver abaixo)
+- A inserção de figurinha passa pelo evento de edição do próprio campo. O design system mantém
+  os IDs apenas das menções confirmadas que continuam no texto, inclusive depois de limpar o
+  rascunho ou substituir uma menção pela figurinha; o wrapper não guarda outra lista de IDs
+  ([#534](https://github.com/Rede-ENois/enois-frontend/issues/534)).
 
 ## Figurinhas
 
 `src/lib/emotes/` (`api`, `catalog`, `catalog-cache`, `use-emotes`) e
 `src/components/emotes/emote-picker-dialog.tsx` (seletor). O texto gravado continua sendo o CÓDIGO —
 a troca por imagem acontece na leitura (`useEmoteText` dentro do `RichText`), então quem edita vê
-`KEKW`, não um endereço de imagem.
+`:KEKW:`, não um endereço de imagem.
+
+- **Formato `:codigo:`** ([#556](https://github.com/Rede-ENois/enois-frontend/issues/556)): só
+  `:KEKW:` vira figurinha, para uma palavra comum que também é código ("Pedro") continuar sendo
+  palavra. Texto escrito antes do corte (`BARE_EMOTE_CODES_UNTIL` em `src/lib/emotes/catalog.ts`,
+  03/11/2026) também troca o código solto, para post antigo continuar como o autor viu: quem desenha
+  passa a data do texto em `RichText writtenAt` (post, comentário, mensagem, post e comentário de
+  grupo, artigo e post de blog). Sem `writtenAt` (bio, descrições), só vale `:codigo:`.
 
 - **Catálogo:** é do BACKEND, não do navegador. O backend fala com o BTTV e o FrankerFaceZ de 3 em 3
   horas, junta tudo em memória e serve três rotas: `GET /emotes?page&limit&q` (página do seletor),
@@ -217,8 +260,13 @@ a troca por imagem acontece na leitura (`useEmoteText` dentro do `RichText`), en
   API de terceiro, e por isso não existe mais "Carregando figurinhas..." interminável. Detalhes do
   módulo em `enois-backend/docs/FIGURINHAS.md`.
 - **Uma lista só:** `GET /emotes` já volta na ordem do seletor — as mais usadas primeiro, o resto em
-  ordem alfabética —, sem aba nem filtro por provedor. Toda figurinha da lista existe no catálogo do
+  ordem alfabética —, sem filtro por provedor. Toda figurinha da lista existe no catálogo do
   backend, então a escolhida aparece igual no texto de quem lê.
+- **Recentes** ([#555](https://github.com/Rede-ENois/enois-frontend/issues/555)): as últimas 24
+  figurinhas escolhidas no seletor ficam no `localStorage` deste aparelho
+  (`rede:emotes:recent:v1`, só os códigos; `src/lib/emotes/recent-emotes.ts`). Com algo salvo, o
+  seletor abre na aba "Recentes" e a lista do backend vira a aba "Todas"; digitar na busca sempre
+  mostra a lista completa. A imagem vem do índice, então código que saiu do catálogo some sozinho.
 - **Paginação:** uma página de 40 por vez (`EMOTES_POR_PAGINA` em `src/lib/emotes/use-emotes.ts`),
   pedida ao backend a cada clique. A resposta anterior fica na tela (`placeholderData`) enquanto a
   nova chega, e a busca é debounced (250 ms) antes de virar `q`.

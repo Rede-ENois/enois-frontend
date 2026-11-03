@@ -1,5 +1,6 @@
 import type { ServiceContract } from "@/types/application/services/service-contract";
 import type { ServiceListing } from "@/types/application/services/service-listing";
+import type { ServiceListingInput } from "@/types/application/services/service-listing-input";
 import type { ServiceProposal } from "@/types/application/services/service-proposal";
 import type { ServiceRequest } from "@/types/application/services/service-request";
 
@@ -32,15 +33,16 @@ export const servicesApi = {
     }>("/servicos/minhas"),
 
   /** Publica uma oferta (teto de 5 abertas por conta). */
-  publishListing: (data: {
-    category: string;
-    title: string;
-    description: string;
-    deliverables: string;
-    price: number;
-    currency?: "FAISCA" | "BRL";
-    deliveryDays: number;
-  }) => api.post<{ id: string; status: string }>("/servicos/ofertas", data),
+  publishListing: (data: ServiceListingInput) =>
+    api.post<{ id: string; status: string }>("/servicos/ofertas", data),
+
+  /** O prestador edita a própria oferta (o preço trava enquanto há contrato aberto). */
+  editListing: (listingId: string, data: ServiceListingInput) =>
+    api.put<{ id: string; status: string }>(`/servicos/ofertas/${listingId}`, data),
+
+  /** O prestador despublica a própria oferta; os contratos já abertos continuam valendo. */
+  removeListing: (listingId: string) =>
+    api.delete<{ id: string; status: string }>(`/servicos/ofertas/${listingId}`),
 
   /** Contrata uma oferta: as faíscas vão para o escrow. */
   buyListing: (listingId: string) =>

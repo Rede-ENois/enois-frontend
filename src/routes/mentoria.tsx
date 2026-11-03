@@ -36,7 +36,6 @@ import {
 } from "lucide-react";
 
 import { ApiError, mentorsApi, walletApi } from "@/lib/api";
-import { resolveCdnUrl } from "@/lib/api/media";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatarData } from "@/lib/date/format";
 import { FAIS_SCALE, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
@@ -46,6 +45,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { MentorAgendaDialog } from "@/components/mentoring/mentor-agenda-dialog";
+import { MentorBanner } from "@/components/mentoring/mentor-banner";
 import { MentorRoomDialog } from "@/components/mentoring/mentor-room-dialog";
 import { MySessionsSection } from "@/components/mentoring/my-sessions-section";
 import { RoomNote } from "@/components/mentoring/session-room";
@@ -204,7 +204,7 @@ function Mentoria() {
                     initialExpertise={myMentor?.expertise.join(", ")}
                     initialPrice={myMentor?.price}
                     initialBanner={myMentor?.banner ?? undefined}
-                    initialMeetingUrl={myMentor?.meetingUrl ?? undefined}
+                    initialMeetingUrl={myMentorRoom?.meetingUrl ?? undefined}
                     initialRoomMode={myMentor?.roomMode}
                     initialJitsiRoom={myMentorRoom?.jitsiRoom}
                     initialSparksPrice={myMentor?.sparksPrice ?? undefined}
@@ -330,8 +330,8 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.bannerLabel}</Label>
 
         {banner ? (
-          <div className="relative overflow-hidden rounded-xl border border-border-soft">
-            <img src={resolveCdnUrl(banner)} alt="" className="h-28 w-full object-cover" />
+          <div className="relative overflow-hidden rounded-xl border border-border-soft bg-muted/40">
+            <MentorBanner src={banner} className="max-h-40" />
 
             <button
               type="button"
@@ -377,6 +377,7 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.expertise}</Label>
 
         <Input
+          aria-label={texts.mentoring.expertise}
           value={skillsText}
           onChange={(e) => setSkillsText(e.target.value)}
           placeholder={texts.mentoring.expertisePlaceholder}
@@ -388,6 +389,7 @@ function RegisterMentorForm({
         <Label className="text-xs text-muted-foreground">{texts.mentoring.investment}</Label>
 
         <Input
+          aria-label={texts.mentoring.investment}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder={texts.mentoring.free}
@@ -552,10 +554,10 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
   return (
     <article className="surface-card mx-auto w-full max-w-5xl space-y-4 overflow-hidden p-5">
       {mentor.banner && (
-        <img
-          src={resolveCdnUrl(mentor.banner)}
-          alt=""
-          className="-mx-5 -mt-5 mb-1 h-36 w-[calc(100%+2.5rem)] max-w-none object-cover"
+        <MentorBanner
+          src={mentor.banner}
+          alt={user?.name ?? texts.mentoring.mentorFallback}
+          className="-mx-5 -mt-5 mb-1 w-[calc(100%+2.5rem)] max-w-none"
         />
       )}
 
@@ -598,7 +600,6 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
             <BookSessionDialog
               mentorId={mentor.id}
               mentorName={user?.name ?? texts.mentoring.mentorFallback}
-              meetingUrl={mentor.meetingUrl}
               roomMode={mentor.roomMode}
               sparksPrice={mentor.sparksPrice}
             />
@@ -672,13 +673,11 @@ function MentorCard({ mentor, openSlots = false }: MentorCardProps & { openSlots
 function BookSessionDialog({
   mentorId,
   mentorName,
-  meetingUrl,
   roomMode,
   sparksPrice,
 }: {
   mentorId: string;
   mentorName: string;
-  meetingUrl?: string | null;
   roomMode?: MentorRoomMode;
   /** Preço em milésimos de faísca; `null`/`undefined` quando o mentor não cobra em faíscas. */
   sparksPrice?: number | null;
@@ -807,23 +806,9 @@ function BookSessionDialog({
               </div>
             )}
 
-            {roomMode === "CUSTOM" && meetingUrl ? (
-              <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                {texts.mentoring.meetingRoom}:{" "}
-                <a
-                  href={meetingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  className="break-all text-primary underline"
-                >
-                  {meetingUrl}
-                </a>
-              </p>
-            ) : (
-              <div className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                <RoomNote mode={roomMode ?? "JITSI_SESSION"} />
-              </div>
-            )}
+            <div className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+              <RoomNote mode={roomMode ?? "JITSI_SESSION"} />
+            </div>
 
             {slots.length > 0 && (
               <div className="space-y-2">

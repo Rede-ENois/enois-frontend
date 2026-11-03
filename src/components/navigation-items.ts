@@ -1,5 +1,6 @@
 import { texts } from "@/texts";
-import type { InterfaceContext } from "@rede-enois/design-system/domain";
+import type { NotificationModule } from "@/types/application/notification/notification-module";
+import type { InterfaceContext, NavigationSection } from "@rede-enois/design-system/domain";
 import {
   BookOpen,
   Bookmark,
@@ -7,15 +8,13 @@ import {
   Building2,
   Calendar,
   Compass,
-  FolderKanban,
   GraduationCap,
   Handshake,
   Home,
   IdCard,
-  Joystick,
+  LayoutGrid,
   MessageCircle,
   NotebookPen,
-  ShoppingBag,
   Users,
   UsersRound,
   Wrench,
@@ -24,7 +23,9 @@ import {
 /**
  * The main menu of each interface. `module` is the id the backend validates in /me/preferences
  * (null = always visible); `context` is the interface the entry belongs to (null = both). The
- * route classification in `lib/interface-context` must agree with it (tested).
+ * route classification in `lib/interface-context` must agree with it (tested). `section` groups
+ * the entry; `notifies` is the notification area whose unread count lights its signal. Rooms that
+ * are not used daily (games, projects, marketplace) live in Explore (`explore-items`).
  */
 export const navigationItems: {
   to: string;
@@ -32,36 +33,32 @@ export const navigationItems: {
   icon: typeof Home;
   module: string | null;
   context: InterfaceContext | null;
+  section: NavigationSection;
+  notifies?: NotificationModule;
 }[] = [
-  { to: "/feed", label: texts.navigation.items.feed, icon: Home, module: null, context: null },
+  {
+    to: "/feed",
+    label: texts.navigation.items.feed,
+    icon: Home,
+    module: null,
+    context: null,
+    section: "you",
+  },
   {
     to: "/mensagens",
     label: texts.navigation.items.messages,
     icon: MessageCircle,
     module: "MESSAGES",
     context: null,
+    section: "you",
   },
-  // Social: community life.
   {
     to: "/rede",
     label: texts.navigation.items.network,
     icon: Users,
     module: null,
     context: "SOCIAL",
-  },
-  {
-    to: "/comunidades",
-    label: texts.navigation.items.communities,
-    icon: Compass,
-    module: "COMMUNITIES",
-    context: "SOCIAL",
-  },
-  {
-    to: "/grupos",
-    label: texts.navigation.items.groups,
-    icon: UsersRound,
-    module: "GROUPS",
-    context: "SOCIAL",
+    section: "you",
   },
   {
     to: "/salvos",
@@ -69,13 +66,25 @@ export const navigationItems: {
     icon: Bookmark,
     module: null,
     context: "SOCIAL",
+    section: "you",
+  },
+  // Social: community life.
+  {
+    to: "/comunidades",
+    label: texts.navigation.items.communities,
+    icon: Compass,
+    module: "COMMUNITIES",
+    context: "SOCIAL",
+    section: "community",
   },
   {
-    to: "/blogs",
-    label: texts.navigation.items.blogs,
-    icon: BookOpen,
-    module: "BLOGS",
+    to: "/grupos",
+    label: texts.navigation.items.groups,
+    icon: UsersRound,
+    module: "GROUPS",
     context: "SOCIAL",
+    section: "community",
+    notifies: "GROUPS",
   },
   {
     to: "/eventos",
@@ -83,6 +92,17 @@ export const navigationItems: {
     icon: Calendar,
     module: "EVENTS",
     context: "SOCIAL",
+    section: "community",
+    notifies: "EVENTS",
+  },
+  {
+    to: "/blogs",
+    label: texts.navigation.items.blogs,
+    icon: BookOpen,
+    module: "BLOGS",
+    context: "SOCIAL",
+    section: "community",
+    notifies: "BLOGS",
   },
   {
     to: "/par-de-estudo",
@@ -90,28 +110,8 @@ export const navigationItems: {
     icon: NotebookPen,
     module: "STUDY_PAIRS",
     context: "SOCIAL",
-  },
-  {
-    to: "/games",
-    label: texts.navigation.items.games,
-    icon: Joystick,
-    module: "COMMUNITY_GAMES",
-    context: "SOCIAL",
-  },
-  {
-    to: "/projetos",
-    label: texts.navigation.items.communityProjects,
-    icon: FolderKanban,
-    module: "COMMUNITY_PROJECTS",
-    context: "SOCIAL",
-  },
-  // The marketplace is the wallet tab (cosmetics and faíscas), not work.
-  {
-    to: "/marketplace",
-    label: texts.navigation.items.marketplace,
-    icon: ShoppingBag,
-    module: null,
-    context: "SOCIAL",
+    section: "community",
+    notifies: "STUDY_PAIRS",
   },
   // Professional: work.
   {
@@ -120,6 +120,8 @@ export const navigationItems: {
     icon: Briefcase,
     module: "JOBS",
     context: "PROFESSIONAL",
+    section: "work",
+    notifies: "JOBS",
   },
   {
     to: "/freelances",
@@ -127,6 +129,7 @@ export const navigationItems: {
     icon: Handshake,
     module: "JOBS",
     context: "PROFESSIONAL",
+    section: "work",
   },
   {
     to: "/servicos",
@@ -134,6 +137,7 @@ export const navigationItems: {
     icon: Wrench,
     module: null,
     context: "PROFESSIONAL",
+    section: "work",
   },
   {
     to: "/empresas",
@@ -141,6 +145,8 @@ export const navigationItems: {
     icon: Building2,
     module: "COMPANIES",
     context: "PROFESSIONAL",
+    section: "work",
+    notifies: "COMPANIES",
   },
   {
     to: "/mentoria",
@@ -148,6 +154,8 @@ export const navigationItems: {
     icon: GraduationCap,
     module: "MENTORING",
     context: "PROFESSIONAL",
+    section: "work",
+    notifies: "MENTORING",
   },
   {
     to: "/profissional",
@@ -155,6 +163,16 @@ export const navigationItems: {
     icon: IdCard,
     module: null,
     context: "PROFESSIONAL",
+    section: "work",
+  },
+  // Both: the doorway to every other room.
+  {
+    to: "/explorar",
+    label: texts.navigation.items.explore,
+    icon: LayoutGrid,
+    module: null,
+    context: null,
+    section: "explore",
   },
 ];
 

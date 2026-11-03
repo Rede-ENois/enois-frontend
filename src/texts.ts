@@ -20,14 +20,21 @@ const common = {
 export const texts = {
   common,
 
+  accessibility: {
+    skipToContent: "Pular para o conteúdo",
+    mainNavigation: "Navegação principal",
+  },
+
   emotes: {
     title: "Figurinhas",
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
+    tabRecent: "Recentes",
+    tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
-    hint: "As mais usadas primeiro. O código entra no texto — quem lê vê a figurinha.",
+    hint: "As mais usadas primeiro. A figurinha entra no texto como :codigo:, e quem lê vê a imagem.",
     count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
     page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
     previous: "Página anterior",
@@ -106,8 +113,59 @@ export const texts = {
       marketplace: "Marketplace",
       services: "Contratar serviços",
       professionalProfile: "Perfil profissional",
+      explore: "Explorar",
     },
     context: { social: "Social", professional: "Profissional" },
+  },
+
+  notificationsPage: {
+    seoTitle: "Avisos · Énóis",
+    today: "Hoje",
+    yesterday: "Ontem",
+  },
+
+  /** The phone dock: daily destinations around the publish action. */
+  dock: {
+    notices: "Avisos",
+    publish: "Publicar",
+  },
+
+  featureSearch: {
+    menuSubtitle: "No menu",
+    wallet: { label: "Carteira", description: "Faíscas, extrato e loja" },
+    account: {
+      label: "Conta e segurança",
+      description: "E-mail, senha, privacidade e preferências",
+    },
+    support: { label: "Ajuda e suporte", description: "Fale com a equipe" },
+    notificationPreferences: {
+      label: "Preferências de aviso",
+      description: "Resumo semanal e categorias de push",
+    },
+  },
+  explore: {
+    seoTitle: "Explorar · Énóis",
+    sections: {
+      play: "Brincar",
+      build: "Construir",
+      community: "Comunidade",
+      work: "Trabalho",
+    },
+    items: {
+      games: { label: "Jogos", description: "Jogos indie feitos pela comunidade" },
+      dailyGames: { label: "Desafio do dia", description: "Um joguinho por dia, com a galera" },
+      projects: { label: "Projetos", description: "O que a comunidade está construindo" },
+      marketplace: { label: "Loja", description: "Cosméticos e itens com faíscas" },
+      developers: { label: "Developers", description: "API e integrações do Énóis" },
+      badges: { label: "Selos", description: "Conquistas e reconhecimentos" },
+      suggestions: { label: "Sugestões", description: "Ideias para o Énóis, votadas por todos" },
+      moderation: { label: "Moderação", description: "Ajude a cuidar da comunidade" },
+      jobs: { label: "Vagas", description: "Oportunidades de trabalho" },
+      freelances: { label: "Freelances", description: "Projetos curtos e pagos" },
+      services: { label: "Serviços", description: "Contrate quem é da comunidade" },
+      companies: { label: "Empresas", description: "Quem contrata e o que faz" },
+      mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+    },
   },
 
   groups: {
@@ -628,6 +686,28 @@ export const texts = {
       backToFeed: "Voltar ao feed",
     },
   },
+  presence: {
+    title: "Estado de presença",
+    change: "Mudar presença",
+    unavailable: "O estado de presença ainda não está disponível neste servidor.",
+    updateError: "Não foi possível atualizar sua presença. Tente novamente.",
+    options: {
+      AVAILABLE: { label: "Disponível", hint: "Você aparece online." },
+      AWAY: { label: "Ausente", hint: "Você aparece como ausente." },
+      DO_NOT_DISTURB: {
+        label: "Não perturbar",
+        hint: "Silencia os avisos no dispositivo, menos segurança e moderação.",
+      },
+      INVISIBLE: { label: "Invisível", hint: "Você aparece offline para outras pessoas." },
+    },
+    publicStatus: {
+      AVAILABLE: "Disponível",
+      AWAY: "Ausente",
+      DO_NOT_DISTURB: "Não perturbar",
+      INVISIBLE: "Offline",
+      OFFLINE: "Offline",
+    },
+  },
   account: {
     identity: {
       saved: "Identidade salva.",
@@ -661,13 +741,30 @@ export const texts = {
           : "Contatos importados do LinkedIn.";
       },
     },
+    settingsSeoTitle: "Conta e segurança",
     menu: {
       blockedUsers: "Usuários bloqueados",
+      walletBalance: (balance: number) =>
+        `${balance.toLocaleString("pt-BR")} ${balance === 1 ? "faísca" : "faíscas"}`,
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",
       identityLoadError: "Não deu para carregar sua identidade profissional.",
       identityRetry: "Tentar de novo",
+      /**
+       * O menu muda por inteiro ao trocar de identidade; sem este aviso, quem acabou de conhecer a
+       * alternância lê a mudança como bug (issue #560). A segunda frase diz que as opções mudam
+       * junto, que é o que a troca faz de fato.
+       */
+      activeIdentity: {
+        SOCIAL: "Você está no perfil Social. As opções abaixo mudam com ele.",
+        PROFESSIONAL: "Você está no perfil Profissional. As opções abaixo mudam com ele.",
+      },
+      /** After switching: the side menu now shows the other interface's items (#560). */
+      switchedTo: {
+        SOCIAL: "Perfil Social ativo. O menu agora mostra comunidades, grupos e eventos.",
+        PROFESSIONAL: "Perfil Profissional ativo. O menu agora mostra vagas, serviços e mentoria.",
+      },
       pushDenied: "Permissão de notificação negada. Libere nas configurações do navegador.",
       /** Pedido fechado sem escolha: não é negado, dá para tentar de novo. */
       pushDismissed: "O pedido de permissão ficou sem resposta. Toque em ligar de novo.",
@@ -689,11 +786,11 @@ export const texts = {
 
   landing: {
     seo: {
-      title: "Énóis, uma rede social feita de gente, não de atenção",
+      title: "Énóis, rede social gratuita, sem anúncios e com feed que termina",
       description:
-        "Rede social gratuita feita por gente: conversas, trabalho, brincadeira e vizinhança no mesmo lugar. Sem anúncios, sem planos pagos e com um feed que termina quando o conteúdo acaba.",
+        "Rede social gratuita com conversas, comunidades, vagas, mentoria e jogos. Sem anúncios, sem plano pago, e o feed termina quando o conteúdo acaba.",
       ogDescription:
-        "Sem anúncio, sem paywall e sem esteira infinita. Uma rede humana em construção com as pessoas, e aberta para quem quiser ajudar.",
+        "Sem anúncio, sem paywall e sem rolagem infinita. Rede social em construção com quem usa, de código aberto.",
       ogImageAlt: "Identidade visual do Énóis com seu símbolo e slogan.",
     },
     /**
@@ -716,81 +813,79 @@ export const texts = {
       contribute: "Contribuir",
     },
     hero: {
-      badge: "A rede é nossa",
-      title: "Uma rede social não precisa viver da sua atenção.",
+      badge: "Rede social gratuita",
+      title: "Uma rede social que não vive da sua atenção.",
       description:
-        "O énóis é uma rede humana: um lugar para conversar, trabalhar, aprender, brincar e construir junto. Sem anúncios, sem planos pagos e sem nada tentando prender você: quem decide quando a visita acaba é você.",
+        "No énóis você publica, entra em comunidades, procura vaga, faz mentoria e joga. Não tem anúncio nem plano pago, e o feed avisa quando acaba.",
       join: "Entrar no énóis",
-      proposal: "Conhecer a proposta",
+      proposal: "Ver a proposta",
       facts: {
         free: "Gratuita, sem plano pago",
-        noAds: "Sem anúncio em nenhum canto",
-        feedEnds: "O feed acaba, e avisa quando acaba",
+        noAds: "Sem anúncio",
+        feedEnds: "O feed acaba e avisa",
       },
     },
     problem: {
-      eyebrow: "De onde a gente veio",
-      title: "Você entrou para conversar. A plataforma quer que você fique.",
+      eyebrow: "O problema",
+      title: "Você entra para conversar. A plataforma quer que você fique.",
       paragraphs: [
-        "Quando a receita de uma rede vem da sua atenção, cada detalhe do produto empurra para o mesmo lado: mais tempo de tela, mais reação, mais retorno. Não é maldade de ninguém, é o modelo funcionando como foi desenhado.",
-        "O énóis nasce de uma pergunta incômoda: e se a plataforma não precisasse ganhar quando você perde seu tempo? É essa pergunta que organiza o que a gente constrói aqui, e o que a gente se recusa a construir.",
+        "Quando a receita vem da sua atenção, o produto é desenhado para render mais tempo de tela, mais reação e mais retorno.",
+        "O énóis parte de outra conta: sem anúncio, a plataforma não ganha quando você perde tempo. Isso decide o que a gente constrói e o que recusa construir.",
       ],
-      standardTitle: "O modelo que a gente questiona",
+      standardTitle: "Como costuma ser",
       standardPoints: [
-        "Tempo de tela como a métrica que manda.",
-        "Notificação desenhada para trazer você de volta.",
-        "Alcance disputado em leilão de anúncio.",
-        "Pessoa tratada como inventário publicitário.",
+        "Tempo de tela é a métrica principal.",
+        "Notificação feita para trazer você de volta.",
+        "Alcance decidido em leilão de anúncio.",
+        "Pessoa vira inventário de publicidade.",
       ],
-      oursTitle: "A aposta do énóis",
+      oursTitle: "Como é no énóis",
       oursPoints: [
-        "A conta não fecha com publicidade, por isso não existe anúncio aqui.",
-        "O que existe é para todo mundo: sem plano pago esperando na esquina.",
-        "O feed termina quando o conteúdo acaba, e diz isso na sua cara.",
-        "Gente de verdade moderando, com regras escritas antes de qualquer punição.",
-        "A rede é humana antes de ser profissional: a foto do almoço e a vaga da empresa cabem no mesmo perfil.",
+        "Não há anúncio.",
+        "Todo mundo usa os mesmos recursos, sem plano pago.",
+        "O feed termina quando o conteúdo acaba, e mostra o aviso.",
+        "Pessoas moderam, com regras escritas antes de qualquer punição.",
+        "A foto do almoço e a vaga da empresa cabem no mesmo perfil.",
       ],
     },
     principles: {
       eyebrow: "Na prática",
-      title: "Filosofia sem prática vira frase de parede.",
-      description:
-        "Estes são compromissos que dá para conferir no produto, não promessas para um futuro distante.",
+      title: "O que dá para conferir no produto",
+      description: "Seis compromissos que já valem hoje.",
       items: [
         {
-          title: "Gratuito de verdade",
-          text: "Sem anúncio, sem plano pago e sem versão premium que destrava o que a gratuita esconde. Todo mundo usa a mesma plataforma, com os mesmos recursos.",
+          title: "Gratuito",
+          text: "Sem anúncio, sem plano pago e sem versão premium. Todo mundo tem os mesmos recursos.",
         },
         {
           title: "O feed acaba",
-          text: "Quando as publicações terminam, aparece o aviso: “Você chegou ao fim do feed.” A visita acaba quando você quiser, não quando o site decidir.",
+          text: "Quando as publicações terminam, aparece o aviso “Você viu tudo por enquanto.” Não há rolagem sem fim.",
         },
         {
-          title: "A mídia não sequestra a tela",
-          text: "Vídeo toca sem som e só enquanto está à vista; quando você rola para longe, ele para. Nada de som automático atrás do que você está lendo.",
+          title: "Vídeo sem som automático",
+          text: "O vídeo toca sem som e só enquanto está à vista. Ao rolar para longe, ele para.",
         },
         {
-          title: "Sua presença, do seu jeito",
-          text: "Bio, capa e páginas aceitam HTML e CSS escritos por você; a cor do tema é escolhida por quem usa, não imposta pelo produto.",
+          title: "Perfil do seu jeito",
+          text: "Bio, capa e páginas aceitam HTML e CSS escritos por você. A cor do tema é você quem escolhe.",
         },
         {
-          title: "Regras escritas, moderação real",
-          text: "As diretrizes são públicas e valem para todo mundo, inclusive para quem denuncia. Denúncia pode ser acompanhada e é revisada por gente, não engavetada.",
+          title: "Regras escritas, moderação por pessoas",
+          text: "As diretrizes são públicas e valem para todo mundo, inclusive para quem denuncia. Você acompanha a denúncia, e uma pessoa a revisa.",
         },
         {
-          title: "Construção aberta",
-          text: "Uma API pública documentada, um canal de suporte de verdade e um produto que muda com o que a comunidade aponta.",
+          title: "Desenvolvimento aberto",
+          text: "API pública documentada, canal de suporte com registro e resposta, e um produto que muda conforme a comunidade aponta.",
         },
       ],
     },
     product: {
-      eyebrow: "Sem maquete",
-      title: "O que já está no ar",
-      description:
-        "Nada aqui é mockup nem promessa de roadmap: é o que existe hoje, funcionando. Parte abre sem conta nenhuma; o resto pede só um cadastro gratuito.",
+      eyebrow: "Já funciona",
+      title: "O que existe hoje",
+      description: "Parte abre sem conta. O resto pede só um cadastro gratuito.",
       capture: {
         alt: "Captura da página pública de vagas do énóis, com filtros por nível, local e tipo e cartões de vagas abertas",
-        caption: "Captura real da página de vagas, enois.ia.br/vagas, aberta sem login.",
+        caption: "Página de vagas, enois.ia.br/vagas, aberta sem login.",
       },
       groups: [
         {
@@ -845,7 +940,7 @@ export const texts = {
           ],
         },
         {
-          label: "O dinheiro é interno",
+          label: "Moeda interna",
           items: [
             "Faíscas: a moeda circula entre as pessoas, sem dinheiro real",
             "Carteira com extrato, transferências instantâneas e resgate em bens",
@@ -860,47 +955,46 @@ export const texts = {
     },
     build: {
       eyebrow: "Em construção",
-      title: "Nada aqui é definitivo, de propósito.",
+      title: "Ainda está em construção.",
       paragraphs: [
-        "O énóis não é um produto lacrado. É software vivo, feito e refeito a partir do que a comunidade aponta: o que confunde, o que trava, o que falta.",
-        "A gente não promete perfeição, promete evolução e transparência sobre o que ainda não está resolvido, incluindo o que esta página ainda não conta.",
+        "O énóis muda com o que a comunidade aponta: o que confunde, o que trava, o que falta.",
+        "O que ainda não está resolvido a gente diz, inclusive o que esta página não conta.",
       ],
       channels: {
         contact: {
-          label: "Falar com a gente",
-          description:
-            "Um canal de suporte de verdade, com registro e resposta, não um formulário que some.",
+          label: "Falar com a equipe",
+          description: "Suporte com registro e resposta.",
         },
         guidelines: {
           label: "Ler as diretrizes",
-          description: "As regras da comunidade, escritas e públicas, valem para todo mundo.",
+          description: "As regras da comunidade, públicas e iguais para todos.",
         },
         api: {
-          label: "Construir em cima",
-          description: "A API é pública e documentada: dá para integrar, automatizar e criar.",
+          label: "Integrar pela API",
+          description: "API pública e documentada, para integrar e automatizar.",
         },
       },
     },
     contribute: {
-      eyebrow: "Código aberto, processo combinado",
-      title: "Contribuir não é bagunça.",
+      eyebrow: "Código aberto",
+      title: "Como contribuir com o código",
       description:
-        "O código do Énóis é aberto, mas o processo é combinado. Antes de abrir um PR, a gente quer saber quem você é, o que quer resolver e se você leu as regras. Isso não é burocracia: é o que mantém o projeto saudável para quem usa e para quem mantém.",
-      rulesTitle: "Como a gente trabalha",
+        "O código do Énóis é aberto e segue um processo. Antes de abrir um PR, conte quem você é, o que quer resolver e confirme que leu as regras.",
+      rulesTitle: "Passo a passo",
       rules: [
         "Leia o guia de contribuição e o código de conduta antes de escrever código.",
         "Abra ou assuma uma issue: mudanças grandes precisam de conversa antes do PR.",
         "Mande mudanças pequenas, com teste e a descrição do problema que resolvem.",
-        "A revisão é conversa técnica, não concurso. O merge é decisão de quem mantém.",
+        "A revisão é uma conversa técnica. Quem mantém o projeto decide o merge.",
       ],
       guide: "Ler o guia de contribuição",
       guideUrl: "https://github.com/Rede-ENois/enois-backend/blob/main/CONTRIBUTING.md",
       formTitle: "Quero contribuir",
       formDescription:
-        "Deixe seus dados básicos. O GitHub é o canal do trabalho; o e-mail serve só para falar sobre a contribuição.",
+        "Informe seus dados. O trabalho acontece no GitHub; o e-mail é só para falar sobre a contribuição.",
       fields: {
         name: "Nome",
-        namePlaceholder: "Como podemos te chamar",
+        namePlaceholder: "Como devemos chamar você",
         github: "GitHub",
         githubPlaceholder: "@usuario ou https://github.com/usuario",
         email: "E-mail",
@@ -911,7 +1005,7 @@ export const texts = {
         experiencePlaceholder: "Escolha uma faixa",
         message: "O que você quer contribuir?",
         messagePlaceholder:
-          "Conte o que você já fez, o que quer aprender ou qual problema do projeto quer atacar.",
+          "O que você já fez, o que quer aprender ou qual problema quer resolver.",
       },
       areas: {
         engineering: "Engenharia",
@@ -937,7 +1031,7 @@ export const texts = {
       sending: "Enviando...",
       successTitle: "Recebemos sua candidatura",
       successDescription:
-        "O registro fica na fila interna do projeto. Se houver uma issue ou um próximo passo para a sua área, a gente fala com você pelo GitHub ou pelo e-mail informado.",
+        "Seu registro entrou na fila do projeto. Se houver uma issue ou um próximo passo para a sua área, entramos em contato pelo GitHub ou pelo e-mail informado.",
       verifiedGithubHint:
         "O GitHub vem do seu vínculo verificado; ele não pode ser alterado por aqui.",
       verifiedSuccessTitle: "Dados confirmados",
@@ -951,28 +1045,24 @@ export const texts = {
       validationTerms: "Para enviar, aceite as regras e os termos.",
     },
     finalCta: {
-      eyebrow: "Chega junto",
-      title: "A internet também é feita das escolhas da gente.",
-      description:
-        "O énóis ainda está evoluindo, e é agora que dá para ajudar a definir o que ele vai ser. Criar conta é gratuito, leva um minuto e não pede cartão.",
-      free: "Acesso gratuito é princípio, não promoção: sem anúncio, sem plano pago e sem versão premium pela metade.",
-      createAccount: "Fazer parte do énóis",
+      eyebrow: "Crie sua conta",
+      title: "Entre agora e ajude a definir o que o énóis vai ser.",
+      description: "Criar conta é gratuito, leva um minuto e não pede cartão.",
+      free: "Gratuito é regra do projeto, não promoção.",
+      createAccount: "Criar minha conta",
       existingAccount: "Já tenho conta",
       finePrint: "Sem cartão de crédito · Sem anúncios · Sem plano premium",
     },
     securityNote: {
       eyebrow: "Aviso a quem testa segurança",
       title: "Testem na sandbox, não contra a nossa API.",
-      body: "Pedimos, por favor, que os testes de segurança sejam realizados em ambiente de sandbox, e não contra a nossa API. Temos os repositórios abertos, tudo é 100% open source, e damos autorização apenas para testes realizados em ambiente simulado. Todo teste executado contra a nossa API será encarado como crime cibernético e denunciado como tal.",
-      closing:
-        "Somos uma rede social sem fins lucrativos que quer ser melhor junto da comunidade. Pedimos que não tentem destruir ideias livres e gratuitas que apenas querem trazer o bem.",
+      body: "Faça testes de segurança só no ambiente de sandbox, nunca contra a nossa API. Os repositórios são abertos, e só autorizamos testes em ambiente simulado. Teste executado contra a nossa API será tratado como crime cibernético e denunciado.",
+      closing: "Somos uma rede social sem fins lucrativos, construída junto com a comunidade.",
       repoLink: "Ver os repositórios abertos",
     },
     footer: {
-      copyright: (year: number) =>
-        `© ${year} Énóis · Uma rede feita com as pessoas, todos os dias.`,
-      tagline:
-        "Uma rede social gratuita feita por gente, sem anúncios, sem paywall, em construção com quem usa.",
+      copyright: (year: number) => `© ${year} Énóis · Rede social gratuita e em construção.`,
+      tagline: "Rede social gratuita, sem anúncios e sem paywall, em construção com quem usa.",
       sectionsLabel: "Nesta página",
       projectLabel: "O projeto",
       privacy: "Privacidade",
@@ -986,6 +1076,10 @@ export const texts = {
       emotes:
         "As figurinhas das conversas não são nossas nem foram feitas por nós: vêm do BetterTTV e do FrankerFaceZ, e cada uma continua pertencendo a quem a criou. O énóis não vende, não licencia e não usa essas imagens fora do site — mantém só uma cópia em cache, para elas abrirem na hora nas conversas. Se você é autor de uma figurinha e quer que ela saia do ar aqui, escreva pela página de contato e ela sai.",
       emotesRemoval: "Pedir a remoção de uma figurinha",
+      kenneyTitle: "Arte de cena dos looks",
+      kenney:
+        "Os cenários dos looks prontos da loja são feitos com sprites de Kenney (kenney.nl), doados ao domínio público sob a licença Creative Commons Zero (CC0 1.0). O crédito não é exigido pela licença — a arte pode ser copiada, modificada e usada à vontade —, mas fica aqui porque o desenho é de outra pessoa.",
+      kenneyCredit: "Kenney.nl · licença CC0 1.0",
     },
   },
 
@@ -1013,25 +1107,26 @@ export const texts = {
   feed: {
     seo: {
       title: "Énóis · Início",
-      description: "Seu feed de insights, perguntas e projetos da comunidade profissional.",
+      description: "Publicações, perguntas e projetos da sua rede.",
     },
     you: "Você",
     refreshing: "Atualizando publicações…",
-    loadingMore: "Carregando mais publicações...",
-    endOfFeed: "Você chegou ao fim do feed.",
+    loadingMore: "Carregando mais publicações…",
+    endOfFeed: "Você viu tudo por enquanto.",
     loadMore: "Carregar mais",
     scrollToTop: "Voltar ao topo",
     newPosts: "Novos posts",
-    empty: "Nada por aqui ainda. Publicações da sua rede aparecem neste feed.",
+    newPostsCount: (count: number) => (count === 1 ? "1 novo post" : `${count} novos posts`),
+    empty: "Sem publicações por enquanto. As da sua rede aparecem aqui.",
     composer: {
       removeMedia: "Remover mídia",
       topic: "Assunto",
-      topicNone: "Sem assunto",
-      topicHint: "Liga o post ao que a gente quer ver (ou não quer) na personalização.",
+      topicRequired: "Escolha o assunto",
+      topicHint: "Obrigatório. Coloca o post nos filtros certos do feed.",
       schedule: "Agendar",
       scheduleDate: "Data e hora",
       scheduleConfirm: "Agendar publicação",
-      scheduleHint: "O post só entra no feed na hora marcada.",
+      scheduleHint: "A publicação aparece no feed na hora marcada.",
       scheduleDone: (date: string) => `Post agendado para ${date}.`,
       scheduleCancelled: "Agendamento cancelado.",
       scheduledTitle: (count: number) =>
@@ -1039,9 +1134,9 @@ export const texts = {
       scheduledFor: (date: string) => `Vai ao ar em ${date}`,
       scheduledPage: "Página agendada",
       scheduleCancel: "Cancelar agendamento",
-      publishedOffer: "Publicado! Que tal levar esse insight para o LinkedIn também?",
+      publishedOffer: "Publicado. Quer compartilhar no LinkedIn?",
       linkedinShare: "Compartilhar no LinkedIn",
-      placeholder: "Compartilhe algo que aprendeu hoje...",
+      placeholder: "Escreva sua publicação",
       types: {
         insight: "Insight",
         article: "Artigo",
@@ -1054,9 +1149,9 @@ export const texts = {
         review: "Avaliação",
         divertido: "Divertido",
         moment: "Momento",
-        momentHint: "Momento se apaga sozinho em 24 horas.",
+        momentHint: "O momento some em 24 horas.",
         poll: "Enquete",
-        pollHint: "O campo de cima é o título da enquete; abaixo entram de 2 a 6 alternativas.",
+        pollHint: "O campo de cima é a pergunta. Abaixo, de 2 a 6 alternativas.",
       },
       typePicker: {
         label: "Tipo",
@@ -1064,36 +1159,37 @@ export const texts = {
       },
       article: {
         bodyLabel: "Texto do artigo",
-        bodyPlaceholder: "Escreva o artigo. O campo de cima é o título que aparece no feed.",
-        bodyHint:
-          "Artigo aceita até 4.000 caracteres (post comum aceita 1.200) e o texto fica guardado separado do post.",
+        bodyPlaceholder: "Escreva o artigo. O campo de cima é o título.",
+        bodyHint: "Até 10.000 caracteres. Publicação comum aceita até 1.200.",
       },
       media: "Mídia",
       video: "Vídeo",
       mediaCount: (count: number) => `${count} ${count === 1 ? "mídia" : "mídias"}`,
       mediaSpoiler: "Marcar mídias como spoiler",
       mediaSpoilerActive: "Mídias marcadas como spoiler",
-      uploadProgress: (progress: number) => `Enviando... ${progress}%`,
-      imageChecking: "Verificando imagem...",
-      imageCheckError: "Não foi possível verificar esta imagem. Remova e tente novamente.",
-      publishError: "Erro ao publicar. Tente novamente.",
+      uploadProgress: (progress: number) => `Enviando… ${progress}%`,
+      imageChecking: "Verificando imagem…",
+      imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",
+      imageProhibitedTitle: "Imagem ocultada",
+      imageProhibitedMessage:
+        "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      publishError: "Não foi possível publicar. Tente de novo.",
       publishErrorTitle: "Não foi possível publicar:",
       page: "Página",
-      pagePlaceholder: "Cole aqui o HTML da sua página...",
+      pagePlaceholder: "Cole o HTML da página",
       pageLabel: "HTML da página",
       pageDescription:
-        "Uma página é uma coisa ou outra: o HTML dela é o conteúdo do post, sem texto separado. Imagem, vídeo e áudio por link https tocam dentro dela; scripts, formulários e requisições externas não rodam. Link de YouTube, Vimeo, Twitch, Dailymotion ou Spotify vira player embutido logo abaixo da página — o quadro em si não executa script, então o player é montado pelo próprio énóis. Documento (PDF) vira link e abre no visualizador do navegador.",
-      pageEmpty: "Cole um HTML para ver a pré-visualização.",
+        "O HTML é o conteúdo da publicação, sem texto separado. Imagem, vídeo e áudio por link https tocam na página. Scripts, formulários e requisições externas não rodam. Links de YouTube, Vimeo, Twitch, Dailymotion e Spotify viram player abaixo da página. PDF vira link.",
+      pageEmpty: "Cole o HTML para ver a pré-visualização.",
       professionalSetupTitle: "Publique como profissional",
       professionalSetupBody:
-        "Aqui no Profissional, o que você publica sai pelo seu perfil profissional. Crie ou ative o seu para começar.",
+        "No modo profissional, você publica pelo perfil profissional. Crie ou ative o seu para começar.",
       professionalSetupCta: "Configurar perfil profissional",
-      professionalLoadErrorTitle: "Não deu para carregar seu perfil profissional",
+      professionalLoadErrorTitle: "Não foi possível carregar seu perfil profissional",
       professionalLoadErrorBody:
-        "Sem ele não dá para saber como sua publicação sairia. Confira a conexão e tente de novo.",
+        "Sem ele, não dá para saber como a publicação sairia. Confira a conexão e tente de novo.",
       professionalLoadErrorRetry: "Tentar de novo",
-      corporateDestination: (name: string) =>
-        `Publicando como ${name}. Esta publicação vai para o feed profissional.`,
+      corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
     },
     tabs: {
       forYou: "Para você",
@@ -1119,21 +1215,21 @@ export const texts = {
       followers: "Seguidores",
       suggestions: "Sugestões para você",
       refreshSuggestions: "Ver outras sugestões",
-      suggestionsDescription: "Com base em interesses e objetivos em comum.",
+      suggestionsDescription: "Interesses e objetivos em comum.",
       connect: "Conectar",
       happeningNow: "Acontecendo agora",
       seeAllEvents: "Ver todos os eventos",
       confirmed: (count: number) => `${count} ${count === 1 ? "confirmado" : "confirmados"}`,
-      eventMeta: (date: string, format: string, confirmed: string) =>
-        `${date} · ${format} · ${confirmed}`,
+      /** The day is on the ticket: the line carries time, format and who is going. */
+      eventMeta: (time: string, format: string, confirmed: string) =>
+        `${time} · ${format} · ${confirmed}`,
     },
     companyPrompt: {
       title: "Sua empresa no Énóis",
-      description:
-        "Crie a página da sua empresa e publique vagas, projetos e serviços para a comunidade.",
+      description: "Publique vagas, projetos e serviços na página da sua empresa.",
       cta: "Criar página",
       dismiss: "Fechar",
-      contextSwitch: "Você está no modo profissional. Empresas, vagas e serviços ficam aqui.",
+      contextSwitch: "Modo profissional: empresas, vagas e serviços.",
     },
   },
 
@@ -1149,50 +1245,50 @@ export const texts = {
       removeOption: "Remover alternativa",
       hint: "De 2 a 6 alternativas, até 120 caracteres cada.",
       vote: "Votar",
-      voting: "Registrando seu voto...",
+      voting: "Registrando voto…",
       votes: (total: number) => (total === 1 ? "1 voto" : `${total} votos`),
       noVotes: "Nenhum voto ainda",
       yourVote: "Seu voto",
-      locked: "Voto único — não dá para trocar depois.",
-      error: "Não foi possível registrar o voto agora.",
-      alreadyVoted: "Você já votou nesta enquete — o voto não pode ser trocado.",
+      locked: "O voto não pode ser alterado.",
+      error: "Não foi possível registrar o voto.",
+      alreadyVoted: "Você já votou nesta enquete.",
     },
     /** Fixar UM post no topo do feed da comunidade/grupo (a administração faz isso). */
     pin: {
       pin: "Fixar no topo",
       unpin: "Desafixar",
       pinned: "Fixado",
-      error: "Não foi possível atualizar o fixado agora.",
+      error: "Não foi possível atualizar o fixado.",
     },
     page: {
       frameTitle: "Página publicada no post",
-      loading: "Carregando a página...",
+      loading: "Carregando a página…",
     },
     owner: {
-      editDescription: "Atualize o texto. Tags, mídias e a comunidade continuam como estão.",
+      editDescription: "Edite o texto. Tags, mídias e comunidade não mudam.",
       deleteTitle: "Excluir publicação?",
       deleteDescription:
-        "A publicação sai do feed para todo mundo e deixa de aparecer para quem acessar o link. As tags e mídias param de ser exibidas.",
+        "A publicação sai do feed e o link deixa de funcionar. Tags e mídias também somem.",
       confirmDelete: "Excluir",
       edited: "Publicação atualizada.",
       deleted: "Publicação excluída.",
       undo: "Desfazer",
-      error: "Não foi possível concluir. Tente novamente.",
+      error: "Não foi possível concluir. Tente de novo.",
     },
     /**
      * Selos de post: a sinalizacao ao lado da reacao. Nove selos em grade 3x3 no seletor; um por
      * pessoa por post (clicar de novo tira, clicar em outro troca).
      */
     seals: {
-      error: "Nao foi possivel salvar o selo. Tente novamente.",
+      error: "Não foi possível salvar o selo. Tente de novo.",
     },
     reactions: {
-      error: "Não foi possível reagir. Tente novamente.",
-      restrictedError: "Sua conta está restrita e não pode reagir agora. Veja em Penalidades.",
+      error: "Não foi possível reagir. Tente de novo.",
+      restrictedError: "Sua conta está restrita e não pode reagir. Veja em Penalidades.",
       sessionError: "Sua sessão expirou. Entre de novo para reagir.",
-      rateLimitError: "Calma aí — muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
+      rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
-      networkError: "Não conseguimos falar com o servidor agora. Tente de novo em instantes.",
+      networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
       emojis: {
         LIKE: "👍",
         LOVE: "❤️",
@@ -1218,20 +1314,20 @@ export const texts = {
       title: "Denunciar post",
       action: "Denunciar",
       success: "Denúncia enviada. Você acompanha em Minhas denúncias.",
-      error: "Não foi possível enviar a denúncia. Tente novamente.",
+      error: "Não foi possível enviar a denúncia. Tente de novo.",
     },
     reposted: "Republicado no seu perfil.",
     alreadyReposted: "Você já republicou este post.",
     repostRemoved: "Republicação removida.",
-    repostError: "Não foi possível republicar agora.",
-    shareCopied: "Link da publicação copiado!",
+    repostError: "Não foi possível republicar.",
+    shareCopied: "Link copiado.",
     editPhoto: "Editar foto",
     comments: {
-      placeholder: "Comente com contexto, dúvida ou referência...",
-      replyPlaceholder: (name: string) => `Responder ${name}...`,
+      placeholder: "Escreva um comentário",
+      replyPlaceholder: (name: string) => `Responder ${name}…`,
       pinError: "Não foi possível fixar o comentário.",
       editError: "Não foi possível salvar a edição. Tente de novo.",
-      acceptError: "Não foi possível atualizar a resposta da dúvida. Tente de novo.",
+      acceptError: "Não foi possível atualizar a resposta aceita. Tente de novo.",
     },
     notes: {
       sent: "Nota enviada para moderação.",
@@ -1285,14 +1381,33 @@ export const texts = {
     blockedSince: (date: string | null) => (date ? `Bloqueado em ${dataCurta(date)}` : "Bloqueado"),
     mute: "Silenciar",
     unmute: "Remover silêncio",
+    muteTitle: (name: string) => `Silenciar ${name}?`,
+    unmuteTitle: (name: string) => `Remover silêncio de ${name}?`,
+    muteDescription:
+      "A pessoa some do seu feed, dos comentários e das notificações, mas continua vendo você normalmente — e não é avisada. A conexão continua. Escolha por quanto tempo:",
+    muteDurationLabel: "Por quanto tempo",
+    muteDurations: {
+      "24h": "24 horas",
+      "72h": "72 horas",
+      "7d": "1 semana",
+      forever: "Sempre (até remover)",
+    },
+    muteActiveDescription: (expiresAt: string | null) =>
+      expiresAt
+        ? `Você silenciou esta pessoa até ${dataCurta(expiresAt)}. O conteúdo dela volta a aparecer sozinho nessa data.`
+        : "Você silenciou esta pessoa até remover. O conteúdo dela continua escondido até você desfazer.",
+    muteError: "Não foi possível concluir. Tente novamente.",
+    mutedBadge: "Você silenciou esta pessoa. O conteúdo dela está escondido para você.",
     mutedTitle: "Usuários silenciados",
     mutedSeoTitle: "Usuários silenciados · Énóis",
     mutedDescription:
       "Estas pessoas estão silenciadas: os posts, mensagens e notificações delas não aparecem para você, mas elas não sabem.",
     mutedEmpty: "Você não silenciou ninguém.",
     mutedHint:
-      "O silêncio esconde o conteúdo da pessoa sem que ela saiba. Diferente do bloqueio, a pessoa ainda pode ver você. Remova o silêncio aqui quando quiser.",
+      "O silêncio esconde o conteúdo da pessoa sem que ela saiba. Diferente do bloqueio, a pessoa ainda pode ver você. Com prazo, ele vence sozinho; remova o silêncio aqui quando quiser.",
     mutedSince: (date: string | null) => (date ? `Silenciado em ${dataCurta(date)}` : "Silenciado"),
+    mutedUntil: (expiresAt: string | null) =>
+      expiresAt ? `Volta em ${dataCurta(expiresAt)}` : "Até remover",
     openToWork: "Aberto a oportunidades",
     mentorAvailable: "Mentor disponível",
     connectionsMeta: (count: number) => `· ${count} ${count === 1 ? "conexão" : "conexões"}`,
@@ -1347,10 +1462,6 @@ export const texts = {
       postsLabel: "publicações",
       connectionsLabel: "conexões",
       followersLabel: "seguidores",
-      composer: {
-        success: "Publicação enviada.",
-        error: "Não foi possível publicar agora. Tente novamente.",
-      },
     },
     /** O título continua "Ranking"; a linha abaixo dele diz QUEM está ali (chegada, não disputa). */
     newMembersHint: "Quem está chegando agora — os mais recentes primeiro.",
@@ -1372,6 +1483,7 @@ export const texts = {
   },
 
   blog: {
+    readingTime: (minutes: number) => `${minutes} min de leitura estimada`,
     seoFallbackTitle: "Blog",
     seoTitle: (name: string) => `${name} · Blog · Énóis`,
     seoDescription: (name: string) =>
@@ -2342,6 +2454,12 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    /**
+     * Inbox preview with its author: "Você" for the viewer (otherwise the peer seems to have
+     * written it) and the sender's first name in groups (the row shows the group, not the author).
+     */
+    you: "Você",
+    authoredPreview: (author: string, text: string) => `${author}: ${text}`,
     e2eRequired:
       "Ative a criptografia ponta a ponta para enviar e ler mensagens. Suas conversas ficam protegidas e só você e o destinatário podem ler.",
     loadMoreConversations: "Carregar conversas antigas",
@@ -3061,6 +3179,13 @@ export const texts = {
   cosmetics: {
     bought: "Item comprado. Agora é só equipar.",
     lookBought: "Look comprado e vestido no seu perfil.",
+    lookEquipped: "Look vestido no seu perfil.",
+    lookUnequipped: "Look guardado. As peças continuam suas.",
+    /** O card do look pronto: o clique veste, e o próximo clique guarda. */
+    equipLook: (title: string) => `Vestir o meu look ${title}`,
+    unequipLook: (title: string) => `Tirar o look ${title} do meu perfil`,
+    lookWearing: "Vestindo",
+    lookWear: "Vestir",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
     /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */
@@ -3068,12 +3193,12 @@ export const texts = {
     lookPiecesHint: "Cada peça é vendida separada: compre só a que falta e monte o seu jeito.",
     /** O botão mostra só a faísca e o preço; quem lê em voz alta ouve a peça e o valor. */
     buyPiece: (name: string, price: string) => `Comprar ${name} por ${price}`,
-    /** Loja: a aba que abre em todas as coleções, para nada do catálogo ficar escondido. */
+    /** Loja: a aba que abre em todas as coleções da temporada, para nada dela ficar escondido. */
     shop: {
       allTab: "Todas as coleções",
       allTitle: "Todas as customizações",
       allDescription:
-        "Molduras, emblemas, temas do cartão, nomes, placas, banners, efeitos e jardins de todas as coleções. O que está fora de temporada continua aqui: ele volta na data dele.",
+        "Molduras, emblemas, temas do cartão, nomes, placas, banners, efeitos e jardins das coleções da temporada, com os clássicos e os essenciais. Cada coleção aparece na época certa e sai quando a data passa.",
     },
     /** Shop banner name while the catalog is not at hand. */
     equippedBannerFallback: "equipado",
@@ -3120,6 +3245,32 @@ export const texts = {
     duelChosen: "Você entrou no time! O emblema já está no seu perfil.",
     huntFound: (found: number, total: number) => `Você achou o Saci! ${found} de ${total}.`,
     huntCompleted: "Você achou os 7 Sacis! O emblema Achei o Saci já é seu.",
+  },
+
+  /** Gerenciar serviços: publicar, editar e remover a própria oferta (#358). */
+  services: {
+    mine: {
+      newTitle: "Publicar serviço",
+      editTitle: "Editar serviço",
+      publish: "Publicar",
+      save: "Salvar",
+      saving: "Salvando…",
+      published: "Serviço publicado.",
+      saved: "Serviço atualizado.",
+      saveFailed: "Não foi possível salvar o serviço.",
+      edit: "Editar",
+      remove: "Remover",
+      removing: "Removendo…",
+      removed: "Serviço removido da vitrine.",
+      removeFailed: "Não foi possível remover o serviço.",
+      removeBlocked: "Há um contrato em andamento com este preço — finalize antes de mudar.",
+      priceLocked: "Há um contrato em andamento com este preço — finalize antes de mudar.",
+      removedHint: "Fora da vitrine",
+      removeTitle: "Remover serviço",
+      removeBody: (title: string) =>
+        `"${title}" sai da vitrine. Os contratos já abertos continuam valendo, e você pode editar e publicar de novo depois.`,
+      removeCancel: "Cancelar",
+    },
   },
 
   wallet: {
@@ -3281,7 +3432,8 @@ export const texts = {
 
   post: {
     seoTitle: "Publicação · Énóis",
-    seoDescription: "Veja esta publicação no Énóis — rede humana gratuita, sem anúncios.",
+    pageHeading: "Publicação",
+    seoDescription: "Publicação no Énóis.",
     back: "Voltar",
     notFound: "Publicação não encontrada.",
   },

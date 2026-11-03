@@ -5,11 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { LojaItem } from "@/types/application/loja/loja-item";
-import type {
-  CosmeticShopCollection,
-  CosmeticShopItem,
-  CosmeticShopLook,
-} from "@rede-enois/design-system/domain";
+import type { CosmeticShopCollection, CosmeticShopItem } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { lojaApi } from "@/lib/api";
@@ -83,6 +79,17 @@ export function CosmeticShop() {
     onSuccess: onSuccess(texts.cosmetics.unequipped, (id) => [id]),
     onError,
   });
+  // Look inteiro que já é seu: um clique veste, outro guarda — sem passar pela compra.
+  const equipLook = useMutation({
+    mutationFn: (id: string) => lojaApi.equipLook(id),
+    onSuccess: onSuccess(texts.cosmetics.lookEquipped, lookItems),
+    onError,
+  });
+  const unequipLook = useMutation({
+    mutationFn: (id: string) => lojaApi.unequipLook(id),
+    onSuccess: onSuccess(texts.cosmetics.lookUnequipped, lookItems),
+    onError,
+  });
 
   const items = useMemo(
     (): CosmeticShopItem[] | undefined =>
@@ -96,7 +103,7 @@ export function CosmeticShop() {
     if (!collections.data) return undefined;
     return collections.data.map((collection): CosmeticShopCollection => ({
       ...collection,
-      looks: collection.looks.map((look): CosmeticShopLook => ({
+      looks: collection.looks.map((look) => ({
         ...look,
         priceLabel: formatFaisca(lookPriceMf(look, itemsById)),
       })),
@@ -119,6 +126,13 @@ export function CosmeticShop() {
       onBuyLook={(id) => buyLook.mutate(id)}
       onEquip={(id) => equip.mutate(id)}
       onUnequip={(id) => unequip.mutate(id)}
+      onEquipLook={(id) => equipLook.mutate(id)}
+      onUnequipLook={(id) => unequipLook.mutate(id)}
+      lookPending={
+        (equipLook.isPending && equipLook.variables) ||
+        (unequipLook.isPending && unequipLook.variables) ||
+        null
+      }
       renderCollectionExtra={(id) => (DUEL_COLLECTIONS.has(id) ? <SaciDuelPanel /> : null)}
     />
   );

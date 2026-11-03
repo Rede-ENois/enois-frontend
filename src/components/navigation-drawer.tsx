@@ -29,12 +29,8 @@ export function NavigationDrawer() {
       onClose={closeMobileNavigation}
       brand={<AppBrand href="/feed" onClick={closeMobileNavigation} />}
     >
-      {/* `min-h-0` + `flex-1` é o que faz a lista rolar dentro do painel: sem isso ela cresce
-          além da altura e o fim fica fora da tela. */}
-      <NavigationLinks
-        onNavigate={closeMobileNavigation}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3"
-      />
+      {/* The drawer panel scrolls its own content; the links only lay themselves out. */}
+      <NavigationLinks onNavigate={closeMobileNavigation} />
     </NavigationDrawerView>
   );
 }

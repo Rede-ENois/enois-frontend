@@ -25,6 +25,13 @@ São 60 coleções prontas × 2 modos. Algumas têm nomes da cultura da comunida
 ([`scripts/theme-audit.mjs`](../scripts/theme-audit.mjs)) varre todas as coleções × modos × páginas
 medindo contraste real (WCAG) e overflow — é o teste de regressão visual do sistema.
 
+## Itens na Aparência
+
+Com sessão, a Aparência tem a aba "Itens" ([#566](https://github.com/Rede-ENois/enois-frontend/issues/566)):
+a mesma lista da aba "Meus itens" da Carteira (`components/wallet/owned-items.tsx`), com molduras,
+emblemas, banners e o resto do que a pessoa já tem, para equipar e tirar ali mesmo. O catálogo só é
+pedido quando a aba abre. Sem itens, o botão leva para a loja da Carteira.
+
 ## Vender tema
 
 Um tema personalizado pode ser publicado como pacote na galeria/marketplace (em faíscas) pela

@@ -137,6 +137,8 @@ function PostDetail() {
 
   return (
     <AppContainer>
+      <h1 className="sr-only">{texts.post.pageHeading}</h1>
+
       <div className="space-y-6">
         <Link
           to="/feed"
@@ -168,6 +170,7 @@ function PostDetail() {
 
                 <RichText
                   content={post.articleBody}
+                  writtenAt={post.createdAt}
                   className="whitespace-pre-line break-words text-base font-normal leading-relaxed text-text-strong"
                 />
               </article>

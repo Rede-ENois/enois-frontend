@@ -16,6 +16,9 @@ sits on top of the main navigation, in the sidebar and in the mobile drawer.
 - **Shared pages** (`/feed`, `/mensagens`, `/carteira`, `/seguranca`, ...) follow the last choice,
   kept on the device (`localStorage`, same key as the old identity toggle, which read `CORPORATE`).
 - Switching on a shared page stays on it; switching on a page of the other interface goes to `/feed`.
+- The account menu (`components/account-menu.tsx`) also switches, with a line saying which profile
+  is on. Its switch navigates client-side and shows a toast saying the side menu now has the other
+  interface's items (`texts.account.menu.switchedTo`, issue #560): the swap read as a bug without it.
 - SSR renders the social interface for shared pages; the device choice applies on hydration
   (`useSyncExternalStore`), without a mismatch.
 

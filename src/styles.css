@@ -54,6 +54,25 @@ li img[src^="https://cdn.frankerfacez.com/"] {
  * `truncate`/`line-clamp` continuam valendo: quem corta o texto define a própria quebra.
  */
 @layer base {
+  /* Foco sempre visível para quem navega por teclado. Componentes com anel próprio
+     (`focus-visible:ring-*`) zeram o outline e mantêm o anel. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  /* Quem pede menos movimento no sistema não recebe animações nem rolagem suave. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   p,
   span,
   h1,
@@ -73,6 +92,21 @@ li img[src^="https://cdn.frankerfacez.com/"] {
   em {
     overflow-wrap: break-word;
   }
+}
+
+/*
+ * Card de look aberto no marketplace não estica os vizinhos da linha (#572).
+ *
+ * A grade de "Looks prontos" do design system é um grid e, por padrão, todo item de uma linha
+ * estica até a altura do mais alto. Ao abrir as peças de um look, o vizinho sem peças à vista
+ * ganhava a mesma altura: o conteúdo dele ficava no topo com um vazio enorme embaixo.
+ *
+ * `align-items: start` deixa cada card com a altura do próprio conteúdo. Fica no CSS do app
+ * porque a regra vem do padrão do grid, não de um defeito do componente — vale para qualquer
+ * `cos-look`, com ou sem `<details>`.
+ */
+.cos-shop__look-grid {
+  align-items: start;
 }
 
 @keyframes slide-down {

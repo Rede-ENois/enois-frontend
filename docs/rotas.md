@@ -4,7 +4,11 @@ As rotas são geradas pelo TanStack Router com SSR — o índice completo está 
 
 ## `/` - Landing Page (`src/routes/index.tsx`)
 
-Página de marketing pública. Sem autenticação necessária.
+Página de marketing pública. Sem autenticação necessária — e quem **tem** sessão não fica aqui:
+o `beforeLoad` da rota manda para `/feed`, e o fallback do cliente em `__root.tsx`
+(`shouldLeaveLanding`, `src/lib/require-auth.ts`) repete a regra quando o SSR entrega um deep link e
+o `beforeLoad` não roda (fechar a aba e reabrir o site). Um destino de push pendente na query
+(`/?push=...`) vence a home e é navegado primeiro.
 
 **Componente:** `Landing()`
 
@@ -25,10 +29,12 @@ Seções:
 
 Funcionalidades:
 
-- **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo)
+- **Compositor de posts** com textarea com @menção, seletor de tipo (INSIGHT, ARTICLE, QUESTION, PROJECT), upload de mídia (imagem/vídeo). Imagens são verificadas ao serem selecionadas; quando a API rejeita por conteúdo sexual, a prévia fica borrada e mostra uma orientação. Falhas técnicas de verificação permanecem identificadas como erro, sem serem apresentadas como rejeição por conteúdo.
+- **Composer at rest:** the feed opens with a one-line `ComposerLauncher` (DS); tapping it, `?compor=POST` (the dock's "Publicar" button) or an existing draft, media or non-INSIGHT type expands the full composer and focuses it.
 - **Identidade ativa:** escolhida no menu da conta; com a profissional, o compositor publica no feed corporativo (`BUSINESS`) e os tipos de página/artigo saem da seleção — regras em `componentes.md`
 - **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos. "Para você" is the default tab (the one that shows the "você está em dia" marker).
-- **`?compor=ARTICLE`:** opens the composer in article mode, then drops the param from the URL. The profile quick composer "Escrever artigo" shortcut links here.
+- **Topic is required** on every post published here (standalone posts): there is no "Sem assunto" option, and publish/schedule stay disabled until one is picked. The last topic used is preselected. The backend answers `400 TOPIC_REQUIRED` otherwise.
+- **Profile shortcuts:** the profile composer never publishes; it opens this composer. `?compor=ARTICLE` opens it in article mode; `?compor=MEDIA` attaches the photos/video picked on the profile (handed over in memory by `lib/composer-handoff`). Both params are dropped from the URL after use.
 - **Feed infinito** de `PostCard` components
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
@@ -38,7 +44,7 @@ Funcionalidades:
   você" by date window, so the list only grows at the end. When the first post leaves through the top,
   `POST /feed/seen` goes once per visit with the newest loaded `createdAt` (`src/lib/feed/caught-up.ts`).
 - **Dúvidas:** no "Tudo", o filtro de tipo "Dúvidas" (`type=QUESTION`) mostra o `QuestionStatusFilter` (Todas, Abertas, Resolvidas → `resolved` omitido, `false`, `true`). Com o tipo Pergunta no compositor aparece o `QuestionComposerHint`. Quem perguntou marca a resposta de outra pessoa nos comentários (otimista, desfaz se a API recusar); a resposta aceita sobe para o topo da lista
-- **Sidebar direita:** Mini-perfil, sugestões de conexão, eventos
+- **Right rail:** events (each with its `EventTicket`, amber when it is today, via `ingressoDeEvento`), today's games, connection suggestions, company prompt and the support card, all as `surface-card` soft tables. The old platform spaces card is gone: those rooms live in `/explorar`.
 
 **Componentes auxiliares:**
 
@@ -224,6 +230,35 @@ on air means no popup. Its `updatedAt` is the version: the last seen one is kept
 (`whats-new-seen`), so each browser shows a release once and a republish opens it again. It is
 separate from the platform notice (tab "Avisos", free HTML), which keeps working as before.
 
+## `/notificacoes` - Notices (`src/routes/notificacoes.index.tsx`)
+
+**Auth:** required (also in the client's central revalidation, `src/lib/require-auth.ts`)
+
+**Component:** `NotificationsPanel` (DS, `variant="page"`) fed by `useNotificationsPanel`
+(`src/components/notifications/use-notifications-panel.ts`), the same hook as the bell popover, so
+both always agree.
+
+- Infinite list (`["notifications","page",context]`), grouped by day: "Hoje", "Ontem", then the date
+  (`notificationDayLabel`, calendar days in the app time zone).
+- Reading one row (open or the check button) or "marcar todas" updates every cached notification
+  list and the unread summary at once (`markReadInCache`), then the server answer refetches them.
+- Notifications of a module the person turned off stay hidden (`isNotificationHidden`, by the
+  `module` the backend sends).
+- Entry: the popover footer "Ver todos os avisos" and the dock's "Avisos" tab on the phone.
+
+## `/explorar` - Explore (`src/routes/explorar.tsx`)
+
+**Auth:** required
+
+**Component:** `ExploreHub` (DS) over `src/components/explore-items.ts`.
+
+- Every room that is not on the dock or in the side menu (games, projects, marketplace, blogs,
+  mentoring, study pairs, moderation application and the rest) lives here, by section (play, build,
+  community, work), so nothing is lost when the menus slim down.
+- Rooms whose module the person turned off are left out; a room with unread notices of its module
+  shows the news dot (`signalFor`).
+- The filter field matches label, description and keywords, ignoring accents.
+
 ## `/notificacoes/preferencias` - Preferências de notificação (`src/routes/notificacoes.preferencias.tsx`)
 
 **Auth:** Obrigatória (também na revalidação central do cliente)
@@ -310,7 +345,7 @@ seguintes; aqui é o mapa completo.
 | `/auth/redefinir`                | `auth.reset.tsx`                                 | Redefinição de senha por token de e-mail.                                                                                                    |
 | `/auth/verificar`                | `auth.verify.tsx`                                | Verificação de e-mail do cadastro (token do link).                                                                                           |
 | `/blog/:username`                | `blog.$username.tsx`                             | Blog de um usuário.                                                                                                                          |
-| `/blog/:username/:postId`        | `blog.$username_.$postId.tsx`                    | Post de blog público (com assinatura).                                                                                                       |
+| `/blog/:username/:postId`        | `blog.$username_.$postId.tsx`                    | Post de blog público (com assinatura e tempo estimado de leitura).                                                                           |
 | `/blog/post/:postId`             | `blog.post.$postId.tsx`                          | Post por id (compartilhamento).                                                                                                              |
 | `/blog/post/novo`                | `blog.post.new.tsx`                              | Editor de post de blog.                                                                                                                      |
 | `/blogs`                         | `blogs.tsx`                                      | Catálogo de blogs.                                                                                                                           |
@@ -320,6 +355,7 @@ seguintes; aqui é o mapa completo.
 | `/comunidades`                   | `comunidades.tsx`                                | Catálogo de comunidades.                                                                                                                     |
 | `/comunidades/:id`               | `comunidades.$communityId.tsx`                   | Página da comunidade (posts, membros, regras).                                                                                               |
 | `/comunidades/:id/canais/:canal` | `comunidades.$communityId.canais.$channelId.tsx` | Canal privado de uma comunidade; acessível somente a membros.                                                                                |
+| `/conta`                         | `conta.tsx`                                      | Conta e segurança: e-mail, senha, logins vinculados, bloqueados, denúncias, penalidades, excluir conta (#562).                               |
 | `/contato`                       | `contato.tsx`                                    | Contato com o time (abre ticket de suporte).                                                                                                 |
 | `/denuncias`                     | `denuncias.tsx`                                  | Minhas denúncias e seus estados.                                                                                                             |
 | `/developers`                    | `developers.tsx`                                 | Portal de desenvolvedores da API pública (catálogo + casos de uso).                                                                          |
@@ -329,6 +365,7 @@ seguintes; aqui é o mapa completo.
 | `/entrar`                        | `entrar.tsx`                                     | Login e cadastro (e-mail + social + 2FA).                                                                                                    |
 | `/par-de-estudo`                 | `par-de-estudo.tsx`                              | Pares de estudo com check-in semanal.                                                                                                        |
 | `/eventos`                       | `eventos.tsx`                                    | Catálogo de eventos com RSVP.                                                                                                                |
+| `/explorar`                      | `explorar.tsx`                                   | Explore hub: every room off the dock and menu, filterable.                                                                                   |
 | `/feed`                          | `feed.tsx`                                       | Feed principal: compositor, abas, feed infinito, sidebar.                                                                                    |
 | `/freelances`                    | `freelances.tsx`                                 | Freelances; visitante vê o aviso e o botão de candidatura.                                                                                   |
 | `/games`                         | `games.tsx`                                      | Catálogo de jogos da comunidade.                                                                                                             |
@@ -346,6 +383,7 @@ seguintes; aqui é o mapa completo.
 | `/moderacao`                     | `moderacao.tsx`                                  | Fila de recursos de penalidades e votação de punição.                                                                                        |
 | `/moderacao/:reportId`           | `moderacao.$reportId.tsx`                        | Decisão de recurso/fila filha da moderação.                                                                                                  |
 | `/moderador`                     | `moderador.tsx`                                  | Painel do moderador: todas as filas + monitoramento (candidatura é só admin).                                                                |
+| `/notificacoes`                  | `notificacoes.index.tsx`                         | All notices, grouped by day, with read one/read all.                                                                                         |
 | `/notificacoes/preferencias`     | `notificacoes.preferencias.tsx`                  | Resumo semanal e categorias de push.                                                                                                         |
 | `/penalidades`                   | `penalidades.tsx`                                | Minhas penalidades e recursos.                                                                                                               |
 | `/perfil/:username`              | `perfil.$username.tsx`                           | Perfil público (posts fixados, ranking de chegada, projetos).                                                                                |
@@ -395,3 +433,9 @@ antigo deixa de responder — sem tocar no perfil social.
 Em grupos, o dono pode selecionar um tópico e usar **Renomear tópico** para editar o nome
 pelo diálogo. O formulário aceita até 80 caracteres e usa o PATCH existente, mantendo a descrição,
 a seleção e o conteúdo do tópico. Após salvar, os rótulos do feed são atualizados.
+
+O cabeçalho do post público e o card da lista do blog mostram o tempo estimado de leitura
+na cor secundária do tema. O cálculo considera o corpo: 200 palavras
+por minuto, arredondado para cima, com mínimo de 1 minuto. Markdown reutiliza a extração de
+texto da prévia (sem imagens, blocos de código e spoilers); HTML ignora tags, scripts, estilos
+e comentários. O cálculo ocorre no frontend, também no SSR, sem mudar o contrato da API.

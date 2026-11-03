@@ -75,6 +75,14 @@ TanStack Query.
 Condições de interface, polling e exceções de frescor continuam nos consumidores. Loaders de SSR,
 revalidação de dados associados à sessão e paginação por cursor conservam suas regras próprias.
 
+**Mensagens em tempo real.** `MessageStream` (montado no root, só com sessão) abre um `EventSource`
+em `/conversations/stream` (`src/lib/message-stream.ts`). Cada evento `conversation` invalida
+`["messages", id]` e o prefixo `["conversations"]` (caixa, arquivadas, contadores e dock). Enquanto o
+stream está conectado, o polling da conversa, da lista e do contador do dock fica desligado
+(`useInboxPollInterval`, `useMessageStreamLive`); se ele cai, o polling antigo volta até reconectar, e
+ao reconectar a caixa é recarregada uma vez para cobrir o que passou. Em dev o proxy do Vite declara
+`X-Client-Origin`, porque o `EventSource` não manda cabeçalho próprio e o proxy remove o `Origin`.
+
 ### 7. Autenticação
 
 Fluxo:

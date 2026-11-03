@@ -9,7 +9,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // Origem do backend (SEM path): o proxy abaixo recebe "/api/..." e encaminha o path completo.
 // Se BACKEND_TARGET tiver um path (ex.: ".../api"), o proxy concatena e a URL vira "/api/api/...",
 // que o gateway do backend não reconhece (404) — foi o que quebrava o dev local.
-const BACKEND_TARGET = process.env.BACKEND_TARGET ?? "https://enois.ia.br";
+// Written back to the env: SSR loaders read it too (`serverBaseUrl` in `src/lib/api-client.ts`).
+process.env.BACKEND_TARGET ??= "https://enois.ia.br";
+const BACKEND_TARGET = process.env.BACKEND_TARGET;
 const NITRO_PRESET = process.env.NITRO_PRESET ?? "vercel";
 
 export default defineConfig({
@@ -27,9 +29,13 @@ export default defineConfig({
           target: BACKEND_TARGET,
           changeOrigin: true,
           configure: (proxy) => {
-            proxy.on("proxyReq", (proxyReq) => {
+            proxy.on("proxyReq", (proxyReq, req) => {
               proxyReq.removeHeader("origin");
               proxyReq.removeHeader("referer");
+              // EventSource cannot set headers: declare the dev origin for it (the message stream).
+              if (!proxyReq.getHeader("x-client-origin") && req.headers.host) {
+                proxyReq.setHeader("x-client-origin", `http://${req.headers.host}`);
+              }
             });
           },
         },

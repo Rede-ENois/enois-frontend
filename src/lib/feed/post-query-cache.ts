@@ -3,6 +3,34 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { FeedPages } from "@/types/lib/feed/feed-pages";
 
+/**
+ * Aba "Ainda não vi": o servidor deixa de mandar o post assim que ele tem reação ou comentário
+ * meus, então qualquer revalidação o tira da tela na hora. Nesta aba a pessoa está lendo — a saída
+ * vale para a próxima visita, não para o instante em que ela reagiu (issue #559).
+ *
+ * O que muda numa reação é contador e resumo, e isso o cache já recebeu na hora
+ * (`updatePostInQueryCache`), então pular a revalidação não deixa nada desatualizado na tela.
+ *
+ * A forma da chave vem de `useFeed` (`src/routes/feed.tsx`): `["feed", tab, typeFilter, resolved]`.
+ */
+export function isUnseenFeedQuery(queryKey: readonly unknown[]): boolean {
+  return queryKey[0] === "feed" && queryKey[1] === "UNSEEN";
+}
+
+/**
+ * Quando a lista do feed se renova sozinha. "Ainda não vi" é a única que não: as duas rotas de
+ * revalidação automática (`refetchInterval` e `refetchOnWindowFocus`) tirariam da tela o post que a
+ * pessoa acabou de marcar como visto, só que com atraso — o `staleTime` da aba é curto, então
+ * voltar o foco na janela já bastaria para refazer a busca. Ela se renova ao voltar para a aba.
+ */
+export function feedRefreshOptions(tab: string): {
+  refetchInterval: number | false;
+  refetchOnWindowFocus: boolean;
+} {
+  if (tab === "UNSEEN") return { refetchInterval: false, refetchOnWindowFocus: false };
+  return { refetchInterval: 30_000, refetchOnWindowFocus: true };
+}
+
 export function updatePostInQueryCache(
   queryClient: QueryClient,
   postId: string,

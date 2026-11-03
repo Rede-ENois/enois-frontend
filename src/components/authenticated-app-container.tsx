@@ -2,14 +2,17 @@ import type { WithRequiredChildren } from "@/types/components/with-required-chil
 import { AppLayout } from "@rede-enois/design-system/patterns";
 
 import { useCurrentUser } from "@/lib/current-user";
+import { usePresenceHeartbeat } from "@/lib/use-presence-heartbeat";
 
 import { AppSidebar } from "./app-sidebar";
 import { AuthenticatedAppHeader } from "./authenticated-app-header";
+import { MobileDock } from "./mobile-dock";
 import { NavigationDrawer } from "./navigation-drawer";
 import { AdminNoticeBanner } from "./notices/admin-notice";
 
 export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
   useCurrentUser();
+  usePresenceHeartbeat();
 
   return (
     <AppLayout>
@@ -29,6 +32,7 @@ export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
 
       <AppLayout.Navigation>
         <NavigationDrawer />
+        <MobileDock />
       </AppLayout.Navigation>
     </AppLayout>
   );

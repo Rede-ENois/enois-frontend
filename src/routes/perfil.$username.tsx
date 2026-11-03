@@ -33,6 +33,7 @@ import {
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
+  BellOff,
   Briefcase,
   Camera,
   Clock,
@@ -51,7 +52,6 @@ import {
   Target,
   ThumbsUp,
   Trophy,
-  VolumeX,
 } from "lucide-react";
 
 import {
@@ -83,10 +83,12 @@ import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { BlockUserDialog } from "@/components/block-user-dialog";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { SaciSpot } from "@/components/events/saci-spot";
+import { MuteUserDialog } from "@/components/mute-user-dialog";
 import { PostCard } from "@/components/post-card";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { PresenceIndicator } from "@/components/presence-indicator";
 import { ProfileBannerDialog } from "@/components/profile-banner-dialog";
 import { ProfileBioDialog } from "@/components/profile-bio-dialog";
 import { ProfileResumeDialog } from "@/components/profile-resume-dialog";
@@ -259,6 +261,7 @@ function Profile() {
   const connectionOffer = connectionAction(connectionData);
   const blocked = connectionData?.blocked ?? false;
   const muted = connectionData?.muted ?? false;
+  const muteExpiresAt = connectionData?.muteExpiresAt ?? null;
 
   const updateProfile = useMutation({
     mutationFn: (data: Pick<UpdateProfileRequest, "avatar" | "banner">) => profileApi.update(data),
@@ -340,13 +343,6 @@ function Profile() {
     mutationFn: () => networkApi.remove(user.id),
     onSuccess: refreshConnection,
     onError: connectionFailed,
-  });
-
-  const toggleMute = useMutation({
-    mutationFn: () => (muted ? networkApi.unmute(user.id) : networkApi.mute(user.id)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] });
-    },
   });
 
   // Abrir conversa: reaproveita a conversa direta existente (o backend nao duplica) e ja entra
@@ -467,6 +463,8 @@ function Profile() {
           }
           nameAddon={
             <>
+              <PresenceIndicator username={user.username} isOwn={isOwnProfile} />
+
               {/* Vulgo: etiqueta ao lado do nome, escolhida pela própria pessoa. */}
               {user.aka && (
                 <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-text-subtle">
@@ -737,18 +735,15 @@ function Profile() {
                       queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
                     }
                   />
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => toggleMute.mutate()}
-                    disabled={toggleMute.isPending}
-                  >
-                    <VolumeX className="h-4 w-4" />
-
-                    <>{muted ? texts.profile.unmute : texts.profile.mute}</>
-                  </Button>
+                  <MuteUserDialog
+                    userId={user.id}
+                    name={user.name}
+                    muted={muted}
+                    expiresAt={muteExpiresAt}
+                    onDone={() =>
+                      queryClient.invalidateQueries({ queryKey: ["connection-status", user.id] })
+                    }
+                  />
 
                   <Button
                     variant="outline"
@@ -775,6 +770,14 @@ function Profile() {
                   <ShieldOff className="h-4 w-4 shrink-0" />
 
                   <>{texts.profile.blockedBadge}</>
+                </p>
+              )}
+
+              {muted && !blocked && (
+                <p className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-normal text-text-subtle">
+                  <BellOff className="h-4 w-4 shrink-0" />
+
+                  <>{texts.profile.mutedBadge}</>
                 </p>
               )}
             </div>
@@ -997,6 +1000,7 @@ function Profile() {
 
                     <div className="space-y-4 pt-2">
                       <Textarea
+                        aria-label={texts.profile.recommendPlaceholder}
                         value={recommendComment}
                         onChange={(e) => setRecommendComment(e.target.value)}
                         placeholder={texts.profile.recommendPlaceholder}

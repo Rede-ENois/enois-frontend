@@ -30,7 +30,12 @@ const CODIGOS = Array.from(
 function fakeFetch(input: RequestInfo | URL) {
   const url = new URL(String(input), "http://localhost");
   if (url.pathname.endsWith("/emotes/index")) {
-    return resposta({ entries: {}, generatedAt: "2026-10-29T00:00:00Z" });
+    return resposta({
+      entries: Object.fromEntries(
+        CODIGOS.map((codigo) => [codigo, `/emotes/image/BTTV/${codigo}?variant=full`]),
+      ),
+      generatedAt: "2026-10-29T00:00:00Z",
+    });
   }
 
   const page = Number(url.searchParams.get("page") ?? 1);
@@ -251,10 +256,84 @@ describe("Seletor de figurinhas", () => {
     expect(document.body.textContent).toContain(texts.emotes.empty);
   });
 
+  it("opens on Recentes with the last picked stickers and searching shows the full list", async () => {
+    window.localStorage.setItem("rede:emotes:recent:v1", JSON.stringify(["EMOTE07", "EMOTE03"]));
+    await renderizar();
+    await esperarAte(() => titulos().length === 2);
+
+    expect(titulos()).toEqual(["EMOTE07", "EMOTE03"]);
+    expect(document.body.textContent).toContain(texts.emotes.tabRecent);
+
+    await digitar("EMOTE1");
+    await esperarAte(() => titulos().length === 10);
+    expect(titulos()).toEqual(CODIGOS.filter((codigo) => codigo.startsWith("EMOTE1")));
+  });
+
+  it("recents that left the catalog stay listed, without an image, instead of an empty tab", async () => {
+    window.localStorage.setItem("rede:emotes:recent:v1", JSON.stringify([{ code: "GONE" }]));
+    await renderizar();
+    await esperarAte(() => document.querySelector('button[title="GONE"]') !== null);
+
+    expect(document.querySelector('button[title="GONE"]')).not.toBeNull();
+    expect(document.querySelector('button[title="GONE"] img')).toBeNull();
+    expect(document.body.textContent).not.toContain(texts.emotes.loading);
+  });
+
+  it("Recentes não depende do índice do catálogo para desenhar a figurinha", async () => {
+    // Índice vazio (primeira visita, cópia expirada, backend sem índice): a figurinha escolhida
+    // continua sendo uma figurinha que a pessoa usou, e a aba não pode sumir nem ficar em
+    // "Carregando".
+    window.localStorage.setItem(
+      "rede:emotes:recent:v1",
+      JSON.stringify([{ code: "EMOTE07", thumb: "/emotes/image/BTTV/EMOTE07?variant=thumb" }]),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = new URL(String(input), "http://localhost");
+        if (url.pathname.endsWith("/emotes/index")) {
+          return resposta({ entries: {}, generatedAt: "2026-10-29T00:00:00Z" });
+        }
+        return fakeFetch(input);
+      }),
+    );
+
+    await renderizar();
+    await esperarAte(() => titulos().length === 1);
+
+    expect(titulos()).toEqual(["EMOTE07"]);
+    expect(document.body.textContent).toContain(texts.emotes.tabRecent);
+    expect(document.body.textContent).not.toContain(texts.emotes.loading);
+  });
+
+  it("picking a sticker moves it to the front of Recentes", async () => {
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+    await act(async () => grade()[5]!.click());
+
+    expect(JSON.parse(window.localStorage.getItem("rede:emotes:recent:v1") ?? "[]")).toEqual([
+      { code: "EMOTE05", thumb: "/emotes/image/BTTV/EMOTE05?variant=thumb" },
+    ]);
+  });
+
   it("fechado não busca nada no backend", async () => {
     await renderizar(false);
 
     expect(grade()).toHaveLength(0);
     expect(vi.mocked(globalThis.fetch)).not.toHaveBeenCalled();
+  });
+
+  it("a figurinha responde ao toque, onde o hover não aparece", async () => {
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+
+    // `hover:bg-surface-2` fica no mesmo lugar, e o estado apertado é o que confirma a escolha no
+    // telefone — medido pelo nome da classe.
+    const classes = grade()[0]!.className.split(/\s+/);
+
+    expect(classes).toContain("hover:bg-surface-2");
+    expect(classes).toContain("active:bg-surface-2");
+    expect(classes).toContain("active:ring-2");
+    expect(classes).toContain("active:ring-ring");
   });
 });

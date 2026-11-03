@@ -24,9 +24,20 @@ import { SESSION_FLAG_KEY, dropSessionKey } from "./session-key";
 const API_BACKEND = import.meta.env.VITE_API_BACKEND ?? "/api";
 
 function baseUrl(): string {
-  if (typeof window === "undefined") return API_BACKEND;
+  if (typeof window === "undefined") return serverBaseUrl();
   if (import.meta.env.DEV) return "/api";
   return API_BACKEND;
+}
+
+/**
+ * Base for SSR loaders. The server has no Vite proxy, so a relative `/api` never resolves there: in
+ * dev every loader failed and a deep link like `/perfil/x` rendered "Pessoa não encontrada". With a
+ * relative base, the server calls the same backend the dev proxy targets (`BACKEND_TARGET`, set by
+ * `vite.config.ts`); an absolute `VITE_API_BACKEND` (production builds) is used as is.
+ */
+function serverBaseUrl(): string {
+  const target = typeof process === "undefined" ? undefined : process.env.BACKEND_TARGET;
+  return API_BACKEND.startsWith("/") && target ? `${target}${API_BACKEND}` : API_BACKEND;
 }
 
 /**

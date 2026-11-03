@@ -42,9 +42,9 @@ import {
 import {
   ArrowLeft,
   Camera,
-  ChevronDown,
   Crown,
   EyeOff,
+  Gift,
   Paperclip,
   Send,
   Settings,
@@ -56,6 +56,7 @@ import {
 import { ApiError, communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -66,6 +67,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 import { AppContainer } from "@/components/app-container";
 import { CommunityChannels } from "@/components/communities/community-channels";
 import { CommunityFavoriteButton } from "@/components/community-favorite-button";
+import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PostCard } from "@/components/post-card";
@@ -132,7 +134,6 @@ function CommunityDetail() {
   const [articleBody, setArticleBody] = useState("");
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const [publishError, setPublishError] = useState<string | null>(null);
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMediaUpload();
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
@@ -140,7 +141,6 @@ function CommunityDetail() {
   const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
-  const currentType = POST_TYPES.find((option) => option.id === postType) ?? POST_TYPES[0];
   const [editOpen, setEditOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -327,7 +327,10 @@ function CommunityDetail() {
                 entry.preview === preview
                   ? {
                       ...entry,
-                      moderationStatus: "blocked",
+                      moderationStatus:
+                        error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED"
+                          ? "prohibited"
+                          : "blocked",
                       moderationError:
                         error instanceof Error
                           ? error.message
@@ -642,55 +645,16 @@ function CommunityDetail() {
 
             {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div
+              data-composer-toolbar=""
+              className="mt-3 flex flex-wrap items-center justify-between gap-2"
+            >
               <div className="flex flex-wrap items-center gap-1.5">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setTypePickerOpen((open) => !open)}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                      typePickerOpen
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                    }`}
-                  >
-                    <currentType.icon className="h-3.5 w-3.5" />
-
-                    <>
-                      {texts.feed.composer.typePicker.label}: {currentType.label}
-                    </>
-
-                    <ChevronDown
-                      className={`h-3.5 w-3.5 transition ${typePickerOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  {typePickerOpen && (
-                    <div className="absolute bottom-full right-0 z-40 mb-1 max-h-[60vh] w-[min(22rem,80vw)] overflow-y-auto rounded-2xl border border-border-soft bg-popover p-2 shadow-lg sm:left-0 sm:right-auto">
-                      <div className="flex flex-wrap gap-1.5">
-                        {POST_TYPES.map((option) => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => {
-                              setPostType(option.id as PostView["type"]);
-                              setTypePickerOpen(false);
-                            }}
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
-                              option.id === postType
-                                ? "bg-primary text-primary-foreground"
-                                : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-                            }`}
-                          >
-                            <option.icon className="h-3.5 w-3.5" />
-
-                            <>{option.label}</>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <PostTypePicker
+                  options={POST_TYPES}
+                  value={postType}
+                  onChange={(id) => setPostType(id as PostView["type"])}
+                />
 
                 {/* Anexo: mesmo clipe do resto do composer, com a contagem quando já tem arquivo. */}
                 {!pageMode && (
@@ -772,49 +736,72 @@ function CommunityDetail() {
 
             {media.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {media.map((item, index) => (
-                  <div
-                    key={index}
-                    className="relative h-20 w-20 overflow-hidden rounded-xl border border-border-soft"
-                  >
-                    <SpoilerPreview
-                      active={mediaSpoiler}
-                      label={texts.posts.mediaSpoiler.badge}
-                      className="h-full w-full"
+                {media.map((item, index) => {
+                  // A prévia é `blob:` do arquivo escolhido; o `src` só recebe esse esquema.
+                  const previewUrl = mediaPreviewUrl(item.preview);
+                  return (
+                    <div
+                      key={index}
+                      className="relative h-20 w-20 overflow-hidden rounded-xl border border-border-soft"
                     >
-                      <img src={item.preview} alt="" className="h-full w-full object-cover" />
-                    </SpoilerPreview>
-                    {item.moderationStatus === "checking" && (
-                      <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
-                        <span className="rounded-full bg-surface-card px-2 py-1 text-[10px] text-text-strong">
-                          {texts.feed.composer.imageChecking}
-                        </span>
-                      </div>
-                    )}
-                    {item.moderationStatus === "blocked" && (
-                      <div className="absolute inset-x-1 bottom-1 rounded bg-destructive/90 px-1 py-0.5 text-[9px] leading-tight text-white">
-                        {item.moderationError ?? texts.feed.composer.imageCheckError}
-                      </div>
-                    )}
+                      <SpoilerPreview
+                        active={mediaSpoiler}
+                        label={texts.posts.mediaSpoiler.badge}
+                        className="h-full w-full"
+                      >
+                        <img
+                          src={previewUrl}
+                          alt=""
+                          className={`h-full w-full object-cover ${item.moderationStatus === "prohibited" ? "scale-110 blur-md" : ""}`}
+                        />
+                      </SpoilerPreview>
+                      {item.moderationStatus === "prohibited" && (
+                        <div
+                          className="absolute inset-0 grid place-items-center bg-surface-card/80"
+                          title={`${texts.feed.composer.imageProhibitedTitle}: ${texts.feed.composer.imageProhibitedMessage}`}
+                        >
+                          <Gift
+                            aria-label={texts.feed.composer.imageProhibitedTitle}
+                            className="h-6 w-6 animate-bounce text-primary"
+                          />
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setMedia((current) => {
-                          URL.revokeObjectURL(current[index].preview);
-                          const next = current.filter((_, i) => i !== index);
-                          if (next.length === 0) setMediaSpoiler(false);
-                          return next;
-                        })
-                      }
-                      aria-label={texts.common.remove}
-                      title={texts.common.remove}
-                      className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-surface-card/80 text-text-strong"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
+                          <span className="sr-only">
+                            {texts.feed.composer.imageProhibitedMessage}
+                          </span>
+                        </div>
+                      )}
+                      {item.moderationStatus === "checking" && (
+                        <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                          <span className="rounded-full bg-surface-card px-2 py-1 text-[10px] text-text-strong">
+                            {texts.feed.composer.imageChecking}
+                          </span>
+                        </div>
+                      )}
+                      {item.moderationStatus === "blocked" && (
+                        <div className="absolute inset-x-1 bottom-1 rounded bg-destructive/90 px-1 py-0.5 text-[9px] leading-tight text-white">
+                          {item.moderationError ?? texts.feed.composer.imageCheckError}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMedia((current) => {
+                            URL.revokeObjectURL(current[index].preview);
+                            const next = current.filter((_, i) => i !== index);
+                            if (next.length === 0) setMediaSpoiler(false);
+                            return next;
+                          })
+                        }
+                        aria-label={texts.common.remove}
+                        title={texts.common.remove}
+                        className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-surface-card/80 text-text-strong"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -973,13 +960,18 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">{texts.communities.create.name}</Label>
 
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          aria-label={texts.communities.create.name}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </div>
 
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">{texts.communities.create.topic}</Label>
 
         <select
+          aria-label={texts.communities.create.topic}
           value={topic ?? ""}
           onChange={(e) => setTopic(e.target.value as CommunityTopic)}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm border-transparent bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -997,7 +989,12 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
           {texts.communities.create.description}
         </Label>
 
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+        <Textarea
+          aria-label={texts.communities.create.description}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -1005,7 +1002,7 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
 
         <div
           className="flex gap-1.5"
-          role="tablist"
+          role="group"
           aria-label={texts.communities.detail.bannerHtml.title}
         >
           <Pill active={bannerMode === "photo"} onClick={() => setBannerMode("photo")}>

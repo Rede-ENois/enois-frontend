@@ -11,9 +11,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountMenu } from "./account-menu";
 
-const mocks = vi.hoisted(() => ({ toast: vi.fn(), me: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  toast: vi.fn(),
+  me: vi.fn(),
+  moderatorMe: vi.fn(),
+  wallet: vi.fn(),
+  navigate: vi.fn(),
+  writeStoredContext: vi.fn(),
+  destination: null as string | null,
+}));
 
-vi.mock("@/lib/api", () => ({ corporateApi: { me: mocks.me } }));
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
+
+vi.mock("@/lib/api", () => ({
+  corporateApi: { me: mocks.me },
+  moderationApi: { me: mocks.moderatorMe },
+  walletApi: { wallet: mocks.wallet },
+}));
+vi.mock("@/components/theme-toggle", () => ({ ThemeSwitch: () => <span>tema</span> }));
 
 vi.mock("@/lib/logout", () => ({ logout: vi.fn() }));
 vi.mock("@rede-enois/design-system/ui", () => ({
@@ -22,11 +37,15 @@ vi.mock("@rede-enois/design-system/ui", () => ({
 
 // The DS menu is replaced by a probe: under test is the contract the app feeds into it.
 vi.mock("@rede-enois/design-system/domain", () => ({
-  AccountMenu: ({ open, onOpenChange, hrefs, identitySlot }: AccountMenuViewProps) => (
+  AccountMenu: ({ open, onOpenChange, hrefs, identitySlot, walletLabel }: AccountMenuViewProps) => (
     <div data-open={String(open)}>
       {identitySlot}
 
-      <a href={hrefs.corporateProfile}>Perfil profissional</a>
+      <span data-wallet>{walletLabel}</span>
+
+      {hrefs.moderator && <a href={hrefs.moderator}>Painel de moderador</a>}
+
+      <a href={hrefs.account}>Conta e segurança</a>
 
       <button type="button" onClick={() => onOpenChange(true)}>
         Abrir menu
@@ -43,8 +62,8 @@ vi.mock("./linked-accounts-dialog", () => ({ LinkedAccountsDialog: () => null })
 vi.mock("@/lib/interface-context", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/interface-context")>()),
   useInterfaceContext: () => "SOCIAL" as const,
-  writeStoredContext: vi.fn(),
-  destinationAfterSwitch: () => null,
+  writeStoredContext: mocks.writeStoredContext,
+  destinationAfterSwitch: () => mocks.destination,
 }));
 vi.mock("@/lib/session", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/session")>()),
@@ -78,7 +97,14 @@ describe("menu da conta", () => {
   beforeEach(() => {
     mocks.toast.mockReset();
     mocks.me.mockReset();
+    mocks.navigate.mockReset();
+    mocks.writeStoredContext.mockReset();
+    mocks.destination = null;
     mocks.me.mockResolvedValue({ exists: false, status: "NONE" });
+    mocks.moderatorMe.mockReset();
+    mocks.moderatorMe.mockResolvedValue({ moderator: false, admin: false });
+    mocks.wallet.mockReset();
+    mocks.wallet.mockResolvedValue({ balance: 1240 });
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
@@ -101,12 +127,36 @@ describe("menu da conta", () => {
     await flush();
   };
 
-  it("leva ao perfil profissional sem repetir as preferências de notificação no menu", async () => {
+  const abrir = async () => {
+    act(() => botao("Abrir menu")?.click());
+    await flush();
+  };
+
+  it("shows the moderator panel only to whoever moderates", async () => {
+    await montar();
+    await abrir();
+    expect(host.querySelector('a[href="/moderador"]')).toBeNull();
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    mocks.moderatorMe.mockResolvedValue({ moderator: true, admin: false });
+    await montar();
+    await abrir();
+    expect(host.querySelector('a[href="/moderador"]')).not.toBeNull();
+  });
+
+  it("shows the wallet balance once the menu opens", async () => {
+    await montar();
+    expect(mocks.wallet).not.toHaveBeenCalled();
+
+    await abrir();
+    expect(host.querySelector("[data-wallet]")?.textContent).toBe("1.240 faíscas");
+  });
+
+  it("sends the account items to the Conta e segurança page (#562)", async () => {
     await montar();
 
-    expect(host.querySelector('a[href="/profissional"]')).not.toBeNull();
-    // Avisos e preferências de notificação vivem dentro do "Uso saudável", não no menu lateral.
-    expect(host.querySelector('a[href="/notificacoes/preferencias"]')).toBeNull();
+    expect(host.querySelector('a[href="/conta"]')).not.toBeNull();
   });
 
   it("com perfil profissional ativo mostra a escolha de identidade", async () => {
@@ -115,6 +165,42 @@ describe("menu da conta", () => {
 
     expect(botao("Profissional")).toBeDefined();
     expect(host.textContent).not.toContain(texts.account.menu.identityLoadError);
+  });
+
+  it("diz em qual perfil o menu está, para a troca de opções não parecer bug", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    await montar();
+
+    expect(host.textContent).toContain(texts.account.menu.activeIdentity.SOCIAL);
+    expect(host.textContent).not.toContain(texts.account.menu.activeIdentity.PROFESSIONAL);
+  });
+
+  it("switching says the side menu changed and navigates without reloading the page", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    mocks.destination = "/feed";
+    await montar();
+
+    act(() => botao("Profissional")?.click());
+
+    expect(mocks.writeStoredContext).toHaveBeenCalledWith("PROFESSIONAL");
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/feed" });
+    expect(mocks.toast).toHaveBeenCalledWith(texts.account.menu.switchedTo.PROFESSIONAL);
+  });
+
+  it("choosing the interface already on does nothing", async () => {
+    mocks.me.mockResolvedValue({ exists: true, status: "ACTIVE", username: "pro", name: "Pro" });
+    await montar();
+
+    act(() => botao("Social")?.click());
+
+    expect(mocks.writeStoredContext).not.toHaveBeenCalled();
+    expect(mocks.toast).not.toHaveBeenCalled();
+  });
+
+  it("sem perfil profissional não anuncia perfil social: não há o que alternar", async () => {
+    await montar();
+
+    expect(host.textContent).not.toContain(texts.account.menu.activeIdentity.SOCIAL);
   });
 
   it("sem perfil profissional não mostra identidade nem erro", async () => {

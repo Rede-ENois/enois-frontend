@@ -3,6 +3,7 @@ import type { BlockedUser } from "@/types/application/network/blocked-user";
 import type { ConnectionRequest } from "@/types/application/network/connection-request";
 import type { ConnectionStatus } from "@/types/application/network/connection-status";
 import type { ConnectionStatusResult } from "@/types/application/network/connection-status-result";
+import type { MuteDuration } from "@/types/application/network/mute-duration";
 import type { MutedUser } from "@/types/application/network/muted-user";
 import type { NetworkSummary } from "@/types/application/network/network-summary";
 import type { NetworkUser } from "@/types/application/network/network-user";
@@ -41,8 +42,12 @@ export const networkApi = {
 
   blocked: () => api.get<BlockedUser[]>("/network/blocks"),
 
-  /** Silencia: a pessoa some do feed, mensagens e notificações, sem saber. */
-  mute: (targetUserId: string) => api.post<{ status: string }>(`/network/mutes/${targetUserId}`),
+  /**
+   * Silencia: a pessoa some do feed, mensagens e notificações, sem saber. O prazo é opcional —
+   * sem ele (`forever`), vale até remover; com prazo, o silêncio vence sozinho e o conteúdo volta.
+   */
+  mute: (targetUserId: string, duration: MuteDuration = "forever") =>
+    api.post<{ status: string }>(`/network/mutes/${targetUserId}`, { duration }),
 
   unmute: (targetUserId: string) =>
     api.delete<{ status: string }>(`/network/mutes/${targetUserId}`),

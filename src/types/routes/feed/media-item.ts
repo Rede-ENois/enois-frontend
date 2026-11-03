@@ -3,6 +3,6 @@ export type MediaItem = {
   file: File;
   preview: string;
   mediaId?: string;
-  moderationStatus?: "checking" | "allowed" | "blocked" | "error";
+  moderationStatus?: "checking" | "allowed" | "prohibited" | "blocked" | "error";
   moderationError?: string;
 };

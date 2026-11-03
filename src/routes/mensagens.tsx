@@ -14,7 +14,8 @@ import { conversationErrorMessage } from "@/lib/conversation-error";
 import { useCurrentUser } from "@/lib/current-user";
 import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useInterfaceContext, writeStoredContext } from "@/lib/interface-context";
-import { liteInterval, litePageSize } from "@/lib/lite-mode";
+import { litePageSize } from "@/lib/lite-mode";
+import { useInboxPollInterval } from "@/lib/message-stream";
 import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
@@ -48,6 +49,7 @@ const CONVERSATIONS_PAGE_SIZE = 20;
 function Mensagens() {
   const { conversation } = Route.useSearch();
   const lite = useLiteMode();
+  const conversationsPollInterval = useInboxPollInterval(15_000, lite);
   const { data: currentUser } = useCurrentUser();
   const currentUserId = currentUser?.id ?? null;
 
@@ -107,7 +109,7 @@ function Mensagens() {
           ),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-    refetchInterval: liteInterval(15_000, lite),
+    refetchInterval: conversationsPollInterval,
   });
 
   // O servidor ordena por updatedAt; reforçamos no cliente pelo horário da última mensagem —
@@ -253,6 +255,7 @@ function Mensagens() {
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
+                    aria-label={texts.messages.searchContacts}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={texts.messages.searchContacts}
@@ -290,6 +293,7 @@ function Mensagens() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  aria-label={texts.messages.searchConversations}
                   placeholder={texts.messages.searchConversations}
                   className="h-9 rounded-full bg-muted pl-9"
                 />

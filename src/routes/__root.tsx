@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import {
   type ErrorComponentProps,
@@ -19,15 +19,17 @@ import type { RootRouteContext } from "@/types/routes/root/root-route-context";
 import { navigateToHref } from "@/utils/navigation";
 import { ToastProvider, buttonVariants } from "@rede-enois/design-system/ui";
 
+import { useMarkPushRead } from "@/lib/notification-read-cache";
 import { registerPushSubscription } from "@/lib/push";
 import {
   hrefDaQueryDePush,
   hrefDoPush,
+  notificationIdDoPush,
   searchSemPush,
   subscriptionDoPush,
 } from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
-import { hasSession, isProtectedPath } from "@/lib/require-auth";
+import { hasSession, isProtectedPath, shouldLeaveLanding } from "@/lib/require-auth";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
 import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
@@ -39,10 +41,12 @@ import { DesignSystemProvider } from "@/components/design-system-provider";
 import { HealthyUsageGuard } from "@/components/healthy-usage/healthy-usage-guard";
 import { InstallPwaBanner } from "@/components/install-pwa-banner";
 import { LiteModeEffects } from "@/components/lite-mode-effects";
+import { MessageStream } from "@/components/messages/message-stream";
 import { ModuleDisabledGate } from "@/components/module-disabled-gate";
 import { AdminNoticeDialog } from "@/components/notices/admin-notice";
 import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
 import { RouteErrorBoundary } from "@/components/route-error-boundary";
+import { SkipLink } from "@/components/skip-link";
 import { WhatsNewGate } from "@/components/whats-new/whats-new-gate";
 
 import appCss from "../styles.css?url";
@@ -178,6 +182,7 @@ function RootShell({ children }: WithRequiredChildren) {
       </head>
 
       <body>
+        <SkipLink />
         {children}
         <Scripts />
       </body>
@@ -196,13 +201,28 @@ function RootComponent() {
 
 function RootInsideProvider() {
   const router = useRouter();
+  const markPushRead = useMarkPushRead();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // Lido uma vez, na montagem: o efeito de push apaga a query antes de navegar, e um segundo
+  // passe (StrictMode) nao pode confundir "sem push" com "home de quem tem sessao".
+  const [pushTargetAtLoad] = useState(() =>
+    typeof window === "undefined" ? null : hrefDaQueryDePush(window.location.search),
+  );
 
   useThemeSync();
 
   useEffect(() => {
     registerServiceWorker();
   }, []);
+
+  useEffect(() => {
+    // A landing so aparece para visitante. O `beforeLoad` dela nao roda no SSR de um deep link,
+    // entao quem reabre o site logado (e o proprio service worker) ve a home em vez do feed.
+    // Declarado antes dos efeitos de push de proposito: eles consomem a query antes de navegar.
+    if (shouldLeaveLanding(pathname, hasSession(), Boolean(pushTargetAtLoad))) {
+      void router.navigate({ to: "/feed", replace: true });
+    }
+  }, [pathname, router, pushTargetAtLoad]);
 
   useEffect(() => {
     // Clique na notificacao PUSH: o service worker nao conhece as rotas do app (a tabela esta em
@@ -218,13 +238,15 @@ function RootInsideProvider() {
         void registerPushSubscription(renewal).catch(() => undefined);
         return;
       }
-      const href = hrefDoPush(event.data as PushNavigateMessage | null);
+      const message = event.data as PushNavigateMessage | null;
+      const href = hrefDoPush(message);
       if (!href) return;
+      markPushRead(notificationIdDoPush(message));
       navigateToHref(href, (opts) => void router.navigate(opts));
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);
-  }, [router]);
+  }, [router, markPushRead]);
 
   useEffect(() => {
     // Clique na notificacao PUSH sem nenhuma aba do app aberta: o worker nao conhece as rotas,
@@ -233,6 +255,7 @@ function RootInsideProvider() {
     // ("/configuracoes/seguranca") abria a pagina de erro.
     const href = hrefDaQueryDePush(window.location.search);
     if (!href) return;
+    markPushRead(notificationIdDoPush(window.location.search));
     const resto = searchSemPush(window.location.search);
     window.history.replaceState(
       null,
@@ -240,7 +263,7 @@ function RootInsideProvider() {
       `${window.location.pathname}${resto ? `?${resto}` : ""}${window.location.hash}`,
     );
     navigateToHref(href, (opts) => void router.navigate(opts));
-  }, [router]);
+  }, [router, markPushRead]);
 
   useEffect(() => {
     // Fallback de autenticacao: o `beforeLoad` das rotas roda no SSR (sem acesso ao
@@ -261,6 +284,7 @@ function RootInsideProvider() {
       </ModuleDisabledGate>
 
       <ChatDock />
+      <MessageStream />
       <InstallPwaBanner />
       <LiteModeEffects />
       <HealthyUsageGuard />

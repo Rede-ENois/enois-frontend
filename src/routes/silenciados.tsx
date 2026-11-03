@@ -79,6 +79,8 @@ function MutedUsers() {
 
                   <p className="text-xs font-normal text-text-subtle">
                     {texts.profile.mutedSince(user.mutedAt)}
+                    {" · "}
+                    {texts.profile.mutedUntil(user.expiresAt)}
                   </p>
                 </div>
 

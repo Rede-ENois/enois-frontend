@@ -106,6 +106,7 @@ function Servicos() {
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
             <Input
+              aria-label="Buscar serviço, pedido ou entregável"
               value={term}
               onChange={(event) => setTerm(event.target.value)}
               placeholder="Buscar serviço, pedido ou entregável"
@@ -332,6 +333,7 @@ function RequestCard({ request }: { request: ServiceRequest }) {
       {open && (
         <div className="mt-3 space-y-2">
           <Textarea
+            aria-label="Como você faria? (mínimo 10 caracteres)"
             rows={3}
             placeholder="Como você faria? (mínimo 10 caracteres)"
             value={message}
@@ -340,6 +342,7 @@ function RequestCard({ request }: { request: ServiceRequest }) {
 
           <div className="flex items-center gap-2">
             <Input
+              aria-label="Seu preço"
               inputMode="decimal"
               placeholder={`${formatFaisca(request.budgetMin)}–${formatFaisca(request.budgetMax)}`}
               value={price}
@@ -445,6 +448,7 @@ function MyContracts({
             {c.escrowState === "HELD" && !c.deliverableNote && (
               <div className="flex w-full items-center gap-2">
                 <Input
+                  aria-label="O que foi entregue (link, material…)"
                   placeholder="O que foi entregue (link, material…)"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
@@ -543,18 +547,21 @@ function NewOfferButton() {
               {/* Os tetos sao os mesmos da coluna e da API (que recusa com 400 dizendo o campo):
                   sem eles aqui, a pessoa podia digitar mais e tomar 409 sem entender o motivo. */}
               <Input
+                aria-label="Categoria (design, código, escrita…)"
                 placeholder="Categoria (design, código, escrita…)"
                 value={f.category}
                 maxLength={40}
                 onChange={(e) => setF({ ...f, category: e.target.value })}
               />
               <Input
+                aria-label="Título (mín. 5 caracteres)"
                 placeholder="Título (mín. 5 caracteres)"
                 value={f.title}
                 maxLength={160}
                 onChange={(e) => setF({ ...f, title: e.target.value })}
               />
               <Textarea
+                aria-label="Descrição (mín. 20 caracteres)"
                 rows={3}
                 placeholder="Descrição (mín. 20 caracteres)"
                 value={f.description}
@@ -562,6 +569,7 @@ function NewOfferButton() {
                 onChange={(e) => setF({ ...f, description: e.target.value })}
               />
               <Input
+                aria-label="Entregáveis (obrigatório)"
                 placeholder="Entregáveis (obrigatório)"
                 value={f.deliverables}
                 maxLength={1000}
@@ -570,12 +578,14 @@ function NewOfferButton() {
 
               <div className="flex gap-2">
                 <Input
+                  aria-label="Preço"
                   type="number"
                   min={1}
                   value={f.price}
                   onChange={(e) => setF({ ...f, price: e.target.value })}
                 />
                 <Input
+                  aria-label="Prazo (dias)"
                   type="number"
                   min={1}
                   value={f.deliveryDays}
@@ -664,18 +674,21 @@ function NewRequestButton() {
 
             <div className="mt-3 space-y-2">
               <Input
+                aria-label="Categoria"
                 placeholder="Categoria"
                 value={f.category}
                 maxLength={40}
                 onChange={(e) => setF({ ...f, category: e.target.value })}
               />
               <Input
+                aria-label="Título (mín. 5 caracteres)"
                 placeholder="Título (mín. 5 caracteres)"
                 value={f.title}
                 maxLength={160}
                 onChange={(e) => setF({ ...f, title: e.target.value })}
               />
               <Textarea
+                aria-label="Descrição (mín. 20 caracteres)"
                 rows={3}
                 placeholder="Descrição (mín. 20 caracteres)"
                 value={f.description}
@@ -683,6 +696,7 @@ function NewRequestButton() {
                 onChange={(e) => setF({ ...f, description: e.target.value })}
               />
               <Input
+                aria-label="Entregáveis e critérios de aceite (obrigatório)"
                 placeholder="Entregáveis e critérios de aceite (obrigatório)"
                 value={f.deliverables}
                 maxLength={1000}
@@ -691,6 +705,7 @@ function NewRequestButton() {
 
               <div className="flex gap-2">
                 <Input
+                  aria-label="Orçamento mínimo"
                   type="number"
                   min={1}
                   placeholder="mín"
@@ -698,6 +713,7 @@ function NewRequestButton() {
                   onChange={(e) => setF({ ...f, budgetMin: e.target.value })}
                 />
                 <Input
+                  aria-label="Orçamento máximo"
                   type="number"
                   min={1}
                   placeholder="máx"

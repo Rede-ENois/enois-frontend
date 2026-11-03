@@ -8,7 +8,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#faf9ff",
+  "background_color": "#f7f4fb",
   "theme_color": "#6746f5",
   "categories": ["social", "lifestyle", "games"],
   "icons": [

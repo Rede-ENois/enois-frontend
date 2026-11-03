@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { ConversationItemProps } from "@/types/routes/messages/conversation-item-props";
 import { ConversationItem as ConversationItemView } from "@rede-enois/design-system/domain";
 
@@ -34,9 +35,13 @@ export function ConversationItem({
     conversation.lastMessageE2e ? "" : (conversation.lastMessage ?? ""),
   );
   const [decryptingPreview, setDecryptingPreview] = useState(!!conversation.lastMessageE2e);
+  // False while the preview is a placeholder (no local key, decryption failed): it is no one's
+  // text, so it gets no author either.
+  const [previewReadable, setPreviewReadable] = useState(true);
   useEffect(() => {
     if (!conversation.lastMessageE2e || !conversation.lastMessage || !conversation.lastMessageIv) {
       setPreview(conversation.lastMessage ?? "");
+      setPreviewReadable(true);
       setDecryptingPreview(false);
       return;
     }
@@ -46,6 +51,7 @@ export function ConversationItem({
       if (cancelled) return;
       if (!has) {
         setPreview("🔒");
+        setPreviewReadable(false);
         setDecryptingPreview(false);
         return;
       }
@@ -58,12 +64,14 @@ export function ConversationItem({
         .then((plain) => {
           if (!cancelled) {
             setPreview(plain);
+            setPreviewReadable(true);
             setDecryptingPreview(false);
           }
         })
         .catch(() => {
           if (!cancelled) {
             setPreview("[Mensagem cifrada]");
+            setPreviewReadable(false);
             setDecryptingPreview(false);
           }
         });
@@ -80,9 +88,27 @@ export function ConversationItem({
 
   const { peer, profileHref } = conversationPeer(conversation, otherId, otherUser);
 
+  // Who wrote the preview: "Você" for the viewer; in a group, the sender's first name, since the
+  // row shows the group and not the author.
+  const from = conversation.lastMessageFrom ?? undefined;
+  const mine = !!currentUserId && from === currentUserId;
+  const groupSenderId = conversation.kind === "GROUP" && !mine ? from : undefined;
+  const { data: groupSender } = useQuery({
+    ...profileQueries.byId(groupSenderId ?? ""),
+    enabled: !!groupSenderId,
+  });
+  const groupSenderName = groupSenderId
+    ? conversationPeer(conversation, groupSenderId, groupSender).peer?.name?.split(" ")[0]
+    : undefined;
+  const author = mine ? texts.messages.you : groupSenderName;
+  const lastMessage =
+    preview && previewReadable && author
+      ? texts.messages.authoredPreview(author, preview)
+      : preview;
+
   return (
     <ConversationItemView
-      conversation={{ ...conversation, lastMessage: preview }}
+      conversation={{ ...conversation, lastMessage }}
       peer={peer}
       profileHref={profileHref}
       timeLabel={conversation.time ? formatTime(conversation.time) : ""}

@@ -1,6 +1,8 @@
 import { type CSSProperties, useId, useMemo, useState } from "react";
 
 import { texts } from "@/texts";
+import type { CosmeticCatalogProps } from "@/types/components/wallet/cosmetic-catalog-props";
+import type { LookNaLoja } from "@/types/components/wallet/look-na-loja";
 import { cn, useMessages } from "@rede-enois/design-system";
 import {
   COSMETIC_KINDS,
@@ -41,20 +43,23 @@ const PAGE_SIZE = 24;
 const EVERYTHING = "*";
 
 /**
- * The collection tabs in shop order: what can be bought today comes first (collections in
- * season, then the year-round classics, `null`), and out-of-season collections close the row.
- * Same order as the design system's newer releases, which the published package does not
- * export yet.
+ * The collection tabs in shop order: the collections in season, then the year-round classics
+ * (`null`). A collection outside its window is not a tab at all — it is not in the shop.
  */
 function shopTabs(
   collections: readonly CosmeticShopCollection[],
   hasClassics: boolean,
 ): (CosmeticShopCollection | null)[] {
-  return [
-    ...collections.filter((c): boolean => c.available),
-    ...(hasClassics ? [null] : []),
-    ...collections.filter((c): boolean => !c.available),
-  ];
+  return [...collections.filter((c): boolean => c.available), ...(hasClassics ? [null] : [])];
+}
+
+/**
+ * What the shop may show: the pieces on sale today and the ones the person already owns — a
+ * bought piece stays at hand to be equipped after its season ends. A piece out of season that
+ * nobody owns is not in the shop, so it never shows up as a locked card.
+ */
+function onSale(items: readonly CosmeticShopItem[]): CosmeticShopItem[] {
+  return items.filter((item): boolean => item.available || Boolean(item.owned));
 }
 
 /** A look's pieces that are in the catalog, grouped by kind in the shop's chip order. */
@@ -109,9 +114,12 @@ export function CosmeticCatalog({
   onBuyLook,
   onEquip,
   onUnequip,
+  onEquipLook,
+  onUnequipLook,
+  lookPending = null,
   renderCollectionExtra,
   initialCollection,
-}: CosmeticShopProps) {
+}: CosmeticCatalogProps) {
   const messages = useMessages().cosmeticShop;
   const [picked, setPicked] = useState<string | null | undefined>(initialCollection);
   const [kind, setKind] = useState<CosmeticKind | "ALL">("ALL");
@@ -121,10 +129,14 @@ export function CosmeticCatalog({
   const [replay, setReplay] = useState(0);
   const headingId = useId();
 
-  const catalog = useMemo(() => items ?? [], [items]);
+  const catalog = useMemo(() => onSale(items ?? []), [items]);
   const itemsById = useMemo(
     () => new Map(catalog.map((item): [string, CosmeticShopItem] => [item.id, item])),
     [catalog],
+  );
+  const listedCollections = useMemo(
+    () => collections.filter((collection): boolean => collection.available),
+    [collections],
   );
 
   if (loading) return <LoadingState />;
@@ -146,13 +158,15 @@ export function CosmeticCatalog({
   const pool = shopPool(catalog, collections, { collection, query });
   const counts = countByKind(pool);
   const listed = kind === "ALL" ? pool : pool.filter((item) => item.kind === kind);
-  const current = collections.find((c) => c.id === collection);
+  const current = listedCollections.find((c) => c.id === collection);
   const preview = previewProfile(user, tryOn);
   const tryingNames = Object.values(tryOn.items)
     .map((id) => itemsById.get(id)?.name)
     .filter(Boolean)
     .join(", ");
-  const lookTried = collections.flatMap((c) => c.looks).find((look) => look.id === tryOn.look);
+  const lookTried = listedCollections
+    .flatMap((c) => c.looks)
+    .find((look) => look.id === tryOn.look);
 
   const resetPage = () => setVisible(PAGE_SIZE);
   const tryItem = (item: CosmeticShopItem) => {
@@ -162,6 +176,20 @@ export function CosmeticCatalog({
   const wearLook = (look: CosmeticShopLook) => {
     setTryOn(tryLook(look, itemsById));
     setReplay((n) => n + 1);
+  };
+
+  /**
+   * A look that is already the viewer's is not a try-on: the click wears it on the profile, and
+   * the next click takes it off. A look with a piece missing still only tries on — nothing is
+   * bought by clicking a card.
+   */
+  const toggleLook = (look: LookNaLoja) => {
+    if (!look.owned) {
+      wearLook(look);
+      return;
+    }
+    if (look.equipped) onUnequipLook?.(look.id);
+    else onEquipLook?.(look.id);
   };
 
   const action = (item: CosmeticShopItem) => {
@@ -178,7 +206,8 @@ export function CosmeticCatalog({
       );
     }
     if (!item.purchasable) return <span className="cos-shop__note">{messages.reward}</span>;
-    if (!item.available) return <span className="cos-shop__note">{messages.outOfSeason}</span>;
+    // `available` não volta a faltar aqui: o que está fora da temporada e não é seu não entra na
+    // lista, e o que é seu cai no ramo de equipar acima.
     return (
       <Button size="sm" disabled={actionPending} onClick={() => onBuy(item.id)}>
         {messages.buy}
@@ -195,7 +224,6 @@ export function CosmeticCatalog({
   const pieceNote = (item: CosmeticShopItem): string | null => {
     if (item.owned) return null;
     if (!item.purchasable) return messages.reward;
-    if (!item.available) return messages.outOfSeason;
     return null;
   };
 
@@ -212,7 +240,7 @@ export function CosmeticCatalog({
         </button>
       );
     }
-    if (!item.purchasable || !item.available) return null;
+    if (!item.purchasable) return null;
     return (
       <button
         type="button"
@@ -228,7 +256,7 @@ export function CosmeticCatalog({
     );
   };
 
-  const look = (entry: CosmeticShopLook, available: boolean, collectionName: string) => {
+  const look = (entry: LookNaLoja, collectionName: string) => {
     const missing = lookMissing(entry, itemsById);
     const themeId = entry.items.find((id) => itemsById.get(id)?.kind === "CARD_THEME");
     const theme = cardTheme(themeId);
@@ -238,10 +266,24 @@ export function CosmeticCatalog({
     const groups = piecesByKind(entry.items, itemsById);
     // O rótulo conta o que está na tela: um id fora do catálogo não vira peça fantasma.
     const pieceCount = groups.reduce((total, [, pieces]) => total + pieces.length, 0);
+    // O servidor diz se cada peça é da pessoa; sem essa resposta, as peças respondem.
+    const owned = entry.owned ?? missing.length === 0;
+    const worn = owned && entry.equipped === true;
+    const pending = lookPending === entry.id;
+    // Os textos de vestir/tirar o look ainda não estão no design system: ficam em `texts`.
+    const label = !owned
+      ? messages.wearLook(entry.title)
+      : worn
+        ? texts.cosmetics.unequipLook(entry.title)
+        : texts.cosmetics.equipLook(entry.title);
     return (
       <li
         key={entry.id}
-        className={cn("cos-look", on ? "is-on" : "cos-still")}
+        className={cn(
+          "cos-look",
+          on ? "is-on" : "cos-still",
+          worn && "border-growth ring-1 ring-growth",
+        )}
         style={
           theme
             ? ({ "--lt": theme.top, "--lb": theme.bottom, color: theme.fg } as CSSProperties)
@@ -251,9 +293,10 @@ export function CosmeticCatalog({
         <button
           type="button"
           className="cos-look__stage"
-          aria-pressed={on}
-          aria-label={messages.wearLook(entry.title)}
-          onClick={() => wearLook(entry)}
+          aria-pressed={worn}
+          aria-label={label}
+          disabled={pending}
+          onClick={() => toggleLook(entry)}
         >
           <UserAvatar
             src={user.avatar}
@@ -276,9 +319,18 @@ export function CosmeticCatalog({
 
         <div className="cos-look__foot">
           <span>{collectionName}</span>
-          {missing.length === 0 ? (
-            <span className="cos-shop__owned">{messages.lookOwned}</span>
-          ) : available ? (
+          {worn ? (
+            <span className="cos-shop__owned">{texts.cosmetics.lookWearing}</span>
+          ) : owned ? (
+            <button
+              type="button"
+              className="font-extrabold text-growth underline underline-offset-2 disabled:opacity-60"
+              disabled={pending}
+              onClick={() => toggleLook(entry)}
+            >
+              {texts.cosmetics.lookWear}
+            </button>
+          ) : (
             <Button
               size="sm"
               disabled={actionPending}
@@ -288,8 +340,6 @@ export function CosmeticCatalog({
               <Sparkles aria-hidden />
               {entry.priceLabel}
             </Button>
-          ) : (
-            <span className="cos-shop__note">{messages.outOfSeason}</span>
           )}
         </div>
 
@@ -360,13 +410,10 @@ export function CosmeticCatalog({
           onClick={() => tryItem(item)}
         >
           <span className="cos-item__kind">{messages.kind[item.kind]}</span>
-          {item.owned ? (
+          {item.owned && (
             <span className="cos-item__tag is-owned">
               {item.equipped ? messages.equipped : messages.owned}
             </span>
-          ) : (
-            !item.available &&
-            item.purchasable && <span className="cos-item__tag">{messages.outOfSeason}</span>
           )}
           <CosmeticItemArt item={item} user={user} variant="stage" />
         </button>
@@ -394,11 +441,11 @@ export function CosmeticCatalog({
   };
 
   const album = current ? albumPage(catalog, current.id) : null;
-  const done = completedCollections(catalog, collections);
+  const done = completedCollections(catalog, listedCollections);
 
   return (
     <div className="cos-shop">
-      {collections.some((c) => c.looks.length > 0) && (
+      {listedCollections.some((c) => c.looks.length > 0) && (
         <section className="cos-shop__looks" aria-labelledby={`${headingId}-looks`}>
           <header className="cos-shop__head">
             <h2 id={`${headingId}-looks`}>{messages.looksTitle}</h2>
@@ -407,7 +454,7 @@ export function CosmeticCatalog({
           </header>
 
           <ul className="cos-shop__look-grid">
-            {collections.flatMap((c) => c.looks.map((entry) => look(entry, c.available, c.name)))}
+            {listedCollections.flatMap((c) => c.looks.map((entry) => look(entry, c.name)))}
           </ul>
         </section>
       )}
@@ -442,7 +489,7 @@ export function CosmeticCatalog({
                 {texts.cosmetics.shop.allTab}
               </button>
 
-              {shopTabs(collections, hasClassics).map((c) => (
+              {shopTabs(listedCollections, hasClassics).map((c) => (
                 <button
                   key={c?.id ?? "classics"}
                   type="button"
@@ -578,7 +625,7 @@ export function CosmeticCatalog({
               <header>
                 <h3 id={`${headingId}-album`}>{messages.albumTitle}</h3>
 
-                <span>{messages.albumProgress(done, collections.length)}</span>
+                <span>{messages.albumProgress(done, listedCollections.length)}</span>
               </header>
 
               <div className="cos-album__page">

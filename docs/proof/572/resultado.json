@@ -1,0 +1,132 @@
+{
+  "resultado": [
+    {
+      "width": 1280,
+      "abriu": true,
+      "antes": {
+        "cards": [
+          {
+            "titulo": "Saci-pererê",
+            "altura": 255,
+            "topo": 327,
+            "aberto": false
+          },
+          {
+            "titulo": "Fogueira",
+            "altura": 255,
+            "topo": 327,
+            "aberto": false
+          },
+          {
+            "titulo": "Neve",
+            "altura": 255,
+            "topo": 327,
+            "aberto": false
+          },
+          {
+            "titulo": "Festa",
+            "altura": 259,
+            "topo": 327,
+            "aberto": false
+          }
+        ],
+        "docWidth": 1280,
+        "clientWidth": 1280
+      },
+      "depois": {
+        "cards": [
+          {
+            "titulo": "Saci-pererê",
+            "altura": 706,
+            "topo": 327,
+            "aberto": true
+          },
+          {
+            "titulo": "Fogueira",
+            "altura": 255,
+            "topo": 327,
+            "aberto": false
+          },
+          {
+            "titulo": "Neve",
+            "altura": 255,
+            "topo": 327,
+            "aberto": false
+          },
+          {
+            "titulo": "Festa",
+            "altura": 259,
+            "topo": 327,
+            "aberto": false
+          }
+        ],
+        "docWidth": 1280,
+        "clientWidth": 1280
+      }
+    },
+    {
+      "width": 390,
+      "abriu": true,
+      "antes": {
+        "cards": [
+          {
+            "titulo": "Saci-pererê",
+            "altura": 255,
+            "topo": 358,
+            "aberto": false
+          },
+          {
+            "titulo": "Fogueira",
+            "altura": 255,
+            "topo": 358,
+            "aberto": false
+          },
+          {
+            "titulo": "Neve",
+            "altura": 255,
+            "topo": 625,
+            "aberto": false
+          },
+          {
+            "titulo": "Festa",
+            "altura": 255,
+            "topo": 625,
+            "aberto": false
+          }
+        ],
+        "docWidth": 390,
+        "clientWidth": 390
+      },
+      "depois": {
+        "cards": [
+          {
+            "titulo": "Saci-pererê",
+            "altura": 614,
+            "topo": 358,
+            "aberto": true
+          },
+          {
+            "titulo": "Fogueira",
+            "altura": 255,
+            "topo": 358,
+            "aberto": false
+          },
+          {
+            "titulo": "Neve",
+            "altura": 255,
+            "topo": 984,
+            "aberto": false
+          },
+          {
+            "titulo": "Festa",
+            "altura": 255,
+            "topo": 984,
+            "aberto": false
+          }
+        ],
+        "docWidth": 390,
+        "clientWidth": 390
+      }
+    }
+  ]
+}

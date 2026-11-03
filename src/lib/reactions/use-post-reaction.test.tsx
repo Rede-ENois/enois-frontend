@@ -173,6 +173,38 @@ describe("Reações rápidas de uma publicação", () => {
     await act(async () => response.resolve({ counters: { ...post.counters, reactions: 1 } }));
   });
 
+  it("não revalida a aba 'Ainda não vi', para o post não sumir no clique", async () => {
+    // A aba "Ainda não vi" recebe a consulta real do feed; a "Tudo" serve de controle.
+    const unseenKey = ["feed", "UNSEEN", "", ""] as const;
+    const allKey = ["feed", "ALL", "", ""] as const;
+    const pagina = { pages: [{ items: [{ ...post }], nextCursor: null }], pageParams: [null] };
+    client.setQueryData(unseenKey, pagina);
+    client.setQueryData(allKey, pagina);
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+
+    await act(async () => controls[0].toggle("LOVE"));
+
+    // A revalidação do feed leva um `predicate`; é ele que decide quais abas são refeitas.
+    const doFeed = invalidate.mock.calls
+      .map(([filtros]) => filtros)
+      .filter((filtros) => filtros?.queryKey?.[0] === "feed")
+      .map((filtros) => filtros!.predicate)
+      .filter((predicate) => predicate !== undefined);
+
+    expect(doFeed).toHaveLength(1);
+    const passa = (key: readonly unknown[]) =>
+      doFeed[0]!({ queryKey: key } as Parameters<NonNullable<(typeof doFeed)[number]>>[0]);
+
+    expect(passa(["feed", "UNSEEN", "", ""])).toBe(false);
+    expect(passa(["feed", "ALL", "", ""])).toBe(true);
+    expect(passa(["feed", "FOR_YOU", "", ""])).toBe(true);
+
+    // O post continua na aba, com a reação refletida.
+    const unseen = client.getQueryData<FeedPages>(unseenKey);
+    expect(unseen?.pages[0].items[0].currentUserReaction).toBe("LOVE");
+    expect(unseen?.pages[0].items).toHaveLength(1);
+  });
+
   it("restaura o estado após falha e permite uma nova tentativa", async () => {
     const response = deferredResponse();
     mocks.react.mockReturnValueOnce(response.promise);
