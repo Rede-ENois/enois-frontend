@@ -52,6 +52,9 @@ const collectionsSchema = z.array(
         items: z.array(z.string().min(1)),
         statusIcon: z.string().nullable(),
         statusText: z.string().nullable(),
+        /** Ausentes sem sessão: a loja pública não tem dono. */
+        owned: z.boolean().optional(),
+        equipped: z.boolean().optional(),
       }),
     ),
   }),
@@ -102,6 +105,15 @@ export const lojaApi = {
   unequip: async (itemId: string): Promise<{ id: string; equipped: boolean }> =>
     equippedSchema.parse(
       await api.post<unknown>(`/loja/${encodeURIComponent(itemId)}/desequipar`, {}),
+    ),
+  /** Veste um look inteiro que já é seu, sem comprar nada. */
+  equipLook: async (lookId: string): Promise<{ id: string; equipped: boolean }> =>
+    equippedSchema.parse(
+      await api.post<unknown>(`/loja/looks/${encodeURIComponent(lookId)}/equipar`, {}),
+    ),
+  unequipLook: async (lookId: string): Promise<{ id: string; equipped: boolean }> =>
+    equippedSchema.parse(
+      await api.post<unknown>(`/loja/looks/${encodeURIComponent(lookId)}/desequipar`, {}),
     ),
   /** Empty text clears the status; `icon` is a free icon or the icon of an owned official badge. */
   setStatus: async (text: string, icon: string | null): Promise<ProfileStatus> =>

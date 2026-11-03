@@ -3156,6 +3156,8 @@ export const texts = {
   cosmetics: {
     bought: "Item comprado. Agora é só equipar.",
     lookBought: "Look comprado e vestido no seu perfil.",
+    lookEquipped: "Look vestido no seu perfil.",
+    lookUnequipped: "Look guardado. As peças continuam suas.",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
     /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */

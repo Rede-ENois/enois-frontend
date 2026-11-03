@@ -112,6 +112,9 @@ export function CosmeticCatalog({
   onBuyLook,
   onEquip,
   onUnequip,
+  onEquipLook,
+  onUnequipLook,
+  lookPending = null,
   renderCollectionExtra,
   initialCollection,
 }: CosmeticShopProps) {
@@ -171,6 +174,20 @@ export function CosmeticCatalog({
   const wearLook = (look: CosmeticShopLook) => {
     setTryOn(tryLook(look, itemsById));
     setReplay((n) => n + 1);
+  };
+
+  /**
+   * A look that is already the viewer's is not a try-on: the click wears it on the profile, and
+   * the next click takes it off. A look with a piece missing still only tries on — nothing is
+   * bought by clicking a card.
+   */
+  const toggleLook = (look: CosmeticShopLook) => {
+    if (!look.owned) {
+      wearLook(look);
+      return;
+    }
+    if (look.equipped) onUnequipLook?.(look.id);
+    else onEquipLook?.(look.id);
   };
 
   const action = (item: CosmeticShopItem) => {
@@ -247,10 +264,23 @@ export function CosmeticCatalog({
     const groups = piecesByKind(entry.items, itemsById);
     // O rótulo conta o que está na tela: um id fora do catálogo não vira peça fantasma.
     const pieceCount = groups.reduce((total, [, pieces]) => total + pieces.length, 0);
+    // O servidor diz se cada peça é da pessoa; sem essa resposta, as peças respondem.
+    const owned = entry.owned ?? missing.length === 0;
+    const worn = owned && entry.equipped === true;
+    const pending = lookPending === entry.id;
+    const label = !owned
+      ? messages.wearLook(entry.title)
+      : worn
+        ? messages.unequipLook(entry.title)
+        : messages.equipLook(entry.title);
     return (
       <li
         key={entry.id}
-        className={cn("cos-look", on ? "is-on" : "cos-still")}
+        className={cn(
+          "cos-look",
+          on ? "is-on" : "cos-still",
+          worn && "border-growth ring-1 ring-growth",
+        )}
         style={
           theme
             ? ({ "--lt": theme.top, "--lb": theme.bottom, color: theme.fg } as CSSProperties)
@@ -260,9 +290,10 @@ export function CosmeticCatalog({
         <button
           type="button"
           className="cos-look__stage"
-          aria-pressed={on}
-          aria-label={messages.wearLook(entry.title)}
-          onClick={() => wearLook(entry)}
+          aria-pressed={worn}
+          aria-label={label}
+          disabled={pending}
+          onClick={() => toggleLook(entry)}
         >
           <UserAvatar
             src={user.avatar}
@@ -285,8 +316,17 @@ export function CosmeticCatalog({
 
         <div className="cos-look__foot">
           <span>{collectionName}</span>
-          {missing.length === 0 ? (
-            <span className="cos-shop__owned">{messages.lookOwned}</span>
+          {worn ? (
+            <span className="cos-shop__owned">{messages.lookWearing}</span>
+          ) : owned ? (
+            <button
+              type="button"
+              className="font-extrabold text-growth underline underline-offset-2 disabled:opacity-60"
+              disabled={pending}
+              onClick={() => toggleLook(entry)}
+            >
+              {messages.lookWear}
+            </button>
           ) : (
             <Button
               size="sm"
