@@ -200,3 +200,35 @@ describe("campo do comentário", () => {
     expect(lastField().placeholder).toBe("Responder Pessoa…");
   });
 });
+
+describe("troca de publicação com o mesmo componente", () => {
+  it("mostra só os comentários da publicação nova, mesmo se a resposta da anterior chegar depois", async () => {
+    let answerOld: (value: unknown) => void = () => undefined;
+    mocks.list.mockImplementation((postId: string) =>
+      postId === "old"
+        ? new Promise((resolve) => {
+            answerOld = resolve;
+          })
+        : Promise.resolve({ items: [comment("new-comment", 2)], nextCursor: null }),
+    );
+    usePostCardStore.getState().initializePostCard("old");
+    usePostCardStore.getState().initializePostCard("new");
+    const render = (postId: string) =>
+      act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId={postId} postAuthorId="author" />
+          </QueryClientProvider>,
+        ),
+      );
+
+    await render("old");
+    await render("new");
+    await settle();
+    // The previous post's answer arrives late: it must not replace the new post's comments.
+    await act(async () => answerOld({ items: [comment("old-comment", 1)], nextCursor: null }));
+    await settle();
+
+    expect(order()).toEqual(["new-comment"]);
+  });
+});
