@@ -1,6 +1,8 @@
 import { type CSSProperties, useId, useMemo, useState } from "react";
 
 import { texts } from "@/texts";
+import type { CosmeticCatalogProps } from "@/types/components/wallet/cosmetic-catalog-props";
+import type { LookNaLoja } from "@/types/components/wallet/look-na-loja";
 import { cn, useMessages } from "@rede-enois/design-system";
 import {
   COSMETIC_KINDS,
@@ -117,7 +119,7 @@ export function CosmeticCatalog({
   lookPending = null,
   renderCollectionExtra,
   initialCollection,
-}: CosmeticShopProps) {
+}: CosmeticCatalogProps) {
   const messages = useMessages().cosmeticShop;
   const [picked, setPicked] = useState<string | null | undefined>(initialCollection);
   const [kind, setKind] = useState<CosmeticKind | "ALL">("ALL");
@@ -181,7 +183,7 @@ export function CosmeticCatalog({
    * the next click takes it off. A look with a piece missing still only tries on — nothing is
    * bought by clicking a card.
    */
-  const toggleLook = (look: CosmeticShopLook) => {
+  const toggleLook = (look: LookNaLoja) => {
     if (!look.owned) {
       wearLook(look);
       return;
@@ -254,7 +256,7 @@ export function CosmeticCatalog({
     );
   };
 
-  const look = (entry: CosmeticShopLook, collectionName: string) => {
+  const look = (entry: LookNaLoja, collectionName: string) => {
     const missing = lookMissing(entry, itemsById);
     const themeId = entry.items.find((id) => itemsById.get(id)?.kind === "CARD_THEME");
     const theme = cardTheme(themeId);
@@ -268,11 +270,12 @@ export function CosmeticCatalog({
     const owned = entry.owned ?? missing.length === 0;
     const worn = owned && entry.equipped === true;
     const pending = lookPending === entry.id;
+    // Os textos de vestir/tirar o look ainda não estão no design system: ficam em `texts`.
     const label = !owned
       ? messages.wearLook(entry.title)
       : worn
-        ? messages.unequipLook(entry.title)
-        : messages.equipLook(entry.title);
+        ? texts.cosmetics.unequipLook(entry.title)
+        : texts.cosmetics.equipLook(entry.title);
     return (
       <li
         key={entry.id}
@@ -317,7 +320,7 @@ export function CosmeticCatalog({
         <div className="cos-look__foot">
           <span>{collectionName}</span>
           {worn ? (
-            <span className="cos-shop__owned">{messages.lookWearing}</span>
+            <span className="cos-shop__owned">{texts.cosmetics.lookWearing}</span>
           ) : owned ? (
             <button
               type="button"
@@ -325,7 +328,7 @@ export function CosmeticCatalog({
               disabled={pending}
               onClick={() => toggleLook(entry)}
             >
-              {messages.lookWear}
+              {texts.cosmetics.lookWear}
             </button>
           ) : (
             <Button
