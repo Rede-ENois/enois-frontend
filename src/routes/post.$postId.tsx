@@ -158,7 +158,9 @@ function PostDetail() {
           </div>
         ) : (
           <>
-            <PostCard post={post} fullPost />
+            {/* Keyed by post: going from one post to another (a notification while reading) gets a
+                fresh card, not the previous one's comments and edit drafts. */}
+            <PostCard key={post.id} post={post} fullPost />
 
             {/* Artigo: o corpo vem so na leitura do post unico (a listagem traz o resumo), entao e
                 aqui que ele aparece — na mesma largura de leitura do resto. */}

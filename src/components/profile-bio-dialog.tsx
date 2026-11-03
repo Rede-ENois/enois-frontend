@@ -9,6 +9,7 @@ import { ProfileBioDialog as ProfileBioDialogView } from "@rede-enois/design-sys
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { profileApi } from "@/lib/api";
+import { ApiError } from "@/lib/api-client";
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
@@ -29,7 +30,9 @@ export function ProfileBioDialog({ initialHtml, onSaved }: ProfileBioDialogProps
       toast(texts.profile.bioHtml.saved);
       onSaved();
     },
-    onError: () => toast(texts.profile.bioHtml.error, "error"),
+    // The API says why (too long, nothing valid left after cleaning); the generic line hid it.
+    onError: (error) =>
+      toast(error instanceof ApiError ? error.message : texts.profile.bioHtml.error, "error"),
   });
 
   return (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -127,18 +127,28 @@ export function PostComments({
       return a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
     });
 
+  // The post this list belongs to now. Moving from one post to another keeps the component (the post
+  // page reuses it): a late answer for the previous post must not land on the new one, or its
+  // comments showed under the new post and reactions went to the old one.
+  const currentPostId = useRef(postId);
+  currentPostId.current = postId;
+
   const loadFirstPage = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setComments([]);
+    setCursor(null);
+    setHasMore(false);
     try {
       const page = await commentsApi.list(postId, null, pageSize);
+      if (currentPostId.current !== postId) return;
       setComments(oldestFirst(page.items));
       setCursor(page.nextCursor);
       setHasMore(Boolean(page.nextCursor));
     } catch {
-      setError("load");
+      if (currentPostId.current === postId) setError("load");
     } finally {
-      setLoading(false);
+      if (currentPostId.current === postId) setLoading(false);
     }
   }, [postId, pageSize]);
 
@@ -151,11 +161,12 @@ export function PostComments({
     setLoadingMore(true);
     try {
       const page = await commentsApi.list(postId, cursor, pageSize);
+      if (currentPostId.current !== postId) return;
       setComments((current) => oldestFirst([...current, ...page.items]));
       setCursor(page.nextCursor);
       setHasMore(Boolean(page.nextCursor));
     } catch {
-      setError("load");
+      if (currentPostId.current === postId) setError("load");
     } finally {
       setLoadingMore(false);
     }

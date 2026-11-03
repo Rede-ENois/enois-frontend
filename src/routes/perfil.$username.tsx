@@ -42,6 +42,7 @@ import {
   Clock,
   Flag,
   Gamepad2,
+  IdCard,
   Image as ImageIcon,
   Link as LinkIcon,
   MapPin,
@@ -80,6 +81,7 @@ import { profileQueries } from "@/lib/query-options/profiles";
 import { isApprovedSoundCloudEmbed } from "@/lib/soundcloud-embed";
 import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
+import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
@@ -202,6 +204,8 @@ function Profile() {
 
   const user = liveProfile ?? loaderUser;
   const isOwnProfile = me?.id === user.id;
+  // The professional side is a separate interface: on the own profile this is the way across.
+  const professional = useProfessionalIdentity();
 
   const { data: contributorSeals } = useQuery({
     queryKey: ["contributor-seals", user.username],
@@ -532,7 +536,7 @@ function Profile() {
                     </span>
                   )}
                   {/* Cidade estruturada: o dono vê a sua (vinda de /me, mesmo privada) e edita;
-                      quem visita só recebe a cidade quando o dono escolheu mostrar. */}
+                    quem visita só recebe a cidade quando o dono escolheu mostrar. */}
                   {isOwnProfile ? (
                     <button
                       type="button"
@@ -595,8 +599,31 @@ function Profile() {
                       </Button>
                     </EditProfileDialog>
 
+                    {professional.applicant ? (
+                      <Link
+                        to="/profissional/$username"
+                        params={{ username: professional.applicant.username }}
+                      >
+                        <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                          <IdCard className="h-4 w-4" />
+
+                          <>{texts.profile.professionalProfile}</>
+                        </Button>
+                      </Link>
+                    ) : (
+                      professional.professionalSetupHref && (
+                        <Link to="/profissional">
+                          <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                            <IdCard className="h-4 w-4" />
+
+                            <>{texts.profile.professionalSetup}</>
+                          </Button>
+                        </Link>
+                      )
+                    )}
+
                     {/* UM botão para a capa: o diálogo já oferece as duas formas (foto ou HTML).
-                        Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
+                      Havia dois abrindo o mesmo diálogo — um deles com o rótulo antigo. */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -644,7 +671,7 @@ function Profile() {
                     />
 
                     {/* Personalização do tema: fica no próprio perfil, que é onde a pessoa
-                        cuida da conta. As cores valem só neste dispositivo. */}
+                      cuida da conta. As cores valem só neste dispositivo. */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -656,23 +683,21 @@ function Profile() {
                       <>{texts.appearance.action}</>
                     </Button>
 
-                    {/* Aparência da VITRINE: o visual que quem visita vê, separado do tema da
-                        conta acima (esse é de quem olha e vale no dispositivo). */}
-                    {myProfile && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full gap-1.5"
-                        onClick={() => setLookOpen(true)}
-                      >
-                        <Sparkles className="h-4 w-4" />
+                    {/* Aparência da vitrine: o tema que os VISITANTES veem. Fica ao lado da
+                      aparência da conta porque as duas são "como meu perfil se parece". */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full gap-1.5"
+                      onClick={() => setLookOpen(true)}
+                    >
+                      <Sparkles className="h-4 w-4" />
 
-                        <>{texts.profile.lookAction}</>
-                      </Button>
-                    )}
+                      <>{texts.profile.lookAction}</>
+                    </Button>
 
                     {/* Sem identidade verificada a reputação é multiplicada por zero: o caminho para
-                        resolver (confirmar e-mail ou ligar o 2FA) fica aqui, no próprio perfil. */}
+                      resolver (confirmar e-mail ou ligar o 2FA) fica aqui, no próprio perfil. */}
                     {authMe && !authMe.identityVerified && (
                       <Link to="/seguranca">
                         <Button size="sm" className="rounded-full gap-1.5">
@@ -894,24 +919,24 @@ function Profile() {
 
               {user.bioHtml ? (
                 /* Bio em HTML: card próprio, com o título "Sobre" só na linha de cima e o quadro
-                   abaixo encostando nas três bordas. Antes usava o `Section` (que tem padding em
-                   volta) com o quadro de celular centralizado — a sobra em volta e a moldura clara
-                   do iframe eram o que parecia "borda branca". */
+                 abaixo encostando nas três bordas. Antes usava o `Section` (que tem padding em
+                 volta) com o quadro de celular centralizado — a sobra em volta e a moldura clara
+                 do iframe eram o que parecia "borda branca". */
                 <section
                   id="sobre"
                   className="scroll-mt-20 overflow-hidden rounded-2xl border border-border-soft bg-surface-card shadow-[0_18px_50px_-42px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
                 >
                   {/* Sem canto no card: a bio em HTML vai até as bordas (o raio do card recortava os
-                      cantos dela — era o que sobrava de arredondamento). */}
+                    cantos dela — era o que sobrava de arredondamento). */}
 
                   <h2 className="px-4 pb-3 pt-4 text-base font-normal text-text-strong sm:px-6 sm:pt-6">
                     <>{texts.profile.sections.about}</>
                   </h2>
 
                   {/* Sem borda, sem cantos e sem folga interna do quadro: o card dá o acabamento e o
-                      HTML do autor usa todo o resto do espaço. O quadro cresce com o conteúdo, mas
-                      com TETO: uma bio gigante — ou um `100vh` colado por engano — para de crescer
-                      aqui em vez de empurrar a página inteira para baixo. */}
+                    HTML do autor usa todo o resto do espaço. O quadro cresce com o conteúdo, mas
+                    com TETO: uma bio gigante — ou um `100vh` colado por engano — para de crescer
+                    aqui em vez de empurrar a página inteira para baixo. */}
                   <SandboxedHtmlFrame
                     html={user.bioHtml}
                     title={texts.profile.bioHtml.frameTitle}
@@ -932,13 +957,13 @@ function Profile() {
               )}
 
               {/* Projetos: cards abaixo da bio — estruturados (stack, repo, status, diário)
-                  ou o HTML próprio do autor. O dono gerencia por aqui mesmo. */}
+                ou o HTML próprio do autor. O dono gerencia por aqui mesmo. */}
               <div id="projetos" className="scroll-mt-20">
                 <ProfileProjectsSection username={user.username} isOwner={isOwnProfile} />
               </div>
 
               {/* Trajetória profissional logo abaixo dos projetos: cargo, empresa, período
-                  (com "atual") e descrição, como no LinkedIn. */}
+                (com "atual") e descrição, como no LinkedIn. */}
               <ProfileExperiencesSection username={user.username} />
 
               {user.skills.length > 0 && (
@@ -1065,8 +1090,8 @@ function Profile() {
               )}
 
               {/* A seção é OPCIONAL (pedido via suporte): quem desligou nas configurações não vê —
-                  a preferência é de quem LÊ, não do perfil visitado. Desde 2026-10-20 a lista é de
-                  CHEGADA (mais recentes primeiro), e o texto acima da lista diz isso. */}
+                a preferência é de quem LÊ, não do perfil visitado. Desde 2026-10-20 a lista é de
+                CHEGADA (mais recentes primeiro), e o texto acima da lista diz isso. */}
               {me?.showRanking !== false && rankingData && rankingData.length > 0 && (
                 <Section title={texts.profile.sections.ranking} icon={Trophy}>
                   <p className="-mt-1 mb-2 text-xs font-normal text-text-subtle">
@@ -1091,7 +1116,7 @@ function Profile() {
                         </div>
 
                         {/* A coluna da direita é QUANDO chegou (o número de reputação não descreve
-                            mais esta lista). */}
+                          mais esta lista). */}
                         {joinedLabel(u.joinedAt) && (
                           <span className="shrink-0 text-xs font-normal text-text-subtle">
                             {joinedLabel(u.joinedAt)}
@@ -1163,12 +1188,12 @@ function Profile() {
         contributor={isOwnProfile && isContributor}
         contributorTagColor={user.contributorTagColor ?? null}
       />
-      {isOwnProfile && myProfile && (
+      {isOwnProfile && (
         <ProfileLookDialog
           open={lookOpen}
           onOpenChange={setLookOpen}
           value={
-            myProfile.profileAppearance ?? {
+            myProfile?.profileAppearance ?? {
               social: socialLook ?? EMPTY_PROFILE_LOOK,
               professional: EMPTY_PROFILE_LOOK,
             }

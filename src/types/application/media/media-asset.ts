@@ -7,5 +7,8 @@ export type MediaAsset = {
   status: string;
   uploadUrl: string | null;
   cdnUrl: string | null;
+  /** Pixel size, when the server knows it (images). */
+  width?: number | null;
+  height?: number | null;
   createdAt: string;
 };
