@@ -20,6 +20,11 @@ export type Notification = {
   actorStyle?: AuthorNameStyle | null;
   title: string;
   body: string;
+  /**
+   * Trecho do post/comentário de origem, já em texto puro. A lista mostra abaixo do `body`;
+   * ausente (ou vazio) = a linha aparece como antes. Backend anterior a este campo não manda.
+   */
+  preview?: string | null;
   createdAt: string;
   read: boolean;
   href: string;
