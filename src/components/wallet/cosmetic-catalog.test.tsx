@@ -96,6 +96,8 @@ describe("Catálogo da loja", () => {
     onBuyLook: vi.fn(),
     onEquip: vi.fn(),
     onUnequip: vi.fn(),
+    onEquipLook: vi.fn(),
+    onUnequipLook: vi.fn(),
   };
 
   function render(props: { items?: CosmeticShopItem[]; collections?: CosmeticShopCollection[] }) {
@@ -269,6 +271,56 @@ describe("Catálogo da loja", () => {
 
     // Fora de temporada: a peça não aparece no look.
     expect(look.textContent).not.toContain("Abóbora");
+  });
+
+  it("o look que já é meu veste no primeiro clique e sai no segundo", async () => {
+    const mine = (equipped: boolean): CosmeticShopCollection[] => [
+      {
+        id: "saci",
+        name: "Dia do Saci",
+        available: true,
+        looks: [
+          {
+            id: "look-saci",
+            title: "Saci-pererê",
+            items: ["tema-noite", "moldura-redemoinho", "emblema-abobora"],
+            priceLabel: "30",
+            owned: true,
+            equipped,
+          },
+        ],
+      },
+    ];
+
+    // Fora do perfil: o card veste, sem comprar nada.
+    await render({ collections: mine(false) });
+    const stage = host.querySelector<HTMLButtonElement>(".cos-look__stage")!;
+    expect(stage.getAttribute("aria-pressed")).toBe("false");
+    expect(stage.getAttribute("aria-label")).toBe("Vestir o meu look Saci-pererê");
+    await click(stage);
+    expect(actions.onEquipLook).toHaveBeenCalledWith("look-saci");
+    expect(actions.onBuyLook).not.toHaveBeenCalled();
+    expect(actions.onUnequipLook).not.toHaveBeenCalled();
+
+    // No perfil: o mesmo clique tira.
+    await render({ collections: mine(true) });
+    const worn = host.querySelector<HTMLButtonElement>(".cos-look__stage")!;
+    expect(worn.getAttribute("aria-pressed")).toBe("true");
+    expect(worn.getAttribute("aria-label")).toBe("Tirar o look Saci-pererê do meu perfil");
+    expect(host.querySelector(".cos-look")!.textContent).toContain("Vestindo");
+    await click(worn);
+    expect(actions.onUnequipLook).toHaveBeenCalledWith("look-saci");
+    expect(actions.onEquipLook).toHaveBeenCalledTimes(1);
+  });
+
+  it("o look com peça faltando continua só provando, sem comprar pelo clique", async () => {
+    await render({ collections: lookCollections });
+    const stage = host.querySelector<HTMLButtonElement>(".cos-look__stage")!;
+    expect(stage.getAttribute("aria-label")).toBe("Vestir o look Saci-pererê");
+    await click(stage);
+    expect(actions.onEquipLook).not.toHaveBeenCalled();
+    expect(actions.onUnequipLook).not.toHaveBeenCalled();
+    expect(actions.onBuyLook).not.toHaveBeenCalled();
   });
 
   it("sem coleções cadastradas, a loja continua mostrando tudo o que está à venda", async () => {
