@@ -83,6 +83,17 @@ export function CosmeticShop() {
     onSuccess: onSuccess(texts.cosmetics.unequipped, (id) => [id]),
     onError,
   });
+  // Look inteiro que já é seu: um clique veste, outro guarda — sem passar pela compra.
+  const equipLook = useMutation({
+    mutationFn: (id: string) => lojaApi.equipLook(id),
+    onSuccess: onSuccess(texts.cosmetics.lookEquipped, lookItems),
+    onError,
+  });
+  const unequipLook = useMutation({
+    mutationFn: (id: string) => lojaApi.unequipLook(id),
+    onSuccess: onSuccess(texts.cosmetics.lookUnequipped, lookItems),
+    onError,
+  });
 
   const items = useMemo(
     (): CosmeticShopItem[] | undefined =>
@@ -119,6 +130,13 @@ export function CosmeticShop() {
       onBuyLook={(id) => buyLook.mutate(id)}
       onEquip={(id) => equip.mutate(id)}
       onUnequip={(id) => unequip.mutate(id)}
+      onEquipLook={(id) => equipLook.mutate(id)}
+      onUnequipLook={(id) => unequipLook.mutate(id)}
+      lookPending={
+        (equipLook.isPending && equipLook.variables) ||
+        (unequipLook.isPending && unequipLook.variables) ||
+        null
+      }
       renderCollectionExtra={(id) => (DUEL_COLLECTIONS.has(id) ? <SaciDuelPanel /> : null)}
     />
   );
