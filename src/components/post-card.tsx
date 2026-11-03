@@ -225,15 +225,25 @@ function PostCardContainer({
       ? `/profissional/${post.authorUsername}`
       : `/perfil/${post.authorUsername}`;
 
+  // O DS espera campos flat (repostedByName/Avatar/Username); o backend manda um objeto aninhado.
+  const dsPost = post.repostedBy
+    ? {
+        ...post,
+        repostedByName: post.repostedBy.name,
+        repostedByAvatar: post.repostedBy.avatar,
+        repostedByUsername: post.repostedBy.username,
+      }
+    : post;
+
   return (
     <PostCardView
-      post={post}
+      post={dsPost}
       hrefs={{
         author: authorHref,
         post: feedTab ? `/post/${post.id}?feedTab=${feedTab}` : `/post/${post.id}`,
         community: post.community ? `/comunidades/${post.community.id}` : null,
         repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
-        repostedBy: post.repostedByUsername ? `/perfil/${post.repostedByUsername}` : null,
+        repostedBy: post.repostedBy?.username ? `/perfil/${post.repostedBy.username}` : null,
         blog: `/blog/${post.authorUsername}/${post.id}`,
       }}
       timeLabel={formatTime(post.createdAt)}
