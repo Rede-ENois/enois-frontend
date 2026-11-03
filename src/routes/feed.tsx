@@ -81,6 +81,7 @@ import {
   useInterfaceContext,
 } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
+import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -875,71 +876,76 @@ function Home() {
                     <div
                       className={`grid gap-2 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                     >
-                      {media.map((item, i) => (
-                        <div
-                          key={i}
-                          className="relative overflow-hidden rounded-xl border border-border-soft"
-                        >
-                          <SpoilerPreview
-                            active={mediaSpoiler}
-                            label={texts.posts.mediaSpoiler.badge}
+                      {media.map((item, i) => {
+                        // A prévia é `blob:` do arquivo que a própria pessoa escolheu; o `src`
+                        // só recebe esse esquema.
+                        const previewUrl = mediaPreviewUrl(item.preview);
+                        return (
+                          <div
+                            key={i}
+                            className="relative overflow-hidden rounded-xl border border-border-soft"
                           >
-                            <img
-                              src={item.preview}
-                              alt=""
-                              className={`h-48 w-full object-cover bg-surface-1 ${item.moderationStatus === "prohibited" ? "scale-105 blur-lg" : ""}`}
-                            />
-                          </SpoilerPreview>
+                            <SpoilerPreview
+                              active={mediaSpoiler}
+                              label={texts.posts.mediaSpoiler.badge}
+                            >
+                              <img
+                                src={previewUrl}
+                                alt=""
+                                className={`h-48 w-full object-cover bg-surface-1 ${item.moderationStatus === "prohibited" ? "scale-105 blur-lg" : ""}`}
+                              />
+                            </SpoilerPreview>
 
-                          {item.moderationStatus === "prohibited" && (
-                            <div className="absolute inset-0 grid place-items-center bg-surface-card/75 p-3 text-center backdrop-blur-sm">
-                              <div className="max-w-xs">
-                                <Gift
-                                  aria-hidden
-                                  className="mx-auto mb-1 h-6 w-6 animate-bounce text-primary"
-                                />
+                            {item.moderationStatus === "prohibited" && (
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/75 p-3 text-center backdrop-blur-sm">
+                                <div className="max-w-xs">
+                                  <Gift
+                                    aria-hidden
+                                    className="mx-auto mb-1 h-6 w-6 animate-bounce text-primary"
+                                  />
 
-                                <p className="text-sm font-semibold text-text-strong">
-                                  {texts.feed.composer.imageProhibitedTitle}
-                                </p>
+                                  <p className="text-sm font-semibold text-text-strong">
+                                    {texts.feed.composer.imageProhibitedTitle}
+                                  </p>
 
-                                <p className="mt-1 text-xs text-text-muted">
-                                  {texts.feed.composer.imageProhibitedMessage}
-                                </p>
+                                  <p className="mt-1 text-xs text-text-subtle">
+                                    {texts.feed.composer.imageProhibitedMessage}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {item.moderationStatus === "checking" && (
-                            <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
-                              <span className="rounded-full bg-surface-card px-3 py-1 text-xs text-text-strong">
-                                {texts.feed.composer.imageChecking}
-                              </span>
-                            </div>
-                          )}
-                          {item.moderationStatus === "blocked" && (
-                            <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
-                              {item.moderationError ?? texts.feed.composer.imageCheckError}
-                            </div>
-                          )}
+                            {item.moderationStatus === "checking" && (
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                                <span className="rounded-full bg-surface-card px-3 py-1 text-xs text-text-strong">
+                                  {texts.feed.composer.imageChecking}
+                                </span>
+                              </div>
+                            )}
+                            {item.moderationStatus === "blocked" && (
+                              <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
+                                {item.moderationError ?? texts.feed.composer.imageCheckError}
+                              </div>
+                            )}
 
-                          <button
-                            type="button"
-                            onClick={() => removeMedia(i)}
-                            aria-label={texts.feed.composer.removeMedia}
-                            title={texts.feed.composer.removeMedia}
-                            className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
+                            <button
+                              type="button"
+                              onClick={() => removeMedia(i)}
+                              aria-label={texts.feed.composer.removeMedia}
+                              title={texts.feed.composer.removeMedia}
+                              className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-surface-card/80 text-text-strong shadow hover:bg-surface-card"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="relative overflow-hidden rounded-xl border border-border-soft">
                       <SpoilerPreview active={mediaSpoiler} label={texts.posts.mediaSpoiler.badge}>
                         <video
-                          src={media[0].preview}
+                          src={mediaPreviewUrl(media[0].preview)}
                           controls
                           className="max-h-64 w-full bg-surface-1"
                         />
