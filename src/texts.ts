@@ -2728,6 +2728,40 @@ export const texts = {
   },
 
   /**
+   * Lição de bons modos: o aviso educativo que aparece quando a moderação barra um arquivo
+   * impróprio no envio. É didático de propósito — quem vê já perdeu o arquivo, então a tela
+   * explica a regra em vez de só recusar.
+   */
+  conductLesson: {
+    badge: "Advertência no Boletim",
+    title: "Sentadinho(a) aí! Lição de bons modos 👨‍🏫",
+    description: "Conteúdo sexual detectado e barrado pela moderação.",
+    intro:
+      "Achou que a coordenação não ia ver? No Énóis levamos o respeito a sério. Anote as regras:",
+    rules: {
+      feed: {
+        title: "O feed não é quarto trancado:",
+        body: "Nudez e pornografia são proibidos na rede.",
+      },
+      moderation: {
+        title: "A moderação não dorme:",
+        body: "Nossa IA detecta e barra violações em tempo real.",
+      },
+      build: {
+        title: "Foque no que constrói:",
+        body: "Compartilhe projetos, debates e ideias construtivas.",
+      },
+      repeat: {
+        title: "Reincidência dá suspensão:",
+        body: "Insistir em burlar as regras gera banimento.",
+      },
+    },
+    dismiss: "Entendido, Professor! Prometo ter bons modos",
+    open: "Ver aula de bons modos",
+    openShort: "Ver aula",
+  },
+
+  /**
    * Painel de moderador: candidatura (credibilidade >= 200 + aprovação) e votação das denúncias.
    * Admins (allowlist de username no backend) decidem candidaturas e podem punir qualquer usuário.
    */
