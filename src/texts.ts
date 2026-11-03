@@ -1076,6 +1076,10 @@ export const texts = {
       emotes:
         "As figurinhas das conversas não são nossas nem foram feitas por nós: vêm do BetterTTV e do FrankerFaceZ, e cada uma continua pertencendo a quem a criou. O énóis não vende, não licencia e não usa essas imagens fora do site — mantém só uma cópia em cache, para elas abrirem na hora nas conversas. Se você é autor de uma figurinha e quer que ela saia do ar aqui, escreva pela página de contato e ela sai.",
       emotesRemoval: "Pedir a remoção de uma figurinha",
+      kenneyTitle: "Arte de cena dos looks",
+      kenney:
+        "Os cenários dos looks prontos da loja são feitos com sprites de Kenney (kenney.nl), doados ao domínio público sob a licença Creative Commons Zero (CC0 1.0). O crédito não é exigido pela licença — a arte pode ser copiada, modificada e usada à vontade —, mas fica aqui porque o desenho é de outra pessoa.",
+      kenneyCredit: "Kenney.nl · licença CC0 1.0",
     },
   },
 
