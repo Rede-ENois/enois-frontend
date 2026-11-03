@@ -1,0 +1,65 @@
+[
+  {
+    "name": "licao-1280",
+    "dialogOpen": true,
+    "rules": [
+      "O feed não é quarto trancado:",
+      "A moderação não dorme:",
+      "Foque no que constrói:",
+      "Reincidência dá suspensão:"
+    ],
+    "title": "Sentadinho(a) aí! Lição de bons modos 👨‍🏫",
+    "dismiss": "Entendido, Professor! Prometo ter bons modos",
+    "dialogWidth": 486,
+    "dialogHeight": 402,
+    "dialogScrolls": 0,
+    "pageOverflow": 0,
+    "bodyOverflow": 0
+  },
+  {
+    "name": "licao-390",
+    "dialogOpen": true,
+    "rules": [
+      "O feed não é quarto trancado:",
+      "A moderação não dorme:",
+      "Foque no que constrói:",
+      "Reincidência dá suspensão:"
+    ],
+    "title": "Sentadinho(a) aí! Lição de bons modos 👨‍🏫",
+    "dismiss": "Entendido, Professor! Prometo ter bons modos",
+    "dialogWidth": 358,
+    "dialogHeight": 465,
+    "dialogScrolls": 0,
+    "pageOverflow": 0,
+    "bodyOverflow": 0
+  },
+  {
+    "name": "previa-feed-1280",
+    "hasBlockedPreview": true,
+    "hasReopenButton": true,
+    "pageOverflow": 0
+  },
+  {
+    "name": "previa-feed-390",
+    "hasBlockedPreview": true,
+    "hasReopenButton": true,
+    "pageOverflow": 0
+  },
+  {
+    "name": "reabre-pela-previa",
+    "dialogOpen": true,
+    "rules": [
+      "O feed não é quarto trancado:",
+      "A moderação não dorme:",
+      "Foque no que constrói:",
+      "Reincidência dá suspensão:"
+    ],
+    "title": "Sentadinho(a) aí! Lição de bons modos 👨‍🏫",
+    "dismiss": "Entendido, Professor! Prometo ter bons modos",
+    "dialogWidth": 512,
+    "dialogHeight": 424,
+    "dialogScrolls": 0,
+    "pageOverflow": 0,
+    "bodyOverflow": 0
+  }
+]

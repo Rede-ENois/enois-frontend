@@ -58,7 +58,7 @@ export function ConductLessonDialog({ open, onOpenChange }: ConductLessonDialogP
                   <>{texts.conductLesson.title}</>
                 </DialogTitle>
 
-                <DialogDescription className="truncate text-[11px] text-text-subtle">
+                <DialogDescription className="text-[11px] text-text-subtle">
                   <>{texts.conductLesson.description}</>
                 </DialogDescription>
               </DialogHeader>
