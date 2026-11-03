@@ -40,11 +40,12 @@ import {
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
+  AlertTriangle,
   ArrowLeft,
   Camera,
   Crown,
   EyeOff,
-  Gift,
+  GraduationCap,
   Paperclip,
   Send,
   Settings,
@@ -69,6 +70,7 @@ import { CommunityFavoriteButton } from "@/components/community-favorite-button"
 import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
+import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { PostCard } from "@/components/post-card";
 import { PollComposer } from "@/components/post/poll-composer";
 import { RichText } from "@/components/post/rich-text";
@@ -144,6 +146,7 @@ function CommunityDetail() {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [conductLessonOpen, setConductLessonOpen] = useState(false);
 
   // `joined` depende de QUEM pergunta, e o SSR nao tem sessao: o dado do loader chega com
   // joined=false. Com o staleTime global de 30s esse dado valia como fresco no cliente, entao a
@@ -320,16 +323,18 @@ function CommunityDetail() {
               ),
             ),
           )
-          .catch((error: unknown) =>
+          .catch((error: unknown) => {
+            const isProhibited =
+              error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED";
+            if (isProhibited) {
+              setConductLessonOpen(true);
+            }
             setMedia((current) =>
               current.map((entry) =>
                 entry.preview === preview
                   ? {
                       ...entry,
-                      moderationStatus:
-                        error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED"
-                          ? "prohibited"
-                          : "blocked",
+                      moderationStatus: isProhibited ? "prohibited" : "blocked",
                       moderationError:
                         error instanceof Error
                           ? error.message
@@ -337,8 +342,8 @@ function CommunityDetail() {
                     }
                   : entry,
               ),
-            ),
-          );
+            );
+          });
       }
     }
     event.target.value = "";
@@ -753,13 +758,23 @@ function CommunityDetail() {
                     </SpoilerPreview>
                     {item.moderationStatus === "prohibited" && (
                       <div
-                        className="absolute inset-0 grid place-items-center bg-surface-card/80"
+                        className="absolute inset-0 grid place-items-center bg-surface-card/85 p-2 text-center backdrop-blur-md"
                         title={`${texts.feed.composer.imageProhibitedTitle}: ${texts.feed.composer.imageProhibitedMessage}`}
                       >
-                        <Gift
-                          aria-label={texts.feed.composer.imageProhibitedTitle}
-                          className="h-6 w-6 animate-bounce text-primary"
-                        />
+                        <div className="flex flex-col items-center">
+                          <AlertTriangle
+                            aria-label={texts.feed.composer.imageProhibitedTitle}
+                            className="h-6 w-6 text-amber-500 dark:text-amber-400 animate-pulse"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => setConductLessonOpen(true)}
+                            className="mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-300 underline hover:no-underline"
+                          >
+                            Ver aula
+                          </button>
+                        </div>
 
                         <span className="sr-only">
                           {texts.feed.composer.imageProhibitedMessage}
@@ -869,6 +884,8 @@ function CommunityDetail() {
           </aside>
         </div>
       </div>
+
+      <ConductLessonDialog open={conductLessonOpen} onOpenChange={setConductLessonOpen} />
     </AppContainer>
   );
 }
