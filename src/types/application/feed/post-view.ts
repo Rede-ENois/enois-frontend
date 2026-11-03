@@ -1,6 +1,7 @@
 import type { PostCommunity } from "@/types/application/community/post-community";
 import type { MyPostNote } from "@/types/application/feed/my-post-note";
 import type { PollView } from "@/types/application/feed/poll-view";
+import type { PostMedia } from "@/types/application/feed/post-media";
 import type { PostNote } from "@/types/application/feed/post-note";
 import type { AuthorContributorTag } from "@/types/application/profile/author-contributor-tag";
 import type { AuthorNameStyle } from "@/types/application/profile/author-name-style";
@@ -75,6 +76,11 @@ export type PostView = {
   articleBody?: string | null;
   tags: string[];
   mediaIds: string[];
+  /**
+   * The attachments of `mediaIds`, sent with the post (with their size) so the card draws them
+   * without one request per file and at its final height.
+   */
+  media?: PostMedia[];
   mediaSpoiler?: boolean;
   createdAt: string;
   visibility: "PUBLIC" | "CONNECTIONS" | "MENTORS";
