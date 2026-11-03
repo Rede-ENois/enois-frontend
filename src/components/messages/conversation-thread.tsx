@@ -27,6 +27,7 @@ import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
 import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
 import { profileQueries } from "@/lib/query-options/profiles";
+import { useConversationOnScreen } from "@/lib/use-conversation-on-screen";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
@@ -90,6 +91,13 @@ export function ConversationThread({
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
   const { messages, decrypting } = useDecryptedMessages(rawMessages);
+
+  const latestIncoming = [...rawMessages].reverse().find((m) => m.from !== currentUserId);
+  useConversationOnScreen(
+    conversation.id,
+    conversation.unread,
+    isLoadingMessages || showingPreviousThread ? undefined : (latestIncoming?.id ?? null),
+  );
 
   const sendMessage = useMutation({
     mutationFn: ({

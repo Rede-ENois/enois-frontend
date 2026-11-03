@@ -197,11 +197,6 @@ function Mensagens() {
       return next;
     });
 
-  const markAsRead = useMutation({
-    mutationFn: (conversationId: string) => messagesApi.markAsRead(conversationId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["conversations"] }),
-  });
-
   if (e2eReady === false && authMe) {
     return (
       <AppContainer>
@@ -416,8 +411,8 @@ function Mensagens() {
                       toggleSelected(c.id);
                       return;
                     }
+                    // A conversa aberta se marca como lida (useConversationOnScreen no filão).
                     setActiveId(c.id);
-                    if (c.unread > 0) markAsRead.mutate(c.id);
                   }}
                 />
               ))
