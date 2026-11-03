@@ -1111,6 +1111,11 @@ export const texts = {
     },
     you: "Você",
     refreshing: "Atualizando publicações…",
+    scrollDebug: {
+      copy: "Copiar relatório de rolagem",
+      copied: "Relatório copiado. Cole na conversa com o time.",
+      failed: "Não deu para copiar. Tente de novo.",
+    },
     loadingMore: "Carregando mais publicações…",
     endOfFeed: "Você viu tudo por enquanto.",
     loadMore: "Carregar mais",

@@ -390,3 +390,12 @@ que a API devolve em `/users/{username}/seals` e `/seals/criteria`; `sealEmblemS
 no cartão do selo no perfil (`ProfileSeals`, via `emblemSrc` do design system). Não há escolha de
 emblema: ele é consequência do nível calculado pelo backend. Regras em `docs/CONTRIBUTION_SEALS.md`
 do backend.
+
+## Feed scroll probe
+
+`VirtualizedFeedList` carries an opt-in probe for people who see the feed jump. Opening
+`/feed?debug=scroll` turns it on for the browser session (`lib/feed/scroll-debug`): it records every
+card that changes height (post id, old and new height, scroll before and after), scroll jumps over
+150px in one event and every change of the post list. A "Copiar relatório de rolagem" button copies
+the device line plus the last 800 entries to paste in a chat. Off by default; the virtualizer's own
+resize runs untouched, the probe only reads around it. No personal data goes in the report.
