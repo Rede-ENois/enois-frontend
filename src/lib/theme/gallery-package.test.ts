@@ -346,6 +346,67 @@ describe("buildGalleryPackage", () => {
     expect(palette.background).not.toBe(BRAND_GROUND.dark);
   });
 
+  it("qualquer plano de fundo livre publica, inclusive a faixa de luminância média", () => {
+    // A varredura de cima só troca o widget e a página, e aí o fundo é sempre o da coleção. Com um
+    // plano de fundo livre a pessoa escolhe a cor do fundo, e a faixa do meio é a que dói: o texto
+    // forte passa raspando no fundo mas não no cartão composto sobre ele. Era ali que o pacote
+    // saía recusado (`#707070` dava 4,24:1 no par de texto forte com o cartão).
+    const solidPage = (color: string) => ({
+      type: "solid" as const,
+      color,
+      alpha: 100,
+      from: color,
+      fromAlpha: 100,
+      to: color,
+      toAlpha: 100,
+      direction: "diagonal" as const,
+      angle: 135,
+    });
+    const hsl = (hue: number, saturation: number, lightness: number): string => {
+      const chroma = (saturation / 100) * Math.min(lightness / 100, 1 - lightness / 100);
+      const channel = (offset: number) => {
+        const k = (offset + hue / 30) % 12;
+        const value = lightness / 100 - chroma * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+        return Math.round(value * 255)
+          .toString(16)
+          .padStart(2, "0");
+      };
+      return `#${channel(0)}${channel(8)}${channel(4)}`;
+    };
+    const backgrounds = [
+      "#707070",
+      "#737373",
+      "#367d36",
+      ...Array.from({ length: 720 }, (_, index) => {
+        const hue = (index % 6) * 60;
+        const saturation = [30, 70][Math.floor(index / 6) % 2];
+        const lightness = [25, 40, 55, 70, 85][Math.floor(index / 12) % 5];
+        return hsl(hue, saturation, lightness);
+      }),
+    ];
+
+    const recusas: string[] = [];
+    for (const collection of THEME_COLLECTIONS) {
+      for (const mode of ["light", "dark"] as const) {
+        for (const color of new Set(backgrounds)) {
+          const { packageJson } = buildGalleryPackage({
+            collectionId: collection.id,
+            settings: {
+              accent: { hue: 262, chroma: 0.2, lightness: 0.6 },
+              background: { hue: 262, chroma: 0.02 },
+            },
+            mode,
+            page: solidPage(color),
+          });
+          for (const recusa of recusasDoServidor(packageJson)) {
+            recusas.push(`${collection.id} (${mode}) fundo ${color}: ${recusa}`);
+          }
+        }
+      }
+    }
+    expect(recusas).toEqual([]);
+  }, 60_000);
+
   it("sem coleção, cai nos tons da marca do modo atual", () => {
     const light = parse(
       buildGalleryPackage({

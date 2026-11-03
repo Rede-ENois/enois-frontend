@@ -174,7 +174,7 @@ export function buildGalleryPackage(input: {
   let surface = preferredSurface;
   let surfaceSolid = over(surface, background, surfaceAlpha);
   if (!passes(strong, [surfaceSolid])) {
-    for (let amount = 0.1; amount <= 0.95; amount += 0.05) {
+    for (let amount = 0.1; amount < 1; amount += 0.05) {
       const candidate = mix(preferredSurface, background, amount);
       const solid = over(candidate, background, surfaceAlpha);
       if (passes(strong, [solid])) {
@@ -183,9 +183,12 @@ export function buildGalleryPackage(input: {
         break;
       }
     }
-    // Nem colado no fundo o texto passa? O fundo é o problema, não o cartão.
+    // Nem colado no fundo o texto passa? Então o fundo é o problema, e não há cartão que salve: o
+    // servidor compõe o cartão sobre o fundo e mede o mesmo par duas vezes. Colar no fundo é o
+    // único pacote honesto; afastar o cartão na direção do relevo derrubava o par no meio da
+    // faixa (fundo `#707070` ia de 4,82 para 4,24).
     if (!passes(strong, [surfaceSolid])) {
-      surface = mix(background, lift, 0.06);
+      surface = background;
       surfaceSolid = over(surface, background, surfaceAlpha);
     }
   }
