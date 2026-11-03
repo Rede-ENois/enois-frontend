@@ -2,16 +2,43 @@
 // prévia bloqueada no compositor do feed, a 390 e 1280 px. App real (Vite dev) com sessão semeada
 // no localStorage e um backend falso em BACKEND_TARGET. Todo nome e valor aqui é obviamente falso.
 //
+//   PLAYWRIGHT_PATH=<caminho de playwright-core/index.js> node docs/proof/611/shot-611.mjs
 //   node docs/proof/611/shot-611.mjs
 //
 // O mock responde o envio com 422 IMAGE_CONTENT_NOT_ALLOWED pelo caminho same-origin
 // (/api/storage/...), que é o único em que o erro chega como ApiError ao compositor.
 // Mede `scrollWidth - clientWidth` do documento e do diálogo em 1280 e 390 px.
-import { chromium } from "/home/mel/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.mjs";
 import { writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+
+// O Playwright não é dependência do app: passa-se o caminho do pacote em PLAYWRIGHT_PATH (o que
+// `npm root -g` ou o cache do npx entregam), e sem ele o próprio npx resolve.
+const playwrightPath = process.env.PLAYWRIGHT_PATH ?? (await npxPlaywright());
+const { chromium } = await import(playwrightPath);
+
+async function npxPlaywright() {
+  const { execFileSync } = await import("node:child_process");
+  const { pathToFileURL } = await import("node:url");
+  const root = execFileSync("npm", ["root", "-g"], { encoding: "utf8" }).trim();
+  for (const dir of [root]) {
+    for (const name of ["playwright", "playwright-core"]) {
+      try {
+        return pathToFileURL(
+          execFileSync("node", ["-p", `require.resolve("${dir}/${name}")`], {
+            encoding: "utf8",
+          }).trim(),
+        ).href;
+      } catch {
+        // Próximo candidato.
+      }
+    }
+  }
+  throw new Error(
+    "Playwright não encontrado: instale (npm i -g playwright) ou defina PLAYWRIGHT_PATH.",
+  );
+}
 
 const APP = "http://127.0.0.1:5178";
 const MOCK_PORT = 8124;
@@ -128,10 +155,13 @@ try {
 
   // A sessão do app vive no localStorage; a rota /sobre existe sem login e grava ali.
   await page.goto(`${APP}/sobre`, { waitUntil: "domcontentloaded" });
-  await page.evaluate((eu) => {
-    localStorage.setItem("session_active", "1");
-    localStorage.setItem("current_user", JSON.stringify(eu));
-  }, { id: EU.id, username: EU.username, name: EU.name });
+  await page.evaluate(
+    (eu) => {
+      localStorage.setItem("session_active", "1");
+      localStorage.setItem("current_user", JSON.stringify(eu));
+    },
+    { id: EU.id, username: EU.username, name: EU.name },
+  );
 
   await page.goto(`${APP}/feed`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector('input[type="file"]', { state: "attached", timeout: 30000 });
