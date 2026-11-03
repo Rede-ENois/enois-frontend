@@ -7,6 +7,7 @@ import { ProfileBannerDialog as ProfileBannerDialogView } from "@rede-enois/desi
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { lojaApi, profileApi } from "@/lib/api";
+import { ApiError } from "@/lib/api-client";
 import { cosmeticErrorMessage, invalidateCosmetics } from "@/lib/cosmetics";
 
 import { BannerHtmlFrame } from "@/components/banner-html-frame";
@@ -48,7 +49,9 @@ export function ProfileBannerDialog({
       toast(texts.profile.bannerHtml.saved);
       onSaved();
     },
-    onError: () => toast(texts.profile.bannerHtml.error, "error"),
+    // The API says why (too long, nothing valid left after cleaning); the generic line hid it.
+    onError: (error) =>
+      toast(error instanceof ApiError ? error.message : texts.profile.bannerHtml.error, "error"),
   });
   const ownCover = useMutation({
     mutationFn: (id: string) => lojaApi.unequip(id),
