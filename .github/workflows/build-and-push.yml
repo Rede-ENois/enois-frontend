@@ -19,6 +19,12 @@ on:
       - qa
   workflow_dispatch:
 
+# One deploy per branch at a time, newest wins: two merges seconds apart used to race and the
+# older commit's deploy could finish last, leaving qa on the previous build.
+concurrency:
+  group: build-and-push-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   HARBOR_REGISTRY: harbor.b7cloud.top
   HARBOR_PROJECT: enois
