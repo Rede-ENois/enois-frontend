@@ -5,4 +5,6 @@ export type NavigationCounts = {
   summary: UnreadSummary | undefined;
   unreadMessages: number;
   pendingRequests: number;
+  /** Modules turned off in personalization: their notices stay out of the panel, so out of the count. */
+  disabledModules: ReadonlySet<string>;
 };

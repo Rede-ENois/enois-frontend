@@ -9,6 +9,7 @@ import { messagesApi, notificationsApi } from "@/lib/api";
 import { useInterfaceContext } from "@/lib/interface-context";
 import { networkQueries } from "@/lib/query-options/network";
 import { useIsAuthenticated } from "@/lib/use-auth";
+import { useDisabledModules } from "@/lib/use-personalization";
 
 /** Areas whose news lights the Explore entry (their rooms live there, not in the menu). */
 export const EXPLORE_MODULES: NotificationModule[] = ["COMMUNITY_GAMES", "DAILY_GAMES"];
@@ -26,7 +27,14 @@ export function signalFor(
     return counts.pendingRequests > 0 ? { kind: "count", count: counts.pendingRequests } : null;
   }
   if (target.href === "/notificacoes") {
-    const notices = (counts.summary?.total ?? 0) - (counts.summary?.byModule.MESSAGES ?? 0);
+    // The summary already leaves out messages and connection requests (their own signals); what is
+    // left is what the notices panel lists, minus the modules turned off there too.
+    const summary = counts.summary;
+    const hidden = [...counts.disabledModules].reduce(
+      (sum, module) => sum + (summary?.byModule[module as NotificationModule] ?? 0),
+      0,
+    );
+    const notices = (summary?.total ?? 0) - hidden;
     return notices > 0 ? { kind: "count", count: notices } : null;
   }
   // An event happening today is the one time-bound signal: it wins over the news dot.
@@ -60,6 +68,7 @@ export function signalFor(
 export function useNavigationCounts(): NavigationCounts {
   const authenticated = useIsAuthenticated();
   const context = useInterfaceContext();
+  const disabledModules = useDisabledModules();
 
   const { data: summary } = useQuery({
     // Under ["notifications"]: reading one (or all) invalidates the summary with the list.
@@ -82,6 +91,7 @@ export function useNavigationCounts(): NavigationCounts {
 
   return {
     summary,
+    disabledModules,
     unreadMessages: messages?.count ?? 0,
     pendingRequests: (requests?.items ?? []).filter(
       (request) => request.status === "PENDING" && request.direction === "INCOMING" && request.peer,
