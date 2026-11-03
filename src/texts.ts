@@ -3158,6 +3158,11 @@ export const texts = {
     lookBought: "Look comprado e vestido no seu perfil.",
     lookEquipped: "Look vestido no seu perfil.",
     lookUnequipped: "Look guardado. As peças continuam suas.",
+    /** O card do look pronto: o clique veste, e o próximo clique guarda. */
+    equipLook: (title: string) => `Vestir o meu look ${title}`,
+    unequipLook: (title: string) => `Tirar o look ${title} do meu perfil`,
+    lookWearing: "Vestindo",
+    lookWear: "Vestir",
     equipped: "Item equipado no seu perfil.",
     unequipped: "Item guardado. Ele continua seu.",
     /** Peças de um look prontas para comprar uma a uma, agrupadas pelo tipo do item. */

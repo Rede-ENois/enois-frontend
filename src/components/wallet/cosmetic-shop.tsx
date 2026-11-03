@@ -5,11 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import type { LojaItem } from "@/types/application/loja/loja-item";
-import type {
-  CosmeticShopCollection,
-  CosmeticShopItem,
-  CosmeticShopLook,
-} from "@rede-enois/design-system/domain";
+import type { CosmeticShopCollection, CosmeticShopItem } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { lojaApi } from "@/lib/api";
@@ -107,7 +103,7 @@ export function CosmeticShop() {
     if (!collections.data) return undefined;
     return collections.data.map((collection): CosmeticShopCollection => ({
       ...collection,
-      looks: collection.looks.map((look): CosmeticShopLook => ({
+      looks: collection.looks.map((look) => ({
         ...look,
         priceLabel: formatFaisca(lookPriceMf(look, itemsById)),
       })),
