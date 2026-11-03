@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { useAppShellStore } from "@/stores/app-shell.store";
 import { texts } from "@/texts";
 import type { InboxTab } from "@/types/routes/messages/inbox-tab";
 import { ConversationListSkeletons, UserAvatar } from "@rede-enois/design-system/domain";
@@ -18,6 +19,7 @@ import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
 import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
+import { cn } from "@/lib/utils";
 
 import { AppContainer } from "@/components/app-container";
 import { SaciSpot } from "@/components/events/saci-spot";
@@ -131,6 +133,13 @@ function Mensagens() {
     enabled: Boolean(activeId) && !listed && !isLoadingConversations,
   });
   const activeConversation = listed ?? linkedConversation ?? null;
+  // An open thread takes the whole phone screen: the dock steps aside (and comes back on leaving).
+  const setConversationOpen = useAppShellStore((state) => state.setConversationOpen);
+  const conversationOpen = activeConversation !== null;
+  useEffect(() => {
+    setConversationOpen(conversationOpen);
+    return () => setConversationOpen(false);
+  }, [conversationOpen, setConversationOpen]);
   useEffect(() => {
     if (linkedConversation?.context && linkedConversation.context !== context) {
       writeStoredContext(linkedConversation.context);
@@ -214,7 +223,15 @@ function Mensagens() {
     <AppContainer>
       {/* `dvh` nos dois tamanhos: `100vh` no desktop é o valor que não encolhe quando a barra
           do navegador aparece no celular, e aí o compositor ficava escondido atrás do teclado. */}
-      <div className="-my-4 grid h-[calc(100dvh-3.5rem)] grid-cols-1 overflow-hidden overscroll-none sm:-my-6 sm:h-[calc(100dvh-4rem)] md:my-0 md:h-[calc(100dvh-7rem)] md:grid-cols-[320px_minmax(0,1fr)] md:rounded-2xl md:border md:border-border-soft md:bg-surface-card md:shadow-card">
+      <div
+        className={cn(
+          "-my-4 grid h-[calc(100dvh-3.5rem)] grid-cols-1 overflow-hidden overscroll-none sm:-my-6 sm:h-[calc(100dvh-4rem)] md:my-0 md:h-[calc(100dvh-7rem)] md:grid-cols-[320px_minmax(0,1fr)] md:rounded-2xl md:border md:border-border-soft md:bg-surface-card md:shadow-card",
+          // The list keeps the floating dock below lg: the screen ends above it (its height, its
+          // bottom gap with the safe area, and a small breath), so the last conversation is reachable.
+          !conversationOpen &&
+            "h-[calc(100dvh-8.25rem-max(0.75rem,env(safe-area-inset-bottom)))] sm:h-[calc(100dvh-8.75rem-max(0.75rem,env(safe-area-inset-bottom)))] md:h-[calc(100dvh-11.75rem-max(0.75rem,env(safe-area-inset-bottom)))] lg:h-[calc(100dvh-7rem)]",
+        )}
+      >
         <div
           className={`flex min-h-0 flex-col border-r border-border ${activeConversation ? "hidden md:flex" : "flex"}`}
         >
