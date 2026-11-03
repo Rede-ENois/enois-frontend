@@ -1,8 +1,8 @@
 # Visual proof: #611 (lição de bons modos ao ter o arquivo barrado)
 
-O contrato pede ~390 px e ~1280 px nas telas alteradas. Este PR mexe no compositor do feed (prévia
-bloqueada) e no aviso educativo que abre quando a moderação recusa a imagem, então a captura roda o
-app real com sessão semeada, e não story do DS.
+O contrato pede ~390 px e ~1280 px nas telas alteradas. Este PR toca três superfícies — a lição, a
+prévia bloqueada do feed e a mesma prévia (selo de 80 px) no compositor da comunidade — então a
+captura roda o app real com sessão semeada, e não story do DS.
 
 ## Como foi medido
 
@@ -17,7 +17,9 @@ compositor como `ApiError` e vira a lição — num PUT cross-origin para o S3, 
    engolido — foi o que travou a primeira tentativa).
 3. Seleciona um PNG pelo input escondido; o compositor abre, o PUT volta 422
    `IMAGE_CONTENT_NOT_ALLOWED` e a lição aparece sozinha.
-4. Fecha pelo rodapé, mede a prévia bloqueada, e clica no botão dela para provar que reabre.
+4. Fecha pelo rodapé, mede a prévia bloqueada e clica no botão dela para provar que reabre.
+5. Repete com `/comunidades/c1`: mesmo envio, mesma recusa, mas a prévia lá é a miniatura de 80 px
+   com o link curto "Ver aula"; o compositor fica abaixo da dobra, então a captura rola até ele.
 
 Cada estado é lido e capturado em 1280 e 390 px. Todo nome e valor do mock é falso.
 
@@ -26,18 +28,21 @@ Cada estado é lido e capturado em 1280 e 390 px. Todo nome e valor do mock é f
 `result.json` traz, por captura, `dialogOpen`, as quatro regras, largura/altura do diálogo, quanto
 ele rola por dentro (`scrollHeight - clientHeight`) e o estouro do documento.
 
-| Captura              | Diálogo      | Rola por dentro | Estouro da página |
-| -------------------- | ------------ | --------------- | ----------------- |
-| `licao-1280.png`     | 486 × 402 px | 0 px            | 0 px              |
-| `licao-390.png`      | 358 × 465 px | 0 px            | 0 px              |
-| `previa-feed-1280`   | —            | —               | 0 px              |
-| `previa-feed-390`    | —            | —               | 0 px              |
-| `reabre-pela-previa` | 512 × 424 px | 0 px            | 0 px              |
+| Captura                      | Diálogo      | Rola por dentro | Estouro da página |
+| ---------------------------- | ------------ | --------------- | ----------------- |
+| `licao-1280.png`             | 486 × 402 px | 0 px            | 0 px              |
+| `licao-390.png`              | 358 × 465 px | 0 px            | 0 px              |
+| `previa-feed-1280.png`       | —            | —               | 0 px              |
+| `previa-feed-390.png`        | —            | —               | 0 px              |
+| `reabre-pela-previa.png`     | 512 × 424 px | 0 px            | 0 px              |
+| `previa-comunidade-1280.png` | —            | —               | 0 px              |
+| `previa-comunidade-390.png`  | —            | —               | 0 px              |
+| `comunidade-reabre.png`      | 512 × 424 px | 0 px            | 0 px              |
 
 Sem estouro horizontal em nenhuma largura e sem scroll dentro do diálogo. Visto na tela: as quatro
 regras numeradas com o tom de cada uma, o selo "Advertência no Boletim", o rodapé "Entendido,
-Professor!" e, no compositor, a prévia "Imagem ocultada" com o botão "Ver aula de bons modos" —
-esse botão é quem reabre a lição depois que o rodapé a fecha.
+Professor!" e, nos dois compositores, a prévia bloqueada com o botão que reabre a lição — "Ver aula
+de bons modos" no feed e "Ver aula" na miniatura da comunidade.
 
 ## O que a captura encontrou
 

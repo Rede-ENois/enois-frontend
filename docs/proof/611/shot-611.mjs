@@ -69,6 +69,22 @@ const mock = createServer((req, res) => {
     return j(200, { items: [], nextCursor: null });
   if (p.startsWith("/feed/posts/seals")) return j(200, {});
   if (p === "/feed") return j(200, { items: [], nextCursor: null, lastSeenAt: null });
+  // A tela da comunidade: o detalhe vem do loader, e o compositor precisa de membros e do feed.
+  if (/^\/communities\/[^/]+$/.test(p))
+    return j(200, {
+      id: "c1",
+      name: "Comunidade de prova",
+      description: "Comunidade criada só para esta captura.",
+      topic: null,
+      members: 1,
+      joined: true,
+      cover: null,
+      avatar: null,
+    });
+  if (/^\/communities\/[^/]+\/members$/.test(p)) return j(200, { items: [] });
+  if (/^\/communities\/[^/]+\/feed$/.test(p))
+    return j(200, { items: [], nextCursor: null, lastSeenAt: null });
+  if (/^\/communities\/[^/]+\/pin$/.test(p)) return j(200, null);
   return j(200, []);
 });
 
@@ -133,7 +149,13 @@ try {
   await page.locator('input[type="file"]').setInputFiles(`${OUT}/arquivo-de-prova.png`, {
     force: true,
   });
-  await page.waitForSelector('[role="dialog"]', { timeout: 20000 });
+  try {
+    await page.waitForSelector('[role="dialog"]', { timeout: 20000 });
+  } catch {
+    console.log("SEM DIALOGO. escritas:", seen.filter((s) => /^(POST|PUT)/.test(s)).join(", "));
+    console.log("corpo:", (await page.evaluate(() => document.body.innerText)).slice(0, 400));
+    throw new Error("dialogo nao abriu no feed");
+  }
   await page.waitForTimeout(700);
 
   for (const width of [1280, 390]) {
@@ -171,6 +193,56 @@ try {
   await page.screenshot({ path: `${OUT}/reabre-pela-previa.png` });
   results.push({ name: "reabre-pela-previa", ...reaberto });
   console.log("reabre-pela-previa", JSON.stringify(reaberto));
+
+  // A mesma prévia no compositor da comunidade — outra superfície alterada, com "Ver aula" curto.
+  await page.goto(`${APP}/comunidades/c1`, { waitUntil: "domcontentloaded" });
+  const inputComunidade = page.locator('input[type="file"]');
+  await inputComunidade.waitFor({ state: "attached", timeout: 30000 });
+  await page.waitForFunction(
+    () => {
+      const input = document.querySelector('input[type="file"]');
+      return !!(input && Object.keys(input).some((k) => k.startsWith("__reactProps")));
+    },
+    { timeout: 30000 },
+  );
+  await inputComunidade.setInputFiles(`${OUT}/arquivo-de-prova.png`, { force: true });
+  await page.waitForSelector('[role="dialog"]', { timeout: 20000 });
+  await page.getByRole("button", { name: /Entendido/ }).click();
+  await page.waitForSelector('[role="dialog"]', { state: "detached", timeout: 10000 });
+
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await sleep(400);
+    // O compositor da comunidade fica abaixo da dobra; a captura tem de mostrar a prévia.
+    await page.evaluate(() => {
+      [...document.querySelectorAll("button")]
+        .find((b) => b.textContent.trim() === "Ver aula")
+        ?.scrollIntoView({ block: "center" });
+    });
+    await sleep(500);
+    const previa = await page.evaluate(() => ({
+      // A prévia da comunidade é um selo de 80 px: só o ícone e o link ficam visíveis, e a frase
+      // inteira vive no `title`/`sr-only`. Por isso a checagem é do link, não do texto do feed.
+      hasBlockedPreview: document.body.innerHTML.includes("Imagem ocultada"),
+      hasShortReopenButton: [...document.querySelectorAll("button")].some(
+        (b) => b.textContent.trim() === "Ver aula",
+      ),
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    }));
+    await page.screenshot({ path: `${OUT}/previa-comunidade-${width}.png` });
+    results.push({ name: `previa-comunidade-${width}`, ...previa });
+    console.log(`previa-comunidade-${width}`, JSON.stringify(previa));
+  }
+
+  // O botão curto da comunidade também reabre a lição.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.getByRole("button", { name: "Ver aula", exact: true }).click();
+  await page.waitForSelector('[role="dialog"]', { timeout: 10000 });
+  await sleep(500);
+  const reabertoComunidade = await page.evaluate(LER);
+  await page.screenshot({ path: `${OUT}/comunidade-reabre.png` });
+  results.push({ name: "comunidade-reabre", ...reabertoComunidade });
+  console.log("comunidade-reabre", JSON.stringify(reabertoComunidade));
 
   console.log("chamadas de escrita:", seen.filter((s) => /^(POST|PUT)/.test(s)).join(", "));
   writeFileSync(`${OUT}/result.json`, `${JSON.stringify(results, null, 2)}\n`);
