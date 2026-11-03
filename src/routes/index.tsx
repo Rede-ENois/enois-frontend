@@ -774,6 +774,31 @@ function Landing() {
                 <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
               </Link>
             </div>
+
+            {/*
+              Crédito do Kenney, no mesmo formato do aviso acima. Aqui a história é outra: os packs
+              são CC0 1.0, então o crédito é cortesia, não obrigação — o aviso diz isso.
+            */}
+            <div className="max-w-3xl">
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                {texts.landing.footer.kenneyTitle}
+              </p>
+
+              <p className="mt-2 text-xs font-normal leading-relaxed text-muted-foreground">
+                {texts.landing.footer.kenney}
+              </p>
+
+              <a
+                href="https://kenney.nl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                {texts.landing.footer.kenneyCredit}
+
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+              </a>
+            </div>
           </div>
         </div>
       </footer>
