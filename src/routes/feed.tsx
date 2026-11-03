@@ -59,15 +59,7 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  ApiError,
-  authApi,
-  corporateApi,
-  eventsApi,
-  feedApi,
-  networkApi,
-  profileApi,
-} from "@/lib/api";
+import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
@@ -82,6 +74,7 @@ import {
   useInterfaceContext,
 } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
+import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
@@ -573,8 +566,7 @@ function Home() {
             ),
           )
           .catch((error: unknown) => {
-            const isProhibited =
-              error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED";
+            const isProhibited = isProhibitedContent(error);
             if (isProhibited) {
               setConductLessonOpen(true);
             }
@@ -922,8 +914,9 @@ function Home() {
                                     onClick={() => setConductLessonOpen(true)}
                                     className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
                                   >
-                                    <GraduationCap className="h-3.5 w-3.5" />
-                                    Ver aula de bons modos
+                                    <GraduationCap className="h-3.5 w-3.5" aria-hidden />
+
+                                    <>{texts.conductLesson.open}</>
                                   </button>
                                 </div>
                               </div>

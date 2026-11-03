@@ -57,6 +57,7 @@ import {
 import { ApiError, communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
@@ -325,8 +326,7 @@ function CommunityDetail() {
             ),
           )
           .catch((error: unknown) => {
-            const isProhibited =
-              error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED";
+            const isProhibited = isProhibitedContent(error);
             if (isProhibited) {
               setConductLessonOpen(true);
             }
@@ -776,7 +776,7 @@ function CommunityDetail() {
                               onClick={() => setConductLessonOpen(true)}
                               className="mt-1 text-[10px] font-medium text-amber-700 dark:text-amber-300 underline hover:no-underline"
                             >
-                              Ver aula
+                              <>{texts.conductLesson.openShort}</>
                             </button>
                           </div>
 
