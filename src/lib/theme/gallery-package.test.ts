@@ -150,6 +150,107 @@ describe("buildGalleryPackage · contrato da galeria", () => {
     }
   });
 
+  it("publica em toda combinação de coleção, modo, widget e plano de fundo", () => {
+    // A varredura que achou o 400 do publish: um plano de fundo livre pode inverter a família de
+    // cor da coleção (tema claro com plano escuro), e o widget translúcido puxa a superfície para
+    // o lado oposto do fundo. Cada combinação tem de publicar.
+    const widgetBrancoTranslucido = {
+      type: "solid" as const,
+      color: "#ffffff",
+      alpha: 22,
+      from: "#ffffff",
+      fromAlpha: 22,
+      to: "#ffffff",
+      toAlpha: 22,
+      direction: "diagonal" as const,
+      angle: 135,
+    };
+    const paginaEscura = {
+      type: "solid" as const,
+      color: "#011627",
+      alpha: 100,
+      from: "#011627",
+      fromAlpha: 100,
+      to: "#011627",
+      toAlpha: 100,
+      direction: "diagonal" as const,
+      angle: 135,
+    };
+
+    const recusas: string[] = [];
+    for (const collection of THEME_COLLECTIONS) {
+      for (const mode of ["light", "dark"] as const) {
+        for (const widget of [null, widgetBrancoTranslucido]) {
+          for (const page of [null, paginaEscura]) {
+            const where = `${collection.id} (${mode})${widget ? " + widget" : ""}${page ? " + pagina" : ""}`;
+            const { packageJson } = buildGalleryPackage({
+              collectionId: collection.id,
+              settings: {
+                accent: { hue: 262, chroma: 0.2, lightness: 0.6 },
+                background: { hue: 262, chroma: 0.02 },
+              },
+              mode,
+              widget,
+              page,
+            });
+            for (const recusa of recusasDoServidor(packageJson)) {
+              recusas.push(`${where}: ${recusa}`);
+            }
+          }
+        }
+      }
+    }
+    expect(recusas).toEqual([]);
+  });
+
+  it("o cartão continua desenhado no fundo e o bloco alternativo não repete a superfície", () => {
+    // Fora do gate do servidor, mas é o que a pessoa vê: borda apagada = tema chapado, e bloco
+    // alternativo igual à superfície = navegação sem degrau.
+    const paginaEscura = {
+      type: "solid" as const,
+      color: "#011627",
+      alpha: 100,
+      from: "#011627",
+      fromAlpha: 100,
+      to: "#011627",
+      toAlpha: 100,
+      direction: "diagonal" as const,
+      angle: 135,
+    };
+
+    const problemas: string[] = [];
+    for (const collection of THEME_COLLECTIONS) {
+      for (const mode of ["light", "dark"] as const) {
+        for (const page of [null, paginaEscura]) {
+          const where = `${collection.id} (${mode})${page ? " + pagina" : ""}`;
+          const { packageJson } = buildGalleryPackage({
+            collectionId: collection.id,
+            settings: {
+              accent: { hue: 262, chroma: 0.2, lightness: 0.6 },
+              background: { hue: 262, chroma: 0.02 },
+            },
+            mode,
+            page,
+          });
+          const { palette } = parse(packageJson);
+          const surface = over(palette.surface, palette.background, palette.surfaceAlpha ?? 100);
+          const borderVsBackground = contrast(palette.border, palette.background);
+          const borderVsMuted = contrast(palette.border, palette.muted);
+          if (borderVsBackground < 3) {
+            problemas.push(`${where}: borda x fundo ${borderVsBackground.toFixed(2)}:1`);
+          }
+          if (borderVsMuted < 3) {
+            problemas.push(`${where}: borda x bloco ${borderVsMuted.toFixed(2)}:1`);
+          }
+          if (palette.muted === palette.background || palette.muted === surface) {
+            problemas.push(`${where}: bloco alternativo repetindo superficie`);
+          }
+        }
+      }
+    }
+    expect(problemas).toEqual([]);
+  });
+
   it("widget translúcido viaja com o alpha, e o texto é medido já composto", () => {
     const { packageJson } = buildGalleryPackage({
       collectionId: null,

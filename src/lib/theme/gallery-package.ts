@@ -10,6 +10,7 @@ import {
   effectiveAlpha,
   hexToRgb,
   readableForeground,
+  relativeLuminance,
   representativeHex,
   rgbToHex,
 } from "@rede-enois/design-system/domain";
@@ -43,6 +44,9 @@ const HEX = /#[0-9a-fA-F]{6}/;
  * 4.49 lá e o publish volta 400 sem a pessoa entender o porquê.
  */
 const MIN_CONTRAST = 4.6;
+
+/** A borda não tem regra no servidor; abaixo disto ela some no fundo (3:1 é o piso de elemento). */
+const BORDER_CONTRAST = 3;
 
 /** Primeiro hex de um token — tokens podem vir em color-mix() ou gradiente. */
 function firstHex(value: string | undefined): string | null {
@@ -91,6 +95,29 @@ function fitText(backdrops: string[], hue: number): string {
   return worst("#ffffff") >= worst("#000000") ? "#ffffff" : "#000000";
 }
 
+/**
+ * A borda do cartão: o token quando ele ainda desenha contra as superfícies do pacote, senão um
+ * degrau do relevo que chega ao piso. Sem isso o cartão some no fundo (o "tema chapado") justamente
+ * quando a pessoa troca o plano de fundo e mantém a coleção.
+ */
+function readableBorder(
+  candidate: string | null,
+  surfaceSolid: string,
+  lift: string,
+  backgrounds: string[],
+): string {
+  const reads = (hex: string) =>
+    backgrounds.every(
+      (backdrop) => contrastRatio(hexToRgb(hex), hexToRgb(backdrop)) >= BORDER_CONTRAST,
+    );
+  if (candidate && reads(candidate)) return candidate;
+  for (let amount = 0.18; amount <= 0.6; amount += 0.06) {
+    const step = mix(surfaceSolid, lift, amount);
+    if (reads(step)) return step;
+  }
+  return mix(surfaceSolid, lift, 0.6);
+}
+
 /** O texto forte puxado para o fundo até onde o piso de contraste deixa. */
 function softer(strong: string, backdrop: string, gates: string[]): string {
   for (let amount = 0.45; amount > 0; amount -= 0.05) {
@@ -119,7 +146,7 @@ export function buildGalleryPackage(input: {
 
   // A cor de widget É o cartão que a pessoa vê. Sem ela o pacote repetia o fundo em superfície e
   // borda, e o tema vendido saía chapado — uma cor só, nada do visual que a pessoa montou.
-  const surface =
+  const preferredSurface =
     (input.widget ? representativeHex(input.widget) : null) ??
     firstHex(tokens["--card"]) ??
     firstHex(tokens["--surface-3"]) ??
@@ -127,18 +154,63 @@ export function buildGalleryPackage(input: {
   const surfaceAlpha = input.widget
     ? effectiveAlpha(input.widget)
     : (collection?.surfaceAlpha ?? 100);
-  const surfaceSolid = over(surface, background, surfaceAlpha);
 
-  // Direção do relevo: no escuro as camadas sobem para o branco; no claro, descem para o preto.
-  const lift = input.mode === "dark" ? "#ffffff" : "#000000";
+  // Direção do relevo: a camada se afasta do FUNDO do pacote, não do modo da coleção. Um plano de
+  // fundo livre pode inverter o modo (tema claro com plano escuro), e aí o relevo do modo pintava
+  // a borda para dentro do fundo.
+  const lift = relativeLuminance(hexToRgb(background)) < 0.5 ? "#ffffff" : "#000000";
+
+  // O pacote tem UM texto forte para todas as superfícies, e o servidor mede nos três. Um fundo
+  // livre de família oposta ao cartão da coleção (plano escuro com tema claro, e vice-versa) não
+  // tem texto que sirva nos dois — nesse caso o cartão se aproxima do fundo até caber, em vez de
+  // gerar um pacote que o publish recusa. A cor de widget que já é da mesma família não se mexe.
+  const strongFor = (bg: string) => {
+    const brand = input.mode === "dark" ? "#f8f8f2" : "#111111";
+    const base = firstHex(tokens["--text-strong"]) ?? brand;
+    return passes(base, [bg]) ? base : fitText([bg], accent.hue);
+  };
+  const strong = strongFor(background);
+
+  let surface = preferredSurface;
+  let surfaceSolid = over(surface, background, surfaceAlpha);
+  if (!passes(strong, [surfaceSolid])) {
+    for (let amount = 0.1; amount <= 0.95; amount += 0.05) {
+      const candidate = mix(preferredSurface, background, amount);
+      const solid = over(candidate, background, surfaceAlpha);
+      if (passes(strong, [solid])) {
+        surface = candidate;
+        surfaceSolid = solid;
+        break;
+      }
+    }
+    // Nem colado no fundo o texto passa? O fundo é o problema, não o cartão.
+    if (!passes(strong, [surfaceSolid])) {
+      surface = mix(background, lift, 0.06);
+      surfaceSolid = over(surface, background, surfaceAlpha);
+    }
+  }
+
+  // O bloco alternativo derivado fica ENTRE o fundo e o cartão: o texto forte já passa nos dois, e
+  // o contraste é monótono na luminância, então ele passa no meio também. Sair do cartão para o
+  // lado do relevo (o que o pacote fazia) podia cruzar a faixa onde o texto some.
+  const derivedMuted = (() => {
+    if (surfaceSolid !== background) {
+      for (let amount = 0.5; amount >= 0.1; amount -= 0.1) {
+        const candidate = mix(background, surfaceSolid, amount);
+        if (passes(strong, [candidate])) return candidate;
+      }
+    }
+    for (let amount = 0.08; amount >= 0.02; amount -= 0.02) {
+      const candidate = mix(background, lift, amount);
+      if (passes(strong, [candidate])) return candidate;
+    }
+    return background;
+  })();
   // `--muted` costuma vir em rgb()/color-mix() nos temas da casa, e aí `firstHex` não acha hex
-  // nenhum — por isso o degrau próprio, em vez de mandar o bloco alternativo sem cor.
-  const muted =
-    firstHex(tokens["--surface-2"]) ??
-    firstHex(tokens["--muted"]) ??
-    (surfaceSolid === background
-      ? mix(background, lift, 0.08)
-      : mix(background, surfaceSolid, 0.5));
+  // nenhum. Quando acha, o token pode ser de OUTRA família de cor — é o caso dos temas presos ao
+  // modo escuro publicados no claro. O token só vale se ainda sobrar texto legível sobre ele.
+  const tokenMuted = firstHex(tokens["--surface-2"]) ?? firstHex(tokens["--muted"]);
+  const muted = tokenMuted && passes(strong, [tokenMuted]) ? tokenMuted : derivedMuted;
 
   // O destaque efetivo é o da personalização livre (buildThemeColor devolve hex).
   const primary =
@@ -148,13 +220,12 @@ export function buildGalleryPackage(input: {
   // O texto que senta EM CIMA do destaque: a galeria exige a cor, e o botão depende dela.
   const onPrimary = rgbToHex(readableForeground(hexToRgb(primary), accent.hue).rgb);
 
-  const border = firstHex(tokens["--border"]) ?? mix(surfaceSolid, lift, 0.18);
-
-  // As superfícies onde o texto do tema nasce — é contra todas que a galeria mede o forte.
-  const backdrops = [background, surfaceSolid, muted];
-  const brandStrong = input.mode === "dark" ? "#f8f8f2" : "#111111";
-  const strongBase = firstHex(tokens["--text-strong"]) ?? brandStrong;
-  const strong = passes(strongBase, backdrops) ? strongBase : fitText(backdrops, accent.hue);
+  // A borda não entra no gate do servidor, mas é ela que desenha o cartão: se o token for da
+  // família de cor do modo da coleção e o fundo tiver sido trocado, a borda some no fundo.
+  const border = readableBorder(firstHex(tokens["--border"]), surfaceSolid, lift, [
+    background,
+    muted,
+  ]);
 
   // O secundário responde pelo fundo e pelo bloco alternativo (é o gate do servidor).
   const subtleGates = [background, muted];
