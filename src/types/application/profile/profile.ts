@@ -1,3 +1,7 @@
+import type {
+  ProfileAppearance,
+  ProfileLook,
+} from "@/types/application/profile/profile-appearance";
 import type { ProfileGardenData } from "@rede-enois/design-system/domain";
 
 export type Profile = {
@@ -76,4 +80,11 @@ export type Profile = {
   /** Status bubble: up to 60 characters and a cosmetic icon key. */
   statusText?: string | null;
   statusIcon?: string | null;
+  /**
+   * Visual que o dono escolheu para a vitrine SOCIAL (o lado profissional tem o seu). Quem
+   * visita recebe este visual; o tema da própria conta continua valendo para o resto do app.
+   */
+  profileLook?: ProfileLook | null;
+  /** Os dois lados, só na leitura do próprio perfil (`/me`). */
+  profileAppearance?: ProfileAppearance | null;
 };

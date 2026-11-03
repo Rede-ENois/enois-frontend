@@ -6,6 +6,7 @@ import type { EducationRequest } from "@/types/application/profile/education-req
 import type { Experience } from "@/types/application/profile/experience";
 import type { ExperienceRequest } from "@/types/application/profile/experience-request";
 import type { Profile } from "@/types/application/profile/profile";
+import type { ProfileAppearance } from "@/types/application/profile/profile-appearance";
 import type { ProfileNetworkUser } from "@/types/application/profile/profile-network-user";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 
@@ -31,6 +32,13 @@ export const profileApi = {
   getById: (id: string) => api.get<Profile>(`/users/by-id/${id}`),
 
   update: (data: UpdateProfileRequest) => api.patch<Profile>("/me/profile", data),
+
+  /**
+   * Aparência da vitrine: um visual para o perfil social e outro para o profissional.
+   * Não confundir com o tema da conta (`/me/theme`), que é a preferência de quem olha.
+   */
+  setProfileAppearance: (appearance: ProfileAppearance) =>
+    api.put<ProfileAppearance>("/me/profile-appearance", appearance),
 
   experiences: {
     list: () => api.get<Experience[]>("/me/experiences"),
