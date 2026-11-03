@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type KeyboardEvent, useRef, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -32,11 +32,27 @@ export function MuteUserDialog({ userId, name, muted, expiresAt, onDone }: MuteU
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
   const [duration, setDuration] = useState<MuteDuration>("24h");
+  const options = useRef<(HTMLButtonElement | null)[]>([]);
 
   const done = () => {
-    queryClient.invalidateQueries();
+    queryClient.invalidateQueries({ queryKey: ["connection-status", userId] });
+    queryClient.invalidateQueries({ queryKey: ["muted-users"] });
     setOpen(false);
     onDone?.();
+  };
+
+  /** Padrão WAI-ARIA de radiogroup: um item no tab order e as setas andam entre as opções. */
+  const choose = (index: number) => {
+    const next = (index + DURATIONS.length) % DURATIONS.length;
+    setDuration(DURATIONS[next]);
+    options.current[next]?.focus();
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    choose(index + step);
   };
 
   const mute = useMutation({
@@ -88,14 +104,19 @@ export function MuteUserDialog({ userId, name, muted, expiresAt, onDone }: MuteU
             role="radiogroup"
             aria-label={texts.profile.muteDurationLabel}
           >
-            {DURATIONS.map((value) => (
+            {DURATIONS.map((value, index) => (
               <button
                 key={value}
+                ref={(element) => {
+                  options.current[index] = element;
+                }}
                 type="button"
                 role="radio"
                 aria-checked={duration === value}
+                tabIndex={duration === value ? 0 : -1}
                 disabled={pending}
                 onClick={() => setDuration(value)}
+                onKeyDown={(event) => onKeyDown(event, index)}
                 className={cn(
                   "rounded-full border px-3 py-2 text-sm font-normal transition-colors",
                   duration === value
