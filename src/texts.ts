@@ -1328,6 +1328,7 @@ export const texts = {
     shareCopied: "Link copiado.",
     editPhoto: "Editar foto",
     comments: {
+      submit: "Comentar",
       placeholder: "Escreva um comentário",
       replyPlaceholder: (name: string) => `Responder ${name}…`,
       pinError: "Não foi possível fixar o comentário.",

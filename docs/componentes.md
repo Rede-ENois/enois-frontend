@@ -187,6 +187,10 @@ Card de post no feed, com todas as ações sociais.
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
 
+## `PostComments` (`src/components/post/post-comments.tsx`)
+
+Nos comentários do feed (`PostComments`), o campo ocupa a largura toda no mobile. No rodapé, as ferramentas ficam à esquerda e o botão “Comentar” à direita, com estados desabilitado e enviando. Ao abrir as ferramentas pelo “+”, Foto, Áudio e GIF ficam na mesma linha entre o “+” e o envio. O envio fica só com o ícone e mantém seu nome acessível; ao fechar, o texto volta. Ambos os botões de envio usam o mesmo formulário; o desktop mantém o botão de ícone ao lado do campo. Anexos também podem ser enviados sem texto.
+
 ## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
 
 Post do feed de um grupo, com reações, comentários e ações de moderação.
