@@ -1,0 +1,6 @@
+config:
+  # Linhas longas são quebradas pelo Prettier (printWidth 100) só onde dá; tabela e link ficam.
+  MD013: false
+ignores:
+  - "node_modules/**"
+  - "CHANGELOG.md"

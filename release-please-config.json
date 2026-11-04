@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "490ecd218a93681f103cd5f773c41eac29c286b4",
+  "bump-minor-pre-major": true,
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "enois-frontend",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        { "type": "feat", "section": "Novidades" },
+        { "type": "fix", "section": "Correções" },
+        { "type": "perf", "section": "Desempenho" },
+        { "type": "revert", "section": "Reversões" },
+        { "type": "docs", "section": "Documentação" },
+        { "type": "refactor", "section": "Refatoração", "hidden": true },
+        { "type": "test", "section": "Testes", "hidden": true },
+        { "type": "ci", "section": "CI", "hidden": true },
+        { "type": "build", "section": "Build", "hidden": true },
+        { "type": "chore", "section": "Manutenção", "hidden": true },
+        { "type": "style", "section": "Estilo", "hidden": true }
+      ]
+    }
+  }
+}

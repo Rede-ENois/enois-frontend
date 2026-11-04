@@ -50,3 +50,6 @@ jobs:
 
       - name: Testes das regras do ESLint
         run: npm run test:eslint-rules
+
+      - name: Testes dos scripts do repositório
+        run: npm run test:scripts

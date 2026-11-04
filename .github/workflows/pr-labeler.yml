@@ -1,0 +1,73 @@
+name: PR Labels
+
+# Roda no contexto da base (pull_request_target) para ter escrita em PR de fork. O código da PR
+# nunca é baixado nem executado aqui: o labeler lê só a lista de arquivos alterados e o título
+# entra no script pelo payload, nunca interpolado no código.
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-labels-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  labeler:
+    name: Rotular a PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Rótulos por área
+        uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+        with:
+          repo-token: ${{ github.token }}
+          sync-labels: true
+
+      - name: Rótulos por tipo (Conventional Commits no título)
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const title = context.payload.pull_request.title ?? "";
+            const body = context.payload.pull_request.body ?? "";
+
+            const byType = {
+              feat: "enhancement",
+              fix: "bug",
+              docs: "documentation",
+              perf: "performance",
+              ci: "ci",
+              chore: "chore",
+              test: "chore",
+              build: "chore",
+              style: "chore",
+              refactor: "chore",
+            };
+            const managed = new Set([...Object.values(byType), "breaking-change"]);
+            // "ci" e "documentation" também vêm do labeler por área: só são removidos aqui
+            // quando nem o título nem os arquivos pedem por eles.
+            const alsoByPath = new Set(["ci", "documentation"]);
+
+            const desired = new Set();
+            const match = title.match(/^(\w+)(?:\([^)]*\))?(!)?:/);
+            if (match && byType[match[1]]) desired.add(byType[match[1]]);
+            if (match?.[2] || /^BREAKING[ -]CHANGE:/m.test(body)) desired.add("breaking-change");
+
+            const current = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+              owner, repo, issue_number,
+            });
+            for (const { name } of current) {
+              if (managed.has(name) && !alsoByPath.has(name) && !desired.has(name)) {
+                await github.rest.issues.removeLabel({ owner, repo, issue_number, name });
+              }
+            }
+            const missing = [...desired].filter((name) => !current.some((l) => l.name === name));
+            if (missing.length) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: missing });
+            }

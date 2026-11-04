@@ -1,0 +1,79 @@
+name: PR Checks
+
+# O Release Please monta versão e CHANGELOG a partir dos commits no padrão Conventional Commits; o
+# título da PR é o que vira commit no squash e o que a revisão lê primeiro, então ele é conferido
+# aqui. A PR de promoção qa -> main é dispensada: ela só carrega commits já conferidos.
+#
+# Este workflow lida com dado da PR (possivelmente de fork) e por isso não tem escrita: o aviso na
+# PR é publicado por pr-checks-comment.yml, que roda no contexto da base.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title:
+    name: Título da PR (Conventional Commits)
+    if: ${{ !(github.event.pull_request.head.ref == 'qa' && github.event.pull_request.base.ref == 'main') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Conferir o título
+        id: commitlint
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        # O corpo da PR não passa pelas regras de corpo de commit: o GitHub já separa título e
+        # descrição, e a descrição tem linhas longas de propósito.
+        run: |
+          cd "$RUNNER_TEMP"
+          npm install --no-save --no-audit --no-fund @commitlint/cli@21.2.4 @commitlint/config-conventional@21.2.4
+          cat > commitlint.config.mjs <<'EOF'
+          export default {
+            extends: ["@commitlint/config-conventional"],
+            rules: {
+              "subject-case": [0],
+              "body-max-line-length": [0],
+              "footer-max-line-length": [0],
+              "body-leading-blank": [0],
+            },
+          };
+          EOF
+          printf '%s\n' "$PR_TITLE" | npx commitlint --verbose
+
+      - name: Registrar a PR para o aviso
+        if: failure() && steps.commitlint.conclusion == 'failure'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: printf '%s\n' "$PR_NUMBER" > pr-number.txt
+
+      - name: Enviar o número da PR ao job de aviso
+        if: failure() && steps.commitlint.conclusion == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pr-title-failure
+          path: pr-number.txt
+          retention-days: 1
+
+  pre-commit:
+    name: Hooks de higiene (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # ESLint, Prettier de código, typecheck e testes já rodam no ci.yml com as dependências
+      # instaladas; aqui ficam os hooks que não dependem do node_modules do projeto.
+      - name: Rodar os hooks
+        env:
+          SKIP: eslint,prettier,typecheck,eslint-rules
+        run: pipx run pre-commit==4.7.0 run --all-files --show-diff-on-failure

@@ -117,8 +117,38 @@ recusa escrita com cookie sem esse header (403 `CSRF_REQUIRED`).
 
 O CI (`.github/workflows/ci.yml`) roda os testes em toda PR.
 
-- `npm install` configura os hooks do git (`simple-git-hooks`): o pre-commit roda `eslint --fix` e `prettier` nos arquivos staged (lint-staged).
-- Em emergência, `git commit --no-verify` pula o hook.
+## Hooks do git (pre-commit)
+
+Os hooks são gerenciados pelo [pre-commit](https://pre-commit.com), configurado em
+`.pre-commit-config.yaml`. Antes de cada commit ele roda nos arquivos staged:
+
+- higiene de arquivos (espaço no fim da linha, quebra de linha final, LF, YAML/JSON/TOML válidos,
+  marcador de conflito, arquivo grande e chave privada);
+- `eslint --fix` (que já aplica o Prettier nos `.ts/.tsx`) e `prettier --write` nos demais formatos;
+- `npm run typecheck` quando há `.ts/.tsx` no commit;
+- os testes das regras locais do ESLint quando `eslint/` muda;
+- `actionlint` nos workflows do GitHub Actions.
+
+Instale o pre-commit uma vez na máquina com o [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install pre-commit
+```
+
+Depois, em cada clone local do repositório, instale o hook:
+
+```bash
+pre-commit install
+```
+
+Os hooks de ESLint, Prettier e typecheck usam as versões do `node_modules` do projeto, então rode
+`npm install` antes do primeiro commit. Para conferir o repositório inteiro de uma vez:
+
+```bash
+pre-commit run --all-files
+```
+
+Em emergência, `git commit --no-verify` pula o hook.
 
 ## Deploy na Vercel
 

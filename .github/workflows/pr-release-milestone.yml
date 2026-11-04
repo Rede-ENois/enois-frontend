@@ -1,0 +1,87 @@
+name: PR Release Milestone
+
+# Toda PR para a qa ou a main entra no milestone da próxima versão (.github/release-lines.json).
+# Quando a versão sai, rotate-release-lines.yml fecha esse milestone com o número da versão e abre o
+# próximo. Roda no contexto confiável da base: a revisão da PR nunca é baixada nem executada.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+concurrency:
+  group: pr-release-milestone-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  milestone:
+    name: Atribuir o milestone da próxima versão
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Baixar a configuração da base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: .github/release-lines.json
+          sparse-checkout-cone-mode: false
+
+      - name: Garantir o milestone
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require("fs");
+            const config = JSON.parse(fs.readFileSync(".github/release-lines.json", "utf8"));
+            const branches = [config.development.branch, config.production.branch];
+            const base = context.payload.pull_request.base.ref;
+            if (!branches.includes(base)) {
+              core.info(`Base ${base} fora das linhas de release; nada a fazer.`);
+              return;
+            }
+
+            const title = config.next_milestone;
+            const current = context.payload.pull_request.milestone;
+            if (current?.title === title) {
+              core.info(`A PR já está em "${title}".`);
+              return;
+            }
+            // Milestone aberto escolhido à mão pela mantenedora é respeitado; só PR sem milestone
+            // (ou presa num milestone já fechado) é movida.
+            if (current && current.state === "open") {
+              core.info(`A PR está no milestone aberto "${current.title}"; mantido.`);
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const findOpen = async () =>
+              (await github.paginate(github.rest.issues.listMilestones, {
+                owner, repo, state: "open", per_page: 100,
+              })).find((m) => m.title === title);
+
+            let milestone = await findOpen();
+            if (!milestone) {
+              try {
+                milestone = (await github.rest.issues.createMilestone({
+                  owner, repo, title,
+                  description: "Mudanças que entram na próxima versão publicada.",
+                })).data;
+                core.info(`Milestone "${title}" criado.`);
+              } catch (error) {
+                // 422: outra execução criou o mesmo milestone ao mesmo tempo.
+                if (error.status !== 422) throw error;
+                milestone = await findOpen();
+                if (!milestone) throw error;
+              }
+            }
+
+            await github.rest.issues.update({
+              owner, repo,
+              issue_number: context.issue.number,
+              milestone: milestone.number,
+            });
+            core.info(`PR atribuída a "${title}".`);

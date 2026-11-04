@@ -1,5 +1,6 @@
 {
-  "name": "connect-grow",
+  "name": "@rede-enois/frontend",
+  "version": "0.0.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -17,8 +18,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:eslint-rules": "node eslint/rules/jsx-content-spacing.test.js && node eslint/rules/type-boundaries.test.js",
+    "test:scripts": "node --test scripts/*.test.mjs",
     "format": "prettier --write .",
-    "prepare": "simple-git-hooks",
     "generate:api": "tsx scripts/fetch-openapi-spec.ts --fetch && tsx scripts/generate-api.ts",
     "check:api-matrix": "tsx scripts/check-api-matrix.ts",
     "generate:api:watch": "orval --config orval.config.ts --watch"
@@ -73,15 +74,5 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,css,yml,yaml}": "prettier --write"
   }
 }

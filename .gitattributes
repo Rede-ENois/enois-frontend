@@ -1,0 +1,14 @@
+# O repositório guarda texto em LF (ver .editorconfig). Sem isto, um Git com
+# core.autocrlf=true (padrão do Git for Windows) faz checkout em CRLF e cada
+# ferramenta passa a ver o arquivo de um jeito.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.webp binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

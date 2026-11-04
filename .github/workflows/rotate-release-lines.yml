@@ -1,0 +1,143 @@
+name: Rotate release lines
+
+# Depois de um release, o milestone "Próxima versão" (.github/release-lines.json) vira o milestone
+# da versão publicada e é fechado; um novo "Próxima versão" é aberto. Fica no milestone fechado só o
+# que de fato saiu na tag: PR mesclada cujo commit está no histórico da tag, e issue já fechada. PR
+# aberta, PR mesclada na qa que ainda não chegou à main e issue aberta passam para o novo milestone.
+#
+# Chamado pelo release-please.yml (um release criado com o GITHUB_TOKEN não dispara o evento
+# `release`) e disponível manualmente para repetir uma rotação. Reexecutar é seguro: o que já foi
+# girado é reaproveitado.
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: Tag publicada (ex. v0.2.0)
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Tag publicada (ex. v0.2.0)
+        required: true
+        type: string
+
+concurrency:
+  group: rotate-release-lines-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rotate:
+    name: Fechar o milestone da versão e abrir o próximo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Baixar a configuração da branch padrão
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: .github/release-lines.json
+          sparse-checkout-cone-mode: false
+
+      - name: Girar os milestones
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        with:
+          script: |
+            const fs = require("fs");
+            const config = JSON.parse(fs.readFileSync(".github/release-lines.json", "utf8"));
+            const nextTitle = config.next_milestone;
+            const tag = process.env.RELEASE_TAG;
+            if (!/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag)) {
+              core.setFailed(`Tag inválida: ${tag}`);
+              return;
+            }
+            const { owner, repo } = context.repo;
+
+            // Commit da tag (desembrulha tag anotada).
+            const ref = await github.rest.git.getRef({ owner, repo, ref: `tags/${tag}` });
+            let releaseSha = ref.data.object.sha;
+            if (ref.data.object.type === "tag") {
+              releaseSha = (await github.rest.git.getTag({ owner, repo, tag_sha: releaseSha }))
+                .data.object.sha;
+            }
+
+            const allMilestones = await github.paginate(github.rest.issues.listMilestones, {
+              owner, repo, state: "all", per_page: 100,
+            });
+            const ensureNext = async () => {
+              const open = allMilestones.find((m) => m.title === nextTitle && m.state === "open");
+              if (open) return open;
+              try {
+                return (await github.rest.issues.createMilestone({
+                  owner, repo, title: nextTitle,
+                  description: "Mudanças que entram na próxima versão publicada.",
+                })).data;
+              } catch (error) {
+                if (error.status !== 422) throw error;
+                const refreshed = await github.paginate(github.rest.issues.listMilestones, {
+                  owner, repo, state: "open", per_page: 100,
+                });
+                const found = refreshed.find((m) => m.title === nextTitle);
+                if (!found) throw error;
+                return found;
+              }
+            };
+
+            // 1. O "Próxima versão" atual vira o milestone da versão (ou reaproveita, em reexecução).
+            let released = allMilestones.find((m) => m.title === tag);
+            const current = allMilestones.find((m) => m.title === nextTitle && m.state === "open");
+            if (!released && current) {
+              released = (await github.rest.issues.updateMilestone({
+                owner, repo, milestone_number: current.number,
+                title: tag,
+                description: `Publicado em ${tag}.`,
+              })).data;
+              core.info(`Milestone "${nextTitle}" renomeado para ${tag}.`);
+              allMilestones.splice(allMilestones.indexOf(current), 1);
+            }
+
+            // 2. Abre o próximo.
+            const next = await ensureNext();
+            if (!released) {
+              core.info(`Nenhum milestone para ${tag}; só garanti "${nextTitle}".`);
+              return;
+            }
+
+            // 3. Devolve ao próximo o que não saiu nesta tag.
+            const items = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, milestone: String(released.number), state: "all", per_page: 100,
+            });
+            const shipped = async (pullNumber) => {
+              const pull = (await github.rest.pulls.get({ owner, repo, pull_number: pullNumber })).data;
+              if (!pull.merged_at || !pull.merge_commit_sha) return false;
+              const cmp = await github.rest.repos.compareCommits({
+                owner, repo, base: pull.merge_commit_sha, head: releaseSha,
+              });
+              return cmp.data.status === "ahead" || cmp.data.status === "identical";
+            };
+            let moved = 0;
+            for (const item of items) {
+              const stays = item.pull_request ? await shipped(item.number) : item.state === "closed";
+              if (stays) continue;
+              await github.rest.issues.update({
+                owner, repo, issue_number: item.number, milestone: next.number,
+              });
+              moved += 1;
+            }
+
+            // 4. Fecha o milestone da versão.
+            if (released.state !== "closed") {
+              await github.rest.issues.updateMilestone({
+                owner, repo, milestone_number: released.number, state: "closed",
+              });
+            }
+            core.info(`${tag} fechado; ${moved} item(ns) movido(s) para "${nextTitle}".`);

@@ -1,0 +1,53 @@
+# Rótulos por área, aplicados pelo workflow pr-labeler.yml a partir dos arquivos alterados.
+# Os rótulos por tipo de mudança (feat, fix, docs...) vêm do título da PR, no mesmo workflow.
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - ".pre-commit-config.yaml"
+          - "Dockerfile"
+          - "docker-compose.yml"
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "*.md"
+api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/lib/api/**"
+          - "src/lib/api-client*.ts"
+          - "orval.config.ts"
+          - "scripts/*api*.ts"
+ui:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/components/**"
+          - "src/styles.css"
+          - "src/branding/**"
+rotas:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/routes/**"
+          - "src/router.tsx"
+          - "src/server.ts"
+          - "src/start.ts"
+pwa:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "public/sw.js"
+          - "public/manifest.webmanifest"
+          - "public/offline.html"
+          - "src/lib/pwa.ts"
+          - "src/lib/push.ts"
+mobile:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "android/**"
+          - "ios/**"
+          - "capacitor.config.*"
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "package.json"
+          - "package-lock.json"

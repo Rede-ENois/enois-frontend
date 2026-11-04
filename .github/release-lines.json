@@ -1,0 +1,5 @@
+{
+  "development": { "branch": "qa" },
+  "production": { "branch": "main" },
+  "next_milestone": "Próxima versão"
+}

@@ -1,0 +1,52 @@
+name: Release Please
+
+# A cada push na main o Release Please mantém aberta uma PR de release com a próxima versão e o
+# CHANGELOG.md, calculados a partir dos commits no padrão Conventional Commits. Mesclar essa PR cria
+# a tag vX.Y.Z e o release no GitHub; em seguida as linhas de release giram (rotate-release-lines).
+#
+# PR criada com o GITHUB_TOKEN não dispara outros workflows (o CI não roda nela). Para que rode,
+# cadastre o secret RELEASE_PLEASE_TOKEN (GitHub App ou token fine-grained com contents e
+# pull-requests de escrita neste repositório); sem ele o workflow usa o GITHUB_TOKEN.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-please-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: PR de release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
+
+  rotate:
+    name: Girar as linhas de release
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/rotate-release-lines.yml
+    with:
+      release_tag: ${{ needs.release-please.outputs.tag_name }}

@@ -1,0 +1,5 @@
+# Rótulos dos runners self-hosted usados pelo deploy (build-and-push.yml).
+self-hosted-runner:
+  labels:
+    - enois
+    - docker-prod4
