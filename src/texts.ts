@@ -1111,6 +1111,11 @@ export const texts = {
     },
     you: "Você",
     refreshing: "Atualizando publicações…",
+    scrollDebug: {
+      copy: "Copiar relatório de rolagem",
+      copied: "Relatório copiado. Cole na conversa com o time.",
+      failed: "Não deu para copiar. Tente de novo.",
+    },
     loadingMore: "Carregando mais publicações…",
     endOfFeed: "Você viu tudo por enquanto.",
     loadMore: "Carregar mais",
@@ -1350,6 +1355,9 @@ export const texts = {
     backHome: "Voltar para o início",
     loadError: "Não foi possível carregar este perfil.",
     editProfile: "Editar perfil",
+    /** Own profile: the way to the professional side, which the social interface does not list. */
+    professionalProfile: "Perfil profissional",
+    professionalSetup: "Ativar perfil profissional",
     message: "Mensagem",
     city: {
       add: "Informar cidade",
@@ -1418,6 +1426,8 @@ export const texts = {
     recommendationQuote: (comment: string) => `"${comment}"`,
     imageUploadError: "Não foi possível enviar a imagem. Tente novamente.",
     avatarUnknown: "?",
+    /** Botão que abre a aparência da vitrine (o visual que quem visita vê). */
+    lookAction: "Aparência do perfil",
     bannerHtml: {
       action: "Mudar capa",
       frameTitle: "Capa em HTML do perfil",
@@ -2722,6 +2732,40 @@ export const texts = {
     moderationEmpty: "Nenhum recurso pendente.",
     decided: "Decisão registrada.",
     moderationError: "Não foi possível registrar a decisão.",
+  },
+
+  /**
+   * Lição de bons modos: o aviso educativo que aparece quando a moderação barra um arquivo
+   * impróprio no envio. É didático de propósito — quem vê já perdeu o arquivo, então a tela
+   * explica a regra em vez de só recusar.
+   */
+  conductLesson: {
+    badge: "Advertência no Boletim",
+    title: "Sentadinho(a) aí! Lição de bons modos 👨‍🏫",
+    description: "Conteúdo sexual detectado e barrado pela moderação.",
+    intro:
+      "Achou que a coordenação não ia ver? No Énóis levamos o respeito a sério. Anote as regras:",
+    rules: {
+      feed: {
+        title: "O feed não é quarto trancado:",
+        body: "Nudez e pornografia são proibidos na rede.",
+      },
+      moderation: {
+        title: "A moderação não dorme:",
+        body: "Nossa IA detecta e barra violações em tempo real.",
+      },
+      build: {
+        title: "Foque no que constrói:",
+        body: "Compartilhe projetos, debates e ideias construtivas.",
+      },
+      repeat: {
+        title: "Reincidência dá suspensão:",
+        body: "Insistir em burlar as regras gera banimento.",
+      },
+    },
+    dismiss: "Entendido, Professor! Prometo ter bons modos",
+    open: "Ver aula de bons modos",
+    openShort: "Ver aula",
   },
 
   /**

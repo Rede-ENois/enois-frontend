@@ -87,6 +87,11 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
   (`useMenuHasNews`, `src/components/use-menu-has-news.ts`).
 - Mobile dock (< 1024px, `src/components/mobile-dock.tsx`): Início, Explorar, Publicar
   (`/feed?compor=POST`), Mensagens and Avisos, with the same signals.
+- Explorar (`src/routes/explorar.tsx`): lists only the rooms of the active interface plus the shared
+  ones (`isOfInterface`): Trabalho appears in the professional interface, Brincar and Comunidade
+  rooms in the social one. An empty section is left out. The menu switcher is the way across, so a
+  tap in Explorar never switches the interface. The header bell shows only from `lg`; below it the
+  dock carries Avisos.
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
 - Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
 
@@ -385,3 +390,12 @@ que a API devolve em `/users/{username}/seals` e `/seals/criteria`; `sealEmblemS
 no cartão do selo no perfil (`ProfileSeals`, via `emblemSrc` do design system). Não há escolha de
 emblema: ele é consequência do nível calculado pelo backend. Regras em `docs/CONTRIBUTION_SEALS.md`
 do backend.
+
+## Feed scroll probe
+
+`VirtualizedFeedList` carries an opt-in probe for people who see the feed jump. Opening
+`/feed?debug=scroll` turns it on for the browser session (`lib/feed/scroll-debug`): it records every
+card that changes height (post id, old and new height, scroll before and after), scroll jumps over
+150px in one event and every change of the post list. A "Copiar relatório de rolagem" button copies
+the device line plus the last 800 entries to paste in a chat. Off by default; the virtualizer's own
+resize runs untouched, the probe only reads around it. No personal data goes in the report.

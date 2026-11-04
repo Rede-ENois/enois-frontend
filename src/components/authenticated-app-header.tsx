@@ -30,7 +30,10 @@ export function AuthenticatedAppHeader() {
       search={<GlobalSearch />}
       actions={
         <>
-          <NotificationsPopover />
+          {/* Below lg the dock carries "Avisos"; two bells read as two different counts. */}
+          <span className="hidden lg:inline-flex">
+            <NotificationsPopover />
+          </span>
           {mounted && profile && <AccountMenu profile={profile} />}
         </>
       }

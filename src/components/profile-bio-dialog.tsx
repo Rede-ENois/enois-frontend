@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { useMutation } from "@tanstack/react-query";
 
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
@@ -9,6 +7,7 @@ import { ProfileBioDialog as ProfileBioDialogView } from "@rede-enois/design-sys
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { profileApi } from "@/lib/api";
+import { ApiError } from "@/lib/api-client";
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
 
@@ -18,24 +17,31 @@ import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
  * Deixar vazio é uma ação legítima: limpa o HTML e o perfil volta a mostrar a bio de texto — por
  * isso o botão de limpar existe, em vez de o campo "não deixar" apagar.
  */
-export function ProfileBioDialog({ initialHtml, onSaved }: ProfileBioDialogProps) {
+export function ProfileBioDialog({
+  open,
+  onOpenChange,
+  initialHtml,
+  onSaved,
+}: ProfileBioDialogProps) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
 
   const save = useMutation({
     mutationFn: (html: string) => profileApi.update({ bioHtml: html }),
     onSuccess: () => {
-      setOpen(false);
+      onOpenChange(false);
       toast(texts.profile.bioHtml.saved);
       onSaved();
     },
-    onError: () => toast(texts.profile.bioHtml.error, "error"),
+    // The API says why (too long, nothing valid left after cleaning); the generic line hid it.
+    onError: (error) =>
+      toast(error instanceof ApiError ? error.message : texts.profile.bioHtml.error, "error"),
   });
 
   return (
     <ProfileBioDialogView
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={onOpenChange}
+      trigger={false}
       initialHtml={initialHtml}
       maxLength={PROFILE_HTML_MAX_LENGTH}
       savePending={save.isPending}

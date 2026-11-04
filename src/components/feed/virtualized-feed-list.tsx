@@ -2,10 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { type VirtualItem, useWindowVirtualizer } from "@tanstack/react-virtual";
 
+import { texts } from "@/texts";
 import type { VirtualizedFeedListProps } from "@/types/components/feed/virtualized-feed-list-props";
 import type { HomeTab } from "@/types/routes/feed/home-tab";
 import { CaughtUpDivider } from "@rede-enois/design-system/domain";
 import { InfiniteScroll } from "@rede-enois/design-system/patterns";
+import { Button, useToast } from "@rede-enois/design-system/ui";
+
+import { recordScrollDebug, scrollDebugEnabled, scrollDebugReport } from "@/lib/feed/scroll-debug";
 
 import { PostCard } from "@/components/post-card";
 
@@ -68,6 +72,7 @@ export function VirtualizedFeedList({
   });
 
   const items = virtualizer.getVirtualItems();
+  const debug = useScrollDebug(virtualizer, posts, scrollMargin);
 
   useEffect(
     () => () => {
@@ -132,6 +137,98 @@ export function VirtualizedFeedList({
         loadingLabel={loadingLabel}
         endLabel={posts.length > 0 ? endLabel : undefined}
       />
+
+      {debug && <ScrollDebugButton />}
     </div>
+  );
+}
+
+/**
+ * With `?debug=scroll` (see `lib/feed/scroll-debug`), records every card that changes height and
+ * what the scroll did, sudden scroll jumps and every change of the post list, so a person who sees
+ * the feed jump can send what happened on their device. Behavior is the same with it on: the
+ * virtualizer's own resize runs untouched, the probe only reads around it.
+ */
+function useScrollDebug(
+  virtualizer: ReturnType<typeof useWindowVirtualizer>,
+  posts: { id: string }[],
+  scrollMargin: number,
+): boolean {
+  const [debug, setDebug] = useState(false);
+  // Read after mount: the server render has no URL to read, and both renders must match.
+  useEffect(() => setDebug(scrollDebugEnabled()), []);
+
+  useEffect(() => {
+    if (!debug) return;
+    const original = virtualizer.resizeItem;
+    virtualizer.resizeItem = (index, size) => {
+      const from = virtualizer.measurementsCache[index]?.size ?? 0;
+      const scrollY = window.scrollY;
+      original(index, size);
+      if (Math.abs(size - from) < 1) return;
+      recordScrollDebug({
+        t: Math.round(performance.now()),
+        kind: "resize",
+        index,
+        post: String(virtualizer.options.getItemKey(index)),
+        from: Math.round(from),
+        to: Math.round(size),
+        scrollY: Math.round(scrollY),
+        scrollAfter: Math.round(window.scrollY),
+      });
+    };
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) > 150) {
+        recordScrollDebug({
+          t: Math.round(performance.now()),
+          kind: "jump",
+          from: Math.round(last),
+          to: Math.round(y),
+        });
+      }
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      virtualizer.resizeItem = original;
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [debug, virtualizer]);
+
+  useEffect(() => {
+    if (!debug) return;
+    recordScrollDebug({
+      t: Math.round(performance.now()),
+      kind: "list",
+      count: posts.length,
+      first: posts[0]?.id ?? "",
+      margin: scrollMargin,
+    });
+  }, [debug, posts, scrollMargin]);
+
+  return debug;
+}
+
+function ScrollDebugButton() {
+  const { toast } = useToast();
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(scrollDebugReport());
+      toast(texts.feed.scrollDebug.copied);
+    } catch {
+      toast(texts.feed.scrollDebug.failed, "error");
+    }
+  };
+  return (
+    <Button
+      type="button"
+      size="sm"
+      onClick={copy}
+      className="fixed bottom-28 left-3 z-50 shadow-lg lg:bottom-4"
+    >
+      {texts.feed.scrollDebug.copy}
+    </Button>
   );
 }

@@ -536,12 +536,20 @@ async function fail<T>(response: Response, path: string, hadSession: boolean): P
   );
 }
 
-/** Corpo padrão das respostas bem-sucedidas (204/vazio, envelope `{body}` ou JSON direto). */
+/**
+ * Corpo padrão das respostas bem-sucedidas (envelope `{body}`, JSON direto ou vazio).
+ *
+ * Vazio nunca é JSON válido: ler o corpo em vez de confiar no `Content-Length` evita o
+ * `response.json()` que estourava com "Unexpected end of JSON input" — e um 200 sem corpo
+ * passa a ser o `undefined` que as rotas sem retorno já esperam.
+ */
 async function parseBody<T>(response: Response): Promise<T> {
-  if (response.status === HttpStatus.NO_CONTENT || response.headers.get("content-length") === "0") {
+  if (response.status === HttpStatus.NO_CONTENT) {
     return undefined as T;
   }
-  const data = await response.json();
+  const raw = await response.text();
+  if (!raw.trim()) return undefined as T;
+  const data = JSON.parse(raw);
   if (data?.body !== undefined) return data.body as T;
   return data as T;
 }

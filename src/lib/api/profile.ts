@@ -6,10 +6,11 @@ import type { EducationRequest } from "@/types/application/profile/education-req
 import type { Experience } from "@/types/application/profile/experience";
 import type { ExperienceRequest } from "@/types/application/profile/experience-request";
 import type { Profile } from "@/types/application/profile/profile";
+import type { ProfileAppearance } from "@/types/application/profile/profile-appearance";
 import type { ProfileNetworkUser } from "@/types/application/profile/profile-network-user";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 
-import { api } from "../api-client";
+import { ApiError, api } from "../api-client";
 
 export const profileApi = {
   /** Liga/desliga a secao de ranking no perfil (preferencia da conta; padrao: mostrar). */
@@ -31,6 +32,30 @@ export const profileApi = {
   getById: (id: string) => api.get<Profile>(`/users/by-id/${id}`),
 
   update: (data: UpdateProfileRequest) => api.patch<Profile>("/me/profile", data),
+
+  /**
+   * Aparência da vitrine: um visual para o perfil social e outro para o profissional.
+   * Não confundir com o tema da conta (`/me/theme`), que é a preferência de quem olha.
+   *
+   * Rota fora da superfície do servidor responde 200 com corpo vazio (anti-enumeração), não
+   * 404 — e um "salvo" vazio fecharia o diálogo sem gravar nada. Sem o objeto de volta, a
+   * escrita falhou; dizer isso é melhor do que fingir sucesso.
+   */
+  setProfileAppearance: async (appearance: ProfileAppearance) => {
+    const saved = await api.put<ProfileAppearance | undefined>(
+      "/me/profile-appearance",
+      appearance,
+    );
+    if (!saved || typeof saved !== "object") {
+      throw new ApiError(
+        0,
+        "PROFILE_APPEARANCE_UNAVAILABLE",
+        "A aparência do perfil não está disponível agora. Tente de novo em alguns minutos.",
+        "/me/profile-appearance",
+      );
+    }
+    return saved;
+  },
 
   experiences: {
     list: () => api.get<Experience[]>("/me/experiences"),

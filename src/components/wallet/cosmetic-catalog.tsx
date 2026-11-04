@@ -34,6 +34,8 @@ import { Button, LoadingState } from "@rede-enois/design-system/ui";
 import { ChevronDown, RotateCcw, Search, Sparkles, X } from "lucide-react";
 
 const PAGE_SIZE = 24;
+/** Looks are bigger cards than the item grid, so fewer of them fit a screen at a time. */
+const LOOK_PAGE_SIZE = 12;
 
 /**
  * Sentinel for the "every collection" tab. The design system's shop only knows a single
@@ -125,6 +127,7 @@ export function CosmeticCatalog({
   const [kind, setKind] = useState<CosmeticKind | "ALL">("ALL");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(PAGE_SIZE);
+  const [visibleLooks, setVisibleLooks] = useState(LOOK_PAGE_SIZE);
   const [tryOn, setTryOn] = useState<CosmeticTryOn>(EMPTY_TRY_ON);
   const [replay, setReplay] = useState(0);
   const headingId = useId();
@@ -168,7 +171,10 @@ export function CosmeticCatalog({
     .flatMap((c) => c.looks)
     .find((look) => look.id === tryOn.look);
 
-  const resetPage = () => setVisible(PAGE_SIZE);
+  const resetPage = () => {
+    setVisible(PAGE_SIZE);
+    setVisibleLooks(LOOK_PAGE_SIZE);
+  };
   const tryItem = (item: CosmeticShopItem) => {
     setTryOn((state) => toggleTryItem(state, item));
     if (item.kind === "PROFILE_EFFECT") setReplay((n) => n + 1);
@@ -442,10 +448,14 @@ export function CosmeticCatalog({
 
   const album = current ? albumPage(catalog, current.id) : null;
   const done = completedCollections(catalog, listedCollections);
+  // The looks follow the picked tab: the whole catalog on "everything", else only that collection.
+  const looksShown = listedCollections
+    .filter((c) => collection === EVERYTHING || c.id === collection)
+    .flatMap((c) => c.looks.map((entry) => ({ entry, collectionName: c.name })));
 
   return (
     <div className="cos-shop">
-      {listedCollections.some((c) => c.looks.length > 0) && (
+      {looksShown.length > 0 && (
         <section className="cos-shop__looks" aria-labelledby={`${headingId}-looks`}>
           <header className="cos-shop__head">
             <h2 id={`${headingId}-looks`}>{messages.looksTitle}</h2>
@@ -454,8 +464,23 @@ export function CosmeticCatalog({
           </header>
 
           <ul className="cos-shop__look-grid">
-            {listedCollections.flatMap((c) => c.looks.map((entry) => look(entry, c.name)))}
+            {looksShown
+              .slice(0, visibleLooks)
+              .map(({ entry, collectionName }) => look(entry, collectionName))}
           </ul>
+
+          {visibleLooks < looksShown.length && (
+            <div className="frame-shop-pagination">
+              <p>
+                {messages.showing(Math.min(visibleLooks, looksShown.length), looksShown.length)}
+              </p>
+
+              <Button variant="outline" onClick={() => setVisibleLooks((n) => n + LOOK_PAGE_SIZE)}>
+                {messages.showMore}
+                <ChevronDown size={15} aria-hidden />
+              </Button>
+            </div>
+          )}
         </section>
       )}
 

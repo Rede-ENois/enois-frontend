@@ -38,6 +38,7 @@ import {
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
+  AlertTriangle,
   ArrowUp,
   BarChart3,
   Briefcase,
@@ -50,7 +51,7 @@ import {
   EyeOff,
   FileText,
   Film,
-  Gift,
+  GraduationCap,
   Image,
   Loader2,
   RefreshCw,
@@ -58,15 +59,7 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  ApiError,
-  authApi,
-  corporateApi,
-  eventsApi,
-  feedApi,
-  networkApi,
-  profileApi,
-} from "@/lib/api";
+import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } from "@/lib/api";
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
@@ -81,6 +74,7 @@ import {
   useInterfaceContext,
 } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
+import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
@@ -101,6 +95,7 @@ import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
+import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
@@ -352,6 +347,7 @@ function Home() {
       item.type !== "image" || (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
   );
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
+  const [conductLessonOpen, setConductLessonOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
   const [pageHtml, setPageHtml] = useState("");
@@ -569,16 +565,17 @@ function Home() {
               ),
             ),
           )
-          .catch((error: unknown) =>
+          .catch((error: unknown) => {
+            const isProhibited = isProhibitedContent(error);
+            if (isProhibited) {
+              setConductLessonOpen(true);
+            }
             setMedia((current) =>
               current.map((entry) =>
                 entry.preview === preview
                   ? {
                       ...entry,
-                      moderationStatus:
-                        error instanceof ApiError && error.code === "IMAGE_CONTENT_NOT_ALLOWED"
-                          ? "prohibited"
-                          : "blocked",
+                      moderationStatus: isProhibited ? "prohibited" : "blocked",
                       moderationError:
                         error instanceof Error
                           ? error.message
@@ -586,8 +583,8 @@ function Home() {
                     }
                   : entry,
               ),
-            ),
-          );
+            );
+          });
       }
     }
   };
@@ -897,11 +894,14 @@ function Home() {
                             </SpoilerPreview>
 
                             {item.moderationStatus === "prohibited" && (
-                              <div className="absolute inset-0 grid place-items-center bg-surface-card/75 p-3 text-center backdrop-blur-sm">
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/85 p-3 text-center backdrop-blur-md">
                                 <div className="max-w-xs">
-                                  <Gift
+                                  <AlertTriangle
                                     aria-hidden
-                                    className="mx-auto mb-1 h-6 w-6 animate-bounce text-primary"
+                                    className={cn(
+                                      "mx-auto mb-1.5 h-7 w-7 text-amber-500 animate-pulse",
+                                      "dark:text-amber-400",
+                                    )}
                                   />
 
                                   <p className="text-sm font-semibold text-text-strong">
@@ -911,6 +911,16 @@ function Home() {
                                   <p className="mt-1 text-xs text-text-subtle">
                                     {texts.feed.composer.imageProhibitedMessage}
                                   </p>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setConductLessonOpen(true)}
+                                    className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
+                                  >
+                                    <GraduationCap className="h-3.5 w-3.5" aria-hidden />
+
+                                    <>{texts.conductLesson.open}</>
+                                  </button>
                                 </div>
                               </div>
                             )}
@@ -1521,6 +1531,8 @@ function Home() {
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>
       )}
+
+      <ConductLessonDialog open={conductLessonOpen} onOpenChange={setConductLessonOpen} />
     </AppContainer>
   );
 }

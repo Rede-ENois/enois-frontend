@@ -1,5 +1,6 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 
+import { useAppShellStore } from "@/stores/app-shell.store";
 import { texts } from "@/texts";
 import { MobileDock as MobileDockView } from "@rede-enois/design-system/patterns";
 import { Plus } from "lucide-react";
@@ -16,6 +17,11 @@ export function MobileDock() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
   const counts = useNavigationCounts();
+  // Chat apps hide the tab bar inside a thread: the floating dock covered the composer (and rose
+  // with the keyboard over it). The back arrow of the thread leads to the list, where it returns.
+  const conversationOpen = useAppShellStore((state) => state.conversationOpen);
+
+  if (conversationOpen) return null;
 
   return (
     <MobileDockView

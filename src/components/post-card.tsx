@@ -25,7 +25,6 @@ import { sealsApi } from "@/lib/api/seals";
 import { saveFeedScroll } from "@/lib/feed-scroll-restoration";
 import { savedPostsQueryOptions } from "@/lib/feed/saved-posts";
 import { useAuth } from "@/lib/use-auth";
-import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { MentionTextarea } from "@/components/mention-textarea";
 import { PollCard } from "@/components/post/poll-card";
@@ -53,8 +52,6 @@ function PostCardContainer({
   pinPending = false,
 }: PostCardProps) {
   const { requireAuth, user } = useAuth();
-  // Modo lite: nada de player de terceiro montando sozinho no feed.
-  const lite = useLiteMode();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isOwner = user?.id != null && user.id === post.authorId;
@@ -228,15 +225,25 @@ function PostCardContainer({
       ? `/profissional/${post.authorUsername}`
       : `/perfil/${post.authorUsername}`;
 
+  // O DS espera campos flat (repostedByName/Avatar/Username); o backend manda um objeto aninhado.
+  const dsPost = post.repostedBy
+    ? {
+        ...post,
+        repostedByName: post.repostedBy.name,
+        repostedByAvatar: post.repostedBy.avatar,
+        repostedByUsername: post.repostedBy.username,
+      }
+    : post;
+
   return (
     <PostCardView
-      post={post}
+      post={dsPost}
       hrefs={{
         author: authorHref,
         post: feedTab ? `/post/${post.id}?feedTab=${feedTab}` : `/post/${post.id}`,
         community: post.community ? `/comunidades/${post.community.id}` : null,
         repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
-        repostedBy: post.repostedByUsername ? `/perfil/${post.repostedByUsername}` : null,
+        repostedBy: post.repostedBy?.username ? `/perfil/${post.repostedBy.username}` : null,
         blog: `/blog/${post.authorUsername}/${post.id}`,
       }}
       timeLabel={formatTime(post.createdAt)}
@@ -268,7 +275,6 @@ function PostCardContainer({
           saveFeedScroll({ tab: feedTab, postId: post.id, scrollY: window.scrollY });
         }
       }}
-      autoplayLinks={!lite}
       pageHtml={pageHtml}
       pageLoading={pageLoading}
       mediaSpoiler={mediaSpoiler}
@@ -376,7 +382,7 @@ function PostCardContainer({
         ) : null
       }
       renderRichText={(props) => <RichText {...props} writtenAt={post.createdAt} />}
-      renderMediaGrid={(props) => <MediaGrid {...props} />}
+      renderMediaGrid={(props) => <MediaGrid {...props} known={post.media} />}
       // The mini card is the social profile; a corporate post keeps the link to its own page.
       renderAuthorTrigger={
         post.authorIdentity === "CORPORATE"

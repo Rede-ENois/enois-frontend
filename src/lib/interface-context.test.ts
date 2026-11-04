@@ -6,6 +6,7 @@ import {
   contextOfPath,
   destinationAfterSwitch,
   effectiveIdentity,
+  isOfInterface,
   professionalProfileState,
   readStoredContext,
   resolveContext,
@@ -83,6 +84,16 @@ describe("resolveContext", () => {
   it("página compartilhada segue a última escolha", () => {
     expect(resolveContext("/mensagens", "PROFESSIONAL")).toBe("PROFESSIONAL");
     expect(resolveContext("/feed", "SOCIAL")).toBe("SOCIAL");
+  });
+});
+
+describe("isOfInterface", () => {
+  it("lista no Explorar só o que é da interface ativa ou compartilhado", () => {
+    expect(isOfInterface("/vagas", "SOCIAL")).toBe(false);
+    expect(isOfInterface("/vagas", "PROFESSIONAL")).toBe(true);
+    expect(isOfInterface("/comunidades", "PROFESSIONAL")).toBe(false);
+    expect(isOfInterface("/loja", "SOCIAL")).toBe(true);
+    expect(isOfInterface("/loja", "PROFESSIONAL")).toBe(true);
   });
 });
 

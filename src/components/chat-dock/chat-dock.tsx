@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useChatDockStore } from "@/stores/chat-dock.store";
 import { texts } from "@/texts";
@@ -102,13 +102,6 @@ function ChatDockInner() {
     baselineRef.current = { context, count: unreadData.count };
   }, [unreadData, context, expand, queryClient]);
 
-  const markAsRead = useMutation({
-    mutationFn: (id: string) => messagesApi.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    },
-  });
-
   const conversations = useMemo(
     () =>
       [...(conversationsData?.pages.flatMap((p) => p.items) ?? [])].sort((a, b) => {
@@ -127,9 +120,8 @@ function ChatDockInner() {
   const janelasVisiveis = openChats.slice(0, janelasQueCabem(larguraDaJanela, openChats.length));
 
   const handleSelectConversation = (id: string) => {
+    // A janela aberta marca a conversa como lida (useConversationOnScreen no filão).
     openChat(id);
-    const conv = conversations.find((c) => c.id === id);
-    if (conv && conv.unread > 0) markAsRead.mutate(id);
   };
 
   if (e2eReady === false) {

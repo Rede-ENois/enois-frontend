@@ -3,8 +3,11 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { ApiError } from "@/lib/api-client";
 
 const mocks = vi.hoisted(() => ({
   catalog: vi.fn(),
@@ -32,6 +35,8 @@ vi.mock("@rede-enois/design-system/domain", () => ({
     </div>
   ),
 }));
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const { ProfileBannerDialog } = await import("./profile-banner-dialog");
 
@@ -102,6 +107,27 @@ describe("ProfileBannerDialog", () => {
     await settle();
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(mocks.toast).toHaveBeenCalledWith(expect.any(String), "error");
+  });
+
+  it("shows the reason the API gave instead of the generic line", async () => {
+    const motivo = "HTML da capa passa do limite de 20.000 caracteres.";
+    mocks.update.mockRejectedValue(new ApiError(400, "BANNER_HTML_TOO_LONG", motivo));
+    await render(null);
+
+    await act(async () => button("save")!.click());
+    await settle();
+
+    expect(mocks.toast).toHaveBeenCalledWith(motivo, "error");
+  });
+
+  it("falls back to the generic line when the failure carries no API answer", async () => {
+    mocks.update.mockRejectedValue(new Error("offline"));
+    await render(null);
+
+    await act(async () => button("save")!.click());
+    await settle();
+
+    expect(mocks.toast).toHaveBeenCalledWith(texts.profile.bannerHtml.error, "error");
   });
 
   it("offers nothing about the shop without an equipped banner, and a new cover refreshes the shop", async () => {
