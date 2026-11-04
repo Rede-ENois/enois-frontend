@@ -1,6 +1,6 @@
 import type { CallJoin } from "./call-join";
 
-/** Url do iframe do Jitsi/JaaS: a sala e o token vão juntos, sem segredo nenhum no cliente. */
+/** Url do iframe do Jitsi: a sala e o token vão juntos, sem segredo nenhum no cliente. */
 export function callEmbedUrl(join: CallJoin): string {
   const params = new URLSearchParams({ jwt: join.jwt });
   // Começa com o microfone e a câmera desligados exceto quando a chamada é de vídeo pedida por
@@ -13,5 +13,5 @@ export function callEmbedUrl(join: CallJoin): string {
   params.set("config.prejoinPageEnabled", "false");
   params.set("config.requireDisplayName", "false");
   params.set("interfaceConfig.SHOW_JITSI_WATERMARK", "false");
-  return `https://${join.host}/${join.room}?${params.toString()}`;
+  return `${join.host}/${join.room}?${params.toString()}`;
 }

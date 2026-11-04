@@ -27,10 +27,9 @@ const JOIN: CallJoin = {
   callId: "call_1",
   kind: "VIDEO",
   modality: "DIRECT",
-  host: "8x8.vc",
+  host: "https://chamadas.example.test",
   tokenTtlSeconds: 7200,
-  appId: "app",
-  room: "app/sala-1",
+  room: "sala-1",
   jwt: "token",
   call: { ...CALL, state: "ACTIVE" },
 };

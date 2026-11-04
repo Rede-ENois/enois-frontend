@@ -7,9 +7,9 @@ export interface CallJoin {
   callId: string;
   kind: CallKind;
   modality: CallModality;
+  /** Origem do Jitsi que a gente hospeda, com https e sem barra no fim. */
   host: string;
   tokenTtlSeconds: number;
-  appId: string | null;
   room: string;
   jwt: string;
   call: CallView;

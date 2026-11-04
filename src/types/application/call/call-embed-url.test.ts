@@ -7,10 +7,9 @@ const JOIN: CallJoin = {
   callId: "call_1",
   kind: "AUDIO",
   modality: "DIRECT",
-  host: "8x8.vc",
+  host: "https://chamadas.example.test",
   tokenTtlSeconds: 7200,
-  appId: "app",
-  room: "app/sala-sem-nome-deusuario",
+  room: "sala-sem-nome-deusuario",
   jwt: "token.assinado",
   call: {
     id: "call_1",
@@ -35,8 +34,8 @@ const JOIN: CallJoin = {
 describe("callEmbedUrl", () => {
   it("leva a sala e o token que o servidor assinou", () => {
     const url = new URL(callEmbedUrl(JOIN));
-    expect(url.origin).toBe("https://8x8.vc");
-    expect(url.pathname).toBe("/app/sala-sem-nome-deusuario");
+    expect(url.origin).toBe("https://chamadas.example.test");
+    expect(url.pathname).toBe("/sala-sem-nome-deusuario");
     expect(url.searchParams.get("jwt")).toBe("token.assinado");
   });
 
