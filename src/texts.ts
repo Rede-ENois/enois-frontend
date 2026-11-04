@@ -3743,7 +3743,10 @@ export const texts = {
     cameraUnavailable: "Não achamos sua câmera. A chamada segue sem vídeo.",
     connectionLost: "A conexão caiu. Tentando de novo…",
     loadError: "A chamada não abriu. Tente de novo.",
-    notConfigured: "As chamadas ainda não estão disponíveis neste ambiente.",
+    // Aparece quando alguém tenta ligar antes de o servidor de chamadas estar configurado.
+    notConfigured: "Ops, ainda estamos configurando tudo por aqui.",
+    notConfiguredTitle: "Chamadas em breve",
+    dismissNotice: "Entendi",
     startAudio: "Ligar",
     startVideo: "Chamar com vídeo",
     tamoJunto: "Tamo junto",

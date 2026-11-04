@@ -9,10 +9,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { callSessionStore, getCallSession } from "@/lib/calls/call-session";
 
-import { CallsProvider } from "./calls-provider";
+import { CallsProvider, useCalls } from "./calls-provider";
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(() => Promise.resolve([] as CallView[])),
+  startDirect: vi.fn(),
   ringtone: vi.fn(() => () => {}),
   current: null as CallView | null,
 }));
@@ -22,6 +23,7 @@ vi.mock("@/lib/api", () => ({
   apiUrl: (path: string) => `/api${path}`,
   callsApi: {
     open: mocks.open,
+    startDirect: mocks.startDirect,
     // A conferência periódica só lê a chamada; devolver a mesma evita efeito colateral no teste.
     get: vi.fn(() => Promise.resolve(mocks.current)),
     join: vi.fn(),
@@ -118,6 +120,47 @@ describe("toque da chamada", () => {
     act(() => callSessionStore.ring(call({ isInitiator: true }), "calling"));
     await flush();
     expect(mocks.ringtone).not.toHaveBeenCalled();
+  });
+
+  it("ligar sem servidor de chamadas configurado mostra o aviso, não um erro seco", async () => {
+    const { ApiError } = await import("@/lib/api-client");
+    mocks.startDirect.mockRejectedValueOnce(
+      new ApiError(503, "CALLS_NOT_CONFIGURED", "As chamadas ainda nao estao configuradas."),
+    );
+    act(() => root.unmount());
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+
+    function Harness() {
+      const calls = useCalls();
+      return (
+        <button type="button" onClick={() => void calls.startDirect("conv_1", "AUDIO")}>
+          ligar
+        </button>
+      );
+    }
+
+    act(() => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <CallsProvider>
+            <Harness />
+          </CallsProvider>
+        </QueryClientProvider>,
+      );
+    });
+    await flush();
+    const button = host.querySelector("button");
+    act(() => button!.click());
+    await flush();
+
+    expect(getCallSession()).toMatchObject({
+      phase: "error",
+      notConfigured: true,
+      error: "Ops, ainda estamos configurando tudo por aqui.",
+      join: null,
+    });
   });
 
   it("retoma ao abrir o app a chamada 1:1 que ficou tocando", async () => {
