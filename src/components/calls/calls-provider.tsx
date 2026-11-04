@@ -12,7 +12,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { CallKind } from "@/types/application/call/call-kind";
-import type { CallState } from "@/types/application/call/call-state";
 import type { CallView } from "@/types/application/call/call-view";
 import type { CallsContextValue } from "@/types/application/call/calls-context-value";
 import { isTerminalState } from "@/types/application/call/is-terminal-state";
@@ -364,27 +363,4 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       {session.phase === "idle" ? null : <CallPanel />}
     </>
   );
-}
-
-/** Nome do estado para a tela ("Chamando…", "Em andamento"). */
-export function stateLabel(state: CallState): string {
-  switch (state) {
-    case "INITIATING":
-    case "RINGING":
-      return texts.calls.ringing;
-    case "CONNECTING":
-      return texts.calls.connecting;
-    case "ACTIVE":
-      return texts.calls.active;
-    case "DECLINED":
-      return texts.calls.declined;
-    case "MISSED":
-      return texts.calls.missed;
-    case "CANCELLED":
-      return texts.calls.cancelled;
-    case "ENDED":
-      return texts.calls.ended;
-    case "FAILED":
-      return texts.calls.failed;
-  }
 }
