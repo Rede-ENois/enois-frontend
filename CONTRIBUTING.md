@@ -35,6 +35,14 @@ precisa do `BACKEND_TARGET` e o backend precisa subir com `--server.servlet.cont
 
 ## Antes de abrir a PR
 
+Configure os hooks uma vez por clone. O projeto usa [pre-commit](https://pre-commit.com/); instale-o com `uv tool install pre-commit`:
+
+```bash
+pre-commit install --overwrite
+```
+
+`--overwrite` substitui o hook antigo do `simple-git-hooks` sem executar os dois em modo de migração. Os hooks de JavaScript do pre-commit usam as dependências fixadas no `package-lock.json`; rode `npm ci` antes de commitar. Para conferir manualmente os hooks, use `pre-commit run`.
+
 ```bash
 npm run lint         # eslint (inclui as regras locais)
 npm run typecheck    # tsc --noEmit

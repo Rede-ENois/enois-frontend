@@ -117,8 +117,15 @@ recusa escrita com cookie sem esse header (403 `CSRF_REQUIRED`).
 
 O CI (`.github/workflows/ci.yml`) roda os testes em toda PR.
 
-- `npm install` configura os hooks do git (`simple-git-hooks`): o pre-commit roda `eslint --fix` e `prettier` nos arquivos staged (lint-staged).
-- Em emergência, `git commit --no-verify` pula o hook.
+- Os hooks de commit usam [pre-commit](https://pre-commit.com/). Instale a ferramenta com `uv tool install pre-commit` e configure o repositório:
+
+  ```bash
+  pre-commit install --overwrite
+  ```
+
+  `--overwrite` substitui o hook antigo do `simple-git-hooks` sem entrar no modo de migração, que executaria os dois hooks juntos. Na primeira execução, os ambientes dos hooks são instalados automaticamente; os hooks locais de JavaScript também exigem `npm ci` (consulte a seção de instalação acima).
+
+- Em emergência, `SKIP=...` pode ignorar hooks específicos; `git commit --no-verify` pula todos os hooks.
 
 ## Deploy na Vercel
 

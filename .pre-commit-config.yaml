@@ -1,0 +1,107 @@
+default_stages: [pre-commit]
+# Node dos hooks `language: node` (svgo, markdownlint). Fixo porque, sem versão, o nodeenv busca
+# a mais recente publicada e quebra ao ler versões alpha (v27.0.0-alpha); `system` não existe no
+# Windows. Use uma LTS.
+default_language_version:
+  node: "24.22.2"
+minimum_pre_commit_version: 4.0.0
+
+# Arquivos gerados ou travados por ferramenta não são reformatados à mão: o routeTree é
+# reescrito pelo plugin do TanStack Router e o lockfile pelo npm.
+exclude: |
+  (?x)^(
+    package-lock\.json|
+    src/routeTree\.gen\.ts|
+    \.env(\..*)?|
+    (^|/)node_modules/.*|
+    (^|/)dist/.*|
+    (^|/)\.output/.*|
+    (^|/)\.vinxi/.*|
+    (^|/)coverage/.*
+  )$
+
+repos:
+  # ==========================================
+  # Higiene de arquivos
+  # ==========================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        # Markdown usa dois espaços no fim da linha para quebrar linha (ver .editorconfig).
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        # O .editorconfig fixa LF; sem isso um commit feito no Windows entra com CRLF.
+        args: [--fix=lf]
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+        # tsconfig.json é JSONC (aceita comentários); o tsc valida ele no typecheck.
+        exclude: ^tsconfig\.json$
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=5000]
+      - id: detect-private-key
+
+  # ==========================================
+  # JS/TS — usa as ferramentas do node_modules do projeto
+  # ==========================================
+  # As versões vêm do package-lock.json, então terminal, GitHub Desktop, VS Code e CI
+  # rodam exatamente o mesmo prettier/eslint/tsc. Um prettier isolado (`language: node`)
+  # não enxergaria o plugin de ordenação de imports configurado no .prettierrc.
+  # Requer `npm ci` antes do primeiro commit.
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint (com prettier embutido)
+        entry: npm exec --no -- eslint --fix --no-warn-ignored
+        language: system
+        files: \.(ts|tsx|js|jsx|mjs|cjs)$
+      - id: prettier
+        name: Prettier
+        entry: npm exec --no -- prettier --write --ignore-unknown
+        language: system
+        files: \.(json|md|css|ya?ml|html)$
+      - id: typecheck
+        name: TypeScript typecheck (tsc)
+        entry: npm run typecheck
+        language: system
+        files: \.(ts|tsx)$
+        pass_filenames: false
+      - id: eslint-rules
+        name: Testes das regras locais do ESLint
+        entry: npm run test:eslint-rules
+        language: system
+        files: ^eslint/
+        pass_filenames: false
+
+  # ==========================================
+  # SVG e Markdown — ambientes isolados com versão fixa
+  # ==========================================
+  # Não dependem do node_modules: o pre-commit instala a versão pinada num ambiente próprio, igual
+  # em qualquer máquina e no CI.
+  - repo: local
+    hooks:
+      - id: svgo
+        name: Otimizar SVG (svgo)
+        entry: svgo --config svgo.config.mjs --quiet
+        language: node
+        additional_dependencies: ["svgo@4.1.0"]
+        files: \.svg$
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.24.0
+    hooks:
+      - id: markdownlint-cli2
+        name: Markdown lint
+
+  # ==========================================
+  # GitHub Actions
+  # ==========================================
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+        files: ^\.github/workflows/.*\.ya?ml$

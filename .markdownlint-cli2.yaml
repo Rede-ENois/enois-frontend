@@ -1,0 +1,11 @@
+config:
+  # Linhas longas são quebradas pelo Prettier (printWidth 100) só onde dá; tabela e link ficam.
+  MD013: false
+ignores:
+  - "node_modules/**"
+  - "CHANGELOG.md"
+  # Templates de PR começam em "##" de propósito: o texto entra no corpo da PR, abaixo do título.
+  - ".github/PULL_REQUEST_TEMPLATE.md"
+  - ".github/PULL_REQUEST_TEMPLATE/**"
+  # Plano gerado por ferramenta, não é documentação do projeto.
+  - ".flattapp/**"
