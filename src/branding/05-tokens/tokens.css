@@ -1,13 +1,13 @@
 /* Énois · Brand color tokens · 2026 */
 :root {
-  --enois-primary: #6746F5;
-  --enois-primary-dark: #4325B8;
+  --enois-primary: #6746f5;
+  --enois-primary-dark: #4325b8;
   --enois-deep: #261357;
-  --enois-lilac: #A78BFA;
-  --enois-lilac-light: #EEE8FF;
-  --enois-coral: #FF7A70;
-  --enois-charcoal: #21173A;
-  --enois-surface: #FAF9FF;
-  --enois-night: #160D2D;
-  --enois-brand-gradient: linear-gradient(135deg, #A78BFA 0%, #6746F5 50%, #4325B8 100%);
+  --enois-lilac: #a78bfa;
+  --enois-lilac-light: #eee8ff;
+  --enois-coral: #ff7a70;
+  --enois-charcoal: #21173a;
+  --enois-surface: #faf9ff;
+  --enois-night: #160d2d;
+  --enois-brand-gradient: linear-gradient(135deg, #a78bfa 0%, #6746f5 50%, #4325b8 100%);
 }

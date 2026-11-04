@@ -5,11 +5,7 @@
       "pagina": {
         "onde": "/conta",
         "titulo": "Conta e segurança",
-        "secoes": [
-          "Acesso",
-          "Privacidade e moderação",
-          "Encerrar conta"
-        ],
+        "secoes": ["Acesso", "Privacidade e moderação", "Encerrar conta"],
         "linhas": [
           "Pular para o conteúdo",
           "Énóis",
@@ -61,11 +57,7 @@
       "pagina": {
         "onde": "/conta",
         "titulo": "Conta e segurança",
-        "secoes": [
-          "Acesso",
-          "Privacidade e moderação",
-          "Encerrar conta"
-        ],
+        "secoes": ["Acesso", "Privacidade e moderação", "Encerrar conta"],
         "linhas": [
           "Pular para o conteúdo",
           "Énóis",

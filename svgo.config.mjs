@@ -3,7 +3,8 @@
 // numérica é alta o bastante para não deslocar curvas do logo.
 export default {
   multipass: true,
-  js2svg: { pretty: true, indent: 2, finalNewline: true },
+  // eol fixo: sem ele o svgo grava CRLF no Windows e briga com o hook mixed-line-ending.
+  js2svg: { pretty: true, indent: 2, finalNewline: true, eol: "lf" },
   plugins: [
     {
       name: "preset-default",
@@ -13,6 +14,8 @@ export default {
           cleanupNumericValues: { floatPrecision: 6 },
           convertPathData: { floatPrecision: 6 },
           removeDesc: false,
+          // role="img" faz o leitor de tela anunciar o aria-label do SVG como imagem.
+          removeUnknownsAndDefaults: { keepRoleAttr: true, keepAriaAttrs: true },
         },
       },
     },

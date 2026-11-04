@@ -35,11 +35,11 @@ e também quando alguém representa o projeto em público.
 
 ## Como relatar
 
-Escreva para **suporte@enois.ia.br** com o que aconteceu, onde, quando e, se houver, capturas ou
+Escreva para **<suporte@enois.ia.br>** com o que aconteceu, onde, quando e, se houver, capturas ou
 links. Relatos são tratados com confidencialidade, e quem relata de boa-fé não é penalizado — mesmo
 que a apuração não confirme o ocorrido.
 
-Para **falhas de segurança**, o canal é outro: **seguranca@enois.ia.br**, conforme o `SECURITY.md`.
+Para **falhas de segurança**, o canal é outro: **<seguranca@enois.ia.br>**, conforme o `SECURITY.md`.
 Não abra issue pública para vulnerabilidade.
 
 ## Consequências

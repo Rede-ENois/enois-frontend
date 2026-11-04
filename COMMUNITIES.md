@@ -13,7 +13,7 @@ Comunidades funcionam como **grupos**. É preciso entrar para interagir.
 
 ## Listar comunidades
 
-```
+```text
 GET /api/communities?topic=TECNOLOGIA&limit=20
 Response: { "items": [{ "id": "community_...", "name": "Devs BR", "description": "...",
                         "members": 42, "topic": "TECNOLOGIA", "cover": "https://...",
@@ -35,7 +35,7 @@ Response: { "items": [{ "id": "community_...", "name": "Devs BR", "description":
 
 ## Ver comunidade
 
-```
+```text
 GET /api/communities/{communityId}
 Response: { "id": "...", "name": "...", "description": "...", "members": 42,
             "topic": "...", "cover": "...", "joined": true }
@@ -47,7 +47,7 @@ Response: { "id": "...", "name": "...", "description": "...", "members": 42,
 
 ## Criar comunidade
 
-```
+```text
 POST /api/communities
 Headers: X-User-Id, X-Session-Token
 Body: { "name": "Devs BR", "description": "Comunidade de devs",
@@ -72,7 +72,7 @@ Response 201: { "id": "community_...", "name": "Devs BR", "description": "...",
 
 ## Editar comunidade
 
-```
+```text
 PATCH /api/communities/{communityId}
 Headers: X-User-Id, X-Session-Token
 Body: { "name": "...", "description": "...", "topic": "...", "cover": "..." }
@@ -89,7 +89,7 @@ Response 200: { "id": "...", "name": "...", "description": "...", "members": ...
 
 ## Entrar na comunidade
 
-```
+```text
 POST /api/communities/{communityId}/members
 Headers: X-User-Id, X-Session-Token
 Response: { "id": "{communityId}", "status": "JOINED" }
@@ -105,7 +105,7 @@ Response: { "id": "{communityId}", "status": "JOINED" }
 
 ## Sair da comunidade
 
-```
+```text
 DELETE /api/communities/{communityId}/members
 Headers: X-User-Id, X-Session-Token
 Response: { "id": "{communityId}", "status": "LEFT" }
@@ -119,7 +119,7 @@ Response: { "id": "{communityId}", "status": "LEFT" }
 
 ## Membros da comunidade
 
-```
+```text
 GET /api/communities/{communityId}/members
 Headers: X-User-Id, X-Session-Token
 Response: { "items": [
@@ -147,7 +147,7 @@ Response: { "items": [
 
 ## Feed da comunidade (posts)
 
-```
+```text
 GET /api/communities/{communityId}/feed?cursor=...&limit=20
 Response: { "items": [
     { "id": "post_...", "authorId": "user_...", "authorUsername": "joao",
@@ -184,7 +184,7 @@ Response: { "items": [
 
 ## Postar na comunidade
 
-```
+```text
 POST /api/feed/posts
 Headers: X-User-Id, X-Session-Token
 Body: { "type": "INSIGHT", "content": "Conteúdo do post",

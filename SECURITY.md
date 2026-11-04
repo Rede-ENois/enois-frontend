@@ -6,7 +6,7 @@
 
 ## Como reportar (canal privado)
 
-1. **E-mail — canal principal:** **seguranca@enois.ia.br** (se preferir, `suporte@enois.ia.br`
+1. **E-mail — canal principal:** **<seguranca@enois.ia.br>** (se preferir, `suporte@enois.ia.br`
    encaminha para a mesma fila). Quem recebe é o time do Énóis, e o conteúdo não é publicado.
 2. **O que incluir:**
    - **versão/commit** em que o problema aparece e o navegador usado;
@@ -80,7 +80,7 @@ backend. Isso **não** equivale a certificação nem substitui uma avaliação i
 ### Resumo (EN)
 
 **Do not open a public issue for security vulnerabilities.** Report privately to
-**seguranca@enois.ia.br**, including the affected version/commit, a minimal reproduction, the
+**<seguranca@enois.ia.br>**, including the affected version/commit, a minimal reproduction, the
 observed vs expected behaviour and the estimated impact. Triage within 5 business days; coordinated
 disclosure for up to 90 days; the advisory ships with the fixing release. Good-faith research
 within scope is welcome. The scope, the commitments and what is already in force are described

@@ -15,7 +15,7 @@ corrigível em aberto — e **somente depois** de a automação ser apagada com 
 
 - Front: `/home/mel/Documentos/connect-grow` (push em `main` = deploy automático).
 - Backend: `/home/mel/Documentos/rede` (só se a correção exigir; seguir regras de migração).
-- Produção: https://enois.ia.br.
+- Produção: <https://enois.ia.br>.
 - Playwright: `/tmp/pwtest` (rodar `cd /tmp/pwtest && node script.mjs`).
 - Rotas: `src/routes/*.tsx` + `src/routeTree.gen.ts`; rotas dinâmicas usam IDs reais dos
   endpoints públicos.

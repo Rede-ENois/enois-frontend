@@ -274,17 +274,17 @@ sondas publicas: `GET /api/version` no backend e os chunks servidos no front.
 /mentors/{id}/slots`, que devolve `PageResponse`), envia a solicitacao e da retorno; quem e o
   mentor ve "Minha agenda" para publicar horarios.
 
-3. **Login social**: as credenciais (Google/Apple) ficam no **backend**; aqui nao ha nada a configurar
+1. **Login social**: as credenciais (Google/Apple) ficam no **backend**; aqui nao ha nada a configurar
    alem do callback. O fluxo e: botao → `GET /api/auth/oauth/{provider}/start` → redirect para o provedor
    → volta em `${REDE_FRONTEND_URL}/auth/callback?status=ok` com os cookies da sessao, tratado por
    `src/routes/auth.callback.tsx`.
    Enquanto o backend nao tiver as credenciais, `start` responde 501 e a tela mostra o erro.
-4. **Esqueci minha senha**: depende do SMTP configurado no backend; o link cai em `/auth/reset?token=...`
+2. **Esqueci minha senha**: depende do SMTP configurado no backend; o link cai em `/auth/reset?token=...`
    (rota `src/routes/auth.reset.tsx`, ja existente).
-5. **Conta**: a troca de e-mail ja tem UI (`change-email-dialog`, usa `POST /api/auth/email/change`).
+3. **Conta**: a troca de e-mail ja tem UI (`change-email-dialog`, usa `POST /api/auth/email/change`).
    Troca de senha (`change-password-dialog` → `POST /api/auth/password/change`) e exclusao de conta
    (`delete-account-dialog` → `POST /api/auth/account/delete`) tambem ja tem tela, no menu da conta.
-6. **Notificacoes push no celular**: o front nao precisa de nenhuma variavel — o service worker (`public/sw.js`)
+4. **Notificacoes push no celular**: o front nao precisa de nenhuma variavel — o service worker (`public/sw.js`)
    recebe o `push` do backend e a chave publica VAPID vem de `GET /api/push/config`. A **unica** acao manual e
    configurar `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` no backend (ver README do backend, passo 7). Enquanto o
    push estiver desligado, a opcao "Ativar notificacoes no celular" nem aparece no menu. Ao mudar o `sw.js`,
@@ -293,7 +293,7 @@ sondas publicas: `GET /api/version` no backend e os chunks servidos no front.
 
 ## Estrutura do projeto
 
-```
+```text
 src/
   routes/        # uma rota por arquivo (TanStack Router) — a tela em si
   components/    # componentes compartilhados (ui/ = base do design system)

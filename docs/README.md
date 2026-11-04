@@ -42,7 +42,7 @@ npm run format   # Prettier
 
 ## Estrutura de Diretórios
 
-```
+```text
 src/
 ├── server.ts                    # Entry point SSR
 ├── start.ts                     # TanStack Start instance

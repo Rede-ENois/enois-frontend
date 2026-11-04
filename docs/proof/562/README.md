@@ -19,10 +19,10 @@ porque o Radix abre no `pointerdown`.
 
 ## Resultado
 
-| Largura | `/conta` | Menu | Overflow lateral |
-| ------- | -------- | ---- | ---------------- |
-| 1280 | título "Conta e segurança", seções Acesso / Privacidade e moderação / Encerrar conta | 11 itens, com **uma** entrada "Conta e segurança" | nenhum (1280/1280) |
-| 390 | idem | idem | nenhum (390/390) |
+| Largura | `/conta`                                                                             | Menu                                              | Overflow lateral   |
+| ------- | ------------------------------------------------------------------------------------ | ------------------------------------------------- | ------------------ |
+| 1280    | título "Conta e segurança", seções Acesso / Privacidade e moderação / Encerrar conta | 11 itens, com **uma** entrada "Conta e segurança" | nenhum (1280/1280) |
+| 390     | idem                                                                                 | idem                                              | nenhum (390/390)   |
 
 Itens do menu nas duas larguras: Ver perfil, Perfil profissional, Carteira, Marketplace, **Conta e
 segurança**, Ajuda e suporte, Uso saudável, Supervisão parental, Painel de moderador, Apoie o Énóis,

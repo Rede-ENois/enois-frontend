@@ -6,19 +6,19 @@
 
 ## Organização
 
-| Pasta | O que inclui |
-|---|---|
-| `01-brand/svg/` | Símbolo vetorial (principal, flat, claro, escuro) e lockups |
-| `01-brand/png/` | Exports transparentes em múltiplas resoluções |
-| `02-web/` | favicon.ico, favicon.svg, web icons, apple-touch-icon, manifest PWA |
-| `03-app/ios/` | AppIcon 1024 × 1024 |
-| `03-app/android/` | launcher icons por densidade + round icons |
-| `03-app/adaptive/` | camadas para adaptive icon Android |
-| `04-social/` | Card OG 1200 × 630 e post quadrado 1080 × 1080 |
-| `05-tokens/` | CSS custom properties e JSON de cores |
-| `06-examples/` | Exemplo pronto de tags `<head>` e instalação |
-| `07-preview/` | Prancha visual de conferência |
-| `08-reference/` | Imagem do conceito visual original (somente referência) |
+| Pasta              | O que inclui                                                        |
+| ------------------ | ------------------------------------------------------------------- |
+| `01-brand/svg/`    | Símbolo vetorial (principal, flat, claro, escuro) e lockups         |
+| `01-brand/png/`    | Exports transparentes em múltiplas resoluções                       |
+| `02-web/`          | favicon.ico, favicon.svg, web icons, apple-touch-icon, manifest PWA |
+| `03-app/ios/`      | AppIcon 1024 × 1024                                                 |
+| `03-app/android/`  | launcher icons por densidade + round icons                          |
+| `03-app/adaptive/` | camadas para adaptive icon Android                                  |
+| `04-social/`       | Card OG 1200 × 630 e post quadrado 1080 × 1080                      |
+| `05-tokens/`       | CSS custom properties e JSON de cores                               |
+| `06-examples/`     | Exemplo pronto de tags `<head>` e instalação                        |
+| `07-preview/`      | Prancha visual de conferência                                       |
+| `08-reference/`    | Imagem do conceito visual original (somente referência)             |
 
 ## Cores principais
 

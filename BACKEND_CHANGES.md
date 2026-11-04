@@ -149,7 +149,7 @@ sem entender o que aconteceu.
 **Comportamento pedido no `signup`:** se já existe conta com o e-mail retornado
 pelo Google, não entrar na conta existente — finalizar o OAuth redirecionando para
 
-```
+```text
 /auth/callback?error=ACCOUNT_EXISTS_LINK_REQUIRED
 ```
 

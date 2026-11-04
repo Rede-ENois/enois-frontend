@@ -80,4 +80,4 @@
 
 ---
 
-_Gerado automaticamente em 2026-06-10_
+Gerado automaticamente em 2026-06-10.

@@ -11,22 +11,22 @@
 
 ## Sumário
 
-- [x] 1. [Convenções Gerais](#1-convencoes-gerais)
-- [x] 2. [Autenticação](#2-autenticacao)
-- [x] 3. [Perfil](#3-perfil)
-- [x] 4. [Feed e Posts](#4-feed-e-posts)
-- [x] 5. [Comentários](#5-comentarios)
-- [x] 6. [Reações, Salvamentos e Compartilhamentos](#6-acoes-em-posts)
-- [x] 7. [Rede de Conexões](#7-rede-de-conexoes)
-- [x] 8. [Mídias](#8-midias)
-- [x] 9. [Comunidades](#9-comunidades)
-- [x] 10. [Vagas](#10-vagas)
-- [x] 11. [Eventos](#11-eventos)
-- [x] 12. [Mentoria](#12-mentoria)
-- [x] 13. [Mensagens](#13-mensagens)
-- [x] 14. [Notificações](#14-notificacoes)
-- [x] 15. [Busca Global](#15-busca-global)
-- [x] 16. [Migração Gradual](#16-migracao-gradual)
+- [x] 1. [Convenções Gerais](#1-convenções-gerais-)
+- [x] 2. [Autenticação](#2-autenticação-)
+- [x] 3. [Perfil](#3-perfil-)
+- [x] 4. [Feed e Posts](#4-feed-e-posts-)
+- [x] 5. [Comentários](#5-comentários-)
+- [x] 6. [Reações, Salvamentos e Compartilhamentos](#6-ações-em-posts-)
+- [x] 7. [Rede de Conexões](#7-rede-de-conexões-)
+- [x] 8. [Mídias](#8-mídias-)
+- [x] 9. [Comunidades](#9-comunidades-)
+- [x] 10. [Vagas](#10-vagas-)
+- [x] 11. [Eventos](#11-eventos-)
+- [x] 12. [Mentoria](#12-mentoria-)
+- [x] 13. [Mensagens](#13-mensagens-)
+- [x] 14. [Notificações](#14-notificações-)
+- [x] 15. [Busca Global](#15-busca-global-)
+- [x] 16. [Migração Gradual](#16-migração-gradual-)
 
 ---
 
@@ -49,7 +49,7 @@
 
 ### Base URL
 
-```
+```text
 http://localhost:8080/api
 ```
 

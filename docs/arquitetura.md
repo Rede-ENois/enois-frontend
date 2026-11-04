@@ -6,7 +6,7 @@ O Connect-Grow é uma SPA (Single Page Application) com SSR (Server-Side Renderi
 
 ## Fluxo de Requisição
 
-```
+```text
 Browser → Vite Dev Server (proxy /api) → Backend Java/Kotlin
                                     ou (produção)
 Browser → Nitro SSR → Backend Java/Kotlin

@@ -16,17 +16,17 @@ Quatro looks de coleções diferentes, cada um com seis peças reais do catálog
 
 ## Antes
 
-| Largura | Fechado | Depois de abrir o primeiro |
-| ------- | ------- | -------------------------- |
-| 1280 | 4 cards de 259 px | **os 4 cards vão a 706 px** |
-| 390 | 4 cards de 255 px | **os 2 da mesma linha vão a 614 px** |
+| Largura | Fechado           | Depois de abrir o primeiro           |
+| ------- | ----------------- | ------------------------------------ |
+| 1280    | 4 cards de 259 px | **os 4 cards vão a 706 px**          |
+| 390     | 4 cards de 255 px | **os 2 da mesma linha vão a 614 px** |
 
 ## Depois (`align-items: start` no grid)
 
-| Largura | Fechado | Depois de abrir o primeiro |
-| ------- | ------- | -------------------------- |
-| 1280 | 255/255/255/259 px | 706 px no aberto; **vizinhos seguem em 255/255/259 px** |
-| 390 | 4 cards de 255 px | 614 px no aberto; **o vizinho da linha segue em 255 px** |
+| Largura | Fechado            | Depois de abrir o primeiro                               |
+| ------- | ------------------ | -------------------------------------------------------- |
+| 1280    | 255/255/255/259 px | 706 px no aberto; **vizinhos seguem em 255/255/259 px**  |
+| 390     | 4 cards de 255 px  | 614 px no aberto; **o vizinho da linha segue em 255 px** |
 
 Sem rolagem lateral nas duas larguras (`scrollWidth` = `clientWidth`).
 

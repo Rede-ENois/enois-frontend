@@ -9,7 +9,7 @@
 
 ## Setup
 
-```
+```text
 API_BASE = http://localhost:8081/api
 CORS    = liberado (qualquer origem, credenciais ativas)
 ```
@@ -28,7 +28,7 @@ O backend valida o `X-Session-Token` contra um token ativo. Em dev, tokens são 
 
 ### Signup
 
-```
+```text
 POST /api/auth/signup
 Body: { "name": "...", "role": "MEMBER", "email": "...", "password": "..." }
 Response 201: { "id": "...", "token": "...", "email": "...", ... }
@@ -36,7 +36,7 @@ Response 201: { "id": "...", "token": "...", "email": "...", ... }
 
 ### Login
 
-```
+```text
 POST /api/auth/login
 Body: { "email": "...", "password": "..." }
 Response 200: { "id": "...", "token": "...", "email": "...", ... }
@@ -44,7 +44,7 @@ Response 200: { "id": "...", "token": "...", "email": "...", ... }
 
 ### Logout
 
-```
+```text
 POST /api/auth/logout
 Headers: X-Session-Token
 Response 200: { "status": "LOGGED_OUT" }
@@ -52,7 +52,7 @@ Response 200: { "status": "LOGGED_OUT" }
 
 ### Meus dados
 
-```
+```text
 GET /api/auth/me
 Headers: X-Session-Token
 Response: { "id": "...", "email": "...", "name": "...", ... }
@@ -62,7 +62,7 @@ Response: { "id": "...", "email": "...", "name": "...", ... }
 
 Fluxo completo:
 
-```
+```text
 1. FRONTEND → POST /api/media/uploads               (pede URL de destino)
                Body: { "fileName": "foto.jpg", "mimeType": "image/jpeg", "size": 12345 }
                Response 201: { "id": "media_...", "cdnUrl": "https://ik.imagekit.io/socialcoisa/...",
@@ -81,7 +81,7 @@ Fluxo completo:
 
 ### Criar upload (passo 1)
 
-```
+```text
 POST /api/media/uploads
 Headers: X-User-Id, X-Session-Token
 Body: { "fileName": "foto.jpg", "mimeType": "image/jpeg", "size": 102400, "purpose": "POST_IMAGE" }
@@ -114,14 +114,14 @@ const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
 
 ### Ver mídia
 
-```
+```text
 GET /api/media/{mediaId}
 Response 200: { "id": "...", "cdnUrl": "...", "status": "PENDING"|"UPLOADED"|"DELETED", ... }
 ```
 
 ### Deletar mídia
 
-```
+```text
 DELETE /api/media/{mediaId}
 Headers: X-User-Id, X-Session-Token
 Response 200: { "id": "...", "status": "DELETE_REQUESTED" }
@@ -131,7 +131,7 @@ Response 200: { "id": "...", "status": "DELETE_REQUESTED" }
 
 ### Publicar post
 
-```
+```text
 POST /api/feed/posts
 Headers: X-User-Id, X-Session-Token
 Body: { "type": "POST"|"REPOST"|"ARTICLE", "content": "...", "tags": ["tech"], "mediaIds": ["media_..."] }
@@ -142,7 +142,7 @@ Tipos de post: `POST` (texto+imagem), `ARTICLE` (artigo longo), `REPOST` (compar
 
 ### Feed
 
-```
+```text
 GET /api/feed?cursor=...&limit=20&tab=FOR_YOU
 Headers: X-User-Id, X-Session-Token
 Tabs: FOR_YOU, FOLLOWING, RECENT
@@ -151,14 +151,14 @@ Response: { "items": [...], "nextCursor": "..." }
 
 ### Posts de um perfil
 
-```
+```text
 GET /api/users/{username}/posts?cursor=...&limit=20
 Response: { "items": [...], "nextCursor": "..." }
 ```
 
 ### Deletar post
 
-```
+```text
 DELETE /api/feed/posts/{postId}?reason=...
 Headers: X-User-Id, X-Session-Token
 Response 200: { "id": "...", "status": "DELETED" }
@@ -166,7 +166,7 @@ Response 200: { "id": "...", "status": "DELETED" }
 
 ### Comentar
 
-```
+```text
 POST /api/feed/posts/{postId}/comments
 Headers: X-User-Id, X-Session-Token
 Body: { "content": "...", "parentCommentId": null }
@@ -175,14 +175,14 @@ Response 201: { "id": "comment_...", ... }
 
 ### Ver comentários
 
-```
+```text
 GET /api/feed/posts/{postId}/comments?cursor=...&limit=20
 Response: { "items": [...], "nextCursor": "..." }
 ```
 
 ### Reagir (curtir etc)
 
-```
+```text
 POST /api/feed/posts/{postId}/reactions
 Body: { "type": "LIKE"|"LOVE"|"HAHA"|"WOW"|"SAD"|"ANGRY" }
 Response 200: { "status": "REACTED" }
@@ -193,14 +193,14 @@ Response 200: { "status": "UNREACTED" }
 
 ### Salvar post
 
-```
+```text
 POST   /api/feed/posts/{postId}/saves       → { "status": "SAVED" }
 DELETE /api/feed/posts/{postId}/saves       → { "status": "UNSAVED" }
 ```
 
 ### Compartilhar
 
-```
+```text
 POST /api/feed/posts/{postId}/shares        → { "status": "SHARED" }
 ```
 
@@ -208,7 +208,7 @@ POST /api/feed/posts/{postId}/shares        → { "status": "SHARED" }
 
 ### Meu perfil
 
-```
+```text
 GET /api/me
 Headers: X-User-Id, X-Session-Token
 Response: { "id": "...", "username": "...", "name": "...", "reputation": ..., ... }
@@ -216,21 +216,21 @@ Response: { "id": "...", "username": "...", "name": "...", "reputation": ..., ..
 
 ### Perfil público por username
 
-```
+```text
 GET /api/users/{username}
 Response: { "id": "...", "username": "...", "name": "...", "headline": "...", ... }
 ```
 
 ### Perfil público por ID
 
-```
+```text
 GET /api/users/by-id/{userId}
 Response: { "id": "...", "username": "...", "name": "...", ... }
 ```
 
 ### Atualizar perfil
 
-```
+```text
 PATCH /api/me/profile
 Headers: X-User-Id, X-Session-Token
 Body: { "name": "...", "headline": "...", "company": "...", "location": "...",
@@ -270,7 +270,7 @@ Body exemplos:
 
 ### Sugestões de conexão
 
-```
+```text
 GET /api/network/suggestions?limit=4
 Headers: X-User-Id, X-Session-Token
 Response: [{ "id": "...", "username": "...", "name": "...", "headline": "...", "avatar": "..." }]
@@ -278,7 +278,7 @@ Response: [{ "id": "...", "username": "...", "name": "...", "headline": "...", "
 
 ### Resumo da rede
 
-```
+```text
 GET /api/network/summary
 Headers: X-User-Id, X-Session-Token
 Response: { "userId": "...", "connections": 5, "followers": 0, "pendingRequests": 2 }
@@ -286,7 +286,7 @@ Response: { "userId": "...", "connections": 5, "followers": 0, "pendingRequests"
 
 ### Solicitações pendentes
 
-```
+```text
 GET /api/network/requests?cursor=...&limit=20
 Headers: X-User-Id, X-Session-Token
 Response: { "items": [{ "id": "...", "fromUserId": "...", "toUserId": "...", "status": "PENDING", "createdAt": "..." }] }
@@ -294,7 +294,7 @@ Response: { "items": [{ "id": "...", "fromUserId": "...", "toUserId": "...", "st
 
 ### Conectar / Aceitar / Remover
 
-```
+```text
 POST   /api/network/connections/{targetUserId}           → { "status": "REQUESTED" }
 PUT    /api/network/connections/{targetUserId}/accept     → { "status": "ACCEPTED" }
 DELETE /api/network/connections/{targetUserId}            → { "status": "REMOVED" }
@@ -306,20 +306,20 @@ Criar vaga exige reputação ≥ 300. Reputação máxima é 1000.
 
 ### Listar vagas
 
-```
+```text
 GET /api/jobs?query=...&type=...&cursor=...&limit=20
 Response: { "items": [{ "id": "...", "title": "...", "company": "...", "location": "...", ... }] }
 ```
 
 ### Ver vaga
 
-```
+```text
 GET /api/jobs/{jobId}
 ```
 
 ### Criar vaga
 
-```
+```text
 POST /api/jobs
 Headers: X-User-Id, X-Session-Token
 Body: { "title": "...", "company": "...", "logo": "...", "location": "...",
@@ -330,14 +330,14 @@ Response 201: { "id": "...", ... }
 
 ### Atualizar / Deletar vaga
 
-```
+```text
 PUT    /api/jobs/{jobId}    (só o dono)
 DELETE /api/jobs/{jobId}    (só o dono) → 204 No Content
 ```
 
 ### Candidatar-se / Salvar vaga
 
-```
+```text
 POST   /api/jobs/{jobId}/applications  → { "status": "APPLIED" }
 POST   /api/jobs/{jobId}/saves          → { "status": "SAVED" }
 DELETE /api/jobs/{jobId}/saves          → { "status": "UNSAVED" }
@@ -347,7 +347,7 @@ DELETE /api/jobs/{jobId}/saves          → { "status": "UNSAVED" }
 
 ### Listar conversas
 
-```
+```text
 GET /api/conversations?cursor=...&limit=20
 Headers: X-User-Id, X-Session-Token
 Response: { "items": [{ "id": "...", "kind": "DIRECT|GROUP", "title": "...", "participantIds": [...],
@@ -356,13 +356,13 @@ Response: { "items": [{ "id": "...", "kind": "DIRECT|GROUP", "title": "...", "pa
 
 ### Pesquisar conversas
 
-```
+```text
 GET /api/conversations/search?q=...
 ```
 
 ### Criar conversa
 
-```
+```text
 POST /api/conversations
 Body: { "kind": "DIRECT", "title": null, "participantIds": ["user_..."] }
 Response 201: conversa criada
@@ -370,7 +370,7 @@ Response 201: conversa criada
 
 ### Enviar mensagem
 
-```
+```text
 POST /api/conversations/{conversationId}/messages
 Body: { "text": "..." }
 Response 201: { "id": "...", "conversationId": "...", "from": "...", "text": "...", "time": "..." }
@@ -378,7 +378,7 @@ Response 201: { "id": "...", "conversationId": "...", "from": "...", "text": "..
 
 ### Listar mensagens
 
-```
+```text
 GET /api/conversations/{conversationId}/messages?cursor=...&limit=50
 Headers: X-User-Id, X-Session-Token
 Response: { "items": [{ "id": "...", "conversationId": "...", "from": "...", "text": "...", "time": "..." }] }
@@ -386,7 +386,7 @@ Response: { "items": [{ "id": "...", "conversationId": "...", "from": "...", "te
 
 ### Marcar como lida
 
-```
+```text
 POST /api/conversations/{conversationId}/read → { "status": "READ" }
 ```
 
@@ -394,7 +394,7 @@ POST /api/conversations/{conversationId}/read → { "status": "READ" }
 
 ### Listar
 
-```
+```text
 GET /api/notifications?cursor=...&limit=20
 Headers: X-User-Id, X-Session-Token
 Response: { "items": [{ "id": "...", "kind": "...", "actorId": "...", "title": "...",
@@ -403,14 +403,14 @@ Response: { "items": [{ "id": "...", "kind": "...", "actorId": "...", "title": "
 
 ### Marcar como lida / Ler todas
 
-```
+```text
 POST /api/notifications/{notificationId}/read  → { "status": "READ" }
 POST /api/notifications/read-all                → { "status": "ALL_READ" }
 ```
 
 ## Busca
 
-```
+```text
 GET /api/search?q=...&types=USER,POST,JOB&limit=10
 Response: { "items": [{ "id": "...", "type": "USER|POST|JOB", "title": "...",
                         "subtitle": "...", "image": "...", "href": "..." }] }
@@ -420,7 +420,7 @@ Response: { "items": [{ "id": "...", "type": "USER|POST|JOB", "title": "...",
 
 Endpoints que retornam listas paginadas usam **cursor-based pagination**:
 
-```
+```text
 GET /api/feed?cursor=&limit=20                    ← primeira página (cursor vazio)
 GET /api/feed?cursor=eyJpZCI6InBvc3RfMTIzIn0&limit=20  ← próxima página
 
@@ -465,7 +465,7 @@ Em operações de escrita (POST, PUT, DELETE), o header `Idempotency-Key` é opc
 
 ## Monitoramento
 
-```
+```text
 GET  /actuator/health         → { "status": "UP" }
 GET  /actuator/metrics        → métricas da aplicação
 GET  /actuator/prometheus     → métricas no formato Prometheus
@@ -473,7 +473,7 @@ GET  /actuator/prometheus     → métricas no formato Prometheus
 
 ## Swagger / OpenAPI
 
-```
+```text
 http://localhost:8081/swagger-ui.html
 http://localhost:8081/api/openapi.json
 ```

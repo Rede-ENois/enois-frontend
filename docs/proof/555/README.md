@@ -22,10 +22,10 @@ Medido no app real (Vite em 5174), com a sessão simulada no `localStorage` e a 
 Chrome headless — nenhuma conta real, nenhum cookie de sessão de verdade. **O índice do catálogo
 está vazio neste roteiro de propósito**, que é o caso que quebrava:
 
-| Largura | Sem nenhuma usada (abre em Todas)    | Depois de escolher uma (abre em Recentes)          | Largura do documento     |
-| ------- | ------------------------------------ | -------------------------------------------------- | ------------------------ |
-| 390     | 6 células, busca visível             | 1 célula (KEKW), busca oculta, sem "Carregando"    | 390 — sem rolagem lateral |
-| 1280    | 6 células, busca visível             | 1 célula (KEKW), busca oculta, sem "Carregando"    | 1280 — sem rolagem lateral |
+| Largura | Sem nenhuma usada (abre em Todas) | Depois de escolher uma (abre em Recentes)       | Largura do documento       |
+| ------- | --------------------------------- | ----------------------------------------------- | -------------------------- |
+| 390     | 6 células, busca visível          | 1 célula (KEKW), busca oculta, sem "Carregando" | 390 — sem rolagem lateral  |
+| 1280    | 6 células, busca visível          | 1 célula (KEKW), busca oculta, sem "Carregando" | 1280 — sem rolagem lateral |
 
 - `seletor-390.png` — seletor reaberto no telefone, na aba Recentes, com a figurinha escolhida.
 - `seletor-1280.png` — o mesmo no desktop.

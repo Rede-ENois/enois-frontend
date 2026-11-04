@@ -1,4 +1,6 @@
-**Findings**
+# Design QA
+
+## Findings
 
 - [Resolved P1] The first iteration only added widgets and did not materially alter the profile composition. The profile route now has a taller identity hero, an immediately visible three-metric strip, and a responsive two-column content layout that surfaces gamification beside the activity stream from tablet widths upward.
 - [Resolved P1] Mobile layout was checked at 393 x 852. The profile actions wrap, the metrics stack, and the document width is 383 px inside a 393 px viewport: there is no horizontal overflow.
@@ -6,13 +8,13 @@
 - [Resolved P1] Avatar-frame effects now receive a dedicated visual buffer in the account trigger and every first-party post composer. The decorative effect remains visible, while the text editor starts outside its bleed area.
 - [Resolved P1] The profile composer now opens in a compact social-prompt state: an avatar sits beside a pill-shaped “Começar publicação” action with a three-part quick-action row. Comments intentionally omit the current user's avatar so the editor remains visually quiet and full width.
 
-**Design decisions**
+## Design decisions
 
 - The reference contributes the spatial language: anchored hero, elevated rounded cards, a social activity column and a complementary progression column. It is not copied literally.
 - Énois keeps its existing palette and user-owned customization. Uploaded avatar/cover HTML remain the visual anchor; no stock or generated image was added.
 - The progression rail only uses live profile, reputation, wallet and emblem data already supplied by the product. The owner composer is a real posting form, deliberately not submitted during QA.
 
-**Implementation Checklist**
+## Implementation Checklist
 
 - Confirmed desktop layout at `1280 x 900`: the community, status, testimonials, ranking, links and final exploration card form one continuous right-hand rail beside the profile content.
 - Confirmed mobile layout at `393 x 852`: hierarchy remains intact and there is no horizontal overflow.

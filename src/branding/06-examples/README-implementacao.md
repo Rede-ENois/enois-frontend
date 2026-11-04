@@ -6,17 +6,17 @@
 4. Em React/Next, configure também a rota de metadata/OG para páginas de perfil individual.
 5. Importe `05-tokens/tokens.css` no CSS global, se desejar usar a paleta.
 
-### Android
+## Android
 
 - Copie as imagens em `03-app/android/mipmap-*` para os diretórios de mesmo nome em `res/`.
 - Para adaptive icon, use `03-app/adaptive/foreground-432.png` e `background-432.png` como layers. A integração final depende de seu framework Android/Expo.
 
-### iOS
+## iOS
 
 - `03-app/ios/AppIcon-1024.png` é RGB e completamente opaco, sem cantos arredondados; iOS aplica a máscara de cantos no ícone final.
 - Ajuste o Asset Catalog (`AppIcon.appiconset`) conforme Xcode ou Expo; o pacote não altera seu projeto automaticamente.
 
-### Notas
+## Notas
 
 - Imagens rasterizadas e SVGs foram recriados para aproximar o 2º conceito escolhido. Não são arquivos vetoriais originais do gerador de imagens.
 - Confirme direitos de marca e verifique o símbolo em tamanhos reais antes de publicar em larga escala.
