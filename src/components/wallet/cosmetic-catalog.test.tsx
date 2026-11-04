@@ -279,6 +279,36 @@ describe("Catálogo da loja", () => {
     expect(look.textContent).not.toContain("Abóbora");
   });
 
+  it("os looks seguem a aba escolhida e chegam em páginas", async () => {
+    // 85 looks de aparência: a seção não pode despejar todos de uma vez.
+    const many: CosmeticShopCollection[] = [
+      {
+        id: "aparencias",
+        name: "Aparências",
+        available: true,
+        looks: Array.from({ length: 85 }, (_, index): LookNaLoja => ({
+          id: `look-tema-${index}`,
+          title: `Tema ${index}`,
+          items: ["tema-noite"],
+          priceLabel: "18",
+          owned: true,
+        })),
+      },
+      ...lookCollections,
+    ];
+    await render({ collections: many });
+    expect(host.querySelectorAll(".cos-look")).toHaveLength(12);
+    expect(host.textContent).toContain("Mostrando 12 de 86");
+
+    await click([...host.querySelectorAll<HTMLButtonElement>(".cos-shop__looks button")].at(-1)!);
+    expect(host.querySelectorAll(".cos-look")).toHaveLength(24);
+
+    // A aba de uma coleção mostra só os looks dela.
+    await click(chip("Dia do Saci"));
+    expect(host.querySelectorAll(".cos-look")).toHaveLength(1);
+    expect(host.querySelector(".cos-look")!.textContent).toContain("Saci-pererê");
+  });
+
   it("o look que já é meu veste no primeiro clique e sai no segundo", async () => {
     const mine = (equipped: boolean): CosmeticShopCollection[] => [
       {
