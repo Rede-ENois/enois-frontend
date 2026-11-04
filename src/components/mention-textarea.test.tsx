@@ -43,13 +43,19 @@ function fakeFetch(input: RequestInfo | URL) {
   });
 }
 
-/** Resposta 200 mínima que o cliente da API entende (ele lê cabeçalhos e corpo). */
+/**
+ * Resposta 200 mínima que o cliente da API entende. Ele lê o corpo por `text()` e só então faz o
+ * `JSON.parse`, então a resposta falsa precisa das duas leituras — só `json()` deixava o corpo
+ * vazio e a figurinha nunca chegava ao campo.
+ */
 function resposta(body: unknown) {
+  const texto = JSON.stringify(body);
   return {
     ok: true,
     status: 200,
     statusText: "OK",
     headers: new Headers({ "content-type": "application/json" }),
+    text: async () => texto,
     json: async () => body,
   };
 }

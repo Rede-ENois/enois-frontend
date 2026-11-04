@@ -27,23 +27,28 @@ let indiceFora = false;
 function fakeFetch(input: RequestInfo | URL) {
   const url = new URL(String(input), "http://localhost");
   if (indiceFora || !url.pathname.endsWith("/emotes/index")) {
-    return {
-      ok: false,
-      status: 503,
-      statusText: "Service Unavailable",
-      headers: new Headers(),
-      json: async () => ({ code: undefined, message: undefined }),
-    };
+    return resposta({ code: undefined, message: undefined }, false);
   }
+  return resposta({
+    entries: { KEKW, catJAM: CATJAM },
+    generatedAt: "2026-10-29T00:00:00Z",
+  });
+}
+
+/**
+ * Resposta mínima que o cliente da API entende. Ele lê o corpo por `text()` e só então faz o
+ * `JSON.parse`, então a resposta falsa precisa das duas leituras — só `json()` deixava o corpo
+ * vazio e o índice nunca chegava ao texto.
+ */
+function resposta(body: unknown, ok = true) {
+  const texto = JSON.stringify(body);
   return {
-    ok: true,
-    status: 200,
-    statusText: "OK",
+    ok,
+    status: ok ? 200 : 503,
+    statusText: ok ? "OK" : "Service Unavailable",
     headers: new Headers({ "content-type": "application/json" }),
-    json: async () => ({
-      entries: { KEKW, catJAM: CATJAM },
-      generatedAt: "2026-10-29T00:00:00Z",
-    }),
+    text: async () => texto,
+    json: async () => body,
   };
 }
 
