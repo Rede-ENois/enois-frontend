@@ -7,10 +7,11 @@ import { Button } from "@rede-enois/design-system/ui";
 import { Minimize2, PhoneOff } from "lucide-react";
 
 import { callSessionStore, useCallSession } from "@/lib/calls/call-session";
+import { stateLabel } from "@/lib/calls/state-label";
 import { useHangUp } from "@/lib/calls/use-hang-up";
 import { cn } from "@/lib/utils";
 
-import { stateLabel, useCalls } from "./calls-provider";
+import { useCalls } from "./calls-provider";
 
 /**
  * Painel da chamada: overlay interno (não abre aba), minimizável, com o Jitsi embutido.
