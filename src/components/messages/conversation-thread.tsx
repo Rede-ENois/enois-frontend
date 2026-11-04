@@ -31,6 +31,7 @@ import { useConversationOnScreen } from "@/lib/use-conversation-on-screen";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
+import { ConversationCallBar } from "../calls/conversation-call-bar";
 import { MessageBubble } from "./message-bubble";
 
 /** Tamanho que o app sempre usou; em modo lite cada página vem maior (menos idas ao servidor). */
@@ -210,6 +211,9 @@ export function ConversationThread({
 
   const { peer, profileHref } = conversationPeer(conversation, otherParticipantId, otherUser);
 
+  /** Chamada 1:1 só entre duas pessoas: com três ou mais participantes não há de quem "ligar". */
+  const isDirect = conversation.participantIds.length === 2;
+
   // Banner profissional: conversa profissional e o usuario nao tem identidade corporativa nela.
   const isProfessional = conversation.context === "PROFESSIONAL";
   const hasMyProfessionalIdentity = Boolean(
@@ -235,32 +239,38 @@ export function ConversationThread({
       profileHref={profileHref}
       onBack={onBack}
       banner={
-        showProfessionalBanner ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-border-soft bg-surface-2 p-4">
-            <div className="flex items-start gap-3">
-              <Briefcase className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <div className="flex flex-col gap-2">
+          {/* Só conversa de duas pessoas liga: grupo não cabe num telefone de dois lados. Em
+              conversa profissional o banner também aparece — a chamada é entre as pessoas. */}
+          {isDirect ? <ConversationCallBar conversationId={conversation.id} /> : null}
 
-              <p className="text-sm text-text-strong">{texts.messages.professionalPrompt}</p>
-            </div>
+          {showProfessionalBanner ? (
+            <div className="flex flex-col gap-2 rounded-xl border border-border-soft bg-surface-2 p-4">
+              <div className="flex items-start gap-3">
+                <Briefcase className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
-            <div className="flex items-center gap-2 pl-8">
-              <Link to="/profissional">
-                <Button size="sm" className="rounded-full">
-                  {texts.messages.professionalPromptCta}
+                <p className="text-sm text-text-strong">{texts.messages.professionalPrompt}</p>
+              </div>
+
+              <div className="flex items-center gap-2 pl-8">
+                <Link to="/profissional">
+                  <Button size="sm" className="rounded-full">
+                    {texts.messages.professionalPromptCta}
+                  </Button>
+                </Link>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => setDismissedProfessionalBanner(true)}
+                >
+                  {texts.messages.professionalPromptSocial}
                 </Button>
-              </Link>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-full"
-                onClick={() => setDismissedProfessionalBanner(true)}
-              >
-                {texts.messages.professionalPromptSocial}
-              </Button>
+              </div>
             </div>
-          </div>
-        ) : undefined
+          ) : null}
+        </div>
       }
       loading={isLoadingMessages || decrypting}
       empty={messages.length === 0}

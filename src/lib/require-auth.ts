@@ -21,6 +21,8 @@ const PROTECTED_ROUTES = [
   // "/jogos-diarios" saiu de proposito: a rota virou um redirecionamento para a categoria
   // diaria dentro de /games, e o proprio painel e que pede a conta.
   "/feed",
+  // Link de chamada: a sala só abre para quem entra identificado.
+  "/call",
   "/boas-vindas",
   "/rede",
   "/salvos",

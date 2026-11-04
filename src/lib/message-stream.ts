@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 
@@ -19,6 +19,16 @@ const RETRY_CLOSED_MS = 30_000;
 
 let live = false;
 const listeners = new Set<() => void>();
+/** Quem quer saber dos eventos de chamada (o provider de chamadas), além do refetch do stream. */
+const callListeners = new Set<(callId: string, state: string) => void>();
+
+/** Assina o evento `call` do stream. Devolve a função de cancelar. */
+export function subscribeToCallEvents(listener: (callId: string, state: string) => void) {
+  callListeners.add(listener);
+  return () => {
+    callListeners.delete(listener);
+  };
+}
 
 function setLive(next: boolean) {
   if (live === next) return;
@@ -58,9 +68,32 @@ export function handleConversationChanged(queryClient: QueryClient, data: string
   void queryClient.invalidateQueries({ queryKey: ["conversations"] });
 }
 
+/**
+ * "A chamada X mudou" (`event: call`): só ids e estado. Quem consome busca o estado real pelas
+ * rotas de chamadas (que autorizam de novo) e atualiza a tela.
+ */
+export function handleCallChanged(
+  queryClient: QueryClient,
+  data: string,
+  onCall?: (callId: string, state: string) => void,
+) {
+  let payload: { callId?: unknown; state?: unknown };
+  try {
+    payload = JSON.parse(data) as { callId?: unknown; state?: unknown };
+  } catch {
+    return;
+  }
+  if (typeof payload.callId !== "string" || typeof payload.state !== "string") return;
+  void queryClient.invalidateQueries({ queryKey: ["calls"] });
+  onCall?.(payload.callId, payload.state);
+}
+
 /** Opens the stream for the signed-in user; mount once, only with a session. */
-export function useMessageStream() {
+export function useMessageStream(onCall?: (callId: string, state: string) => void) {
   const queryClient = useQueryClient();
+  // Callback em ref: reconectar o stream a cada render não é aceitável.
+  const callListener = useRef(onCall);
+  callListener.current = onCall;
 
   useEffect(() => {
     if (typeof EventSource === "undefined") return;
@@ -76,6 +109,12 @@ export function useMessageStream() {
       };
       source.addEventListener("conversation", (event) =>
         handleConversationChanged(queryClient, (event as MessageEvent<string>).data),
+      );
+      source.addEventListener("call", (event) =>
+        handleCallChanged(queryClient, (event as MessageEvent<string>).data, (id, state) => {
+          callListener.current?.(id, state);
+          callListeners.forEach((listener) => listener(id, state));
+        }),
       );
       source.onerror = () => {
         setLive(false);

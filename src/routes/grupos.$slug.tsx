@@ -57,6 +57,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { BannerHtmlFrame } from "@/components/banner-html-frame";
+import { TamoJuntoBar } from "@/components/calls/tamo-junto-bar";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { formatTime } from "@/components/post/format-time";
@@ -256,6 +257,8 @@ function GrupoPage() {
                 {texts.groups.share}
               </Button>
             </div>
+
+            {group.joined ? <TamoJuntoBar groupId={group.id} /> : null}
           </div>
         </div>
 

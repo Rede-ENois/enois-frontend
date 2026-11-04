@@ -91,6 +91,21 @@ describe("navigateToHref", () => {
     expect(resolve("/eventos?")).toHaveBeenCalledWith({ to: "/eventos" });
   });
 
+  it("abre a chamada da notificacao (e do push), com ou sem o prefixo /api", () => {
+    expect(resolve("/call/call_1")).toHaveBeenCalledWith({
+      to: "/call/$callId",
+      params: { callId: "call_1" },
+    });
+    expect(resolve("/api/call/call_2")).toHaveBeenCalledWith({
+      to: "/call/$callId",
+      params: { callId: "call_2" },
+    });
+  });
+
+  it("nao transforma caminho a mais em chamada", () => {
+    expect(resolve("/call/call_1/extra")).not.toHaveBeenCalled();
+  });
+
   it("nao navega para href desconhecido nem incompleto", () => {
     expect(resolve("/desconhecido")).not.toHaveBeenCalled();
     expect(resolve("/games/so-username")).not.toHaveBeenCalled();
