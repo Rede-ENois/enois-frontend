@@ -88,12 +88,22 @@ export function useOpenCall(input: { conversationId?: string; groupId?: string }
 /** Ações do runtime ativo; fora de uma sessão, as telas falam com o "sem sessão". */
 let runtimeValue: CallsContextValue = noSession;
 
+/** O ambiente ainda não tem servidor de chamadas: é aviso, não falha da pessoa. */
+function isNotConfigured(error: unknown): boolean {
+  return error instanceof ApiError && error.code === "CALLS_NOT_CONFIGURED";
+}
+
 function messageFor(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === "CALLS_NOT_CONFIGURED") return texts.calls.notConfigured;
     return error.message;
   }
   return texts.calls.loadError;
+}
+
+/** Fecha a tela com o motivo certo: aviso de ambiente em configuração ou erro explícito. */
+function failWith(error: unknown) {
+  callSessionStore.error(messageFor(error), { notConfigured: isNotConfigured(error) });
 }
 
 /**
@@ -145,7 +155,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
           // segue para o erro explícito abaixo
         }
       }
-      callSessionStore.error(messageFor(error));
+      failWith(error);
     }
   }, []);
 
@@ -278,7 +288,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
         }
         refreshRelated();
       } catch (error) {
-        callSessionStore.error(messageFor(error));
+        failWith(error);
       }
     },
     [enterRoom, refreshRelated],
@@ -292,7 +302,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       await enterRoom(answered);
       refreshRelated();
     } catch (error) {
-      callSessionStore.error(messageFor(error));
+      failWith(error);
     }
   }, [enterRoom, refreshRelated]);
 
@@ -323,7 +333,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
         }
         await enterRoom(target);
       } catch (error) {
-        callSessionStore.error(messageFor(error));
+        failWith(error);
       }
     },
     [enterRoom],

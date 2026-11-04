@@ -80,5 +80,24 @@ describe("callSessionStore", () => {
     callSessionStore.live(JOIN);
     callSessionStore.error("sem microfone");
     expect(getCallSession()).toMatchObject({ phase: "error", error: "sem microfone", join: null });
+    expect(getCallSession().notConfigured).toBe(false);
+  });
+
+  it("aviso de ambiente em configuração é marcado e larga a credencial", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.error("Ops, ainda estamos configurando tudo por aqui.", {
+      notConfigured: true,
+    });
+    expect(getCallSession()).toMatchObject({
+      phase: "error",
+      notConfigured: true,
+      join: null,
+    });
+  });
+
+  it("entrar numa sala limpa o aviso de ambiente em configuração", () => {
+    callSessionStore.error("Ops…", { notConfigured: true });
+    callSessionStore.joining();
+    expect(getCallSession().notConfigured).toBe(false);
   });
 });

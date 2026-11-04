@@ -25,6 +25,33 @@ export function CallPanel() {
   const hangUp = useHangUp();
   const call = session.call;
 
+  // Aviso de ambiente ainda em configuração: não é uma chamada, então não tem moldura de chamada.
+  if (session.phase === "error" && session.notConfigured) {
+    return (
+      <div
+        className={cn(
+          "fixed z-[60] flex flex-col gap-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-4 shadow-2xl",
+          "inset-x-2 bottom-2 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[340px]",
+        )}
+        role="alertdialog"
+        aria-live="assertive"
+      >
+        <p className="text-sm font-semibold text-text-strong">{texts.calls.notConfiguredTitle}</p>
+
+        <p className="text-sm text-text-muted">{session.error ?? texts.calls.notConfigured}</p>
+
+        <Button
+          variant="outline"
+          className="w-full rounded-full"
+          onClick={() => calls.close()}
+          autoFocus
+        >
+          {texts.calls.dismissNotice}
+        </Button>
+      </div>
+    );
+  }
+
   if (!call) return null;
 
   const title = call.kind === "VIDEO" ? texts.calls.videoTitle : texts.calls.audioTitle;
