@@ -50,6 +50,7 @@ export function CommentReactionsDialog({
       users={users}
       currentUserId={user?.id ?? null}
       emojis={REACTION_EMOJIS}
+      profileHref={(username) => `/perfil/${username}`}
       isLoading={isLoading}
       isError={isError}
     />

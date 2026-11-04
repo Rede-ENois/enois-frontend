@@ -50,6 +50,7 @@ export function ReactionsDialog({ postId }: PostIdProps) {
       users={users}
       currentUserId={currentUserId}
       emojis={REACTION_EMOJIS}
+      profileHref={(username) => `/perfil/${username}`}
       isLoading={isLoading}
       isError={isError}
     />
