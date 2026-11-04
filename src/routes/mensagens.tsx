@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -136,7 +136,8 @@ function Mensagens() {
   // An open thread takes the whole phone screen: the dock steps aside (and comes back on leaving).
   const setConversationOpen = useAppShellStore((state) => state.setConversationOpen);
   const conversationOpen = activeConversation !== null;
-  useEffect(() => {
+  // useLayoutEffect: o dock precisa sumir ANTES do paint, senao ele cobre o input por um frame.
+  useLayoutEffect(() => {
     setConversationOpen(conversationOpen);
     return () => setConversationOpen(false);
   }, [conversationOpen, setConversationOpen]);
