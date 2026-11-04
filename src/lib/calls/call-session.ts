@@ -20,6 +20,7 @@ const IDLE: CallSessionState = {
   join: null,
   minimized: false,
   error: null,
+  notConfigured: false,
   needsRejoin: false,
   notice: null,
 };
@@ -57,7 +58,7 @@ export const callSessionStore = {
   },
 
   joining() {
-    set({ phase: "joining", error: null });
+    set({ phase: "joining", error: null, notConfigured: false });
   },
 
   live(join: CallJoin) {
@@ -66,6 +67,7 @@ export const callSessionStore = {
       call: join.call,
       join,
       error: null,
+      notConfigured: false,
       needsRejoin: false,
       minimized: false,
     });
@@ -89,11 +91,18 @@ export const callSessionStore = {
   },
 
   ended(call: CallView) {
-    set({ call, join: null, phase: "ended", error: null, notice: null });
+    set({ call, join: null, phase: "ended", error: null, notConfigured: false, notice: null });
   },
 
-  error(message: string) {
-    set({ phase: "error", error: message, join: null, needsRejoin: false });
+  /** `notConfigured` marca o aviso de ambiente ainda em configuração (não é falha da pessoa). */
+  error(message: string, options?: { notConfigured?: boolean }) {
+    set({
+      phase: "error",
+      error: message,
+      join: null,
+      needsRejoin: false,
+      notConfigured: options?.notConfigured ?? false,
+    });
   },
 
   idle() {
