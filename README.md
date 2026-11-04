@@ -110,7 +110,9 @@ recusa escrita com cookie sem esse header (403 `CSRF_REQUIRED`).
 
 - `npm run dev`: inicia o ambiente local
 - `npm run build`: gera o build de producao
-- `npm run preview`: serve o build para validacao local
+- `npm run preview`: gera o build com o preset `node-server` do Nitro e sobe o servidor dele em
+  `http://localhost:4173` (SSR igual ao da produção). `--port <n>` troca a porta e `--no-build` reaproveita
+  o último build
 - `npm run lint`: executa o ESLint
 - `npm run format`: formata os arquivos com Prettier
 - `npm test`: roda os testes unitários com Vitest
