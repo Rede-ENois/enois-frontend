@@ -6,7 +6,7 @@ name: Build, Push and Deploy
 # It must NEVER be targeted by a job that runs on `pull_request` — a fork PR would then
 # execute arbitrary workflow code with access to our infra ("pwn request"). The deploy job
 # below is gated to `push`/`workflow_dispatch` on protected branches only. PR validation
-# always runs on GitHub-hosted `ubuntu-latest` and never touches secrets.
+# always runs on GitHub-hosted `ubuntu-24.04` and never touches secrets.
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
   validate-pr-build:
     name: 🧪 Validar build (PR)
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -85,7 +85,7 @@ jobs:
   build-and-push:
     name: 🐳 Build & Push → Harbor
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
       branch: ${{ steps.vars.outputs.branch }}

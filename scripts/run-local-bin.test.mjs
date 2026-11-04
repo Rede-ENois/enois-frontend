@@ -6,16 +6,19 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { parseArgs, resolveBin } from "./run-local-bin.mjs";
+import { parseArgs, resolveBin, runBin } from "./run-local-bin.mjs";
 
 const script = fileURLToPath(new URL("./run-local-bin.mjs", import.meta.url));
 
+// Projeto falso com um pacote "fake" cujo binário sai com o código recebido no primeiro argumento.
+// Os testes não dependem de nada instalado no node_modules do repositório (o job de hooks do CI
+// roda sem `npm ci`).
 function fakeProject(bin) {
   const root = mkdtempSync(join(tmpdir(), "run-local-bin-"));
   const pkgDir = join(root, "node_modules", "fake");
   mkdirSync(join(pkgDir, "bin"), { recursive: true });
   writeFileSync(join(pkgDir, "package.json"), JSON.stringify({ name: "fake", bin }));
-  writeFileSync(join(pkgDir, "bin", "fake.js"), "");
+  writeFileSync(join(pkgDir, "bin", "fake.js"), "process.exit(Number(process.argv[2] ?? 0));\n");
   return root;
 }
 
@@ -64,21 +67,17 @@ test("pacote ausente falha com uma mensagem que manda rodar npm ci", () => {
   assert.match(result.stderr, /npm ci/);
 });
 
-test("repassa o código de saída do binário", () => {
-  const result = spawnSync(process.execPath, [script, "typescript", "tsc", "--", "--version"], {
-    encoding: "utf8",
-  });
-  assert.equal(result.status, 0);
-  assert.match(result.stdout, /Version \d+\.\d+/);
+test("repassa o código de saída de sucesso do binário", () => {
+  const root = fakeProject({ fake: "bin/fake.js" });
+  assert.equal(runBin(root, "fake", "fake", ["0"]), 0);
 });
 
 test("repassa o código de saída de falha do binário", () => {
-  const result = spawnSync(
-    process.execPath,
-    [script, "typescript", "tsc", "--", "--opcao-invalida"],
-    {
-      encoding: "utf8",
-    },
-  );
-  assert.notEqual(result.status, 0);
+  const root = fakeProject({ fake: "bin/fake.js" });
+  assert.equal(runBin(root, "fake", "fake", ["3"]), 3);
+});
+
+test("devolve null em vez de executar quando o pacote falta", () => {
+  const root = mkdtempSync(join(tmpdir(), "run-local-bin-"));
+  assert.equal(runBin(root, "fake", "fake", []), null);
 });

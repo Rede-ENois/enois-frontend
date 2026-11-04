@@ -30,19 +30,29 @@ export function parseArgs(argv) {
   return { pkg, bin: bin ?? pkg, args: rest };
 }
 
+/** Executa o binário do pacote com o Node atual e devolve o código de saída (null se não existe). */
+export function runBin(projectRoot, pkg, bin, args) {
+  const file = resolveBin(projectRoot, pkg, bin);
+  if (!file) return null;
+  const result = spawnSync(process.execPath, [file, ...args], {
+    cwd: projectRoot,
+    stdio: "inherit",
+  });
+  if (result.error) throw result.error;
+  return result.status ?? 1;
+}
+
 function main() {
   const { pkg, bin, args } = parseArgs(process.argv.slice(2));
-  const file = resolveBin(root, pkg, bin);
-  if (!file) {
+  const status = runBin(root, pkg, bin, args);
+  if (status === null) {
     console.error(
       `"${bin}" (pacote ${pkg}) não está instalado no node_modules. Rode \`npm ci\` antes de ` +
         "commitar; o README explica o token do GitHub Packages que a instalação exige.",
     );
     process.exit(1);
   }
-  const result = spawnSync(process.execPath, [file, ...args], { cwd: root, stdio: "inherit" });
-  if (result.error) throw result.error;
-  process.exit(result.status ?? 1);
+  process.exit(status);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
