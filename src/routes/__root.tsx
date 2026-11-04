@@ -36,6 +36,7 @@ import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
 
 import { AgeGate } from "@/components/age-gate";
 import { AppContainer } from "@/components/app-container";
+import { CallsProvider } from "@/components/calls/calls-provider";
 import { ChatDock } from "@/components/chat-dock/chat-dock";
 import { DesignSystemProvider } from "@/components/design-system-provider";
 import { HealthyUsageGuard } from "@/components/healthy-usage/healthy-usage-guard";
@@ -277,21 +278,25 @@ function RootInsideProvider() {
 
   return (
     <ToastProvider>
-      <ModuleDisabledGate>
-        <RouteErrorBoundary key={pathname} onReset={() => router.invalidate()}>
-          <Outlet />
-        </RouteErrorBoundary>
-      </ModuleDisabledGate>
+      {/* Chamadas envolvem a casca: o overlay é interno (nunca uma aba nova) e as telas usam
+          useCalls para começar/receber em qualquer página. */}
+      <CallsProvider>
+        <ModuleDisabledGate>
+          <RouteErrorBoundary key={pathname} onReset={() => router.invalidate()}>
+            <Outlet />
+          </RouteErrorBoundary>
+        </ModuleDisabledGate>
 
-      <ChatDock />
-      <MessageStream />
-      <InstallPwaBanner />
-      <LiteModeEffects />
-      <HealthyUsageGuard />
-      <OnboardingRedirect />
-      <WhatsNewGate />
-      <AgeGate />
-      <AdminNoticeDialog />
+        <ChatDock />
+        <MessageStream />
+        <InstallPwaBanner />
+        <LiteModeEffects />
+        <HealthyUsageGuard />
+        <OnboardingRedirect />
+        <WhatsNewGate />
+        <AgeGate />
+        <AdminNoticeDialog />
+      </CallsProvider>
     </ToastProvider>
   );
 }

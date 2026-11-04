@@ -17,6 +17,7 @@ export { jobsApi } from "./jobs";
 export { eventsApi } from "./events";
 export { mentorsApi } from "./mentors";
 export { messagesApi } from "./messages";
+export { callsApi } from "./calls";
 export { notificationsApi } from "./notifications";
 export { searchApi } from "./search";
 export { reportsApi, REPORT_REASONS } from "./reports";
