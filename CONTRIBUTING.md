@@ -111,6 +111,31 @@ descrever.
   | Correção de bug                              | `fix.md`     |
   | Manutenção, docs, CI, dependências, refactor | `chore.md`   |
 
+## Verificação de segurança (Snyk)
+
+Toda PR recebe o check `security/snyk (ak4-47)`. Ele vem da integração do [Snyk](https://snyk.io)
+com o GitHub, configurada na organização `ak4-47` do Snyk, e procura vulnerabilidades conhecidas nas
+dependências que a PR muda. O teste roda sozinho: você não precisa instalar nem configurar nada para
+ele aparecer, e PR vinda de fork também é testada.
+
+- **Passou** ("1 security test has passed"): a PR não traz vulnerabilidade nova.
+- **Falhou**: a PR adiciona ou atualiza uma dependência com falha conhecida. Corrija antes de pedir
+  revisão: em geral, trocar pela versão que o Snyk indica como corrigida resolve.
+
+O detalhe do resultado (qual pacote, qual falha e qual versão corrige) fica no painel do Snyk, que só
+abre para membros da organização. Para ver:
+
+1. Clique em **Details** no check da PR, ou abra [app.snyk.io](https://app.snyk.io).
+2. Entre com **GitHub**, usando a mesma conta que abriu a PR. Na primeira vez, isso cria sua conta no
+   Snyk (gratuita).
+3. Peça acesso à organização `ak4-47`: na lista de organizações, encontre-a e clique em **Request**.
+   O pedido fica como pendente até alguém da administração responder.
+4. Os admins da organização recebem o pedido por e-mail e enviam um convite. Aceite o convite que
+   chegar no seu e-mail; a partir daí o link **Details** abre o resultado.
+
+Cada pessoa pode pedir acesso à mesma organização uma vez a cada 48 horas. Se o pedido demorar,
+avise na própria PR. Sem acesso ao painel, o resultado (passou ou falhou) continua visível na PR.
+
 ## Árvore compartilhada
 
 Se você trabalha na mesma cópia do repositório que outra pessoa (ou outro agente): não rode
