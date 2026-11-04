@@ -1380,7 +1380,7 @@ function Home() {
         {/* Right rail: TUDO num único filho do grid. O cartão de doação já foi um filho solto
             aqui — ele esticava até a altura da coluna inteira e empurrava/escondia os outros
             cartões (o que está acontecendo agora) para fora da dobra. */}
-        <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
+        <aside className="sticky top-20 hidden max-h-[calc(100vh-10rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
           {/* Three quiet tables at most: what happens today, people to meet, and support as one
               line at the end. "Novidades para explorar" left (it repeated the menu; Explore has
               every room) and so did the profile card (the account menu carries it). */}
