@@ -2,6 +2,15 @@
 @source "../src";
 @import "@rede-enois/design-system/styles.css";
 
+/* Limita o link para que o título da evidência trunque dentro do cartão do selo. */
+.cos-card__body:has([aria-labelledby="profile-seals-title"]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[aria-labelledby="profile-seals-title"] li a {
+  max-width: 100%;
+}
+
 /*
  * Figurinhas no meio do texto.
  *
