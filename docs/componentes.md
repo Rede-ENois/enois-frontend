@@ -324,6 +324,8 @@ Alternador de tema claro/escuro/sistema.
 
 Hook para detectar breakpoint mobile (< 768px).
 
+No mesmo breakpoint, `src/styles.css` garante fonte mínima de 16px nos campos de texto para evitar zoom automático ao focar no iOS, preservando o zoom manual e os controles não textuais.
+
 **Retorno:** `boolean`
 
 ## Componentes UI (shadcn/ui)
