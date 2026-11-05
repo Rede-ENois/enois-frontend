@@ -1,9 +1,8 @@
 default_stages: [pre-commit]
-# Node dos hooks `language: node` (svgo, markdownlint). Fixo porque, sem versão, o nodeenv busca
-# a mais recente publicada e quebra ao ler versões alpha (v27.0.0-alpha); `system` não existe no
-# Windows. Use uma LTS.
+# Node dos hooks `language: node` (svgo, markdownlint). Use a mesma linha principal do CI e do
+# projeto; o patch fixo evita que um ambiente de hook mude sem uma alteração explícita aqui.
 default_language_version:
-  node: "24.22.2"
+  node: "22.23.4"
 minimum_pre_commit_version: 4.0.0
 
 # Arquivos gerados ou travados por ferramenta não são reformatados à mão: o routeTree é
@@ -54,6 +53,14 @@ repos:
   # Requer `npm ci` antes do primeiro commit.
   - repo: local
     hooks:
+      - id: node-dependencies
+        name: Dependências locais do projeto
+        entry: >-
+          node -e "const fs = require('node:fs'); if (!fs.existsSync('node_modules')) { console.error('Dependências do projeto não encontradas. Rode npm ci na raiz do repositório antes de commitar.'); process.exit(1); }"
+        language: system
+        files: \.(ts|tsx|js|jsx|mjs|cjs|json|md|css|ya?ml|html)$
+        pass_filenames: false
+        fail_fast: true
       - id: eslint
         name: ESLint (com prettier embutido)
         entry: npm exec --no -- eslint --fix --no-warn-ignored
