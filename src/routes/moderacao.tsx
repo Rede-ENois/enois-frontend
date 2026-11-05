@@ -283,6 +283,25 @@ function AdminSection() {
       toast("Não foi possível banir o usuário (mínimo de 10 caracteres no motivo).", "error"),
   });
 
+  const banirComIps = useMutation({
+    mutationFn: () =>
+      moderationApi.banWithIps(
+        username.trim(),
+        motivo.trim() || "Banimento com bloqueio de IPs decidido no painel.",
+      ),
+    onSuccess: (resposta) => {
+      const msgs: string[] = [`@${resposta.sanction.username} banido permanentemente.`];
+      if (resposta.blockedIps.length > 0)
+        msgs.push(`${resposta.blockedIps.length} IP(s) bloqueado(s).`);
+      if (resposta.alreadyBlockedIps.length > 0)
+        msgs.push(`${resposta.alreadyBlockedIps.length} IP(s) já bloqueado(s).`);
+      toast(msgs.join(" "), "success");
+      void queryClient.invalidateQueries({ queryKey: ["blocked-ips"] });
+    },
+    onError: () =>
+      toast("Não foi possível banir e bloquear IPs (mínimo de 10 caracteres no motivo).", "error"),
+  });
+
   const bloquear = useMutation({
     mutationFn: ({ ip, reason }: { ip: string; reason: string }) =>
       moderationApi.blockIp(ip, reason),
@@ -354,6 +373,25 @@ function AdminSection() {
           >
             <Trash2 className="h-3.5 w-3.5" />
             Sanitizar
+          </Button>
+
+          <Button
+            size="sm"
+            variant="destructive"
+            className="rounded-full gap-1.5"
+            disabled={semUsuario || banirComIps.isPending}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  `Banir PERMANENTEMENTE @${username.trim()} e bloquear TODOS os IPs conhecidos? Sem recurso, sem nova conta.`,
+                )
+              )
+                return;
+              banirComIps.mutate();
+            }}
+          >
+            <ShieldOff className="h-3.5 w-3.5" />
+            Banir e bloquear IPs
           </Button>
 
           <Button
