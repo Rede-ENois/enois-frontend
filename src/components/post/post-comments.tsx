@@ -12,8 +12,6 @@ import {
   PostComments as PostCommentsView,
   orderCommentsWithAccepted,
 } from "@rede-enois/design-system/domain";
-import { Button } from "@rede-enois/design-system/ui";
-import { Loader2, Send } from "lucide-react";
 
 import { commentsApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
@@ -174,9 +172,11 @@ export function PostComments({
     }
   };
 
+  const canSend = Boolean(draft.trim()) || media.length > 0;
+
   const submit = async (website: string): Promise<boolean> => {
     const content = draft.trim();
-    if ((!content && media.length === 0) || sending) return false;
+    if (!canSend || sending) return false;
     // Comentar e uma acao: sem sessao (link compartilhado aberto por outra pessoa) vai para o login.
     if (!requireAuth()) return false;
 
@@ -283,60 +283,35 @@ export function PostComments({
       onAddAudio={addAudio}
       onErrorChange={setError}
       composerField={({ toolsOpen, replyingTo }) => (
-        <>
-          <div className="comment-composer-field contents">
-            <MentionTextarea
-              value={draft}
-              onChange={(value, ids) => {
-                setDraft(postId, value);
-                setCommentMentions(postId, ids);
-              }}
-              placeholder={
-                replyingTo
-                  ? texts.posts.comments.replyPlaceholder(replyingTo)
-                  : texts.posts.comments.placeholder
-              }
-              className="w-full resize-none border-0 bg-transparent px-2 py-1.5 text-sm font-normal outline-none"
-              rows={1}
-              maxLength={COMMENT_MAX_LENGTH}
-              // The counter speaks up near the limit only: a quiet field otherwise.
-              showCounter={draft.length >= COMMENT_COUNTER_FROM}
-              toolbar
-              toolbarVisible={toolsOpen}
-              emoteInline
-              onPasteImages={addMediaFiles}
-              // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
-              onSubmitShortcut={() =>
-                (
-                  document.getElementById(`comment-form-${postId}`) as HTMLFormElement | null
-                )?.requestSubmit()
-              }
-            />
-          </div>
-
-          <Button
-            type="submit"
-            size="sm"
-            className={`comment-composer-submit rounded-full sm:hidden ${toolsOpen ? "h-8 w-8 p-0" : ""}`}
-            disabled={(!draft.trim() && media.length === 0) || sending}
-            aria-busy={sending}
-            aria-label={sending ? texts.common.sending : texts.posts.comments.submit}
-          >
-            {toolsOpen ? (
-              sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Send className="h-4 w-4" aria-hidden="true" />
-              )
-            ) : sending ? (
-              texts.common.sending
-            ) : (
-              texts.posts.comments.submit
-            )}
-          </Button>
-        </>
+        <MentionTextarea
+          value={draft}
+          onChange={(value, ids) => {
+            setDraft(postId, value);
+            setCommentMentions(postId, ids);
+          }}
+          placeholder={
+            replyingTo
+              ? texts.posts.comments.replyPlaceholder(replyingTo)
+              : texts.posts.comments.placeholder
+          }
+          className="w-full resize-none border-0 bg-transparent px-2 py-1.5 text-sm font-normal outline-none"
+          rows={1}
+          maxLength={COMMENT_MAX_LENGTH}
+          // The counter speaks up near the limit only: a quiet field otherwise.
+          showCounter={draft.length >= COMMENT_COUNTER_FROM}
+          toolbar
+          toolbarVisible={toolsOpen}
+          emoteInline
+          onPasteImages={addMediaFiles}
+          // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
+          onSubmitShortcut={() =>
+            (
+              document.getElementById(`comment-form-${postId}`) as HTMLFormElement | null
+            )?.requestSubmit()
+          }
+        />
       )}
-      canSend={Boolean(draft.trim()) || media.length > 0}
+      canSend={canSend}
       sending={sending}
       onSubmit={submit}
       onOpenGifPicker={() => setGifOpen(true)}

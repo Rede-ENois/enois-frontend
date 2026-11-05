@@ -189,7 +189,7 @@ Card de post no feed, com todas as ações sociais.
 
 ## `PostComments` (`src/components/post/post-comments.tsx`)
 
-Nos comentários do feed (`PostComments`), o campo ocupa a largura toda no mobile. No rodapé, as ferramentas ficam à esquerda e o botão “Comentar” à direita, com estados desabilitado e enviando. Ao abrir as ferramentas pelo “+”, Foto, Áudio e GIF ficam na mesma linha entre o “+” e o envio. O envio fica só com o ícone e mantém seu nome acessível; ao fechar, o texto volta. Ambos os botões de envio usam o mesmo formulário; o desktop mantém o botão de ícone ao lado do campo. Anexos também podem ser enviados sem texto.
+O frontend fornece o campo de texto, o rascunho, os anexos e o callback de envio ao `PostComments` do design system. O DS é responsável pelo layout responsivo, pela bandeja de ferramentas e pelo único botão de envio. O slot `composerField` contém apenas o campo, sem botão adicional ou CSS do frontend que reorganize a estrutura interna do DS. A validação compartilhada `canSend` permite texto ou mídia e impede envio enquanto há uma requisição em andamento. Upload, autenticação e chamadas à API continuam no frontend. A apresentação mobile depende da versão do DS que contém esse layout.
 
 ## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
 

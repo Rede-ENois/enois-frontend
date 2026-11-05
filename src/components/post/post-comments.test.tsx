@@ -105,7 +105,7 @@ describe("botão Comentar", () => {
       const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
       Object.defineProperty(input, "files", { configurable: true, value: [file] });
       await act(async () => input.dispatchEvent(new Event("change", { bubbles: true })));
-      const button = container.querySelector<HTMLButtonElement>(".comment-composer-submit")!;
+      const button = container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
       expect(button.disabled).toBe(false);
       await act(async () => button.click());
       expect(mocks.uploadAll).toHaveBeenCalledWith([{ file }]);
@@ -139,17 +139,9 @@ describe("botão Comentar", () => {
       ),
     );
     await settle();
-    const button = () => container.querySelector<HTMLButtonElement>(".comment-composer-submit")!;
+    const button = () => container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
     expect(button().textContent).toBe("Comentar");
     expect(button().disabled).toBe(true);
-    const tools = container.querySelector<HTMLButtonElement>("button[aria-controls]")!;
-    await act(async () => tools.click());
-    expect(button().textContent).toBe("");
-    expect(button().querySelector("svg")).not.toBeNull();
-    expect(button().getAttribute("aria-label")).toBe("Comentar");
-    expect(button().disabled).toBe(true);
-    await act(async () => tools.click());
-    expect(button().textContent).toBe("Comentar");
     await act(async () => usePostCardStore.getState().setDraft("post", "   "));
     expect(button().disabled).toBe(true);
     await act(async () => usePostCardStore.getState().setDraft("post", "Comentário"));
