@@ -46,6 +46,13 @@ function ModeracaoDenuncia() {
   // penalizar o dono por algo que a página publicou é recusado pelo servidor.
   const isCompany = data?.report.targetType === "COMPANY";
 
+  // Chamada não tem post para excluir: o alvo é a sala, e o que se decide é sobre quem foi apontado.
+  const isCall = data?.report.targetType === "CALL";
+
+  // A captura é prova privada: vem por quem tem sessão de admin (o storage exige moderador).
+  const captureUrl =
+    data?.media?.cdnUrl || (data?.media?.objectKey ? `/api/storage/${data.media.objectKey}` : "");
+
   const acoes: {
     id: ModeracaoAcao;
     label: string;
@@ -55,12 +62,18 @@ function ModeracaoDenuncia() {
         { id: "empresa", label: texts.moderacaoReview.removeCompany, variant: "destructive" },
         { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
       ]
-    : [
-        { id: "penalizar", label: texts.moderacaoReview.penalize, variant: "default" },
-        { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
-        { id: "excluir", label: texts.moderacaoReview.deletePost, variant: "outline" },
-        { id: "banir", label: texts.moderacaoReview.ban, variant: "destructive" },
-      ];
+    : isCall
+      ? [
+          { id: "penalizar", label: texts.moderacaoReview.penalize, variant: "default" },
+          { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
+          { id: "banir", label: texts.moderacaoReview.ban, variant: "destructive" },
+        ]
+      : [
+          { id: "penalizar", label: texts.moderacaoReview.penalize, variant: "default" },
+          { id: "avisar", label: texts.moderacaoReview.warn, variant: "outline" },
+          { id: "excluir", label: texts.moderacaoReview.deletePost, variant: "outline" },
+          { id: "banir", label: texts.moderacaoReview.ban, variant: "destructive" },
+        ];
 
   return (
     <AppContainer>
@@ -109,6 +122,30 @@ function ModeracaoDenuncia() {
                 </p>
 
                 <p className="whitespace-pre-wrap break-words text-sm">{data.content}</p>
+              </section>
+            )}
+
+            {data.call && (
+              <section className="surface-card space-y-2 p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-subtle">
+                  {texts.moderacaoReview.capture}
+                </p>
+
+                {captureUrl ? (
+                  <img
+                    src={captureUrl}
+                    alt={texts.moderacaoReview.capture}
+                    className="w-full rounded-xl border border-border-soft"
+                  />
+                ) : (
+                  <p className="text-sm text-text-muted">{texts.moderacaoReview.captureMissing}</p>
+                )}
+
+                {data.call.participants.length > 0 && (
+                  <p className="text-xs text-text-subtle">
+                    {texts.moderacaoReview.participants}: {data.call.participants.join(", ")}
+                  </p>
+                )}
               </section>
             )}
 

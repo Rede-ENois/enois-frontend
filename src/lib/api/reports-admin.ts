@@ -17,6 +17,23 @@ export const reportsAdminApi = {
       authorId: string;
       author: string;
       content: string;
+      /** Só em denúncia de chamada: quem estava na sala, quem foi apontado e quando. */
+      call?: {
+        callId: string;
+        reportedUserId: string;
+        participants: string[];
+        mediaId: string | null;
+        reportedAt: string;
+      } | null;
+      /** A captura do momento da denúncia, quando existe. `cdnUrl` é a imagem em si. */
+      media?: {
+        id: string;
+        fileName: string;
+        mimeType: string;
+        purpose: string;
+        cdnUrl: string | null;
+        objectKey?: string | null;
+      } | null;
     }>(`/admin/reports/${reportId}`),
 
   penalize: (reportId: string) => api.post<string>(`/admin/reports/${reportId}/penalize`, {}),

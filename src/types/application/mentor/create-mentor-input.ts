@@ -9,8 +9,8 @@ export type CreateMentorInput = Pick<
   Mentor,
   "expertise" | "price" | "banner" | "sparksPrice" | "roomMode"
 > & {
-  /** Sala externa da sessão (Google Meet, Jitsi...); só o dono a recebe de volta, por `/room`. */
+  /** Sala externa da sessão (Google Meet, Zoom...); só o dono a recebe de volta, por `/room`. */
   meetingUrl?: string | null;
-  /** Nome próprio para a sala permanente do Jitsi; sem ele o slug vem do id do mentor. */
-  jitsiRoom?: string | null;
+  /** Nome próprio para a sala fixa do Epapo; sem ele o nome vem do id do mentor. */
+  roomSlug?: string | null;
 };

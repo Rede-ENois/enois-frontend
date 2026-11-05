@@ -78,6 +78,7 @@ import { profileCardData } from "@/lib/cosmetics";
 import { connectionAction } from "@/lib/network/connection-action";
 import { buildShareTags } from "@/lib/open-graph";
 import { authorNameStyle } from "@/lib/profile-name-style";
+import { resolveProfileLook } from "@/lib/profile/profile-look";
 import { profileQueries } from "@/lib/query-options/profiles";
 import { isApprovedSoundCloudEmbed } from "@/lib/soundcloud-embed";
 import { useAuth } from "@/lib/use-auth";
@@ -446,8 +447,12 @@ function Profile() {
   }, [cropImageSrc]);
 
   // Quem visita vê o visual que o DONO escolheu; a prévia do diálogo vence enquanto está aberta.
-  const socialLook =
-    (lookPreview ?? myProfile?.profileAppearance)?.social ?? user.profileLook ?? null;
+  const socialLook = resolveProfileLook({
+    isOwnProfile,
+    preview: lookPreview,
+    ownAppearance: myProfile?.profileAppearance,
+    publicLook: user.profileLook,
+  });
   const themeMode = usePreferencesStore((state) => state.theme);
 
   return (

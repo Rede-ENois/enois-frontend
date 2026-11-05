@@ -1,5 +1,7 @@
 import type { CallJoin } from "@/types/application/call/call-join";
 import type { CallKind } from "@/types/application/call/call-kind";
+import type { CallReportInput } from "@/types/application/call/call-report-input";
+import type { CallReportParticipant } from "@/types/application/call/call-report-participant";
 import type { CallView } from "@/types/application/call/call-view";
 
 import { api } from "../api-client";
@@ -39,4 +41,14 @@ export const callsApi = {
   end: (callId: string) => api.post<CallView>(`/calls/${callId}/end`),
   /** A tela perdeu a mídia: fecha explicitamente em vez de ficar pendurada. */
   fail: (callId: string) => api.post<CallView>(`/calls/${callId}/fail`),
+
+  /**
+   * Quem esteve na sala e pode ser apontado. A lista vem do servidor: quem não entrou não aparece,
+   * e quem denuncia não aparece para si mesmo.
+   */
+  reportable: (callId: string) => api.get<CallReportParticipant[]>(`/calls/${callId}/reportable`),
+
+  /** Denúncia da chamada com o relato e a captura do momento (quando houve). */
+  report: (callId: string, data: CallReportInput) =>
+    api.post<{ id: string; status: string }>(`/calls/${callId}/reports`, data),
 };

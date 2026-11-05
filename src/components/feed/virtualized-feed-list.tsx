@@ -52,19 +52,30 @@ export function VirtualizedFeedList({
   useLayoutEffect(() => {
     const element = listRef.current;
     if (!element) return;
-    const measure = () => Math.round(element.getBoundingClientRect().top + window.scrollY);
-    // Guard funcional: so atualiza quando o valor muda de verdade. Sem isso o ResizeObserver
-    // dispara a cada frame de scroll (o virtualizer muda a altura do documento) e o re-render
-    // faz a lista blinkar.
+    // offsetTop acumulado: nao e afetado pela barra de endereco do browser mobile
+    // (getBoundingClientRect oscila quando o chrome do browser esconde/aparece).
+    const measure = () => {
+      let top = 0;
+      let el: HTMLElement | null = element;
+      while (el) {
+        top += el.offsetTop;
+        el = el.offsetParent as HTMLElement | null;
+      }
+      return Math.round(top);
+    };
     const update = () =>
       setScrollMargin((prev) => {
         const next = measure();
         return prev === next ? prev : next;
       });
     update();
+    // Observa so o container acima da lista (o main), nao o document inteiro.
+    // O document muda de tamanho a cada scroll (virtualizer) e no mobile quando
+    // a barra de endereco esconde. O main so muda quando um banner aparece/desaparece.
     if (typeof ResizeObserver === "undefined") return;
+    const target = element.parentElement ?? element;
     const observer = new ResizeObserver(update);
-    observer.observe(document.documentElement);
+    observer.observe(target);
     return () => observer.disconnect();
   }, []);
 
@@ -233,7 +244,7 @@ function ScrollDebugButton() {
       type="button"
       size="sm"
       onClick={copy}
-      className="fixed bottom-28 left-3 z-50 shadow-lg lg:bottom-4"
+      className="fixed bottom-20 left-3 z-50 shadow-lg lg:bottom-4"
     >
       {texts.feed.scrollDebug.copy}
     </Button>

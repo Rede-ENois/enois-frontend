@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   getMySessions: vi.fn(),
   cancelSession: vi.fn(),
   getSessions: vi.fn(),
+  joinSession: vi.fn(),
   openDirect: vi.fn(),
   navigate: vi.fn(),
   me: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock("@/lib/api", () => ({
     getMySessions: mocks.getMySessions,
     cancelSession: mocks.cancelSession,
     getSessions: mocks.getSessions,
+    joinSession: mocks.joinSession,
   },
   messagesApi: { openDirect: mocks.openDirect },
 }));
@@ -65,6 +67,7 @@ beforeEach(() => {
   mocks.getMySessions.mockReset();
   mocks.cancelSession.mockReset();
   mocks.getSessions.mockReset();
+  mocks.joinSession.mockReset();
   mocks.openDirect.mockReset();
   mocks.navigate.mockReset();
   mocks.me.mockReset();
@@ -103,7 +106,7 @@ const tabByLabel = (text: string) =>
     (item) => item.textContent?.trim() === text,
   );
 
-/** "Entrar na sala" é um link (abre em outra aba), não um botão. */
+/** Sala própria do mentor: "Entrar na sala" é um link (abre em outra aba). */
 const linkByText = (text: string) =>
   Array.from(container.querySelectorAll("a")).find((item) => item.textContent?.includes(text));
 
@@ -122,26 +125,48 @@ describe("MySessionsSection", () => {
     expect(container.textContent).toContain("Agendada");
   });
 
-  it("mostra a sala do Jitsi da sessão com o atalho de entrar", async () => {
-    const jitsi: MySession = {
+  it("abre a sala do Epapo embutida, com o token pedido ao servidor", async () => {
+    const epapo: MySession = {
       ...paid,
-      id: "session_jitsi",
-      roomUrl: "https://meet.jit.si/rede-mentoria-session_jitsi",
-      roomMode: "JITSI_SESSION",
+      id: "session_epapo",
+      roomUrl: "https://meet.example.test/rede-mentoria-session_epapo",
+      roomMode: "EPAPO_SESSION",
     };
-    await render([jitsi]);
+    mocks.joinSession.mockResolvedValue({
+      sessionId: epapo.id,
+      roomUrl: epapo.roomUrl,
+      jwt: "token-da-sala",
+      tokenTtlSeconds: 7200,
+    });
+    await render([epapo]);
 
-    expect(container.textContent).toContain("https://meet.jit.si/rede-mentoria-session_jitsi");
-    // Sala do Jitsi tem entrada por telefone; a sala própria (Meet) não.
-    expect(buttonByText("Entrar por telefone")).toBeDefined();
-    expect(linkByText("Entrar na sala")?.getAttribute("href")).toBe(jitsi.roomUrl);
+    // Sala do Epapo não é um link: a entrada é um botão que abre o quadro dentro do app.
+    expect(linkByText("Entrar na sala")).toBeUndefined();
+    const enter = buttonByText("Entrar na sala");
+    expect(enter).toBeDefined();
+
+    await act(async () => {
+      enter?.click();
+      await Promise.resolve();
+    });
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+      if (document.querySelector("iframe")) break;
+    }
+
+    expect(mocks.joinSession).toHaveBeenCalledWith("mentor_1", "session_epapo");
+    const frame = document.querySelector("iframe");
+    expect(frame?.getAttribute("src")).toContain("jwt=token-da-sala");
+    expect(frame?.getAttribute("src")).toContain("meet.example.test/rede-mentoria-session_epapo");
   });
 
-  it("não oferece telefone para a sala própria do mentor", async () => {
+  it("sala própria do mentor abre em outra aba, sem pedir token", async () => {
     await render([paid]);
 
     expect(linkByText("Entrar na sala")?.getAttribute("href")).toBe(paid.roomUrl);
-    expect(buttonByText("Entrar por telefone")).toBeUndefined();
+    expect(mocks.joinSession).not.toHaveBeenCalled();
   });
 
   it("distingue a sessão gratuita no histórico", async () => {
@@ -203,8 +228,8 @@ describe("MySessionsSection", () => {
         message: "Quero revisar meu portfólio",
         status: "SCHEDULED",
         priceSparks: 300_000,
-        roomUrl: "https://meet.jit.si/rede-mentoria-mentor_session_1",
-        roomMode: "JITSI_SESSION",
+        roomUrl: "https://meet.example.test/rede-mentoria-mentor_session_1",
+        roomMode: "EPAPO_SESSION",
         createdAt: "2026-10-30T12:00:00Z",
       },
     ]);
