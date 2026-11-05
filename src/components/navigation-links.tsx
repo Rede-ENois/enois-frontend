@@ -47,7 +47,8 @@ export function NavigationLinks({
   });
   const favoriteCommunities = favorites?.items ?? [];
 
-  const toLink = (community: { id: string; name: string }) => ({
+  const toLink = (community: { id: string; name: string; avatar?: string | null }) => ({
+    avatar: community.avatar,
     id: community.id,
     name: community.name,
     href: `/comunidades/${community.id}`,
