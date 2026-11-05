@@ -39,7 +39,12 @@ export function ConversationItem({
   // text, so it gets no author either.
   const [previewReadable, setPreviewReadable] = useState(true);
   useEffect(() => {
-    if (!conversation.lastMessageE2e || !conversation.lastMessage || !conversation.lastMessageIv) {
+    if (
+      !conversation.lastMessageE2e ||
+      !conversation.lastMessage ||
+      !conversation.lastMessageIv ||
+      !currentUserId
+    ) {
       setPreview(conversation.lastMessage ?? "");
       setPreviewReadable(true);
       setDecryptingPreview(false);
@@ -55,12 +60,15 @@ export function ConversationItem({
         setDecryptingPreview(false);
         return;
       }
-      decryptReceived({
-        e2e: true,
-        text: conversation.lastMessage!,
-        iv: conversation.lastMessageIv!,
-        conversationId: conversation.id,
-      } as Parameters<typeof decryptReceived>[0])
+      decryptReceived(
+        {
+          e2e: true,
+          text: conversation.lastMessage!,
+          iv: conversation.lastMessageIv!,
+          conversationId: conversation.id,
+        } as Parameters<typeof decryptReceived>[0],
+        currentUserId!,
+      )
         .then((plain) => {
           if (!cancelled) {
             setPreview(plain);
@@ -84,6 +92,7 @@ export function ConversationItem({
     conversation.lastMessageE2e,
     conversation.lastMessageIv,
     conversation.id,
+    currentUserId,
   ]);
 
   const { peer, profileHref } = conversationPeer(conversation, otherId, otherUser);
