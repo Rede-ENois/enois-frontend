@@ -13,7 +13,7 @@ import { Search } from "lucide-react";
 import { authApi, messagesApi, networkApi } from "@/lib/api";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { useCurrentUser } from "@/lib/current-user";
-import { hasLocalKeys } from "@/lib/e2e/key-manager";
+import { isE2eReady } from "@/lib/e2e/key-manager";
 import { useInterfaceContext, writeStoredContext } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
@@ -58,7 +58,7 @@ function Mensagens() {
   // Gate E2E: verifica se tem chave local antes de mostrar qualquer conversa.
   const [e2eReady, setE2eReady] = useState<boolean | null>(null);
   useEffect(() => {
-    hasLocalKeys().then(setE2eReady);
+    isE2eReady().then(setE2eReady);
   }, []);
   const { data: authMe } = useQuery({
     queryKey: ["auth-me"],

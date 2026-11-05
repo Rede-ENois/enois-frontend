@@ -9,7 +9,7 @@ import { ChatDock as ChatDockView } from "@rede-enois/design-system/domain";
 import { authApi, messagesApi } from "@/lib/api";
 import { janelasQueCabem } from "@/lib/chat-dock/chat-dock-layout";
 import { useLarguraDaJanela } from "@/lib/chat-dock/use-largura-da-janela";
-import { hasLocalKeys } from "@/lib/e2e/key-manager";
+import { isE2eReady } from "@/lib/e2e/key-manager";
 import { useInterfaceContext } from "@/lib/interface-context";
 import { useMessageStreamLive } from "@/lib/message-stream";
 import { hasSession } from "@/lib/require-auth";
@@ -43,10 +43,10 @@ function ChatDockInner() {
   const queryClient = useQueryClient();
   const larguraDaJanela = useLarguraDaJanela();
 
-  // Gate E2E: sem chaves locais, o dock mostra o setup em vez das conversas.
+  // Gate E2E: sem chaves locais OU sem keypair no servidor, mostra o setup.
   const [e2eReady, setE2eReady] = useState<boolean | null>(null);
   useEffect(() => {
-    hasLocalKeys().then(setE2eReady);
+    isE2eReady().then(setE2eReady);
   }, []);
   const { data: authMe } = useQuery({
     queryKey: ["auth-me"],

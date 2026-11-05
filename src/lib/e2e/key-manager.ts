@@ -114,25 +114,52 @@ export async function hasLocalKeys(): Promise<boolean> {
 }
 
 /**
+ * Verifica se o E2E esta pronto de verdade: chaves locais E keypair no servidor.
+ * Cobre o caso de chave local orfã (IndexedDB sobreviveu mas o servidor nao tem o keypair)
+ * que fazia o gate achar que tava tudo certo e as mensagens ficavam como "Mensagem Cifrada".
+ */
+export async function isE2eReady(): Promise<boolean> {
+  if (!(await hasLocalKeys())) return false;
+  try {
+    await e2eApi.myKeypair();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Retorna true se o servidor tem keypair ativo pra este usuario. */
+export async function serverHasKeypair(): Promise<boolean> {
+  try {
+    await e2eApi.myKeypair();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Sincroniza as chaves locais com o servidor: se a chave publica local difere da ativa no
  * servidor, restaura do backup. Chamado no login com a senha disponivel — garante que todos
  * os devices compartilhem o mesmo keypair sem forcar o usuario a configurar de novo.
+ *
+ * NUNCA gera keypair novo se o servidor ja tem um: se a restauracao falha com o servidor
+ * tendo keypair, a senha esta errada e gerar novo destruiria as conversation keys antigas.
  */
 export async function syncKeysOnLogin(password: string): Promise<void> {
-  try {
-    const serverKeypair = await e2eApi.myKeypair();
+  const hasServer = await serverHasKeypair();
+
+  if (hasServer) {
     const localPub = await getLocalPublicKey();
-
-    if (localPub === serverKeypair.publicKey) return; // já sincronizado
-
-    // Chave diferente ou ausente: restaura do servidor com a senha do login.
+    const serverKeypair = await e2eApi.myKeypair();
+    if (localPub === serverKeypair.publicKey) return;
+    // Restaura do servidor. Se falhar (senha errada), NAO gera novo.
     await restoreFromBackup(password);
-  } catch {
-    // Servidor sem keypair (primeiro setup): gera.
-    if (!(await hasLocalKeys())) {
-      await generateAndUpload(password);
-    }
+    return;
   }
+
+  // Servidor sem keypair: primeiro setup.
+  await generateAndUpload(password);
 }
 
 /** Re-cifra a chave privada com nova senha e re-upload (pra troca de senha). */
