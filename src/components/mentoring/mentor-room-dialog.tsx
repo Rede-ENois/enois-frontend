@@ -17,8 +17,8 @@ import { Copy, Video } from "lucide-react";
 import { mentorsApi } from "@/lib/api";
 
 /**
- * Painel do mentor com a sala que as próximas sessões usam. O link permanente do Jitsi não vai
- * para a vitrine (não tem sala de espera: quem tem o link entra), então ele só aparece aqui.
+ * Painel do mentor com a sala que as próximas sessões usam. O link da sala fixa não vai para a
+ * vitrine, então ele só aparece aqui — e a entrada continua passando pelo servidor.
  */
 export function MentorRoomDialog({ mentorId }: { mentorId: string }) {
   const { toast } = useToast();
@@ -32,7 +32,7 @@ export function MentorRoomDialog({ mentorId }: { mentorId: string }) {
 
   const roomUrl = data?.roomUrl ?? null;
   const modeLabel =
-    data?.roomMode === "JITSI_PERMANENT"
+    data?.roomMode === "EPAPO_PERMANENT"
       ? texts.mentoring.roomModePermanent
       : data?.roomMode === "CUSTOM"
         ? texts.mentoring.roomModeCustom

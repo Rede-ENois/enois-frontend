@@ -14,7 +14,7 @@ export type MySession = {
   status: SessionStatus;
   /** Preço pago em milésimos de faísca (`null` quando a sessão é gratuita). */
   priceSparks: number | null;
-  /** Link da sala, congelado no agendamento (Jitsi por sessão, sala fixa ou sala própria). */
+  /** Link da sala, congelado no agendamento (Epapo por sessão, sala fixa ou sala própria). */
   roomUrl: string | null;
   /** Como a sala foi escolhida quando a sessão foi marcada. */
   roomMode: MentorRoomMode | null;
