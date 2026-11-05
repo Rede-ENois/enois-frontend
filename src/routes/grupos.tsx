@@ -18,7 +18,7 @@ import {
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { Camera, ChevronRight, Loader2, Plus, Search, Users } from "lucide-react";
+import { Camera, ChevronRight, Compass, Loader2, Plus, Search, Users } from "lucide-react";
 
 import { groupsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
@@ -33,13 +33,15 @@ export const Route = createFileRoute("/grupos")({
 });
 
 /**
- * Descoberta de grupos — PÚBLICA de propósito: quem ainda não entrou pode conhecer a apresentação,
- * mas nada do conteúdo interno aparece aqui (o backend só manda metadados públicos).
+ * Painel de grupos — mostra primeiro os grupos dos quais o usuário participa,
+ * com painel lateral "Descobrir" onde o sistema sugere novos grupos da rede.
  */
 function Grupos() {
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const authenticated = useIsAuthenticated();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Este arquivo é o PAI de /grupos/$slug: quando um grupo está na URL, quem responde é o filho
   // (a página do grupo) — sem o Outlet, a lista engolia a navegação e ninguém conseguia ENTRAR
@@ -47,20 +49,55 @@ function Grupos() {
   const matchRoute = useMatchRoute();
   const isDetail = matchRoute({ to: "/grupos/$slug" });
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["groups", query],
+  const {
+    data: mineData,
+    isLoading: isMineLoading,
+    isError: isMineError,
+  } = useQuery({
+    queryKey: ["groups", "mine"],
+    queryFn: () => groupsApi.mine(),
+    enabled: !isDetail && authenticated,
+  });
+
+  const {
+    data: listData,
+    isLoading: isListLoading,
+    isError: isListError,
+  } = useQuery({
+    queryKey: ["groups", "list", query],
     queryFn: () => groupsApi.list(query.trim() || undefined),
     enabled: !isDetail,
   });
-  const groups = data?.items ?? [];
+
+  const joinMutation = useMutation({
+    mutationFn: (groupId: string) => groupsApi.join(groupId),
+    onSuccess: (res) => {
+      void queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast(res.status === "MEMBER" ? texts.groups.joined : texts.groups.pending);
+    },
+    onError: () => toast(texts.groups.joinError, "error"),
+  });
 
   if (isDetail) {
     return <Outlet />;
   }
 
+  const allMine = mineData?.items ?? [];
+  const needle = query.trim().toLocaleLowerCase("pt-BR");
+  const filteredMine = needle
+    ? allMine.filter(
+        (g) =>
+          g.name.toLocaleLowerCase("pt-BR").includes(needle) ||
+          (g.description ?? "").toLocaleLowerCase("pt-BR").includes(needle),
+      )
+    : allMine;
+
+  const mineIdSet = new Set(allMine.map((g) => g.id));
+  const suggestedGroups = (listData?.items ?? []).filter((g) => !g.joined && !mineIdSet.has(g.id));
+
   return (
     <AppContainer>
-      <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div className="mx-auto w-full max-w-5xl space-y-6">
         <PageHeader
           title={texts.groups.title}
           description={texts.groups.subtitle}
@@ -86,27 +123,127 @@ function Grupos() {
           />
         </div>
 
-        {isLoading && (
-          <div className="flex justify-center py-8 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        )}
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          {/* Coluna Principal: Grupos em que participamos */}
+          <section className="min-w-0 space-y-4">
+            {authenticated ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-text-strong">
+                    {texts.groups.myGroups}
+                    {allMine.length > 0 && (
+                      <span className="ml-2 text-xs font-normal text-text-subtle">
+                        ({allMine.length})
+                      </span>
+                    )}
+                  </h2>
+                </div>
 
-        {isError && (
-          <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-            {texts.groups.loadError}
-          </p>
-        )}
+                {isMineLoading && (
+                  <div className="flex justify-center py-8 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                )}
 
-        {!isLoading && !isError && groups.length === 0 && (
-          <p className="text-sm text-text-subtle">{texts.groups.empty}</p>
-        )}
+                {isMineError && (
+                  <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
+                    {texts.groups.loadError}
+                  </p>
+                )}
 
-        <ul className="space-y-3">
-          {groups.map((group) => (
-            <GroupCard key={group.id} group={group} />
-          ))}
-        </ul>
+                {!isMineLoading && !isMineError && filteredMine.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-border-soft p-8 text-center">
+                    <p className="font-medium text-text-strong">
+                      {query.trim() ? texts.groups.myGroupsSearchEmpty : texts.groups.myGroupsEmpty}
+                    </p>
+                    {!query.trim() && (
+                      <p className="mt-1 text-sm text-text-subtle">
+                        {texts.groups.myGroupsEmptyHint}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <ul className="space-y-3">
+                  {filteredMine.map((group) => (
+                    <GroupCard key={group.id} group={group} isMember />
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <h2 className="text-base font-semibold text-text-strong">{texts.groups.title}</h2>
+
+                {isListLoading && (
+                  <div className="flex justify-center py-8 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                )}
+
+                {isListError && (
+                  <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
+                    {texts.groups.loadError}
+                  </p>
+                )}
+
+                {!isListLoading && !isListError && (listData?.items ?? []).length === 0 && (
+                  <p className="text-sm text-text-subtle">{texts.groups.empty}</p>
+                )}
+
+                <ul className="space-y-3">
+                  {(listData?.items ?? []).map((group) => (
+                    <GroupCard key={group.id} group={group} />
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+
+          {/* Painel Lateral: Descobrir novos grupos */}
+          <aside className="space-y-4 lg:sticky lg:top-20">
+            <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
+              <div className="flex items-center gap-2">
+                <Compass className="h-4 w-4 text-primary" />
+
+                <h2 className="text-sm font-semibold text-text-strong">{texts.groups.discover}</h2>
+              </div>
+
+              <p className="mt-1 text-xs text-text-subtle">{texts.groups.discoverSubtitle}</p>
+
+              {isListLoading && (
+                <div className="flex justify-center py-6 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              )}
+
+              {isListError && (
+                <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                  {texts.groups.loadError}
+                </p>
+              )}
+
+              {!isListLoading && !isListError && suggestedGroups.length === 0 && (
+                <p className="mt-4 text-xs text-text-subtle">
+                  {query.trim() ? texts.groups.discoverSearchEmpty : texts.groups.discoverEmpty}
+                </p>
+              )}
+
+              {!isListLoading && !isListError && suggestedGroups.length > 0 && (
+                <ul className="mt-4 space-y-3">
+                  {suggestedGroups.map((group) => (
+                    <SuggestedGroupCard
+                      key={group.id}
+                      group={group}
+                      onJoin={(id) => joinMutation.mutate(id)}
+                      isJoining={joinMutation.isPending && joinMutation.variables === group.id}
+                      authenticated={authenticated}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
 
       <CreateGroupDialog open={createOpen} onOpenChange={setCreateOpen} />
@@ -114,7 +251,18 @@ function Grupos() {
   );
 }
 
-function GroupCard({ group }: { group: GroupView }) {
+function GroupCard({ group, isMember }: { group: GroupView; isMember?: boolean }) {
+  const roleLabel =
+    group.viewerRole === "OWNER"
+      ? texts.groups.roleOwner
+      : group.viewerRole === "ADMIN"
+        ? texts.groups.roleAdmin
+        : group.viewerRole === "MODERATOR"
+          ? texts.groups.roleModerator
+          : isMember || group.joined
+            ? texts.groups.roleMember
+            : null;
+
   return (
     <li>
       <Link
@@ -135,7 +283,14 @@ function GroupCard({ group }: { group: GroupView }) {
         )}
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-semibold text-text-strong">{group.name}</span>
+          <span className="flex items-center gap-2">
+            <span className="truncate font-semibold text-text-strong">{group.name}</span>
+            {roleLabel && (
+              <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-primary">
+                {roleLabel}
+              </span>
+            )}
+          </span>
 
           {group.description && (
             <span className="block truncate text-sm text-text-subtle">{group.description}</span>
@@ -149,6 +304,89 @@ function GroupCard({ group }: { group: GroupView }) {
 
         <ChevronRight className="h-4 w-4 shrink-0 text-text-subtle" />
       </Link>
+    </li>
+  );
+}
+
+function SuggestedGroupCard({
+  group,
+  onJoin,
+  isJoining,
+  authenticated,
+}: {
+  group: GroupView;
+  onJoin: (id: string) => void;
+  isJoining: boolean;
+  authenticated: boolean;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <li className="rounded-xl border border-border-soft bg-surface-card p-3 transition hover:border-primary/30">
+      <div className="flex items-start gap-2.5">
+        <Link to="/grupos/$slug" params={{ slug: group.slug }} className="shrink-0">
+          {group.avatar ? (
+            <img
+              src={resolveCdnUrl(group.avatar)}
+              alt=""
+              className="h-10 w-10 rounded-lg object-cover"
+            />
+          ) : (
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <Users className="h-4 w-4" />
+            </span>
+          )}
+        </Link>
+
+        <div className="min-w-0 flex-1">
+          <Link
+            to="/grupos/$slug"
+            params={{ slug: group.slug }}
+            className="block truncate text-sm font-semibold text-text-strong hover:text-primary transition"
+          >
+            {group.name}
+          </Link>
+
+          <span className="block text-[11px] text-text-date">
+            {texts.groups.members(group.members)} ·{" "}
+            {group.joinMode === "OPEN" ? texts.groups.joinModeOpen : texts.groups.joinModeApproval}
+          </span>
+          {group.description && (
+            <p className="mt-0.5 line-clamp-2 text-xs text-text-subtle">{group.description}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2.5 flex items-center justify-end">
+        {group.requestPending ? (
+          <span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-text-subtle">
+            {texts.groups.pending}
+          </span>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 w-auto rounded-full px-3 text-xs font-medium gap-1"
+            disabled={isJoining}
+            onClick={() => {
+              if (!authenticated) {
+                void navigate({ to: "/entrar" });
+                return;
+              }
+              onJoin(group.id);
+            }}
+          >
+            {isJoining ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : group.joinMode === "OPEN" ? (
+              texts.groups.join
+            ) : (
+              texts.groups.requestJoin
+            )}
+          </Button>
+        )}
+      </div>
     </li>
   );
 }

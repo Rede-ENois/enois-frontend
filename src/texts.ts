@@ -183,6 +183,14 @@ export const texts = {
     pending: "Pedido pendente",
     leave: "Sair do grupo",
     joined: "Você participa",
+    myGroups: "Seus grupos",
+    myGroupsEmpty: "Você ainda não participa de nenhum grupo.",
+    myGroupsEmptyHint: "Explore os grupos sugeridos ao lado para começar a participar.",
+    myGroupsSearchEmpty: "Nenhum dos seus grupos corresponde à busca.",
+    discover: "Descobrir",
+    discoverSubtitle: "Grupos recomendados para você conhecer e participar.",
+    discoverEmpty: "Você já participa de todos os grupos disponíveis!",
+    discoverSearchEmpty: "Nenhum novo grupo encontrado para essa busca.",
     create: "Criar grupo",
     createTitle: "Criar grupo",
     createDescription: "Escolha o nome e como as pessoas entram. Dá para mudar depois.",
@@ -1199,6 +1207,7 @@ export const texts = {
       professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
     },
+    personalizeFeed: "Personalizar feed",
     tabs: {
       forYou: "Para você",
       news: "Notícias",
@@ -3510,7 +3519,14 @@ export const texts = {
   healthyUsage: {
     tabs: {
       wellbeing: "Bem-estar",
+      personalization: "Personalização",
       notifications: "Notificações e avisos",
+    },
+    personalization: {
+      feedTitle: "Feed padrão",
+      feedHint: "Escolha qual feed você quer ver ao abrir o Énóis.",
+      postTypeTitle: "Tipos de publicação",
+      postTypeHint: "Filtre quais tipos de post você quer ver no feed Tudo.",
     },
   },
 
