@@ -1330,7 +1330,7 @@ function Home() {
               <button
                 type="button"
                 onClick={arrivals.release}
-                className="fixed left-1/2 top-24 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
+                className="fixed left-1/2 top-20 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95 sm:top-24"
               >
                 <span className="flex items-center gap-1.5">
                   <ArrowUp className="h-3.5 w-3.5 animate-bounce" />
