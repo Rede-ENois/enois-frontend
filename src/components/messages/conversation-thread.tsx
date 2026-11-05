@@ -188,7 +188,12 @@ export function ConversationThread({
     // E2E obrigatorio: se a cifragem falhar, NAO envia. Nenhuma mensagem sai plaintext.
     if (text) {
       try {
-        const e2e = await encryptForSend(conversation.id, text, conversation.participantIds);
+        // Garante que o remetente esta na lista (precisa da copia da AES key pra ler a propria msg).
+        const allParticipants =
+          currentUserId && !conversation.participantIds.includes(currentUserId)
+            ? [...conversation.participantIds, currentUserId]
+            : conversation.participantIds;
+        const e2e = await encryptForSend(conversation.id, text, allParticipants);
         sendMessage.mutate({
           conversationId: conversation.id,
           text,

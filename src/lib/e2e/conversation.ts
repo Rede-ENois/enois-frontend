@@ -75,13 +75,16 @@ export async function decryptReceived(message: Message, currentUserId: string): 
   if (!privateKeyBase64) return "[Mensagem cifrada — configure o E2E]";
 
   // Formato novo: per-message encrypted keys.
-  if (message.encryptedKeys && message.encryptedKeys[currentUserId]) {
+  // O backend devolve encrypted_keys como string JSON (coluna TEXT); parseia aqui.
+  const keys: Record<string, string> | null =
+    message.encryptedKeys && typeof message.encryptedKeys === "string"
+      ? JSON.parse(message.encryptedKeys)
+      : (message.encryptedKeys ?? null);
+
+  if (keys && keys[currentUserId]) {
     try {
       const privateKey = await importPrivateKey(privateKeyBase64);
-      const aesKeyBase64 = await decryptWithPrivateKey(
-        message.encryptedKeys[currentUserId],
-        privateKey,
-      );
+      const aesKeyBase64 = await decryptWithPrivateKey(keys[currentUserId], privateKey);
       const aesKey = await importSymmetricKey(aesKeyBase64);
       return await decryptMessage(message.text, message.iv, aesKey);
     } catch {
