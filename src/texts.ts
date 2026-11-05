@@ -580,6 +580,9 @@ export const texts = {
     actionError: "Não foi possível aplicar a ação.",
     alreadyReviewed: "Esta denúncia já foi revisada.",
     forbidden: "Sessão sem acesso de admin para esta fila.",
+    capture: "Captura da chamada no momento da denúncia",
+    captureMissing: "Esta denúncia de chamada veio sem captura de tela.",
+    participants: "Na sala quando a denúncia foi feita",
   },
   onboarding: {
     seoTitle: "Boas-vindas · Énóis",
@@ -2672,6 +2675,7 @@ export const texts = {
       COMMENT: "Comentário",
       USER: "Perfil",
       JOB: "Vaga",
+      CALL: "Chamada",
     } as Record<string, string>,
     reason: {
       SEXUAL_CONTENT: "Nudez ou conteúdo sexual",
@@ -2862,6 +2866,7 @@ export const texts = {
         GROUP_POST: "Post de grupo",
         GROUP_COMMENT: "Comentário de grupo",
         COMPANY: "Página empresarial",
+        CALL: "Chamada",
       } as Record<string, string>,
     },
     tabs: {
@@ -3756,6 +3761,36 @@ export const texts = {
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
     participants: (count: number) =>
       count === 1 ? "1 pessoa na chamada" : `${count} pessoas na chamada`,
+
+    /**
+     * Denúncia da chamada. A captura é do momento do clique: a sala tira a foto e ela vai junto
+     * com o relato para a moderação — nunca é publicada nem fica visível para quem foi denunciado.
+     */
+    report: {
+      action: "Denunciar chamada",
+      title: "Denunciar chamada",
+      description:
+        "A moderação recebe seu relato e uma captura do que está na tela agora. A pessoa denunciada não fica sabendo quem denunciou.",
+      who: "Quem você quer denunciar?",
+      whoEmpty: "Ninguém além de você entrou nesta chamada até agora.",
+      reason: "Motivo",
+      descriptionLabel: "O que aconteceu?",
+      descriptionPlaceholder: "Conte o que foi dito ou feito na chamada.",
+      capture: "Captura do momento",
+      capturePending: "Tirando a foto da chamada…",
+      captureReady: "A captura vai junto com a denúncia.",
+      captureMissing:
+        "Não conseguimos tirar a foto agora (câmera desligada ou sala sem imagem). A denúncia segue só com o relato.",
+      captureAlt: "Captura da chamada no momento da denúncia",
+      send: "Enviar denúncia",
+      sending: "Enviando…",
+      cancel: "Cancelar",
+      success: "Denúncia enviada. A moderação vai analisar a chamada.",
+      error: "Não foi possível enviar a denúncia. Tente de novo.",
+      alreadyReported: "Você já denunciou esta pessoa nesta chamada.",
+      notInCall: "Esta pessoa não está mais na chamada.",
+      tooLong: "O relato ficou longo demais. Resuma um pouco.",
+    },
   },
 
   root: {
