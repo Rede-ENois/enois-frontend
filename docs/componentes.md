@@ -328,6 +328,11 @@ Hook para detectar breakpoint mobile (< 768px).
 
 ## Componentes UI (shadcn/ui)
 
+Os campos das alternativas de enquete e do compositor de canal usam `Input` e `Textarea`
+de `@rede-enois/design-system/ui`. A tipografia de formulário pertence ao DS; não há uma
+regra global de tamanho de fonte no frontend. O canal passa a usar também o contador
+padrão do `Textarea`, mantendo o limite de 1200 caracteres.
+
 46 componentes em `src/components/ui/` gerados pelo shadcn:
 
 | Componente     | Descrição                                                               |

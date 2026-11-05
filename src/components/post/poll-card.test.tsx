@@ -19,7 +19,8 @@ vi.mock("@/lib/api", () => ({ feedApi: { votePoll: mocks.votePoll } }));
 vi.mock("@/lib/use-auth", () => ({
   useAuth: () => ({ requireAuth: () => true, user: { id: "u1" } }),
 }));
-vi.mock("@rede-enois/design-system/ui", () => ({
+vi.mock("@rede-enois/design-system/ui", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@rede-enois/design-system/ui")>()),
   useToast: () => ({ toast: vi.fn() }),
 }));
 vi.mock("@rede-enois/design-system/domain", () => ({}));

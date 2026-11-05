@@ -1,0 +1,79 @@
+{
+  "browser": "156.0.4314.58",
+  "measurements": [
+    {
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "viewport": "width=device-width, initial-scale=1",
+      "fields": [
+        {
+          "type": "text",
+          "fontSize": 16,
+          "width": 288,
+          "right": 321,
+          "maxLength": 120
+        },
+        {
+          "type": "text",
+          "fontSize": 16,
+          "width": 288,
+          "right": 321,
+          "maxLength": 120
+        },
+        {
+          "type": "text",
+          "fontSize": 16,
+          "width": 288,
+          "right": 321,
+          "maxLength": 120
+        },
+        {
+          "type": "textarea",
+          "fontSize": 16,
+          "width": 310,
+          "right": 350,
+          "maxLength": 1200
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "height": 844,
+      "scrollWidth": 1280,
+      "viewport": "width=device-width, initial-scale=1",
+      "fields": [
+        {
+          "type": "text",
+          "fontSize": 14,
+          "width": 474,
+          "right": 859,
+          "maxLength": 120
+        },
+        {
+          "type": "text",
+          "fontSize": 14,
+          "width": 474,
+          "right": 859,
+          "maxLength": 120
+        },
+        {
+          "type": "text",
+          "fontSize": 14,
+          "width": 474,
+          "right": 859,
+          "maxLength": 120
+        },
+        {
+          "type": "textarea",
+          "fontSize": 14,
+          "width": 496,
+          "right": 888,
+          "maxLength": 1200
+        }
+      ]
+    }
+  ],
+  "consoleErrorsAndWarnings": [],
+  "limitations": "Isolated PollComposer and channel Textarea integration; does not verify an authenticated channel route, native iOS keyboard zoom or manual pinch gestures."
+}
