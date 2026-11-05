@@ -6,6 +6,6 @@ export type SendMessageInput = {
   text: Message["text"];
   mediaIds: Message["mediaIds"];
   mediaSpoiler?: boolean;
-  e2e?: { ciphertext: string; iv: string };
+  e2e?: { ciphertext: string; iv: string; encryptedKeys: Record<string, string> };
   replyToId?: string;
 };
