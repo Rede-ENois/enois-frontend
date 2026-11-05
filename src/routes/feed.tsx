@@ -55,6 +55,7 @@ import {
   Image,
   Loader2,
   RefreshCw,
+  SlidersHorizontal,
   UserPlus,
   X,
 } from "lucide-react";
@@ -95,46 +96,13 @@ import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
+import { HOME_TABS, POST_TYPE_FILTERS, TAB_LABELS } from "@/constants/feed-filters";
+import { readLastFeedTypeFilter, rememberFeedTypeFilter } from "@/lib/feed/last-tab";
+import { HealthyUsageDialog } from "@/components/healthy-usage/healthy-usage-dialog";
 import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
-
-/** Abas válidas da tela inicial (a URL carrega a escolhida). */
-const HOME_TABS: HomeTab[] = ["ALL", "FOR_YOU", "UNSEEN", "TRENDING", "INTERACTED", "CORPORATE"];
-
-const TAB_LABELS: Record<HomeTab, string> = {
-  ALL: texts.feed.tabs.all,
-  FOR_YOU: texts.feed.tabs.forYou,
-  UNSEEN: texts.feed.tabs.unseen,
-  TRENDING: texts.feed.tabs.trending,
-  INTERACTED: texts.feed.tabs.interacted,
-  CORPORATE: texts.feed.tabs.corporate,
-  // Legado (backend aceita mas frontend não mostra).
-  FOLLOWING: texts.feed.tabs.following,
-  RECENT: texts.feed.tabs.discussions,
-  PROJECTS: texts.feed.tabs.projects,
-  NEWS: texts.feed.tabs.news,
-  TUTORIALS: texts.feed.tabs.tutorials,
-  OPPORTUNITIES: texts.feed.tabs.opportunities,
-  REVIEWS: texts.feed.tabs.reviews,
-  FUN: texts.feed.tabs.fun,
-};
-
-/** Tipos de post para o filtro do feed "Tudo". */
-const POST_TYPE_FILTERS = [
-  { value: "", label: texts.feed.tabs.allTypes },
-  { value: "INSIGHT", label: "Insights" },
-  { value: "QUESTION", label: "Dúvidas" },
-  { value: "PROJECT", label: "Projetos" },
-  { value: "NEWS", label: "Notícias" },
-  { value: "TUTORIAL", label: "Tutoriais" },
-  { value: "OPPORTUNITY", label: "Oportunidades" },
-  { value: "REVIEW", label: "Avaliações" },
-  { value: "DIVERTIDO", label: "Diversão" },
-  { value: "ARTICLE", label: "Artigos" },
-  { value: "POLL", label: "Enquetes" },
-] as const;
 
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,
@@ -278,9 +246,13 @@ function Home() {
   } = useFeedTab(aba, professional, (next) => {
     void navigate({ search: { aba: next }, replace: true });
   });
-  const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
-  const [typeFilter, setTypeFilter] = useState("");
+  const [personalizationOpen, setPersonalizationOpen] = useState(false);
+  const [typeFilter, setTypeFilter] = useState(() => readLastFeedTypeFilter());
+  const handleTypeFilterChange = (next: string) => {
+    rememberFeedTypeFilter(next);
+    setTypeFilter(next);
+  };
   const [questionStatus, setQuestionStatus] = useState<QuestionStatus>("all");
   // The backend honors type (and resolved) only on the "Tudo" tab.
   const questionsFeed = tab === "ALL" && typeFilter === "QUESTION";
@@ -1258,76 +1230,32 @@ function Home() {
             </section>
           )}
 
-          {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
-              tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
-              escolhido e abre a lista. Na interface profissional o feed é um só (o corporativo):
-              o título diz isso no lugar do seletor. */}
-          {professional ? (
-            <h2 className="text-sm font-medium text-text-strong">{texts.feed.tabs.corporate}</h2>
-          ) : (
+          {/* Header limpo do feed: título sutil + indicador de filtro + botão de personalização */}
+          <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
+              <h2 className="text-sm font-semibold text-text-strong">
+                {professional ? texts.feed.tabs.corporate : TAB_LABELS[tab]}
+              </h2>
 
-              <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={texts.feed.tabs.openList}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
-                  >
-                    {TAB_LABELS[tab]}
-
-                    <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
-                  </button>
-                </PopoverTrigger>
-
-                <PopoverContent align="start" className="w-56 p-1">
-                  <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
-                    {HOME_TABS.filter((opcao) => opcao !== "CORPORATE").map((opcao) => (
-                      <button
-                        key={opcao}
-                        type="button"
-                        onClick={() => {
-                          setTab(opcao);
-                          setMenuTipoFeed(false);
-                        }}
-                        aria-pressed={opcao === tab}
-                        className={cn(
-                          "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                          opcao === tab
-                            ? "bg-primary-soft text-primary"
-                            : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                        )}
-                      >
-                        {TAB_LABELS[opcao]}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              {tab === "ALL" && typeFilter && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-primary">
+                  {POST_TYPE_FILTERS.find((f) => f.value === typeFilter)?.label ?? typeFilter}
+                </span>
+              )}
             </div>
-          )}
 
-          {tab === "ALL" && (
-            <div className="flex flex-wrap gap-2 pb-2">
-              {POST_TYPE_FILTERS.map((f) => (
-                <button
-                  key={f.value}
-                  type="button"
-                  onClick={() => setTypeFilter(f.value)}
-                  aria-pressed={typeFilter === f.value}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-medium transition",
-                    typeFilter === f.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-text-strong",
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          )}
+            {!professional && (
+              <button
+                type="button"
+                onClick={() => setPersonalizationOpen(true)}
+                aria-label={texts.feed.personalizeFeed}
+                title={texts.feed.personalizeFeed}
+                className="grid h-9 w-9 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
           {questionsFeed && (
             <QuestionStatusFilter value={questionStatus} onChange={setQuestionStatus} />
@@ -1542,6 +1470,15 @@ function Home() {
       )}
 
       <ConductLessonDialog open={conductLessonOpen} onOpenChange={setConductLessonOpen} />
+      <HealthyUsageDialog
+        open={personalizationOpen}
+        onOpenChange={setPersonalizationOpen}
+        initialTab="personalizacao"
+        currentFeedTab={tab}
+        onFeedTabChange={setTab}
+        currentTypeFilter={typeFilter}
+        onTypeFilterChange={handleTypeFilterChange}
+      />
     </AppContainer>
   );
 }

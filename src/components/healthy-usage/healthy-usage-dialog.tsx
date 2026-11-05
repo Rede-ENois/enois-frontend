@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
+import { HOME_TABS, POST_TYPE_FILTERS, TAB_LABELS } from "@/constants/feed-filters";
 import { texts } from "@/texts";
 import type { Personalization } from "@/types/application/preferences/personalization";
+import type { HomeTab } from "@/types/routes/feed/home-tab";
 import { useMessages } from "@rede-enois/design-system";
 import {
   Button,
@@ -21,10 +23,16 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { HeartPulse } from "lucide-react";
+import { HeartPulse, SlidersHorizontal } from "lucide-react";
 
 import { preferencesApi } from "@/lib/api";
 import { writeBatataMode } from "@/lib/batata-mode";
+import {
+  readLastFeedTab,
+  readLastFeedTypeFilter,
+  rememberFeedTab,
+  rememberFeedTypeFilter,
+} from "@/lib/feed/last-tab";
 import {
   HEALTHY_USAGE_MAX_MINUTES,
   HEALTHY_USAGE_MIN_MINUTES,
@@ -65,33 +73,37 @@ function loadDeviceSettings() {
 }
 
 /**
- * Uso saudável: o lembrete de pausa (local, do aparelho) + o centro de personalização
- * (assuntos preferidos, assuntos que não gosto e módulos desativados — com a fonte única
- * no backend, aplicada na navegação, nos feeds e nas recomendações) e, na segunda aba, os
- * avisos e as preferências de notificação da conta.
- *
- * A tela é montada aqui (e não pelo `HealthyUsageDialog` do design system) porque o pacote
- * publicado ainda não abre espaço para conteúdo extra dentro do diálogo. O conteúdo da aba
- * "Bem-estar" segue a mesma estrutura e os mesmos textos do pacote.
- *
- * O BATATA é o único controle que vale no clique, sem esperar o "Salvar": ele muda a cara da
- * tela inteira, e a pessoa precisa ver o resultado para decidir se é isso que quer. A gravação
- * vai junto (mesma rota de preferências), com o espelho local aplicado antes da resposta e
- * desfeito se o servidor recusar.
+ * Uso saudável e personalização:
+ * - Bem-estar: lembrete de pausa (local, do aparelho), descanso noturno, modo lite, modo BATATA
+ *   e opções de movimento.
+ * - Personalização: feed padrão, tipos de publicação, assuntos preferidos/bloqueados e módulos.
+ * - Notificações: avisos no dispositivo e preferências de notificação da conta.
  */
 export function HealthyUsageDialog({
   open,
   onOpenChange,
+  initialTab = "bem-estar",
+  currentFeedTab,
+  onFeedTabChange,
+  currentTypeFilter,
+  onTypeFilterChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTab?: "bem-estar" | "personalizacao" | "notificacoes";
+  currentFeedTab?: HomeTab;
+  onFeedTabChange?: (tab: HomeTab) => void;
+  currentTypeFilter?: string;
+  onTypeFilterChange?: (filter: string) => void;
 }) {
   const messages = useMessages().healthyUsageDialog;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: personalization } = usePersonalization();
 
-  const [tab, setTab] = useState<"bem-estar" | "notificacoes">("bem-estar");
+  const [tab, setTab] = useState<"bem-estar" | "personalizacao" | "notificacoes">("bem-estar");
+  const [feedTab, setFeedTab] = useState<HomeTab>("ALL");
+  const [typeFilter, setTypeFilter] = useState<string>("");
   const [enabled, setEnabled] = useState(false);
   const [minutes, setMinutes] = useState(30);
   const [liked, setLiked] = useState<string[]>([]);
@@ -108,14 +120,16 @@ export function HealthyUsageDialog({
 
   useEffect(() => {
     if (!open) return;
-    setTab("bem-estar");
+    setTab(initialTab);
+    setFeedTab(currentFeedTab ?? readLastFeedTab());
+    setTypeFilter(currentTypeFilter ?? readLastFeedTypeFilter());
     const device = loadDeviceSettings();
     setEnabled(device.enabled);
     setMinutes(device.minutes);
     setForceMotion(device.forceMotion);
     setCardTilt(device.cardTilt);
     setReducedMotionDevice(device.reducedMotion);
-  }, [open]);
+  }, [open, initialTab, currentFeedTab, currentTypeFilter]);
 
   useEffect(() => {
     if (!open || !personalization) return;
@@ -139,12 +153,14 @@ export function HealthyUsageDialog({
       }),
     onSuccess: () => {
       writeHealthyUsage({ enabled, minutes: clampMinutes(minutes) });
-      // O atributo no <html> e o cache mais folgado entram pelo LiteModeEffects assim que a
-      // preferência volta do servidor; o espelho no aparelho só adianta o próximo paint.
       writeLiteMode(liteMode);
       writeBatataMode(batataMode);
       writeForceMotion(forceMotion);
       writeCardTilt(cardTilt);
+      rememberFeedTab(feedTab);
+      rememberFeedTypeFilter(typeFilter);
+      onFeedTabChange?.(feedTab);
+      onTypeFilterChange?.(typeFilter);
       void queryClient.invalidateQueries({ queryKey: ["personalization"] });
       toast(texts.personalization.saved, "success");
       onOpenChange(false);
@@ -153,11 +169,6 @@ export function HealthyUsageDialog({
       toast(error instanceof Error ? error.message : texts.personalization.saveError, "error"),
   });
 
-  /**
-   * O interruptor do BATATA aplica e grava na hora. Otimista no cache: o `data-batata` no
-   * `<html>` sai do LiteModeEffects, que lê a preferência — sem a atualização antecipada a tela
-   * só mudaria depois da volta do servidor.
-   */
   const toggleBatata = useMutation({
     mutationFn: (on: boolean) => preferencesApi.setPersonalization({ batataMode: on }),
     onMutate: (on) => {
@@ -177,12 +188,8 @@ export function HealthyUsageDialog({
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["personalization"] }),
   });
 
-  // BATATA já entrega o que o lite entrega (e mais): as animações continuam desligadas de
-  // qualquer jeito, então a chave de "manter as animações" não teria efeito nenhum.
   const animationsOff = liteMode || batataMode;
 
-  // Um assunto não pode estar nos dois lados: marcar num remove do outro (o backend recusa
-  // o conflito, e a tela evita chegar lá).
   const toggleLiked = (topic: string) => {
     setLiked((current) =>
       current.includes(topic) ? current.filter((value) => value !== topic) : [...current, topic],
@@ -208,17 +215,30 @@ export function HealthyUsageDialog({
       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-normal">
-            <HeartPulse className="h-5 w-5 text-primary" />
-            {messages.title}
+            {tab === "personalizacao" ? (
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
+            ) : (
+              <HeartPulse className="h-5 w-5 text-primary" />
+            )}
+            {tab === "personalizacao"
+              ? texts.healthyUsage.tabs.personalization
+              : messages.title}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(value) => setTab(value as "bem-estar" | "notificacoes")}>
+        <Tabs
+          value={tab}
+          onValueChange={(value) =>
+            setTab(value as "bem-estar" | "personalizacao" | "notificacoes")
+          }
+        >
           <TabsList className="w-full">
-            {/* O cinza-arroxeado do pacote não alcança contraste no tema claro; aqui a aba ativa
-                usa a cor de texto do tema para continuar legível nos dois modos. */}
             <TabsTrigger value="bem-estar" className={TAB_CLASS}>
               {texts.healthyUsage.tabs.wellbeing}
+            </TabsTrigger>
+
+            <TabsTrigger value="personalizacao" className={TAB_CLASS}>
+              {texts.healthyUsage.tabs.personalization}
             </TabsTrigger>
 
             <TabsTrigger value="notificacoes" className={TAB_CLASS}>
@@ -308,7 +328,6 @@ export function HealthyUsageDialog({
                 checked={batataMode}
                 onCheckedChange={(on) => {
                   setBatataMode(on);
-                  // O BATATA muda a cara da tela inteira; o app aplica e grava na hora.
                   toggleBatata.mutate(on);
                 }}
               />
@@ -347,6 +366,64 @@ export function HealthyUsageDialog({
 
               <Switch checked={cardTilt} onCheckedChange={setCardTilt} />
             </label>
+
+            <div className="flex justify-end border-t border-border-soft pt-4">
+              <Button
+                className="rounded-full"
+                disabled={save.isPending}
+                onClick={() => save.mutate()}
+              >
+                {messages.save}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="personalizacao" className="space-y-6 pt-1">
+            <section className="space-y-2">
+              <h3 className="text-sm font-semibold text-text-strong">
+                {texts.healthyUsage.personalization.feedTitle}
+              </h3>
+
+              <p className="text-xs text-text-subtle">
+                {texts.healthyUsage.personalization.feedHint}
+              </p>
+
+              <div className="flex flex-wrap gap-1.5">
+                {HOME_TABS.filter((opcao) => opcao !== "CORPORATE").map((opcao) => (
+                  <Pill
+                    key={opcao}
+                    active={feedTab === opcao}
+                    onClick={() => setFeedTab(opcao)}
+                  >
+                    {TAB_LABELS[opcao]}
+                  </Pill>
+                ))}
+              </div>
+            </section>
+
+            {feedTab === "ALL" && (
+              <section className="space-y-2 border-t border-border-soft pt-4">
+                <h3 className="text-sm font-semibold text-text-strong">
+                  {texts.healthyUsage.personalization.postTypeTitle}
+                </h3>
+
+                <p className="text-xs text-text-subtle">
+                  {texts.healthyUsage.personalization.postTypeHint}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {POST_TYPE_FILTERS.map((f) => (
+                    <Pill
+                      key={f.value}
+                      active={typeFilter === f.value}
+                      onClick={() => setTypeFilter(f.value)}
+                    >
+                      {f.label}
+                    </Pill>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="space-y-2 border-t border-border-soft pt-4">
               <h3 className="text-sm font-semibold text-text-strong">{messages.likeTitle}</h3>
