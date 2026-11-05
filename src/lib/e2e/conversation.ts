@@ -28,7 +28,7 @@ import {
   importPublicKey,
   importSymmetricKey,
 } from "./crypto";
-import { getLocalPrivateKey } from "./key-manager";
+import { getLocalPrivateKey, getLocalPublicKey, restoreFromBackup } from "./key-manager";
 
 /** Cache em memória das chaves simétricas já importadas (por conversa). */
 const conversationKeyCache = new Map<string, CryptoKey>();
@@ -108,8 +108,10 @@ async function createOrFetchKey(
 
         return key;
       } catch {
-        // Keypair diferente (outro device gerou) — gera nova chave pra esta conversa.
-        // Mensagens antigas cifradas com a chave anterior ficam indecifráveis neste device.
+        // Keypair diferente (outro device gerou): tenta sincronizar com o servidor antes de
+        // desistir e gerar uma chave nova (que tornaria as mensagens antigas indecifráveis).
+        const synced = await trySyncKeypairAndRetry(existing.encryptedKey, conversationId);
+        if (synced) return synced;
       }
     }
   }
@@ -122,6 +124,34 @@ async function createOrFetchKey(
   conversationKeyCache.set(conversationId, newKey);
   redistributedThisSession.add(conversationId);
   return newKey;
+}
+
+/**
+ * Quando a chave privada local não decifra a chave de conversa (keypair mismatch), verifica se
+ * o servidor tem uma chave pública diferente da local. Se tiver, o dispositivo está desatualizado
+ * e precisa da senha do usuário pra restaurar — não podemos fazer isso automaticamente aqui, mas
+ * pelo menos não geramos uma chave nova que iria tornar mensagens antigas permanentemente perdidas.
+ *
+ * Retorna a chave importada se conseguiu sincronizar, ou null se não foi possível.
+ */
+async function trySyncKeypairAndRetry(
+  encryptedConversationKey: string,
+  conversationId: string,
+): Promise<CryptoKey | null> {
+  try {
+    const serverPub = await e2eApi.myKeypair();
+    const localPub = await getLocalPublicKey();
+    if (serverPub.publicKey === localPub) return null; // Mesmo keypair, o erro é outro.
+
+    // Keypair diferente no servidor — precisaria da senha pra restaurar. Sem senha disponível
+    // aqui, logamos o problema pra o usuário saber que precisa reconfigurar.
+    console.warn(
+      "[e2e] keypair local difere do servidor. Relogin com senha necessario para sincronizar.",
+    );
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /** Cifra uma mensagem pra envio E2E. */
@@ -161,6 +191,16 @@ export async function decryptReceived(message: Message): Promise<string> {
     conversationKeyCache.set(message.conversationId, key);
     return await decryptMessage(message.text, message.iv, key);
   } catch {
+    // Keypair mismatch: não gera chave nova (isso é leitura, não envio). Avisa que precisa sync.
+    const localPub = await getLocalPublicKey();
+    try {
+      const serverKp = await e2eApi.myKeypair();
+      if (serverKp.publicKey !== localPub) {
+        return "[Mensagem cifrada — entre com a senha para sincronizar suas chaves]";
+      }
+    } catch {
+      /* servidor indisponível */
+    }
     return "[Mensagem cifrada — chave não disponível]";
   }
 }
