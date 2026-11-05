@@ -4,6 +4,7 @@ import {
   type BackgroundStyle,
   PAGE_PAINT_TARGETS,
   type Theme,
+  type ThemeCollection,
   type ThemeSettings,
   WIDGET_PAINT_TARGETS,
   backgroundValue,
@@ -37,6 +38,30 @@ export const THEME_CSS_STORAGE_KEY = "connect-grow-theme-css";
  * existir ANTES do primeiro paint — é o que impede o conteúdo piscar sem o tema.
  */
 export const THEME_COLLECTION_STORAGE_KEY = "connect-grow-theme-collection";
+
+/**
+ * Pinta `.bg-background` (diálogos, sheets) quando o fundo do tema é degradê.
+ *
+ * `buildCollectionCss` chama `paintGradientCss` com dois escopos numa string só; a vírgula
+ * do escopo não distribui, então `.bg-background` só casa no modo escuro. No claro o
+ * utilitário `bg-background` tenta `background-color: var(--background)`, o gradiente é
+ * rejeitado e o painel fica transparente. Esta regra dá a cada escopo o descendente.
+ *
+ * Tema com fundo sólido não recebe a regra: `background-image` com hex apagaria imagem de fundo.
+ */
+export function collectionDialogGradientPaint(collection: ThemeCollection, mode: Theme): string {
+  const tokens =
+    mode === "dark" ? (collection.tokens.dark ?? collection.tokens.light) : collection.tokens.light;
+  const background = tokens["--background"] ?? "";
+  if (!background.includes("gradient")) return "";
+  return [
+    `html:root[data-theme="${collection.id}"] .bg-background,`,
+    `html:root.dark[data-theme="${collection.id}"] .bg-background {`,
+    `  background-image: ${background};`,
+    `  background-attachment: fixed;`,
+    `}`,
+  ].join("\n");
+}
 
 /**
  * Aplica o que o usuário escolheu, em camadas: padrão da marca / tema da coleção >
@@ -97,6 +122,11 @@ export function applyThemeSettings(
         pageAlpha: collection && !pageBackground ? pageAlpha : null,
       })
     : buildThemeCss(settings, mode);
+
+  if (collection) {
+    const dialogPaint = collectionDialogGradientPaint(collection, mode);
+    if (dialogPaint) css += `\n${dialogPaint}`;
+  }
 
   // Os fundos livres entram no MESMO seletor de especificidade alta dos tokens: um
   // chunk de rota não os desfaz no meio da navegação (lição da camada de cores).
