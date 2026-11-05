@@ -96,6 +96,8 @@ export const feedApi = {
     communityId?: string;
     /** Assunto do post avulso (viaja com o agendado; em comunidade o post herda o dela). */
     topic?: string;
+    /** Alternativas da enquete, quando `type` é POLL: são o conteúdo e viajam até a publicação. */
+    pollOptions?: string[];
     scheduledAt: string;
   }) => api.post<ScheduledPostView>("/feed/scheduled", data),
 
