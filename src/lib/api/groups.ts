@@ -20,8 +20,7 @@ export const groupsApi = {
   list: (query?: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<GroupView>>(`/groups${buildQuery({ query, cursor, limit })}`),
 
-  mine: (limit = 50) =>
-    api.get<PageResponse<GroupView>>(`/groups/mine${buildQuery({ limit })}`),
+  mine: (limit = 50) => api.get<PageResponse<GroupView>>(`/groups/mine${buildQuery({ limit })}`),
 
   /** Abre pelo slug (a página pública) ou pelo id (ações internas). */
   get: (slugOrId: string) => api.get<GroupView>(`/groups/${encodeURIComponent(slugOrId)}`),

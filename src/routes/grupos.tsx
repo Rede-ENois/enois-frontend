@@ -93,9 +93,7 @@ function Grupos() {
     : allMine;
 
   const mineIdSet = new Set(allMine.map((g) => g.id));
-  const suggestedGroups = (listData?.items ?? []).filter(
-    (g) => !g.joined && !mineIdSet.has(g.id),
-  );
+  const suggestedGroups = (listData?.items ?? []).filter((g) => !g.joined && !mineIdSet.has(g.id));
 
   return (
     <AppContainer>
@@ -156,9 +154,7 @@ function Grupos() {
                 {!isMineLoading && !isMineError && filteredMine.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-border-soft p-8 text-center">
                     <p className="font-medium text-text-strong">
-                      {query.trim()
-                        ? texts.groups.myGroupsSearchEmpty
-                        : texts.groups.myGroupsEmpty}
+                      {query.trim() ? texts.groups.myGroupsSearchEmpty : texts.groups.myGroupsEmpty}
                     </p>
                     {!query.trim() && (
                       <p className="mt-1 text-sm text-text-subtle">
@@ -176,9 +172,7 @@ function Grupos() {
               </>
             ) : (
               <>
-                <h2 className="text-base font-semibold text-text-strong">
-                  {texts.groups.title}
-                </h2>
+                <h2 className="text-base font-semibold text-text-strong">{texts.groups.title}</h2>
 
                 {isListLoading && (
                   <div className="flex justify-center py-8 text-muted-foreground">
@@ -210,13 +204,11 @@ function Grupos() {
             <div className="rounded-2xl border border-border-soft bg-surface-card p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <Compass className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-semibold text-text-strong">
-                  {texts.groups.discover}
-                </h2>
+
+                <h2 className="text-sm font-semibold text-text-strong">{texts.groups.discover}</h2>
               </div>
-              <p className="mt-1 text-xs text-text-subtle">
-                {texts.groups.discoverSubtitle}
-              </p>
+
+              <p className="mt-1 text-xs text-text-subtle">{texts.groups.discoverSubtitle}</p>
 
               {isListLoading && (
                 <div className="flex justify-center py-6 text-muted-foreground">
@@ -232,9 +224,7 @@ function Grupos() {
 
               {!isListLoading && !isListError && suggestedGroups.length === 0 && (
                 <p className="mt-4 text-xs text-text-subtle">
-                  {query.trim()
-                    ? texts.groups.discoverSearchEmpty
-                    : texts.groups.discoverEmpty}
+                  {query.trim() ? texts.groups.discoverSearchEmpty : texts.groups.discoverEmpty}
                 </p>
               )}
 
@@ -356,6 +346,7 @@ function SuggestedGroupCard({
           >
             {group.name}
           </Link>
+
           <span className="block text-[11px] text-text-date">
             {texts.groups.members(group.members)} ·{" "}
             {group.joinMode === "OPEN" ? texts.groups.joinModeOpen : texts.groups.joinModeApproval}

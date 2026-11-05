@@ -39,7 +39,8 @@ vi.mock("@/components/app-container", () => ({
 }));
 
 const { Route } = await import("./grupos");
-const Grupos = (Route as any).component || (Route as any).options.component;
+const Grupos = (Route as unknown as { options: { component: () => React.JSX.Element } }).options
+  .component;
 
 const myGroup: GroupView = {
   id: "group-mine-1",
