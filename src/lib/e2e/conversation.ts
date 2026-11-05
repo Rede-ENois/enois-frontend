@@ -31,6 +31,9 @@ import {
 } from "./crypto";
 import { getLocalPrivateKey } from "./key-manager";
 
+/** Cache da conversation key importada (fallback pra mensagens antigas). */
+const legacyConvKeyCache = new Map<string, CryptoKey>();
+
 /**
  * Cifra uma mensagem pra envio. Retorna ciphertext, iv e as chaves cifradas por participante.
  * Lanca erro se algum participante nao tem keypair E2E (nao envia plaintext).
@@ -94,15 +97,19 @@ export async function decryptReceived(message: Message, currentUserId: string): 
   }
 }
 
-/** Fallback pra mensagens antigas que usam conversation key. */
+/** Fallback pra mensagens antigas que usam conversation key. Cache por conversa. */
 async function decryptWithConversationKey(
   message: Message,
   privateKeyBase64: string,
 ): Promise<string> {
-  const existing = await e2eApi.myConversationKey(message.conversationId);
-  if (!existing.encryptedKey) throw new Error("sem chave de conversa");
-  const privateKey = await importPrivateKey(privateKeyBase64);
-  const symmetricKeyBase64 = await decryptWithPrivateKey(existing.encryptedKey, privateKey);
-  const key = await importSymmetricKey(symmetricKeyBase64);
+  let key = legacyConvKeyCache.get(message.conversationId);
+  if (!key) {
+    const existing = await e2eApi.myConversationKey(message.conversationId);
+    if (!existing.encryptedKey) throw new Error("sem chave de conversa");
+    const privateKey = await importPrivateKey(privateKeyBase64);
+    const symmetricKeyBase64 = await decryptWithPrivateKey(existing.encryptedKey, privateKey);
+    key = await importSymmetricKey(symmetricKeyBase64);
+    legacyConvKeyCache.set(message.conversationId, key);
+  }
   return await decryptMessage(message.text, message.iv!, key);
 }
