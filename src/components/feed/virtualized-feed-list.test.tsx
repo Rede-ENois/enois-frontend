@@ -20,6 +20,8 @@ describe("VirtualizedFeedList scroll probe", () => {
   let host: HTMLDivElement;
 
   beforeEach(() => {
+    // O jsdom não implementa a API usada pelo virtualizador ao montar a lista.
+    vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
     host = document.createElement("div");
     document.body.append(host);
     root = createRoot(host);
@@ -30,6 +32,7 @@ describe("VirtualizedFeedList scroll probe", () => {
     host.remove();
     window.sessionStorage.clear();
     window.history.replaceState(null, "", "/");
+    vi.restoreAllMocks();
   });
 
   const render = () =>

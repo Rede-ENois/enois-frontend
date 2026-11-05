@@ -7,7 +7,7 @@ import { TOPIC_LABELS } from "@/constants/community-topics";
 import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
 import { InfiniteScroll } from "@rede-enois/design-system/patterns";
-import { Button } from "@rede-enois/design-system/ui";
+import { Button, Textarea } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Hash, Lock } from "lucide-react";
 
 import { communitiesApi, feedApi } from "@/lib/api";
@@ -163,7 +163,7 @@ function ChannelPage() {
 
         {authenticated && joined && (
           <form onSubmit={submit} className="surface-card p-5">
-            <textarea
+            <Textarea
               aria-label={texts.channelPage.composerPlaceholder}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}

@@ -2,26 +2,6 @@
 @source "../src";
 @import "@rede-enois/design-system/styles.css";
 
-/* Campos abaixo de 16px provocam zoom ao focar no iOS. Mantém o zoom manual disponível. */
-@media (width < 768px) {
-  input:not(
-    [type="checkbox"],
-    [type="radio"],
-    [type="range"],
-    [type="color"],
-    [type="file"],
-    [type="hidden"],
-    [type="button"],
-    [type="submit"],
-    [type="reset"]
-  ),
-  textarea,
-  select,
-  [contenteditable="true"] {
-    font-size: max(16px, 1em);
-  }
-}
-
 /*
  * Figurinhas no meio do texto.
  *

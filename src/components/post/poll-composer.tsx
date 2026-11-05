@@ -1,5 +1,6 @@
 import { POLL_MAX_OPTIONS, POLL_OPTION_MAX_LENGTH } from "@/constants/post-types";
 import { texts } from "@/texts";
+import { Input } from "@rede-enois/design-system/ui";
 import { Plus, X } from "lucide-react";
 
 /**
@@ -29,15 +30,18 @@ export function PollComposer({
       <div className="flex flex-col gap-1.5">
         {options.map((option, position) => (
           <div key={position} className="flex items-center gap-2">
-            <input
-              type="text"
-              value={option}
-              maxLength={POLL_OPTION_MAX_LENGTH}
-              onChange={(event) => update(position, event.target.value)}
-              placeholder={texts.posts.poll.optionPlaceholder(position + 1)}
-              aria-label={texts.posts.poll.optionPlaceholder(position + 1)}
-              className="min-w-0 flex-1 rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
-            />
+            <div className="min-w-0 flex-1">
+              <Input
+                type="text"
+                value={option}
+                maxLength={POLL_OPTION_MAX_LENGTH}
+                showCounter={false}
+                onChange={(event) => update(position, event.target.value)}
+                placeholder={texts.posts.poll.optionPlaceholder(position + 1)}
+                aria-label={texts.posts.poll.optionPlaceholder(position + 1)}
+                className="h-auto rounded-lg border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong shadow-none"
+              />
+            </div>
 
             {options.length > 2 && (
               <button
