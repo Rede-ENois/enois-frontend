@@ -67,6 +67,14 @@ export function navigateToHref(href: string, navigate: Navigate) {
     return;
   }
 
+  // Notificação de chamada traz o id da chamada: a rota /call pede o painel ao provider (nada de
+  // aba nova). Sem esta entrada o clique na notificação não fazia nada.
+  const call = path.match(/^call\/([^/]+)$/);
+  if (call) {
+    navigate({ to: "/call/$callId", params: { callId: call[1] } });
+    return;
+  }
+
   const valuesAfter = (source: string) => path.slice(source.length).split("/").filter(Boolean);
   // Mesma origem pode ter mais de uma rota (com e sem id): vale a primeira cujos parâmetros o href
   // preenche, então href incompleto cai na versão sem parâmetro ou em nenhuma.

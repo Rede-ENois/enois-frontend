@@ -59,6 +59,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
+import { Route as CallCallIdRouteImport } from './routes/call.$callId'
 import { Route as ComunidadesCommunityIdRouteImport } from './routes/comunidades.$communityId'
 import { Route as EmpresaSlugRouteImport } from './routes/empresa.$slug'
 import { Route as GamesUsernameRouteImport } from './routes/games.$username'
@@ -334,6 +335,11 @@ const BlogUsernameRoute = BlogUsernameRouteImport.update({
   path: '/blog/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CallCallIdRoute = CallCallIdRouteImport.update({
+  id: '/call/$callId',
+  path: '/call/$callId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComunidadesCommunityIdRoute = ComunidadesCommunityIdRouteImport.update({
   id: '/$communityId',
   path: '/$communityId',
@@ -509,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
+  '/call/$callId': typeof CallCallIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
@@ -585,6 +592,7 @@ export interface FileRoutesByTo {
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
+  '/call/$callId': typeof CallCallIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
@@ -662,6 +670,7 @@ export interface FileRoutesById {
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
+  '/call/$callId': typeof CallCallIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
@@ -740,6 +749,7 @@ export interface FileRouteTypes {
     | '/auth/reset'
     | '/auth/verify'
     | '/blog/$username'
+    | '/call/$callId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
@@ -816,6 +826,7 @@ export interface FileRouteTypes {
     | '/auth/reset'
     | '/auth/verify'
     | '/blog/$username'
+    | '/call/$callId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
@@ -892,6 +903,7 @@ export interface FileRouteTypes {
     | '/auth/reset'
     | '/auth/verify'
     | '/blog/$username'
+    | '/call/$callId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
@@ -969,6 +981,7 @@ export interface RootRouteChildren {
   AuthResetRoute: typeof AuthResetRoute
   AuthVerifyRoute: typeof AuthVerifyRoute
   BlogUsernameRoute: typeof BlogUsernameRoute
+  CallCallIdRoute: typeof CallCallIdRoute
   EmpresaSlugRoute: typeof EmpresaSlugRoute
   NotificacoesPreferenciasRoute: typeof NotificacoesPreferenciasRoute
   PerfilUsernameRoute: typeof PerfilUsernameRoute
@@ -1336,6 +1349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/call/$callId': {
+      id: '/call/$callId'
+      path: '/call/$callId'
+      fullPath: '/call/$callId'
+      preLoaderRoute: typeof CallCallIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/comunidades/$communityId': {
       id: '/comunidades/$communityId'
       path: '/$communityId'
@@ -1667,6 +1687,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetRoute: AuthResetRoute,
   AuthVerifyRoute: AuthVerifyRoute,
   BlogUsernameRoute: BlogUsernameRoute,
+  CallCallIdRoute: CallCallIdRoute,
   EmpresaSlugRoute: EmpresaSlugRoute,
   NotificacoesPreferenciasRoute: NotificacoesPreferenciasRoute,
   PerfilUsernameRoute: PerfilUsernameRoute,

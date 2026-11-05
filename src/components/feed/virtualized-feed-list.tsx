@@ -52,8 +52,15 @@ export function VirtualizedFeedList({
   useLayoutEffect(() => {
     const element = listRef.current;
     if (!element) return;
+    const measure = () => Math.round(element.getBoundingClientRect().top + window.scrollY);
+    // Guard funcional: so atualiza quando o valor muda de verdade. Sem isso o ResizeObserver
+    // dispara a cada frame de scroll (o virtualizer muda a altura do documento) e o re-render
+    // faz a lista blinkar.
     const update = () =>
-      setScrollMargin(Math.round(element.getBoundingClientRect().top + window.scrollY));
+      setScrollMargin((prev) => {
+        const next = measure();
+        return prev === next ? prev : next;
+      });
     update();
     if (typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(update);

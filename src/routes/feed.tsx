@@ -1330,10 +1330,10 @@ function Home() {
               <button
                 type="button"
                 onClick={arrivals.release}
-                className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
+                className="fixed left-1/2 top-24 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
               >
                 <span className="flex items-center gap-1.5">
-                  <ArrowUp className="h-3.5 w-3.5" />
+                  <ArrowUp className="h-3.5 w-3.5 animate-bounce" />
 
                   {arrivals.held
                     ? texts.feed.newPostsCount(arrivals.held.count)
@@ -1380,7 +1380,7 @@ function Home() {
         {/* Right rail: TUDO num único filho do grid. O cartão de doação já foi um filho solto
             aqui — ele esticava até a altura da coluna inteira e empurrava/escondia os outros
             cartões (o que está acontecendo agora) para fora da dobra. */}
-        <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
+        <aside className="sticky top-20 hidden max-h-[calc(100vh-10rem)] space-y-4 self-start overflow-y-auto scrollbar-on-hover lg:block">
           {/* Three quiet tables at most: what happens today, people to meet, and support as one
               line at the end. "Novidades para explorar" left (it repeated the menu; Explore has
               every room) and so did the profile card (the account menu carries it). */}
