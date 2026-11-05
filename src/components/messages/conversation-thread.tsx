@@ -91,7 +91,7 @@ export function ConversationThread({
   const rawMessages = (messagesData?.pages.flatMap((page) => page.items) ?? []).sort(
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
-  const { messages, decrypting } = useDecryptedMessages(rawMessages);
+  const { messages, decrypting } = useDecryptedMessages(rawMessages, currentUserId);
 
   const latestIncoming = [...rawMessages].reverse().find((m) => m.from !== currentUserId);
   useConversationOnScreen(
