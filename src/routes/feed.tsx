@@ -4,6 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { POST_TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
+import { HOME_TABS, POST_TYPE_FILTERS, TAB_LABELS } from "@/constants/feed-filters";
 import { postContentLimit } from "@/constants/post-content-limits";
 import { PAGE_HTML_MAX_LENGTH } from "@/constants/post-page";
 import { ARTICLE_BODY_MAX_LENGTH, POLL_MIN_OPTIONS, POST_TYPES } from "@/constants/post-types";
@@ -66,6 +67,7 @@ import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format"
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
+import { readLastFeedTypeFilter, rememberFeedTypeFilter } from "@/lib/feed/last-tab";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
@@ -93,12 +95,10 @@ import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
+import { HealthyUsageDialog } from "@/components/healthy-usage/healthy-usage-dialog";
 import { HtmlEditor } from "@/components/html-editor";
 import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
-import { HOME_TABS, POST_TYPE_FILTERS, TAB_LABELS } from "@/constants/feed-filters";
-import { readLastFeedTypeFilter, rememberFeedTypeFilter } from "@/lib/feed/last-tab";
-import { HealthyUsageDialog } from "@/components/healthy-usage/healthy-usage-dialog";
 import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PollComposer } from "@/components/post/poll-composer";

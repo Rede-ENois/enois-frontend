@@ -220,9 +220,7 @@ export function HealthyUsageDialog({
             ) : (
               <HeartPulse className="h-5 w-5 text-primary" />
             )}
-            {tab === "personalizacao"
-              ? texts.healthyUsage.tabs.personalization
-              : messages.title}
+            {tab === "personalizacao" ? texts.healthyUsage.tabs.personalization : messages.title}
           </DialogTitle>
         </DialogHeader>
 
@@ -390,11 +388,7 @@ export function HealthyUsageDialog({
 
               <div className="flex flex-wrap gap-1.5">
                 {HOME_TABS.filter((opcao) => opcao !== "CORPORATE").map((opcao) => (
-                  <Pill
-                    key={opcao}
-                    active={feedTab === opcao}
-                    onClick={() => setFeedTab(opcao)}
-                  >
+                  <Pill key={opcao} active={feedTab === opcao} onClick={() => setFeedTab(opcao)}>
                     {TAB_LABELS[opcao]}
                   </Pill>
                 ))}
