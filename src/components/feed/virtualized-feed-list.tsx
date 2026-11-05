@@ -13,10 +13,18 @@ import { recordScrollDebug, scrollDebugEnabled, scrollDebugReport } from "@/lib/
 
 import { PostCard } from "@/components/post-card";
 
-/** Estimated height of a post card in px (text-only, no media). */
-const ESTIMATE_SIZE = 280;
-/** Extra items rendered above/below the viewport. */
-const OVERSCAN = 5;
+/**
+ * Estimated height of a post card in px. Mobile cards are taller (narrow viewport wraps
+ * text, images take full width), so the estimate sits between the two to minimize the
+ * delta that causes scroll jumps when the real size is measured.
+ */
+const ESTIMATE_SIZE = 360;
+/**
+ * Extra items rendered above/below the viewport. Higher = items are measured before they
+ * enter the visible area, so the resize adjustment happens offscreen. The tradeoff is more
+ * mounted DOM nodes, but 10 PostCards is fine on modern phones.
+ */
+const OVERSCAN = 10;
 
 /**
  * Measured card heights per feed tab, kept across unmounts. Opening a post unmounts the feed;
@@ -91,6 +99,29 @@ export function VirtualizedFeedList({
 
   const items = virtualizer.getVirtualItems();
   const debug = useScrollDebug(virtualizer, posts, scrollMargin);
+
+  // Scroll correction: quando um card ACIMA do viewport muda de tamanho, o conteúdo
+  // visível desloca sem o scrollY compensar. Isto intercepta cada resize e corrige
+  // o scroll pelo delta, impedindo o "volta pra trás" no mobile.
+  useEffect(() => {
+    const original = virtualizer.resizeItem;
+    virtualizer.resizeItem = (index, size) => {
+      const cached = virtualizer.measurementsCache[index];
+      const oldSize = cached?.size ?? ESTIMATE_SIZE;
+      const delta = size - oldSize;
+      original(index, size);
+      // Só corrige se o item está acima do que o usuário vê e a diferença é > 1px.
+      if (Math.abs(delta) > 1 && cached) {
+        const itemEnd = cached.start + oldSize;
+        if (itemEnd < window.scrollY) {
+          window.scrollBy(0, delta);
+        }
+      }
+    };
+    return () => {
+      virtualizer.resizeItem = original;
+    };
+  }, [virtualizer]);
 
   useEffect(
     () => () => {
