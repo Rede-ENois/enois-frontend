@@ -65,6 +65,7 @@ export function ConversationItem({
           e2e: true,
           text: conversation.lastMessage!,
           iv: conversation.lastMessageIv!,
+          encryptedKeys: conversation.lastMessageEncryptedKeys ?? undefined,
           conversationId: conversation.id,
         } as Parameters<typeof decryptReceived>[0],
         currentUserId!,
