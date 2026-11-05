@@ -15,7 +15,7 @@ export type Mentor = {
    */
   sparksPrice: number | null;
   /**
-   * De onde vem a sala: Jitsi por sessão (padrão), sala fixa do Jitsi ou sala própria.
+   * De onde vem a sala: Epapo por sessão (padrão), sala fixa do Epapo ou sala própria.
    * O link em si não vem na vitrine: é privado e só o dono o recebe por `GET /mentors/{id}/room`.
    */
   roomMode: MentorRoomMode;

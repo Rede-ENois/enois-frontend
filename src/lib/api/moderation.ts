@@ -147,6 +147,14 @@ export const moderationApi = {
   unblockIp: (ip: string) =>
     api.post<{ ip: string }>(`/admin/blocked-ips/${encodeURIComponent(ip)}/unblock`, {}),
 
+  /** Bane o usuario (PERMABAN) e bloqueia todos os IPs conhecidos de uma vez. (so admin pae) */
+  banWithIps: (username: string, reason: string) =>
+    api.post<{
+      sanction: { userId: string; username: string; type: string; status: string };
+      blockedIps: string[];
+      alreadyBlockedIps: string[];
+    }>(`/admin/users/${encodeURIComponent(username)}/ban-with-ips`, { reason }),
+
   /** Fila de jogos enviados pela comunidade (moderador ou admin). */
   games: (limit = 30) => api.get<GameReviewView[]>(`/moderation/games?limit=${limit}`),
 

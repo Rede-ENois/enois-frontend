@@ -8,7 +8,7 @@ import type { MenteeSession } from "@/types/application/mentor/mentee-session";
 import type { Mentor } from "@/types/application/mentor/mentor";
 import type { MentorRoom } from "@/types/application/mentor/mentor-room";
 import type { MySession } from "@/types/application/mentor/my-session";
-import type { SessionDialIn } from "@/types/application/mentor/session-dial-in";
+import type { SessionAccess } from "@/types/application/mentor/session-access";
 import type { TimeSlot } from "@/types/application/mentor/time-slot";
 import type { UpdateMentorInput } from "@/types/application/mentor/update-mentor-input";
 
@@ -45,9 +45,12 @@ export const mentorsApi = {
   /** Sala configurada pelo mentor (só o dono): link permanente ou sala própria. */
   getRoom: (mentorId: string) => api.get<MentorRoom>(`/mentors/${mentorId}/room`),
 
-  /** Entrar por telefone numa sala Jitsi; a lista vem vazia quando a API do Jitsi não responde. */
-  getDialIn: (mentorId: string, sessionId: string) =>
-    api.get<SessionDialIn>(`/mentors/${mentorId}/sessions/${sessionId}/dial-in`),
+  /**
+   * Entrada na sala da sessão: só quem participa. Sala do Epapo vem com token curto emitido pelo
+   * servidor de reunião; sala própria do mentor vem só com o link (`jwt` nulo).
+   */
+  joinSession: (mentorId: string, sessionId: string) =>
+    api.post<SessionAccess>(`/mentors/${mentorId}/sessions/${sessionId}/join`, {}),
 
   /** Inscrições recebidas (só o dono da agenda). */
   getSessions: (mentorId: string) => api.get<MenteeSession[]>(`/mentors/${mentorId}/sessions`),

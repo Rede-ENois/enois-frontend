@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 
 import { texts } from "@/texts";
 import { callEmbedUrl } from "@/types/application/call/call-embed-url";
 import { isTerminalState } from "@/types/application/call/is-terminal-state";
 import { Button } from "@rede-enois/design-system/ui";
-import { Minimize2, PhoneOff } from "lucide-react";
+import { Flag, Minimize2, PhoneOff } from "lucide-react";
 
 import { callSessionStore, useCallSession } from "@/lib/calls/call-session";
 import { useHangUp } from "@/lib/calls/use-hang-up";
 import { cn } from "@/lib/utils";
 
+import { CallReportDialog } from "./call-report-dialog";
 import { stateLabel, useCalls } from "./calls-provider";
 
 /**
@@ -24,6 +25,9 @@ export function CallPanel() {
   const calls = useCalls();
   const hangUp = useHangUp();
   const call = session.call;
+  // A sala é de outro domínio: a captura da denúncia é pedida a ela por postMessage.
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // Aviso de ambiente ainda em configuração: não é uma chamada, então não tem moldura de chamada.
   if (session.phase === "error" && session.notConfigured) {
@@ -100,6 +104,7 @@ export function CallPanel() {
       {session.phase === "live" && session.join ? (
         <CallFrame
           key={session.join.jwt}
+          frameRef={frameRef}
           url={callEmbedUrl(session.join)}
           title={title}
           onClosed={() => callSessionStore.lostCredential()}
@@ -134,11 +139,23 @@ export function CallPanel() {
         ) : null}
 
         {session.phase === "live" ? (
-          <Button variant="outline" className="w-full rounded-full" onClick={() => void hangUp()}>
-            <PhoneOff className="mr-2 h-4 w-4" />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 rounded-full"
+              onClick={() => setReportOpen(true)}
+            >
+              <Flag className="mr-2 h-4 w-4" />
 
-            {isGroup ? texts.calls.end : texts.calls.hangUp}
-          </Button>
+              {texts.calls.report.action}
+            </Button>
+
+            <Button variant="outline" className="flex-1 rounded-full" onClick={() => void hangUp()}>
+              <PhoneOff className="mr-2 h-4 w-4" />
+
+              {isGroup ? texts.calls.end : texts.calls.hangUp}
+            </Button>
+          </div>
         ) : null}
 
         {session.phase === "error" ? (
@@ -155,6 +172,15 @@ export function CallPanel() {
           <p className="text-center text-sm text-text-muted">{stateLabel(call.state)}</p>
         ) : null}
       </div>
+
+      {session.phase === "live" ? (
+        <CallReportDialog
+          callId={call.id}
+          frameRef={frameRef}
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+        />
+      ) : null}
     </div>
   );
 }
@@ -183,7 +209,17 @@ function expandCall() {
 }
 
 /** O iframe do Jitsi: some só quando a chamada acaba, nunca vira outra aba. */
-function CallFrame({ url, title, onClosed }: { url: string; title: string; onClosed: () => void }) {
+function CallFrame({
+  url,
+  title,
+  frameRef,
+  onClosed,
+}: {
+  url: string;
+  title: string;
+  frameRef: RefObject<HTMLIFrameElement | null>;
+  onClosed: () => void;
+}) {
   const [failed, setFailed] = useState(false);
   const loaded = useRef(false);
 
@@ -208,6 +244,7 @@ function CallFrame({ url, title, onClosed }: { url: string; title: string; onClo
       ) : null}
 
       <iframe
+        ref={frameRef}
         src={url}
         title={title}
         // Só o necessário para a mídia: câmera e microfone; nada de abrir janelas ou sair daqui.

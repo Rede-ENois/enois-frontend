@@ -580,6 +580,9 @@ export const texts = {
     actionError: "Não foi possível aplicar a ação.",
     alreadyReviewed: "Esta denúncia já foi revisada.",
     forbidden: "Sessão sem acesso de admin para esta fila.",
+    capture: "Captura da chamada no momento da denúncia",
+    captureMissing: "Esta denúncia de chamada veio sem captura de tela.",
+    participants: "Na sala quando a denúncia foi feita",
   },
   onboarding: {
     seoTitle: "Boas-vindas · Énóis",
@@ -1239,6 +1242,15 @@ export const texts = {
   },
 
   posts: {
+    /** Cartão do link publicado no post: miniatura, título e o botão que abre a página inteira. */
+    linkPreview: {
+      open: "Abrir página completa",
+      /** Página do próprio Énóis: o botão leva para dentro do app, não para fora. */
+      openInternal: "Abrir no Énóis",
+      /** O site não respondeu: o cartão continua lá, só sem miniatura. */
+      failed: "Não foi possível carregar a miniatura deste link.",
+      imageAlt: (title: string) => `Prévia de ${title}`,
+    },
     mediaSpoiler: {
       badge: "SPOILER",
     },
@@ -2352,42 +2364,39 @@ export const texts = {
     meetingUrl: "Sala da sessão (opcional)",
     meetingRoom: "A sessão acontece nesta sala",
     meetingUrlPlaceholder: "https://meet.google.com/...",
-    meetingUrlHint: "Google Meet, Jitsi ou outra sala externa. Quem agendar vê o link.",
+    meetingUrlHint: "Google Meet, Zoom ou outra sala externa. Quem agendar vê o link.",
     meetingUrlInvalid: "O link precisa começar com https://",
-    /** Sala da sessão: Jitsi por sessão (padrão), sala fixa do Jitsi ou sala própria. */
+    /** Sala da sessão: Epapo por sessão (padrão), sala fixa do Epapo ou sala própria. */
     roomModeTitle: "Onde a sessão acontece",
     roomModeHint:
-      "O Jitsi é o padrão: cada sessão ganha um link próprio, criado na hora do agendamento. Você pode usar uma sala fixa sua no Jitsi ou uma sala externa.",
-    roomModeSession: "Jitsi — uma sala por sessão",
-    roomModeSessionHint: "Nada para configurar. Quem agendar recebe o link da própria sessão.",
-    roomModePermanent: "Jitsi — sala fixa",
+      "A sala do Epapo é o padrão: cada sessão ganha uma sala própria, criada na hora do agendamento. Você pode usar uma sala fixa sua ou uma sala externa.",
+    roomModeSession: "Sala por sessão",
+    roomModeSessionHint: "Nada para configurar. Quem agendar entra pela própria sessão.",
+    roomModePermanent: "Sala fixa",
     roomModePermanentHint:
-      "Um link só, que você guarda e repete. Ele não aparece na vitrine: só quem agendou recebe.",
+      "Uma sala só, que você guarda e repete. Ela não aparece na vitrine: só quem agendou entra.",
     roomModeCustom: "Minha própria sala",
     roomModeCustomHint: "Google Meet, Zoom ou outra sala externa. Quem agendar vê o link.",
-    jitsiRoomName: "Nome da sala fixa (opcional)",
-    jitsiRoomNamePlaceholder: "mel-mentoria",
-    jitsiRoomNameHint:
+    roomSlugName: "Nome da sala fixa (opcional)",
+    roomSlugNamePlaceholder: "mel-mentoria",
+    roomSlugNameHint:
       "Letras, números e hífen, de 3 a 100 caracteres. Sem nome, a sala usa o seu identificador aqui.",
-    jitsiRoomNameInvalid: "Use só letras, números e hífen (3 a 100 caracteres).",
-    permanentRoomTitle: "Sala fixa do Jitsi",
-    permanentRoomHint: "As próximas sessões usam este link. Guarde para entrar quando precisar.",
+    roomSlugNameInvalid: "Use só letras, números e hífen (3 a 100 caracteres).",
+    permanentRoomTitle: "Sala fixa",
+    permanentRoomHint:
+      "As próximas sessões usam esta sala. Guarde o link para entrar quando precisar.",
     permanentRoomCopy: "Copiar link",
     permanentRoomCopied: "Link copiado.",
     permanentRoomError: "Não foi possível carregar a sala agora.",
-    roomPerSessionNote: "A sala do Jitsi é criada no agendamento e o link aparece aqui.",
-    roomPermanentNote: "A sessão usa a sala fixa do Jitsi do mentor; o link aparece aqui.",
+    roomPerSessionNote: "A sala é criada no agendamento e a entrada aparece aqui.",
+    roomPermanentNote: "A sessão usa a sala fixa do mentor; a entrada aparece aqui.",
     roomCustomNote: "A sessão usa a sala escolhida pelo mentor.",
     enterRoom: "Entrar na sala",
-    dialIn: "Entrar por telefone",
-    dialInTitle: "Entrar na sala por telefone",
-    dialInHint:
-      "A sessão é no Jitsi: quando não houver internet, dá para participar por telefone com o PIN da conferência.",
-    dialInConference: "Conferência",
-    dialInPin: "PIN",
-    dialInNumbers: "Números para discar",
-    dialInEmpty: "O Jitsi não informou números agora. Entre pelo link da sala.",
-    dialInError: "Não foi possível carregar os números de discagem.",
+    roomDialogTitle: "Sala da sessão",
+    roomOpening: "Abrindo a sala...",
+    roomOpenError: "Não foi possível abrir a sala agora.",
+    roomPrivacyNote:
+      "A sala abre aqui dentro, com entrada autorizada pelo servidor. Nada é gravado por padrão.",
     availabilityTitle: "Disponibilidade semanal",
     availabilityHint:
       "Marque os dias e horários em que você atende. Publicamos as próximas quatro semanas automaticamente — horário já reservado não é removido.",
@@ -2474,6 +2483,7 @@ export const texts = {
     authoredPreview: (author: string, text: string) => `${author}: ${text}`,
     e2eRequired:
       "Ative a criptografia ponta a ponta para enviar e ler mensagens. Suas conversas ficam protegidas e só você e o destinatário podem ler.",
+    e2eFallback: "Não foi possível cifrar a mensagem. Ela foi enviada sem criptografia.",
     loadMoreConversations: "Carregar conversas antigas",
     tabs: {
       all: "Todas",
@@ -2672,6 +2682,7 @@ export const texts = {
       COMMENT: "Comentário",
       USER: "Perfil",
       JOB: "Vaga",
+      CALL: "Chamada",
     } as Record<string, string>,
     reason: {
       SEXUAL_CONTENT: "Nudez ou conteúdo sexual",
@@ -2862,6 +2873,7 @@ export const texts = {
         GROUP_POST: "Post de grupo",
         GROUP_COMMENT: "Comentário de grupo",
         COMPANY: "Página empresarial",
+        CALL: "Chamada",
       } as Record<string, string>,
     },
     tabs: {
@@ -3756,6 +3768,36 @@ export const texts = {
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
     participants: (count: number) =>
       count === 1 ? "1 pessoa na chamada" : `${count} pessoas na chamada`,
+
+    /**
+     * Denúncia da chamada. A captura é do momento do clique: a sala tira a foto e ela vai junto
+     * com o relato para a moderação — nunca é publicada nem fica visível para quem foi denunciado.
+     */
+    report: {
+      action: "Denunciar chamada",
+      title: "Denunciar chamada",
+      description:
+        "A moderação recebe seu relato e uma captura do que está na tela agora. A pessoa denunciada não fica sabendo quem denunciou.",
+      who: "Quem você quer denunciar?",
+      whoEmpty: "Ninguém além de você entrou nesta chamada até agora.",
+      reason: "Motivo",
+      descriptionLabel: "O que aconteceu?",
+      descriptionPlaceholder: "Conte o que foi dito ou feito na chamada.",
+      capture: "Captura do momento",
+      capturePending: "Tirando a foto da chamada…",
+      captureReady: "A captura vai junto com a denúncia.",
+      captureMissing:
+        "Não conseguimos tirar a foto agora (câmera desligada ou sala sem imagem). A denúncia segue só com o relato.",
+      captureAlt: "Captura da chamada no momento da denúncia",
+      send: "Enviar denúncia",
+      sending: "Enviando…",
+      cancel: "Cancelar",
+      success: "Denúncia enviada. A moderação vai analisar a chamada.",
+      error: "Não foi possível enviar a denúncia. Tente de novo.",
+      alreadyReported: "Você já denunciou esta pessoa nesta chamada.",
+      notInCall: "Esta pessoa não está mais na chamada.",
+      tooLong: "O relato ficou longo demais. Resuma um pouco.",
+    },
   },
 
   root: {

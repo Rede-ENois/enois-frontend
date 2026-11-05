@@ -53,4 +53,5 @@ export { statsApi } from "./stats";
 export { corporateApi } from "./corporate";
 export { studyPairsApi } from "./study-pairs";
 export { resumeImportApi, resumeErrorMessage } from "./resume-import";
+export { linkPreviewsApi } from "./link-previews";
 export { api, ApiError, buildQuery, clearSession } from "../api-client";
