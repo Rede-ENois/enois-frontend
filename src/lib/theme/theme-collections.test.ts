@@ -1,5 +1,4 @@
 import {
-  type BackgroundStyle,
   THEME_COLLECTIONS,
   THEME_COLLECTION_IDS,
   THEME_TOKEN_NAMES,
@@ -7,6 +6,7 @@ import {
 } from "@rede-enois/design-system/domain";
 import { describe, expect, it } from "vitest";
 
+import { collectionDialogGradientPaint } from "./apply-theme";
 import { resolveThemeCollection } from "./resolve-theme-collection";
 
 /**
@@ -158,5 +158,21 @@ describe("cores livres como camada sobre os temas", () => {
     // de mesma especificidade (apply-theme), então o builder do tema não os recebe.
     const css = buildCollectionCss(resolveThemeCollection("win95")!, "light", { accent });
     expect(css).not.toContain("#0b1220");
+  });
+});
+
+describe("fundo degradê nos diálogos", () => {
+  it("Blahaj claro pinta .bg-background nos dois escopos com o degradê do tema", () => {
+    const blahaj = resolveThemeCollection("blahaj")!;
+    const paint = collectionDialogGradientPaint(blahaj, "light");
+    expect(paint).toContain('html:root[data-theme="blahaj"] .bg-background');
+    expect(paint).toContain('html:root.dark[data-theme="blahaj"] .bg-background');
+    expect(paint).toContain(blahaj.tokens.light["--background"]);
+    expect(paint).toContain("background-attachment: fixed");
+  });
+
+  it("tema de fundo sólido não recebe a regra de background-image no diálogo", () => {
+    const metro = resolveThemeCollection("metro")!;
+    expect(collectionDialogGradientPaint(metro, "light")).toBe("");
   });
 });
