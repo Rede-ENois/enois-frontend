@@ -2474,6 +2474,7 @@ export const texts = {
     authoredPreview: (author: string, text: string) => `${author}: ${text}`,
     e2eRequired:
       "Ative a criptografia ponta a ponta para enviar e ler mensagens. Suas conversas ficam protegidas e só você e o destinatário podem ler.",
+    e2eFallback: "Não foi possível cifrar a mensagem. Ela foi enviada sem criptografia.",
     loadMoreConversations: "Carregar conversas antigas",
     tabs: {
       all: "Todas",

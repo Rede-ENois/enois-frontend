@@ -190,7 +190,7 @@ export function ConversationThread({
       try {
         e2e = await encryptForSend(conversation.id, text, conversation.participantIds);
       } catch {
-        // E2E falhou — envia em texto claro.
+        toast(texts.messages.e2eFallback, "error");
       }
     }
     sendMessage.mutate({
