@@ -22,6 +22,7 @@ import { ProfilePeek } from "@/components/profile/profile-peek";
 
 import { CommentReactionsDialog } from "./comment-reactions-dialog";
 import { formatTime } from "./format-time";
+import { renderLinkPreview } from "./link-previews";
 import { MediaGrid } from "./media-grid";
 import { ReportDialog } from "./report-dialog";
 import { RichText } from "./rich-text";
@@ -198,6 +199,7 @@ export function CommentItem({
       onCancelEdit={() => setEditError(null)}
       renderRichText={(props) => <RichText {...props} writtenAt={comment.createdAt} />}
       renderMediaGrid={(props) => <MediaGrid {...props} />}
+      renderLinkPreview={renderLinkPreview}
       renderAuthorTrigger={
         comment.authorUsername
           ? (content) => (

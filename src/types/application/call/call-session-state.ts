@@ -9,6 +9,11 @@ export interface CallSessionState {
   join: CallJoin | null;
   minimized: boolean;
   error: string | null;
+  /**
+   * O servidor respondeu que as chamadas ainda não estão ligadas neste ambiente
+   * (`CALLS_NOT_CONFIGURED`). O painel mostra o aviso amigável em vez da tela de erro.
+   */
+  notConfigured: boolean;
   /** O painel está aberto mas o iframe foi escondido (reabrir reinjeta a credencial). */
   needsRejoin: boolean;
   /** Aviso que não impede a chamada (sem câmera, conexão caindo). */

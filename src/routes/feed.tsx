@@ -1329,11 +1329,12 @@ function Home() {
             {arrivals.notice && (
               <button
                 type="button"
+                data-new-posts
                 onClick={arrivals.release}
-                className="fixed left-1/2 top-16 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95"
+                className="fixed left-1/2 top-20 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95 sm:top-24"
               >
                 <span className="flex items-center gap-1.5">
-                  <ArrowUp className="h-3.5 w-3.5" />
+                  <ArrowUp className="h-3.5 w-3.5 animate-bounce" />
 
                   {arrivals.held
                     ? texts.feed.newPostsCount(arrivals.held.count)
@@ -1526,7 +1527,7 @@ function Home() {
           aria-label={texts.feed.scrollToTop}
           title={texts.feed.scrollToTop}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-28 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
+          className="fixed bottom-20 right-4 z-40 rounded-full border-border-soft bg-surface-card/95 shadow-lg backdrop-blur-sm lg:hidden"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
         </Button>

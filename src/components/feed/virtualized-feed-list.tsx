@@ -13,10 +13,18 @@ import { recordScrollDebug, scrollDebugEnabled, scrollDebugReport } from "@/lib/
 
 import { PostCard } from "@/components/post-card";
 
-/** Estimated height of a post card in px (text-only, no media). */
-const ESTIMATE_SIZE = 280;
-/** Extra items rendered above/below the viewport. */
-const OVERSCAN = 5;
+/**
+ * Estimated height of a post card in px. Mobile cards are taller (narrow viewport wraps
+ * text, images take full width), so the estimate sits between the two to minimize the
+ * delta that causes scroll jumps when the real size is measured.
+ */
+const ESTIMATE_SIZE = 360;
+/**
+ * Extra items rendered above/below the viewport. Higher = items are measured before they
+ * enter the visible area, so the resize adjustment happens offscreen. The tradeoff is more
+ * mounted DOM nodes, but 10 PostCards is fine on modern phones.
+ */
+const OVERSCAN = 10;
 
 /**
  * Measured card heights per feed tab, kept across unmounts. Opening a post unmounts the feed;
@@ -52,19 +60,30 @@ export function VirtualizedFeedList({
   useLayoutEffect(() => {
     const element = listRef.current;
     if (!element) return;
-    const measure = () => Math.round(element.getBoundingClientRect().top + window.scrollY);
-    // Guard funcional: so atualiza quando o valor muda de verdade. Sem isso o ResizeObserver
-    // dispara a cada frame de scroll (o virtualizer muda a altura do documento) e o re-render
-    // faz a lista blinkar.
+    // offsetTop acumulado: nao e afetado pela barra de endereco do browser mobile
+    // (getBoundingClientRect oscila quando o chrome do browser esconde/aparece).
+    const measure = () => {
+      let top = 0;
+      let el: HTMLElement | null = element;
+      while (el) {
+        top += el.offsetTop;
+        el = el.offsetParent as HTMLElement | null;
+      }
+      return Math.round(top);
+    };
     const update = () =>
       setScrollMargin((prev) => {
         const next = measure();
         return prev === next ? prev : next;
       });
     update();
+    // Observa so o container acima da lista (o main), nao o document inteiro.
+    // O document muda de tamanho a cada scroll (virtualizer) e no mobile quando
+    // a barra de endereco esconde. O main so muda quando um banner aparece/desaparece.
     if (typeof ResizeObserver === "undefined") return;
+    const target = element.parentElement ?? element;
     const observer = new ResizeObserver(update);
-    observer.observe(document.documentElement);
+    observer.observe(target);
     return () => observer.disconnect();
   }, []);
 
@@ -80,6 +99,29 @@ export function VirtualizedFeedList({
 
   const items = virtualizer.getVirtualItems();
   const debug = useScrollDebug(virtualizer, posts, scrollMargin);
+
+  // Scroll correction: quando um card ACIMA do viewport muda de tamanho, o conteúdo
+  // visível desloca sem o scrollY compensar. Isto intercepta cada resize e corrige
+  // o scroll pelo delta, impedindo o "volta pra trás" no mobile.
+  useEffect(() => {
+    const original = virtualizer.resizeItem;
+    virtualizer.resizeItem = (index, size) => {
+      const cached = virtualizer.measurementsCache[index];
+      const oldSize = cached?.size ?? ESTIMATE_SIZE;
+      const delta = size - oldSize;
+      original(index, size);
+      // Só corrige se o item está acima do que o usuário vê e a diferença é > 1px.
+      if (Math.abs(delta) > 1 && cached) {
+        const itemEnd = cached.start + oldSize;
+        if (itemEnd < window.scrollY) {
+          window.scrollBy(0, delta);
+        }
+      }
+    };
+    return () => {
+      virtualizer.resizeItem = original;
+    };
+  }, [virtualizer]);
 
   useEffect(
     () => () => {
@@ -233,7 +275,7 @@ function ScrollDebugButton() {
       type="button"
       size="sm"
       onClick={copy}
-      className="fixed bottom-28 left-3 z-50 shadow-lg lg:bottom-4"
+      className="fixed bottom-20 left-3 z-50 shadow-lg lg:bottom-4"
     >
       {texts.feed.scrollDebug.copy}
     </Button>

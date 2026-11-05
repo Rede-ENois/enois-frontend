@@ -32,6 +32,7 @@ import { PresenceIndicator } from "@/components/presence-indicator";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 import { formatTime } from "./post/format-time";
+import { renderLinkPreview } from "./post/link-previews";
 import { MediaGrid } from "./post/media-grid";
 import { PostActions } from "./post/post-actions";
 import { PostComments } from "./post/post-comments";
@@ -383,6 +384,7 @@ function PostCardContainer({
       }
       renderRichText={(props) => <RichText {...props} writtenAt={post.createdAt} />}
       renderMediaGrid={(props) => <MediaGrid {...props} known={post.media} />}
+      renderLinkPreview={renderLinkPreview}
       // The mini card is the social profile; a corporate post keeps the link to its own page.
       renderAuthorTrigger={
         post.authorIdentity === "CORPORATE"

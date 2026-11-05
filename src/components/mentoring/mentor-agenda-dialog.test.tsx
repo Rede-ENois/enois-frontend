@@ -49,8 +49,8 @@ const session: MenteeSession = {
   message: "Quero revisar meu portfólio",
   status: "SCHEDULED",
   priceSparks: 300_000,
-  roomUrl: "https://meet.jit.si/rede-mentoria-mentor_session_1",
-  roomMode: "JITSI_SESSION",
+  roomUrl: "https://meet.example.test/rede-mentoria-mentor_session_1",
+  roomMode: "EPAPO_SESSION",
   createdAt: "2026-10-30T12:00:00Z",
 };
 
