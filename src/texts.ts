@@ -1239,6 +1239,15 @@ export const texts = {
   },
 
   posts: {
+    /** Cartão do link publicado no post: miniatura, título e o botão que abre a página inteira. */
+    linkPreview: {
+      open: "Abrir página completa",
+      /** Página do próprio Énóis: o botão leva para dentro do app, não para fora. */
+      openInternal: "Abrir no Énóis",
+      /** O site não respondeu: o cartão continua lá, só sem miniatura. */
+      failed: "Não foi possível carregar a miniatura deste link.",
+      imageAlt: (title: string) => `Prévia de ${title}`,
+    },
     mediaSpoiler: {
       badge: "SPOILER",
     },
