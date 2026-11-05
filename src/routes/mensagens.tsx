@@ -222,10 +222,9 @@ function Mensagens() {
       <div
         className={cn(
           "-my-4 grid h-[calc(100dvh-3.5rem)] grid-cols-1 overflow-hidden overscroll-none sm:-my-6 sm:h-[calc(100dvh-4rem)] md:my-0 md:h-[calc(100dvh-7rem)] md:grid-cols-[320px_minmax(0,1fr)] md:rounded-2xl md:border md:border-border-soft md:bg-surface-card md:shadow-card",
-          // The list keeps the floating dock below lg: the screen ends above it (its height, its
-          // bottom gap with the safe area, and a small breath), so the last conversation is reachable.
+          // The flat dock (3.5rem + safe area) sits below the list. The height leaves room for it.
           !conversationOpen &&
-            "h-[calc(100dvh-8.25rem-max(0.75rem,env(safe-area-inset-bottom)))] sm:h-[calc(100dvh-8.75rem-max(0.75rem,env(safe-area-inset-bottom)))] md:h-[calc(100dvh-11.75rem-max(0.75rem,env(safe-area-inset-bottom)))] lg:h-[calc(100dvh-7rem)]",
+            "h-[calc(100dvh-7rem-env(safe-area-inset-bottom))] sm:h-[calc(100dvh-7.5rem-env(safe-area-inset-bottom))] md:h-[calc(100dvh-11rem-env(safe-area-inset-bottom))] lg:h-[calc(100dvh-7rem)]",
         )}
       >
         <div

@@ -244,7 +244,7 @@ function ScrollDebugButton() {
       type="button"
       size="sm"
       onClick={copy}
-      className="fixed bottom-28 left-3 z-50 shadow-lg lg:bottom-4"
+      className="fixed bottom-20 left-3 z-50 shadow-lg lg:bottom-4"
     >
       {texts.feed.scrollDebug.copy}
     </Button>
