@@ -147,11 +147,15 @@ export async function serverHasKeypair(): Promise<boolean> {
  * tendo keypair, a senha esta errada e gerar novo destruiria as conversation keys antigas.
  */
 export async function syncKeysOnLogin(password: string): Promise<void> {
-  const hasServer = await serverHasKeypair();
+  let serverKeypair: Awaited<ReturnType<typeof e2eApi.myKeypair>> | null = null;
+  try {
+    serverKeypair = await e2eApi.myKeypair();
+  } catch {
+    // 404: servidor sem keypair.
+  }
 
-  if (hasServer) {
+  if (serverKeypair) {
     const localPub = await getLocalPublicKey();
-    const serverKeypair = await e2eApi.myKeypair();
     if (localPub === serverKeypair.publicKey) return;
     // Restaura do servidor. Se falhar (senha errada), NAO gera novo.
     await restoreFromBackup(password);
