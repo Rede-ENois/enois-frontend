@@ -98,10 +98,12 @@ async function createOrFetchKey(
         conversationKeyCache.set(conversationId, key);
 
         // Redistribui em background pra participantes que possam ter entrado no E2E depois.
-        // Roda uma vez por conversa por sessão (o set evita repetir).
+        // Roda uma vez por conversa por sessão (o set evita repetir). Se falhar, tenta de
+        // novo no próximo envio (não marca como redistribuída).
         if (!redistributedThisSession.has(conversationId)) {
-          redistributedThisSession.add(conversationId);
-          distributeToAll(conversationId, symmetricKeyBase64, participantIds).catch(() => {});
+          distributeToAll(conversationId, symmetricKeyBase64, participantIds)
+            .then(() => redistributedThisSession.add(conversationId))
+            .catch((err) => console.warn("[e2e] redistribuicao falhou, tentara de novo:", err));
         }
 
         return key;
