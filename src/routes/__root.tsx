@@ -32,6 +32,7 @@ import { registerServiceWorker } from "@/lib/pwa";
 import { hasSession, isProtectedPath, shouldLeaveLanding } from "@/lib/require-auth";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
 import { useThemeSync } from "@/lib/theme/use-theme-sync";
+import { useScrollDirection } from "@/lib/use-scroll-direction";
 import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
 
 import { AgeGate } from "@/components/age-gate";
@@ -211,6 +212,7 @@ function RootInsideProvider() {
   );
 
   useThemeSync();
+  useScrollDirection();
 
   useEffect(() => {
     registerServiceWorker();

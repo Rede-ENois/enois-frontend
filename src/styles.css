@@ -109,6 +109,30 @@ li img[src^="https://cdn.frankerfacez.com/"] {
   align-items: start;
 }
 
+/*
+ * Mobile scroll behavior (X-style): o header esconde no scroll pra baixo e o dock fica
+ * semi-transparente. No scroll pra cima o header volta e o dock fica opaco.
+ * O hook `useScrollDirection` seta `data-scroll-down` no <html>.
+ * Desktop (lg+) nunca é afetado — a media query limita a < 1024px.
+ */
+@media (max-width: 1023px) {
+  /* Header sticky: top negativo faz ele sair da tela naturalmente, sem gap. */
+  header.sticky {
+    transition: top 0.3s ease;
+  }
+  html[data-scroll-down] header.sticky {
+    top: -4rem;
+  }
+
+  /* Dock: opacidade reduzida enquanto scrolla pra baixo. */
+  nav[aria-label="Navegação principal"] {
+    transition: opacity 0.3s ease;
+  }
+  html[data-scroll-down] nav[aria-label="Navegação principal"] {
+    opacity: 0.4;
+  }
+}
+
 @keyframes slide-down {
   from {
     opacity: 0;
