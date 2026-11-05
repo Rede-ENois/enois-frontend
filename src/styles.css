@@ -131,6 +131,14 @@ li img[src^="https://cdn.frankerfacez.com/"] {
   html[data-scroll-down] nav[aria-label="Navegação principal"] {
     opacity: 0.4;
   }
+
+  /* Botão "novo post": acompanha o header — sobe quando ele sai. */
+  [data-new-posts] {
+    transition: top 0.3s ease;
+  }
+  html[data-scroll-down] [data-new-posts] {
+    top: 0.75rem;
+  }
 }
 
 @keyframes slide-down {
