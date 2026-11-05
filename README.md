@@ -117,15 +117,26 @@ recusa escrita com cookie sem esse header (403 `CSRF_REQUIRED`).
 
 O CI (`.github/workflows/ci.yml`) roda os testes em toda PR.
 
-- Os hooks de commit usam [pre-commit](https://pre-commit.com/). Instale a ferramenta com `uv tool install pre-commit` e configure o repositório:
+## Hooks do git (pre-commit)
 
-  ```bash
-  pre-commit install --overwrite
-  ```
+Os hooks são gerenciados pelo [pre-commit](https://pre-commit.com), configurado em
+`.pre-commit-config.yaml`. Antes de cada commit, eles rodam nos arquivos staged; ESLint, Prettier e
+SVGO também podem aplicar correções automaticamente:
 
-  `--overwrite` substitui o hook antigo do `simple-git-hooks` sem entrar no modo de migração, que executaria os dois hooks juntos. Na primeira execução, os ambientes dos hooks são instalados automaticamente; os hooks locais de JavaScript também exigem `npm ci` (consulte a seção de instalação acima).
+- verificações de higiene (espaços e finais de linha, sintaxe de YAML/JSON/TOML, marcadores de
+  conflito, tamanho de arquivo e chaves privadas);
+- ESLint e Prettier nos arquivos compatíveis, com correções automáticas quando aplicáveis;
+- `npm run typecheck` quando há arquivos `.ts` ou `.tsx` staged;
+- testes das regras locais do ESLint quando há mudanças em `eslint/`;
+- SVGO em SVGs e markdownlint em Markdown;
+- actionlint nos workflows do GitHub Actions.
 
-- Em emergência, `SKIP=...` pode ignorar hooks específicos; `git commit --no-verify` pula todos os hooks.
+Os hooks de ESLint, Prettier e typecheck usam as dependências do projeto; rode `npm ci` antes de
+commitar. A instalação do pre-commit em cada clone, incluindo a substituição do hook legado, está
+documentada em [Antes de abrir a PR](CONTRIBUTING.md#antes-de-abrir-a-pr). Para executar manualmente
+os hooks nos arquivos staged, use `pre-commit run`.
+
+Em emergência, `git commit --no-verify` pula o hook.
 
 ## Deploy na Vercel
 
@@ -251,17 +262,17 @@ sondas publicas: `GET /api/version` no backend e os chunks servidos no front.
 /mentors/{id}/slots`, que devolve `PageResponse`), envia a solicitacao e da retorno; quem e o
   mentor ve "Minha agenda" para publicar horarios.
 
-3. **Login social**: as credenciais (Google/Apple) ficam no **backend**; aqui nao ha nada a configurar
+1. **Login social**: as credenciais (Google/Apple) ficam no **backend**; aqui nao ha nada a configurar
    alem do callback. O fluxo e: botao → `GET /api/auth/oauth/{provider}/start` → redirect para o provedor
    → volta em `${REDE_FRONTEND_URL}/auth/callback?status=ok` com os cookies da sessao, tratado por
    `src/routes/auth.callback.tsx`.
    Enquanto o backend nao tiver as credenciais, `start` responde 501 e a tela mostra o erro.
-4. **Esqueci minha senha**: depende do SMTP configurado no backend; o link cai em `/auth/reset?token=...`
+2. **Esqueci minha senha**: depende do SMTP configurado no backend; o link cai em `/auth/reset?token=...`
    (rota `src/routes/auth.reset.tsx`, ja existente).
-5. **Conta**: a troca de e-mail ja tem UI (`change-email-dialog`, usa `POST /api/auth/email/change`).
+3. **Conta**: a troca de e-mail ja tem UI (`change-email-dialog`, usa `POST /api/auth/email/change`).
    Troca de senha (`change-password-dialog` → `POST /api/auth/password/change`) e exclusao de conta
    (`delete-account-dialog` → `POST /api/auth/account/delete`) tambem ja tem tela, no menu da conta.
-6. **Notificacoes push no celular**: o front nao precisa de nenhuma variavel — o service worker (`public/sw.js`)
+4. **Notificacoes push no celular**: o front nao precisa de nenhuma variavel — o service worker (`public/sw.js`)
    recebe o `push` do backend e a chave publica VAPID vem de `GET /api/push/config`. A **unica** acao manual e
    configurar `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` no backend (ver README do backend, passo 7). Enquanto o
    push estiver desligado, a opcao "Ativar notificacoes no celular" nem aparece no menu. Ao mudar o `sw.js`,
@@ -270,7 +281,7 @@ sondas publicas: `GET /api/version` no backend e os chunks servidos no front.
 
 ## Estrutura do projeto
 
-```
+```text
 src/
   routes/        # uma rota por arquivo (TanStack Router) — a tela em si
   components/    # componentes compartilhados (ui/ = base do design system)

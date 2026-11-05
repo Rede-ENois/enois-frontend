@@ -4,7 +4,7 @@
 export default {
   multipass: true,
   // eol fixo: sem ele o svgo grava CRLF no Windows e briga com o hook mixed-line-ending.
-  js2svg: { pretty: true, indent: 2, finalNewline: true, eol: "lf" },
+  js2svg: { pretty: false, finalNewline: true, eol: "lf" },
   plugins: [
     {
       name: "preset-default",
