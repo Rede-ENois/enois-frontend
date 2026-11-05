@@ -1329,6 +1329,7 @@ function Home() {
             {arrivals.notice && (
               <button
                 type="button"
+                data-new-posts
                 onClick={arrivals.release}
                 className="fixed left-1/2 top-20 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95 sm:top-24"
               >
