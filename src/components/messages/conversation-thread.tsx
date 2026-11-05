@@ -22,7 +22,6 @@ import { Briefcase } from "lucide-react";
 import { messagesApi, reportsApi, servicesApi } from "@/lib/api";
 import { conversationPeer } from "@/lib/conversation-peer";
 import { encryptForSend } from "@/lib/e2e/conversation";
-import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
 import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
@@ -185,22 +184,36 @@ export function ConversationThread({
       const results = await upload.uploadAll(files.map((file) => ({ file })));
       mediaIds = results.map((result) => result.mediaId);
     }
-    let e2e: { ciphertext: string; iv: string } | undefined;
-    if (text && (await hasLocalKeys())) {
+
+    // E2E obrigatorio: se a cifragem falhar, NAO envia. Nenhuma mensagem sai plaintext.
+    if (text) {
       try {
-        e2e = await encryptForSend(conversation.id, text, conversation.participantIds);
-      } catch {
-        toast(texts.messages.e2eFallback, "error");
+        const e2e = await encryptForSend(conversation.id, text, conversation.participantIds);
+        sendMessage.mutate({
+          conversationId: conversation.id,
+          text,
+          mediaIds,
+          mediaSpoiler,
+          e2e,
+          replyToId,
+        });
+      } catch (err) {
+        toast(err instanceof Error ? err.message : texts.messages.e2eFallback, "error");
       }
+      return;
     }
-    sendMessage.mutate({
-      conversationId: conversation.id,
-      text,
-      mediaIds,
-      mediaSpoiler,
-      e2e,
-      replyToId,
-    });
+
+    // Mensagem so com midia, sem texto pra cifrar.
+    if (mediaIds.length > 0) {
+      sendMessage.mutate({
+        conversationId: conversation.id,
+        text: "",
+        mediaIds,
+        mediaSpoiler,
+        e2e: undefined,
+        replyToId,
+      });
+    }
   };
 
   const otherParticipantId = conversation.participantIds.find((id) => id !== currentUserId);
