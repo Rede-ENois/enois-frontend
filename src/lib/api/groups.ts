@@ -1,4 +1,4 @@
-import type { PageResponse } from "@/types/application/api/page-response";
+﻿import type { PageResponse } from "@/types/application/api/page-response";
 import type { StatusResponse } from "@/types/application/api/status-response";
 import type { CreateGroupInput } from "@/types/application/group/create-group-input";
 import type { GroupComment } from "@/types/application/group/group-comment";
@@ -19,6 +19,9 @@ import { api, buildQuery } from "../api-client";
 export const groupsApi = {
   list: (query?: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<GroupView>>(`/groups${buildQuery({ query, cursor, limit })}`),
+
+  mine: (limit = 50) =>
+    api.get<PageResponse<GroupView>>(`/groups/mine${buildQuery({ limit })}`),
 
   /** Abre pelo slug (a página pública) ou pelo id (ações internas). */
   get: (slugOrId: string) => api.get<GroupView>(`/groups/${encodeURIComponent(slugOrId)}`),

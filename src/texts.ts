@@ -1199,6 +1199,7 @@ export const texts = {
       professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
     },
+    personalizeFeed: "Personalizar feed",
     tabs: {
       forYou: "Para você",
       news: "Notícias",
@@ -3510,7 +3511,14 @@ export const texts = {
   healthyUsage: {
     tabs: {
       wellbeing: "Bem-estar",
+      personalization: "Personalização",
       notifications: "Notificações e avisos",
+    },
+    personalization: {
+      feedTitle: "Feed padrão",
+      feedHint: "Escolha qual feed você quer ver ao abrir o Énóis.",
+      postTypeTitle: "Tipos de publicação",
+      postTypeHint: "Filtre quais tipos de post você quer ver no feed Tudo.",
     },
   },
 
