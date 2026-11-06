@@ -33,7 +33,10 @@ export function FeedPreferencesPanel() {
     onError: (_error, _hideReposts, context) => {
       if (context?.previous) queryClient.setQueryData(PERSONALIZATION_KEY, context.previous);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: PERSONALIZATION_KEY }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: PERSONALIZATION_KEY });
+      void queryClient.invalidateQueries({ queryKey: ["feed"] });
+    },
   });
 
   const data = personalization.data;
@@ -44,7 +47,19 @@ export function FeedPreferencesPanel() {
         {texts.feedPreferences.feedSection}
       </h2>
 
-      {personalization.isError && !data ? (
+      {personalization.isPending && !data ? (
+        <div
+          className="mt-1 flex items-center justify-between gap-4 py-3 animate-pulse"
+          aria-busy="true"
+        >
+          <div className="min-w-0 space-y-2">
+            <div className="h-4 w-32 rounded bg-surface-2" />
+            <div className="h-3.5 w-64 rounded bg-surface-2" />
+          </div>
+
+          <div className="h-6 w-11 rounded-full bg-surface-2" />
+        </div>
+      ) : personalization.isError && !data ? (
         <div className="mt-3 space-y-3">
           <p className="text-sm text-text-subtle">{texts.feedPreferences.loadError}</p>
 
