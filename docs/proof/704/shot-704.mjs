@@ -1,12 +1,12 @@
 // Prova visual de #704: revert de hashtags e retorno das bolhas de Assunto e Tipo
 // no compositor compacto, a 1280 px e 390 px.
 import { spawn } from "node:child_process";
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import os from "node:os";
+import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "../../..");
@@ -123,7 +123,8 @@ const mock = createServer((req, res) => {
   if (path.startsWith("/conversations/unread-count")) return json(res, 200, { count: 0 });
   if (path.startsWith("/conversations")) return json(res, 200, { items: [], nextCursor: null });
   if (path.startsWith("/communities/mine")) return json(res, 200, { items: [], nextCursor: null });
-  if (path.startsWith("/communities/favorites")) return json(res, 200, { items: [], nextCursor: null });
+  if (path.startsWith("/communities/favorites"))
+    return json(res, 200, { items: [], nextCursor: null });
   if (path.startsWith("/emotes/index") || path.startsWith("/emotes")) return json(res, 200, []);
   if (path.startsWith("/avisos/ativo")) return json(res, 200, null);
   if (path.startsWith("/stats")) return json(res, 200, { activeUsers: 1 });
@@ -200,7 +201,9 @@ async function capturar(cdp, sessionId, width, name, results) {
   const png = await cdp.send("Page.captureScreenshot", { format: "png" }, sessionId);
   writeFileSync(`${OUT}/${name}.png`, Buffer.from(png.data, "base64"));
   results.push({ name, width, ...state });
-  console.log(`Captura salva: ${name}.png (${width}px, overflow: ${state.overflow}px, topicMenuOpen: ${state.topicMenuOpen})`);
+  console.log(
+    `Captura salva: ${name}.png (${width}px, overflow: ${state.overflow}px, topicMenuOpen: ${state.topicMenuOpen})`,
+  );
 }
 
 // Inicia Vite dev server se não estiver rodando
