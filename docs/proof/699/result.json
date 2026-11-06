@@ -1,0 +1,32 @@
+[
+  {
+    "name": "modal-1280",
+    "width": 1280,
+    "dialogFound": true,
+    "title": "O que mudou no É-Nóis",
+    "itemsCount": 4,
+    "overflow": 0
+  },
+  {
+    "name": "modal-390",
+    "width": 390,
+    "dialogFound": true,
+    "title": "O que mudou no É-Nóis",
+    "itemsCount": 4,
+    "overflow": 0
+  },
+  {
+    "name": "novidades-1280",
+    "width": 1280,
+    "headerTitle": "O que há de novo no É-Nóis",
+    "itemsCount": 4,
+    "overflow": 0
+  },
+  {
+    "name": "novidades-390",
+    "width": 390,
+    "headerTitle": "O que há de novo no É-Nóis",
+    "itemsCount": 4,
+    "overflow": 0
+  }
+]

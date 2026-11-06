@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { CHANGELOG_RELEASES, LATEST_CHANGELOG_VERSION } from "@/constants/changelog";
+
 import { shouldShowWhatsNew } from "./whats-new";
 
 const done = { onboardingCompleted: true };
@@ -41,5 +43,25 @@ describe("whats-new popup", () => {
 
   it("treats a backend without the onboarding field as done", () => {
     expect(shouldShowWhatsNew("/feed", {}, v1, never)).toBe(true);
+  });
+});
+
+describe("changelog releases stability and integrity", () => {
+  it("keeps releases sorted with latest first and version matching latest release", () => {
+    const versions = CHANGELOG_RELEASES.map((r) => r.version);
+    const sorted = [...versions].sort().reverse();
+    expect(versions).toEqual(sorted);
+    expect(LATEST_CHANGELOG_VERSION).toBe(CHANGELOG_RELEASES[0]?.version);
+  });
+
+  it("points all actions to known internal routes", () => {
+    const validRoutes = new Set(["/feed", "/grupos", "/conta", "/novidades"]);
+    for (const release of CHANGELOG_RELEASES) {
+      for (const item of release.items) {
+        if (item.action) {
+          expect(validRoutes.has(item.action.to)).toBe(true);
+        }
+      }
+    }
   });
 });

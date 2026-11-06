@@ -46,7 +46,9 @@ export function WhatsNewGate() {
     retry: false,
   });
 
-  // Consolidação entre changelog versionado e notas do admin
+  // Consolidação entre changelog versionado e notas do admin.
+  // A versão dispensada é a versão estável do changelog versionado no código;
+  // notas dinâmicas do admin somam itens ao modal sem rebobinar a dispensa de quem já viu.
   const { currentVersion, activeRelease } = useMemo(() => {
     const baseRelease = CHANGELOG_RELEASES[0] ?? {
       version: LATEST_CHANGELOG_VERSION,
@@ -56,14 +58,15 @@ export function WhatsNewGate() {
       items: [],
     };
 
+    const version = baseRelease.version;
+
     if (!adminRelease || !adminRelease.items || adminRelease.items.length === 0) {
       return {
-        currentVersion: baseRelease.version,
+        currentVersion: version,
         activeRelease: baseRelease,
       };
     }
 
-    const version = `${baseRelease.version}-${adminRelease.updatedAt}`;
     const combined: ChangelogRelease = {
       ...baseRelease,
       items: [
@@ -102,6 +105,27 @@ export function WhatsNewGate() {
     },
   });
 
+  // Mutation para registrar a dispensa da versão na conta
+  const dismissMutation = useMutation({
+    mutationFn: (version: string) => preferencesApi.dismissWhatsNew(version),
+    onMutate: async (version) => {
+      await queryClient.cancelQueries({ queryKey: ["personalization"] });
+      const previous = queryClient.getQueryData<Personalization>(["personalization"]);
+      queryClient.setQueryData<Personalization>(["personalization"], (cur) =>
+        cur ? { ...cur, whatsNewLastSeen: version } : cur,
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["personalization"], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["personalization"] });
+    },
+  });
+
   // Abre automaticamente quando preenche os critérios
   useEffect(() => {
     const noticePending =
@@ -113,15 +137,10 @@ export function WhatsNewGate() {
   }, [pathname, user, currentVersion, personalization, notice]);
 
   const handleDismiss = () => {
-    if (hasSession()) {
-      void preferencesApi.dismissWhatsNew(currentVersion).catch(() => {
-        // Sem a chamada, a próxima leitura da conta trata a versão como não vista.
-      });
-      queryClient.setQueryData<Personalization>(["personalization"], (cur) =>
-        cur ? { ...cur, whatsNewLastSeen: currentVersion } : cur,
-      );
-    }
     setOpen(false);
+    if (hasSession()) {
+      dismissMutation.mutate(currentVersion);
+    }
   };
 
   return (
