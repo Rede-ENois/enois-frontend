@@ -1,6 +1,5 @@
-import { describe, expect, it } from "vitest";
-
 import { CHANGELOG_RELEASES, LATEST_CHANGELOG_VERSION } from "@/constants/changelog";
+import { describe, expect, it } from "vitest";
 
 import { shouldShowWhatsNew } from "./whats-new";
 
