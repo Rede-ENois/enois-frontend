@@ -1,4 +1,12 @@
-import { type ChangeEvent, type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
@@ -18,6 +26,7 @@ import type { HomeTab } from "@/types/routes/feed/home-tab";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
+  CaughtUpDivider,
   ComposerLauncher,
   HashtagPicker,
   PostCardSkeletons,
@@ -28,6 +37,7 @@ import {
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
+import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
   EmptyState,
@@ -95,7 +105,6 @@ import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
 import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
-import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
 import { HealthyUsageDialog } from "@/components/healthy-usage/healthy-usage-dialog";
 import { HtmlEditor } from "@/components/html-editor";
@@ -103,6 +112,7 @@ import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { NightRestReminder } from "@/components/night-rest-reminder";
+import { PostCard } from "@/components/post-card";
 import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
@@ -655,17 +665,14 @@ function Home() {
     const savedScroll = readFeedScroll(tab);
     if (!savedScroll) return;
 
-    // The list is virtualized, so the post may be loaded but not mounted: look in the data, not
-    // the DOM, or every page gets fetched looking for a card that only mounts after the scroll.
+    // Se o post salvo ainda nao chegou (paginacao), busca a proxima pagina.
     const loaded = feedPosts.some((post) => post.id === savedScroll.postId);
     if (!loaded && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
       return;
     }
 
-    // The cards are measured as they arrive, so the page may not be tall enough for the saved
-    // position yet: written now, the scroll would stop on another post and the position would be
-    // lost. It stays saved and the next list change tries again.
+    // A pagina pode nao ser alta o suficiente ainda pra posicao salva.
     if (!canReachScroll(savedScroll.scrollY)) return;
 
     clearFeedScroll();
@@ -1365,9 +1372,6 @@ function Home() {
 
             {feedLoading && <PostCardSkeletons />}
 
-            {/* Floats over the top of the list instead of taking a row: a row that appears and
-                disappears would move every post on each refresh, and a reserved one left an
-                empty band above the feed. */}
             {!feedLoading && feedFetching && !isFetchingNextPage && (
               <div
                 role="status"
@@ -1380,21 +1384,32 @@ function Home() {
               </div>
             )}
 
-            {!feedLoading && feedPosts.length > 0 && (
-              <VirtualizedFeedList
-                posts={feedPosts}
-                feedTab={tab}
-                caughtUpAt={caughtUpAt}
-                firstPostRef={firstPostRef}
+            <div className="space-y-4">
+              {!feedLoading &&
+                feedPosts.map((p, index) => (
+                  <Fragment key={p.id}>
+                    {index === caughtUpAt && <CaughtUpDivider />}
+
+                    {index === 0 ? (
+                      <div ref={firstPostRef}>
+                        <PostCard post={p} feedTab={tab} virtualized />
+                      </div>
+                    ) : (
+                      <PostCard post={p} feedTab={tab} virtualized />
+                    )}
+                  </Fragment>
+                ))}
+
+              {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
+
+              <InfiniteScroll
                 hasMore={Boolean(hasNextPage)}
-                loadingMore={isFetchingNextPage}
+                loading={isFetchingNextPage}
                 onLoadMore={loadNextPage}
                 loadingLabel={texts.feed.loadingMore}
-                endLabel={texts.feed.endOfFeed}
+                endLabel={feedPosts.length > 0 ? texts.feed.endOfFeed : undefined}
               />
-            )}
-
-            {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
+            </div>
           </div>
         </div>
 
