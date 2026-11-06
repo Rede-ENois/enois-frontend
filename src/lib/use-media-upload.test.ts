@@ -34,3 +34,28 @@ describe("uploadError", () => {
     });
   });
 });
+
+describe("uploadError — falhas do servidor no envio de arquivo", () => {
+  it.each([
+    ["MEDIA_TOO_LARGE", 413],
+    ["MEDIA_SIZE_MISMATCH", 400],
+    ["MEDIA_UPLOAD_FAILED", 400],
+    ["MEDIA_UPLOAD_UNAVAILABLE", 503],
+    ["MEDIA_STORAGE_WRITE_FAILED", 502],
+  ])("troca a mensagem técnica de %s por texto do app", (code, status) => {
+    const err = uploadError(
+      new ApiError(status, code, "Arquivo grande demais para a limpeza de metadados."),
+    );
+    expect(err).toMatchObject({
+      code,
+      status,
+      message: texts.errors.knownCodes[code],
+    });
+    expect((err as Error).message).not.toContain("metadados");
+  });
+
+  it("mantém o código que ainda não tem texto próprio", () => {
+    const original = new ApiError(403, "MEDIA_FORBIDDEN", "Esta midia nao e sua.");
+    expect(uploadError(original)).toBe(original);
+  });
+});

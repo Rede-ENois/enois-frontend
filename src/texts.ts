@@ -327,6 +327,17 @@ export const texts = {
         "Esse arquivo do LinkedIn é grande demais para importar. Baixe de novo só os dados do perfil (sem mensagens e conexões) e tente outra vez.",
       IDEMPOTENCY_KEY_REQUIRED:
         "O backend rejeitou a requisição por falta de Idempotency-Key. Recarregue a página; se o problema persistir, há um bug no front-end (src/lib/api-client.ts).",
+      /** Arquivo acima do limite da limpeza de metadados (fotos e PDFs até 40 MB). */
+      MEDIA_TOO_LARGE:
+        "Esse arquivo é grande demais para ser enviado aqui. Diminua o tamanho ou envie em partes menores.",
+      MEDIA_SIZE_MISMATCH:
+        "O upload não bateu com o arquivo escolhido. Escolha o arquivo de novo e envie outra vez.",
+      MEDIA_UPLOAD_FAILED: "O envio não terminou. Verifique sua conexão e tente novamente.",
+      /** Falha ao gravar o arquivo no armazenamento ou ao preparar o temporário no servidor. */
+      MEDIA_UPLOAD_UNAVAILABLE:
+        "Não conseguimos guardar o arquivo agora. Tente novamente em alguns instantes.",
+      MEDIA_STORAGE_WRITE_FAILED:
+        "Não conseguimos guardar o arquivo agora. Tente novamente em alguns instantes.",
     },
   },
 
