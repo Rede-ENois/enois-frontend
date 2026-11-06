@@ -633,17 +633,14 @@ function Home() {
     const savedScroll = readFeedScroll(tab);
     if (!savedScroll) return;
 
-    // The list is virtualized, so the post may be loaded but not mounted: look in the data, not
-    // the DOM, or every page gets fetched looking for a card that only mounts after the scroll.
+    // Se o post salvo ainda nao chegou (paginacao), busca a proxima pagina.
     const loaded = feedPosts.some((post) => post.id === savedScroll.postId);
     if (!loaded && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
       return;
     }
 
-    // The cards are measured as they arrive, so the page may not be tall enough for the saved
-    // position yet: written now, the scroll would stop on another post and the position would be
-    // lost. It stays saved and the next list change tries again.
+    // A pagina pode nao ser alta o suficiente ainda pra posicao salva.
     if (!canReachScroll(savedScroll.scrollY)) return;
 
     clearFeedScroll();
@@ -1311,10 +1308,10 @@ function Home() {
 
                     {index === 0 ? (
                       <div ref={firstPostRef}>
-                        <PostCard post={p} feedTab={tab} />
+                        <PostCard post={p} feedTab={tab} virtualized />
                       </div>
                     ) : (
-                      <PostCard post={p} feedTab={tab} />
+                      <PostCard post={p} feedTab={tab} virtualized />
                     )}
                   </Fragment>
                 ))}
