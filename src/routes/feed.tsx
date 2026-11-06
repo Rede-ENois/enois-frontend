@@ -818,6 +818,7 @@ function Home() {
                     className="flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-sm font-normal"
                     maxLength={postContentLimit(postType)}
                     toolbar
+                    toolbarMenu
                     onPasteImages={addMediaFiles}
                   />
                 )}
@@ -865,6 +866,7 @@ function Home() {
                     className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                     rows={8}
                     toolbar
+                    toolbarMenu
                   />
                 </div>
               )}
