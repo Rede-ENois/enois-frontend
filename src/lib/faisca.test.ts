@@ -36,6 +36,14 @@ describe("faísca fracionada", () => {
     expect(formatFaisca(-2 * FAIS_SCALE)).toBe("-2 faíscas");
   });
 
+  it("não perde o sinal num débito menor que uma faísca", () => {
+    // Sem a parte inteira o sinal ficava só na faísca, que é zero: o extrato mostrava débito
+    // como crédito.
+    expect(formatFaisca(-830)).toBe("-830 fagulhas");
+    expect(formatFaisca(-1)).toBe("-1 fagulha");
+    expect(formatFaisca(-999)).toBe("-999 fagulhas");
+  });
+
   it("separa as duas partes sem perder o resto", () => {
     expect(partesFaisca(101_830)).toEqual({ faiscas: 101, fagulhas: 830 });
     expect(partesFaisca(2 * FAIS_SCALE)).toEqual({ faiscas: 2, fagulhas: 0 });
