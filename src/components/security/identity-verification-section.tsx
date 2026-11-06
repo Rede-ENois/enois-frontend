@@ -29,7 +29,6 @@ export function IdentityVerificationSection() {
     if (outcome === "ok") toast(texts.identity.resultOk);
     else if (outcome === "erro") toast(texts.identity.resultError, "error");
     if (outcome) queryClient.invalidateQueries({ queryKey: ["identity-status"] });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { data: status, isLoading } = useQuery({

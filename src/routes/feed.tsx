@@ -602,7 +602,7 @@ function Home() {
   // Files picked on the profile shortcut arrive once, right after the navigation.
   useEffect(() => {
     if (compor === "MEDIA") addMediaFiles(takeComposerFiles());
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot on arrival; addMediaFiles is rebuilt every render.
+    // one-shot on arrival; addMediaFiles is rebuilt every render.
   }, [compor]);
 
   const handleMediaSelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -678,7 +678,7 @@ function Home() {
     };
 
     requestAnimationFrame(() => requestAnimationFrame(restore));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `feedPosts` is rebuilt every render; its length and which list it is are the signal.
+    // `feedPosts` is rebuilt every render; its length and which list it is are the signal.
   }, [
     feedLoading,
     feedPosts.length,

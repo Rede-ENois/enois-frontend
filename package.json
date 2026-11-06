@@ -16,7 +16,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:eslint-rules": "node eslint/rules/jsx-content-spacing.test.js && node eslint/rules/type-boundaries.test.js",
+    "test:eslint-rules": "node eslint/rules/jsx-content-spacing.test.js && node eslint/rules/no-front-markup.test.js && node eslint/rules/type-boundaries.test.js",
     "format": "prettier --write .",
     "prepare": "simple-git-hooks",
     "generate:api": "tsx scripts/fetch-openapi-spec.ts --fetch && tsx scripts/generate-api.ts",

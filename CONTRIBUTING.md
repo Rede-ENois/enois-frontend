@@ -56,6 +56,31 @@ depois de uma execução bem-sucedida de `npm run generate:api`.
 **Nada disso vê a tela.** Se a mudança aparece para quem usa, abra o navegador e olhe — e conte na PR
 o que você viu. Build verde com tela quebrada é o jeito mais fácil de publicar um bug.
 
+## Lint que bloqueia
+
+O `npm run lint` roda no pre-commit e no CI de toda PR, e PR com erro de lint não entra. Além das
+regras de sempre, ele recusa:
+
+- **Markup no app** (`local/no-front-markup`): nada de elemento HTML (`<div>`, `<button>`...),
+  `className` ou `style` em `src/**/*.tsx`. Toda view nasce no `@rede-enois/design-system`; aqui só
+  se compõem componentes do DS, se passa dado e se liga callback. Precisa de layout novo? Vira view
+  no DS (ou variante/prop de uma que já existe).
+- **`eslint-disable`**: comentários de desligar regra são ignorados (`noInlineConfig`). Regra
+  errada se corrige no `eslint.config.js`, numa PR revisada.
+- **Cor fixa** em `.tsx` (`#7c3aed`): use os tokens do DS.
+- **`localStorage`/`sessionStorage`** fora de `src/stores/`.
+- **`console.log`/`console.debug`** (`console.warn` e `console.error` podem).
+- **Import interno do DS** (`@rede-enois/design-system/dist/...`): só pelos entrypoints.
+
+O código que já existia quando essas regras entraram está congelado no `eslint-suppressions.json`,
+com a contagem por arquivo. Ele **só diminui**:
+
+- Consertou violação antiga? Rode `npx eslint . --prune-suppressions` e commite o arquivo (o lint
+  falha enquanto sobrar supressão sem uso).
+- Violação nova não se suprime: o CI compara o arquivo com o da base e recusa a PR se alguma
+  contagem subir (`scripts/check-lint-suppressions.mjs`). Renomear ou apagar arquivo antigo libera
+  a contagem dele.
+
 ## Convenções da casa
 
 **Comentário explica o porquê, não o quê.** O código já diz o que faz. O comentário existe para a
