@@ -32,17 +32,20 @@ function AccountSettingsPage() {
   return (
     <AppContainer>
       <AccountSettings
-        hrefs={{
-          security: "/seguranca",
-          blockedUsers: "/bloqueados",
-          myReports: "/denuncias",
-          sanctions: "/penalidades",
-          guardian: "/responsavel",
-          mutedUsers: "/silenciados",
-          notificationPreferences: "/notificacoes/preferencias",
-          feedPreferences: "/conta/preferencias-feed",
-          supportUs: "/apoiar",
-        }}
+        hrefs={
+          {
+            security: "/seguranca",
+            blockedUsers: "/bloqueados",
+            myReports: "/denuncias",
+            sanctions: "/penalidades",
+            guardian: "/responsavel",
+            mutedUsers: "/silenciados",
+            notificationPreferences: "/notificacoes/preferencias",
+            // Prop adicionada no PR #149 do Design System. Cast documentado para compatibilidade com o pacote publicado enquanto aguarda release.
+            feedPreferences: "/conta/preferencias-feed",
+            supportUs: "/apoiar",
+          } as React.ComponentProps<typeof AccountSettings>["hrefs"]
+        }
         onChangeEmail={() => setDialog("email")}
         onChangePassword={() => setDialog("password")}
         onOpenLinkedAccounts={() => setDialog("linked")}

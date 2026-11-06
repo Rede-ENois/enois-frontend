@@ -4,31 +4,35 @@
     "width": 1280,
     "switchChecked": false,
     "hasTitle": true,
-    "hasHint": false,
-    "pageOverflow": 0
+    "hasHint": true,
+    "pageOverflow": 0,
+    "consoleErrorsCount": 1
   },
   {
     "name": "feed-prefs-desligado-390",
     "width": 390,
     "switchChecked": false,
     "hasTitle": true,
-    "hasHint": false,
-    "pageOverflow": 0
+    "hasHint": true,
+    "pageOverflow": 0,
+    "consoleErrorsCount": 1
   },
   {
     "name": "feed-prefs-ligado-1280",
     "width": 1280,
-    "switchChecked": false,
+    "switchChecked": true,
     "hasTitle": true,
-    "hasHint": false,
-    "pageOverflow": 0
+    "hasHint": true,
+    "pageOverflow": 0,
+    "consoleErrorsCount": 1
   },
   {
     "name": "feed-prefs-ligado-390",
     "width": 390,
-    "switchChecked": false,
+    "switchChecked": true,
     "hasTitle": true,
-    "hasHint": false,
-    "pageOverflow": 0
+    "hasHint": true,
+    "pageOverflow": 0,
+    "consoleErrorsCount": 1
   }
 ]
