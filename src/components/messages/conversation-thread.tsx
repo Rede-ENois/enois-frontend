@@ -17,7 +17,7 @@ import {
   ConversationThread as ConversationThreadView,
 } from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Lock } from "lucide-react";
 
 import { messagesApi, reportsApi, servicesApi } from "@/lib/api";
 import { conversationPeer } from "@/lib/conversation-peer";
@@ -291,7 +291,7 @@ export function ConversationThread({
         </div>
       }
       loading={isLoadingMessages || decrypting}
-      empty={messages.length === 0}
+      empty={false}
       newestMessageId={messages.length > 0 ? messages[messages.length - 1].id : null}
       hasOlderMessages={hasOlderMessages}
       loadingOlder={isLoadingOlder}
@@ -326,6 +326,30 @@ export function ConversationThread({
       }
       onCancelReply={() => setReplyingTo(null)}
     >
+      {messages.length === 0 && !isLoadingMessages && peer ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          {peer.avatar ? (
+            <img
+              src={peer.avatar}
+              alt={peer.name ?? ""}
+              className="h-20 w-20 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-2 text-2xl font-semibold text-text-subtle">
+              {peer.name?.charAt(0)?.toUpperCase() ?? "?"}
+            </div>
+          )}
+
+          <p className="text-base font-semibold text-text-strong">{peer.name}</p>
+
+          <p className="max-w-xs text-xs text-text-subtle">
+            <Lock className="mr-1 inline-block h-3 w-3" />
+            As mensagens são protegidas com a criptografia de ponta a ponta. Somente as pessoas que
+            fazem parte da conversa podem ler, ouvir e compartilhar esse conteúdo.
+          </p>
+        </div>
+      ) : null}
+
       {messages.map((m) => (
         <MessageBubble
           key={m.id}

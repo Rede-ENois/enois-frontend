@@ -131,7 +131,22 @@ describe("uso saudável", () => {
     expect(mocks.toast).toHaveBeenCalledWith(texts.personalization.saved, "success");
   });
 
+  it("permite personalizar o feed na aba de personalização", async () => {
+    await act(async () => {
+      botao(texts.healthyUsage.tabs.personalization)!.dispatchEvent(
+        new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
+      );
+    });
+
+    expect(document.body.textContent).toContain(texts.healthyUsage.personalization.feedTitle);
+  });
+
   it("um assunto marcado como preferido sai do lado que não gosto", async () => {
+    await act(async () => {
+      botao(texts.healthyUsage.tabs.personalization)!.dispatchEvent(
+        new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
+      );
+    });
     // "O que quero ver" e "Assuntos que não gosto" não podem ter o mesmo assunto.
     await act(async () => botao(TOPIC_LABELS.POLITICA)!.click());
     await act(async () => botao("Salvar")!.click());
