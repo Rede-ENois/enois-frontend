@@ -116,11 +116,17 @@ export const mediaApi = {
    * o storage recusa a subida. Com o gateway do b7 a subida passa pelo próprio app
    * (`PUT /api/storage/{chave}`), que exige a sessão de quem é dono do asset — por isso os cookies
    * vão junto. Na AWS, a URL assinada direto no bucket ignora esse cabecalho extra.
+   *
+   * Usa `XMLHttpRequest` (e não `fetch`) porque só ele emite `progress` — o `fetch` não tem API de
+   * progresso e fingir o percentual deixaria a pessoa guiando por um número que não é o dela. O
+   * cancelamento é feito via `AbortSignal`, suportado pelo XHR.
    */
   uploadToSignedUrl: async (
     signedUrl: string,
     file: File,
     headers: Record<string, string> = {},
+    onProgress?: (percent: number) => void,
+    signal?: AbortSignal,
   ) => {
     // Only the API's own storage gateway gets the session cookies and CSRF header: a bucket URL
     // signed by AWS would refuse a credentialed CORS request.
@@ -128,21 +134,59 @@ export const mediaApi = {
       typeof window !== "undefined" &&
       new URL(signedUrl, window.location.href).origin ===
         new URL(apiUrl("/"), window.location.href).origin;
-    const response = await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      credentials: toApi ? "include" : "same-origin",
-      headers: toApi ? { ...headers, ...sessionHeaders() } : headers,
-    });
+    const finalHeaders = toApi ? { ...headers, ...sessionHeaders() } : headers;
 
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
-      if (toApi) {
-        const path = new URL(signedUrl, window.location.href).pathname;
-        throw mediaUploadResponseError(response.status, body, path);
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", signedUrl);
+      xhr.withCredentials = toApi;
+      for (const [key, value] of Object.entries(finalHeaders)) {
+        xhr.setRequestHeader(key, value);
       }
-      throw new Error(`Upload falhou: ${response.status} ${body}`);
-    }
+
+      const cleanup = () => {
+        if (signal) {
+          signal.removeEventListener("abort", onAbort);
+        }
+      };
+      const onAbort = () => xhr.abort();
+      if (signal) {
+        if (signal.aborted) {
+          xhr.abort();
+        } else {
+          signal.addEventListener("abort", onAbort);
+        }
+      }
+
+      xhr.onload = () => {
+        cleanup();
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+          return;
+        }
+        const body = xhr.responseText ?? "";
+        if (toApi) {
+          const path = new URL(signedUrl, window.location.href).pathname;
+          reject(mediaUploadResponseError(xhr.status, body, path));
+          return;
+        }
+        reject(new Error(`Upload falhou: ${xhr.status} ${body}`));
+      };
+      xhr.onerror = () => {
+        cleanup();
+        reject(new Error(`Upload falhou: ${xhr.status}`));
+      };
+      xhr.onabort = () => {
+        cleanup();
+        reject(new Error("Upload cancelado."));
+      };
+      xhr.upload.onprogress = (event: ProgressEvent) => {
+        if (event.lengthComputable && event.total > 0) {
+          onProgress?.(Math.round((event.loaded / event.total) * 100));
+        }
+      };
+      xhr.send(file);
+    });
   },
 
   /**

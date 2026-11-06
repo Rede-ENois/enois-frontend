@@ -1,9 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { texts } from "@/texts";
+import type { UploadFileState } from "@/types/media-upload/upload-file-state";
 import type { UploadInput } from "@/types/media-upload/upload-input";
 import type { UploadResult } from "@/types/media-upload/upload-result";
 import type { UploadState } from "@/types/media-upload/upload-state";
+import type { UploadStatus } from "@/types/media-upload/upload-status";
 
 import { ApiError, randomUUID } from "@/lib/api-client";
 import { mediaApi } from "@/lib/api/media";
@@ -57,67 +59,37 @@ function genFileName(file: File): string {
   return `media/${key}/${sanitizeName(file.name)}`;
 }
 
+/** Chave estável do arquivo: o progresso e o estado por arquivo usam-na como identificador. */
+export function mediaFileKey(file: File): string {
+  return `${file.name}:${file.size}:${file.lastModified}`;
+}
+
+function emptyFileState(): UploadFileState {
+  return { status: "idle", progress: 0 };
+}
+
 export function useMediaUpload() {
-  const [state, setState] = useState<UploadState>({ status: "idle", progress: 0 });
+  const [state, setState] = useState<UploadState>({ status: "idle", progress: 0, files: {} });
+  const inFlight = useRef<Map<string, Promise<UploadResult>>>(new Map());
+  const controllers = useRef<Map<string, AbortController>>(new Map());
 
-  const upload = useCallback(async (file: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
-    if (file.size > MAX_MEDIA_BYTES) {
-      const error = new Error(
-        `O arquivo tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
-          MAX_MEDIA_BYTES / (1024 * 1024)
-        }MB.`,
-      );
-      setState({ status: "error", progress: 0, error: error.message });
-      throw error;
-    }
-
-    setState({ status: "uploading", progress: 0 });
-
-    try {
-      const fileName = genFileName(file);
-      const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
-        fileName,
-        mimeType: file.type,
-        size: file.size,
-        purpose,
-      });
-
-      // O servidor diz para onde subir: com S3 é uma URL assinada (PUT direto); sem isso, o fluxo
-      // multipart do ImageKit de sempre. O front não adivinha pelo formato da URL.
-      if (provider !== "S3") {
-        throw new Error(
-          "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
-        );
-      }
-      await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
-
-      setState({ status: "done", progress: 100 });
-      return { mediaId: id, cdnUrl };
-    } catch (caught) {
-      const err = uploadError(caught);
-      const msg = err instanceof Error ? err.message : "Upload falhou";
-      setState({ status: "error", progress: 0, error: msg });
-      throw err;
-    }
+  const patchFile = useCallback((key: string, patch: Partial<UploadFileState>) => {
+    setState((atual) => ({
+      ...atual,
+      files: { ...atual.files, [key]: { ...(atual.files[key] ?? emptyFileState()), ...patch } },
+    }));
   }, []);
 
-  const uploadAll = useCallback(async (files: UploadInput[]): Promise<UploadResult[]> => {
-    if (files.length === 0) return [];
-    setState({ status: "uploading", progress: 0 });
+  const patchState = useCallback((patch: Partial<UploadState>) => {
+    setState((atual) => ({ ...atual, ...patch }));
+  }, []);
 
-    const results: UploadResult[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const { file, purpose = "POST_IMAGE" } = files[i];
-      if (file.size > MAX_MEDIA_BYTES) {
-        const error = new Error(
-          `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
-            MAX_MEDIA_BYTES / (1024 * 1024)
-          }MB.`,
-        );
-        setState({ status: "error", progress: 0, error: error.message });
-        throw error;
-      }
+  const runUpload = useCallback(
+    async (file: File, purpose: string, key: string): Promise<UploadResult> => {
+      const controller = new AbortController();
+      controllers.current.set(key, controller);
       try {
+        setState((atual) => ({ ...atual, status: "uploading", progress: 0, error: undefined }));
         const fileName = genFileName(file);
         const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
           fileName,
@@ -125,28 +97,139 @@ export function useMediaUpload() {
           size: file.size,
           purpose,
         });
-        // Mesma bifurcação do upload avulso: quem manda no caminho é o provedor que o servidor
-        // respondeu, não o formato da URL. Aqui subia sempre pelo ImageKit — com o storage em S3,
-        // o compositor (que usa este caminho para TODOS os anexos) falhava.
+
+        // O servidor diz para onde subir: com S3 é uma URL assinada (PUT direto); sem isso, o fluxo
+        // multipart do ImageKit de sempre. O front não adivinha pelo formato da URL.
         if (provider !== "S3") {
           throw new Error(
             "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
           );
         }
-        await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
-        results.push({ mediaId: id, cdnUrl });
-        setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
+        await mediaApi.uploadToSignedUrl(
+          uploadUrl,
+          file,
+          uploadHeaders ?? {},
+          (percent) => {
+            setState((atual) =>
+              atual.status === "uploading" ? { ...atual, progress: percent } : atual,
+            );
+          },
+          controller.signal,
+        );
+
+        setState((atual) => ({ ...atual, status: "done", progress: 100, error: undefined }));
+        return { mediaId: id, cdnUrl };
       } catch (caught) {
         const err = uploadError(caught);
         const msg = err instanceof Error ? err.message : "Upload falhou";
-        setState({ status: "error", progress: 0, error: msg });
+        setState((atual) => ({ ...atual, status: "error", progress: 0, error: msg }));
         throw err;
+      } finally {
+        controllers.current.delete(key);
       }
-    }
+    },
+    [],
+  );
 
-    setState({ status: "done", progress: 100 });
-    return results;
+  const upload = useCallback(
+    async (file: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
+      const key = mediaFileKey(file);
+      const existente = inFlight.current.get(key);
+      if (existente) {
+        // Mesma subida em andamento (duplo clique, envio repetido): devolve o mesmo pedido, sem
+        // subir o arquivo duas vezes.
+        return existente;
+      }
+      const promessa = runUpload(file, purpose, key)
+        .then(
+          (resultado) => {
+            patchFile(key, { status: "done", progress: 100 });
+            return resultado;
+          },
+          (caught) => {
+            const err = uploadError(caught);
+            patchFile(key, {
+              status: "error",
+              progress: 0,
+              error: err instanceof Error ? err.message : "Upload falhou",
+            });
+            throw err;
+          },
+        )
+        .finally(() => {
+          inFlight.current.delete(key);
+        });
+      inFlight.current.set(key, promessa);
+      return promessa;
+    },
+    [runUpload, patchFile],
+  );
+
+  const uploadAll = useCallback(
+    async (files: UploadInput[]): Promise<UploadResult[]> => {
+      if (files.length === 0) return [];
+      patchState({ status: "uploading", progress: 0, error: undefined });
+
+      const resultados: UploadResult[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const { file, purpose = "POST_IMAGE" } = files[i];
+        const key = mediaFileKey(file);
+        if (file.size > MAX_MEDIA_BYTES) {
+          const error = new Error(
+            `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
+              MAX_MEDIA_BYTES / (1024 * 1024)
+            }MB.`,
+          );
+          patchFile(key, { status: "error", progress: 0, error: error.message });
+          patchState({ status: "error", progress: 0, error: error.message });
+          throw error;
+        }
+        try {
+          patchFile(key, { status: "uploading", progress: 0, error: undefined });
+          patchState({ status: "uploading", progress: 0, error: undefined });
+          const resultado = await upload(file, purpose);
+          patchFile(key, { status: "done", progress: 100 });
+          resultados.push(resultado);
+          patchState({
+            status: "uploading",
+            progress: Math.round(((i + 1) / files.length) * 100),
+          });
+        } catch (caught) {
+          const err = uploadError(caught);
+          const msg = err instanceof Error ? err.message : "Upload falhou";
+          patchFile(key, { status: "error", progress: 0, error: msg });
+          patchState({ status: "error", progress: 0, error: msg });
+          throw err;
+        }
+      }
+
+      patchState({ status: "done", progress: 100, error: undefined });
+      return resultados;
+    },
+    [upload, patchFile, patchState],
+  );
+
+  /** Cancela o(s) upload(s) em andamento (o XHR suporta abort; o resto do fluxo segue). */
+  const cancel = useCallback((chave?: string) => {
+    const alvos =
+      chave != null
+        ? [chave]
+        : Array.from(controllers.current.keys()).filter((k) => controllers.current.has(k));
+    for (const key of alvos) {
+      controllers.current.get(key)?.abort();
+      controllers.current.delete(key);
+    }
   }, []);
 
-  return { ...state, upload, uploadAll };
+  const status: UploadStatus = state.status;
+  const progress = state.progress;
+
+  /** Volta ao estado inicial (por exemplo, depois que a publicação concluiu com sucesso). */
+  const reset = useCallback(() => {
+    inFlight.current.clear();
+    controllers.current.clear();
+    setState({ status: "idle", progress: 0, error: undefined, files: {} });
+  }, []);
+
+  return { ...state, status, progress, upload, uploadAll, cancel, reset };
 }

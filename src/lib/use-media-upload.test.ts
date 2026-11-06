@@ -2,7 +2,20 @@ import { texts } from "@/texts";
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "./api-client";
-import { uploadError } from "./use-media-upload";
+import { mediaFileKey, uploadError } from "./use-media-upload";
+
+describe("mediaFileKey", () => {
+  it("deriva a mesma chave estável para o mesmo arquivo", () => {
+    const file = new File(["foto"], "foto.png", { type: "image/png" });
+    expect(mediaFileKey(file)).toBe(mediaFileKey(file));
+  });
+
+  it("deriva chaves distintas para arquivos diferentes", () => {
+    const a = new File(["a"], "a.png", { type: "image/png" });
+    const b = new File(["b"], "b.png", { type: "image/png" });
+    expect(mediaFileKey(a)).not.toBe(mediaFileKey(b));
+  });
+});
 
 describe("uploadError", () => {
   it("explains a file type the purpose does not take", () => {
@@ -31,6 +44,16 @@ describe("uploadError", () => {
     expect(err).toMatchObject({
       code: "IMAGE_CANNOT_BE_VERIFIED",
       message: texts.errors.knownCodes.IMAGE_CANNOT_BE_VERIFIED,
+    });
+  });
+
+  it("explica quando o serviço de moderação de imagem está indisponível sem bloquear o envio", () => {
+    const err = uploadError(
+      new ApiError(503, "IMAGE_MODERATION_UNAVAILABLE", "raw", "/storage/key"),
+    );
+    expect(err).toMatchObject({
+      code: "IMAGE_MODERATION_UNAVAILABLE",
+      message: texts.errors.knownCodes.IMAGE_MODERATION_UNAVAILABLE,
     });
   });
 });

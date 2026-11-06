@@ -91,7 +91,7 @@ import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
-import { useMediaUpload } from "@/lib/use-media-upload";
+import { mediaFileKey, useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
 
 import { AppContainer } from "@/components/app-container";
@@ -395,6 +395,7 @@ function Home() {
   const createPost = useMutation({
     mutationFn: (data: CreatePostInput) => feedApi.create(data),
     onSuccess: () => {
+      upload.reset();
       queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
   });
@@ -480,8 +481,8 @@ function Home() {
   // O mínimo do input datetime-local é AGORA+1min (o backend recusa mais perto que isso).
   const minScheduleAt = valorDeDataLocal(new Date(Date.now() + 60_000));
 
-  const publishPost = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const publishPost = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     if (!mediaReady) return;
     const content = draft.trim();
     // Pagina e uma coisa OU outra: o HTML e o conteudo e o texto do post nao e exigido. Artigo
@@ -493,7 +494,7 @@ function Home() {
     const options = normalizePollOptions(pollOptions);
     if (pollMode && options.length < POLL_MIN_OPTIONS) return;
 
-    const formData = new FormData(event.currentTarget);
+    const formData = event ? new FormData(event.currentTarget) : new FormData();
     setPublishError(null);
     try {
       let mediaIds: string[] = [];
@@ -538,6 +539,11 @@ function Home() {
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     }
+  };
+
+  const retryPublish = async () => {
+    // Reenvia a mesma publicação: as mídias pendentes continuam na lista e o upload roda de novo.
+    await publishPost(undefined);
   };
 
   const addMediaFiles = (files: File[]) => {
@@ -939,6 +945,52 @@ function Home() {
                                 </span>
                               </div>
                             )}
+
+                            {upload.files[mediaFileKey(item.file)]?.status === "uploading" && (
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                                <div className="w-52 max-w-full px-3">
+                                  <span className="block text-center text-xs text-text-strong">
+                                    {texts.feed.composer.uploadProgress(
+                                      upload.files[mediaFileKey(item.file)]?.progress ?? 0,
+                                    )}
+                                  </span>
+
+                                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+                                    <div
+                                      className="h-full rounded-full bg-primary transition-all"
+                                      style={{
+                                        width: `${upload.files[mediaFileKey(item.file)]?.progress ?? 0}%`,
+                                      }}
+                                    />
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => upload.cancel(mediaFileKey(item.file))}
+                                    aria-label={texts.common.cancel}
+                                    className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1 text-[11px] font-medium text-text-strong transition hover:bg-surface-2"
+                                  >
+                                    {texts.common.cancel}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {upload.files[mediaFileKey(item.file)]?.status === "processing" && (
+                              <div className="absolute inset-0 grid place-items-center bg-surface-card/70 backdrop-blur-sm">
+                                <span className="rounded-full bg-surface-card px-3 py-1 text-xs text-text-strong">
+                                  {texts.feed.composer.uploadProcessing}
+                                </span>
+                              </div>
+                            )}
+
+                            {upload.files[mediaFileKey(item.file)]?.status === "error" && (
+                              <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
+                                {upload.files[mediaFileKey(item.file)]?.error ??
+                                  texts.feed.composer.imageCheckError}
+                              </div>
+                            )}
+
                             {item.moderationStatus === "blocked" && (
                               <div className="absolute inset-x-2 bottom-2 rounded-lg bg-destructive/90 px-2 py-1 text-xs text-white">
                                 {item.moderationError ?? texts.feed.composer.imageCheckError}
@@ -1116,6 +1168,16 @@ function Home() {
                       {texts.feed.composer.uploadProgress(upload.progress)}
                     </span>
                   )}
+                  {!publishError && upload.status === "processing" && (
+                    <span className="text-xs font-normal text-text-subtle">
+                      {texts.feed.composer.uploadProcessing}
+                    </span>
+                  )}
+                  {!publishError && upload.status === "done" && (
+                    <span className="text-xs font-normal text-text-subtle">
+                      {texts.feed.composer.uploadDone}
+                    </span>
+                  )}
                   <Button
                     type="button"
                     size="sm"
@@ -1146,23 +1208,38 @@ function Home() {
                       !topic ||
                       createPost.isPending ||
                       upload.status === "uploading" ||
+                      upload.status === "processing" ||
                       !mediaReady
                     }
                   >
-                    {createPost.isPending || upload.status === "uploading" ? (
+                    {createPost.isPending ||
+                    upload.status === "uploading" ||
+                    upload.status === "processing" ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
 
-                        <>
-                          {upload.status === "uploading"
-                            ? texts.common.sending
+                        {upload.status === "uploading"
+                          ? texts.common.sending
+                          : upload.status === "processing"
+                            ? texts.feed.composer.uploadProcessing
                             : texts.common.publishing}
-                        </>
                       </>
                     ) : (
                       texts.common.publish
                     )}
                   </Button>
+
+                  {publishError && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => void retryPublish()}
+                    >
+                      {texts.feed.composer.uploadRetry}
+                    </Button>
+                  )}
                 </div>
               </div>
 
