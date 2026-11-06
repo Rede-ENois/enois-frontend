@@ -1136,8 +1136,10 @@ export const texts = {
     empty: "Sem publicações por enquanto. As da sua rede aparecem aqui.",
     composer: {
       removeMedia: "Remover mídia",
-      topic: "Assunto",
-      topicRequired: "Escolha o assunto",
+      topic: "Tópico",
+      /** Palavra que aparece depois do "#" enquanto o tópico não foi escolhido. */
+      topicTag: "tópico",
+      topicRequired: "Escolha o tópico",
       topicHint: "Obrigatório. Coloca o post nos filtros certos do feed.",
       schedule: "Agendar",
       scheduleDate: "Data e hora",
@@ -1171,6 +1173,8 @@ export const texts = {
       },
       typePicker: {
         label: "Tipo",
+        /** Palavra que aparece depois do "#" enquanto o tipo não foi escolhido. */
+        tag: "tipo",
         change: "Trocar o tipo da publicação",
       },
       article: {
@@ -1181,8 +1185,19 @@ export const texts = {
       media: "Mídia",
       video: "Vídeo",
       mediaCount: (count: number) => `${count} ${count === 1 ? "mídia" : "mídias"}`,
+      /** Menu do "+": tudo que se anexa ao post sai daqui, em vez de uma bolha por tipo. */
+      attach: {
+        label: "Anexar",
+        photo: "Foto ou vídeo",
+        photoHint: "Escolher um arquivo do dispositivo",
+        link: "Link",
+        linkHint: "Colar um link no texto da publicação",
+        linkPlaceholder: "Cole o link (https://...)",
+        linkConfirm: "Anexar link",
+      },
       mediaSpoiler: "Marcar mídias como spoiler",
       mediaSpoilerActive: "Mídias marcadas como spoiler",
+      mediaSpoilerNoMedia: "Anexe uma foto ou vídeo para marcar spoiler",
       uploadProgress: (progress: number) => `Enviando… ${progress}%`,
       imageChecking: "Verificando imagem…",
       imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",

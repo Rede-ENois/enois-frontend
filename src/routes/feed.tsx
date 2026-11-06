@@ -19,6 +19,7 @@ import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
   ComposerLauncher,
+  HashtagPicker,
   PostCardSkeletons,
   QuestionComposerHint,
   type QuestionStatus,
@@ -51,12 +52,14 @@ import {
   Code2,
   EyeOff,
   FileText,
-  Film,
   GraduationCap,
   Image,
+  Link2,
   Loader2,
+  Plus,
   RefreshCw,
   SlidersHorizontal,
+  Smile,
   UserPlus,
   X,
 } from "lucide-react";
@@ -91,7 +94,6 @@ import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
 import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
-import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
@@ -246,7 +248,6 @@ function Home() {
   } = useFeedTab(aba, professional, (next) => {
     void navigate({ search: { aba: next }, replace: true });
   });
-  const [menuTopic, setMenuTopic] = useState(false);
   const [personalizationOpen, setPersonalizationOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState(() => readLastFeedTypeFilter());
   const handleTypeFilterChange = (next: string) => {
@@ -322,6 +323,10 @@ function Home() {
   const [conductLessonOpen, setConductLessonOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [emoteOpen, setEmoteOpen] = useState(false);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   // Agendamento: o post fica na fila do backend e só entra no feed na hora marcada.
@@ -432,6 +437,8 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      setLinkUrl("");
+      setLinkOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
     } catch {
@@ -497,6 +504,8 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      setLinkUrl("");
+      setLinkOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     }
@@ -581,7 +590,30 @@ function Home() {
     });
   };
 
+  /** Anexa o link ao texto do post: a prévia do cartão é montada na publicação. */
+  const attachLink = () => {
+    const raw = linkUrl.trim();
+    if (!raw) return;
+    // Sem esquema o backend não reconhece o link; https é o padrão que a web espera.
+    const href = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+    if (articleMode) {
+      setArticleBody((current) => (current.trim() ? `${current.trimEnd()} ${href}` : href));
+    } else {
+      setDraft((current) => (current.trim() ? `${current.trimEnd()} ${href}` : href));
+    }
+    setLinkUrl("");
+    setLinkOpen(false);
+  };
+
   const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
+
+  // Publicar e agendar dependem do mesmo mínimo: conteúdo (ou página), artigo completo e tópico.
+  const postReady =
+    (pageMode ? pageHtml.trim().length > 0 : draft.trim().length > 0) &&
+    (!articleMode || articleBody.trim().length > 0) &&
+    Boolean(topic);
+  const publishDisabled =
+    !postReady || createPost.isPending || upload.status === "uploading" || !mediaReady;
 
   // "Você está em dia" lives only on "Para você". The marker counts as it arrived on the first page
   // OF THIS VISIT: after POST /feed/seen a refetch would bring the new value and the divider would
@@ -796,6 +828,10 @@ function Home() {
                     className="flex-1 resize-none rounded-2xl border-border-soft bg-surface-1 px-3 py-2 text-sm font-normal"
                     maxLength={postContentLimit(postType)}
                     toolbar
+                    toolbarMenu
+                    emoteOpen={emoteOpen}
+                    onEmoteOpenChange={setEmoteOpen}
+                    hideEmoteTrigger
                     onPasteImages={addMediaFiles}
                   />
                 )}
@@ -843,6 +879,7 @@ function Home() {
                     className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                     rows={8}
                     toolbar
+                    toolbarMenu
                   />
                 </div>
               )}
@@ -955,67 +992,44 @@ function Home() {
                 </div>
               )}
 
+              {publishError && (
+                <p className="mt-3 text-xs font-normal text-destructive">
+                  {texts.feed.composer.publishErrorTitle}
+                </p>
+              )}
+
               <div
                 data-composer-toolbar=""
                 className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle"
               >
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
-                  <Popover open={menuTopic} onOpenChange={setMenuTopic}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label={texts.feed.composer.topic}
-                        title={texts.feed.composer.topicHint}
-                        className={cn(
-                          "inline-flex max-w-[11rem] items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition",
-                          topic
-                            ? "border border-primary/40 bg-primary/10 text-primary"
-                            : "border border-dashed border-primary/60 text-text-strong hover:border-primary",
-                        )}
-                      >
-                        <span className="truncate">
-                          {topic
-                            ? (TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS] ?? topic)
-                            : texts.feed.composer.topicRequired}
-                        </span>
+                  {/* Tópico e Tipo como hashtags compactas */}
+                  <HashtagPicker
+                    options={POST_TOPICS.map((option) => ({
+                      value: option,
+                      label: TOPIC_LABELS[option],
+                    }))}
+                    value={topic}
+                    onChange={(option) => {
+                      setTopic(option);
+                      rememberTopic(option);
+                    }}
+                    placeholder={texts.feed.composer.topicTag}
+                    label={texts.feed.composer.topic}
+                    required
+                  />
 
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
-                      </button>
-                    </PopoverTrigger>
-
-                    <PopoverContent align="start" className="w-56 p-1">
-                      <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
-                        {POST_TOPICS.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => {
-                              setTopic(option);
-                              rememberTopic(option);
-                              setMenuTopic(false);
-                            }}
-                            aria-pressed={topic === option}
-                            className={cn(
-                              "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                              topic === option
-                                ? "bg-primary-soft text-primary-text"
-                                : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                            )}
-                          >
-                            {TOPIC_LABELS[option]}
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-
-                  {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
                   <div>
-                    <PostTypePicker
-                      options={availableTypes}
+                    <HashtagPicker
+                      options={availableTypes.map((t) => ({
+                        value: t.id,
+                        label: t.label,
+                        icon: t.icon,
+                      }))}
                       value={postType}
                       onChange={(id) => setPostType(id as PostView["type"])}
+                      placeholder={texts.feed.composer.typePicker.tag}
+                      label={texts.feed.composer.typePicker.label}
                     />
 
                     {currentType.id === "MOMENT" && (
@@ -1026,33 +1040,72 @@ function Home() {
                     )}
                   </div>
 
-                  {/* Mídia não existe em página (a página é o conteúdo dela). */}
+                  {/* Um "+" só para tudo que se anexa: foto/vídeo e link. A página é o próprio
+                      conteúdo, então nem entra. */}
                   {!pageMode && (
-                    <ComposerAction
-                      icon={mediaType === "video" ? Film : Image}
-                      label={
-                        mediaType === "video"
-                          ? texts.feed.composer.video
-                          : media.length > 0
-                            ? texts.feed.composer.mediaCount(media.length)
-                            : texts.feed.composer.media
-                      }
-                      active={media.length > 0}
-                      onClick={() => fileRef.current?.click()}
-                    />
-                  )}
-                  {((!pageMode && media.length > 0) ||
-                    (pageMode && pageHtml.trim().length > 0)) && (
-                    <ComposerAction
-                      icon={EyeOff}
-                      label={
-                        mediaSpoiler
-                          ? texts.feed.composer.mediaSpoilerActive
-                          : texts.feed.composer.mediaSpoiler
-                      }
-                      active={mediaSpoiler}
-                      onClick={() => setMediaSpoiler((active) => !active)}
-                    />
+                    <Popover open={attachOpen} onOpenChange={setAttachOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={texts.feed.composer.attach.label}
+                          title={texts.feed.composer.attach.label}
+                          aria-expanded={attachOpen}
+                          className={cn(
+                            "relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary",
+                            (attachOpen || media.length > 0) && "bg-primary/10 text-primary",
+                          )}
+                        >
+                          <Plus
+                            className={cn(
+                              "h-5 w-5 transition-transform duration-200 motion-reduce:transition-none",
+                              attachOpen && "rotate-45",
+                            )}
+                          />
+
+                          {media.length > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+                              {media.length}
+                            </span>
+                          )}
+                        </button>
+                      </PopoverTrigger>
+
+                      <PopoverContent
+                        align="start"
+                        side="top"
+                        collisionPadding={8}
+                        className="w-[min(15rem,calc(100vw-1rem))] rounded-2xl border-border-soft p-1"
+                      >
+                        <button
+                          type="button"
+                          title={texts.feed.composer.attach.photoHint}
+                          onClick={() => {
+                            setAttachOpen(false);
+                            // Dentro do toque: o Safari só abre o seletor de arquivo a partir do gesto.
+                            fileRef.current?.click();
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text-strong transition hover:bg-surface-2"
+                        >
+                          <Image className="h-4 w-4 shrink-0 text-sky-500" />
+
+                          <>{texts.feed.composer.attach.photo}</>
+                        </button>
+
+                        <button
+                          type="button"
+                          title={texts.feed.composer.attach.linkHint}
+                          onClick={() => {
+                            setAttachOpen(false);
+                            setLinkOpen(true);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text-strong transition hover:bg-surface-2"
+                        >
+                          <Link2 className="h-4 w-4 shrink-0 text-emerald-500" />
+
+                          <>{texts.feed.composer.attach.link}</>
+                        </button>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
 
@@ -1074,54 +1127,54 @@ function Home() {
                   </div>
                 )}
 
-                {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
-                  alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
-                <div className="ml-auto flex items-center gap-2">
-                  {/* O motivo da recusa fica na linha de baixo, inteiro: antes ele saía truncado em
-                    200px ao lado do botão e a publicação recusada parecia "não fazer nada". */}
-                  {publishError && (
-                    <span className="text-xs font-normal text-destructive">
-                      {texts.feed.composer.publishErrorTitle}
-                    </span>
-                  )}
+                {/* À direita, os atalhos que acompanham a escrita — figurinha, olho do spoiler e
+                  agendamento — e o Publicar. No celular o grupo inteiro desce junto e continua
+                  alinhado à direita; os ícones são só ícones para caber sem apertar o campo. */}
+                <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+                  {/* O andamento do envio fica na própria linha do botão, que também mostra o giro. */}
                   {!publishError && upload.status === "uploading" && (
-                    <span className="text-xs font-normal text-text-subtle">
+                    <span className="hidden text-xs font-normal text-text-subtle sm:inline">
                       {texts.feed.composer.uploadProgress(upload.progress)}
                     </span>
                   )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full gap-1.5"
-                    disabled={
-                      (pageMode ? !pageHtml.trim() : !draft.trim()) ||
-                      (articleMode && !articleBody.trim()) ||
-                      !topic ||
-                      createPost.isPending ||
-                      upload.status === "uploading" ||
-                      !mediaReady
-                    }
-                    onClick={() => setSchedulingOpen((open) => !open)}
+
+                  {!pageMode && !articleMode && (
+                    <ComposerAction
+                      icon={Smile}
+                      label={texts.emotes.button}
+                      title={texts.emotes.button}
+                      active={emoteOpen}
+                      dialog
+                      onClick={() => setEmoteOpen(true)}
+                    />
+                  )}
+
+                  {!pageMode && (
+                    <ComposerAction
+                      icon={EyeOff}
+                      label={
+                        mediaSpoiler
+                          ? texts.feed.composer.mediaSpoilerActive
+                          : media.length > 0
+                            ? texts.feed.composer.mediaSpoiler
+                            : texts.feed.composer.mediaSpoilerNoMedia
+                      }
+                      active={mediaSpoiler}
+                      disabled={media.length === 0}
+                      onClick={() => setMediaSpoiler((active) => !active)}
+                    />
+                  )}
+
+                  <ComposerAction
+                    icon={CalendarClock}
+                    label={texts.feed.composer.schedule}
                     title={texts.feed.composer.scheduleHint}
-                  >
-                    <CalendarClock className="h-3.5 w-3.5" />
+                    active={schedulingOpen}
+                    disabled={publishDisabled}
+                    onClick={() => setSchedulingOpen((open) => !open)}
+                  />
 
-                    <>{texts.feed.composer.schedule}</>
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    className="rounded-full"
-                    disabled={
-                      (pageMode ? !pageHtml.trim() : !draft.trim()) ||
-                      (articleMode && !articleBody.trim()) ||
-                      !topic ||
-                      createPost.isPending ||
-                      upload.status === "uploading" ||
-                      !mediaReady
-                    }
-                  >
+                  <Button size="sm" className="rounded-full shrink-0" disabled={publishDisabled}>
                     {createPost.isPending || upload.status === "uploading" ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1138,6 +1191,37 @@ function Home() {
                   </Button>
                 </div>
               </div>
+
+              {linkOpen && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-border-soft bg-surface-1 p-2">
+                  <Link2 className="ml-1 hidden h-4 w-4 shrink-0 text-text-subtle sm:block" />
+                  <Input
+                    autoFocus
+                    type="url"
+                    inputMode="url"
+                    value={linkUrl}
+                    onChange={(event) => setLinkUrl(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter") return;
+                      event.preventDefault();
+                      attachLink();
+                    }}
+                    aria-label={texts.feed.composer.attach.link}
+                    placeholder={texts.feed.composer.attach.linkPlaceholder}
+                    className="min-w-0 flex-1"
+                  />
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-full"
+                    disabled={!linkUrl.trim()}
+                    onClick={attachLink}
+                  >
+                    {texts.feed.composer.attach.linkConfirm}
+                  </Button>
+                </div>
+              )}
 
               {schedulingOpen && (
                 <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-border-soft bg-surface-1 p-3">
@@ -1483,20 +1567,33 @@ function Home() {
   );
 }
 
-function ComposerAction({ icon: Icon, label, active, onClick }: ComposerActionProps) {
+function ComposerAction({
+  icon: Icon,
+  label,
+  title,
+  active = false,
+  disabled = false,
+  dialog = false,
+  onClick,
+}: ComposerActionProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
+      disabled={disabled}
+      aria-label={label}
+      title={title ?? label}
+      aria-pressed={dialog ? undefined : active}
+      aria-haspopup={dialog ? "dialog" : undefined}
+      className={cn(
+        "grid h-8 w-8 shrink-0 place-items-center rounded-full transition",
         active
           ? "bg-primary text-primary-foreground"
-          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-      }`}
+          : "text-text-subtle hover:bg-surface-2 hover:text-primary",
+        disabled && "cursor-not-allowed opacity-40 hover:bg-transparent hover:text-text-subtle",
+      )}
     >
-      <Icon className="h-3.5 w-3.5" />
-
-      <>{label}</>
+      <Icon className="h-4 w-4" />
     </button>
   );
 }
