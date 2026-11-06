@@ -759,14 +759,6 @@ function Home() {
                 fileRef.current?.click();
                 setComposerOpen(true);
               }}
-              onAddVideo={() => {
-                fileRef.current?.click();
-                setComposerOpen(true);
-              }}
-              onWriteArticle={() => {
-                setPostType("ARTICLE");
-                setComposerOpen(true);
-              }}
             />
           )}
 
