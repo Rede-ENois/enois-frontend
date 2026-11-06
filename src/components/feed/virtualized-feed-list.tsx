@@ -24,7 +24,7 @@ const ESTIMATE_SIZE = 360;
  * enter the visible area, so the resize adjustment happens offscreen. The tradeoff is more
  * mounted DOM nodes, but 10 PostCards is fine on modern phones.
  */
-const OVERSCAN = 10;
+const OVERSCAN = 50;
 
 /**
  * Measured card heights per feed tab, kept across unmounts. Opening a post unmounts the feed;
