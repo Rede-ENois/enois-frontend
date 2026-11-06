@@ -1,0 +1,26 @@
+[
+  {
+    "name": "banner-1280",
+    "width": 1280,
+    "seloPresente": true,
+    "texto": "Não conseguimos processar esse arquivo: ele é grande demais para este tipo de envio. Diminua o tamanho e tente de novo.",
+    "vazaMensagemDoServidor": false,
+    "largura": 566,
+    "altura": 40,
+    "entrelinha": 16,
+    "linhas": 3,
+    "estouroDaPagina": 0
+  },
+  {
+    "name": "banner-390",
+    "width": 390,
+    "seloPresente": true,
+    "texto": "Não conseguimos processar esse arquivo: ele é grande demais para este tipo de envio. Diminua o tamanho e tente de novo.",
+    "vazaMensagemDoServidor": false,
+    "largura": 316,
+    "altura": 56,
+    "entrelinha": 16,
+    "linhas": 4,
+    "estouroDaPagina": 0
+  }
+]
