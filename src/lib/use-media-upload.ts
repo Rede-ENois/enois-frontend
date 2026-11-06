@@ -30,6 +30,11 @@ const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
   MEDIA_UPLOAD_FAILED: texts.errors.knownCodes.MEDIA_UPLOAD_FAILED,
   MEDIA_UPLOAD_UNAVAILABLE: texts.errors.knownCodes.MEDIA_UPLOAD_UNAVAILABLE,
   MEDIA_STORAGE_WRITE_FAILED: texts.errors.knownCodes.MEDIA_STORAGE_WRITE_FAILED,
+  MEDIA_STORAGE_DISABLED: texts.errors.knownCodes.MEDIA_STORAGE_DISABLED,
+  // O restante do mapa de mídia fica de fora de propósito: MEDIA_LENGTH_REQUIRED é 411 por falta de
+  // Content-Length, que depende do navegador e não do arquivo; os outros (MEDIA_FORBIDDEN,
+  // MEDIA_NOT_FOUND, MEDIA_KEY_MISMATCH, MEDIA_OWNER_MISMATCH, MEDIA_INVALID_KEY) descrevem o
+  // asset ou a chave, não o envio, e o app não os recebe no caminho de upload.
 };
 
 /** Troca a mensagem técnica do servidor pela explicação do app, mantendo código e status. */
