@@ -1,30 +1,49 @@
-import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
 
 import { Route } from "./__root";
 
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>("@tanstack/react-router");
+  return {
+    ...actual,
+    useRouter: () => ({ options: { ssr: { nonce: "nonce-test" } } }),
+    HeadContent: () => null,
+    Scripts: () => null,
+  };
+});
+
 /**
- * O head do app é a única fonte dos ícones da aba: se uma declaração de `icon` apontar para um
- * arquivo que não existe em `public/`, o navegador troca o joinha pelo ícone padrão sem nenhum
- * erro visível. Estes testes fixam o contrato que o HTML servido já cumpre.
+ * Os ícones da aba abrem o `<head>` do shell diretamente, antes do `HeadContent`, para saírem
+ * nos primeiros bytes do documento (evitando flash do favicon padrão). Estes testes fixam que
+ * o shell declara exatamente o `.svg` e o `.ico` com os quatro tamanhos e sem o `/vite.svg`.
  */
-async function icones() {
-  const head = await Route.options.head?.({} as never);
-  const links = (head?.links ?? []).filter((link) => link?.rel === "icon");
-  return links.filter((link) => link !== undefined);
+function renderShellHead(): string {
+  const options = Route.options as unknown as {
+    shellComponent?: (props: { children: null }) => React.ReactElement | null;
+  };
+  const Shell = options.shellComponent;
+  if (!Shell) throw new Error("shellComponent não encontrado no Route");
+  const html = renderToStaticMarkup(createElement(Shell, { children: null }));
+  const headMatch = html.match(/<head>([\s\S]*?)<\/head>/);
+  return headMatch ? headMatch[1] : html;
 }
 
 describe("head do app — ícones da aba", () => {
-  it("declara só o vetor com o ladrilho e o .ico", async () => {
-    expect((await icones()).map((link) => link.href)).toEqual(["/favicon.svg", "/favicon.ico"]);
+  it("declara só o vetor com o ladrilho e o .ico nos primeiros bytes do shell", () => {
+    const head = renderShellHead();
+    expect(head).toContain('<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>');
+    expect(head).toContain(
+      '<link rel="icon" type="image/vnd.microsoft.icon" sizes="16x16 32x32 48x48 64x64" href="/favicon.ico"/>',
+    );
+    expect(head).not.toContain("/vite.svg");
   });
 
-  /**
-   * `sizes="any"` diz "escalável, sem tamanho fixo" e é falso para um contêiner .ico: o navegador
-   * passa a baixá-lo para qualquer slot ou descarta a declaração.
-   */
-  it("declara todos os tamanhos que o contêiner .ico tem de verdade", async () => {
-    const ico = (await icones()).find((link) => link.href === "/favicon.ico");
-    expect(ico?.sizes).toBe("16x16 32x32 48x48 64x64");
-    expect(ico?.type).toBe("image/x-icon");
+  it("declara todos os tamanhos que o contêiner .ico tem de verdade", () => {
+    const head = renderShellHead();
+    expect(head).toMatch(/sizes="16x16 32x32 48x48 64x64"/);
+    expect(head).toMatch(/type="image\/vnd\.microsoft\.icon"/);
   });
 });
