@@ -1,0 +1,60 @@
+[
+  {
+    "name": "compositor-1280",
+    "width": 1280,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "topicSelector": "bubble",
+    "topicLabel": "Escolha o assunto",
+    "topicRequired": true,
+    "overflow": 0
+  },
+  {
+    "name": "compositor-390",
+    "width": 390,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "topicSelector": "bubble",
+    "topicLabel": "Escolha o assunto",
+    "topicRequired": true,
+    "overflow": 0
+  },
+  {
+    "name": "assunto-aberto-1280",
+    "width": 1280,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "topicMenuOpen": true,
+    "maxHeight": "18rem",
+    "scrollable": true,
+    "overflow": 0
+  },
+  {
+    "name": "assunto-aberto-390",
+    "width": 390,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "topicMenuOpen": true,
+    "maxHeight": "18rem",
+    "scrollable": true,
+    "overflow": 0
+  },
+  {
+    "name": "anexo-aberto-1280",
+    "width": 1280,
+    "docWidth": 1280,
+    "clientWidth": 1280,
+    "attachMenuOpen": true,
+    "options": ["Foto ou vídeo", "Link"],
+    "overflow": 0
+  },
+  {
+    "name": "anexo-aberto-390",
+    "width": 390,
+    "docWidth": 390,
+    "clientWidth": 390,
+    "attachMenuOpen": true,
+    "options": ["Foto ou vídeo", "Link"],
+    "overflow": 0
+  }
+]
