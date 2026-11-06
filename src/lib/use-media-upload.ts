@@ -15,39 +15,35 @@ import { mediaApi } from "@/lib/api/media";
  */
 export const MAX_MEDIA_BYTES = 500 * 1024 * 1024;
 
-/** The API refuses a file type the upload purpose does not take: say it in plain words. */
+/**
+ * Códigos de erro do upload que têm texto próprio no app. O servidor manda a mensagem dele, mas
+ * ela é técnica ("Arquivo grande demais para a limpeza de metadados") ou fala de infraestrutura;
+ * aqui a pessoa lê o que aconteceu e o que fazer.
+ */
+const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
+  MEDIA_TYPE_NOT_ALLOWED: texts.errors.knownCodes.MEDIA_TYPE_NOT_ALLOWED,
+  IMAGE_CONTENT_NOT_ALLOWED: texts.errors.knownCodes.IMAGE_CONTENT_NOT_ALLOWED,
+  IMAGE_CANNOT_BE_VERIFIED: texts.errors.knownCodes.IMAGE_CANNOT_BE_VERIFIED,
+  IMAGE_MODERATION_UNAVAILABLE: texts.errors.knownCodes.IMAGE_MODERATION_UNAVAILABLE,
+  MEDIA_TOO_LARGE: texts.errors.knownCodes.MEDIA_TOO_LARGE,
+  MEDIA_SIZE_MISMATCH: texts.errors.knownCodes.MEDIA_SIZE_MISMATCH,
+  MEDIA_UPLOAD_FAILED: texts.errors.knownCodes.MEDIA_UPLOAD_FAILED,
+  MEDIA_UPLOAD_UNAVAILABLE: texts.errors.knownCodes.MEDIA_UPLOAD_UNAVAILABLE,
+  MEDIA_STORAGE_WRITE_FAILED: texts.errors.knownCodes.MEDIA_STORAGE_WRITE_FAILED,
+  MEDIA_STORAGE_DISABLED: texts.errors.knownCodes.MEDIA_STORAGE_DISABLED,
+  // O restante do mapa de mídia fica de fora de propósito: MEDIA_LENGTH_REQUIRED é 411 por falta de
+  // Content-Length, que depende do navegador e não do arquivo; os outros (MEDIA_FORBIDDEN,
+  // MEDIA_NOT_FOUND, MEDIA_KEY_MISMATCH, MEDIA_OWNER_MISMATCH, MEDIA_INVALID_KEY) descrevem o
+  // asset ou a chave, não o envio, e o app não os recebe no caminho de upload.
+};
+
+/** Troca a mensagem técnica do servidor pela explicação do app, mantendo código e status. */
 export function uploadError(err: unknown): unknown {
-  if (err instanceof ApiError && err.code === "MEDIA_TYPE_NOT_ALLOWED") {
-    return new ApiError(
-      err.status,
-      err.code,
-      texts.errors.knownCodes.MEDIA_TYPE_NOT_ALLOWED,
-      err.path,
-    );
-  }
-  if (err instanceof ApiError && err.code === "IMAGE_CONTENT_NOT_ALLOWED") {
-    return new ApiError(
-      err.status,
-      err.code,
-      texts.errors.knownCodes.IMAGE_CONTENT_NOT_ALLOWED,
-      err.path,
-    );
-  }
-  if (err instanceof ApiError && err.code === "IMAGE_CANNOT_BE_VERIFIED") {
-    return new ApiError(
-      err.status,
-      err.code,
-      texts.errors.knownCodes.IMAGE_CANNOT_BE_VERIFIED,
-      err.path,
-    );
-  }
-  if (err instanceof ApiError && err.code === "IMAGE_MODERATION_UNAVAILABLE") {
-    return new ApiError(
-      err.status,
-      err.code,
-      texts.errors.knownCodes.IMAGE_MODERATION_UNAVAILABLE,
-      err.path,
-    );
+  if (err instanceof ApiError && err.code) {
+    const message = UPLOAD_ERROR_MESSAGES[err.code];
+    if (message) {
+      return new ApiError(err.status, err.code, message, err.path);
+    }
   }
   return err;
 }
