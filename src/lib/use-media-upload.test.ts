@@ -67,4 +67,12 @@ describe("uploadError — falhas do servidor no envio de arquivo", () => {
     const original = new ApiError(403, "MEDIA_FORBIDDEN", "Esta midia nao e sua.");
     expect(uploadError(original)).toBe(original);
   });
+  it.each([
+    [422, "IMAGE_TOO_LARGE_TO_VERIFY"],
+    [422, "MEDIA_PROCESSING_FAILED"],
+    [503, "MEDIA_PROCESSING_UNAVAILABLE"],
+  ] as const)("explains processing error %s %s", (status, code) => {
+    const err = uploadError(new ApiError(status, code, "raw", "/storage/key"));
+    expect(err).toMatchObject({ code, message: texts.errors.knownCodes[code] });
+  });
 });
