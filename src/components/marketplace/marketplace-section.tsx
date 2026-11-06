@@ -197,7 +197,7 @@ export function MarketplaceSection() {
 
                 <p className="mt-1 flex items-center gap-1.5 text-lg font-semibold text-primary">
                   <Sparkles className="h-4 w-4" />
-                  {formatFaisca(bought.price)} faíscas
+                  {formatFaisca(bought.price)}
                 </p>
 
                 <p className="mt-2 text-xs text-text-subtle">{texts.marketplace.purchaseHeld}</p>
@@ -410,7 +410,7 @@ function ListingDetailsDialog({
           <div className="rounded-2xl border border-border-soft bg-surface-1 p-4">
             <span className="flex items-center gap-1.5 text-lg font-semibold text-primary">
               <Sparkles className="h-4 w-4" />
-              {formatFaisca(listing.price)} faíscas
+              {formatFaisca(listing.price)}
             </span>
 
             <p className="mt-1 text-xs text-text-subtle">{texts.marketplace.escrowHint}</p>
@@ -506,7 +506,7 @@ function ListingCard({
 
           <span className="flex items-center gap-1.5 text-lg font-semibold text-primary">
             <Sparkles className="h-4 w-4" />
-            {formatFaisca(listing.price)} faíscas
+            {formatFaisca(listing.price)}
           </span>
 
           {buy.isError && !detailsOpen && (
@@ -601,7 +601,7 @@ function MyPurchases({
                   </span>
 
                   <span className="block text-xs text-text-subtle">
-                    {formatFaisca(p.price)} faíscas ·{" "}
+                    {formatFaisca(p.price)} ·{" "}
                     {p.state === "HELD"
                       ? "retidas no escrow"
                       : p.state === "RELEASED"
@@ -676,7 +676,7 @@ function MySales({ sales }: { sales: Awaited<ReturnType<typeof marketplaceApi.sa
       <ul className="space-y-2">
         {sales.map((s) => (
           <li key={s.id} className="surface-card flex items-center gap-2 p-3">
-            <span className="min-w-0 flex-1 text-sm">Venda de {formatFaisca(s.price)} faíscas</span>
+            <span className="min-w-0 flex-1 text-sm">Venda de {formatFaisca(s.price)}</span>
 
             <StateChip state={s.state} />
           </li>

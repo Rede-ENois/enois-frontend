@@ -204,8 +204,7 @@ function ServiceRow({
   onRemove: (offer: ServiceListing) => void;
   removing: boolean;
 }) {
-  const price =
-    offer.currency === "BRL" ? formatBrlCents(offer.price) : `${formatFaisca(offer.price)} faíscas`;
+  const price = offer.currency === "BRL" ? formatBrlCents(offer.price) : formatFaisca(offer.price);
   const removed = offer.status !== "ACTIVE";
 
   return (

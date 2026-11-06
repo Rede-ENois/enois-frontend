@@ -221,10 +221,16 @@ function Carteira() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-4xl font-semibold tracking-tight text-text-strong">
-                  {formatFaisca(wallet?.balance ?? 0)}{" "}
-                  <span className="text-lg font-normal text-text-subtle">faíscas</span>
-                </p>
+                <>
+                  <p className="text-4xl font-semibold tracking-tight text-text-strong">
+                    {formatFaisca(wallet?.balance ?? 0)}
+                  </p>
+
+                  <p className="text-xs leading-relaxed text-text-subtle">
+                    {texts.wallet.fagulhasExplained}{" "}
+                    <span className="text-text-strong">{texts.wallet.fagulhasExample}</span>
+                  </p>
+                </>
               )}
 
               {wallet && (
@@ -332,13 +338,19 @@ function Carteira() {
                     onChange={(event) => setForm({ ...form, amount: event.target.value })}
                     placeholder="0,00"
                   />
-                  {cotacao && parseFaiscaInput(form.amount) !== null && (
+                  {parseFaiscaInput(form.amount) !== null && (
                     <span className="block text-xs text-text-subtle">
-                      ≈{" "}
-                      {formatBrlMicros(
-                        faiscaToBrlMicros(parseFaiscaInput(form.amount)!, cotacao.brlMicros),
-                      )}{" "}
-                      na cotação de referência
+                      {formatFaisca(parseFaiscaInput(form.amount)!)}
+                      {cotacao && (
+                        <>
+                          {" "}
+                          ≈{" "}
+                          {formatBrlMicros(
+                            faiscaToBrlMicros(parseFaiscaInput(form.amount)!, cotacao.brlMicros),
+                          )}{" "}
+                          na cotação de referência
+                        </>
+                      )}
                     </span>
                   )}
                 </label>
