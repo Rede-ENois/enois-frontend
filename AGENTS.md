@@ -13,7 +13,10 @@ Quebrar qualquer uma destas fecha a PR, por melhor que seja o resto.
 
 1. **Nunca faça merge de PR**, sua ou de outra pessoa. Nada de `gh pr merge`, bypass de admin ou
    "merge quando passar". Merge é ação humana, de um mantenedor (ver `.github/CODEOWNERS`), depois de
-   uma revisão aprovada.
+   uma revisão aprovada. Única exceção: o app `kof-agent-worker`, autorizado pelos mantenedores, pode
+   fazer merge, e só com o CI verde e **nenhuma revisão `CHANGES_REQUESTED` em aberto**, de quem quer
+   que seja. Pedido de mudança se resolve com nova revisão de quem pediu ou com dispensa explícita de
+   um mantenedor, nunca passando por cima dele.
 2. **Nunca dê push em `qa` ou `main`**, nunca force-push em branch que você não criou, nunca suba
    tag, nunca dispare workflow de deploy na mão. Push em `qa` ou `main` faz deploy.
 3. **Nunca abra PR `qa` → `main`.** Promover para produção é decisão dos mantenedores.
