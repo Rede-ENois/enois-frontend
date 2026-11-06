@@ -22,23 +22,13 @@ import { EmotePickerDialog } from "@/components/emotes/emote-picker-dialog";
  */
 export function MentionTextarea({
   emoteInline = false,
-  emoteOpen: controlledEmoteOpen,
-  onEmoteOpenChange,
-  hideEmoteTrigger = false,
   ...props
 }: Omit<MentionTextareaProps, "mentionResults" | "onMentionQueryChange"> & {
   /** Sticker button at the end of the field (compact composer) instead of above it. */
   emoteInline?: boolean;
-  /** Controlled picker: the composer's footer owns the trigger. */
-  emoteOpen?: boolean;
-  onEmoteOpenChange?: (open: boolean) => void;
-  /** No built-in sticker trigger; another button (the footer) opens the picker. */
-  hideEmoteTrigger?: boolean;
 }) {
   const [mentionQuery, setMentionQuery] = useState("");
-  const [internalEmoteOpen, setInternalEmoteOpen] = useState(false);
-  const emoteOpen = controlledEmoteOpen ?? internalEmoteOpen;
-  const setEmoteOpen = onEmoteOpenChange ?? setInternalEmoteOpen;
+  const [emoteOpen, setEmoteOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: results = [] } = useQuery({
@@ -82,7 +72,7 @@ export function MentionTextarea({
       ref={containerRef}
       className={emoteInline ? "flex min-w-0 flex-1 items-end gap-1" : "min-w-0 flex-1"}
     >
-      {props.toolbar && !emoteInline && !hideEmoteTrigger && (
+      {props.toolbar && !emoteInline && (
         <div className="mb-1 flex items-center justify-end">
           <Button
             type="button"
@@ -103,7 +93,7 @@ export function MentionTextarea({
         mentionResults={results}
         onMentionQueryChange={setMentionQuery}
       />
-      {emoteInline && !hideEmoteTrigger && (
+      {emoteInline && (
         <Button
           type="button"
           size="icon"

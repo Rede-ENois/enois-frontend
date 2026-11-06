@@ -1,7 +1,6 @@
 import type { HomeTab } from "@/types/routes/feed/home-tab";
 
 const LAST_FEED_TAB_KEY = "connect-grow-last-feed-tab";
-const LAST_FEED_TYPE_FILTER_KEY = "connect-grow-last-feed-type-filter";
 
 /** The tab the feed opens on when nothing was chosen yet (or the saved one is no longer offered). */
 export const DEFAULT_FEED_TAB: HomeTab = "ALL";
@@ -10,7 +9,7 @@ export const DEFAULT_FEED_TAB: HomeTab = "ALL";
  * Tabs worth remembering. "CORPORATE" is left out: it is not a choice, the professional interface
  * forces it, and saving it would send the social interface to a tab it does not have.
  */
-export const REMEMBERABLE_TABS: readonly HomeTab[] = [
+const REMEMBERABLE_TABS: readonly HomeTab[] = [
   "ALL",
   "FOR_YOU",
   "UNSEEN",
@@ -40,29 +39,5 @@ export function rememberFeedTab(tab: HomeTab): void {
     localStorage.setItem(LAST_FEED_TAB_KEY, tab);
   } catch {
     // modo privado/cota: a escolha vale só para esta sessão.
-  }
-}
-
-/**
- * Filtro por tipo de post guardado no navegador.
- */
-export function readLastFeedTypeFilter(): string {
-  try {
-    if (typeof localStorage === "undefined") return "";
-    return localStorage.getItem(LAST_FEED_TYPE_FILTER_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-export function rememberFeedTypeFilter(type: string): void {
-  try {
-    if (!type) {
-      localStorage.removeItem(LAST_FEED_TYPE_FILTER_KEY);
-    } else {
-      localStorage.setItem(LAST_FEED_TYPE_FILTER_KEY, type);
-    }
-  } catch {
-    // modo privado/cota
   }
 }
