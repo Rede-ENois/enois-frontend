@@ -52,10 +52,11 @@ import {
   Code2,
   EyeOff,
   FileText,
-  Film,
   GraduationCap,
   Image,
+  Link2,
   Loader2,
+  Plus,
   RefreshCw,
   SlidersHorizontal,
   UserPlus,
@@ -321,6 +322,9 @@ function Home() {
   const [conductLessonOpen, setConductLessonOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   // Agendamento: o post fica na fila do backend e só entra no feed na hora marcada.
@@ -431,6 +435,8 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      setLinkUrl("");
+      setLinkOpen(false);
       setScheduleAt("");
       setSchedulingOpen(false);
     } catch {
@@ -496,6 +502,8 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      setLinkUrl("");
+      setLinkOpen(false);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     }
@@ -578,6 +586,21 @@ function Home() {
       if (next.length === 0) setMediaSpoiler(false);
       return next;
     });
+  };
+
+  /** Anexa o link ao texto do post: a prévia do cartão é montada na publicação. */
+  const attachLink = () => {
+    const raw = linkUrl.trim();
+    if (!raw) return;
+    // Sem esquema o backend não reconhece o link; https é o padrão que a web espera.
+    const href = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+    if (articleMode) {
+      setArticleBody((current) => (current.trim() ? `${current.trimEnd()} ${href}` : href));
+    } else {
+      setDraft((current) => (current.trim() ? `${current.trimEnd()} ${href}` : href));
+    }
+    setLinkUrl("");
+    setLinkOpen(false);
   };
 
   const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
@@ -996,20 +1019,72 @@ function Home() {
                     )}
                   </div>
 
-                  {/* Mídia não existe em página (a página é o conteúdo dela). */}
+                  {/* Um "+" só para tudo que se anexa: foto/vídeo e link. A página é o próprio
+                      conteúdo, então nem entra. */}
                   {!pageMode && (
-                    <ComposerAction
-                      icon={mediaType === "video" ? Film : Image}
-                      label={
-                        mediaType === "video"
-                          ? texts.feed.composer.video
-                          : media.length > 0
-                            ? texts.feed.composer.mediaCount(media.length)
-                            : texts.feed.composer.media
-                      }
-                      active={media.length > 0}
-                      onClick={() => fileRef.current?.click()}
-                    />
+                    <Popover open={attachOpen} onOpenChange={setAttachOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={texts.feed.composer.attach.label}
+                          title={texts.feed.composer.attach.label}
+                          aria-expanded={attachOpen}
+                          className={cn(
+                            "relative grid h-8 w-8 shrink-0 place-items-center rounded-full text-text-subtle transition hover:bg-surface-2 hover:text-primary",
+                            (attachOpen || media.length > 0) && "bg-primary/10 text-primary",
+                          )}
+                        >
+                          <Plus
+                            className={cn(
+                              "h-5 w-5 transition-transform duration-200 motion-reduce:transition-none",
+                              attachOpen && "rotate-45",
+                            )}
+                          />
+
+                          {media.length > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
+                              {media.length}
+                            </span>
+                          )}
+                        </button>
+                      </PopoverTrigger>
+
+                      <PopoverContent
+                        align="start"
+                        side="top"
+                        collisionPadding={8}
+                        className="w-[min(15rem,calc(100vw-1rem))] rounded-2xl border-border-soft p-1"
+                      >
+                        <button
+                          type="button"
+                          title={texts.feed.composer.attach.photoHint}
+                          onClick={() => {
+                            setAttachOpen(false);
+                            // Dentro do toque: o Safari só abre o seletor de arquivo a partir do gesto.
+                            fileRef.current?.click();
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text-strong transition hover:bg-surface-2"
+                        >
+                          <Image className="h-4 w-4 shrink-0 text-sky-500" />
+
+                          <>{texts.feed.composer.attach.photo}</>
+                        </button>
+
+                        <button
+                          type="button"
+                          title={texts.feed.composer.attach.linkHint}
+                          onClick={() => {
+                            setAttachOpen(false);
+                            setLinkOpen(true);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-text-strong transition hover:bg-surface-2"
+                        >
+                          <Link2 className="h-4 w-4 shrink-0 text-emerald-500" />
+
+                          <>{texts.feed.composer.attach.link}</>
+                        </button>
+                      </PopoverContent>
+                    </Popover>
                   )}
                   {((!pageMode && media.length > 0) ||
                     (pageMode && pageHtml.trim().length > 0)) && (
@@ -1108,6 +1183,37 @@ function Home() {
                   </Button>
                 </div>
               </div>
+
+              {linkOpen && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-border-soft bg-surface-1 p-2">
+                  <Link2 className="ml-1 hidden h-4 w-4 shrink-0 text-text-subtle sm:block" />
+                  <Input
+                    autoFocus
+                    type="url"
+                    inputMode="url"
+                    value={linkUrl}
+                    onChange={(event) => setLinkUrl(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter") return;
+                      event.preventDefault();
+                      attachLink();
+                    }}
+                    aria-label={texts.feed.composer.attach.link}
+                    placeholder={texts.feed.composer.attach.linkPlaceholder}
+                    className="min-w-0 flex-1"
+                  />
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-full"
+                    disabled={!linkUrl.trim()}
+                    onClick={attachLink}
+                  >
+                    {texts.feed.composer.attach.linkConfirm}
+                  </Button>
+                </div>
+              )}
 
               {schedulingOpen && (
                 <div className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-border-soft bg-surface-1 p-3">
