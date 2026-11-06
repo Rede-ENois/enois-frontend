@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { TOPICS, TOPIC_LABELS } from "@/constants/community-topics";
 import { texts } from "@/texts";
@@ -21,7 +22,7 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { HeartPulse } from "lucide-react";
+import { HeartPulse, Sparkles } from "lucide-react";
 
 import { preferencesApi } from "@/lib/api";
 import { writeBatataMode } from "@/lib/batata-mode";
@@ -88,6 +89,7 @@ export function HealthyUsageDialog({
 }) {
   const messages = useMessages().healthyUsageDialog;
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: personalization } = usePersonalization();
 
@@ -102,6 +104,7 @@ export function HealthyUsageDialog({
   const [batataMode, setBatataMode] = useState(false);
   const [forceMotion, setForceMotion] = useState(false);
   const [cardTilt, setCardTilt] = useState(true);
+  const [whatsNewEnabled, setWhatsNewEnabled] = useState(true);
   // Só aparece para quem o sistema está pedindo menos movimento: nas outras pessoas a chave
   // não teria efeito nenhum e só faria volume.
   const [reducedMotionDevice, setReducedMotionDevice] = useState(false);
@@ -125,6 +128,7 @@ export function HealthyUsageDialog({
     setNightRestReminder(personalization.nightRestReminder);
     setLiteMode(personalization.liteMode);
     setBatataMode(personalization.batataMode);
+    setWhatsNewEnabled(personalization.whatsNewEnabled ?? true);
   }, [open, personalization]);
 
   const save = useMutation({
@@ -136,6 +140,7 @@ export function HealthyUsageDialog({
         nightRestReminder,
         liteMode,
         batataMode,
+        whatsNewEnabled,
       }),
     onSuccess: () => {
       writeHealthyUsage({ enabled, minutes: clampMinutes(minutes) });
@@ -414,6 +419,38 @@ export function HealthyUsageDialog({
                     </label>
                   );
                 })}
+              </div>
+            </section>
+
+            {/* Configuração de novidades do sistema e design */}
+            <section className="space-y-3 border-t border-border-soft pt-4">
+              <label className="flex items-start justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-text-strong">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Novidades do sistema e design
+                  </span>
+
+                  <span className="mt-0.5 block text-xs text-text-subtle">
+                    Exibir resumo com as melhorias de layout, novidades do design system e como
+                    usá-las no primeiro acesso após cada atualização.
+                  </span>
+                </span>
+
+                <Switch checked={whatsNewEnabled} onCheckedChange={setWhatsNewEnabled} />
+              </label>
+
+              <div>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-primary underline underline-offset-2 hover:opacity-80"
+                  onClick={() => {
+                    onOpenChange(false);
+                    void navigate({ to: "/novidades" });
+                  }}
+                >
+                  Ver histórico de novidades e atualizações →
+                </button>
               </div>
             </section>
 

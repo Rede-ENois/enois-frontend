@@ -1,9 +1,11 @@
 import { useState } from "react";
 
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { AccountSettings } from "@rede-enois/design-system/domain";
+import { Button } from "@rede-enois/design-system/ui";
+import { Sparkles } from "lucide-react";
 
 import { useCurrentUser } from "@/lib/current-user";
 import { requireAuth } from "@/lib/require-auth";
@@ -48,6 +50,32 @@ function AccountSettingsPage() {
         onDeleteAccount={() => setDialog("delete")}
         onOpenHealthyUsage={() => setDialog("healthy")}
       />
+
+      <section className="mt-4 rounded-2xl border border-border-soft bg-surface-card p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <Sparkles className="h-4 w-4" />
+            </span>
+
+            <div>
+              <p className="text-sm font-semibold text-text-strong">
+                Novidades do Sistema e Design
+              </p>
+
+              <p className="text-xs text-text-subtle">
+                Veja as melhorias recentes no layout, novos componentes e recursos lançados.
+              </p>
+            </div>
+          </div>
+
+          <Link to="/novidades">
+            <Button variant="outline" size="sm" className="w-full rounded-full sm:w-auto">
+              Ver novidades
+            </Button>
+          </Link>
+        </div>
+      </section>
 
       {profile && (
         <ChangeEmailDialog

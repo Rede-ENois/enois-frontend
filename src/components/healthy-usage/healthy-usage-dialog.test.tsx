@@ -25,6 +25,8 @@ const PERSONALIZATION: Personalization = {
   nightRestDismissedOn: null,
   liteMode: false,
   batataMode: false,
+  whatsNewEnabled: true,
+  whatsNewLastSeen: null,
 };
 
 vi.mock("@/lib/api", () => ({
@@ -126,6 +128,7 @@ describe("uso saudável", () => {
       nightRestReminder: false,
       liteMode: false,
       batataMode: false,
+      whatsNewEnabled: true,
     });
     expect(mocks.onOpenChange).toHaveBeenCalledWith(false);
     expect(mocks.toast).toHaveBeenCalledWith(texts.personalization.saved, "success");

@@ -18,4 +18,8 @@ export type Personalization = {
    * dois — BATATA implica os efeitos do lite.
    */
   batataMode: boolean;
+  /** Se o resumo de novidades deve abrir automaticamente no primeiro acesso após cada versão. */
+  whatsNewEnabled: boolean;
+  /** Versão da última novidade dispensada na conta; null = nunca dispensou. */
+  whatsNewLastSeen: string | null;
 };

@@ -13,6 +13,7 @@ import {
   Lightbulb,
   Puzzle,
   ShoppingBag,
+  Sparkles,
   Wrench,
 } from "lucide-react";
 
@@ -76,6 +77,18 @@ export const exploreItems: {
     color: "var(--table-3)",
     module: null,
     keywords: ["api", "token", "integracao"],
+  },
+  {
+    section: "community",
+    href: "/novidades",
+    text: {
+      label: "Novidades",
+      description: "Atualizações de layout, design system e recursos",
+    },
+    icon: Sparkles,
+    color: "var(--table-4)",
+    module: null,
+    keywords: ["novidades", "recursos", "changelog", "design system", "layout"],
   },
   {
     section: "community",

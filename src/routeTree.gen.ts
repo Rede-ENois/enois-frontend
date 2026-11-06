@@ -37,6 +37,7 @@ import { Route as MentoriaRouteImport } from './routes/mentoria'
 import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as ModeradorRouteImport } from './routes/moderador'
+import { Route as NovidadesRouteImport } from './routes/novidades'
 import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -223,6 +224,11 @@ const ModeracaoRoute = ModeracaoRouteImport.update({
 const ModeradorRoute = ModeradorRouteImport.update({
   id: '/moderador',
   path: '/moderador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovidadesRoute = NovidadesRouteImport.update({
+  id: '/novidades',
+  path: '/novidades',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
@@ -493,6 +499,7 @@ export interface FileRoutesByFullPath {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/novidades': typeof NovidadesRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -570,6 +577,7 @@ export interface FileRoutesByTo {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/novidades': typeof NovidadesRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -648,6 +656,7 @@ export interface FileRoutesById {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/novidades': typeof NovidadesRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -727,6 +736,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/novidades'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -804,6 +814,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/novidades'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -881,6 +892,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/novidades'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -959,6 +971,7 @@ export interface RootRouteChildren {
   MeusServicosRoute: typeof MeusServicosRoute
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
+  NovidadesRoute: typeof NovidadesRoute
   ParDeEstudoRoute: typeof ParDeEstudoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1193,6 +1206,13 @@ declare module '@tanstack/react-router' {
       path: '/moderador'
       fullPath: '/moderador'
       preLoaderRoute: typeof ModeradorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/novidades': {
+      id: '/novidades'
+      path: '/novidades'
+      fullPath: '/novidades'
+      preLoaderRoute: typeof NovidadesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/par-de-estudo': {
@@ -1665,6 +1685,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeusServicosRoute: MeusServicosRoute,
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
+  NovidadesRoute: NovidadesRoute,
   ParDeEstudoRoute: ParDeEstudoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,

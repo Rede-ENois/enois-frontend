@@ -21,6 +21,10 @@ export const preferencesApi = {
   dismissNightRest: (night: string) =>
     api.post<Personalization>("/me/preferences/night-rest/dismissed", { night }),
 
+  /** Marca uma versão das novidades como vista na conta (vale em todos os aparelhos). */
+  dismissWhatsNew: (version: string) =>
+    api.post<Personalization>("/me/preferences/whats-new/dismissed", { version }),
+
   setPersonalization: (data: Partial<Personalization>) =>
     api.put<Personalization>("/me/preferences", data),
 
