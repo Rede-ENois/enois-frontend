@@ -2,13 +2,21 @@
 
 @AGENTS.md
 
-O `AGENTS.md` (importado acima) é o contrato operacional de todo agente de IA neste repositório. As
-regras valem por inteiro; a de baixo é repetida porque é a mais fácil de pular:
+O `AGENTS.md` (importado acima) é o contrato operacional de todo agente de IA neste repositório. Ele
+vale por inteiro. As regras abaixo são repetidas porque são as que os agentes mais quebram aqui:
 
-- **Regra do escoteiro: toda falha é corrigida quando encontrada.** Teste quebrado ou instável,
-  build quebrado, erro de lint ou de tipo, bug ou falha de segurança que você encontrar é corrigido
-  na mesma tarefa, mesmo que seja anterior à sua mudança. Se o conserto estiver realmente fora de
-  alcance, registre (issue ou item do backlog) e diga na PR — nunca deixe em silêncio.
+- **Você nunca faz merge, nunca dá push em `qa`/`main`, nunca abre `qa` → `main`.** Abra a PR para a
+  `qa` e pare. O `.claude/settings.json` bloqueia esses comandos; não procure um jeito de contornar.
+- **Você nunca reverte nem refaz trabalho alheio, e nunca muda layout ou linguagem visual, sem o aval
+  escrito de um mantenedor.** Se a tarefa parece pedir isso, pare e pergunte.
+- **UI nova vai para o design system.** Aqui entra só o container.
+- **Duas tentativas falhas no mesmo bug: pare e reporte** o que mediu e o que descartou. Nada de
+  corrente de PRs de hotfix.
+- **Concluído é comprovado:** `npm run lint && npm run typecheck && npm test && npm run build` na
+  árvore final, e o navegador a 390px e desktop quando a mudança aparece na tela.
+- **Regra do escoteiro:** toda falha que você encontrar é corrigida na mesma tarefa, mesmo que seja
+  anterior a você. Se estiver realmente fora de alcance, abra uma issue e diga na PR. Nunca em
+  silêncio.
 
 <!-- engineering-learn:live -->
 
