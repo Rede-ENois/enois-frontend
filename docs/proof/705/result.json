@@ -1,0 +1,32 @@
+[
+  {
+    "name": "carteira-1280",
+    "width": 1280,
+    "saldo": "101 faíscas 830 fagulhas",
+    "explica": true,
+    "exemploVisivel": true,
+    "larguraDaExplicacao": 624,
+    "linhasDaExplicacao": 3,
+    "estouroDaPagina": 0
+  },
+  {
+    "name": "carteira-390",
+    "width": 390,
+    "saldo": "101 faíscas 830 fagulhas",
+    "explica": true,
+    "exemploVisivel": true,
+    "larguraDaExplicacao": 318,
+    "linhasDaExplicacao": 5,
+    "estouroDaPagina": 0
+  },
+  {
+    "name": "pagamento-1280",
+    "width": 1280,
+    "previaDoValor": "101 faíscas 830 fagulhas ≈ R$ 10,183 na cotação de referência"
+  },
+  {
+    "name": "pagamento-390",
+    "width": 390,
+    "previaDoValor": "101 faíscas 830 fagulhas ≈ R$ 10,183 na cotação de referência"
+  }
+]

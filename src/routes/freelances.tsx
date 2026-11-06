@@ -301,7 +301,7 @@ function FreelanceCard({ item, authenticated }: { item: FreelanceView; authentic
         ) : (
           <span className="inline-flex items-center gap-1.5 font-semibold text-primary">
             <Sparkles className="h-4 w-4" />
-            {formatFaisca(item.budgetMin)}–{formatFaisca(item.budgetMax)} faíscas
+            {formatFaisca(item.budgetMin)} a {formatFaisca(item.budgetMax)}
           </span>
         )}
 

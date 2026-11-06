@@ -1,4 +1,5 @@
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
+import { formatFaisca } from "@/lib/faisca";
 
 const common = {
   enter: "Entrar",
@@ -755,8 +756,8 @@ export const texts = {
     settingsSeoTitle: "Conta e segurança",
     menu: {
       blockedUsers: "Usuários bloqueados",
-      walletBalance: (balance: number) =>
-        `${balance.toLocaleString("pt-BR")} ${balance === 1 ? "faísca" : "faíscas"}`,
+      /** Recebe os milésimos crus da carteira: o saldo do menu também é faísca e fagulha. */
+      walletBalance: (balance: number) => formatFaisca(balance),
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",
@@ -1740,7 +1741,7 @@ export const texts = {
         "Partida iniciada conta cada vez que alguém aperta Jogar — não prova que o jogo terminou de carregar. Jogador conta cada conta uma vez; quem joga sem entrar conta a cada partida.",
       spend: {
         title: "O jogo quer gastar faíscas",
-        amount: (value: string) => `${value} faíscas`,
+        amount: (value: string) => value,
         notice:
           "O gasto só acontece com a sua confirmação. O jogo nunca acessa a sua conta nem a sua sessão — ele apenas pediu.",
         refuse: "Recusar",
@@ -2326,15 +2327,15 @@ export const texts = {
       "Entre 50 e 10.000 faíscas. A taxa da plataforma (10%) já é descontada do seu lado.",
     sparksPriceInvalid: "Informe um preço entre 50 e 10.000 faíscas.",
     sparksAccepted: (price: string) => `aceita faíscas · ${price}`,
-    sparksBalance: (balance: string) => `Seu saldo: ${balance} faíscas`,
+    sparksBalance: (balance: string) => `Seu saldo: ${balance}`,
     sparksBalanceLow: (balance: string, needed: string) =>
-      `Saldo insuficiente: você tem ${balance} e a sessão custa ${needed} faíscas.`,
+      `Saldo insuficiente: você tem ${balance} e a sessão custa ${needed}.`,
     sparksFeeNote: "Da liberação, a plataforma retém 10% e o mentor recebe o resto.",
     sparksEscrowNote:
       "O valor fica retido na sua carteira ao confirmar e volta integral se você cancelar antes do horário começar.",
-    paidWithSparks: (price: string) => `pago com ${price} faíscas`,
+    paidWithSparks: (price: string) => `pago com ${price}`,
     sparksInsufficientError: "Saldo de faíscas insuficiente para esta sessão.",
-    sparksPriceRange: (min: string, max: string) => `${min} a ${max} faíscas`,
+    sparksPriceRange: (min: string, max: string) => `${min} a ${max}`,
     freeSession: "Sessão gratuita",
     completeSession: "Concluir sessão",
     completeConfirm:
@@ -3359,6 +3360,13 @@ export const texts = {
     notice:
       "A faísca existe só dentro do Énóis: circula entre pessoas e vale nos marketplaces da plataforma. Transferências são instantâneas e sem reversão.",
     historyEmpty: "Sem movimentações ainda. A faísca circula quando a comunidade circula.",
+    /**
+     * A explicação do decimal. Sem ela, "101 faíscas 830 fagulhas" é só um número comprido: a
+     * pessoa precisa saber que a parte depois da faísca é uma unidade menor, e não um erro.
+     */
+    fagulhasExplained:
+      "Uma faísca se divide em 1.000 fagulhas, como o real se divide em centavos. Por isso o saldo aparece em duas partes: as faíscas inteiras e as fagulhas que sobram.",
+    fagulhasExample: "Exemplo: 101 faíscas 830 fagulhas é o mesmo que 101,83 faíscas.",
     kind: {
       AIRDROP: "Distribuição inicial",
       GENESIS_TREASURY: "Gênese",

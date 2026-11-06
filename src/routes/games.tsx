@@ -443,7 +443,7 @@ function MyGames({
                 className="rounded-full gap-1"
                 disabled={boost.isPending}
                 onClick={() => boost.mutate(g.id)}
-                title={`Sobe no catálogo por 7 dias — ${formatFaisca(5000)} faíscas`}
+                title={`Sobe no catálogo por 7 dias — ${formatFaisca(5000)}`}
               >
                 <Rocket className="h-4 w-4" />
                 Impulsionar

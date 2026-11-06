@@ -330,9 +330,9 @@ describe("pedidos do jogo presos ao jogo que os fez", () => {
     await open("jogo-a");
     await startGame();
     await fromGame("jogo-a", { type: "enois:spend", amount: 1000, requestId: "r-1" });
-    await waitFor(() => expect(dialog()?.textContent).toContain("1 faíscas"));
+    await waitFor(() => expect(dialog()?.textContent).toContain("1 faísca "));
     await fromGame("jogo-a", { type: "enois:spend", amount: 999000, requestId: "r-2" });
-    expect(dialog()?.textContent).toContain("1 faíscas");
+    expect(dialog()?.textContent).toContain("1 faísca ");
     expect(dialog()?.textContent).not.toContain("999");
 
     await act(async () => button(texts.games.game.spend.confirm)!.click());
