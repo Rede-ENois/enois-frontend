@@ -50,7 +50,10 @@ export function formatFaisca(mf: number): string {
     partes.push(`${nf.format(faiscas)} ${nomeUnidade(UNIDADE_FAISCA, faiscas)}`);
   }
   if (fagulhas > 0) {
-    partes.push(`${nf.format(fagulhas)} ${nomeUnidade(UNIDADE_FAGULHA, fagulhas)}`);
+    // A parte inteira carrega o sinal, mas num débito menor que uma faísca ela é zero: sem isto
+    // "-830" virava "830 fagulhas", e o extrato mostrava débito como crédito.
+    const texto = mf < 0 && faiscas === 0 ? `-${nf.format(fagulhas)}` : nf.format(fagulhas);
+    partes.push(`${texto} ${nomeUnidade(UNIDADE_FAGULHA, fagulhas)}`);
   }
   return partes.join(" ");
 }
