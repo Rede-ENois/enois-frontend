@@ -9,7 +9,12 @@ import { requireAuth } from "@/lib/require-auth";
 import { AppContainer } from "@/components/app-container";
 import { FeedPreferencesPanel } from "@/components/feed/feed-preferences-panel";
 
-export const Route = createFileRoute("/conta/preferencias-feed")({
+/**
+ * O `_` no fim de `conta_` (no NOME DO ARQUIVO) mantém a URL `/conta/preferencias-feed` sem
+ * aninhar na página de conta: `AccountSettingsPage` não tem `<Outlet/>`, então a filha nunca
+ * apareceria. Mesmo padrão de `blog.$username_.$postId.tsx`.
+ */
+export const Route = createFileRoute("/conta_/preferencias-feed")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.feedPreferences.seoTitle }] }),
   component: FeedPreferencesPage,

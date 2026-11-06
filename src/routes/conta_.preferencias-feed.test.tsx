@@ -48,7 +48,7 @@ vi.mock("@rede-enois/design-system/ui", () => ({
   ),
 }));
 
-const { Route } = await import("./conta.preferencias-feed");
+const { Route } = await import("./conta_.preferencias-feed");
 const FeedPreferencesPage = (
   Route as unknown as { options: { component: () => React.JSX.Element } }
 ).options.component;
