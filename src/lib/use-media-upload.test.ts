@@ -46,6 +46,9 @@ describe("uploadError — falhas do servidor no envio de arquivo", () => {
     ["MEDIA_UPLOAD_UNAVAILABLE", 503],
     ["MEDIA_STORAGE_WRITE_FAILED", 502],
     ["MEDIA_STORAGE_DISABLED", 503],
+    ["IMAGE_TOO_LARGE_TO_VERIFY", 422],
+    ["MEDIA_PROCESSING_FAILED", 422],
+    ["MEDIA_PROCESSING_UNAVAILABLE", 503],
   ] as const)("troca a mensagem técnica de %s por texto do app", (code, status) => {
     const err = uploadError(new ApiError(status, code, MENSAGEM_TECNICA)) as ApiError;
     expect(err).toBeInstanceOf(ApiError);
@@ -66,13 +69,5 @@ describe("uploadError — falhas do servidor no envio de arquivo", () => {
   it("mantém o código que ainda não tem texto próprio", () => {
     const original = new ApiError(403, "MEDIA_FORBIDDEN", "Esta midia nao e sua.");
     expect(uploadError(original)).toBe(original);
-  });
-  it.each([
-    [422, "IMAGE_TOO_LARGE_TO_VERIFY"],
-    [422, "MEDIA_PROCESSING_FAILED"],
-    [503, "MEDIA_PROCESSING_UNAVAILABLE"],
-  ] as const)("explains processing error %s %s", (status, code) => {
-    const err = uploadError(new ApiError(status, code, "raw", "/storage/key"));
-    expect(err).toMatchObject({ code, message: texts.errors.knownCodes[code] });
   });
 });
