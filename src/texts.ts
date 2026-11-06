@@ -1197,6 +1197,7 @@ export const texts = {
       },
       mediaSpoiler: "Marcar mídias como spoiler",
       mediaSpoilerActive: "Mídias marcadas como spoiler",
+      mediaSpoilerNoMedia: "Anexe uma foto ou vídeo para marcar spoiler",
       uploadProgress: (progress: number) => `Enviando… ${progress}%`,
       imageChecking: "Verificando imagem…",
       imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",

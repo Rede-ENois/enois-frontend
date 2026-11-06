@@ -59,6 +59,7 @@ import {
   Plus,
   RefreshCw,
   SlidersHorizontal,
+  Smile,
   UserPlus,
   X,
 } from "lucide-react";
@@ -325,6 +326,7 @@ function Home() {
   const [attachOpen, setAttachOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [emoteOpen, setEmoteOpen] = useState(false);
   const [pageHtml, setPageHtml] = useState("");
   const [articleBody, setArticleBody] = useState("");
   // Agendamento: o post fica na fila do backend e só entra no feed na hora marcada.
@@ -605,6 +607,14 @@ function Home() {
 
   const mediaType = media.length > 0 ? (media[0].type === "image" ? "image" : "video") : null;
 
+  // Publicar e agendar dependem do mesmo mínimo: conteúdo (ou página), artigo completo e tópico.
+  const postReady =
+    (pageMode ? pageHtml.trim().length > 0 : draft.trim().length > 0) &&
+    (!articleMode || articleBody.trim().length > 0) &&
+    Boolean(topic);
+  const publishDisabled =
+    !postReady || createPost.isPending || upload.status === "uploading" || !mediaReady;
+
   // "Você está em dia" lives only on "Para você". The marker counts as it arrived on the first page
   // OF THIS VISIT: after POST /feed/seen a refetch would bring the new value and the divider would
   // jump to the top while the person reads.
@@ -819,6 +829,9 @@ function Home() {
                     maxLength={postContentLimit(postType)}
                     toolbar
                     toolbarMenu
+                    emoteOpen={emoteOpen}
+                    onEmoteOpenChange={setEmoteOpen}
+                    hideEmoteTrigger
                     onPasteImages={addMediaFiles}
                   />
                 )}
@@ -979,6 +992,12 @@ function Home() {
                 </div>
               )}
 
+              {publishError && (
+                <p className="mt-3 text-xs font-normal text-destructive">
+                  {texts.feed.composer.publishErrorTitle}
+                </p>
+              )}
+
               <div
                 data-composer-toolbar=""
                 className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle"
@@ -1088,19 +1107,6 @@ function Home() {
                       </PopoverContent>
                     </Popover>
                   )}
-                  {((!pageMode && media.length > 0) ||
-                    (pageMode && pageHtml.trim().length > 0)) && (
-                    <ComposerAction
-                      icon={EyeOff}
-                      label={
-                        mediaSpoiler
-                          ? texts.feed.composer.mediaSpoilerActive
-                          : texts.feed.composer.mediaSpoiler
-                      }
-                      active={mediaSpoiler}
-                      onClick={() => setMediaSpoiler((active) => !active)}
-                    />
-                  )}
                 </div>
 
                 {linkedinUrl && (
@@ -1121,54 +1127,54 @@ function Home() {
                   </div>
                 )}
 
-                {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
-                  alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
-                <div className="ml-auto flex items-center gap-2">
-                  {/* O motivo da recusa fica na linha de baixo, inteiro: antes ele saía truncado em
-                    200px ao lado do botão e a publicação recusada parecia "não fazer nada". */}
-                  {publishError && (
-                    <span className="text-xs font-normal text-destructive">
-                      {texts.feed.composer.publishErrorTitle}
-                    </span>
-                  )}
+                {/* À direita, os atalhos que acompanham a escrita — figurinha, olho do spoiler e
+                  agendamento — e o Publicar. No celular o grupo inteiro desce junto e continua
+                  alinhado à direita; os ícones são só ícones para caber sem apertar o campo. */}
+                <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+                  {/* O andamento do envio fica na própria linha do botão, que também mostra o giro. */}
                   {!publishError && upload.status === "uploading" && (
-                    <span className="text-xs font-normal text-text-subtle">
+                    <span className="hidden text-xs font-normal text-text-subtle sm:inline">
                       {texts.feed.composer.uploadProgress(upload.progress)}
                     </span>
                   )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full gap-1.5"
-                    disabled={
-                      (pageMode ? !pageHtml.trim() : !draft.trim()) ||
-                      (articleMode && !articleBody.trim()) ||
-                      !topic ||
-                      createPost.isPending ||
-                      upload.status === "uploading" ||
-                      !mediaReady
-                    }
-                    onClick={() => setSchedulingOpen((open) => !open)}
+
+                  {!pageMode && !articleMode && (
+                    <ComposerAction
+                      icon={Smile}
+                      label={texts.emotes.button}
+                      title={texts.emotes.button}
+                      active={emoteOpen}
+                      dialog
+                      onClick={() => setEmoteOpen(true)}
+                    />
+                  )}
+
+                  {!pageMode && (
+                    <ComposerAction
+                      icon={EyeOff}
+                      label={
+                        mediaSpoiler
+                          ? texts.feed.composer.mediaSpoilerActive
+                          : media.length > 0
+                            ? texts.feed.composer.mediaSpoiler
+                            : texts.feed.composer.mediaSpoilerNoMedia
+                      }
+                      active={mediaSpoiler}
+                      disabled={media.length === 0}
+                      onClick={() => setMediaSpoiler((active) => !active)}
+                    />
+                  )}
+
+                  <ComposerAction
+                    icon={CalendarClock}
+                    label={texts.feed.composer.schedule}
                     title={texts.feed.composer.scheduleHint}
-                  >
-                    <CalendarClock className="h-3.5 w-3.5" />
+                    active={schedulingOpen}
+                    disabled={publishDisabled}
+                    onClick={() => setSchedulingOpen((open) => !open)}
+                  />
 
-                    <>{texts.feed.composer.schedule}</>
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    className="rounded-full"
-                    disabled={
-                      (pageMode ? !pageHtml.trim() : !draft.trim()) ||
-                      (articleMode && !articleBody.trim()) ||
-                      !topic ||
-                      createPost.isPending ||
-                      upload.status === "uploading" ||
-                      !mediaReady
-                    }
-                  >
+                  <Button size="sm" className="rounded-full shrink-0" disabled={publishDisabled}>
                     {createPost.isPending || upload.status === "uploading" ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1561,20 +1567,33 @@ function Home() {
   );
 }
 
-function ComposerAction({ icon: Icon, label, active, onClick }: ComposerActionProps) {
+function ComposerAction({
+  icon: Icon,
+  label,
+  title,
+  active = false,
+  disabled = false,
+  dialog = false,
+  onClick,
+}: ComposerActionProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition ${
+      disabled={disabled}
+      aria-label={label}
+      title={title ?? label}
+      aria-pressed={dialog ? undefined : active}
+      aria-haspopup={dialog ? "dialog" : undefined}
+      className={cn(
+        "grid h-8 w-8 shrink-0 place-items-center rounded-full transition",
         active
           ? "bg-primary text-primary-foreground"
-          : "border border-border-soft text-text-subtle hover:border-primary hover:text-primary"
-      }`}
+          : "text-text-subtle hover:bg-surface-2 hover:text-primary",
+        disabled && "cursor-not-allowed opacity-40 hover:bg-transparent hover:text-text-subtle",
+      )}
     >
-      <Icon className="h-3.5 w-3.5" />
-
-      <>{label}</>
+      <Icon className="h-4 w-4" />
     </button>
   );
 }
