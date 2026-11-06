@@ -7,6 +7,8 @@ vale por inteiro. As regras abaixo são repetidas porque são as que os agentes 
 
 - **Você nunca faz merge, nunca dá push em `qa`/`main`, nunca abre `qa` → `main`.** Abra a PR para a
   `qa` e pare. O `.claude/settings.json` bloqueia esses comandos; não procure um jeito de contornar.
+  A única exceção de merge (app `kof-agent-worker`, sem `CHANGES_REQUESTED` em aberto) está no item 1
+  das proibições do `AGENTS.md`.
 - **Você nunca reverte nem refaz trabalho alheio, e nunca muda layout ou linguagem visual, sem o aval
   escrito de um mantenedor.** Se a tarefa parece pedir isso, pare e pergunte.
 - **UI nova vai para o design system.** Aqui entra só o container.
