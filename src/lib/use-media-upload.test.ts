@@ -42,7 +42,7 @@ describe("uploadError — falhas do servidor no envio de arquivo", () => {
     ["MEDIA_UPLOAD_FAILED", 400],
     ["MEDIA_UPLOAD_UNAVAILABLE", 503],
     ["MEDIA_STORAGE_WRITE_FAILED", 502],
-  ])("troca a mensagem técnica de %s por texto do app", (code, status) => {
+  ] as const)("troca a mensagem técnica de %s por texto do app", (code, status) => {
     const err = uploadError(
       new ApiError(status, code, "Arquivo grande demais para a limpeza de metadados."),
     );
