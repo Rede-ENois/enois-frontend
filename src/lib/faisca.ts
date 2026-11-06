@@ -63,12 +63,49 @@ export function formatFaisca(mf: number): string {
  * O decimal aqui são FAGULHAS: "1,5" são 1.500 mf, ou seja, uma faísca e quinhentas fagulhas.
  */
 export function parseFaiscaInput(text: string): number | null {
-  const cleaned = text.trim().replace(/\s/g, "");
-  if (!cleaned) return null;
-  const normalized = cleaned.includes(",") ? cleaned.replace(/\./g, "").replace(",", ".") : cleaned;
-  const value = Number(normalized);
-  if (!Number.isFinite(value) || value <= 0) return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  // O campo de edição é preenchido com `formatFaisca`, então o texto que ele mesmo escreve
+  // ("101 faíscas 830 fagulhas") precisa voltar. Sem isso, abrir um item para editar e salvar
+  // mandava zero.
+  if (/faísca|fagulha/i.test(trimmed)) return parseUnidades(trimmed);
+  const cleaned = trimmed.replace(/\s/g, "");
+  const value = lerNumero(cleaned);
+  if (value === null || value <= 0) return null;
   return Math.round(value * FAIS_SCALE);
+}
+
+/** "1.234,56" (pt-BR) ou "1234.56" → número. Com vírgula, o ponto é milhar. */
+function lerNumero(text: string): number | null {
+  const normalized = text.includes(",") ? text.replace(/\./g, "").replace(",", ".") : text;
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
+const PARTE_EM_UNIDADE = /(-?\d[\d.,]*)\s*(faíscas?|fagulhas?)/gi;
+
+/** "101 faíscas 830 fagulhas" → 101.830 mf. O sinal de `formatFaisca` vale para o total. */
+function parseUnidades(text: string): number | null {
+  const partes = [...text.matchAll(PARTE_EM_UNIDADE)];
+  if (partes.length === 0) return null;
+  // A string inteira tem de ser feita dessas partes: sobra de texto ("830 fagulhas5") é
+  // digitação pela metade e não pode virar um valor menor em silêncio.
+  const consumido = partes
+    .map((parte) => parte[0])
+    .join("")
+    .replace(/\s/g, "");
+  if (consumido !== text.replace(/\s/g, "")) return null;
+  const sinal = partes[0][1].startsWith("-") ? -1 : 1;
+  let total = 0;
+  for (const [, numero, unidade] of partes) {
+    // Com a unidade do lado o número é inteiro: "1.234 faíscas" são mil duzentas e trinta e
+    // quatro, e "1,5 faíscas" são uma faísca e quinhentas fagulhas.
+    const valor = lerNumero(numero.replace(/-/g, "").replace(/\./g, "").replace(",", "."));
+    if (valor === null) return null;
+    total += /^fagulha/i.test(unidade) ? Math.abs(valor) : Math.abs(valor) * FAIS_SCALE;
+  }
+  total *= sinal;
+  return total > 0 ? Math.round(total) : null;
 }
 
 /**

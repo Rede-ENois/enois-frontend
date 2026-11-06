@@ -67,6 +67,25 @@ describe("faísca fracionada", () => {
     expect(parseFaiscaInput("50.5")).toBe(50_500);
   });
 
+  it("lê de volta o texto que ele mesmo escreve, para editar sem zerar o valor", () => {
+    // O campo de edição nasce com `formatFaisca`; se o parser não ler esse formato, salvar
+    // manda 0 (freelances, meus-servicos e mentoria pré-preenchem assim).
+    for (const mf of [101_830, 1_500, 50 * FAIS_SCALE, 830, 1, 1_234_500, 999_000]) {
+      expect(parseFaiscaInput(formatFaisca(mf))).toBe(mf);
+    }
+    expect(parseFaiscaInput("101 faíscas 830 fagulhas")).toBe(101_830);
+    expect(parseFaiscaInput("1 faísca 500 fagulhas")).toBe(1_500);
+    expect(parseFaiscaInput("1.234 faíscas 500 fagulhas")).toBe(1_234_500);
+    expect(parseFaiscaInput("830 fagulhas")).toBe(830);
+    expect(parseFaiscaInput("50 faíscas")).toBe(50_000);
+  });
+
+  it("recusa texto de unidade pela metade em vez de ler um valor menor", () => {
+    expect(parseFaiscaInput("101 faíscas 830")).toBeNull();
+    expect(parseFaiscaInput("faíscas")).toBeNull();
+    expect(parseFaiscaInput("101 faíscas 830 fagulhas5")).toBeNull();
+  });
+
   it("lê dinheiro em reais inteiros, sem confundir com milésimos de faísca", () => {
     // O freela em dinheiro guarda R$ inteiro; a faísca guarda milésimo. Mesmo texto, números
     // diferentes — trocar os dois inflava o valor em 1.000×.
