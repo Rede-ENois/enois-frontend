@@ -151,4 +151,39 @@ describe("preferências de feed", () => {
     expect(interruptor()?.dataset.checked).toBe("false");
     expect(host.textContent).toContain(texts.feedPreferences.saveError);
   });
+
+  it("invalida o cache do feed ao salvar", async () => {
+    const invalidateSpy = vi.spyOn(client, "invalidateQueries");
+    mocks.getPersonalization.mockResolvedValue(PREFERENCES);
+    mocks.setPersonalization.mockResolvedValue({ ...PREFERENCES, hideReposts: true });
+    await render();
+
+    await act(async () => interruptor()!.click());
+    await settle();
+
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["feed"] });
+  });
+
+  it("mostra skeleton de carregamento enquanto busca personalizacao", async () => {
+    let resolver: (p: Personalization) => void = () => {};
+    mocks.getPersonalization.mockImplementationOnce(
+      () =>
+        new Promise<Personalization>((resolve) => {
+          resolver = resolve;
+        }),
+    );
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <FeedPreferencesPage />
+        </QueryClientProvider>,
+      );
+    });
+    expect(host.querySelector("[aria-busy='true']")).toBeTruthy();
+
+    await act(async () => resolver(PREFERENCES));
+    await settle();
+    expect(host.querySelector("[aria-busy='true']")).toBeFalsy();
+    expect(interruptor()).toBeTruthy();
+  });
 });
