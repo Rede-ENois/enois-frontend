@@ -1136,10 +1136,8 @@ export const texts = {
     empty: "Sem publicações por enquanto. As da sua rede aparecem aqui.",
     composer: {
       removeMedia: "Remover mídia",
-      topic: "Tópico",
-      /** Palavra que aparece depois do "#" enquanto o tópico não foi escolhido. */
-      topicTag: "tópico",
-      topicRequired: "Escolha o tópico",
+      topic: "Assunto",
+      topicRequired: "Escolha o assunto",
       topicHint: "Obrigatório. Coloca o post nos filtros certos do feed.",
       schedule: "Agendar",
       scheduleDate: "Data e hora",
@@ -1173,8 +1171,6 @@ export const texts = {
       },
       typePicker: {
         label: "Tipo",
-        /** Palavra que aparece depois do "#" enquanto o tipo não foi escolhido. */
-        tag: "tipo",
         change: "Trocar o tipo da publicação",
       },
       article: {
