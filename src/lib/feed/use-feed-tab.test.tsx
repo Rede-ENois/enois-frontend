@@ -5,6 +5,7 @@ import type { HomeTab } from "@/types/routes/feed/home-tab";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { readLastFeedTypeFilter, rememberFeedTypeFilter } from "./last-tab";
 import { useFeedTab } from "./use-feed-tab";
 
 const KEY = "connect-grow-last-feed-tab";
@@ -120,5 +121,15 @@ describe("useFeedTab", () => {
     localStorage.setItem(KEY, "TRENDING");
     await mount("CORPORATE");
     expect(probe.tab).toBe("TRENDING");
+  });
+
+  describe("rememberFeedTypeFilter", () => {
+    it("guarda e recupera o filtro por tipo de post no localStorage", () => {
+      expect(readLastFeedTypeFilter()).toBe("");
+      rememberFeedTypeFilter("INSIGHT");
+      expect(readLastFeedTypeFilter()).toBe("INSIGHT");
+      rememberFeedTypeFilter("");
+      expect(readLastFeedTypeFilter()).toBe("");
+    });
   });
 });
