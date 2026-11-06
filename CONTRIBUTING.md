@@ -136,6 +136,39 @@ descrever.
   | Correção de bug                              | `fix.md`     |
   | Manutenção, docs, CI, dependências, refactor | `chore.md`   |
 
+## Regras de pull request
+
+Uma PR só é revisada se cumprir os seis pontos abaixo. PR que não cumpre volta sem revisão.
+
+1. **Uma feature por PR.** Correção de bug, refactor e feature não viajam juntos. PR grande demais
+   para revisar é PR que ninguém revisa de verdade.
+2. **Teste para cada mudança de comportamento.** Feature nova tem teste; bug corrigido tem teste de
+   regressão que falha no código antigo. Teste e implementação no mesmo commit.
+3. **Documentação atualizada no mesmo PR.** Mudou o módulo? A doc dele muda junto. `docs/` descreve o
+   que existe — não o que se pretende.
+4. **Sem comentário narrando o óbvio.** Comentário registra restrição que o código não mostra. O
+   resto é ruído que envelhece mal.
+5. **Lint, typecheck, teste e build verdes antes do push.** Sem `eslint-disable`, `@ts-ignore` ou
+   `as any` novo para chegar lá.
+6. **Issue aberta com o plano de implementação.** A PR referencia a issue; a issue diz o que será
+   feito e como será provado. Trabalho sem origem rastreável não entra.
+
+Além disso: a PR declara o uso de IA no checklist do template, e o merge exige aprovação de alguém
+que não empurrou o código.
+
+## Design system
+
+A interface é construída sobre `@rede-enois/design-system` (repositório `enois-design-system`). Ele é
+contrato, não sugestão:
+
+- componente que o design system já tem **não é reimplementado no front**;
+- cor, espaçamento, raio e tipografia vêm de token do tema — hex solto, `px` arbitrário e
+  `!important` para vencer o tema não passam;
+- todo par texto/fundo passa WCAG AA nos dois modos e nos temas suportados;
+- elemento interativo é botão ou link de verdade, com rótulo acessível e foco visível;
+- falta um componente? A mudança começa no `enois-design-system`, com versão nova e consumidor
+  atualizado — não num componente local que depois diverge.
+
 ## Árvore compartilhada
 
 Se você trabalha na mesma cópia do repositório que outra pessoa (ou outro agente): não rode
