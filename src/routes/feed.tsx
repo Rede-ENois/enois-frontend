@@ -19,6 +19,7 @@ import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
   ComposerLauncher,
+  HashtagPicker,
   PostCardSkeletons,
   QuestionComposerHint,
   type QuestionStatus,
@@ -91,7 +92,6 @@ import { AppContainer } from "@/components/app-container";
 import { SaciDuelBanner } from "@/components/events/saci-duel-banner";
 import { SaciSpot } from "@/components/events/saci-spot";
 import { CompanyPromptCard } from "@/components/feed/company-prompt-card";
-import { PostTypePicker } from "@/components/feed/post-type-picker";
 import { ProfessionalComposerNotice } from "@/components/feed/professional-composer-notice";
 import { VirtualizedFeedList } from "@/components/feed/virtualized-feed-list";
 import { TodayGamesCard } from "@/components/games/today-games-card";
@@ -246,7 +246,6 @@ function Home() {
   } = useFeedTab(aba, professional, (next) => {
     void navigate({ search: { aba: next }, replace: true });
   });
-  const [menuTopic, setMenuTopic] = useState(false);
   const [personalizationOpen, setPersonalizationOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState(() => readLastFeedTypeFilter());
   const handleTypeFilterChange = (next: string) => {
@@ -960,62 +959,33 @@ function Home() {
                 className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm font-normal text-text-subtle"
               >
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {/* Categoria do post: guarda a última escolha para o próximo post já nascer nela. */}
-                  <Popover open={menuTopic} onOpenChange={setMenuTopic}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label={texts.feed.composer.topic}
-                        title={texts.feed.composer.topicHint}
-                        className={cn(
-                          "inline-flex max-w-[11rem] items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-normal transition",
-                          topic
-                            ? "border border-primary/40 bg-primary/10 text-primary"
-                            : "border border-dashed border-primary/60 text-text-strong hover:border-primary",
-                        )}
-                      >
-                        <span className="truncate">
-                          {topic
-                            ? (TOPIC_LABELS[topic as keyof typeof TOPIC_LABELS] ?? topic)
-                            : texts.feed.composer.topicRequired}
-                        </span>
+                  {/* Tópico e Tipo como hashtags compactas */}
+                  <HashtagPicker
+                    options={POST_TOPICS.map((option) => ({
+                      value: option,
+                      label: TOPIC_LABELS[option],
+                    }))}
+                    value={topic}
+                    onChange={(option) => {
+                      setTopic(option);
+                      rememberTopic(option);
+                    }}
+                    placeholder={texts.feed.composer.topicTag}
+                    label={texts.feed.composer.topic}
+                    required
+                  />
 
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
-                      </button>
-                    </PopoverTrigger>
-
-                    <PopoverContent align="start" className="w-56 p-1">
-                      <div className="flex max-h-72 flex-col gap-0.5 overflow-y-auto">
-                        {POST_TOPICS.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => {
-                              setTopic(option);
-                              rememberTopic(option);
-                              setMenuTopic(false);
-                            }}
-                            aria-pressed={topic === option}
-                            className={cn(
-                              "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                              topic === option
-                                ? "bg-primary-soft text-primary-text"
-                                : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                            )}
-                          >
-                            {TOPIC_LABELS[option]}
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-
-                  {/* Seletor de tipo recolhido: mostra o tipo atual e abre a lista completa. */}
                   <div>
-                    <PostTypePicker
-                      options={availableTypes}
+                    <HashtagPicker
+                      options={availableTypes.map((t) => ({
+                        value: t.id,
+                        label: t.label,
+                        icon: t.icon,
+                      }))}
                       value={postType}
                       onChange={(id) => setPostType(id as PostView["type"])}
+                      placeholder={texts.feed.composer.typePicker.tag}
+                      label={texts.feed.composer.typePicker.label}
                     />
 
                     {currentType.id === "MOMENT" && (
