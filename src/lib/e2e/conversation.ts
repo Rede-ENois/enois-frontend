@@ -33,6 +33,8 @@ import { getLocalPrivateKey } from "./key-manager";
 
 /** Cache da conversation key importada (fallback pra mensagens antigas). */
 const legacyConvKeyCache = new Map<string, CryptoKey>();
+/** Conversas que ja falharam na decifra — nao tenta de novo nesta sessao. */
+const legacyConvKeyFailed = new Set<string>();
 
 /**
  * Cifra uma mensagem pra envio. Retorna ciphertext, iv e as chaves cifradas por participante.
@@ -93,9 +95,14 @@ export async function decryptReceived(message: Message, currentUserId: string): 
   }
 
   // Formato antigo: conversation key (mensagens anteriores a migracao).
+  // Se ja falhou nesta sessao, nao tenta de novo (evita centenas de requests).
+  if (legacyConvKeyFailed.has(message.conversationId)) {
+    return "[Mensagem cifrada — chave nao disponivel]";
+  }
   try {
     return await decryptWithConversationKey(message, privateKeyBase64);
   } catch {
+    legacyConvKeyFailed.add(message.conversationId);
     return "[Mensagem cifrada — chave nao disponivel]";
   }
 }
