@@ -13,7 +13,7 @@
  * cliente recarrega sozinho quando o novo SW assume (ver src/lib/pwa.ts).
  */
 
-const VERSION = "enois-v13";
+const VERSION = "enois-v14";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const PRECACHE = [
@@ -21,6 +21,8 @@ const PRECACHE = [
   "/brand/mark-primary.svg",
   "/manifest.webmanifest",
   "/favicon.ico",
+  "/favicon.svg",
+  "/vite.svg",
   "/icons/brand-icon-192.png",
   "/icons/brand-icon-512.png",
   "/icons/brand-icon-maskable-512.png",
