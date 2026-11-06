@@ -232,3 +232,64 @@ describe("troca de publicação com o mesmo componente", () => {
     expect(order()).toEqual(["new-comment"]);
   });
 });
+
+/**
+ * Um comentário recusado não é a lista falhando: antes o erro do envio entrava no mesmo estado do
+ * erro de carregamento e a thread inteira sumia atrás de "Não foi possível carregar os
+ * comentários" — para o autor parecia que o comentário tinha se perdido (issue #461).
+ */
+describe("envio recusado não some com a conversa", () => {
+  it("mantém os comentários na tela e mostra o aviso junto do campo", async () => {
+    mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
+    mocks.create.mockRejectedValue(new Error("duplicado"));
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    await act(async () => usePostCardStore.getState().setDraft("post", "Repetido"));
+    await act(async () =>
+      container
+        .querySelector("form")!
+        .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
+    );
+    await settle();
+
+    expect(order()).toEqual(["root"]);
+    expect(container.textContent).toContain("Não foi possível enviar o comentário.");
+    expect(container.textContent).not.toContain("Não foi possível carregar os comentários.");
+  });
+
+  it("some com o aviso na tentativa seguinte", async () => {
+    mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
+    mocks.create.mockRejectedValueOnce(new Error("duplicado")).mockResolvedValue(comment("new", 2));
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    const send = async () => {
+      await act(async () =>
+        container
+          .querySelector("form")!
+          .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
+      );
+      await settle();
+    };
+
+    await act(async () => usePostCardStore.getState().setDraft("post", "Primeira"));
+    await send();
+    expect(container.textContent).toContain("Não foi possível enviar o comentário.");
+
+    await act(async () => usePostCardStore.getState().setDraft("post", "Segunda"));
+    await send();
+    expect(container.textContent).not.toContain("Não foi possível enviar o comentário.");
+    expect(order()).toEqual(["root", "new"]);
+  });
+});
