@@ -248,7 +248,6 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
     // Só na montagem: depois quem manda é o stream e a conferência periódica.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Toque da chamada recebida: só 1:1 (grupo nunca toca) e nunca em modo lite/BATATA.

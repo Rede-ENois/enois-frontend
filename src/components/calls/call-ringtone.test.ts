@@ -49,7 +49,6 @@ describe("startRingtone", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).AudioContext;
   });
 
