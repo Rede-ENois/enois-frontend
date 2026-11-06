@@ -18,4 +18,6 @@ export type Personalization = {
    * dois — BATATA implica os efeitos do lite.
    */
   batataMode: boolean;
+  /** Sem republicações no feed: true esconde os reposts de quem você segue. */
+  hideReposts: boolean;
 };

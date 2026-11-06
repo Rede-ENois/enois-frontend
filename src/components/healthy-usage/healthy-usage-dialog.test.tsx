@@ -25,6 +25,7 @@ const PERSONALIZATION: Personalization = {
   nightRestDismissedOn: null,
   liteMode: false,
   batataMode: false,
+  hideReposts: false,
 };
 
 vi.mock("@/lib/api", () => ({

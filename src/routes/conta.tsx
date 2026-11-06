@@ -40,6 +40,7 @@ function AccountSettingsPage() {
           guardian: "/responsavel",
           mutedUsers: "/silenciados",
           notificationPreferences: "/notificacoes/preferencias",
+          feedPreferences: "/conta/preferencias-feed",
           supportUs: "/apoiar",
         }}
         onChangeEmail={() => setDialog("email")}
