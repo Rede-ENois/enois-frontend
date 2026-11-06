@@ -100,6 +100,41 @@ Regra do cliente de sessão: nunca altere o estado local de autenticação (apag
 limpar a sessão) antes de o servidor confirmar. Toda recusa explícita de `/auth/*` (400/401/403) é
 sessão recusada; só falha de rede é "indisponível".
 
+## Ciclo de trabalho
+
+Ler o estado → escolher a tarefa de maior valor que ninguém reivindicou → implementar **um escopo
+completo** → testar → commit → PR para `qa`.
+
+- **Nunca perguntar quando as evidências do repositório podem responder.** Leia o código, o teste, o
+  log. Pergunta é para decisão de produto, não para fato que está no arquivo.
+- **Nunca encerrar um turno com trabalho não commitado, nem apenas com um resumo.**
+- Exatamente um item do todo pode estar `in_progress`.
+- **Concluído significa comprovado, não pretendido.**
+- Pare e reporte quando a decisão exigir produto/linguagem visual (só mantenedor decide), houver
+  colisão inevitável com a lane de outro agente, ou depender de acesso que você não tem.
+
+## Gate de qualidade (Q0–Q7)
+
+Fluxo de correção: **reproduzir → corrigir a causa-raiz → adicionar teste de prova → rodar os testes
+relevantes → rodar a suíte → caçar casos-limite → commit → push.**
+
+- **Q0 — causa-raiz.** Bug é corrigido na causa, não no sintoma. O teste de prova **falha no código
+  antigo** e passa no novo. Teste que passa antes e depois não prova nada.
+- **Q1 — cobertura.** Toda funcionalidade tem teste; toda correção tem teste de regressão; teste e
+  implementação compartilham o commit; refactor preserva a prova existente.
+- **Q2 — verde antes do push.** Lint, typecheck, teste e build verdes **antes** de empurrar.
+- **Q3 — casos-limite.** Cobrir quando aplicável: vazio/null, limite de tamanho de campo, erro
+  esperado, estado de carregamento, erro de rede versus erro de servidor, duplo clique, idempotência,
+  viewport de 390px. **Só o caminho feliz é insuficiente.**
+- **Q4 — caça.** Procurar ativamente: entrada extrema, fronteira do contrato da API, regressão em
+  tela vizinha, comportamento não coberto.
+- **Q5 — honestidade do verde.** Sem falso verde, sem asserção enfraquecida, sem `.skip` escondido.
+  Vermelho seu é corrigido ou revertido.
+- **Q6 — a suíte é o mínimo, não o teto.**
+- **Q7 — proibido.** Stub, placeholder, `TODO`/`FIXME` fingindo conclusão, componente que devolve
+  `null` para esconder ausência, branch não tratada engolida, suporte fingido como "não
+  implementado". Estado não suportado aparece como erro explícito na tela, nunca como "talvez".
+
 ## Concluído é comprovado
 
 Rode na **árvore final**, depois do rebase na `origin/qa`:
@@ -114,6 +149,12 @@ Nada disso vê a tela. Se a pessoa usuária enxerga a mudança, abra no navegado
 desktop**, claro e escuro, e conte na PR o que viu (estado, viewport, tema). Bug corrigido ganha um
 teste que falharia antes do conserto. Carregando, vazio e erro são explícitos; erro aparece, nunca é
 engolido.
+
+- **Nunca afirmar que está verde sem prova executada.** "Deveria passar" não é resultado.
+- **Falha ambiental não é regressão sua** — mas precisa ser dita na PR, com o motivo e a evidência de
+  que o mesmo erro existe na `qa` limpa. Exemplo conhecido: o design system instalado localmente
+  desatualizado gera dezenas de erros de `tsc`; prove com um worktree da `qa` limpa antes de culpar o
+  seu diff.
 
 ## Pull requests
 
@@ -136,11 +177,28 @@ engolido.
 
 ## Design system
 
+O DS é **contrato**, não sugestão. A view nasce lá; aqui só mora o container.
+
 - PR de bump do DS muda só `package.json` e `package-lock.json`, feita com
   `npm install @rede-enois/design-system@^X.Y.Z`. Nunca apague nem regenere o lockfile inteiro.
 - Suba só para uma versão publicada de que você precisa, e diga qual mudança dela você usa.
 - Código ainda em revisão no DS: instale o `-rc` da dist-tag `next` na sua PR e avise; troque para a
   versão final antes do merge.
+- **Componente que o DS já tem não é reimplementado aqui.** Antes de criar, procure no pacote. Se
+  falta, a mudança começa no `enois-design-system` — não num componente local que depois diverge.
+- **Token, não valor mágico.** Cor, espaçamento, raio, tipografia e sombra vêm de token do tema. Hex
+  solto, `px` arbitrário e `!important` para vencer o tema são proibidos.
+- **Tema é dado, não código.** Componente não assume um modo (claro/escuro) nem uma paleta fixa.
+- **Contraste é requisito.** Todo par texto/fundo passa WCAG AA nos dois modos e nos temas
+  suportados. Componente novo entra com verificação de contraste.
+- **Acessibilidade mínima:** elemento interativo é botão ou link de verdade, tem rótulo acessível
+  (`aria-label` quando não há texto visível), foco visível e navegação por teclado.
+- **Camadas do DS:** `domain → patterns → ui`. Um componente de `ui` não importa de `patterns`;
+  nenhum deles busca dados, navega ou lê store. Se precisa de dados, quem passa é o chamador.
+- **Mudança no DS é mudança de contrato:** sobe versão, atualiza o consumidor no mesmo fluxo e prova
+  que as telas que usam o componente continuam corretas.
+- **Nada de estilo inline para resolver layout.** Se o layout quebra, o problema é a estrutura
+  (grid/flex, `min-w-0`, largura mínima), não um `style=` de emergência.
 
 ## Segurança
 
@@ -183,3 +241,36 @@ engolido.
 
 - `docs/` descreve o que **existe**. Código mudou? A doc dele muda na mesma PR.
 - Decisão tomada em conversa vira documento no commit que a implementa.
+- Documento que descreve comportamento que o código não tem é bug de documentação — corrija ou
+  remova.
+
+## Contribuindo com IA
+
+O contrato completo está em [`CONTRIBUTING.md`](CONTRIBUTING.md#contribuições-com-ia). Resumo:
+
+1. **Declare o uso** pelo checkbox do template. Sem nome de ferramenta, sem `Co-Authored-By`, sem
+   "Generated with".
+2. **Quem submete responde pelo código.** Entenda cada linha antes de abrir a PR.
+3. **Prova, não promessa.** "Deveria funcionar" não é verificação.
+4. **Zero slop.** Sem comentário narrando o óbvio, sem arquivo gerado em massa, sem dependência nova
+   sem justificativa, sem refatoração que a tarefa não pediu, sem abstração especulativa.
+5. **Revisão humana antes do merge continua sendo a regra**, com aprovação de quem não empurrou.
+
+## Autoverificação final
+
+Antes de dizer que terminou, confira cada item. **Se qualquer um for falso, o estado é `não-pronto`.**
+
+- [ ] lint, typecheck, teste e build verdes na árvore final
+- [ ] causa-raiz corrigida, não o sintoma
+- [ ] teste de prova falha no código antigo
+- [ ] casos-limite relevantes cobertos (vazio, carregando, erro, 390px)
+- [ ] sem falso verde, sem asserção enfraquecida, sem skip escondido
+- [ ] sem stub, sem placeholder, sem TODO fingindo conclusão
+- [ ] sem `eslint-disable`, `@ts-ignore`, `as any` novo
+- [ ] sem segredo, sem dado pessoal, sem detalhe de correção de segurança no texto público
+- [ ] design system respeitado (view no DS, token, contraste AA, acessibilidade)
+- [ ] documentação do módulo atualizada no mesmo commit
+- [ ] árvore limpa, sem marcador de conflito, sem trabalho alheio
+- [ ] remoto sincronizado
+
+`if_any_false: state: não-pronto — next: corrigir-antes-da-entrega`
