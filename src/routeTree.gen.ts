@@ -61,6 +61,7 @@ import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
 import { Route as CallCallIdRouteImport } from './routes/call.$callId'
 import { Route as ComunidadesCommunityIdRouteImport } from './routes/comunidades.$communityId'
+import { Route as ContaPreferenciasFeedRouteImport } from './routes/conta.preferencias-feed'
 import { Route as EmpresaSlugRouteImport } from './routes/empresa.$slug'
 import { Route as GamesUsernameRouteImport } from './routes/games.$username'
 import { Route as GamesPainelRouteImport } from './routes/games.painel'
@@ -345,6 +346,11 @@ const ComunidadesCommunityIdRoute = ComunidadesCommunityIdRouteImport.update({
   path: '/$communityId',
   getParentRoute: () => ComunidadesRoute,
 } as any)
+const ContaPreferenciasFeedRoute = ContaPreferenciasFeedRouteImport.update({
+  id: '/preferencias-feed',
+  path: '/preferencias-feed',
+  getParentRoute: () => ContaRoute,
+} as any)
 const EmpresaSlugRoute = EmpresaSlugRouteImport.update({
   id: '/empresa/$slug',
   path: '/empresa/$slug',
@@ -472,7 +478,7 @@ export interface FileRoutesByFullPath {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
-  '/conta': typeof ContaRoute
+  '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
@@ -517,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
+  '/conta/preferencias-feed': typeof ContaPreferenciasFeedRoute
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
   '/games/painel': typeof GamesPainelRoute
@@ -549,7 +556,7 @@ export interface FileRoutesByTo {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
-  '/conta': typeof ContaRoute
+  '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
@@ -594,6 +601,7 @@ export interface FileRoutesByTo {
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
+  '/conta/preferencias-feed': typeof ContaPreferenciasFeedRoute
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
   '/games/painel': typeof GamesPainelRoute
@@ -627,7 +635,7 @@ export interface FileRoutesById {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
-  '/conta': typeof ContaRoute
+  '/conta': typeof ContaRouteWithChildren
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/developers': typeof DevelopersRoute
@@ -672,6 +680,7 @@ export interface FileRoutesById {
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
+  '/conta/preferencias-feed': typeof ContaPreferenciasFeedRoute
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
   '/games/painel': typeof GamesPainelRoute
@@ -751,6 +760,7 @@ export interface FileRouteTypes {
     | '/blog/$username'
     | '/call/$callId'
     | '/comunidades/$communityId'
+    | '/conta/preferencias-feed'
     | '/empresa/$slug'
     | '/games/$username'
     | '/games/painel'
@@ -828,6 +838,7 @@ export interface FileRouteTypes {
     | '/blog/$username'
     | '/call/$callId'
     | '/comunidades/$communityId'
+    | '/conta/preferencias-feed'
     | '/empresa/$slug'
     | '/games/$username'
     | '/games/painel'
@@ -905,6 +916,7 @@ export interface FileRouteTypes {
     | '/blog/$username'
     | '/call/$callId'
     | '/comunidades/$communityId'
+    | '/conta/preferencias-feed'
     | '/empresa/$slug'
     | '/games/$username'
     | '/games/painel'
@@ -938,7 +950,7 @@ export interface RootRouteChildren {
   BoasVindasRoute: typeof BoasVindasRoute
   CarteiraRoute: typeof CarteiraRoute
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
-  ContaRoute: typeof ContaRoute
+  ContaRoute: typeof ContaRouteWithChildren
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
   DevelopersRoute: typeof DevelopersRoute
@@ -1363,6 +1375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComunidadesCommunityIdRouteImport
       parentRoute: typeof ComunidadesRoute
     }
+    '/conta/preferencias-feed': {
+      id: '/conta/preferencias-feed'
+      path: '/preferencias-feed'
+      fullPath: '/conta/preferencias-feed'
+      preLoaderRoute: typeof ContaPreferenciasFeedRouteImport
+      parentRoute: typeof ContaRoute
+    }
     '/empresa/$slug': {
       id: '/empresa/$slug'
       path: '/empresa/$slug'
@@ -1554,6 +1573,16 @@ const ComunidadesRouteWithChildren = ComunidadesRoute._addFileChildren(
   ComunidadesRouteChildren,
 )
 
+interface ContaRouteChildren {
+  ContaPreferenciasFeedRoute: typeof ContaPreferenciasFeedRoute
+}
+
+const ContaRouteChildren: ContaRouteChildren = {
+  ContaPreferenciasFeedRoute: ContaPreferenciasFeedRoute,
+}
+
+const ContaRouteWithChildren = ContaRoute._addFileChildren(ContaRouteChildren)
+
 interface GamesUsernameRouteChildren {
   GamesUsernameGameSlugRoute: typeof GamesUsernameGameSlugRoute
 }
@@ -1644,7 +1673,7 @@ const rootRouteChildren: RootRouteChildren = {
   BoasVindasRoute: BoasVindasRoute,
   CarteiraRoute: CarteiraRoute,
   ComunidadesRoute: ComunidadesRouteWithChildren,
-  ContaRoute: ContaRoute,
+  ContaRoute: ContaRouteWithChildren,
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
   DevelopersRoute: DevelopersRoute,

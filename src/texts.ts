@@ -3519,6 +3519,18 @@ export const texts = {
     deviceOff: "Avisos desligados neste aparelho",
   },
 
+  feedPreferences: {
+    seoTitle: "Preferências de feed · Énóis",
+    title: "Preferências de feed",
+    description: "Escolha o que aparece no seu feed.",
+    feedSection: "Feed",
+    hideReposts: "Ocultar reposts",
+    hideRepostsHint: "Remove republicações do seu feed.",
+    loadError: "Não foi possível carregar suas preferências. Tente de novo.",
+    saveError: "Não foi possível salvar. Tente de novo.",
+    retry: "Tentar de novo",
+  },
+
   healthyUsage: {
     tabs: {
       wellbeing: "Bem-estar",
