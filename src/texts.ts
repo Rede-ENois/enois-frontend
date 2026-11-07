@@ -323,6 +323,12 @@ export const texts = {
         "Não foi possível verificar esta imagem. Tente outro arquivo ou converta para JPG ou PNG.",
       IMAGE_MODERATION_UNAVAILABLE:
         "A verificação de imagens está indisponível no momento. Tente novamente mais tarde.",
+      IMAGE_TOO_LARGE_TO_VERIFY:
+        "Essa imagem tem quadros demais ou é grande demais para verificar. Envie uma versão menor ou com menos quadros.",
+      MEDIA_PROCESSING_FAILED:
+        "Não conseguimos processar esse arquivo. Confira se ele não está corrompido e se o formato bate com o conteúdo, e tente de novo.",
+      MEDIA_PROCESSING_UNAVAILABLE:
+        "O processamento de arquivos está ocupado ou indisponível agora. Tente novamente em alguns instantes.",
       IMPORT_TOO_LARGE:
         "Esse arquivo do LinkedIn é grande demais para importar. Baixe de novo só os dados do perfil (sem mensagens e conexões) e tente outra vez.",
       IDEMPOTENCY_KEY_REQUIRED:

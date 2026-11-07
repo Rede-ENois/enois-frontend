@@ -46,6 +46,9 @@ describe("uploadError — falhas do servidor no envio de arquivo", () => {
     ["MEDIA_UPLOAD_UNAVAILABLE", 503],
     ["MEDIA_STORAGE_WRITE_FAILED", 502],
     ["MEDIA_STORAGE_DISABLED", 503],
+    ["IMAGE_TOO_LARGE_TO_VERIFY", 422],
+    ["MEDIA_PROCESSING_FAILED", 422],
+    ["MEDIA_PROCESSING_UNAVAILABLE", 503],
   ] as const)("troca a mensagem técnica de %s por texto do app", (code, status) => {
     const err = uploadError(new ApiError(status, code, MENSAGEM_TECNICA)) as ApiError;
     expect(err).toBeInstanceOf(ApiError);
