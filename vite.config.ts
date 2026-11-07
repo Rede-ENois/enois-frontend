@@ -5,18 +5,27 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
 
-// Origem do backend (SEM path): o proxy abaixo recebe "/api/..." e encaminha o path completo.
-// Se BACKEND_TARGET tiver um path (ex.: ".../api"), o proxy concatena e a URL vira "/api/api/...",
-// que o gateway do backend não reconhece (404) — foi o que quebrava o dev local.
-// Written back to the env: SSR loaders read it too (`serverBaseUrl` in `src/lib/api-client.ts`).
-process.env.BACKEND_TARGET ??= "https://enois.ia.br";
-const BACKEND_TARGET = process.env.BACKEND_TARGET;
+// Origem do backend (SEM path): o proxy encaminha "/api/..." com o path completo.
+// Se BACKEND_TARGET tiver um path (ex.: ".../api"), a URL vira "/api/api/...", que o gateway do
+// backend não reconhece (404) — foi o que quebrava o dev local.
+// O `.env` é a fonte local (o wrapper não o lê sozinho) e `process.env` tem prioridade.
+// Written back to the env: SSR loaders read it too (`serverBaseUrl` em `src/lib/api-client.ts`).
+const fileEnv = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "");
+const BACKEND_TARGET =
+  process.env.BACKEND_TARGET ?? fileEnv.BACKEND_TARGET ?? "https://enois.ia.br";
+process.env.BACKEND_TARGET = BACKEND_TARGET;
 const NITRO_PRESET = process.env.NITRO_PRESET ?? "vercel";
 
 export default defineConfig({
   nitro: {
     preset: NITRO_PRESET,
+    // O middleware de dev do Nitro roda ANTES do proxy do Vite: sem este devProxy, "/api/*" cai
+    // no SSR do app e responde 404 (HTML) em vez de chegar ao backend.
+    devProxy: {
+      "/api": { target: BACKEND_TARGET, changeOrigin: true },
+    },
   },
   tanstackStart: {
     server: { entry: "server" },

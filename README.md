@@ -93,6 +93,9 @@ context-path ligado e aponte o proxy para ele:
 BACKEND_TARGET=http://localhost:8081 npm run dev
 ```
 
+O destino também pode ficar no `.env` (`BACKEND_TARGET=http://localhost:8081`): o `vite.config.ts` lê o
+arquivo, e a variável exportada no shell tem prioridade sobre ele.
+
 Sem o `context-path=/api` o backend responde só em `/push/config`, `/notifications`, etc., e o proxy devolve
 404 em tudo.
 
