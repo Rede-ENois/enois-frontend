@@ -185,7 +185,7 @@ function Servicos() {
 }
 
 function Price({ value, currency }: { value: number; currency: string }) {
-  const label = currency === "BRL" ? formatBrlCents(value) : `${formatFaisca(value)} faíscas`;
+  const label = currency === "BRL" ? formatBrlCents(value) : formatFaisca(value);
   return (
     <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-sm font-semibold text-primary-text">
       <Sparkles className="h-3.5 w-3.5" />
@@ -313,7 +313,7 @@ function RequestCard({ request }: { request: ServiceRequest }) {
         </span>
 
         <span className="shrink-0 text-sm font-semibold text-primary-text">
-          {formatFaisca(request.budgetMin)}–{formatFaisca(request.budgetMax)} faíscas
+          {formatFaisca(request.budgetMin)} a {formatFaisca(request.budgetMax)}
         </span>
       </div>
 
@@ -407,7 +407,7 @@ function MyContracts({
         {contracts.map((c) => (
           <li key={c.id} className="surface-card flex flex-wrap items-center gap-2 p-3">
             <span className="min-w-0 flex-1 text-sm">
-              Contratei · {formatFaisca(c.price)} faíscas
+              Contratei · {formatFaisca(c.price)}
               {c.escrowState === "HELD" &&
                 (c.deliverableNote ? ` · entrega: ${c.deliverableNote}` : " · aguardando entrega")}
             </span>
@@ -440,7 +440,7 @@ function MyContracts({
         {sellerContracts.map((c) => (
           <li key={c.id} className="surface-card flex flex-wrap items-center gap-2 p-3">
             <span className="min-w-0 flex-1 text-sm">
-              Executei · {formatFaisca(c.price)} faíscas
+              Executei · {formatFaisca(c.price)}
               {c.escrowState === "HELD" && !c.deliverableNote && " · entregue o que foi combinado"}
             </span>
 

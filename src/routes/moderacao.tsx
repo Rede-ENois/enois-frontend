@@ -192,7 +192,7 @@ function DisputasSection() {
               className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4"
             >
               <p className="text-sm font-semibold">
-                Transferência de {formatFaisca(d.amount)} faíscas · motivo: {d.reason}
+                Transferência de {formatFaisca(d.amount)} · motivo: {d.reason}
               </p>
 
               <p className="text-xs text-text-subtle">

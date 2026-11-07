@@ -151,8 +151,6 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "16x16 32x32 48x48" },
       { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
       // As fontes do Google entram pelo script de arranque, e só quando o aparelho não está em
       // modo econômico: em BATATA a tipografia é a do sistema e o pedido nem sai. Sem JS, o
@@ -171,6 +169,16 @@ function RootShell({ children }: WithRequiredChildren) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        {/* Os dois ícones abrem o `<head>` de propósito: o `HeadContent` serializa antes a lista de
+            `modulepreload` dos chunks antes do `head()` da rota. Assim o pedido do favicon sai logo
+            nos primeiros bytes do documento. O `sizes` do `.ico` lista as quatro resoluções reais do contêiner. */}
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link
+          rel="icon"
+          type="image/vnd.microsoft.icon"
+          sizes="16x16 32x32 48x48 64x64"
+          href="/favicon.ico"
+        />
         <HeadContent />
         <script
           nonce={nonce}

@@ -433,6 +433,15 @@ function GroupFeed({ group }: { group: GroupView }) {
         </p>
       ) : (
         <>
+          {/* Cada tópico tem a sua sala de vídeo, independente da sala geral do grupo. */}
+          {activeTopic && (
+            <TamoJuntoBar
+              groupId={group.id}
+              topicId={activeTopic.id}
+              topicName={activeTopic.name}
+            />
+          )}
+
           {activeTopic && activeTopic.status === "OPEN" && (
             <div className="space-y-2 rounded-2xl border border-border-soft bg-surface-card p-4">
               <MentionTextarea

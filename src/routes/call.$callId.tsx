@@ -33,7 +33,6 @@ function CallLanding() {
   useEffect(() => {
     void calls.open(callId);
     // Só quando o id muda: as ações do provider não precisam reabrir a chamada.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callId]);
 
   // Chamada já na tela (ou terminada com aviso): volta para o ponto de origem.

@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/interface-context", () => ({ useInterfaceContext: () => mocks.context }));
 vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => true }));
 vi.mock("@/lib/require-auth", () => ({ hasSession: () => true }));
-vi.mock("@/lib/e2e/key-manager", () => ({ hasLocalKeys: () => Promise.resolve(mocks.keys) }));
+vi.mock("@/lib/e2e/key-manager", () => ({ isE2eReady: () => Promise.resolve(mocks.keys) }));
 vi.mock("@/lib/api", () => ({
   authApi: { me: () => Promise.resolve({ hasPassword: true }) },
   messagesApi: {

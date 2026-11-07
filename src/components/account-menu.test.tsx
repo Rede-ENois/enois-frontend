@@ -150,7 +150,7 @@ describe("menu da conta", () => {
     expect(mocks.wallet).not.toHaveBeenCalled();
 
     await abrir();
-    expect(host.querySelector("[data-wallet]")?.textContent).toBe("1.240 faíscas");
+    expect(host.querySelector("[data-wallet]")?.textContent).toBe("1 faísca 240 fagulhas");
   });
 
   it("sends the account items to the Conta e segurança page (#562)", async () => {

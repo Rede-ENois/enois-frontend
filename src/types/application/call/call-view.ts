@@ -10,6 +10,8 @@ export interface CallView {
   modality: CallModality;
   conversationId: string | null;
   groupId: string | null;
+  /** Tópico do grupo quando a sala é do tópico; nulo na sala geral e em toda 1:1. */
+  topicId: string | null;
   initiatorId: string;
   displayName: string;
   state: CallState;

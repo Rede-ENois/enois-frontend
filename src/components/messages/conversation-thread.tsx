@@ -17,12 +17,11 @@ import {
   ConversationThread as ConversationThreadView,
 } from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Lock } from "lucide-react";
 
 import { messagesApi, reportsApi, servicesApi } from "@/lib/api";
 import { conversationPeer } from "@/lib/conversation-peer";
 import { encryptForSend } from "@/lib/e2e/conversation";
-import { hasLocalKeys } from "@/lib/e2e/key-manager";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
 import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
@@ -91,7 +90,7 @@ export function ConversationThread({
   const rawMessages = (messagesData?.pages.flatMap((page) => page.items) ?? []).sort(
     (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
   );
-  const { messages, decrypting } = useDecryptedMessages(rawMessages);
+  const { messages, decrypting } = useDecryptedMessages(rawMessages, currentUserId);
 
   const latestIncoming = [...rawMessages].reverse().find((m) => m.from !== currentUserId);
   useConversationOnScreen(
@@ -185,22 +184,41 @@ export function ConversationThread({
       const results = await upload.uploadAll(files.map((file) => ({ file })));
       mediaIds = results.map((result) => result.mediaId);
     }
-    let e2e: { ciphertext: string; iv: string } | undefined;
-    if (text && (await hasLocalKeys())) {
+
+    // E2E obrigatorio: se a cifragem falhar, NAO envia. Nenhuma mensagem sai plaintext.
+    if (text) {
       try {
-        e2e = await encryptForSend(conversation.id, text, conversation.participantIds);
-      } catch {
-        toast(texts.messages.e2eFallback, "error");
+        // Garante que o remetente esta na lista (precisa da copia da AES key pra ler a propria msg).
+        const allParticipants =
+          currentUserId && !conversation.participantIds.includes(currentUserId)
+            ? [...conversation.participantIds, currentUserId]
+            : conversation.participantIds;
+        const e2e = await encryptForSend(conversation.id, text, allParticipants);
+        sendMessage.mutate({
+          conversationId: conversation.id,
+          text,
+          mediaIds,
+          mediaSpoiler,
+          e2e,
+          replyToId,
+        });
+      } catch (err) {
+        toast(err instanceof Error ? err.message : texts.messages.e2eFallback, "error");
       }
+      return;
     }
-    sendMessage.mutate({
-      conversationId: conversation.id,
-      text,
-      mediaIds,
-      mediaSpoiler,
-      e2e,
-      replyToId,
-    });
+
+    // Mensagem so com midia, sem texto pra cifrar.
+    if (mediaIds.length > 0) {
+      sendMessage.mutate({
+        conversationId: conversation.id,
+        text: "",
+        mediaIds,
+        mediaSpoiler,
+        e2e: undefined,
+        replyToId,
+      });
+    }
   };
 
   const otherParticipantId = conversation.participantIds.find((id) => id !== currentUserId);
@@ -273,7 +291,7 @@ export function ConversationThread({
         </div>
       }
       loading={isLoadingMessages || decrypting}
-      empty={messages.length === 0}
+      empty={false}
       newestMessageId={messages.length > 0 ? messages[messages.length - 1].id : null}
       hasOlderMessages={hasOlderMessages}
       loadingOlder={isLoadingOlder}
@@ -308,6 +326,30 @@ export function ConversationThread({
       }
       onCancelReply={() => setReplyingTo(null)}
     >
+      {messages.length === 0 && !isLoadingMessages && peer ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          {peer.avatar ? (
+            <img
+              src={peer.avatar}
+              alt={peer.name ?? ""}
+              className="h-20 w-20 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-2 text-2xl font-semibold text-text-subtle">
+              {peer.name?.charAt(0)?.toUpperCase() ?? "?"}
+            </div>
+          )}
+
+          <p className="text-base font-semibold text-text-strong">{peer.name}</p>
+
+          <p className="max-w-xs text-xs text-text-subtle">
+            <Lock className="mr-1 inline-block h-3 w-3" />
+            As mensagens são protegidas com a criptografia de ponta a ponta. Somente as pessoas que
+            fazem parte da conversa podem ler, ouvir e compartilhar esse conteúdo.
+          </p>
+        </div>
+      ) : null}
+
       {messages.map((m) => (
         <MessageBubble
           key={m.id}

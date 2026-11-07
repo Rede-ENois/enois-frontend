@@ -33,9 +33,7 @@ export function countNewPosts(known: Set<string>, page: PageResponse<PostView>):
 
 /**
  * Whether the first page that came back has to wait instead of entering the list: it changed, and the
- * reader is scrolled down. Inserted right away it would move every card down — and the virtualizer,
- * which measures cards by where they are, would move the scroll along with them while the person
- * reads.
+ * reader is scrolled down. Inserted right away it would move every card down while the person reads.
  *
  * An empty list is not a change worth waiting for: it is the first load of a tab or filter. Neither is
  * a changed ranking (`adoptsFirstPage` false): the reader keeps the list they were reading and gets

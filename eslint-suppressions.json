@@ -1,0 +1,770 @@
+{
+  "src/components/account-menu.tsx": {
+    "local/no-front-markup": {
+      "count": 15
+    }
+  },
+  "src/components/authenticated-app-header.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/components/blog/blog-post-editor.tsx": {
+    "local/no-front-markup": {
+      "count": 37
+    },
+    "no-restricted-globals": {
+      "count": 5
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "src/components/calls/call-panel.tsx": {
+    "local/no-front-markup": {
+      "count": 58
+    }
+  },
+  "src/components/calls/call-report-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 41
+    }
+  },
+  "src/components/calls/call-ringtone.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/calls/conversation-call-bar.tsx": {
+    "local/no-front-markup": {
+      "count": 9
+    }
+  },
+  "src/components/calls/tamo-junto-bar.tsx": {
+    "local/no-front-markup": {
+      "count": 15
+    }
+  },
+  "src/components/chat-dock/chat-dock.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/components/community-favorite-button.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/daily-word.tsx": {
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/components/design-system-provider.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/emotes/emote-picker-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 37
+    }
+  },
+  "src/components/error-banner.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/events/saci-duel-banner.tsx": {
+    "local/no-front-markup": {
+      "count": 5
+    },
+    "no-restricted-properties": {
+      "count": 2
+    }
+  },
+  "src/components/events/saci-duel-panel.tsx": {
+    "local/no-front-markup": {
+      "count": 3
+    }
+  },
+  "src/components/events/saci-spot.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/feed/company-prompt-card.tsx": {
+    "local/no-front-markup": {
+      "count": 16
+    },
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/components/feed/post-type-picker.tsx": {
+    "local/no-front-markup": {
+      "count": 10
+    }
+  },
+  "src/components/feed/professional-composer-notice.tsx": {
+    "local/no-front-markup": {
+      "count": 10
+    }
+  },
+  "src/components/healthy-usage/healthy-usage-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 108
+    }
+  },
+  "src/components/html-editor.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/install-pwa-banner.tsx": {
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/components/linked-accounts-dialog.tsx": {
+    "no-restricted-globals": {
+      "count": 1
+    }
+  },
+  "src/components/linkedin-sync-prompt.tsx": {
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/components/marketplace/marketplace-section.tsx": {
+    "local/no-front-markup": {
+      "count": 205
+    },
+    "no-restricted-syntax": {
+      "count": 6
+    }
+  },
+  "src/components/mention-textarea.tsx": {
+    "local/no-front-markup": {
+      "count": 8
+    }
+  },
+  "src/components/mentoring/mentor-agenda-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 5
+    }
+  },
+  "src/components/mentoring/mentor-banner.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/components/mentoring/mentor-room-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 23
+    }
+  },
+  "src/components/mentoring/mentor-sessions-list.tsx": {
+    "local/no-front-markup": {
+      "count": 47
+    }
+  },
+  "src/components/mentoring/my-sessions-section.tsx": {
+    "local/no-front-markup": {
+      "count": 49
+    }
+  },
+  "src/components/mentoring/session-room.tsx": {
+    "local/no-front-markup": {
+      "count": 25
+    }
+  },
+  "src/components/mentoring/weekly-availability-editor.tsx": {
+    "local/no-front-markup": {
+      "count": 37
+    }
+  },
+  "src/components/messages/conversation-thread.tsx": {
+    "local/no-front-markup": {
+      "count": 24
+    }
+  },
+  "src/components/messages/message-bubble.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/micro-project-management.tsx": {
+    "local/no-front-markup": {
+      "count": 25
+    }
+  },
+  "src/components/moderation/conduct-lesson-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 40
+    }
+  },
+  "src/components/moderation/monitoring-section.tsx": {
+    "local/no-front-markup": {
+      "count": 59
+    }
+  },
+  "src/components/moderation/notices-section.tsx": {
+    "local/no-front-markup": {
+      "count": 37
+    }
+  },
+  "src/components/moderation/penalties-section.tsx": {
+    "local/no-front-markup": {
+      "count": 72
+    }
+  },
+  "src/components/moderation/release-notes-section.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/moderation/suggestions-section.tsx": {
+    "local/no-front-markup": {
+      "count": 30
+    }
+  },
+  "src/components/mute-user-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 14
+    }
+  },
+  "src/components/navigation-links.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/notices/admin-notice.tsx": {
+    "local/no-front-markup": {
+      "count": 18
+    }
+  },
+  "src/components/notifications/notification-preferences-panel.tsx": {
+    "local/no-front-markup": {
+      "count": 16
+    }
+  },
+  "src/components/post-card.tsx": {
+    "local/no-front-markup": {
+      "count": 5
+    }
+  },
+  "src/components/post/comment-item.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/post/link-preview-card.tsx": {
+    "local/no-front-markup": {
+      "count": 25
+    }
+  },
+  "src/components/post/poll-card.tsx": {
+    "local/no-front-markup": {
+      "count": 27
+    }
+  },
+  "src/components/post/poll-composer.tsx": {
+    "local/no-front-markup": {
+      "count": 18
+    }
+  },
+  "src/components/post/post-comments.tsx": {
+    "local/no-front-markup": {
+      "count": 1
+    }
+  },
+  "src/components/presence-indicator.tsx": {
+    "local/no-front-markup": {
+      "count": 24
+    }
+  },
+  "src/components/profile/profile-city-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 6
+    }
+  },
+  "src/components/profile/profile-peek.tsx": {
+    "local/no-front-markup": {
+      "count": 11
+    }
+  },
+  "src/components/profile/profile-status-dialog.tsx": {
+    "local/no-front-markup": {
+      "count": 18
+    }
+  },
+  "src/components/projects/project-cover.tsx": {
+    "local/no-front-markup": {
+      "count": 5
+    }
+  },
+  "src/components/route-error-boundary.tsx": {
+    "local/no-front-markup": {
+      "count": 14
+    }
+  },
+  "src/components/skip-link.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/components/study-pairs/goal-search.tsx": {
+    "local/no-front-markup": {
+      "count": 25
+    }
+  },
+  "src/components/study-pairs/study-pairs.tsx": {
+    "local/no-front-markup": {
+      "count": 3
+    }
+  },
+  "src/components/suggestion-form.tsx": {
+    "local/no-front-markup": {
+      "count": 29
+    }
+  },
+  "src/components/suggestions/my-suggestions.tsx": {
+    "local/no-front-markup": {
+      "count": 23
+    }
+  },
+  "src/components/wallet/cosmetic-catalog.tsx": {
+    "local/no-front-markup": {
+      "count": 149
+    }
+  },
+  "src/components/wallet/owned-items.tsx": {
+    "local/no-front-markup": {
+      "count": 42
+    }
+  },
+  "src/lib/api-client.ts": {
+    "no-restricted-globals": {
+      "count": 7
+    }
+  },
+  "src/lib/current-user.ts": {
+    "no-restricted-globals": {
+      "count": 1
+    }
+  },
+  "src/lib/device-flags.ts": {
+    "no-restricted-properties": {
+      "count": 2
+    }
+  },
+  "src/lib/device-id.ts": {
+    "no-restricted-properties": {
+      "count": 2
+    }
+  },
+  "src/lib/emotes/catalog-cache.ts": {
+    "no-restricted-properties": {
+      "count": 2
+    }
+  },
+  "src/lib/emotes/recent-emotes.ts": {
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/lib/feed-scroll-restoration.ts": {
+    "no-restricted-globals": {
+      "count": 3
+    }
+  },
+  "src/lib/feed/last-tab.ts": {
+    "no-restricted-globals": {
+      "count": 3
+    }
+  },
+  "src/lib/healthy-usage.ts": {
+    "no-restricted-properties": {
+      "count": 2
+    }
+  },
+  "src/lib/interface-context.ts": {
+    "no-restricted-globals": {
+      "count": 3
+    },
+    "no-restricted-properties": {
+      "count": 2
+    }
+  },
+  "src/lib/notice-dismissal.ts": {
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/lib/onboarding.ts": {
+    "no-restricted-globals": {
+      "count": 3
+    }
+  },
+  "src/lib/query-client.ts": {
+    "no-restricted-globals": {
+      "count": 1
+    }
+  },
+  "src/lib/session-key.ts": {
+    "no-restricted-globals": {
+      "count": 3
+    }
+  },
+  "src/lib/session.ts": {
+    "no-restricted-globals": {
+      "count": 7
+    }
+  },
+  "src/lib/theme/apply-theme.ts": {
+    "no-restricted-globals": {
+      "count": 5
+    }
+  },
+  "src/lib/theme/gallery-collections.ts": {
+    "no-restricted-globals": {
+      "count": 4
+    }
+  },
+  "src/lib/whats-new.ts": {
+    "no-restricted-globals": {
+      "count": 2
+    }
+  },
+  "src/routes/__root.tsx": {
+    "local/no-front-markup": {
+      "count": 28
+    }
+  },
+  "src/routes/apoiar.tsx": {
+    "local/no-front-markup": {
+      "count": 119
+    },
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/routes/auth.callback.tsx": {
+    "local/no-front-markup": {
+      "count": 14
+    }
+  },
+  "src/routes/auth.reset.tsx": {
+    "local/no-front-markup": {
+      "count": 58
+    }
+  },
+  "src/routes/auth.verify.tsx": {
+    "local/no-front-markup": {
+      "count": 25
+    }
+  },
+  "src/routes/blog.$username.tsx": {
+    "local/no-front-markup": {
+      "count": 54
+    }
+  },
+  "src/routes/blog.$username_.$postId.tsx": {
+    "local/no-front-markup": {
+      "count": 38
+    }
+  },
+  "src/routes/blogs.tsx": {
+    "local/no-front-markup": {
+      "count": 31
+    }
+  },
+  "src/routes/bloqueados.tsx": {
+    "local/no-front-markup": {
+      "count": 26
+    }
+  },
+  "src/routes/boas-vindas.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/routes/call.$callId.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/routes/carteira.tsx": {
+    "local/no-front-markup": {
+      "count": 149
+    }
+  },
+  "src/routes/comunidades.$communityId.canais.$channelId.tsx": {
+    "local/no-front-markup": {
+      "count": 47
+    }
+  },
+  "src/routes/comunidades.$communityId.tsx": {
+    "local/no-front-markup": {
+      "count": 190
+    }
+  },
+  "src/routes/comunidades.tsx": {
+    "local/no-front-markup": {
+      "count": 45
+    }
+  },
+  "src/routes/contato.tsx": {
+    "local/no-front-markup": {
+      "count": 47
+    }
+  },
+  "src/routes/denuncias.tsx": {
+    "local/no-front-markup": {
+      "count": 31
+    }
+  },
+  "src/routes/developers.tsx": {
+    "local/no-front-markup": {
+      "count": 159
+    }
+  },
+  "src/routes/diretrizes.tsx": {
+    "local/no-front-markup": {
+      "count": 28
+    }
+  },
+  "src/routes/empresa.$slug.tsx": {
+    "local/no-front-markup": {
+      "count": 11
+    }
+  },
+  "src/routes/entrar.tsx": {
+    "local/no-front-markup": {
+      "count": 199
+    },
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "src/routes/eventos.tsx": {
+    "local/no-front-markup": {
+      "count": 49
+    }
+  },
+  "src/routes/feed.tsx": {
+    "local/no-front-markup": {
+      "count": 212
+    },
+    "no-restricted-globals": {
+      "count": 4
+    }
+  },
+  "src/routes/freelances.tsx": {
+    "local/no-front-markup": {
+      "count": 90
+    }
+  },
+  "src/routes/games.$username.tsx": {
+    "local/no-front-markup": {
+      "count": 49
+    }
+  },
+  "src/routes/games.painel.tsx": {
+    "local/no-front-markup": {
+      "count": 79
+    }
+  },
+  "src/routes/games.tsx": {
+    "local/no-front-markup": {
+      "count": 161
+    }
+  },
+  "src/routes/grupos.$slug.tsx": {
+    "local/no-front-markup": {
+      "count": 264
+    }
+  },
+  "src/routes/grupos.tsx": {
+    "local/no-front-markup": {
+      "count": 158
+    }
+  },
+  "src/routes/index.tsx": {
+    "local/no-front-markup": {
+      "count": 338
+    }
+  },
+  "src/routes/mensagens.tsx": {
+    "local/no-front-markup": {
+      "count": 68
+    }
+  },
+  "src/routes/mentoria.tsx": {
+    "local/no-front-markup": {
+      "count": 247
+    }
+  },
+  "src/routes/meus-servicos.tsx": {
+    "local/no-front-markup": {
+      "count": 74
+    }
+  },
+  "src/routes/moderacao.$reportId.tsx": {
+    "local/no-front-markup": {
+      "count": 56
+    }
+  },
+  "src/routes/moderacao.tsx": {
+    "local/no-front-markup": {
+      "count": 128
+    }
+  },
+  "src/routes/moderador.tsx": {
+    "local/no-front-markup": {
+      "count": 328
+    }
+  },
+  "src/routes/notificacoes.index.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/routes/notificacoes.preferencias.tsx": {
+    "local/no-front-markup": {
+      "count": 2
+    }
+  },
+  "src/routes/penalidades.tsx": {
+    "local/no-front-markup": {
+      "count": 55
+    }
+  },
+  "src/routes/perfil.$username.tsx": {
+    "local/no-front-markup": {
+      "count": 174
+    }
+  },
+  "src/routes/post.$postId.tsx": {
+    "local/no-front-markup": {
+      "count": 15
+    }
+  },
+  "src/routes/privacidade.tsx": {
+    "local/no-front-markup": {
+      "count": 27
+    }
+  },
+  "src/routes/profissional.tsx": {
+    "local/no-front-markup": {
+      "count": 149
+    }
+  },
+  "src/routes/profissional_.$username.tsx": {
+    "local/no-front-markup": {
+      "count": 20
+    }
+  },
+  "src/routes/projetos.$username.$projectSlug.tsx": {
+    "local/no-front-markup": {
+      "count": 41
+    }
+  },
+  "src/routes/projetos.$username.tsx": {
+    "local/no-front-markup": {
+      "count": 18
+    }
+  },
+  "src/routes/projetos.index.tsx": {
+    "local/no-front-markup": {
+      "count": 49
+    }
+  },
+  "src/routes/projetos.painel.tsx": {
+    "local/no-front-markup": {
+      "count": 40
+    }
+  },
+  "src/routes/rede.tsx": {
+    "local/no-front-markup": {
+      "count": 52
+    }
+  },
+  "src/routes/responsavel.tsx": {
+    "local/no-front-markup": {
+      "count": 67
+    },
+    "no-restricted-globals": {
+      "count": 4
+    }
+  },
+  "src/routes/salvos.tsx": {
+    "local/no-front-markup": {
+      "count": 8
+    }
+  },
+  "src/routes/seguranca.tsx": {
+    "local/no-front-markup": {
+      "count": 132
+    },
+    "no-restricted-globals": {
+      "count": 1
+    }
+  },
+  "src/routes/selos.tsx": {
+    "local/no-front-markup": {
+      "count": 105
+    }
+  },
+  "src/routes/servicos.tsx": {
+    "local/no-front-markup": {
+      "count": 145
+    }
+  },
+  "src/routes/silenciados.tsx": {
+    "local/no-front-markup": {
+      "count": 26
+    }
+  },
+  "src/routes/sobre.tsx": {
+    "local/no-front-markup": {
+      "count": 11
+    }
+  },
+  "src/routes/sugestoes.tsx": {
+    "local/no-front-markup": {
+      "count": 13
+    }
+  },
+  "src/routes/suporte.tsx": {
+    "local/no-front-markup": {
+      "count": 14
+    }
+  },
+  "src/routes/termos.tsx": {
+    "local/no-front-markup": {
+      "count": 9
+    }
+  },
+  "src/routes/vagas.$jobId.candidaturas.tsx": {
+    "local/no-front-markup": {
+      "count": 74
+    }
+  },
+  "src/routes/vagas.$jobId.tsx": {
+    "local/no-front-markup": {
+      "count": 145
+    }
+  },
+  "src/routes/vagas.minhas.tsx": {
+    "local/no-front-markup": {
+      "count": 94
+    }
+  },
+  "src/routes/vagas.tsx": {
+    "local/no-front-markup": {
+      "count": 298
+    }
+  }
+}

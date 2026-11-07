@@ -56,6 +56,31 @@ depois de uma execução bem-sucedida de `npm run generate:api`.
 **Nada disso vê a tela.** Se a mudança aparece para quem usa, abra o navegador e olhe — e conte na PR
 o que você viu. Build verde com tela quebrada é o jeito mais fácil de publicar um bug.
 
+## Lint que bloqueia
+
+O `npm run lint` roda no pre-commit e no CI de toda PR, e PR com erro de lint não entra. Além das
+regras de sempre, ele recusa:
+
+- **Markup no app** (`local/no-front-markup`): nada de elemento HTML (`<div>`, `<button>`...),
+  `className` ou `style` em `src/**/*.tsx`. Toda view nasce no `@rede-enois/design-system`; aqui só
+  se compõem componentes do DS, se passa dado e se liga callback. Precisa de layout novo? Vira view
+  no DS (ou variante/prop de uma que já existe).
+- **`eslint-disable`**: comentários de desligar regra são ignorados (`noInlineConfig`). Regra
+  errada se corrige no `eslint.config.js`, numa PR revisada.
+- **Cor fixa** em `.tsx` (`#7c3aed`): use os tokens do DS.
+- **`localStorage`/`sessionStorage`** fora de `src/stores/`.
+- **`console.log`/`console.debug`** (`console.warn` e `console.error` podem).
+- **Import interno do DS** (`@rede-enois/design-system/dist/...`): só pelos entrypoints.
+
+O código que já existia quando essas regras entraram está congelado no `eslint-suppressions.json`,
+com a contagem por arquivo. Ele **só diminui**:
+
+- Consertou violação antiga? Rode `npx eslint . --prune-suppressions` e commite o arquivo (o lint
+  falha enquanto sobrar supressão sem uso).
+- Violação nova não se suprime: o CI compara o arquivo com o da base e recusa a PR se alguma
+  contagem subir (`scripts/check-lint-suppressions.mjs`). Renomear ou apagar arquivo antigo libera
+  a contagem dele.
+
 ## Convenções da casa
 
 **Comentário explica o porquê, não o quê.** O código já diz o que faz. O comentário existe para a
@@ -110,6 +135,39 @@ descrever.
   | Funcionalidade nova                          | `feature.md` |
   | Correção de bug                              | `fix.md`     |
   | Manutenção, docs, CI, dependências, refactor | `chore.md`   |
+
+## Regras de pull request
+
+Uma PR só é revisada se cumprir os seis pontos abaixo. PR que não cumpre volta sem revisão.
+
+1. **Uma feature por PR.** Correção de bug, refactor e feature não viajam juntos. PR grande demais
+   para revisar é PR que ninguém revisa de verdade.
+2. **Teste para cada mudança de comportamento.** Feature nova tem teste; bug corrigido tem teste de
+   regressão que falha no código antigo. Teste e implementação no mesmo commit.
+3. **Documentação atualizada no mesmo PR.** Mudou o módulo? A doc dele muda junto. `docs/` descreve o
+   que existe — não o que se pretende.
+4. **Sem comentário narrando o óbvio.** Comentário registra restrição que o código não mostra. O
+   resto é ruído que envelhece mal.
+5. **Lint, typecheck, teste e build verdes antes do push.** Sem `eslint-disable`, `@ts-ignore` ou
+   `as any` novo para chegar lá.
+6. **Issue aberta com o plano de implementação.** A PR referencia a issue; a issue diz o que será
+   feito e como será provado. Trabalho sem origem rastreável não entra.
+
+Além disso: a PR declara o uso de IA no checklist do template, e o merge exige aprovação de alguém
+que não empurrou o código.
+
+## Design system
+
+A interface é construída sobre `@rede-enois/design-system` (repositório `enois-design-system`). Ele é
+contrato, não sugestão:
+
+- componente que o design system já tem **não é reimplementado no front**;
+- cor, espaçamento, raio e tipografia vêm de token do tema — hex solto, `px` arbitrário e
+  `!important` para vencer o tema não passam;
+- todo par texto/fundo passa WCAG AA nos dois modos e nos temas suportados;
+- elemento interativo é botão ou link de verdade, com rótulo acessível e foco visível;
+- falta um componente? A mudança começa no `enois-design-system`, com versão nova e consumidor
+  atualizado — não num componente local que depois diverge.
 
 ## Árvore compartilhada
 

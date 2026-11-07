@@ -12,6 +12,7 @@ export type ConversationItemProps = {
     | "unread"
     | "lastMessageE2e"
     | "lastMessageIv"
+    | "lastMessageEncryptedKeys"
     | "lastMessageFrom"
     | "identities"
   >;
