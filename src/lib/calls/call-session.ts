@@ -22,6 +22,7 @@ const IDLE: CallSessionState = {
   error: null,
   notConfigured: false,
   needsRejoin: false,
+  needsCredential: false,
   notice: null,
 };
 
@@ -57,8 +58,22 @@ export const callSessionStore = {
     set({ call });
   },
 
-  joining() {
-    set({ phase: "joining", error: null, notConfigured: false });
+  /**
+   * Entrada a caminho. A chamada vai junto: quem clicou em "entrar" precisa ver a tela abrir
+   * naquele instante, mesmo entrando do zero (até aqui o painel só desenhava com a credencial
+   * pronta, e quem estava de fora não via nada acontecer até ela chegar).
+   */
+  joining(call?: CallView) {
+    set({ phase: "joining", call: call ?? state.call, error: null, notConfigured: false });
+  },
+
+  /** A tela pediu credencial nova; o provider consome e zera na mesma volta. */
+  requestCredential() {
+    set({ phase: "joining", error: null, notConfigured: false, needsCredential: true });
+  },
+
+  credentialConsumed() {
+    set({ needsCredential: false });
   },
 
   live(join: CallJoin) {
@@ -69,6 +84,7 @@ export const callSessionStore = {
       error: null,
       notConfigured: false,
       needsRejoin: false,
+      needsCredential: false,
       minimized: false,
     });
   },
@@ -78,12 +94,12 @@ export const callSessionStore = {
   },
 
   expand() {
-    set({ minimized: false, needsRejoin: true, phase: "joining" });
+    set({ minimized: false, needsRejoin: true, needsCredential: true, phase: "joining" });
   },
 
   /** O iframe caiu: a próxima abertura pede credencial nova ao servidor. */
   lostCredential() {
-    set({ needsRejoin: true, phase: "joining" });
+    set({ needsRejoin: true, needsCredential: true, phase: "joining" });
   },
 
   notice(message: string | null) {
@@ -91,7 +107,15 @@ export const callSessionStore = {
   },
 
   ended(call: CallView) {
-    set({ call, join: null, phase: "ended", error: null, notConfigured: false, notice: null });
+    set({
+      call,
+      join: null,
+      phase: "ended",
+      error: null,
+      notConfigured: false,
+      needsCredential: false,
+      notice: null,
+    });
   },
 
   /** `notConfigured` marca o aviso de ambiente ainda em configuração (não é falha da pessoa). */
@@ -101,6 +125,7 @@ export const callSessionStore = {
       error: message,
       join: null,
       needsRejoin: false,
+      needsCredential: false,
       notConfigured: options?.notConfigured ?? false,
     });
   },

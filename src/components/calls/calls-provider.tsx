@@ -156,7 +156,9 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
 
   /** Pede a credencial ao servidor e abre o painel com o Jitsi. */
   const enterRoom = useCallback(async (target: CallView) => {
-    callSessionStore.joining();
+    // A chamada vai junto: quem clica em "entrar" vê a tela abrir na hora, em vez de achar que
+    // o clique não fez nada enquanto a credencial não chega.
+    callSessionStore.joining(target);
     try {
       const join = await callsApi.join(target.id);
       callSessionStore.live(join);
@@ -194,21 +196,29 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
         return;
       }
       // ACTIVE: se ainda não estamos dentro, entra (voltar de outra tela, aceite em outra aba).
-      callSessionStore.update(next);
-      if (phase !== "live" && phase !== "joining") {
+      // A decisão lê o store, não o `phase` deste render: uma resposta que chegue enquanto a
+      // entrada está a caminho abria uma segunda entrada.
+      //
+      // `error` fica de fora: uma entrada que falhou espera a pessoa clicar de novo. Reentrar
+      // sozinho a cada conferência transformava uma recusa em tentativa atrás de tentativa.
+      const inRoom = getCallSession().phase;
+      if (inRoom !== "live" && inRoom !== "joining" && inRoom !== "error") {
         void enterRoom(next);
       }
+      callSessionStore.update(next);
       refreshRelated();
     },
     [enterRoom, refreshRelated],
   );
 
-  // Reconexão: painel sem credencial pede uma nova ao servidor em vez de abrir a sala às cegas.
+  // Reconexão: painel reaberto (ou sem mídia) pede credencial nova em vez de abrir a sala às cegas.
+  // O pedido é consumido antes da entrada, para não ser rearmado pela resposta que vem:
+  // `needsCredential` é um pedido de uma vez, não um estado de espera.
   useEffect(() => {
-    if (!session.call || session.join) return;
-    if (session.phase !== "joining") return;
+    if (!session.needsCredential || !session.call) return;
+    callSessionStore.credentialConsumed();
     void enterRoom(session.call);
-  }, [session.call, session.join, session.phase, enterRoom]);
+  }, [session.needsCredential, session.call, enterRoom]);
 
   // O stream avisa na hora; a consulta busca o estado real (o evento só traz ids).
   useEffect(() => {
@@ -223,12 +233,15 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   }, [applyServerState]);
 
   // Chamada em aberto: confere o estado no servidor de tempos em tempos (o stream avisa antes).
+  // A conferência depende só do id: uma resposta que atualiza a chamada mudava a identidade de
+  // `session.call`, o efeito remontava e a conferência saía de novo — durante a espera de uma
+  // reconexão, isso virava uma consulta atrás da outra.
+  const openCallId = session.call && !isTerminalState(session.call.state) ? session.call.id : null;
   useEffect(() => {
-    if (!session.call || isTerminalState(session.call.state)) return;
-    const id = session.call.id;
+    if (!openCallId) return;
     const tick = () => {
       void callsApi
-        .get(id)
+        .get(openCallId)
         .then(applyServerState)
         .catch((error: unknown) => {
           if (error instanceof ApiError && error.status === 404) callSessionStore.idle();
@@ -238,7 +251,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     tick();
     const interval = setInterval(tick, POLL_MS);
     return () => clearInterval(interval);
-  }, [session.call, applyServerState]);
+  }, [openCallId, applyServerState]);
 
   // Ao (re)abrir o app, volta para a chamada que ficou aberta.
   useEffect(() => {
@@ -267,10 +280,11 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Toque da chamada recebida: só 1:1 (grupo nunca toca) e nunca em modo lite/BATATA.
+  const ringingKind = session.phase === "incoming" ? (call?.modality ?? null) : null;
   useEffect(() => {
-    if (session.phase !== "incoming" || !call || call.modality !== "DIRECT") return;
+    if (ringingKind !== "DIRECT") return;
     return startRingtone({ enabled: !silent.current });
-  }, [session.phase, call]);
+  }, [ringingKind]);
 
   // Chamada encerrada some sozinha depois de mostrar o motivo.
   useEffect(() => {
@@ -281,15 +295,14 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
 
   // Aba fechada/atualizada dentro da chamada: avisa o servidor para não ficar pendurada.
   useEffect(() => {
+    if (!openCallId) return;
     const onPageHide = () => {
-      const current = session.call;
-      if (!current || isTerminalState(current.state)) return;
       // sendBeacon leva a cookie de sessão da mesma origem (não dá para pôr header).
-      navigator.sendBeacon?.(apiUrl(`/calls/${current.id}/leave`));
+      navigator.sendBeacon?.(apiUrl(`/calls/${openCallId}/leave`));
     };
     window.addEventListener("pagehide", onPageHide);
     return () => window.removeEventListener("pagehide", onPageHide);
-  }, [session.call]);
+  }, [openCallId]);
 
   const start = useCallback(
     async (run: () => Promise<CallView>) => {
