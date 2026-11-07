@@ -34,14 +34,14 @@ export const messagesApi = {
     text: string,
     mediaIds: string[] = [],
     mediaSpoiler = false,
-    e2e?: { ciphertext: string; iv: string },
+    e2e?: { ciphertext: string; iv: string; encryptedKeys: Record<string, string> },
     replyToId?: string,
   ) =>
     api.post<Message>(`/conversations/${conversationId}/messages`, {
       text: e2e ? e2e.ciphertext : text,
       mediaIds,
       mediaSpoiler,
-      ...(e2e ? { e2e: true, iv: e2e.iv } : {}),
+      ...(e2e ? { e2e: true, iv: e2e.iv, encryptedKeys: JSON.stringify(e2e.encryptedKeys) } : {}),
       ...(replyToId ? { replyToId } : {}),
     }),
 

@@ -181,6 +181,8 @@ export function PostComments({
     if (posting) return false;
     setPosting(true);
     setSending(true);
+    // A nova tentativa apaga o aviso da anterior.
+    setError(null);
     try {
       let mediaIds: string[] = [];
       let finalContent = content;
@@ -216,7 +218,10 @@ export function PostComments({
       setMediaSpoiler(false);
       return true;
     } catch {
-      setError(media.length > 0 ? "upload" : "load");
+      // Envio recusado não é a lista falhando: o erro fica junto do campo e os comentários já
+      // carregados continuam na tela. Antes isso caía em "load" e a thread inteira virava
+      // "Não foi possível carregar os comentários" — o sintoma do comentário que some ao enviar.
+      setError(media.length > 0 ? "upload" : "send");
       return false;
     } finally {
       setPosting(false);

@@ -1,4 +1,5 @@
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
+import { formatFaisca } from "@/lib/faisca";
 
 const common = {
   enter: "Entrar",
@@ -183,6 +184,14 @@ export const texts = {
     pending: "Pedido pendente",
     leave: "Sair do grupo",
     joined: "Você participa",
+    myGroups: "Seus grupos",
+    myGroupsEmpty: "Você ainda não participa de nenhum grupo.",
+    myGroupsEmptyHint: "Explore os grupos sugeridos ao lado para começar a participar.",
+    myGroupsSearchEmpty: "Nenhum dos seus grupos corresponde à busca.",
+    discover: "Descobrir",
+    discoverSubtitle: "Grupos recomendados para você conhecer e participar.",
+    discoverEmpty: "Você já participa de todos os grupos disponíveis!",
+    discoverSearchEmpty: "Nenhum novo grupo encontrado para essa busca.",
     create: "Criar grupo",
     createTitle: "Criar grupo",
     createDescription: "Escolha o nome e como as pessoas entram. Dá para mudar depois.",
@@ -314,10 +323,34 @@ export const texts = {
         "Não foi possível verificar esta imagem. Tente outro arquivo ou converta para JPG ou PNG.",
       IMAGE_MODERATION_UNAVAILABLE:
         "A verificação de imagens está indisponível no momento. Tente novamente mais tarde.",
+      IMAGE_TOO_LARGE_TO_VERIFY:
+        "Essa imagem tem quadros demais ou é grande demais para verificar. Envie uma versão menor ou com menos quadros.",
+      MEDIA_PROCESSING_FAILED:
+        "Não conseguimos processar esse arquivo. Confira se ele não está corrompido e se o formato bate com o conteúdo, e tente de novo.",
+      MEDIA_PROCESSING_UNAVAILABLE:
+        "O processamento de arquivos está ocupado ou indisponível agora. Tente novamente em alguns instantes.",
       IMPORT_TOO_LARGE:
         "Esse arquivo do LinkedIn é grande demais para importar. Baixe de novo só os dados do perfil (sem mensagens e conexões) e tente outra vez.",
       IDEMPOTENCY_KEY_REQUIRED:
         "O backend rejeitou a requisição por falta de Idempotency-Key. Recarregue a página; se o problema persistir, há um bug no front-end (src/lib/api-client.ts).",
+      /**
+       * Foto/PDF acima do teto da limpeza de metadados (40 MB), não do upload (500 MB): o arquivo
+       * cabe no envio, mas não dá para processar. A mensagem não pode prometer um limite que o
+       * envio não tem.
+       */
+      MEDIA_TOO_LARGE:
+        "Não conseguimos processar esse arquivo: ele é grande demais para este tipo de envio. Diminua o tamanho e tente de novo.",
+      MEDIA_SIZE_MISMATCH:
+        "O upload não bateu com o arquivo escolhido. Escolha o arquivo de novo e envie outra vez.",
+      MEDIA_UPLOAD_FAILED: "O envio não terminou. Verifique sua conexão e tente novamente.",
+      /** Falha ao gravar o arquivo no armazenamento ou ao preparar o temporário no servidor. */
+      MEDIA_UPLOAD_UNAVAILABLE:
+        "Não conseguimos guardar o arquivo agora. Tente novamente em alguns instantes.",
+      MEDIA_STORAGE_WRITE_FAILED:
+        "Não conseguimos guardar o arquivo agora. Tente novamente em alguns instantes.",
+      /** O armazenamento de mídia está desligado no servidor: não é o arquivo, é a infraestrutura. */
+      MEDIA_STORAGE_DISABLED:
+        "O envio de arquivos está indisponível no momento. Tente novamente mais tarde.",
     },
   },
 
@@ -747,8 +780,8 @@ export const texts = {
     settingsSeoTitle: "Conta e segurança",
     menu: {
       blockedUsers: "Usuários bloqueados",
-      walletBalance: (balance: number) =>
-        `${balance.toLocaleString("pt-BR")} ${balance === 1 ? "faísca" : "faíscas"}`,
+      /** Recebe os milésimos crus da carteira: o saldo do menu também é faísca e fagulha. */
+      walletBalance: (balance: number) => formatFaisca(balance),
       /** O backend não confirmou: os cookies da sessão continuariam valendo. */
       logoutFailed: "Não foi possível sair agora. Sua sessão continua ativa neste aparelho.",
       logoutRetry: "Tentar de novo",
@@ -1114,11 +1147,6 @@ export const texts = {
     },
     you: "Você",
     refreshing: "Atualizando publicações…",
-    scrollDebug: {
-      copy: "Copiar relatório de rolagem",
-      copied: "Relatório copiado. Cole na conversa com o time.",
-      failed: "Não deu para copiar. Tente de novo.",
-    },
     loadingMore: "Carregando mais publicações…",
     endOfFeed: "Você viu tudo por enquanto.",
     loadMore: "Carregar mais",
@@ -1199,6 +1227,7 @@ export const texts = {
       professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
     },
+    personalizeFeed: "Personalizar feed",
     tabs: {
       forYou: "Para você",
       news: "Notícias",
@@ -1736,7 +1765,7 @@ export const texts = {
         "Partida iniciada conta cada vez que alguém aperta Jogar — não prova que o jogo terminou de carregar. Jogador conta cada conta uma vez; quem joga sem entrar conta a cada partida.",
       spend: {
         title: "O jogo quer gastar faíscas",
-        amount: (value: string) => `${value} faíscas`,
+        amount: (value: string) => value,
         notice:
           "O gasto só acontece com a sua confirmação. O jogo nunca acessa a sua conta nem a sua sessão — ele apenas pediu.",
         refuse: "Recusar",
@@ -2322,15 +2351,15 @@ export const texts = {
       "Entre 50 e 10.000 faíscas. A taxa da plataforma (10%) já é descontada do seu lado.",
     sparksPriceInvalid: "Informe um preço entre 50 e 10.000 faíscas.",
     sparksAccepted: (price: string) => `aceita faíscas · ${price}`,
-    sparksBalance: (balance: string) => `Seu saldo: ${balance} faíscas`,
+    sparksBalance: (balance: string) => `Seu saldo: ${balance}`,
     sparksBalanceLow: (balance: string, needed: string) =>
-      `Saldo insuficiente: você tem ${balance} e a sessão custa ${needed} faíscas.`,
+      `Saldo insuficiente: você tem ${balance} e a sessão custa ${needed}.`,
     sparksFeeNote: "Da liberação, a plataforma retém 10% e o mentor recebe o resto.",
     sparksEscrowNote:
       "O valor fica retido na sua carteira ao confirmar e volta integral se você cancelar antes do horário começar.",
-    paidWithSparks: (price: string) => `pago com ${price} faíscas`,
+    paidWithSparks: (price: string) => `pago com ${price}`,
     sparksInsufficientError: "Saldo de faíscas insuficiente para esta sessão.",
-    sparksPriceRange: (min: string, max: string) => `${min} a ${max} faíscas`,
+    sparksPriceRange: (min: string, max: string) => `${min} a ${max}`,
     freeSession: "Sessão gratuita",
     completeSession: "Concluir sessão",
     completeConfirm:
@@ -3355,6 +3384,13 @@ export const texts = {
     notice:
       "A faísca existe só dentro do Énóis: circula entre pessoas e vale nos marketplaces da plataforma. Transferências são instantâneas e sem reversão.",
     historyEmpty: "Sem movimentações ainda. A faísca circula quando a comunidade circula.",
+    /**
+     * A explicação do decimal. Sem ela, "101 faíscas 830 fagulhas" é só um número comprido: a
+     * pessoa precisa saber que a parte depois da faísca é uma unidade menor, e não um erro.
+     */
+    fagulhasExplained:
+      "Uma faísca se divide em 1.000 fagulhas, como o real se divide em centavos. Por isso o saldo aparece em duas partes: as faíscas inteiras e as fagulhas que sobram.",
+    fagulhasExample: "Exemplo: 101 faíscas 830 fagulhas é o mesmo que 101,83 faíscas.",
     kind: {
       AIRDROP: "Distribuição inicial",
       GENESIS_TREASURY: "Gênese",
@@ -3510,7 +3546,14 @@ export const texts = {
   healthyUsage: {
     tabs: {
       wellbeing: "Bem-estar",
+      personalization: "Personalização",
       notifications: "Notificações e avisos",
+    },
+    personalization: {
+      feedTitle: "Feed padrão",
+      feedHint: "Escolha qual feed você quer ver ao abrir o Énóis.",
+      postTypeTitle: "Tipos de publicação",
+      postTypeHint: "Filtre quais tipos de post você quer ver no feed Tudo.",
     },
   },
 
@@ -3763,9 +3806,16 @@ export const texts = {
     dismissNotice: "Entendi",
     startAudio: "Ligar",
     startVideo: "Chamar com vídeo",
+    // A chamada em grupo se chama sempre "Tamo junto"; o que muda é a mídia.
     tamoJunto: "Tamo junto",
+    tamoJuntoAudio: "Tamo junto voz",
+    tamoJuntoVideo: "Tamo junto vídeo",
     tamoJuntoStart: "Chamar o grupo",
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
+    tamoJuntoTopicLive: (topic: string) =>
+      `🔴 Tamo junto do tópico ${topic} ao vivo! Entre na chamada quando quiser.`,
+    /** Nome da sala de um tópico: "Tamo junto voz · Assuntos gerais". */
+    tamoJuntoTopic: (name: string, topic: string) => `${name} · ${topic}`,
     participants: (count: number) =>
       count === 1 ? "1 pessoa na chamada" : `${count} pessoas na chamada`,
 

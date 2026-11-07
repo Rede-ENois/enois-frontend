@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(gh pr merge:*)",
+      "Bash(gh workflow run:*)",
+      "Bash(gh release create:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --tags:*)",
+      "Bash(git push origin qa:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git push origin HEAD:qa:*)",
+      "Bash(git push origin HEAD:main:*)",
+      "Bash(npm publish:*)",
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.production)"
+    ]
+  }
+}

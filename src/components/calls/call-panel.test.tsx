@@ -18,6 +18,7 @@ function ringingCall(): CallView {
     modality: "DIRECT",
     conversationId: "conv_1",
     groupId: null,
+    topicId: null,
     initiatorId: "user_a",
     displayName: "Ana",
     state: "RINGING",
@@ -94,6 +95,14 @@ describe("painel da chamada sem servidor de chamadas configurado", () => {
     act(() => dismiss!.click());
     expect(getCallSession().phase).toBe("idle");
     expect(host.textContent).not.toContain("Ops…");
+  });
+
+  it("quem entra de fora vê a tela abrir enquanto conecta, sem 'N pessoas'", () => {
+    // Entrada do zero (sala do grupo que alguém abriu): a chamada vai junto com o "conectando",
+    // senão o clique em "entrar" não muda nada na tela até a credencial chegar.
+    act(() => callSessionStore.joining({ ...ringingCall(), modality: "GROUP", state: "ACTIVE" }));
+    expect(host.textContent).toContain("Conectando…");
+    expect(host.textContent).not.toContain("pessoa");
   });
 
   it("erro de verdade continua na moldura de erro, não no aviso", () => {

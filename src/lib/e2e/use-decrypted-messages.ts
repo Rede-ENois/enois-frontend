@@ -13,7 +13,10 @@ const MIN_DECRYPT_MS = 800;
  * Hook que decifra mensagens E2E em batch. Mensagens sem e2e passam direto.
  * Retorna as mensagens com o texto em claro + flag de decrypting pro primeiro load.
  */
-export function useDecryptedMessages(messages: Message[]): DecryptedResult {
+export function useDecryptedMessages(
+  messages: Message[],
+  currentUserId: string | null,
+): DecryptedResult {
   const [decrypted, setDecrypted] = useState<Message[]>([]);
   const [decrypting, setDecrypting] = useState(true);
   const firstDecryptDone = useRef(false);
@@ -27,7 +30,7 @@ export function useDecryptedMessages(messages: Message[]): DecryptedResult {
       const isFirstRun = !firstDecryptDone.current;
 
       const hasE2e = messages.some((msg) => msg.e2e);
-      if (!hasE2e) {
+      if (!hasE2e || !currentUserId) {
         if (isFirstRun) firstDecryptDone.current = true;
         if (!cancelled) {
           setDecrypted(messages);
@@ -51,7 +54,7 @@ export function useDecryptedMessages(messages: Message[]): DecryptedResult {
       const results = await Promise.all(
         messages.map(async (msg) => {
           if (!msg.e2e) return msg;
-          const plaintext = await decryptReceived(msg);
+          const plaintext = await decryptReceived(msg, currentUserId);
           return { ...msg, text: plaintext };
         }),
       );
@@ -81,7 +84,7 @@ export function useDecryptedMessages(messages: Message[]): DecryptedResult {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [messages]);
+  }, [messages, currentUserId]);
 
   return { messages: decrypted, decrypting };
 }

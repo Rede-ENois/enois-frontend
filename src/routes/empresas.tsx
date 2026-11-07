@@ -57,7 +57,7 @@ function Empresas() {
     if (consumeContextSwitch()) {
       toast(texts.feed.companyPrompt.contextSwitch);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // One request per pause in typing, not per key.
   useEffect(() => {

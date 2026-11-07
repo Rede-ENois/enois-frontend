@@ -17,6 +17,10 @@ export const e2eApi = {
   userPublicKey: (userId: string) =>
     api.get<PublicKeyView>(`/e2e/keypair/${encodeURIComponent(userId)}`),
 
+  /** Retorna a public key ativa de cada usuario. Quem nao tem keypair nao aparece no mapa. */
+  batchPublicKeys: (userIds: string[]) =>
+    api.post<Record<string, string>>("/e2e/keypairs/batch", userIds),
+
   distributeConversationKey: (
     conversationId: string,
     participants: Array<{ userId: string; encryptedKey: string }>,

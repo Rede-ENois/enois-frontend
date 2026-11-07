@@ -36,7 +36,7 @@ function msg(overrides: Partial<Message> = {}): Message {
 let captured: { messages: Message[]; decrypting: boolean } = { messages: [], decrypting: true };
 
 function HookProbe({ messages }: { messages: Message[] }) {
-  captured = useDecryptedMessages(messages);
+  captured = useDecryptedMessages(messages, "user_me");
   return null;
 }
 

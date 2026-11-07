@@ -82,8 +82,10 @@ export function CallPanel() {
           </p>
 
           <p className="text-xs text-text-muted" aria-live="polite">
-            {stateLabel(call.state)}
-            {call.state === "ACTIVE" && call.participantCount > 0
+            {/* Enquanto a credencial não chega, quem clicou em entrar ainda está entrando: dizer
+                "em andamento · N pessoas" aí mostra a sala para quem não está nela. */}
+            {session.phase === "joining" ? texts.calls.connecting : stateLabel(call.state)}
+            {session.phase !== "joining" && call.state === "ACTIVE" && call.participantCount > 0
               ? ` · ${texts.calls.participants(call.participantCount)}`
               : ""}
           </p>
