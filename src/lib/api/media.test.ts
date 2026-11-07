@@ -1,7 +1,28 @@
 import { texts } from "@/texts";
 import { describe, expect, it } from "vitest";
 
-import { mediaUploadResponseError } from "./media";
+import { mediaUploadResponseError, resolveCdnUrl } from "./media";
+
+describe("resolveCdnUrl", () => {
+  it("keeps the dev local storage path on the app's own origin", () => {
+    expect(resolveCdnUrl("/api/storage/uploads/media_1/file.png")).toBe(
+      "/api/storage/uploads/media_1/file.png",
+    );
+    expect(resolveCdnUrl("/storage/uploads/media_1/file.png")).toBe(
+      "/storage/uploads/media_1/file.png",
+    );
+  });
+
+  it("still sends legacy relative paths to the ImageKit endpoint", () => {
+    expect(resolveCdnUrl("/destaque/foto.png")).toMatch(/^https?:\/\/.+\/destaque\/foto\.png$/);
+  });
+
+  it("keeps absolute URLs untouched", () => {
+    expect(resolveCdnUrl("https://cdn.example.com/foto.png")).toBe(
+      "https://cdn.example.com/foto.png",
+    );
+  });
+});
 
 describe("mediaUploadResponseError", () => {
   it("preserves the API code and maps the moderation message", () => {

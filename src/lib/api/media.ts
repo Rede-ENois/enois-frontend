@@ -27,6 +27,10 @@ export function resolveCdnUrl(url: string | null | undefined): string | undefine
   if (!url) return undefined;
   const cleaned = url.replace(/%2F/g, "/");
   if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) return cleaned;
+  // Storage local de dev (`rede.media.storage=local`): o cdnUrl é um caminho relativo servido pela
+  // própria API (`/api/storage/...`), não um caminho do ImageKit. Deixar relativo faz a mídia
+  // carregar da mesma origem do app (proxy do Vite), sem host fixo nem CSP extra.
+  if (cleaned.startsWith("/api/storage/") || cleaned.startsWith("/storage/")) return cleaned;
   return `${IMAGEKIT_URL_ENDPOINT}${cleaned.startsWith("/") ? "" : "/"}${cleaned}`;
 }
 
