@@ -50,6 +50,7 @@ function call(overrides: Partial<CallView>): CallView {
     modality: "DIRECT",
     conversationId: "conv_1",
     groupId: null,
+    topicId: null,
     initiatorId: "user_a",
     displayName: "Ana",
     state: "RINGING",

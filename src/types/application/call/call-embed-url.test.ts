@@ -17,6 +17,7 @@ const JOIN: CallJoin = {
     modality: "DIRECT",
     conversationId: "conv",
     groupId: null,
+    topicId: null,
     initiatorId: "u1",
     displayName: "Ana",
     state: "ACTIVE",

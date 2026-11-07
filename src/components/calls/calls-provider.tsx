@@ -63,22 +63,38 @@ export function useCalls(): CallsContextValue {
 }
 
 /** A chamada aberta do vínculo: é o banner "Chamando…" / "🔴 ao vivo" da conversa e do grupo. */
-export function useOpenCall(input: { conversationId?: string; groupId?: string }) {
+export function useOpenCall(input: {
+  conversationId?: string;
+  groupId?: string;
+  topicId?: string;
+}) {
   const session = useCallSession();
   const query = useQuery({
-    queryKey: ["calls", "open", input.conversationId ?? null, input.groupId ?? null],
+    queryKey: [
+      "calls",
+      "open",
+      input.conversationId ?? null,
+      input.groupId ?? null,
+      input.topicId ?? null,
+    ],
     queryFn: () =>
       input.conversationId
         ? callsApi.openOfConversation(input.conversationId)
-        : callsApi.openOfGroup(input.groupId ?? ""),
+        : input.topicId
+          ? callsApi.openOfTopic(input.groupId ?? "", input.topicId)
+          : callsApi.openOfGroup(input.groupId ?? ""),
     enabled: Boolean(input.conversationId || input.groupId),
     refetchInterval: POLL_MS,
   });
   const mine = session.call;
+  // A sala do tópico e a sala geral do grupo são chamadas diferentes: comparar só o grupo
+  // mostraria a sala errada no banner do tópico.
   const sameLink =
     mine !== null &&
     ((input.conversationId !== undefined && mine.conversationId === input.conversationId) ||
-      (input.groupId !== undefined && mine.groupId === input.groupId));
+      (input.groupId !== undefined &&
+        mine.groupId === input.groupId &&
+        (mine.topicId ?? null) === (input.topicId ?? null)));
   if (sameLink && !isTerminalState(mine.state)) {
     return { call: mine, isLoading: false };
   }
@@ -342,7 +358,12 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     () => ({
       startDirect: (conversationId, kind) =>
         start(() => callsApi.startDirect(conversationId, kind)),
-      startGroup: (groupId, kind) => start(() => callsApi.startGroup(groupId, kind)),
+      startGroup: (groupId, kind, topicId) =>
+        start(() =>
+          topicId
+            ? callsApi.startTopicCall(groupId, topicId, kind)
+            : callsApi.startGroup(groupId, kind),
+        ),
       answer,
       decline,
       open,

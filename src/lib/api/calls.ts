@@ -17,15 +17,22 @@ export const callsApi = {
   startDirect: (conversationId: string, kind: CallKind) =>
     api.post<CallView>(`/conversations/${conversationId}/calls`, { kind }),
 
-  /** Começa (ou devolve) o "Tamo junto" do grupo. */
+  /** Começa (ou devolve) o "Tamo junto" da sala geral do grupo. */
   startGroup: (groupId: string, kind: CallKind) =>
     api.post<CallView>(`/groups/${groupId}/calls`, { kind }),
+
+  /** Começa (ou devolve) o "Tamo junto" do tópico: sala própria, independente da geral. */
+  startTopicCall: (groupId: string, topicId: string, kind: CallKind) =>
+    api.post<CallView>(`/groups/${groupId}/topics/${topicId}/calls`, { kind }),
 
   /** Chamada aberta do vínculo, se houver (`null` quando não há). */
   openOfConversation: (conversationId: string) =>
     api.get<CallView | null>(`/conversations/${conversationId}/calls/open`),
 
   openOfGroup: (groupId: string) => api.get<CallView | null>(`/groups/${groupId}/calls/open`),
+
+  openOfTopic: (groupId: string, topicId: string) =>
+    api.get<CallView | null>(`/groups/${groupId}/topics/${topicId}/calls/open`),
 
   /** Tudo que está aberto para a pessoa: é o que permite voltar de outra tela para a chamada. */
   open: () => api.get<CallView[]>("/calls/open"),

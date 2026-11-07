@@ -4,7 +4,8 @@ import type { CallView } from "./call-view";
 /** Ações da chamada disponíveis em qualquer tela (o provider central as implementa). */
 export interface CallsContextValue {
   startDirect: (conversationId: string, kind: CallKind) => Promise<void>;
-  startGroup: (groupId: string, kind: CallKind) => Promise<void>;
+  /** Sala geral do grupo, ou a sala do tópico quando `topicId` vem preenchido. */
+  startGroup: (groupId: string, kind: CallKind, topicId?: string) => Promise<void>;
   answer: () => Promise<void>;
   decline: () => Promise<void>;
   /** Pede credencial ao servidor e abre a sala (usado por notificações e pelo banner do grupo). */

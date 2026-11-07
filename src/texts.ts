@@ -3800,9 +3800,16 @@ export const texts = {
     dismissNotice: "Entendi",
     startAudio: "Ligar",
     startVideo: "Chamar com vídeo",
+    // A chamada em grupo se chama sempre "Tamo junto"; o que muda é a mídia.
     tamoJunto: "Tamo junto",
+    tamoJuntoAudio: "Tamo junto voz",
+    tamoJuntoVideo: "Tamo junto vídeo",
     tamoJuntoStart: "Chamar o grupo",
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
+    tamoJuntoTopicLive: (topic: string) =>
+      `🔴 Tamo junto do tópico ${topic} ao vivo! Entre na chamada quando quiser.`,
+    /** Nome da sala de um tópico: "Tamo junto voz · Assuntos gerais". */
+    tamoJuntoTopic: (name: string, topic: string) => `${name} · ${topic}`,
     participants: (count: number) =>
       count === 1 ? "1 pessoa na chamada" : `${count} pessoas na chamada`,
 
