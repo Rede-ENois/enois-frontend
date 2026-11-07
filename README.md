@@ -79,28 +79,34 @@ Inicie o servidor de desenvolvimento:
 npm run dev
 ```
 
-O Vite vai mostrar a URL local no terminal, normalmente `http://localhost:8080`.
+A porta é fixa em **http://localhost:5173** (`server.port` + `strictPort` no `vite.config.ts`).
+Não use 5174+ nem o IP da máquina: 5173 é a única origem liberada no CORS/OAuth do backend em `dev`.
 
-**Apontando para um backend local**: o proxy do dev recebe `/api/...` e encaminha o caminho **completo** (em
-produção é o gateway que remove o `/api`). Então, para rodar contra um backend na sua máquina, suba-o com o
-context-path ligado e aponte o proxy para ele:
+**Backend local**: copie `.env.example` para `.env` (o arquivo é ignorado pelo git) e confirme:
 
-```bash
-# no repositorio do backend
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8081 --server.servlet.context-path=/api"
-
-# aqui no front
-BACKEND_TARGET=http://localhost:8081 npm run dev
+```env
+BACKEND_TARGET=http://localhost:8081   # sem /api no final
+VITE_API_BACKEND=/api
+VITE_SITE_URL=http://localhost:5173
 ```
 
-O destino também pode ficar no `.env` (`BACKEND_TARGET=http://localhost:8081`): o `vite.config.ts` lê o
-arquivo, e a variável exportada no shell tem prioridade sobre ele.
+O backend precisa subir com o context-path `/api` (o proxy encaminha `/api/...` **com** o prefixo;
+em produção é o gateway que remove). O passo a passo completo — chave de cadastro, Mailpit, storage
+local de mídia e problemas comuns — está no guia do backend:
+[`docs/LOCAL_DEVELOPMENT.md`](https://github.com/Rede-ENois/enois-backend/blob/qa/docs/LOCAL_DEVELOPMENT.md).
 
-Sem o `context-path=/api` o backend responde só em `/push/config`, `/notifications`, etc., e o proxy devolve
-404 em tudo.
+Resumo do comando do backend:
 
-Os loaders do SSR (ex.: o perfil em `/perfil/$username`) rodam no servidor, onde não há proxy: com
-`/api` relativo eles chamam o mesmo `BACKEND_TARGET` direto (`serverBaseUrl` em `src/lib/api-client.ts`).
+```bash
+cd enois-backend
+SPRING_PROFILES_ACTIVE=dev REDE_SECURITY_ENCRYPTION_KEY=... FRONTEND_URL=http://localhost:5173 \
+  ./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.servlet.context-path=/api"
+```
+
+- Sem `context-path=/api` o backend responde na raiz e o proxy devolve 404 em tudo.
+- `BACKEND_TARGET` com `/api` no final vira `/api/api/...` → 404.
+- Os loaders do SSR (ex.: `/perfil/$username`) rodam no servidor, onde não há proxy: usam o mesmo
+  `BACKEND_TARGET` direto (`serverBaseUrl` em `src/lib/api-client.ts`).
 
 **Sessão no dev**: a sessão vive em cookies HttpOnly (`enois_session`/`enois_refresh`) que a API grava. No
 dev o navegador fala só com o Vite (`/api` relativo, via proxy), então os cookies são do próprio

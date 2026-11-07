@@ -32,6 +32,12 @@ export default defineConfig({
   },
   vite: {
     server: {
+      // O wrapper do Lovable sugere 8080, mas nesta máquina a 8080 é do Coolify/Traefik. A 5173 é
+      // a origem liberada no CORS/OAuth do backend em dev; `strictPort` evita cair em 8081 (porta
+      // do backend) e só descobrir no 404/CORS minutos depois. No sandbox do Lovable a 8080
+      // continua sendo forçada pelo próprio wrapper.
+      port: 5173,
+      strictPort: true,
       allowedHosts: true,
       proxy: {
         "/api": {

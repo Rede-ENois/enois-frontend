@@ -61,7 +61,9 @@ está desativado e não há server function com chave privada.
 
 - Plugin: TanStack Router + React + Tailwind CSS v4
 - SSR: Nitro com preset `vercel`
-- Proxy: `/api` → `http://localhost:8081` em dev
+- Dev server fixo em `http://localhost:5173` (`strictPort`)
+- Proxy de `/api` → `BACKEND_TARGET` (padrão `http://localhost:8081`) em **dois** lugares:
+  `nitro.devProxy` (o middleware do Nitro roda antes do proxy do Vite) e `vite.server.proxy`
 
 ## `eslint.config.js`
 
