@@ -3808,7 +3808,8 @@ export const texts = {
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
     tamoJuntoTopicLive: (topic: string) =>
       `🔴 Tamo junto do tópico ${topic} ao vivo! Entre na chamada quando quiser.`,
-    tamoJuntoTopic: (topic: string) => `Tamo junto do tópico ${topic}`,
+    /** Nome da sala de um tópico: "Tamo junto voz · Assuntos gerais". */
+    tamoJuntoTopic: (name: string, topic: string) => `${name} · ${topic}`,
     participants: (count: number) =>
       count === 1 ? "1 pessoa na chamada" : `${count} pessoas na chamada`,
 

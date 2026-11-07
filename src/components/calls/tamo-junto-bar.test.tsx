@@ -89,8 +89,13 @@ describe("'Tamo junto' do grupo", () => {
 
   it("no tópico, a sala é a do tópico", () => {
     act(() => root.render(<></>));
-    act(() => root.render(<TamoJuntoBar groupId="grupo_1" topicId="topico_1" topicName="Avisos" />));
-    act(() => button("Tamo junto vídeo")!.click());
+    act(() =>
+      root.render(<TamoJuntoBar groupId="grupo_1" topicId="topico_1" topicName="Avisos" />),
+    );
+    expect(host.textContent).toContain("Tamo junto vídeo");
+    expect(button("Tamo junto vídeo · Avisos")).toBeTruthy();
+    expect(button("Tamo junto voz · Avisos")).toBeTruthy();
+    act(() => button("Tamo junto vídeo · Avisos")!.click());
     expect(mocks.startGroup).toHaveBeenCalledWith("grupo_1", "VIDEO", "topico_1");
   });
 
@@ -103,6 +108,15 @@ describe("'Tamo junto' do grupo", () => {
     expect(host.textContent).toContain("3 pessoas na chamada");
     act(() => button("Entrar na chamada")!.click());
     expect(mocks.open).toHaveBeenCalledWith("call_g");
+  });
+
+  it("ao vivo no tópico, o nome da sala diz de que tópico é", () => {
+    act(() => root.render(<></>));
+    mocks.openCall = call({ topicId: "topico_1" });
+    act(() =>
+      root.render(<TamoJuntoBar groupId="grupo_1" topicId="topico_1" topicName="Avisos" />),
+    );
+    expect(host.textContent).toContain("Tamo junto voz · Avisos");
   });
 
   it("chamada encerrada volta ao botão de chamar", () => {

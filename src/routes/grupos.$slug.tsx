@@ -433,15 +433,13 @@ function GroupFeed({ group }: { group: GroupView }) {
         </p>
       ) : (
         <>
+          {/* Cada tópico tem a sua sala de vídeo, independente da sala geral do grupo. */}
           {activeTopic && (
-            // Cada tópico tem a sua sala de vídeo, independente da sala geral do grupo.
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border-soft bg-surface-card px-4 py-3">
-              <p className="text-xs font-medium text-text-subtle">
-                {texts.calls.tamoJuntoTopic(activeTopic.name)}
-              </p>
-
-              <TamoJuntoBar groupId={group.id} topicId={activeTopic.id} topicName={activeTopic.name} />
-            </div>
+            <TamoJuntoBar
+              groupId={group.id}
+              topicId={activeTopic.id}
+              topicName={activeTopic.name}
+            />
           )}
 
           {activeTopic && activeTopic.status === "OPEN" && (
