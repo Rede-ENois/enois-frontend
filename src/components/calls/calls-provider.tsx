@@ -156,7 +156,9 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
 
   /** Pede a credencial ao servidor e abre o painel com o Jitsi. */
   const enterRoom = useCallback(async (target: CallView) => {
-    callSessionStore.joining();
+    // A chamada vai junto: quem clica em "entrar" vê a tela abrir na hora, em vez de achar que
+    // o clique não fez nada enquanto a credencial não chega.
+    callSessionStore.joining(target);
     try {
       const join = await callsApi.join(target.id);
       callSessionStore.live(join);

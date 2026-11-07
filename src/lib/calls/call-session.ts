@@ -58,8 +58,13 @@ export const callSessionStore = {
     set({ call });
   },
 
-  joining() {
-    set({ phase: "joining", error: null, notConfigured: false });
+  /**
+   * Entrada a caminho. A chamada vai junto: quem clicou em "entrar" precisa ver a tela abrir
+   * naquele instante, mesmo entrando do zero (até aqui o painel só desenhava com a credencial
+   * pronta, e quem estava de fora não via nada acontecer até ela chegar).
+   */
+  joining(call?: CallView) {
+    set({ phase: "joining", call: call ?? state.call, error: null, notConfigured: false });
   },
 
   /** A tela pediu credencial nova; o provider consome e zera na mesma volta. */
