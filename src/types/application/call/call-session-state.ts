@@ -16,6 +16,12 @@ export interface CallSessionState {
   notConfigured: boolean;
   /** O painel está aberto mas o iframe foi escondido (reabrir reinjeta a credencial). */
   needsRejoin: boolean;
+  /**
+   * Pedido de credencial nova, feito pela tela (reabriu do canto, perdendo a mídia). O provider
+   * consome e zera: sem isso, cada resposta do servidor poderia rearmar o pedido e a entrada
+   * seria pedida de novo indefinidamente.
+   */
+  needsCredential: boolean;
   /** Aviso que não impede a chamada (sem câmera, conexão caindo). */
   notice: string | null;
 }
