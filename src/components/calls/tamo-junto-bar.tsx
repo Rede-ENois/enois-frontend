@@ -10,19 +10,38 @@ import { useCalls, useOpenCall } from "./calls-provider";
  *
  * Diferente do 1:1, aqui ninguém é chamado no telefone — a chamada fica ao vivo e quem quiser
  * entra. Por isso não há toque, nem microfone/câmera ligados sozinhos: abrir a sala é escolher
- * entrar.
+ * entrar, e quem abre já entra.
+ *
+ * A chamada em grupo se chama sempre "Tamo junto"; o que muda é a mídia ("Tamo junto voz" ou
+ * "Tamo junto vídeo"). Com `topicId`, a barra é a sala daquele tópico — cada tópico tem a sua,
+ * independente da sala geral do grupo.
  */
-export function TamoJuntoBar({ groupId }: { groupId: string }) {
+export function TamoJuntoBar({
+  groupId,
+  topicId,
+  topicName,
+}: {
+  groupId: string;
+  topicId?: string;
+  topicName?: string;
+}) {
   const calls = useCalls();
-  const { call } = useOpenCall({ groupId });
+  const { call } = useOpenCall({ groupId, topicId });
   const open = call !== null && !isTerminalState(call.state);
+  const mediaName = call?.kind === "VIDEO" ? texts.calls.tamoJuntoVideo : texts.calls.tamoJuntoAudio;
 
   if (open && call) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-text-strong" aria-live="polite">
-            {texts.calls.tamoJuntoLive}
+            {topicName ? `${mediaName} · ${topicName}` : mediaName}
+          </p>
+
+          <p className="text-xs text-text-subtle">
+            {topicName
+              ? texts.calls.tamoJuntoTopicLive(topicName)
+              : texts.calls.tamoJuntoLive}
           </p>
 
           <p className="text-xs text-text-subtle">
@@ -42,23 +61,23 @@ export function TamoJuntoBar({ groupId }: { groupId: string }) {
       <Button
         size="sm"
         className="w-auto rounded-full gap-1.5"
-        onClick={() => void calls.startGroup(groupId, "AUDIO")}
+        onClick={() => void calls.startGroup(groupId, "AUDIO", topicId)}
       >
         <Phone className="h-3.5 w-3.5" />
 
-        <>{texts.calls.tamoJunto}</>
+        <>{texts.calls.tamoJuntoAudio}</>
       </Button>
 
       <Button
         size="sm"
         variant="outline"
         className="w-auto rounded-full gap-1.5"
-        aria-label={texts.calls.startVideo}
-        onClick={() => void calls.startGroup(groupId, "VIDEO")}
+        aria-label={texts.calls.tamoJuntoVideo}
+        onClick={() => void calls.startGroup(groupId, "VIDEO", topicId)}
       >
         <Video className="h-3.5 w-3.5" />
 
-        <>{texts.calls.startVideo}</>
+        <>{texts.calls.tamoJuntoVideo}</>
       </Button>
     </div>
   );

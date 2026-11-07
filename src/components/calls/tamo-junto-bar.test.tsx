@@ -35,6 +35,7 @@ function call(overrides: Partial<CallView>): CallView {
     modality: "GROUP",
     conversationId: null,
     groupId: "grupo_1",
+    topicId: null,
     initiatorId: "user_a",
     displayName: "Rapaziada",
     state: "ACTIVE",
@@ -75,14 +76,29 @@ describe("'Tamo junto' do grupo", () => {
     );
 
   it("abre a chamada do grupo sem tocar ninguém", () => {
-    act(() => button("Tamo junto")!.click());
-    expect(mocks.startGroup).toHaveBeenCalledWith("grupo_1", "AUDIO");
+    act(() => button("Tamo junto voz")!.click());
+    expect(mocks.startGroup).toHaveBeenCalledWith("grupo_1", "AUDIO", undefined);
+  });
+
+  it("a chamada em grupo se chama sempre Tamo junto, com a mídia no nome", () => {
+    expect(host.textContent).toContain("Tamo junto voz");
+    expect(host.textContent).toContain("Tamo junto vídeo");
+    act(() => button("Tamo junto vídeo")!.click());
+    expect(mocks.startGroup).toHaveBeenCalledWith("grupo_1", "VIDEO", undefined);
+  });
+
+  it("no tópico, a sala é a do tópico", () => {
+    act(() => root.render(<></>));
+    act(() => root.render(<TamoJuntoBar groupId="grupo_1" topicId="topico_1" topicName="Avisos" />));
+    act(() => button("Tamo junto vídeo")!.click());
+    expect(mocks.startGroup).toHaveBeenCalledWith("grupo_1", "VIDEO", "topico_1");
   });
 
   it("com a chamada ao vivo, anuncia o grupo no ar e deixa entrar", () => {
     act(() => root.render(<></>));
     mocks.openCall = call({});
     act(() => root.render(<TamoJuntoBar groupId="grupo_1" />));
+    expect(host.textContent).toContain("Tamo junto voz");
     expect(host.textContent).toContain("🔴 O grupo está ao vivo! Entre na chamada quando quiser.");
     expect(host.textContent).toContain("3 pessoas na chamada");
     act(() => button("Entrar na chamada")!.click());
@@ -94,6 +110,6 @@ describe("'Tamo junto' do grupo", () => {
     mocks.openCall = call({ state: "ENDED" });
     act(() => root.render(<TamoJuntoBar groupId="grupo_1" />));
     expect(host.textContent).not.toContain("ao vivo");
-    expect(button("Tamo junto")).toBeTruthy();
+    expect(button("Tamo junto voz")).toBeTruthy();
   });
 });
