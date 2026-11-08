@@ -32,15 +32,31 @@ export function useHangUp() {
 
 /**
  * Avisa o servidor que a pessoa largou a chamada: quem ligou cancela, quem recebeu recusa e, na
- * sala, encerra. Também é o caminho de quem troca de chamada no meio de uma ligação.
+ * sala, a pessoa sai. Também é o caminho de quem troca de chamada no meio de uma ligação.
+ *
+ * Na sala vale `leave`, não `end`: no grupo, `end` devolve o encerramento de quem chegou antes
+ * sem apagar o registro de presença, e a pessoa continua contada como presente. No 1:1 `leave`
+ * encerra a chamada, que é o mesmo efeito aqui.
  */
 export async function hangUpOnServer(call: CallView): Promise<void> {
   const ringing = call.state === "RINGING" || call.state === "CONNECTING";
   try {
     if (ringing && call.isInitiator) await callsApi.cancel(call.id);
     else if (ringing) await callsApi.decline(call.id);
-    else await callsApi.end(call.id);
+    else await callsApi.leave(call.id);
   } catch {
     // Já terminou do outro lado: a tela segue do mesmo jeito.
+  }
+}
+
+/**
+ * Largar uma chamada que o servidor já deu por atendida (`answer` respondeu) e cuja sala não
+ * abriu: é `leave` pela mesma razão do {@link hangUpOnServer}.
+ */
+export async function leaveAnsweredRoom(call: CallView): Promise<void> {
+  try {
+    await callsApi.leave(call.id);
+  } catch {
+    // Rede fora ou chamada já encerrada: o servidor fecha a sala pela tolerância de abandono.
   }
 }

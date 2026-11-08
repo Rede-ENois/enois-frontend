@@ -22,7 +22,7 @@ import { isTerminalState } from "@/types/application/call/is-terminal-state";
 import { callsApi } from "@/lib/api";
 import { ApiError, apiUrl } from "@/lib/api-client";
 import { callSessionStore, getCallSession, useCallSession } from "@/lib/calls/call-session";
-import { hangUpOnServer } from "@/lib/calls/use-hang-up";
+import { hangUpOnServer, leaveAnsweredRoom } from "@/lib/calls/use-hang-up";
 import { readEconomicMode } from "@/lib/lite-mode";
 import { subscribeToCallEvents } from "@/lib/message-stream";
 import { hasSession } from "@/lib/require-auth";
@@ -184,8 +184,14 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     void queryClient.invalidateQueries({ queryKey: ["conversations"] });
   }, [queryClient]);
 
-  /** Pede a credencial ao servidor e abre o painel com o Jitsi. */
-  const enterRoom = useCallback(async (target: CallView) => {
+  /**
+   * Pede a credencial ao servidor e abre o painel com o Jitsi.
+   *
+   * Devolve `"left"` quando a entrada chegou a ser registrada e a sala não abriu (a saída já foi
+   * avisada) e `"failed"` quando a credencial nem veio — quem chamou decide se ainda há presença
+   * para largar.
+   */
+  const enterRoom = useCallback(async (target: CallView): Promise<"live" | "left" | "failed"> => {
     // A chamada vai junto: quem clica em "entrar" vê a tela abrir na hora, em vez de achar que
     // o clique não fez nada enquanto a credencial não chega.
     callSessionStore.joining(target);
@@ -193,22 +199,27 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       const join = await callsApi.join(target.id);
       // O iframe ganha câmera e microfone: só abre no servidor de reunião que a gente hospeda.
       if (!isTrustedCallHost(join.host)) {
+        // Pedir a credencial já registra a entrada no servidor: sem o aviso de saída a pessoa
+        // fica presa na sala (no 1:1, o outro lado a vê conectada até a tolerância vencer).
+        await leaveAnsweredRoom(target);
         callSessionStore.error(texts.calls.untrustedRoom);
-        return;
+        return "left";
       }
       callSessionStore.live(join);
+      return "live";
     } catch (error) {
       if (error instanceof ApiError && error.code?.startsWith("CALL_")) {
         // A chamada terminou entre o clique e a entrada: mostra o motivo, não um erro seco.
         try {
           const current = await callsApi.get(target.id);
           callSessionStore.ended(current);
-          return;
+          return "failed";
         } catch {
           // segue para o erro explícito abaixo
         }
       }
       failWith(error);
+      return "failed";
     }
   }, []);
 
@@ -414,9 +425,13 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       if (!current) return;
       try {
         const answered = await callsApi.answer(current.id);
-        await enterRoom(answered);
+        // `answer` já registrou a presença no servidor: se a sala não abrir, a saída é avisada
+        // aqui. Sem isso a pessoa fica contada na chamada até a tolerância de abandono vencer.
+        const outcome = await enterRoom(answered);
+        if (outcome === "failed") await leaveAnsweredRoom(answered);
         refreshRelated();
       } catch (error) {
+        // O atendimento em si falhou: a presença não foi registrada, então não há o que largar.
         failWith(error);
       }
     },

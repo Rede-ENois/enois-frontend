@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   decline: vi.fn(),
   end: vi.fn<(callId: string) => Promise<void>>(() => Promise.resolve()),
   cancel: vi.fn<(callId: string) => Promise<void>>(() => Promise.resolve()),
+  leave: vi.fn<(callId: string) => Promise<void>>(() => Promise.resolve()),
   onCallEvent: null as ((callId: string) => void) | null,
 }));
 
@@ -38,6 +39,7 @@ vi.mock("@/lib/api", () => ({
     decline: mocks.decline,
     end: mocks.end,
     cancel: mocks.cancel,
+    leave: mocks.leave,
   },
 }));
 vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => true }));
@@ -485,6 +487,7 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
     mocks.decline.mockReset();
     mocks.end.mockClear();
     mocks.cancel.mockClear();
+    mocks.leave.mockClear();
     clearSession();
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const host = document.createElement("div");
@@ -539,8 +542,8 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
   it("atender a da fila no meio da ligação avisa o servidor que a pessoa saiu da sala", async () => {
     const { queued } = await liveWithQueued();
     const order: string[] = [];
-    mocks.end.mockImplementation(async (id: string) => {
-      order.push(`end:${id}`);
+    mocks.leave.mockImplementation(async (id: string) => {
+      order.push(`leave:${id}`);
     });
     mocks.answer.mockImplementation(async (id: string) => {
       order.push(`answer:${id}`);
@@ -553,7 +556,7 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
     });
     await flush();
 
-    expect(order).toEqual(["end:call_1", "answer:call_2"]);
+    expect(order).toEqual(["leave:call_1", "answer:call_2"]);
     expect(getCallSession()).toMatchObject({ phase: "live", call: { id: "call_2" } });
     // A sala largada não volta para a fila.
     expect(getCallSession().waiting).toEqual([]);
@@ -599,6 +602,72 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
       await answering;
     });
     expect(getCallSession()).toMatchObject({ phase: "live", call: { id: "call_2" } });
+  });
+
+  it("largar a sala avisa a saída com leave, que também apaga a presença no grupo", async () => {
+    const live = call({
+      modality: "GROUP",
+      conversationId: null,
+      groupId: "grupo_1",
+      state: "ACTIVE",
+    });
+    const queued = call({ id: "call_2", displayName: "Bia", modality: "GROUP", isInitiator: true });
+    byId.set(live.id, live);
+    byId.set(queued.id, queued);
+    await flush();
+    act(() => callSessionStore.live(joinFor(live)));
+    act(() => callSessionStore.ring(queued, "calling"));
+    await flush();
+
+    mocks.answer.mockResolvedValue({ ...queued, state: "CONNECTING" });
+    mocks.join.mockRejectedValue(new Error("rede fora"));
+    await act(async () => {
+      await actions.current?.answer("call_2");
+    });
+    await flush();
+
+    expect(mocks.leave).toHaveBeenCalledWith("call_1");
+    expect(mocks.end).not.toHaveBeenCalled();
+  });
+
+  it("atender da fila com falha no servidor avisa a saída da chamada atendida", async () => {
+    const { queued } = await liveWithQueued();
+    // O servidor deu a chamada por atendida, mas a credencial da sala não veio.
+    mocks.answer.mockResolvedValue({ ...queued, state: "ACTIVE" });
+    mocks.join.mockRejectedValue(new Error("rede fora"));
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { href: "https://enois.ia.br/" },
+    });
+
+    await act(async () => {
+      await actions.current?.answer("call_2");
+    });
+    await flush();
+
+    expect(mocks.leave).toHaveBeenCalledWith("call_1");
+    expect(mocks.leave).toHaveBeenCalledWith("call_2");
+    expect(getCallSession().phase).toBe("error");
+  });
+
+  it("host fora do servidor de reunião avisa a saída em vez de deixar a chamada presa", async () => {
+    const target = call({ state: "RINGING" });
+    byId.set(target.id, target);
+    await flush();
+    act(() => callSessionStore.ring(target, "incoming"));
+    mocks.answer.mockResolvedValue({ ...target, state: "CONNECTING" });
+    mocks.join.mockResolvedValue(joinFor(target, "https://sala-de-outra-pessoa.example"));
+
+    await act(async () => {
+      await actions.current?.answer();
+    });
+    await flush();
+
+    expect(mocks.leave).toHaveBeenCalledWith("call_1");
+    expect(getCallSession()).toMatchObject({
+      phase: "error",
+      error: expect.stringContaining("servidor de chamadas"),
+    });
   });
 
   it("chamada da fila que terminou no servidor sai da fila sem mexer na tela", async () => {
