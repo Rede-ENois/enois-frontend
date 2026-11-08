@@ -1,3 +1,5 @@
+import { trustedCallOrigins } from "@/lib/calls/call-origins";
+
 import type { CallJoin } from "./call-join";
 
 /**
@@ -22,21 +24,6 @@ const CONFIG: Array<[string, (join: CallJoin) => string]> = [
   ["config.prejoinConfig.enabled", () => "false"],
   ["config.disableDeepLinking", () => "true"],
 ];
-
-/**
- * Origens do servidor de reunião que a gente hospeda (o Epapo). É o mesmo endereço que o backend
- * entrega em `join.host` (`REDE_CALLS_EPAPO_URL`, em QA e produção). Outro ambiente informa as
- * suas em `VITE_CALLS_ORIGINS`, separadas por vírgula.
- */
-const DEFAULT_CALL_ORIGINS = ["https://meet.enois.ia.br"];
-
-function trustedCallOrigins(): string[] {
-  const configured = (import.meta.env.VITE_CALLS_ORIGINS ?? "")
-    .split(",")
-    .map((origin: string) => origin.trim())
-    .filter(Boolean);
-  return configured.length > 0 ? configured : DEFAULT_CALL_ORIGINS;
-}
 
 /**
  * O iframe da chamada recebe câmera e microfone: só abre na origem exata do nosso servidor de

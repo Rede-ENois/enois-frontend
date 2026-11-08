@@ -21,7 +21,16 @@ import { isTerminalState } from "@/types/application/call/is-terminal-state";
 
 import { callsApi } from "@/lib/api";
 import { ApiError, apiUrl } from "@/lib/api-client";
-import { callSessionStore, getCallSession, useCallSession } from "@/lib/calls/call-session";
+import { shouldAutoEnter } from "@/lib/calls/call-entry";
+import { requestCallMedia } from "@/lib/calls/call-media-permission";
+import {
+  callInRoom,
+  callSessionStore,
+  forgetLeftCall,
+  getCallSession,
+  useCallSession,
+  wasCallLeft,
+} from "@/lib/calls/call-session";
 import { hangUpOnServer, leaveAnsweredRoom } from "@/lib/calls/use-hang-up";
 import { readEconomicMode } from "@/lib/lite-mode";
 import { subscribeToCallEvents } from "@/lib/message-stream";
@@ -51,6 +60,7 @@ const noSession: CallsContextValue = {
   answer: async () => {},
   decline: async () => {},
   open: async () => {},
+  leaveFromRoom: async () => {},
   close: () => {},
   call: null,
 };
@@ -134,6 +144,14 @@ function isSlotFree(phase: CallPhase): boolean {
 }
 
 /**
+ * O "Tamo junto" é opt-in: ninguém é chamado nem levado para a sala do grupo. Só um clique em
+ * "Entrar" (ou em abrir a chamada) põe a pessoa dentro dela.
+ */
+function isGroupCall(call: CallView): boolean {
+  return call.modality === "GROUP";
+}
+
+/**
  * Estado do servidor de uma chamada que não está na tela: atualiza ou tira da fila, e uma chamada
  * nova tocando entra nela. Nunca toma a tela da chamada de cima.
  */
@@ -195,6 +213,13 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     // A chamada vai junto: quem clica em "entrar" vê a tela abrir na hora, em vez de achar que
     // o clique não fez nada enquanto a credencial não chega.
     callSessionStore.joining(target);
+    // A permissão é pedida aqui, na página do app, e não dentro do iframe: no celular, um pedido
+    // que parte de dentro da sala não vira pergunta nenhuma, e a chamada abria muda. Recusar não
+    // impede entrar — a sala tem o botão para pedir de novo; a tela só diz o que aconteceu.
+    const media = await requestCallMedia(target.kind);
+    if (media === "denied") callSessionStore.notice(texts.calls.mediaDenied);
+    else if (media === "unavailable") callSessionStore.notice(texts.calls.mediaUnavailable);
+    else if (media === "unsupported") callSessionStore.notice(texts.calls.mediaUnsupported);
     try {
       const join = await callsApi.join(target.id);
       // O iframe ganha câmera e microfone: só abre no servidor de reunião que a gente hospeda.
@@ -244,7 +269,10 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
         return;
       }
       if (next.state === "RINGING" || next.state === "CONNECTING") {
-        if (phase === "idle" || phase === "ended" || phase === "error") {
+        if (isGroupCall(next)) {
+          // A sala do grupo não toca nem abre a tela: ela fica ao vivo na barra do grupo.
+          if (getCallSession().call?.id === next.id) callSessionStore.update(next);
+        } else if (phase === "idle" || phase === "ended" || phase === "error") {
           callSessionStore.ring(next, next.isInitiator ? "calling" : "incoming");
         } else {
           callSessionStore.update(next);
@@ -258,8 +286,10 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       //
       // `error` fica de fora: uma entrada que falhou espera a pessoa clicar de novo. Reentrar
       // sozinho a cada conferência transformava uma recusa em tentativa atrás de tentativa.
-      const inRoom = getCallSession().phase;
-      if (inRoom !== "live" && inRoom !== "joining" && inRoom !== "error") {
+      //
+      // O grupo não puxa ninguém e a chamada que a pessoa largou também não: a decisão está em
+      // `shouldAutoEnter`, com o porquê de cada condição.
+      if (shouldAutoEnter(next, getCallSession().phase, wasCallLeft(next.id))) {
         void enterRoom(next);
       }
       callSessionStore.update(next);
@@ -322,8 +352,12 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
             (candidate) => candidate.state === "RINGING" || candidate.state === "CONNECTING",
           ) ?? open[0];
         if (active.state === "ACTIVE") {
-          void enterRoom(active);
-        } else if (active.state === "RINGING") {
+          // Voltar de outra tela para o 1:1 em que a pessoa estava. O "Tamo junto" fica de fora:
+          // abrir o app não é escolher entrar no grupo, e a barra do grupo tem o "Entrar".
+          if (shouldAutoEnter(active, phaseRef.current, wasCallLeft(active.id))) {
+            void enterRoom(active);
+          }
+        } else if (active.state === "RINGING" && !isGroupCall(active)) {
           callSessionStore.ring(active, active.isInitiator ? "calling" : "incoming");
         }
       })
@@ -333,8 +367,9 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-    // Só na montagem: depois quem manda é o stream e a conferência periódica.
-  }, []);
+    // Só na montagem: depois quem manda é o stream e a conferência periódica. `enterRoom` é
+    // estável, então pô-lo na lista não refaz o pedido a cada render.
+  }, [enterRoom]);
 
   // Toque da chamada recebida: só 1:1 (grupo nunca toca) e nunca em modo lite/BATATA. A fila
   // conta: uma 1:1 esperando atrás de uma chamada em grupo também precisa tocar, senão ela chega
@@ -390,10 +425,39 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("pagehide", onPageHide);
   }, [openCallId]);
 
+  /**
+   * Saída pela própria sala: a pessoa desligou dentro do iframe do Epapo.
+   *
+   * O painel escuta o aviso da sala e cai aqui. A tela fecha na hora (o iframe desmonta), o
+   * servidor fica sabendo que a pessoa saiu e a chamada não volta sozinha para a tela — nem se o
+   * servidor responder ACTIVE de novo, porque a saída já está marcada.
+   */
+  const leaveFromRoom = useCallback(
+    async (callId: string) => {
+      // Só a chamada em que a pessoa está: um aviso atrasado da sala anterior não pode fechar a
+      // chamada que ela abriu depois.
+      if (callInRoom()?.id !== callId) return;
+      callSessionStore.markLeft(callId);
+      try {
+        // `leave` e não `end`: no grupo a sala segue com os outros; no 1:1 o servidor encerra.
+        await callsApi.leave(callId);
+      } catch {
+        // Chamada já encerrada do outro lado (ou rede fora): a tela fecha do mesmo jeito, e o
+        // servidor a fecha pela tolerância de abandono.
+      } finally {
+        refreshRelated();
+      }
+    },
+    [refreshRelated],
+  );
+
   const start = useCallback(
     async (run: () => Promise<CallView>) => {
       try {
         const started = await run();
+        // Começar a chamada é escolher estar nela: abre logo depois, e a marca de saída anterior
+        // não pode barrar a entrada.
+        forgetLeftCall(started.id);
         if (started.state === "ACTIVE" || started.state === "CONNECTING") {
           // "Tamo junto" nasce ao vivo: quem abre já entra.
           await enterRoom(started);
@@ -445,6 +509,8 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
         : getCallSession().call;
       if (callId) {
         callSessionStore.removeWaiting(callId);
+      } else if (current) {
+        callSessionStore.markLeft(current.id);
       } else {
         callSessionStore.idle();
       }
@@ -462,6 +528,9 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
 
   const open = useCallback(
     async (callId: string) => {
+      // "Entrar" é a escolha explícita de voltar para a sala: é o único caminho que apaga a marca
+      // de saída do grupo.
+      forgetLeftCall(callId);
       try {
         const target = await callsApi.get(callId);
         if (isTerminalState(target.state)) {
@@ -493,10 +562,11 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
       answer,
       decline,
       open,
+      leaveFromRoom,
       close: () => callSessionStore.idle(),
       call,
     }),
-    [start, answer, decline, open, call],
+    [start, answer, decline, open, leaveFromRoom, call],
   );
 
   // As telas leem as ações por `useCalls()` (contexto). O contexto mora acima deste componente —

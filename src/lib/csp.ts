@@ -1,6 +1,8 @@
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
+import { trustedCallOrigins } from "./calls/call-origins";
+
 /**
  * Internal request header that carries the per-request CSP nonce from the server entry
  * (`server.ts`, which also writes the CSP header) to the router, which stamps it on every inline
@@ -32,6 +34,29 @@ export function contentSecurityPolicy(nonce: string | null): string {
     "base-uri 'self'",
     "form-action 'self'",
   ].join("; ");
+}
+
+/**
+ * Permissions-Policy da página.
+ *
+ * Antes ela era `microphone=(), camera=()`: isso fecha as duas para a página inteira, e o
+ * `allow` do iframe não reabre o que a página negou. A sala carregava sem áudio nem vídeo e o
+ * navegador não chegava a perguntar nada — nem no computador, nem no celular. Agora a própria
+ * página pode usar as duas (é ela que pede a permissão ao usuário antes de abrir a sala) e só o
+ * servidor de reunião hospedado por nós entra no `allow`, que é o mesmo que vai no iframe. Um
+ * endereço de reunião de outro domínio não ganha a câmera. O resto continua fechado.
+ */
+export function permissionsPolicy(origins: string[] = trustedCallOrigins()): string {
+  const callHosts = origins.map((origin) => origin.replace(/\/$/, "")).join(" ");
+  const media = callHosts ? `self ${callHosts}` : "self";
+  return [
+    "geolocation=()",
+    `microphone=(${media})`,
+    `camera=(${media})`,
+    "display-capture=(self)",
+    "payment=()",
+    "usb=()",
+  ].join(", ");
 }
 
 /** 128 random bits, base64. */

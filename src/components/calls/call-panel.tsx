@@ -7,6 +7,7 @@ import { isTerminalState } from "@/types/application/call/is-terminal-state";
 import { Button } from "@rede-enois/design-system/ui";
 import { Flag, Minimize2, PhoneOff } from "lucide-react";
 
+import { subscribeToRoomExit } from "@/lib/calls/call-room-bridge";
 import { callSessionStore, useCallSession } from "@/lib/calls/call-session";
 import { useHangUp } from "@/lib/calls/use-hang-up";
 import { useFocusTrap } from "@/lib/use-focus-trap";
@@ -86,10 +87,13 @@ export function CallPanel() {
       ref={dialogRef}
       tabIndex={-1}
       className={cn(
+        // `dvh` e não `inset-0` no celular: com `inset-0` a altura é a do viewport de layout, que
+        // fica atrás da barra do navegador — os botões de encerrar e denunciar terminam embaixo
+        // dela. `dvh` acompanha a barra, e a folga de baixo respeita a área segura do aparelho.
         "fixed z-[60] flex flex-col overflow-hidden border-border-soft bg-surface-1 shadow-2xl focus:outline-none",
         fullscreen
-          ? "inset-0 justify-center rounded-none border-0 sm:inset-3 sm:rounded-2xl sm:border"
-          : "inset-x-2 bottom-2 max-h-[85vh] rounded-2xl border sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",
+          ? "inset-x-0 top-0 h-[100dvh] justify-center rounded-none border-0 sm:inset-3 sm:h-auto sm:rounded-2xl sm:border"
+          : "inset-x-2 bottom-2 max-h-[85dvh] rounded-2xl border sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",
       )}
       role="dialog"
       aria-label={title}
@@ -141,6 +145,9 @@ export function CallPanel() {
               url={callEmbedUrl(session.join)}
               title={title}
               onClosed={() => callSessionStore.lostCredential()}
+              // A pessoa desligou dentro da sala: fecha o painel e avisa o servidor. Não é
+              // "credencial perdida" — reconectar ali reabriria a chamada que ela encerrou.
+              onLeft={(reason) => void calls.leaveFromRoom(session.join!.callId, reason)}
             />
           ) : null}
 
@@ -248,11 +255,14 @@ function CallFrame({
   title,
   frameRef,
   onClosed,
+  onLeft,
 }: {
   url: string;
   title: string;
   frameRef: RefObject<HTMLIFrameElement | null>;
   onClosed: () => void;
+  /** A sala avisou que a pessoa saiu dela (desligou na barra do próprio Epapo). */
+  onLeft: (reason: string | undefined) => void;
 }) {
   const [failed, setFailed] = useState(false);
   const loaded = useRef(false);
@@ -264,6 +274,14 @@ function CallFrame({
     }, 15_000);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    // A sala é de outro domínio e só se comunica por postMessage: é o aviso de saída que faz o
+    // painel fechar quando a pessoa desliga por dentro dela.
+    return subscribeToRoomExit(frameRef.current, (message) => onLeft(message.reason));
+    // A iframe é remontada a cada credencial (`key` no `<iframe>`), então o aviso é religado com
+    // a janela nova. O `ref` em si é estável, então listá-lo não refaz a escuta à toa.
+  }, [url, onLeft, frameRef]);
 
   return (
     <div className="relative min-h-[240px] flex-1 bg-black">
@@ -282,6 +300,8 @@ function CallFrame({
         src={url}
         title={title}
         // Só o necessário para a mídia: câmera e microfone; nada de abrir janelas ou sair daqui.
+        // Este `allow` só repassa o que a página já libera: quem autoriza o domínio da sala é o
+        // `Permissions-Policy` (ver `permissionsPolicy` em `lib/csp.ts`).
         allow="camera; microphone; autoplay; display-capture; fullscreen"
         allowFullScreen
         className={cn("h-full w-full border-0", failed ? "opacity-0" : "opacity-100")}
