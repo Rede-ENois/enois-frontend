@@ -90,8 +90,9 @@ de persistência e de consulta por intervalo.
 ordem de inserção, e a consulta ordena por início; a expectativa foi corrigida (o comportamento
 estava certo).
 
-**PR:** [#531](https://github.com/Rede-ENois/enois-backend/pull/531) — aguardando revisão humana.
-A documentação foi no PR [#740](https://github.com/Rede-ENois/enois-frontend/pull/740).
+**PR:** [#531](https://github.com/Rede-ENois/enois-backend/pull/531) — mergeado em `6ac79d83`.
+A documentação foi no PR [#740](https://github.com/Rede-ENois/enois-frontend/pull/740), mergeado em
+`6765a46a`.
 
 **BLOQUEIOS:** nenhum bloqueio novo. B1 resolvido com worktree novo a partir de `enois/qa`
 (`b80e8571`). B2 e B3 já têm encaminhamento escrito; a migração de dados de `events` é uma unidade
@@ -100,3 +101,59 @@ própria e continua pendente.
 **PRÓXIMA EXECUÇÃO:** Fase 1, segunda unidade — serviço de aplicação e endpoints de leitura
 (`GET /calendar/entries?from=&to=&scope=`, `GET /calendar/entries/{id}`) com autorização por dono e
 DTO de saída; teste de contrato com 401 sem sessão, 404 para entrada alheia e filtro de agenda.
+
+---
+
+## EXECUÇÃO 3
+
+**DATA/HORA:** 2026-11-08, 08:11 a 08:45 (America/Sao_Paulo)
+
+**FASE:** 1 — fundação do calendário
+
+**TAREFA:** leitura da agenda: serviço de aplicação, `GET /calendar/entries` e
+`GET /calendar/entries/{id}` com autorização por dono (sem criação/edição).
+
+**REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
+
+**ARQUIVOS:**
+- `src/main/java/com/socialcoisa/rede/calendar/application/CalendarQueryService.java` (novo)
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryController.java` (novo)
+- `src/test/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryReadApiTests.java` (novo)
+- `docs/engineering/ENOIS-CALENDAR-ROADMAP.md`, `ENOIS-CALENDAR-ARCHITECTURE.md`,
+  `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
+
+**IMPLEMENTAÇÃO:**
+- `GET /calendar/entries?from=&to=&scope=`: janela meia-aberta sobre as entradas do dono da sessão.
+  `scope` ausente devolve as duas agendas (visão consolidada composta na consulta, não uma terceira
+  agenda). `from`, `to` ausentes, no formato errado ou com janela invertida viram 400
+  `INVALID_WINDOW`; agenda fora de `SOCIAL`/`PROFESSIONAL` vira 400 `INVALID_SCOPE`.
+- `GET /calendar/entries/{id}`: detalhe do próprio compromisso. Entrada de outra pessoa responde o
+  mesmo 404 `CALENDAR_ENTRY_NOT_FOUND` de um identificador inexistente, para não confirmar que o id
+  existe.
+- Autorização pelo `CurrentUserResolver` existente: sem sessão é 401 nas duas rotas, antes de tocar
+  o banco.
+- Saída pelo DTO `CalendarEntryView`, com instantes ISO-8601 UTC, `timeZoneId` do organizador e
+  `cancelledAt`; a entidade e o `ownerId` não saem no corpo.
+- Decisão registrada como D10 na arquitetura: a consulta devolve o cancelado na janela
+  (`state=CANCELLED`), porque a tela e o `.ics` precisam mostrar o que foi desmarcado.
+- Observação de fluxo: o PR #531 foi mergeado como squash e a branch antiga ficou com o conteúdo
+  duplicado. Esta unidade foi aplicada numa branch nova a partir da `qa` (`6ac79d83`), não na branch
+  do #531.
+
+**TESTES:** `./mvnw -o test -Dtest=CalendarEntryReadApiTests` — 9 testes, 0 falhas, 0 erros,
+executados na árvore final sobre a `qa` `6ac79d83`. Cobrem 401 nas duas rotas sem sessão, isolamento
+entre donos na lista e no detalhe, filtro por agenda e consolidada, janela meia-aberta dos dois lados
+(termina no início e começa no fim não aparecem; atravessa aparece), 404 sem enumeração, campos do
+contrato sem `ownerId`, os quatro casos de 400, compromisso cancelado e o alias `/v1`.
+Os 20 testes de domínio e persistência da execução 2 continuam verdes.
+
+**PR:** [#536](https://github.com/Rede-ENois/enois-backend/pull/536) — aguardando revisão humana.
+Documentação no PR [#742](https://github.com/Rede-ENois/enois-frontend/pull/742), que declara a
+dependência do #536.
+
+**BLOQUEIOS:** nenhum novo. B5 segue valendo: esta unidade é só API, sem tela, então não houve
+verificação visual. A migração de dados de `events` (B2) continua pendente como unidade própria.
+
+**PRÓXIMA EXECUÇÃO:** Fase 1, terceira unidade — `POST /calendar/entries`, `PATCH` e `DELETE`
+(cancelamento) com validação do corpo, `Idempotency-Key` no padrão do repositório e autorização por
+dono; testes de contrato de 201, 400, 404, idempotência e cancelamento. Sem convites ainda.
