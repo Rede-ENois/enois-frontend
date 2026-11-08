@@ -176,7 +176,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#538](https://github.com/Rede-ENois/enois-backend/pull/538) | enois-backend | Fase 1: escrita da agenda (`POST`, `PATCH`, `DELETE` cancelando) com `Idempotency-Key` e autorização por dono | **mergeado** em `422d852e` (2026-11-08) |
 | [#744](https://github.com/Rede-ENois/enois-frontend/pull/744) | enois-frontend | Documentação: execução 4 | **mergeado** em `2b82fd3b` (2026-11-08) |
 | [#541](https://github.com/Rede-ENois/enois-backend/pull/541) | enois-backend | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado) | aberto, **aguardando revisão humana** |
-| `PENDENTE` | enois-frontend | Documentação: execução 5 e decisões D13/D14 | aberto, **aguardando revisão humana**; depende do #541 |
+| [#745](https://github.com/Rede-ENois/enois-frontend/pull/745) | enois-frontend | Documentação: execução 5 e decisões D13/D14 | aberto, **aguardando revisão humana**; depende do #541 |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.

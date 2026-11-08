@@ -281,7 +281,7 @@ sobre a `qa` `422d852e`) — 51 testes, 0 falhas, 0 erros: `CalendarInvitationAp
 Nenhuma rodada precisou de conserto: a suíte de convites passou de primeira.
 
 **PR:** backend [#541](https://github.com/Rede-ENois/enois-backend/pull/541), aguardando revisão
-humana. Documentação aberta nesta execução, depende do #541.
+humana. Documentação [#745](https://github.com/Rede-ENois/enois-frontend/pull/745), depende do #541.
 
 **BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`) continua pendente como
 unidade própria. B5 continua valendo: unidade só de API, sem tela, então não há verificação a
