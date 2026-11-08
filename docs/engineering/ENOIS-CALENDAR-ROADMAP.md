@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=1 (fundação do calendário)
-EXECUCAO=5
-ULTIMA_ATUALIZACAO=2026-11-08T10:40:00-03:00
+FASE_ATUAL=1 (fundação do calendário) — concluída; próxima é a 2 (Design System)
+EXECUCAO=6
+ULTIMA_ATUALIZACAO=2026-11-08T11:45:00-03:00
 ```
 
 ---
@@ -151,7 +151,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | Fase | Escopo | Depende de | Estado |
 |---|---|---|---|
 | 0 | Inventário + roadmap + contratos | — | **concluída** |
-| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **em andamento** (modelo, leitura, escrita e convites entregues; falta a listagem de convites pendentes) |
+| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
 | 2 | Design System: calendário mês/semana/dia/lista, alternância, estados | 1 (contrato) | pendente |
 | 3 | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes | 1, 2 | pendente |
 | 4 | Agenda social: chamadas, eventos de grupo/comunidade, pessoais | 3 | pendente |
@@ -171,12 +171,14 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 |---|---|---|---|
 | [#740](https://github.com/Rede-ENois/enois-frontend/pull/740) | enois-frontend | Documentação: roadmap, arquitetura e log | **mergeado** em `6765a46a` (2026-11-08) |
 | [#531](https://github.com/Rede-ENois/enois-backend/pull/531) | enois-backend | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela | **mergeado** em `6ac79d83` (2026-11-08, squash) |
-| [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | aberto, **aguardando revisão humana** |
+| [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | **mergeado** em `3a803a01` (2026-11-08) |
 | [#742](https://github.com/Rede-ENois/enois-frontend/pull/742) | enois-frontend | Documentação: execução 3 | **mergeado** em `cd193381` (2026-11-08) |
 | [#538](https://github.com/Rede-ENois/enois-backend/pull/538) | enois-backend | Fase 1: escrita da agenda (`POST`, `PATCH`, `DELETE` cancelando) com `Idempotency-Key` e autorização por dono | **mergeado** em `422d852e` (2026-11-08) |
 | [#744](https://github.com/Rede-ENois/enois-frontend/pull/744) | enois-frontend | Documentação: execução 4 | **mergeado** em `2b82fd3b` (2026-11-08) |
-| [#541](https://github.com/Rede-ENois/enois-backend/pull/541) | enois-backend | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado) | aberto, **aguardando revisão humana** |
-| [#745](https://github.com/Rede-ENois/enois-frontend/pull/745) | enois-frontend | Documentação: execução 5 e decisões D13/D14 | aberto, **aguardando revisão humana**; depende do #541 |
+| [#745](https://github.com/Rede-ENois/enois-frontend/pull/745) | enois-frontend | Documentação: execução 5 e decisões D13/D14 | **mergeado** em `ba8ee20f` (2026-11-08) |
+| [#541](https://github.com/Rede-ENois/enois-backend/pull/541) | enois-backend | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado) | **mergeado** em `358acbcc` (2026-11-08) |
+| [#542](https://github.com/Rede-ENois/enois-backend/pull/542) | enois-backend | Fase 1: detalhe com o lugar do leitor e `GET /calendar/invitations` (convites pendentes) | aberto, **aguardando revisão humana** |
+| [#746](https://github.com/Rede-ENois/enois-frontend/pull/746) | enois-frontend | Documentação: execução 6 e decisão D15 | aberto, **aguardando revisão humana** |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -185,11 +187,12 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (backend, `feat/enois-calendar-leitura`, árvore final sobre a `qa` `6ac79d83`),
+Última execução (backend, `feat/enois-calendar-detalhe`, árvore final sobre a `qa` `358acbcc`),
 `./mvnw -o test -Dtest=...`:
 
 | Classe | Testes | Resultado |
 |---|---|---|
+| `CalendarDetailAndPendingInvitationsApiTests` | 6 | verde (detalhe do convidado sem lista, 404 de estranho, detalhe do dono com participantes, pendentes, cancelada fora, alias `/v1`) |
 | `CalendarInvitationApiTests` | 11 | verde (convite pelo @, 409 repetido, 404 alheio, resposta, agenda do convidado, remoção) |
 | `CalendarEntryWriteApiTests` | 9 | verde (contrato HTTP da escrita: 201, 400, 404, idempotência, cancelamento) |
 | `CalendarEntryReadApiTests` | 9 | verde (contrato HTTP da leitura) |
@@ -217,11 +220,17 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 6 — Fase 1, quinta unidade (fecha a fundação):** `GET /calendar/entries/{id}` devolvendo
-o lugar do leitor (dono ou convidado) e a lista de participantes para o dono, mais
-`GET /calendar/invitations?state=INVITED` para a tela mostrar os convites pendentes sem varrer a
-agenda. Testes de contrato do detalhe para convidado (200, sem dono exposto) e da lista de
-pendentes. Com isso a Fase 1 fecha e a Fase 2 (Design System) começa.
+**Execução 7 — Fase 2, primeira unidade (Design System):** componentes de calendário em
+`Rede-ENois/enois-design-system` — visão de mês, semana, dia e lista, mais a alternância entre elas,
+com `useMessages()` para a microcópia e `src/types/domain/calendar/` para os tipos. Sem chamada de
+API dentro dos componentes. Publicar a versão e atualizar o lock do front na mesma entrega.
+Verificação: `npm run build`, `npm run typecheck`, `npm run lint` e `npm test` no DS.
+
+*(Tarefa da execução 6, entregue:)* **Execução 6 — Fase 1, quinta unidade (fecha a fundação):**
+`GET /calendar/entries/{id}` devolvendo o lugar do leitor (dono ou convidado) e a lista de
+participantes para o dono, mais `GET /calendar/invitations` para a tela mostrar os convites
+pendentes sem varrer a agenda. Testes de contrato do detalhe para convidado e da lista de pendentes
+entregues.
 
 *(Tarefa da execução 5, entregue:)* **Execução 5 — Fase 1, quarta unidade: convites e participantes.** Tabela
 `calendar_entry_participants` com estado por participante (convidado, aceito, recusado, talvez),
@@ -249,6 +258,7 @@ leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois dest
 | 3 | 2026-11-08 ~08:40 | 1 | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #742 |
 | 4 | 2026-11-08 ~09:35 | 1 | Escrita da entrada (`POST`, `PATCH`, `DELETE` cancelando) com validação, `Idempotency-Key` e autorização por dono + 9 testes de contrato verdes; 40 testes verdes na suíte do calendário e guardas |
 | 5 | 2026-11-08 ~10:40 | 1 | Convites e participantes (`V258`): convite pelo @, resposta por participante, remoção pelo organizador e agenda do convidado com o estado do convite + 11 testes de contrato; 51 testes verdes na suíte do calendário e guardas |
+| 6 | 2026-11-08 ~11:45 | 1 | Detalhe com o lugar do leitor (`{ entry, owner, participation, participants }`, lista só para o organizador) e `GET /calendar/invitations` com os pendentes + 6 testes de contrato; 57 testes verdes na suíte do calendário e guardas; backend PR #542 |
 
 ---
 

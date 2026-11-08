@@ -299,3 +299,73 @@ dono), e entra a listagem de convites pendentes (`GET /calendar/invitations?stat
 tela conseguir mostrar "você foi convidado" sem varrer a agenda; testes de contrato do detalhe para
 convidado (200, sem convidados expostos) e de convite pendente. Com isso a Fase 1 fecha e a Fase 2
 (Design System) começa na execução seguinte.
+
+---
+
+## EXECUÇÃO 6
+
+**DATA/HORA:** 2026-11-08, 11:10–11:55 (America/Sao_Paulo)
+
+**FASE:** 1 — fundação do calendário (última unidade; fase fechada)
+
+**TAREFA:** fechamento da fundação. `GET /calendar/entries/{id}` passa a devolver o lugar de quem
+lê (dono com a lista de participantes, convidado com a própria resposta e sem a lista) e entra
+`GET /calendar/invitations` com os convites que a pessoa ainda não respondeu.
+
+**REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
+
+**ARQUIVOS:**
+- `src/main/java/com/socialcoisa/rede/calendar/application/CalendarQueryService.java` — `detail(...)`
+- `src/main/java/com/socialcoisa/rede/calendar/application/CalendarInvitationService.java` —
+  `pendingInvitations(...)`
+- `src/main/java/com/socialcoisa/rede/calendar/application/port/out/CalendarParticipantRepository.java`
+  e `adapters/out/persistence/` — `findPendingByUser`, consulta por pessoa e estado
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryController.java` —
+  `AgendaDetailView` e o detalhe com participantes
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarInvitationsController.java` (novo)
+- `src/test/java/.../CalendarDetailAndPendingInvitationsApiTests.java` (novo),
+  `CalendarEntryReadApiTests.java` e `CalendarEntryWriteApiTests.java` (formato novo do detalhe)
+- `docs/engineering/ENOIS-CALENDAR-ROADMAP.md`, `ENOIS-CALENDAR-ARCHITECTURE.md` (D15),
+  `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
+
+**IMPLEMENTAÇÃO:**
+- O detalhe passou a devolver `{ entry, owner, participation, participants }`, o mesmo vocabulário
+  do item da agenda. `participants` vem preenchido só para o organizador; para o convidado é nulo.
+- O convidado lê o compromisso do organizador com `owner=false` e o estado do próprio convite, e
+  continua recebendo 404 em toda rota de escrita, como já recebia.
+- Quem não organiza nem foi convidado recebe o mesmo 404 `CALENDAR_ENTRY_NOT_FOUND` de um id que não
+  existe, tanto no detalhe quanto numa entrada hipotética.
+- `GET /calendar/invitations` devolve os compromissos ativos em que a pessoa está em `INVITED`, do
+  convite mais antigo ao mais novo. Entrada cancelada sai da lista. Sem sessão é 401, e o alias
+  `/v1` serve o mesmo contrato.
+- Nenhuma migration nesta unidade: as linhas de participante e os índices já existiam desde a V258.
+
+**TESTES:** `./mvnw -o test -Dtest='Calendar*Tests,MariaDbReservedWordsTests,FlywayMigrationConfigTests,AutomatedWritePathsTests'`
+na árvore final (worktree `feat/enois-calendar-detalhe` sobre a `qa` `358acbcc`) — 9 classes,
+**57 testes, 0 falhas, 0 erros**: `CalendarDetailAndPendingInvitationsApiTests` 6/6 (novo),
+`CalendarInvitationApiTests` 11/11, `CalendarEntryReadApiTests` 9/9, `CalendarEntryWriteApiTests`
+9/9, `CalendarEntryTests` 8/8, `CalendarEntryPersistenceTests` 5/5, `MariaDbReservedWordsTests` 2/2,
+`FlywayMigrationConfigTests` 5/5 e `AutomatedWritePathsTests` 2/2.
+
+A primeira rodada teve 1 falha, e era do contrato antigo: `CalendarEntryWriteApiTests` ainda lia o
+detalhe no formato plano (`$.id`, `$.title`). A asserção foi atualizada para `$.entry.*` mais
+`$.owner`; nenhum código de produção mudou por causa dela.
+
+**PR:** backend [#542](https://github.com/Rede-ENois/enois-backend/pull/542), aguardando revisão
+humana. Documentação [#746](https://github.com/Rede-ENois/enois-frontend/pull/746), que declara a
+dependência do #542.
+
+A CI do #542 fechou verde: `Testes (PR)` (7m28s), `Validar build (PR)`, `Schema x migrations`,
+CodeQL (java-kotlin, javascript-typescript, actions, python) e snyk passaram; os jobs de build e
+deploy ficaram em `skipping`, como é o esperado num PR para a `qa`.
+
+**BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`, colunas de data em texto)
+continua pendente como unidade própria e não impede nenhuma fase; fica registrada para não virar
+esquecimento. B5 continua valendo: unidade só de API, sem tela, então não há verificação a 390px e
+1280px a registrar.
+
+**PRÓXIMA EXECUÇÃO:** Fase 2 — Design System. Primeira unidade no repositório
+`Rede-ENois/enois-design-system`: componentes de calendário (mês, semana, dia, lista) e a alternância
+entre as visões, com tipos em `src/types/domain/calendar/`, microcópia por `useMessages()` e nenhuma
+chamada de API dentro do componente. Prova: `npm run build`, `npm run typecheck`, `npm run lint` e
+`npm test` no DS; publicar a versão e atualizar o lock do front na mesma entrega.
