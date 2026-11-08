@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { startRingtone } from "./call-ringtone";
 
-/** AudioContext de mentira: só conta o que foi criado e fechado. */
-function fakeAudioContext(created: number[]) {
+/** AudioContext de mentira: registra as frequências pedidas aos osciladores. */
+function fakeAudioContext(created: number[], frequencies: number[]) {
   return class {
     currentTime = 0;
     destination = {};
@@ -14,7 +14,14 @@ function fakeAudioContext(created: number[]) {
     createOscillator() {
       return {
         type: "sine",
-        frequency: { value: 0 },
+        frequency: {
+          get value() {
+            return 0;
+          },
+          set value(f: number) {
+            frequencies.push(f);
+          },
+        },
         connect: () => ({ connect: () => {} }),
         start: () => {},
         stop: () => {},
@@ -40,11 +47,13 @@ function fakeAudioContext(created: number[]) {
 
 describe("startRingtone", () => {
   const created: number[] = [];
+  const frequencies: number[] = [];
 
   beforeEach(() => {
     created.length = 0;
+    frequencies.length = 0;
     vi.useFakeTimers();
-    Object.assign(window, { AudioContext: fakeAudioContext(created) });
+    Object.assign(window, { AudioContext: fakeAudioContext(created, frequencies) });
   });
 
   afterEach(() => {
@@ -73,5 +82,22 @@ describe("startRingtone", () => {
     stop();
     expect(setTimeoutSpy).toHaveBeenCalled();
     setTimeoutSpy.mockRestore();
+  });
+
+  it("a mesma chamada toca sempre as mesmas notas, e chamadas diferentes soam diferentes", () => {
+    const stopA = startRingtone({ enabled: true, callId: "call_aaa" });
+    expect(frequencies).toHaveLength(2);
+    const notasDeA = [...frequencies];
+    frequencies.length = 0;
+    stopA();
+
+    const stopA2 = startRingtone({ enabled: true, callId: "call_aaa" });
+    expect(frequencies).toEqual(notasDeA);
+    frequencies.length = 0;
+    stopA2();
+
+    const stopB = startRingtone({ enabled: true, callId: "call_bbb" });
+    expect(frequencies).not.toEqual(notasDeA);
+    stopB();
   });
 });
