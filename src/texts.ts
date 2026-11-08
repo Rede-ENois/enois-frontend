@@ -3798,6 +3798,9 @@ export const texts = {
     failed: "Falha de conexão",
     answer: "Atender",
     decline: "Recusar",
+    /** Com duas chamadas na tela, cada botão diz de quem é a chamada que ele atende ou recusa. */
+    answerFrom: (name: string) => `Atender a chamada de ${name}`,
+    declineFrom: (name: string) => `Recusar a chamada de ${name}`,
     /** A credencial apontou para um servidor de reunião que não é o nosso: a sala não abre. */
     untrustedRoom: "Esta sala não está no nosso servidor de chamadas, então ela não foi aberta.",
     cancel: "Cancelar",
