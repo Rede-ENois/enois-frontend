@@ -40,6 +40,8 @@ env:
   VITE_SITE_URL_QA: https://enois-qa.b7cloud.tech
   VITE_API_BACKEND_PROD: https://api.enois.ia.br/api
   VITE_SITE_URL_PROD: https://enois.ia.br
+  # isweee.com espelha o app (enois.ia.br segue o principal); a QA tem um domínio só.
+  VITE_SITE_DOMAINS_PROD: enois.ia.br,isweee.com
 
 permissions:
   contents: read
@@ -140,9 +142,11 @@ jobs:
           if [ "${BRANCH}" = "main" ]; then
             echo "api_backend=${VITE_API_BACKEND_PROD}" >> "$GITHUB_OUTPUT"
             echo "site_url=${VITE_SITE_URL_PROD}" >> "$GITHUB_OUTPUT"
+            echo "site_domains=${VITE_SITE_DOMAINS_PROD}" >> "$GITHUB_OUTPUT"
           else
             echo "api_backend=${VITE_API_BACKEND_QA}" >> "$GITHUB_OUTPUT"
             echo "site_url=${VITE_SITE_URL_QA}" >> "$GITHUB_OUTPUT"
+            echo "site_domains=" >> "$GITHUB_OUTPUT"
           fi
 
       # push:true direto no buildx (buildkit) dá 400 no token service do Harbor com
@@ -159,6 +163,7 @@ jobs:
           build-args: |
             VITE_API_BACKEND=${{ steps.buildargs.outputs.api_backend }}
             VITE_SITE_URL=${{ steps.buildargs.outputs.site_url }}
+            VITE_SITE_DOMAINS=${{ steps.buildargs.outputs.site_domains }}
           secrets: |
             npm_token=${{ secrets.GITHUB_TOKEN }}
           tags: |
