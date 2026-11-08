@@ -18,11 +18,13 @@ arquitetura.
 `enois-design-system` (leitura do pacote publicado).
 
 **ARQUIVOS:**
+
 - `docs/engineering/ENOIS-CALENDAR-ROADMAP.md` (novo)
 - `docs/engineering/ENOIS-CALENDAR-ARCHITECTURE.md` (novo)
 - `docs/engineering/ENOIS-CALENDAR-EXECUTION-LOG.md` (novo)
 
 **IMPLEMENTAÇÃO:**
+
 - Backend: mapeados 41 pacotes; identificados como base o outbox transacional, os 42 workers
   `@Scheduled`, o módulo `notifications` com `NotificationCreatedEvent`, `calls` com `event_id`
   (V256) e `mentoring` com `MentorSlot` tipado em `Instant`.

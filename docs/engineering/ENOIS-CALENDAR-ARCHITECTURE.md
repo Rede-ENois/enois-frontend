@@ -115,3 +115,18 @@ As visões de mês/semana/dia são construídas com os componentes já existente
 Não introduzir biblioteca de calendário sem necessidade comprovada: as três visões são aritmética de
 data e grade, e a dependência externa traria o próprio CSS e o próprio tema, que brigariam com os 60
 temas do app.
+
+---
+
+## D9 — A execução horária é uma sessão de agente com o repositório como memória
+
+**Problema.** O projeto pede uma execução por hora que continue de onde a anterior parou. Uma
+automação agendada não nasce com o histórico da conversa anterior: o que ela tem é o workspace.
+
+**Decisão.** O estado entre execuções fica em três arquivos versionados em `docs/engineering/`:
+o roadmap (estado, fases, bloqueios, próxima tarefa), a arquitetura (decisões) e o log (o que cada
+execução entregou). Cada execução atualiza os três no fim, e são a primeira leitura da seguinte.
+
+**Consequência prática.** Perder a lista de tarefas de uma sessão não perde trabalho, porque a lista
+real está no roadmap. Bloqueio (credencial OAuth, acesso, pacote privado) fica escrito com o
+encaminhamento em vez de ser redescoberto a cada hora.
