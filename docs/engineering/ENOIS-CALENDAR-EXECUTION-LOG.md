@@ -355,6 +355,10 @@ detalhe no formato plano (`$.id`, `$.title`). A asserção foi atualizada para `
 humana. Documentação [#746](https://github.com/Rede-ENois/enois-frontend/pull/746), que declara a
 dependência do #542.
 
+A CI do #542 fechou verde: `Testes (PR)` (7m28s), `Validar build (PR)`, `Schema x migrations`,
+CodeQL (java-kotlin, javascript-typescript, actions, python) e snyk passaram; os jobs de build e
+deploy ficaram em `skipping`, como é o esperado num PR para a `qa`.
+
 **BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`, colunas de data em texto)
 continua pendente como unidade própria e não impede nenhuma fase; fica registrada para não virar
 esquecimento. B5 continua valendo: unidade só de API, sem tela, então não há verificação a 390px e
