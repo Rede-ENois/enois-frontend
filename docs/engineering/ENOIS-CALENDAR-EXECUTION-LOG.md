@@ -214,6 +214,9 @@ humana. Documentação — [#744](https://github.com/Rede-ENois/enois-frontend/p
 A CI do #538 fechou verde: `Testes (PR)`, `Validar build (PR)`, `Schema x migrations`, CodeQL e
 snyk passaram; deploy não roda em PR.
 
+A CI do #541 fechou verde: `Testes (PR)` (9m18s), `Validar build (PR)`, `Schema x migrations`, CodeQL
+e snyk passaram.
+
 **BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`) continua pendente como
 unidade própria. B5 continua valendo: esta unidade é só API, sem tela, então não há verificação a
 390px/1280px a registrar. A tela entra na Fase 3, quando existir o componente da Fase 2.
@@ -282,6 +285,9 @@ Nenhuma rodada precisou de conserto: a suíte de convites passou de primeira.
 
 **PR:** backend [#541](https://github.com/Rede-ENois/enois-backend/pull/541), aguardando revisão
 humana. Documentação [#745](https://github.com/Rede-ENois/enois-frontend/pull/745), depende do #541.
+
+A CI do #541 fechou verde: `Testes (PR)` (9m18s), `Validar build (PR)`, `Schema x migrations`, CodeQL
+e snyk passaram.
 
 **BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`) continua pendente como
 unidade própria. B5 continua valendo: unidade só de API, sem tela, então não há verificação a
