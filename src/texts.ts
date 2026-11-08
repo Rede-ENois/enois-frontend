@@ -3780,6 +3780,14 @@ export const texts = {
     audioTitle: "Chamada de áudio",
     videoTitle: "Chamada de vídeo",
     incoming: (name: string) => `${name} está te chamando`,
+    /**
+     * Chamada que chegou com outra já na tela. Ela não some: fica na fila e abre assim que a atual
+     * terminar — dizer isso evita a impressão de que a ligação foi perdida.
+     */
+    incomingHeld: (name: string) => `Chamada de ${name} esperando`,
+    answerHeld: "Atender esta",
+    /** Chamada seguinte da fila: dizer o nome evita atender a pessoa errada. */
+    nextInQueue: (name: string) => `A seguir: ${name}`,
     ringing: "Chamando…",
     connecting: "Conectando…",
     active: "Em andamento",

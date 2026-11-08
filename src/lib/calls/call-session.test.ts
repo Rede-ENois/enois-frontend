@@ -102,3 +102,75 @@ describe("callSessionStore", () => {
     expect(getCallSession().notConfigured).toBe(false);
   });
 });
+
+describe("fila de chamadas", () => {
+  const OTHER: CallView = { ...CALL, id: "call_2", displayName: "Bia", isInitiator: false };
+
+  beforeEach(() => callSessionStore.idle());
+
+  it("a segunda chamada não apaga a que está na tela", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    const state = getCallSession();
+    expect(state.call?.id).toBe("call_1");
+    expect(state.phase).toBe("calling");
+    expect(state.waiting.map((held) => held.id)).toEqual(["call_2"]);
+  });
+
+  it("a mesma chamada atualiza em vez de entrar na fila", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring({ ...CALL, state: "CONNECTING" }, "calling");
+    expect(getCallSession().waiting).toEqual([]);
+    expect(getCallSession().call?.state).toBe("CONNECTING");
+  });
+
+  it("a fila sobrevive ao fim da chamada da tela", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    callSessionStore.ended({ ...CALL, state: "ENDED" });
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_2"]);
+  });
+
+  it("fechar a tela não descarta quem está esperando", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    callSessionStore.idle();
+    expect(getCallSession()).toMatchObject({ phase: "idle", call: null });
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_2"]);
+  });
+
+  it("a próxima da fila assume a tela quando a de cima termina", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    callSessionStore.ended({ ...CALL, state: "ENDED" });
+    const promoted = callSessionStore.promoteWaiting();
+    expect(promoted?.id).toBe("call_2");
+    expect(getCallSession()).toMatchObject({ phase: "incoming", call: { id: "call_2" } });
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("atender uma da fila troca as duas de lugar, sem perder a de cima", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    const swapped = callSessionStore.swapWaiting("call_2");
+    expect(swapped?.id).toBe("call_2");
+    expect(getCallSession()).toMatchObject({ phase: "incoming", call: { id: "call_2" } });
+    // A que estava na tela continua tocando: ninguém a recusou.
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_1"]);
+  });
+
+  it("recusar uma da fila só tira ela da fila", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    callSessionStore.removeWaiting("call_2");
+    expect(getCallSession()).toMatchObject({ phase: "calling", call: { id: "call_1" } });
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("a chamada que terminou sai da fila sozinha", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    callSessionStore.ended({ ...OTHER, state: "MISSED" });
+    expect(getCallSession().waiting).toEqual([]);
+  });
+});

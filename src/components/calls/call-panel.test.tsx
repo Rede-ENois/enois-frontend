@@ -33,12 +33,14 @@ function ringingCall(): CallView {
   };
 }
 
+const actions = vi.hoisted(() => ({ answer: vi.fn(), decline: vi.fn() }));
+
 vi.mock("./calls-provider", () => ({
   useCalls: () => ({
     startDirect: vi.fn(),
     startGroup: vi.fn(),
-    answer: vi.fn(),
-    decline: vi.fn(),
+    answer: actions.answer,
+    decline: actions.decline,
     open: vi.fn(),
     close: () => callSessionStore.idle(),
     call: null,
@@ -111,5 +113,102 @@ describe("painel da chamada sem servidor de chamadas configurado", () => {
     act(() => callSessionStore.error("Você não participa desta conversa."));
     expect(host.textContent).toContain("Você não participa desta conversa.");
     expect(host.textContent).not.toContain("Chamadas em breve");
+  });
+});
+
+describe("chamada recebida em tela cheia", () => {
+  let root: Root;
+  let host: HTMLDivElement;
+  let client: QueryClient;
+
+  const incoming = (overrides: Partial<CallView> = {}): CallView => ({
+    ...ringingCall(),
+    isInitiator: false,
+    ...overrides,
+  });
+
+  const button = (label: string) =>
+    Array.from(host.querySelectorAll("button")).find((element) =>
+      (element.textContent ?? "").includes(label),
+    );
+
+  beforeEach(() => {
+    actions.answer.mockClear();
+    actions.decline.mockClear();
+    callSessionStore.idle();
+    host = document.createElement("div");
+    document.body.append(host);
+    client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    root = createRoot(host);
+    act(() =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <CallPanel />
+        </QueryClientProvider>,
+      ),
+    );
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+    callSessionStore.idle();
+  });
+
+  it("ocupa a tela inteira, como um discador", () => {
+    act(() => callSessionStore.ring(incoming(), "incoming"));
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+    expect(dialog!.className).toContain("inset-0");
+    expect(dialog!.getAttribute("aria-modal")).toBe("true");
+  });
+
+  it("mostra quem liga e as duas saídas, sem atender sozinho", () => {
+    act(() => callSessionStore.ring(incoming(), "incoming"));
+    expect(host.textContent).toContain("Ana");
+    expect(button("Atender")).toBeTruthy();
+    expect(button("Recusar")).toBeTruthy();
+    // Nada de atender sem clique: a decisão é de quem recebe.
+    expect(actions.answer).not.toHaveBeenCalled();
+    expect(getCallSession().phase).toBe("incoming");
+  });
+
+  it("recusar chama a recusa e não atende", () => {
+    act(() => callSessionStore.ring(incoming(), "incoming"));
+    act(() => button("Recusar")!.click());
+    expect(actions.decline).toHaveBeenCalledTimes(1);
+    expect(actions.answer).not.toHaveBeenCalled();
+  });
+
+  it("atender chama o atendimento", () => {
+    act(() => callSessionStore.ring(incoming(), "incoming"));
+    act(() => button("Atender")!.click());
+    expect(actions.answer).toHaveBeenCalledTimes(1);
+  });
+
+  it("a chamada que já estava na tela aparece e pode ser atendida dali", () => {
+    act(() => callSessionStore.ring(ringingCall(), "calling"));
+    act(() => callSessionStore.ring(incoming({ id: "call_2", displayName: "Bia" }), "incoming"));
+    // A de cima continua na tela; a nova espera e é anunciada pelo nome.
+    expect(host.textContent).toContain("A seguir: Bia");
+    expect(getCallSession().call?.id).toBe("call_1");
+  });
+
+  it("a chamada ao vivo também abre em tela cheia", () => {
+    act(() => callSessionStore.ring(ringingCall(), "calling"));
+    act(() =>
+      callSessionStore.live({
+        callId: "call_1",
+        kind: "AUDIO",
+        modality: "DIRECT",
+        host: "https://chamadas.example.test",
+        tokenTtlSeconds: 7200,
+        room: "sala-1",
+        jwt: "token",
+        call: { ...ringingCall(), state: "ACTIVE" },
+      }),
+    );
+    const dialog = host.querySelector('[role="dialog"]');
+    expect(dialog!.className).toContain("inset-0");
   });
 });

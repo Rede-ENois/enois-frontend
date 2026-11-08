@@ -22,7 +22,7 @@
   },
   "src/components/calls/call-panel.tsx": {
     "local/no-front-markup": {
-      "count": 58
+      "count": 56
     }
   },
   "src/components/calls/call-report-dialog.tsx": {

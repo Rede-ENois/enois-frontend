@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { CallKind } from "@/types/application/call/call-kind";
+import type { CallPhase } from "@/types/application/call/call-phase";
 import type { CallState } from "@/types/application/call/call-state";
 import type { CallView } from "@/types/application/call/call-view";
 import type { CallsContextValue } from "@/types/application/call/calls-context-value";
@@ -120,6 +121,14 @@ function messageFor(error: unknown): string {
 /** Fecha a tela com o motivo certo: aviso de ambiente em configuração ou erro explícito. */
 function failWith(error: unknown) {
   callSessionStore.error(messageFor(error), { notConfigured: isNotConfigured(error) });
+}
+
+/**
+ * A tela está livre para a próxima da fila. Erro ainda ocupa a tela: a pessoa viu um aviso e é ela
+ * que fecha. "Joining" também: a credencial daquela chamada está a caminho.
+ */
+function isSlotFree(phase: CallPhase): boolean {
+  return phase === "idle" || phase === "ended";
 }
 
 /**
@@ -279,19 +288,44 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     // Só na montagem: depois quem manda é o stream e a conferência periódica.
   }, []);
 
-  // Toque da chamada recebida: só 1:1 (grupo nunca toca) e nunca em modo lite/BATATA.
-  const ringingKind = session.phase === "incoming" ? (call?.modality ?? null) : null;
+  // Toque da chamada recebida: só 1:1 (grupo nunca toca) e nunca em modo lite/BATATA. A fila
+  // conta: uma 1:1 esperando atrás de uma chamada em grupo também precisa tocar, senão ela chega
+  // em silêncio e a pessoa só descobre quando a de cima termina.
+  const ringing =
+    (session.phase === "incoming" && call?.modality === "DIRECT") ||
+    session.waiting.some((held) => held.modality === "DIRECT");
   useEffect(() => {
-    if (ringingKind !== "DIRECT") return;
+    if (!ringing) return;
     return startRingtone({ enabled: !silent.current });
-  }, [ringingKind]);
+  }, [ringing]);
 
-  // Chamada encerrada some sozinha depois de mostrar o motivo.
+  // Chamada encerrada some sozinha depois de mostrar o motivo. A próxima da fila assume antes
+  // disso: a tela do "encerrada" é da chamada anterior e não pode atrasar quem está tocando.
   useEffect(() => {
     if (session.phase !== "ended") return;
     const timer = setTimeout(() => callSessionStore.idle(), ENDED_DISMISS_MS);
     return () => clearTimeout(timer);
   }, [session.phase]);
+
+  // Fila: chamada que chegou com outra na tela entra quando a de cima termina (ou antes, por
+  // "Atender esta"). O estado real vem do servidor — a fila guarda só quem tocou.
+  const heldId = session.waiting[0]?.id ?? null;
+  useEffect(() => {
+    if (heldId === null) return;
+    if (!isSlotFree(session.phase)) return;
+    const next = callSessionStore.promoteWaiting();
+    if (!next) return;
+    void callsApi
+      .get(next.id)
+      .then(applyServerState)
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 404) {
+          callSessionStore.removeWaiting(next.id);
+          return;
+        }
+        // Rede fora: a próxima conferência da chamada promovida tenta de novo.
+      });
+  }, [heldId, session.phase, applyServerState]);
 
   // Aba fechada/atualizada dentro da chamada: avisa o servidor para não ficar pendurada.
   useEffect(() => {
@@ -322,30 +356,46 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     [enterRoom, refreshRelated],
   );
 
-  const answer = useCallback(async () => {
-    const current = getCallSession().call;
-    if (!current) return;
-    try {
-      const answered = await callsApi.answer(current.id);
-      await enterRoom(answered);
-      refreshRelated();
-    } catch (error) {
-      failWith(error);
-    }
-  }, [enterRoom, refreshRelated]);
+  /**
+   * Atende. Sem id, é a chamada da tela; com id, é a que está na fila — atender a de baixo não
+   * pode atropelar a de cima, então ela sai da fila e assume a tela.
+   */
+  const answer = useCallback(
+    async (callId?: string) => {
+      const current = callId ? callSessionStore.swapWaiting(callId) : getCallSession().call;
+      if (!current) return;
+      try {
+        const answered = await callsApi.answer(current.id);
+        await enterRoom(answered);
+        refreshRelated();
+      } catch (error) {
+        failWith(error);
+      }
+    },
+    [enterRoom, refreshRelated],
+  );
 
-  const decline = useCallback(async () => {
-    const current = getCallSession().call;
-    callSessionStore.idle();
-    if (!current) return;
-    try {
-      await callsApi.decline(current.id);
-    } catch {
-      // Já terminou do outro lado: a tela fecha do mesmo jeito.
-    } finally {
-      refreshRelated();
-    }
-  }, [refreshRelated]);
+  const decline = useCallback(
+    async (callId?: string) => {
+      const current = callId
+        ? getCallSession().waiting.find((held) => held.id === callId)
+        : getCallSession().call;
+      if (callId) {
+        callSessionStore.removeWaiting(callId);
+      } else {
+        callSessionStore.idle();
+      }
+      if (!current) return;
+      try {
+        await callsApi.decline(current.id);
+      } catch {
+        // Já terminou do outro lado: a tela fecha do mesmo jeito.
+      } finally {
+        refreshRelated();
+      }
+    },
+    [refreshRelated],
+  );
 
   const open = useCallback(
     async (callId: string) => {
