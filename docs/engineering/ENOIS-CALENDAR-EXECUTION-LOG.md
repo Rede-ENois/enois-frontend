@@ -18,11 +18,13 @@ arquitetura.
 `enois-design-system` (leitura do pacote publicado).
 
 **ARQUIVOS:**
+
 - `docs/engineering/ENOIS-CALENDAR-ROADMAP.md` (novo)
 - `docs/engineering/ENOIS-CALENDAR-ARCHITECTURE.md` (novo)
 - `docs/engineering/ENOIS-CALENDAR-EXECUTION-LOG.md` (novo)
 
 **IMPLEMENTAÇÃO:**
+
 - Backend: mapeados 41 pacotes; identificados como base o outbox transacional, os 42 workers
   `@Scheduled`, o módulo `notifications` com `NotificationCreatedEvent`, `calls` com `event_id`
   (V256) e `mentoring` com `MentorSlot` tipado em `Instant`.
@@ -60,6 +62,7 @@ de persistência e de consulta por intervalo.
 **REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
 
 **ARQUIVOS:**
+
 - `src/main/resources/db/migration/V257__calendar_entries.sql` (novo)
 - `src/main/java/com/socialcoisa/rede/calendar/domain/` — `CalendarEntry`, `CalendarScope`,
   `CalendarKind`, `CalendarEntryState`, `CalendarEntrySource`
@@ -71,6 +74,7 @@ de persistência e de consulta por intervalo.
   `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
 
 **IMPLEMENTAÇÃO:**
+
 - Tabela `calendar_entries` com início/fim em `timestamp`, `time_zone_id` IANA, `scope`, `kind`,
   `state`, origem (`source_type`/`source_id`) e carimbo de cancelamento. `CHECK` garante fim depois
   do início e origem sempre completa ou vazia. Índices `(owner_id, starts_at, state)` e
@@ -116,6 +120,7 @@ DTO de saída; teste de contrato com 401 sem sessão, 404 para entrada alheia e 
 **REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
 
 **ARQUIVOS:**
+
 - `src/main/java/com/socialcoisa/rede/calendar/application/CalendarQueryService.java` (novo)
 - `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryController.java` (novo)
 - `src/test/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryReadApiTests.java` (novo)
@@ -123,6 +128,7 @@ DTO de saída; teste de contrato com 401 sem sessão, 404 para entrada alheia e 
   `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
 
 **IMPLEMENTAÇÃO:**
+
 - `GET /calendar/entries?from=&to=&scope=`: janela meia-aberta sobre as entradas do dono da sessão.
   `scope` ausente devolve as duas agendas (visão consolidada composta na consulta, não uma terceira
   agenda). `from`, `to` ausentes, no formato errado ou com janela invertida viram 400
@@ -173,6 +179,7 @@ dono; testes de contrato de 201, 400, 404, idempotência e cancelamento. Sem con
 **REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
 
 **ARQUIVOS:**
+
 - `src/main/java/com/socialcoisa/rede/calendar/application/CalendarCommandService.java` (novo)
 - `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryController.java`
   (as três rotas de escrita, `CalendarEntryRequest` e `CalendarEntryPatchRequest`)
@@ -181,6 +188,7 @@ dono; testes de contrato de 201, 400, 404, idempotência e cancelamento. Sem con
   `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
 
 **IMPLEMENTAÇÃO:**
+
 - `CalendarCommandService` concentra criação, edição parcial e cancelamento. Toda violação de
   invariante do domínio (`IllegalArgumentException`) vira **400 `INVALID_CALENDAR_ENTRY`** com a
   mensagem do domínio, que já é escrita para quem usa o app; tentar editar entrada cancelada
@@ -244,6 +252,7 @@ passando a incluir o que ela foi convidada a participar.
 **REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
 
 **ARQUIVOS:**
+
 - `src/main/resources/db/migration/V258__calendar_entry_participants.sql` (novo)
 - `src/main/java/com/socialcoisa/rede/calendar/domain/` — `CalendarParticipant`,
   `CalendarParticipantState`
@@ -259,6 +268,7 @@ passando a incluir o que ela foi convidada a participar.
   `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
 
 **IMPLEMENTAÇÃO:**
+
 - Tabela `calendar_entry_participants` com estado por pessoa (`INVITED`, `ACCEPTED`, `DECLINED`,
   `TENTATIVE`), unicidade `(entry_id, user_id)`, quem convidou e os carimbos de convite e resposta.
   Sem chave estrangeira, como no resto do repositório. Índice por compromisso e por pessoa.
@@ -315,6 +325,7 @@ lê (dono com a lista de participantes, convidado com a própria resposta e sem 
 **REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
 
 **ARQUIVOS:**
+
 - `src/main/java/com/socialcoisa/rede/calendar/application/CalendarQueryService.java` — `detail(...)`
 - `src/main/java/com/socialcoisa/rede/calendar/application/CalendarInvitationService.java` —
   `pendingInvitations(...)`
@@ -329,6 +340,7 @@ lê (dono com a lista de participantes, convidado com a própria resposta e sem 
   `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
 
 **IMPLEMENTAÇÃO:**
+
 - O detalhe passou a devolver `{ entry, owner, participation, participants }`, o mesmo vocabulário
   do item da agenda. `participants` vem preenchido só para o organizador; para o convidado é nulo.
 - O convidado lê o compromisso do organizador com `owner=false` e o estado do próprio convite, e
@@ -369,3 +381,111 @@ esquecimento. B5 continua valendo: unidade só de API, sem tela, então não há
 entre as visões, com tipos em `src/types/domain/calendar/`, microcópia por `useMessages()` e nenhuma
 chamada de API dentro do componente. Prova: `npm run build`, `npm run typecheck`, `npm run lint` e
 `npm test` no DS; publicar a versão e atualizar o lock do front na mesma entrega.
+
+---
+
+## Execução 7
+
+**EXECUÇÃO:** 7
+
+**DATA/HORA:** 2026-11-08T13:35:00-03:00
+
+**FASE:** 2 (Design System) — primeira unidade
+
+**TAREFA:** visão de mês, semana, dia e lista no design system, com a alternância entre elas, tipos
+em `src/types/domain/calendar/`, microcópia por `useMessages()` e nenhuma chamada de API dentro do
+componente.
+
+**REPOSITÓRIOS:**
+
+- `Rede-ENois/enois-design-system` (código), worktree `/tmp/wt-ds-calendar`, branch
+  `feat/calendar-views` a partir da `qa` `3f7a756` (versão 0.29.9).
+- `Rede-ENois/enois-frontend` (esta documentação), worktree `/tmp/wt-calendar-docs6`, branch
+  `docs/enois-calendar-execucao-7` a partir da `qa` `eb80d9e2`.
+
+**ARQUIVOS:** no DS, 38 arquivos novos ou alterados (2136 linhas):
+
+- `src/types/domain/calendar/` — 21 arquivos, um tipo por arquivo.
+- `src/types/messages/calendar-messages.ts` e os dois registros (`messages.ts`, `default-messages.ts`).
+- `src/messages/defaults/calendar.ts` — microcópia em pt-BR.
+- `src/lib/calendar/` — `calendar-dates.ts`, `calendar-grid.ts`, `calendar-period.ts`,
+  `calendar-kind-tone.ts`.
+- `src/domain/calendar/` — `calendar-agenda.tsx`, `calendar-view-switcher.tsx`,
+  `calendar-month-view.tsx`, `calendar-week-view.tsx`, `calendar-day-view.tsx`,
+  `calendar-list-view.tsx`, `calendar-entry-row.tsx`, `calendar-error-state.tsx`, `index.ts`, os
+  dois testes e a story.
+- `src/domain/index.ts` — exportação da feature.
+
+No front, este bloco, a seção 8 do roadmap, a seção 10 (próxima tarefa), a linha nova do histórico e
+a decisão D16 na arquitetura.
+
+**IMPLEMENTAÇÃO:**
+
+- `CalendarAgenda` compõe o cabeçalho (anterior, próximo, Hoje e a alternância entre as visões) com
+  a visão escolhida. Recebe itens, período e callbacks; não busca dado, não navega e não importa
+  `@tanstack/*`, `zustand` ou `@/`.
+- As quatro visões:
+  - **Mês**: grade de 7 colunas começando no domingo, com os dias emprestados dos meses vizinhos
+    marcados, o dia de hoje destacado, até três itens por célula e um contador `+N`.
+  - **Semana**: sete colunas, cada uma com o seu dia, em rolagem horizontal abaixo de 42rem.
+  - **Dia**: a lista do dia com o convite respondível (Aceitar, Talvez, Recusar), o botão desligado
+    enquanto a resposta está no caminho e uma linha de estado em `role="status"`.
+  - **Lista**: dias agrupados, com o selo "Hoje", o compromisso cancelado riscado e vazio explícito.
+- `CalendarEntryRow` é a linha compartilhada, com o tom por tipo de compromisso, o horário no fuso da
+  entrada e o `aria-label` que nomeia o link.
+- Data e fuso sem dependência nova: `Intl.DateTimeFormat` com `timeZone` explícito e aritmética de
+  `YYYY-MM-DD` em UTC. `todayIn` devolve o dia de hoje na zona pedida, para a tela não marcar o dia
+  errado quando o cliente está em outro fuso.
+- `periodWindow` por visão devolve o intervalo que o app manda para a API:
+  - mês: a grade inteira, incluindo os dias emprestados (`2026-11` vai de `2026-11-01` a
+    `2026-12-06`);
+  - semana e lista: os sete dias do bloco;
+  - dia: um dia. Todos meio abertos.
+
+  A primeira versão devolvia o mês de calendário na visão de mês. Como a grade desenha os dias
+  emprestados, o começo e o fim de cada semana apareceriam vazios. O conserto é `periodWindow`
+  delegando para `monthWindow`, e o teste fixa a diferença.
+
+- Decisão de produto registrada em D16: a entrada da agenda fica sempre na seção "explore" do menu
+  principal, sem módulo.
+
+**TESTES:** no DS, na árvore final:
+
+- `npm run lint` — `EXIT=0`, 5 warnings que já existiam em `ui/date-text-input.tsx`,
+  `domain/games/game-reviews-section.tsx`, `domain/post/reactions/post-actions.tsx`,
+  `domain/post/reactions/reactions-dialog.tsx` e `domain/wellbeing/healthy-usage-dialog.tsx`. Nenhuma
+  é do calendário, e nenhuma foi tocada.
+- `npm run typecheck` — `EXIT=0`.
+- `npm test` — 155 arquivos, **1313 testes, 0 falhas**. A feature soma 24 (13 de grade e data, 11 da
+  agenda em jsdom).
+- `npm run build` — `EXIT=0`.
+- `npm run test:dist` — `EXIT=0` (`ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`); a importação de
+  `dist/domain/index.js` em Node puro confirma `CalendarAgenda`, `CalendarMonthView`, `monthWindow`,
+  `periodWindow` e `todayIn` como funções.
+- `npm run build-storybook` — `EXIT=0`.
+
+Erros meus, retificados: os primeiros testes da grade tinham três expectativas erradas (achei que
+`2026-10-01` era terça, a grade de novembro emprestava dias no começo e `monthWindow` era o mês de
+calendário). O código estava certo; os testes foram corrigidos e um deles passou a cobrir os dias
+emprestados.
+
+**PR:** design system
+[#164](https://github.com/Rede-ENois/enois-design-system/pull/164), aguardando revisão humana. Esta
+documentação vai em PR próprio para a `qa` do front, declarando a dependência do #164.
+
+**BLOQUEIOS:** nenhum bloqueio novo.
+
+- Publicação da versão fica para depois do merge: não faz sentido publicar código que ninguém
+  revisou, e também não dá para fixar no front a versão de uma feature que ainda não está publicada.
+  O número da versão e o lock do front entram na rodada que publicar.
+- B5 (sem navegador) vale para esta unidade só em parte: os componentes ainda não estão montados em
+  nenhuma rota, então não há tela para medir a 390px e 1280px. As visões foram construídas com
+  `min-w-0` e rolagem própria na semana; a medição fica para a rodada do front.
+- B2 (`events.date`/`time` em texto) continua pendente como unidade própria.
+
+**PRÓXIMA EXECUÇÃO:** Fase 2, segunda unidade no DS: a entrada da agenda no menu.
+
+- `NavigationItemData.section: "explore"`, sempre visível e sem módulo, conforme a D16.
+- Um ícone de calendário no catálogo do DS, se ainda não houver um adequado.
+- Teste de que a seção "explore" mostra a entrada mesmo sem módulo.
+- Se a revisão do #164 mudar o contrato das visões, reconciliar antes de abrir a próxima unidade.

@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=1 (fundação do calendário) — concluída; próxima é a 2 (Design System)
-EXECUCAO=6
-ULTIMA_ATUALIZACAO=2026-11-08T11:45:00-03:00
+FASE_ATUAL=2 (Design System) — em andamento; a fundação (fase 1) está concluída
+EXECUCAO=7
+ULTIMA_ATUALIZACAO=2026-11-08T13:35:00-03:00
 ```
 
 ---
@@ -35,12 +35,12 @@ calendário".
 
 ## 2. Repositórios envolvidos
 
-| Repositório | Papel | Branch de entrega | Estado verificado em 2026-11-08 |
-|---|---|---|---|
-| `Rede-ENois/enois-backend` | API, motor de eventos, migrações, workers | `qa` → `main` | Base real em `6ac79d83`; último migration `V257__calendar_entries.sql` |
-| `Rede-ENois/enois-frontend` | Telas, navegação, tipos, cliente de API | `qa` → `main` | Base em `6765a46a` |
-| `Rede-ENois/enois-design-system` | Componentes e tokens compartilhados | publica pacote versionado | Consumido como `@rede-enois/design-system@0.29.9` |
-| `Rede-ENois/epapo` | Sala de reunião (fork do Jitsi) | `master` (push = produção) | Integração via JWT já existente no módulo `calls` |
+| Repositório                      | Papel                                     | Branch de entrega          | Estado verificado em 2026-11-08                                        |
+| -------------------------------- | ----------------------------------------- | -------------------------- | ---------------------------------------------------------------------- |
+| `Rede-ENois/enois-backend`       | API, motor de eventos, migrações, workers | `qa` → `main`              | Base real em `6ac79d83`; último migration `V257__calendar_entries.sql` |
+| `Rede-ENois/enois-frontend`      | Telas, navegação, tipos, cliente de API   | `qa` → `main`              | Base em `6765a46a`                                                     |
+| `Rede-ENois/enois-design-system` | Componentes e tokens compartilhados       | publica pacote versionado  | Consumido como `@rede-enois/design-system@0.29.9`                      |
+| `Rede-ENois/epapo`               | Sala de reunião (fork do Jitsi)           | `master` (push = produção) | Integração via JWT já existente no módulo `calls`                      |
 
 **Atenção operacional:** o clone local `/home/mel/Documentos/rede` está **977 commits atrás** da
 `qa` real. Toda leitura de código do backend deve ser feita por
@@ -54,8 +54,9 @@ checkout atual.
 ### Backend (`com.socialcoisa.rede`, 41 pacotes, arquitetura hexagonal por módulo)
 
 Cada módulo segue `domain/` + `application/` (+ `application/port/in`, `port/out`) + `adapters/in/web`
-+ `adapters/out/persistence`. Um `*Module.java` faz a fiação. A base tem um pacote `apiv1` que
-registra o contrato versionado `/api/v1`.
+
+- `adapters/out/persistence`. Um `*Module.java` faz a fiação. A base tem um pacote `apiv1` que
+  registra o contrato versionado `/api/v1`.
 
 Peças reaproveitáveis já existentes:
 
@@ -68,7 +69,7 @@ Peças reaproveitáveis já existentes:
   `feed/application/ScheduledPostPublishWorker.java` + `ScheduledPostService.publishDue()`
   (`findDue(now, maxAttempts, limite)`, `attempts` na linha, erro vira registro com motivo).
 - **Notificações** (`notifications`): `Notification.create(id, userId, kind, actorId, title, body,
-  href, ctaLabel, now)`, com `NotificationCreatedEvent` + handler de outbox. Já existe preferência
+href, ctaLabel, now)`, com `NotificationCreatedEvent` + handler de outbox. Já existe preferência
   por módulo (`NotificationPreferenceController`).
 - **Chamadas** (`calls`): `CallSessionJpaEntity` com `event_id` (V256), `CallExpiryWorker`,
   `EpapoMeetingTokenIssuer`, `CallAudience`, `CallRoomAuthorization`. Sala é criada sob demanda, não
@@ -100,30 +101,30 @@ ou de disponibilidade.
 
 ## 4. Inventário — o que existe e o que falta
 
-| Funcionalidade | Frontend | Backend | Design System | Situação |
-|---|---|---|---|---|
-| Agenda social | não existe | não existe | não existe | **A construir** |
-| Agenda profissional | não existe | não existe | não existe | **A construir** |
-| Visualização consolidada | não existe | não existe | não existe | **A construir** |
-| Motor central de compromissos | não existe | não existe | — | **A construir** |
-| Eventos | `/eventos` (vitrine), `eventos.tsx` | `events` (Event + Attendee) | `event-card`, recorrência | **Existe parcial** — data/hora são texto livre |
-| Mentorias | `/mentoria` | `mentoring` (`MentorSlot` tipado) | não existe picker de slot | **Existe parcial** — sem agenda e sem conflito |
-| Entrevistas / vagas | `/vagas`, candidaturas | `jobs` | — | **Não integrado a agenda** |
-| Chamadas Épapo | painel de chamada + iframe | `calls` com `event_id` (V256) | — | **Existe**, sem agendamento |
-| Salas do Tamo Junto | barra do encontro | `calls` (sala por evento) | — | **Existe**, sem compromisso com hora |
-| Convites / participantes | parcial em eventos | `EventAttendee` | não existe status de convite | **A construir central** |
-| Disponibilidade / conflitos | não existe | slot de mentor isolado | não existe | **A construir** |
-| Lembretes | não existe | workers existem, sem lembrete | não existe | **A construir** |
-| ICS export/import | não existe | não existe | não existe | **A construir** |
-| Assinatura privada `.ics` | não existe | não existe | não existe | **A construir** |
-| Google/Microsoft/Apple | não existe | OAuth existe no `identity` como base | — | **A construir** |
+| Funcionalidade                | Frontend                            | Backend                                                         | Design System                                         | Situação                                                     |
+| ----------------------------- | ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| Agenda social                 | não existe                          | `calendar_entries` com `scope=SOCIAL`                           | visões prontas (PR #164)                              | **Parcial** — falta a tela                                   |
+| Agenda profissional           | não existe                          | `calendar_entries` com `scope=PROFESSIONAL`                     | visões prontas (PR #164)                              | **Parcial** — falta a tela                                   |
+| Visualização consolidada      | não existe                          | leitura sem `scope` devolve as duas                             | visões prontas (PR #164)                              | **Parcial** — falta a tela                                   |
+| Motor central de compromissos | não existe                          | `CalendarEntry` + leitura, escrita e convites                   | —                                                     | **Parcial** — falta disponibilidade, recorrência e lembretes |
+| Eventos                       | `/eventos` (vitrine), `eventos.tsx` | `events` (Event + Attendee)                                     | `event-card`, recorrência                             | **Existe parcial** — data/hora são texto livre               |
+| Mentorias                     | `/mentoria`                         | `mentoring` (`MentorSlot` tipado)                               | não existe picker de slot                             | **Existe parcial** — sem agenda e sem conflito               |
+| Entrevistas / vagas           | `/vagas`, candidaturas              | `jobs`                                                          | —                                                     | **Não integrado a agenda**                                   |
+| Chamadas Épapo                | painel de chamada + iframe          | `calls` com `event_id` (V256)                                   | —                                                     | **Existe**, sem agendamento                                  |
+| Salas do Tamo Junto           | barra do encontro                   | `calls` (sala por evento)                                       | —                                                     | **Existe**, sem compromisso com hora                         |
+| Convites / participantes      | parcial em eventos                  | `calendar_entry_participants` (V258), convite pelo @ e resposta | linha de convite com Aceitar/Talvez/Recusar (PR #164) | **Parcial** — falta a tela                                   |
+| Disponibilidade / conflitos   | não existe                          | slot de mentor isolado                                          | não existe                                            | **A construir**                                              |
+| Lembretes                     | não existe                          | workers existem, sem lembrete                                   | não existe                                            | **A construir**                                              |
+| ICS export/import             | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
+| Assinatura privada `.ics`     | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
+| Google/Microsoft/Apple        | não existe                          | OAuth existe no `identity` como base                            | —                                                     | **A construir**                                              |
 
 ### Dívida encontrada que bloqueia a agenda
 
 1. **`events.domain.Event` guarda `date` e `time` como `String` de texto livre**
    (`events/domain/Event.java:6-7`), com parser tolerante em `expiresAt()` para ISO e `dd/MM/yyyy`.
    O front tem o mesmo formato (`src/types/application/event/event.ts`: `date: string; time:
-   string`). Nenhuma consulta por intervalo é possível; nenhum fuso, nenhuma duração.
+string`). Nenhuma consulta por intervalo é possível; nenhum fuso, nenhuma duração.
    Isso precisa de coluna tipada **antes** de qualquer calendário.
 2. Não existe `timezone` em lugar nenhum do domínio de eventos ou mentoria.
 3. Não há noção de "participante com estado de convite" fora de `EventAttendee` (contagem).
@@ -148,37 +149,38 @@ Resumo do que será decidido na Fase 1:
 
 Ordem obrigatória. Cada fase pode exigir várias execuções.
 
-| Fase | Escopo | Depende de | Estado |
-|---|---|---|---|
-| 0 | Inventário + roadmap + contratos | — | **concluída** |
-| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
-| 2 | Design System: calendário mês/semana/dia/lista, alternância, estados | 1 (contrato) | pendente |
-| 3 | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes | 1, 2 | pendente |
-| 4 | Agenda social: chamadas, eventos de grupo/comunidade, pessoais | 3 | pendente |
-| 5 | Agenda profissional: entrevistas, mentorias, reuniões, workshops | 3 | pendente |
-| 6 | Disponibilidade e conflitos | 1 | pendente |
-| 7 | Épapo e Tamo Junto vinculados a compromisso | 1, 4 | pendente |
-| 8 | iCalendar export/import | 1 | pendente |
-| 9 | Assinatura privada e cache | 8 | pendente |
-| 10 | Provedores externos (Google/Microsoft/Apple) | 8, 9 | pendente |
-| 11 | Revisão geral: regressão, segurança, a11y, performance | todas | pendente |
+| Fase | Escopo                                                                   | Depende de   | Estado                                                                                                                                         |
+| ---- | ------------------------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | Inventário + roadmap + contratos                                         | —            | **concluída**                                                                                                                                  |
+| 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
+| 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **em andamento** (visões e alternância no DS PR #164; falta a entrada de menu)                                                                 |
+| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | pendente                                                                                                                                       |
+| 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | pendente                                                                                                                                       |
+| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
+| 6    | Disponibilidade e conflitos                                              | 1            | pendente                                                                                                                                       |
+| 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
+| 8    | iCalendar export/import                                                  | 1            | pendente                                                                                                                                       |
+| 9    | Assinatura privada e cache                                               | 8            | pendente                                                                                                                                       |
+| 10   | Provedores externos (Google/Microsoft/Apple)                             | 8, 9         | pendente                                                                                                                                       |
+| 11   | Revisão geral: regressão, segurança, a11y, performance                   | todas        | pendente                                                                                                                                       |
 
 ---
 
 ## 7. PRs
 
-| PR | Repositório | Escopo | Estado |
-|---|---|---|---|
-| [#740](https://github.com/Rede-ENois/enois-frontend/pull/740) | enois-frontend | Documentação: roadmap, arquitetura e log | **mergeado** em `6765a46a` (2026-11-08) |
-| [#531](https://github.com/Rede-ENois/enois-backend/pull/531) | enois-backend | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela | **mergeado** em `6ac79d83` (2026-11-08, squash) |
-| [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | **mergeado** em `3a803a01` (2026-11-08) |
-| [#742](https://github.com/Rede-ENois/enois-frontend/pull/742) | enois-frontend | Documentação: execução 3 | **mergeado** em `cd193381` (2026-11-08) |
-| [#538](https://github.com/Rede-ENois/enois-backend/pull/538) | enois-backend | Fase 1: escrita da agenda (`POST`, `PATCH`, `DELETE` cancelando) com `Idempotency-Key` e autorização por dono | **mergeado** em `422d852e` (2026-11-08) |
-| [#744](https://github.com/Rede-ENois/enois-frontend/pull/744) | enois-frontend | Documentação: execução 4 | **mergeado** em `2b82fd3b` (2026-11-08) |
-| [#745](https://github.com/Rede-ENois/enois-frontend/pull/745) | enois-frontend | Documentação: execução 5 e decisões D13/D14 | **mergeado** em `ba8ee20f` (2026-11-08) |
-| [#541](https://github.com/Rede-ENois/enois-backend/pull/541) | enois-backend | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado) | **mergeado** em `358acbcc` (2026-11-08) |
-| [#542](https://github.com/Rede-ENois/enois-backend/pull/542) | enois-backend | Fase 1: detalhe com o lugar do leitor e `GET /calendar/invitations` (convites pendentes) | aberto, **aguardando revisão humana** |
-| [#746](https://github.com/Rede-ENois/enois-frontend/pull/746) | enois-frontend | Documentação: execução 6 e decisão D15 | aberto, **aguardando revisão humana** |
+| PR                                                                 | Repositório         | Escopo                                                                                                        | Estado                                          |
+| ------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| [#740](https://github.com/Rede-ENois/enois-frontend/pull/740)      | enois-frontend      | Documentação: roadmap, arquitetura e log                                                                      | **mergeado** em `6765a46a` (2026-11-08)         |
+| [#531](https://github.com/Rede-ENois/enois-backend/pull/531)       | enois-backend       | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela                                 | **mergeado** em `6ac79d83` (2026-11-08, squash) |
+| [#536](https://github.com/Rede-ENois/enois-backend/pull/536)       | enois-backend       | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono    | **mergeado** em `3a803a01` (2026-11-08)         |
+| [#742](https://github.com/Rede-ENois/enois-frontend/pull/742)      | enois-frontend      | Documentação: execução 3                                                                                      | **mergeado** em `cd193381` (2026-11-08)         |
+| [#538](https://github.com/Rede-ENois/enois-backend/pull/538)       | enois-backend       | Fase 1: escrita da agenda (`POST`, `PATCH`, `DELETE` cancelando) com `Idempotency-Key` e autorização por dono | **mergeado** em `422d852e` (2026-11-08)         |
+| [#744](https://github.com/Rede-ENois/enois-frontend/pull/744)      | enois-frontend      | Documentação: execução 4                                                                                      | **mergeado** em `2b82fd3b` (2026-11-08)         |
+| [#745](https://github.com/Rede-ENois/enois-frontend/pull/745)      | enois-frontend      | Documentação: execução 5 e decisões D13/D14                                                                   | **mergeado** em `ba8ee20f` (2026-11-08)         |
+| [#541](https://github.com/Rede-ENois/enois-backend/pull/541)       | enois-backend       | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado)                      | **mergeado** em `358acbcc` (2026-11-08)         |
+| [#542](https://github.com/Rede-ENois/enois-backend/pull/542)       | enois-backend       | Fase 1: detalhe com o lugar do leitor e `GET /calendar/invitations` (convites pendentes)                      | aberto, **aguardando revisão humana**           |
+| [#746](https://github.com/Rede-ENois/enois-frontend/pull/746)      | enois-frontend      | Documentação: execução 6 e decisão D15                                                                        | **mergeado** em `eb80d9e2` (2026-11-08)         |
+| [#164](https://github.com/Rede-ENois/enois-design-system/pull/164) | enois-design-system | Fase 2: agenda no DS (mês, semana, dia, lista) e a alternância entre as visões                                | aberto, **aguardando revisão humana**           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -187,20 +189,32 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (backend, `feat/enois-calendar-detalhe`, árvore final sobre a `qa` `358acbcc`),
+Última execução (design system, `feat/calendar-views`, árvore final sobre a `qa` `3f7a756`,
+versão 0.29.9):
+
+| Comando                   | Resultado                                                        |
+| ------------------------- | ---------------------------------------------------------------- |
+| `npm run lint`            | `EXIT=0`, 0 erros; 5 warnings que já existiam fora do calendário |
+| `npm run typecheck`       | `EXIT=0`                                                         |
+| `npm test`                | 155 arquivos, **1313 testes, 0 falhas** (24 deles da agenda)     |
+| `npm run build`           | `EXIT=0`                                                         |
+| `npm run test:dist`       | `EXIT=0` (`ok .`, `./ui`, `./patterns`, `./domain`)              |
+| `npm run build-storybook` | `EXIT=0`                                                         |
+
+Execução anterior (backend, `feat/enois-calendar-detalhe`, árvore final sobre a `qa` `358acbcc`),
 `./mvnw -o test -Dtest=...`:
 
-| Classe | Testes | Resultado |
-|---|---|---|
-| `CalendarDetailAndPendingInvitationsApiTests` | 6 | verde (detalhe do convidado sem lista, 404 de estranho, detalhe do dono com participantes, pendentes, cancelada fora, alias `/v1`) |
-| `CalendarInvitationApiTests` | 11 | verde (convite pelo @, 409 repetido, 404 alheio, resposta, agenda do convidado, remoção) |
-| `CalendarEntryWriteApiTests` | 9 | verde (contrato HTTP da escrita: 201, 400, 404, idempotência, cancelamento) |
-| `CalendarEntryReadApiTests` | 9 | verde (contrato HTTP da leitura) |
-| `CalendarEntryTests` | 8 | verde |
-| `CalendarEntryPersistenceTests` | 5 | verde |
-| `MariaDbReservedWordsTests` | 2 | verde (guarda de migration) |
-| `FlywayMigrationConfigTests` | 5 | verde (inclui unicidade de versão) |
-| `AutomatedWritePathsTests` | 2 | verde (rota nova de escrita nasce protegida) |
+| Classe                                        | Testes | Resultado                                                                                                                          |
+| --------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `CalendarDetailAndPendingInvitationsApiTests` | 6      | verde (detalhe do convidado sem lista, 404 de estranho, detalhe do dono com participantes, pendentes, cancelada fora, alias `/v1`) |
+| `CalendarInvitationApiTests`                  | 11     | verde (convite pelo @, 409 repetido, 404 alheio, resposta, agenda do convidado, remoção)                                           |
+| `CalendarEntryWriteApiTests`                  | 9      | verde (contrato HTTP da escrita: 201, 400, 404, idempotência, cancelamento)                                                        |
+| `CalendarEntryReadApiTests`                   | 9      | verde (contrato HTTP da leitura)                                                                                                   |
+| `CalendarEntryTests`                          | 8      | verde                                                                                                                              |
+| `CalendarEntryPersistenceTests`               | 5      | verde                                                                                                                              |
+| `MariaDbReservedWordsTests`                   | 2      | verde (guarda de migration)                                                                                                        |
+| `FlywayMigrationConfigTests`                  | 5      | verde (inclui unicidade de versão)                                                                                                 |
+| `AutomatedWritePathsTests`                    | 2      | verde (rota nova de escrita nasce protegida)                                                                                       |
 
 O gate de cada execução fica registrado no log de execução.
 
@@ -208,31 +222,39 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 9. Bloqueios e problemas conhecidos
 
-| # | Problema | Impacto | Encaminhamento |
-|---|---|---|---|
-| B1 | `enois-backend` local 977 commits atrás da `qa` | leitura de código errada e branch desatualizada | usar `git show enois/qa:` ou worktree novo; **nunca** commitar no checkout atual |
-| B2 | `Event.date`/`time` são texto; front igual | sem consulta por intervalo, sem fuso | corrigir na Fase 1 com coluna tipada + backfill |
-| B3 | Sem `timezone` no domínio | recorrência e ICS errados | decidir na arquitetura (guardar `Instant` + `ZoneId` do organizer) |
-| B4 | `@rede-enois/design-system` é pacote privado e o token local não tem `read:packages` | build/typecheck local falha fora da versão em cache | usar o tarball da versão do lock quando disponível; declarar no PR |
-| B5 | Sem navegador utilizável para prova visual nesta máquina | não há captura de tela | usar Chrome headless + CDP; quando não der, declarar a limitação no PR |
+| #   | Problema                                                                             | Impacto                                             | Encaminhamento                                                                   |
+| --- | ------------------------------------------------------------------------------------ | --------------------------------------------------- | -------------------------------------------------------------------------------- |
+| B1  | `enois-backend` local 977 commits atrás da `qa`                                      | leitura de código errada e branch desatualizada     | usar `git show enois/qa:` ou worktree novo; **nunca** commitar no checkout atual |
+| B2  | `Event.date`/`time` são texto; front igual                                           | sem consulta por intervalo, sem fuso                | corrigir na Fase 1 com coluna tipada + backfill                                  |
+| B3  | Sem `timezone` no domínio                                                            | recorrência e ICS errados                           | decidir na arquitetura (guardar `Instant` + `ZoneId` do organizer)               |
+| B4  | `@rede-enois/design-system` é pacote privado e o token local não tem `read:packages` | build/typecheck local falha fora da versão em cache | usar o tarball da versão do lock quando disponível; declarar no PR               |
+| B5  | Sem navegador utilizável para prova visual nesta máquina                             | não há captura de tela                              | usar Chrome headless + CDP; quando não der, declarar a limitação no PR           |
 
 ---
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 7 — Fase 2, primeira unidade (Design System):** componentes de calendário em
-`Rede-ENois/enois-design-system` — visão de mês, semana, dia e lista, mais a alternância entre elas,
-com `useMessages()` para a microcópia e `src/types/domain/calendar/` para os tipos. Sem chamada de
-API dentro dos componentes. Publicar a versão e atualizar o lock do front na mesma entrega.
+**Execução 8 — Fase 2, segunda unidade (Design System): a entrada da agenda no menu.** A agenda
+aparece sempre na seção "explore" do menu principal, sem depender de módulo (D16). Unidade: a entrada
+em `NavigationItemData` com `section: "explore"`, um ícone de calendário no catálogo do DS se ainda
+não houver um adequado, e o teste que prova que a seção mostra a entrada mesmo sem módulo.
 Verificação: `npm run build`, `npm run typecheck`, `npm run lint` e `npm test` no DS.
 
-*(Tarefa da execução 6, entregue:)* **Execução 6 — Fase 1, quinta unidade (fecha a fundação):**
+Antes: conferir se a revisão do #164 mudou o contrato das visões; se mudou, reconciliar primeiro.
+
+_(Tarefa da execução 7, entregue:)_ **Execução 7 — Fase 2, primeira unidade (Design System):**
+`CalendarAgenda` com as visões de mês, semana, dia e lista e a alternância entre elas, tipos em
+`src/types/domain/calendar/`, microcópia por `useMessages()`, ajudantes puros de data e grade, 24
+testes e a story. Nenhuma chamada de API dentro dos componentes. A publicação da versão fica para
+depois do merge, quando o front puder fixar o número.
+
+_(Tarefa da execução 6, entregue:)_ **Execução 6 — Fase 1, quinta unidade (fecha a fundação):**
 `GET /calendar/entries/{id}` devolvendo o lugar do leitor (dono ou convidado) e a lista de
 participantes para o dono, mais `GET /calendar/invitations` para a tela mostrar os convites
 pendentes sem varrer a agenda. Testes de contrato do detalhe para convidado e da lista de pendentes
 entregues.
 
-*(Tarefa da execução 5, entregue:)* **Execução 5 — Fase 1, quarta unidade: convites e participantes.** Tabela
+_(Tarefa da execução 5, entregue:)_ **Execução 5 — Fase 1, quarta unidade: convites e participantes.** Tabela
 `calendar_entry_participants` com estado por participante (convidado, aceito, recusado, talvez),
 `POST /calendar/entries/{entryId}/participants` e `PATCH .../participants/{userId}` restritos ao
 dono, leitura incluindo os compromissos em que a pessoa é participante e o convidado sem poder
@@ -240,7 +262,7 @@ editar a entrada do organizador. Testes de contrato: 201 convidando, 409 convite
 entrada alheia, 403 para o convidado responder convite de terceiro, e a entrada aparecendo para o
 convidado com o estado do convite.
 
-*(Tarefa da execução 4, entregue:)* **Execução 4 — Fase 1, terceira unidade:** criação e edição da entrada com `POST /calendar/entries`
+_(Tarefa da execução 4, entregue:)_ **Execução 4 — Fase 1, terceira unidade:** criação e edição da entrada com `POST /calendar/entries`
 e `PATCH /calendar/entries/{id}`, com validação do corpo (título, intervalo, fuso IANA), idempotência
 no padrão do repositório (`Idempotency-Key`) e autorização por dono; `DELETE` cancelando (`CANCELLED`,
 nunca apagando a linha). Testes de contrato: 401 sem sessão, 201 na criação, 400 para corpo inválido,
@@ -251,14 +273,15 @@ leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois dest
 
 ## 11. Histórico de execuções (resumo)
 
-| # | Data/hora | Fase | Resultado |
-|---|---|---|---|
-| 1 | 2026-11-08 ~09:40 | 0 | Inventário dos 4 repositórios, matriz de funcionalidades, dívida de data/hora, roadmap e arquitetura escritos; docs no PR #740 |
-| 2 | 2026-11-08 ~13:10 | 1 | `calendar_entries` (V257) + domínio + porta/adaptador + 20 testes verdes; backend PR #531 |
-| 3 | 2026-11-08 ~08:40 | 1 | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #742 |
-| 4 | 2026-11-08 ~09:35 | 1 | Escrita da entrada (`POST`, `PATCH`, `DELETE` cancelando) com validação, `Idempotency-Key` e autorização por dono + 9 testes de contrato verdes; 40 testes verdes na suíte do calendário e guardas |
-| 5 | 2026-11-08 ~10:40 | 1 | Convites e participantes (`V258`): convite pelo @, resposta por participante, remoção pelo organizador e agenda do convidado com o estado do convite + 11 testes de contrato; 51 testes verdes na suíte do calendário e guardas |
-| 6 | 2026-11-08 ~11:45 | 1 | Detalhe com o lugar do leitor (`{ entry, owner, participation, participants }`, lista só para o organizador) e `GET /calendar/invitations` com os pendentes + 6 testes de contrato; 57 testes verdes na suíte do calendário e guardas; backend PR #542 |
+| #   | Data/hora         | Fase | Resultado                                                                                                                                                                                                                                              |
+| --- | ----------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | 2026-11-08 ~09:40 | 0    | Inventário dos 4 repositórios, matriz de funcionalidades, dívida de data/hora, roadmap e arquitetura escritos; docs no PR #740                                                                                                                         |
+| 2   | 2026-11-08 ~13:10 | 1    | `calendar_entries` (V257) + domínio + porta/adaptador + 20 testes verdes; backend PR #531                                                                                                                                                              |
+| 3   | 2026-11-08 ~08:40 | 1    | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #742                                                                                                        |
+| 4   | 2026-11-08 ~09:35 | 1    | Escrita da entrada (`POST`, `PATCH`, `DELETE` cancelando) com validação, `Idempotency-Key` e autorização por dono + 9 testes de contrato verdes; 40 testes verdes na suíte do calendário e guardas                                                     |
+| 5   | 2026-11-08 ~10:40 | 1    | Convites e participantes (`V258`): convite pelo @, resposta por participante, remoção pelo organizador e agenda do convidado com o estado do convite + 11 testes de contrato; 51 testes verdes na suíte do calendário e guardas                        |
+| 6   | 2026-11-08 ~11:45 | 1    | Detalhe com o lugar do leitor (`{ entry, owner, participation, participants }`, lista só para o organizador) e `GET /calendar/invitations` com os pendentes + 6 testes de contrato; 57 testes verdes na suíte do calendário e guardas; backend PR #542 |
+| 7   | 2026-11-08 ~13:35 | 2    | `CalendarAgenda` no DS com mês, semana, dia e lista, alternância, 21 tipos, microcópia, quatro ajudantes de data/grade e story; 24 testes da feature e 1313 verdes na suíte inteira; DS PR #164                                                        |
 
 ---
 
