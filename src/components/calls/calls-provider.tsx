@@ -11,6 +11,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import { isTrustedCallHost } from "@/types/application/call/call-embed-url";
 import type { CallKind } from "@/types/application/call/call-kind";
 import type { CallPhase } from "@/types/application/call/call-phase";
 import type { CallState } from "@/types/application/call/call-state";
@@ -190,6 +191,11 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     callSessionStore.joining(target);
     try {
       const join = await callsApi.join(target.id);
+      // O iframe ganha câmera e microfone: só abre no servidor de reunião que a gente hospeda.
+      if (!isTrustedCallHost(join.host)) {
+        callSessionStore.error(texts.calls.untrustedRoom);
+        return;
+      }
       callSessionStore.live(join);
     } catch (error) {
       if (error instanceof ApiError && error.code?.startsWith("CALL_")) {

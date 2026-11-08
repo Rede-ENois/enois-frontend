@@ -3798,6 +3798,8 @@ export const texts = {
     failed: "Falha de conexão",
     answer: "Atender",
     decline: "Recusar",
+    /** A credencial apontou para um servidor de reunião que não é o nosso: a sala não abre. */
+    untrustedRoom: "Esta sala não está no nosso servidor de chamadas, então ela não foi aberta.",
     cancel: "Cancelar",
     end: "Encerrar",
     hangUp: "Desligar",

@@ -617,4 +617,21 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
     expect(getCallSession()).toMatchObject({ phase: "incoming", call: { id: "call_1" } });
     expect(getCallSession().waiting).toEqual([]);
   });
+
+  it("credencial apontando para outro servidor de reunião não abre a sala", async () => {
+    const live = call({ state: "ACTIVE" });
+    byId.set(live.id, live);
+    mocks.join.mockResolvedValue(joinFor(live, "https://outro-servidor.example"));
+    await flush();
+
+    await act(async () => {
+      await actions.current?.open(live.id);
+    });
+
+    expect(getCallSession()).toMatchObject({
+      phase: "error",
+      join: null,
+      error: "Esta sala não está no nosso servidor de chamadas, então ela não foi aberta.",
+    });
+  });
 });
