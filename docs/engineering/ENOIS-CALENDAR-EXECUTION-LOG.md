@@ -90,8 +90,9 @@ de persistência e de consulta por intervalo.
 ordem de inserção, e a consulta ordena por início; a expectativa foi corrigida (o comportamento
 estava certo).
 
-**PR:** [#531](https://github.com/Rede-ENois/enois-backend/pull/531) — aguardando revisão humana.
-A documentação foi no PR [#740](https://github.com/Rede-ENois/enois-frontend/pull/740).
+**PR:** [#531](https://github.com/Rede-ENois/enois-backend/pull/531) — mergeado em `6ac79d83`.
+A documentação foi no PR [#740](https://github.com/Rede-ENois/enois-frontend/pull/740), mergeado em
+`6765a46a`.
 
 **BLOQUEIOS:** nenhum bloqueio novo. B1 resolvido com worktree novo a partir de `enois/qa`
 (`b80e8571`). B2 e B3 já têm encaminhamento escrito; a migração de dados de `events` é uma unidade
@@ -147,7 +148,7 @@ contrato sem `ownerId`, os quatro casos de 400, compromisso cancelado e o alias 
 Os 20 testes de domínio e persistência da execução 2 continuam verdes.
 
 **PR:** [#536](https://github.com/Rede-ENois/enois-backend/pull/536) — aguardando revisão humana.
-Documentação no PR [#537](https://github.com/Rede-ENois/enois-frontend/pull/537), que declara a
+Documentação no PR [#742](https://github.com/Rede-ENois/enois-frontend/pull/742), que declara a
 dependência do #536.
 
 **BLOQUEIOS:** nenhum novo. B5 segue valendo: esta unidade é só API, sem tela, então não houve

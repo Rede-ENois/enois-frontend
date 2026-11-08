@@ -172,7 +172,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#740](https://github.com/Rede-ENois/enois-frontend/pull/740) | enois-frontend | Documentação: roadmap, arquitetura e log | **mergeado** em `6765a46a` (2026-11-08) |
 | [#531](https://github.com/Rede-ENois/enois-backend/pull/531) | enois-backend | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela | **mergeado** em `6ac79d83` (2026-11-08, squash) |
 | [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | aberto, **aguardando revisão humana** |
-| [#537](https://github.com/Rede-ENois/enois-frontend/pull/537) | enois-frontend | Documentação: execução 3 (este PR) | aberto, **aguardando revisão humana**; depende do #536 |
+| [#742](https://github.com/Rede-ENois/enois-frontend/pull/742) | enois-frontend | Documentação: execução 3 (este PR) | aberto, **aguardando revisão humana**; depende do #536 |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -225,7 +225,7 @@ leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois dest
 |---|---|---|---|
 | 1 | 2026-11-08 ~09:40 | 0 | Inventário dos 4 repositórios, matriz de funcionalidades, dívida de data/hora, roadmap e arquitetura escritos; docs no PR #740 |
 | 2 | 2026-11-08 ~13:10 | 1 | `calendar_entries` (V257) + domínio + porta/adaptador + 20 testes verdes; backend PR #531 |
-| 3 | 2026-11-08 ~08:40 | 1 | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #537 |
+| 3 | 2026-11-08 ~08:40 | 1 | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #742 |
 
 ---
 
