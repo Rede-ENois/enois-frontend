@@ -209,7 +209,7 @@ rodada da suíte nova passou de primeira; a única correção no caminho foi uma
 asserção de mensagem.
 
 **PR:** backend — [#538](https://github.com/Rede-ENois/enois-backend/pull/538), aguardando revisão
-humana. Documentação — PR aberta nesta execução, depende do #538.
+humana. Documentação — [#744](https://github.com/Rede-ENois/enois-frontend/pull/744), depende do #538.
 
 **BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`) continua pendente como
 unidade própria. B5 continua valendo: esta unidade é só API, sem tela, então não há verificação a

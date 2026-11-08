@@ -174,7 +174,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | aberto, **aguardando revisão humana** |
 | [#742](https://github.com/Rede-ENois/enois-frontend/pull/742) | enois-frontend | Documentação: execução 3 | **mergeado** em `cd193381` (2026-11-08) |
 | [#538](https://github.com/Rede-ENois/enois-backend/pull/538) | enois-backend | Fase 1: escrita da agenda (`POST`, `PATCH`, `DELETE` cancelando) com `Idempotency-Key` e autorização por dono | aberto, **aguardando revisão humana** |
-| `PENDENTE` | enois-frontend | Documentação: execução 4 | aberto, **aguardando revisão humana**; depende do #538 |
+| [#744](https://github.com/Rede-ENois/enois-frontend/pull/744) | enois-frontend | Documentação: execução 4 | aberto, **aguardando revisão humana**; depende do #538 |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
