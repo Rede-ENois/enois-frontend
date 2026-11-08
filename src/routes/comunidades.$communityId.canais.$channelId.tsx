@@ -6,14 +6,20 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { TOPIC_LABELS } from "@/constants/community-topics";
 import { texts } from "@/texts";
 import type { PostView } from "@/types/application/feed/post-view";
+import type { MediaItem } from "@/types/routes/feed/media-item";
+import { ComposerMediaPicker } from "@rede-enois/design-system/domain";
 import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import { Button } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Hash, Lock } from "lucide-react";
 
 import { communitiesApi, feedApi } from "@/lib/api";
 import { litePageSize } from "@/lib/lite-mode";
+import { isProhibitedContent } from "@/lib/media-moderation";
+import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
+import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
 import { PostCard } from "@/components/post-card";
@@ -32,6 +38,7 @@ function ChannelPage() {
   const { communityId, channelId } = Route.useParams();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const authenticated = useIsAuthenticated();
   const lite = useLiteMode();
@@ -67,16 +74,66 @@ function ChannelPage() {
     retry: false,
   });
 
+  const upload = useMediaUpload();
+
+  // Mesmo seletor do feed e do grupo: até 4 imagens, upload já na seleção.
+  const addMediaFiles = (files: File[]) => {
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      if (media.length >= 4) break;
+
+      const preview = URL.createObjectURL(file);
+      const item: MediaItem = { type: "image", file, preview, moderationStatus: "checking" };
+      setMedia((prev) => [...prev, item]);
+      void upload
+        .upload(file, "POST_IMAGE")
+        .then((result) =>
+          setMedia((current) =>
+            current.map((entry) =>
+              entry.preview === preview
+                ? { ...entry, mediaId: result.mediaId, moderationStatus: "allowed" }
+                : entry,
+            ),
+          ),
+        )
+        .catch((err: unknown) => {
+          if (isProhibitedContent(err)) {
+            setMedia((current) =>
+              current.map((entry) =>
+                entry.preview === preview ? { ...entry, moderationStatus: "prohibited" } : entry,
+              ),
+            );
+            setError(texts.feed.composer.imageProhibitedTitle);
+            return;
+          }
+          setMedia((current) => current.filter((entry) => entry.preview !== preview));
+          URL.revokeObjectURL(preview);
+          setError(err instanceof Error ? err.message : texts.channelPage.error);
+        });
+    }
+  };
+  const removeMedia = (index: number) => {
+    setMedia((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const publish = useMutation({
-    mutationFn: () =>
-      feedApi.create({
+    mutationFn: async () => {
+      // As imagens sobem primeiro; a publicação leva só os ids.
+      const mediaIds = media.length > 0 ? await uploadComposerMedia(media, upload.uploadAll) : [];
+      return feedApi.create({
         type: "INSIGHT",
         content: draft.trim(),
+        mediaIds,
         communityId,
         channelId,
-      }),
+      });
+    },
     onSuccess: () => {
       setDraft("");
+      setMedia([]);
       setError(null);
       void queryClient.invalidateQueries({
         queryKey: ["community", communityId, "channel", channelId, "posts"],
@@ -88,7 +145,7 @@ function ChannelPage() {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    if (!draft.trim()) return;
+    if (!draft.trim() && media.length === 0) return;
     publish.mutate();
   };
 
@@ -172,14 +229,37 @@ function ChannelPage() {
               rows={3}
               className="w-full resize-y rounded-2xl border border-border bg-muted/40 px-3 py-2 text-sm font-normal outline-none transition focus:border-primary"
             />
+            <ComposerMediaPicker
+              items={media.flatMap((item) => {
+                // A prévia só vira `src` depois de conferida como `blob:`; o que não passa
+                // simplesmente não é desenhado.
+                const preview = mediaPreviewUrl(item.preview);
+                return preview
+                  ? [
+                      {
+                        preview,
+                        status:
+                          item.moderationStatus === "checking"
+                            ? "checking"
+                            : item.moderationStatus === "prohibited"
+                              ? "prohibited"
+                              : "allowed",
+                      } as const,
+                    ]
+                  : [];
+              })}
+              onFiles={addMediaFiles}
+              onRemove={removeMedia}
+              canAddMore={media.length < 4}
+            />
 
             {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
 
-            <div className="mt-3 flex justify-end">
+            <div className="mt-3 flex items-center justify-end gap-2">
               <Button
                 type="submit"
                 className="w-auto rounded-full"
-                disabled={publish.isPending || !draft.trim()}
+                disabled={publish.isPending || (!draft.trim() && media.length === 0)}
               >
                 {publish.isPending ? texts.channelPage.publishing : texts.channelPage.publish}
               </Button>

@@ -11,7 +11,9 @@ import type { GroupPost } from "@/types/application/group/group-post";
 import type { GroupTopic } from "@/types/application/group/group-topic";
 import type { GroupView } from "@/types/application/group/group-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
+import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
+  ComposerMediaPicker,
   ReactionPicker,
   StyledName,
   UserAvatar,
@@ -52,6 +54,9 @@ import { groupsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { useCurrentUser } from "@/lib/current-user";
 import { dataHora, hora } from "@/lib/date/format";
+import { isProhibitedContent } from "@/lib/media-moderation";
+import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
@@ -61,6 +66,7 @@ import { TamoJuntoBar } from "@/components/calls/tamo-junto-bar";
 import { HtmlEditor } from "@/components/html-editor";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { formatTime } from "@/components/post/format-time";
+import { MediaGrid } from "@/components/post/media-grid";
 import { ReportDialog } from "@/components/post/report-dialog";
 import { RichText } from "@/components/post/rich-text";
 import { ProfilePeek } from "@/components/profile/profile-peek";
@@ -282,6 +288,7 @@ function GroupFeed({ group }: { group: GroupView }) {
   const { toast } = useToast();
   const [topicId, setTopicId] = useState<string | null>(null);
   const [content, setContent] = useState("");
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [topicName, setTopicName] = useState("");
   const [editingTopic, setEditingTopic] = useState<GroupTopic | null>(null);
@@ -319,14 +326,70 @@ function GroupFeed({ group }: { group: GroupView }) {
     void queryClient.invalidateQueries({ queryKey: ["group", group.slug] });
   };
 
+  const upload = useMediaUpload();
+
+  // Mesmas regras do feed: só imagem, teto de 4, upload já na seleção (o id fica no item).
+  const addMediaFiles = (files: File[]) => {
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      if (media.length >= 4) break;
+
+      const preview = URL.createObjectURL(file);
+      const item: MediaItem = { type: "image", file, preview, moderationStatus: "checking" };
+      setMedia((prev) => [...prev, item]);
+      void upload
+        .upload(file, "POST_IMAGE")
+        .then((result) =>
+          setMedia((current) =>
+            current.map((entry) =>
+              entry.preview === preview
+                ? { ...entry, mediaId: result.mediaId, moderationStatus: "allowed" }
+                : entry,
+            ),
+          ),
+        )
+        .catch((error: unknown) => {
+          if (isProhibitedContent(error)) {
+            setMedia((current) =>
+              current.map((entry) =>
+                entry.preview === preview ? { ...entry, moderationStatus: "prohibited" } : entry,
+              ),
+            );
+            toast(texts.feed.composer.imageProhibitedTitle, "error");
+            return;
+          }
+          setMedia((current) => current.filter((entry) => entry.preview !== preview));
+          URL.revokeObjectURL(preview);
+          toast(error instanceof Error ? error.message : texts.groups.publishError, "error");
+        });
+    }
+  };
+  const removeMedia = (index: number) => {
+    setMedia((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+  const clearMedia = () => {
+    setMedia((prev) => {
+      for (const item of prev) URL.revokeObjectURL(item.preview);
+      return [];
+    });
+  };
+
   const publish = useMutation({
-    mutationFn: () =>
-      groupsApi.publish(group.id, {
+    mutationFn: async () => {
+      // Mesmo caminho do feed: as imagens sobem primeiro e a publicação leva só os ids.
+      const mediaIds = media.length > 0 ? await uploadComposerMedia(media, upload.uploadAll) : [];
+      return groupsApi.publish(group.id, {
         topicId: activeTopicId ?? "",
         content: content.trim(),
-      }),
+        mediaIds,
+      });
+    },
     onSuccess: () => {
       setContent("");
+      setMedia([]);
       invalidatePosts();
     },
     // A mensagem do servidor diz o motivo (conta restrita, ECA, topico arquivado): um texto
@@ -454,19 +517,42 @@ function GroupFeed({ group }: { group: GroupView }) {
                 toolbar
               />
 
+              {/* Mesmo seletor do feed: até 4 imagens, só imagem (vídeo fica no feed). */}
+              <ComposerMediaPicker
+                items={media.flatMap((item) => {
+                  // A prévia só vira `src` depois de conferida como `blob:`; o que não passa
+                  // simplesmente não é desenhado.
+                  const preview = mediaPreviewUrl(item.preview);
+                  return preview
+                    ? [
+                        {
+                          preview,
+                          status: item.moderationStatus === "checking" ? "checking" : "allowed",
+                        } as const,
+                      ]
+                    : [];
+                })}
+                onFiles={addMediaFiles}
+                onRemove={removeMedia}
+                canAddMore={media.length < 4}
+              />
+
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   className="w-auto rounded-full"
-                  disabled={!content.trim() || publish.isPending}
-                  onClick={() => setContent("")}
+                  disabled={(!content.trim() && media.length === 0) || publish.isPending}
+                  onClick={() => {
+                    setContent("");
+                    clearMedia();
+                  }}
                 >
                   {texts.common.cancel}
                 </Button>
 
                 <Button
                   className="w-auto rounded-full"
-                  disabled={!content.trim() || publish.isPending}
+                  disabled={(!content.trim() && media.length === 0) || publish.isPending}
                   onClick={() => publish.mutate()}
                 >
                   {publish.isPending ? texts.groups.publishing : texts.groups.publish}
@@ -698,6 +784,8 @@ export function GroupPostItem({
         writtenAt={post.createdAt}
         className="mt-2 whitespace-pre-line wrap-anywhere text-sm text-text-strong"
       />
+
+      {post.mediaIds.length > 0 && <MediaGrid mediaIds={post.mediaIds} compact />}
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-subtle">
         <ReactionPicker
