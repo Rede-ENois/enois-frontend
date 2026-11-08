@@ -18,6 +18,7 @@ function call(overrides: Partial<CallView> = {}): CallView {
     conversationId: null,
     groupId: "group_1",
     topicId: null,
+    eventId: null,
     initiatorId: "user_a",
     displayName: "Geral",
     state: "ACTIVE",
