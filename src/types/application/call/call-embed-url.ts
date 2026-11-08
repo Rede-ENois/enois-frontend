@@ -1,17 +1,67 @@
+import { trustedCallOrigins } from "@/lib/calls/call-origins";
+
 import type { CallJoin } from "./call-join";
+
+/**
+ * Opções do Jitsi que a tela precisa ligar ou desligar por sala.
+ *
+ * O parâmetro `jwt` é lido da query e da barra; todo o resto, só da barra (`#`) — é onde o
+ * `setConfigFromURLParams` do Epapo procura. Um `config.*` na query é ignorado sem aviso, e é por
+ * isso que a chamada abria com P2P ligado mesmo com o pedido de desligar.
+ *
+ * Além disso o Epapo só aceita a chave que está na lista de override dele (`configWhitelist.ts`
+ * e `interfaceConfigWhitelist.ts`); chave fora da lista também é descartada em silêncio.
+ */
+const CONFIG: Array<[string, (join: CallJoin) => string]> = [
+  // Tudo pela ponte de vídeo do servidor. Com P2P ligado, dois participantes montam a conexão
+  // direta e a chamada deixa de passar pelo Epapo; com três ou mais a sala é remontada na ponte
+  // no meio do caminho e as pessoas caem.
+  ["config.p2p.enabled", () => "false"],
+  // Começa com a câmera desligada na chamada de áudio: ninguém abre a câmera sem escolher.
+  ["config.startWithVideoMuted", (join) => (join.kind === "AUDIO" ? "true" : "false")],
+  // Abre direto na sala. O nome do Epapo é `prejoinConfig.enabled`; `prejoinPageEnabled` é o
+  // nome antigo e não está na lista de override dele.
+  ["config.prejoinConfig.enabled", () => "false"],
+  ["config.disableDeepLinking", () => "true"],
+];
+
+/**
+ * O iframe da chamada recebe câmera e microfone: só abre na origem exata do nosso servidor de
+ * reunião, nunca num endereço qualquer que venha na credencial.
+ */
+export function isTrustedCallHost(host: string): boolean {
+  let origin: string;
+  try {
+    const url = new URL(host);
+    if (
+      url.protocol !== "https:" ||
+      url.pathname.replace(/\/$/, "") !== "" ||
+      url.search ||
+      url.hash
+    ) {
+      return false;
+    }
+    origin = url.origin;
+  } catch {
+    return false;
+  }
+  return trustedCallOrigins().includes(origin);
+}
 
 /** Url do iframe do Jitsi: a sala e o token vão juntos, sem segredo nenhum no cliente. */
 export function callEmbedUrl(join: CallJoin): string {
-  const params = new URLSearchParams({ jwt: join.jwt });
-  // Começa com o microfone e a câmera desligados exceto quando a chamada é de vídeo pedida por
-  // quem ligou: ninguém entra com mídia ligada sem escolher.
-  params.set("config.startAudioOnly", join.kind === "AUDIO" ? "true" : "false");
-  params.set("config.startWithAudioMuted", "false");
-  params.set("config.startWithVideoMuted", join.kind === "AUDIO" ? "true" : "false");
-  // Nada de gravação/streaming na tela: o token já as desliga, e a UI não oferece.
-  params.set("config.disableDeepLinking", "true");
-  params.set("config.prejoinPageEnabled", "false");
-  params.set("config.requireDisplayName", "false");
-  params.set("interfaceConfig.SHOW_JITSI_WATERMARK", "false");
-  return `${join.host}/${join.room}?${params.toString()}`;
+  if (!isTrustedCallHost(join.host)) throw new Error("untrusted call host");
+  const search = new URLSearchParams({ jwt: join.jwt });
+  return `${join.host}/${join.room}?${search.toString()}${callEmbedHash(join)}`;
+}
+
+/**
+ * A fração `#config.*` da URL do iframe.
+ *
+ * Fica exportada para a prova: o teste confere que cada chave sai daqui e que todas são
+ * aplicadas pelo próprio Epapo, para uma opção nova não voltar a morrer em silêncio.
+ */
+export function callEmbedHash(join: CallJoin): string {
+  const hash = new URLSearchParams(CONFIG.map(([key, value]) => [key, value(join)]));
+  return `#${hash.toString()}`;
 }

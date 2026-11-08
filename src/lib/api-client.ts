@@ -5,6 +5,7 @@ import type { RequestOptions } from "@/types/application/api/request-options";
 
 import { notifyBirthDateRequired, notifyParentalConsentRequired } from "./age-required";
 import { clientOriginHeader } from "./api/client-origin";
+import { apiBaseForHost, parseSiteDomains } from "./api/site-api-base";
 import { clearAuthHint } from "./auth-hint";
 import { getDeviceId } from "./device-id";
 import { resetSessionScopedData } from "./query-client";
@@ -23,10 +24,13 @@ import { SESSION_FLAG_KEY, dropSessionKey } from "./session-key";
  */
 const API_BACKEND = import.meta.env.VITE_API_BACKEND ?? "/api";
 
+/** Domains that serve this build, primary first (see `apiBaseForHost`). */
+const SITE_DOMAINS = parseSiteDomains(import.meta.env.VITE_SITE_DOMAINS);
+
 function baseUrl(): string {
   if (typeof window === "undefined") return serverBaseUrl();
   if (import.meta.env.DEV) return "/api";
-  return API_BACKEND;
+  return apiBaseForHost(API_BACKEND, window.location.hostname, SITE_DOMAINS);
 }
 
 /**

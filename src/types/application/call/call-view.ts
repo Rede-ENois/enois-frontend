@@ -12,6 +12,8 @@ export interface CallView {
   groupId: string | null;
   /** Tópico do grupo quando a sala é do tópico; nulo na sala geral e em toda 1:1. */
   topicId: string | null;
+  /** Encontro dono da sala "Tamo junto"; nulo nas chamadas de conversa e de grupo. */
+  eventId: string | null;
   initiatorId: string;
   displayName: string;
   state: CallState;

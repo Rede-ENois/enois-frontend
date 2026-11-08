@@ -146,6 +146,11 @@ O front de `enois.ia.br` **nao** roda na Vercel. Fluxo (`.github/workflows/build
 
 A API mora em outro host (`https://api.enois.ia.br/api` em prod), fixado no build por `VITE_API_BACKEND`.
 
+O mesmo build atende dois dominios: `enois.ia.br` (principal, canonical) e o espelho `isweee.com`
+(`VITE_SITE_DOMAINS`). No espelho o navegador chama `api.isweee.com`, porque os cookies de sessao
+pertencem ao host da API do site em que a pessoa esta; de `isweee.com` para `api.enois.ia.br` a
+chamada seria cross-site e o navegador nao mandaria os cookies.
+
 ## Variaveis de ambiente
 
 `VITE_*` sao embutidas no bundle em tempo de build (portanto publicas). O front nao usa nenhum segredo:
@@ -156,7 +161,9 @@ server function que leia chave privada.
 | ---------------------------- | ------ | ----------------------------------------------------------------- |
 | `VITE_API_BACKEND`           | build  | build-arg do `Dockerfile` (`https://api.enois.ia.br/api` em prod) |
 | `VITE_SITE_URL`              | build  | build-arg do `Dockerfile` (origem publica declarada pelo SSR)     |
+| `VITE_SITE_DOMAINS`          | build  | dominios do app, principal primeiro (`enois.ia.br,isweee.com`)    |
 | `VITE_IMAGEKIT_URL_ENDPOINT` | build  | opcional: so resolve URLs antigas de midia do ImageKit            |
+| `VITE_CALLS_ORIGINS`         | build  | opcional: origens do Epapo aceitas no iframe da chamada           |
 
 ## Pendencias (o que falta)
 

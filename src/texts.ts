@@ -3780,6 +3780,14 @@ export const texts = {
     audioTitle: "Chamada de áudio",
     videoTitle: "Chamada de vídeo",
     incoming: (name: string) => `${name} está te chamando`,
+    /**
+     * Chamada que chegou com outra já na tela. Ela não some: fica na fila e abre assim que a atual
+     * terminar — dizer isso evita a impressão de que a ligação foi perdida.
+     */
+    incomingHeld: (name: string) => `Chamada de ${name} esperando`,
+    answerHeld: "Atender esta",
+    /** Chamada seguinte da fila: dizer o nome evita atender a pessoa errada. */
+    nextInQueue: (name: string) => `A seguir: ${name}`,
     ringing: "Chamando…",
     connecting: "Conectando…",
     active: "Em andamento",
@@ -3790,6 +3798,11 @@ export const texts = {
     failed: "Falha de conexão",
     answer: "Atender",
     decline: "Recusar",
+    /** Com duas chamadas na tela, cada botão diz de quem é a chamada que ele atende ou recusa. */
+    answerFrom: (name: string) => `Atender a chamada de ${name}`,
+    declineFrom: (name: string) => `Recusar a chamada de ${name}`,
+    /** A credencial apontou para um servidor de reunião que não é o nosso: a sala não abre. */
+    untrustedRoom: "Esta sala não está no nosso servidor de chamadas, então ela não foi aberta.",
     cancel: "Cancelar",
     end: "Encerrar",
     hangUp: "Desligar",
@@ -3798,6 +3811,16 @@ export const texts = {
     join: "Entrar na chamada",
     micUnavailable: "Não achamos seu microfone. A chamada segue só para ouvir.",
     cameraUnavailable: "Não achamos sua câmera. A chamada segue sem vídeo.",
+    /**
+     * Permissão de mídia pedida antes de a sala abrir. A recusa não impede entrar: a sala tem o
+     * botão para pedir de novo, e dizer isso evita a pessoa achar que a chamada quebrou.
+     */
+    mediaDenied:
+      "O navegador bloqueou o microfone e a câmera. Entre na chamada e libere no botão do Epapo.",
+    mediaUnavailable:
+      "Não conseguimos acessar o microfone ou a câmera. Confira se outro app não está usando e entre na chamada.",
+    mediaUnsupported:
+      "Este navegador não dá acesso ao microfone e à câmera. Abra o Énóis num navegador atualizado para falar na chamada.",
     connectionLost: "A conexão caiu. Tentando de novo…",
     loadError: "A chamada não abriu. Tente de novo.",
     // Aparece quando alguém tenta ligar antes de o servidor de chamadas estar configurado.
@@ -3812,6 +3835,7 @@ export const texts = {
     tamoJuntoVideo: "Tamo junto vídeo",
     tamoJuntoStart: "Chamar o grupo",
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
+    tamoJuntoEventLive: "🔴 O encontro está ao vivo! Entre na chamada quando quiser.",
     tamoJuntoTopicLive: (topic: string) =>
       `🔴 Tamo junto do tópico ${topic} ao vivo! Entre na chamada quando quiser.`,
     /** Nome da sala de um tópico: "Tamo junto voz · Assuntos gerais". */
