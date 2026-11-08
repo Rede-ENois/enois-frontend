@@ -214,3 +214,53 @@ da rota pública de escrita.
 
 **Consequência.** A Fase 4 e a Fase 5 (agendas social e profissional) escrevem pelo serviço, não por
 HTTP, e a rota HTTP nunca precisa confiar num `sourceId` vindo do cliente.
+
+---
+
+## D13 — O convite é do compromisso, e a agenda de cada um é a união de duas consultas
+
+**Problema.** Compromisso social quase nunca é de uma pessoa só. O organizador precisa ver quem
+aceitou; o convidado precisa ver o compromisso na própria agenda com a própria resposta, sem passar
+a ser dono da entrada.
+
+**Decisão.**
+- Tabela própria (`calendar_entry_participants`) com estado por pessoa, em vez de coluna na entrada:
+  cada participante responde por si, e um aceito com dois recusados não cabe numa coluna.
+  Unicidade `(entry_id, user_id)` impede o convite repetido no banco, não só na checagem.
+- `INVITED` é pendente, não resposta. `TENTATIVE` ("talvez") é resposta de verdade e fica separada
+  de `ACCEPTED`: somar talvez como presença faz o organizador contar quem não confirmou.
+- A leitura da agenda consulta os compromissos do dono e os compromissos em que a pessoa foi
+  convidada, e devolve cada item com `owner` e `participation`. A tela não precisa de duas rotas
+  nem de juntar listas no cliente.
+- **Convite recusado continua na agenda.** A pessoa respondeu, o compromisso faz parte do histórico
+  dela. Filtrar "só o que eu vou" é da tela, pelo campo `participation`.
+- O organizador não tem linha de participante. Convite para o próprio dono é 400.
+- Quem responde é tirado da sessão (`/participants/me`), não do caminho. Rota com id de pessoa
+  deixaria alguém responder convite alheio bastando o id, e a checagem viraria outra regra de dono.
+- Convite para entrada cancelada é 409: a entrada cancelada existe para publicar o cancelamento, não
+  para receber gente nova.
+
+**Rejeitado.** Tabela de "convite" separada de "participante": o ciclo de vida é o mesmo e duas
+tabelas criariam o estado em que a pessoa está convidada e não participante ao mesmo tempo. Estado
+do convite dentro do item do compromisso (JSON na entrada): não dá para consultar "quem aceitou" sem
+ler e reescrever o compromisso inteiro.
+
+**Limite conhecido.** Convidar 50 pessoas numa transação grava 50 linhas uma a uma. Para o tamanho
+de uma agenda social isso está certo; se aparecer compromisso de comunidade com centenas de
+convidados, o caminho é o lote, como o chat fez em `#535`.
+
+---
+
+## D14 — Convidado vê o compromisso, não ganha a entrada
+
+**Problema.** Depois que a pessoa aceita o convite, a tentação é copiar o compromisso para a agenda
+dela. Aí existem duas linhas para o mesmo evento, e o reagendamento do organizador atualiza uma e
+deixa a outra para trás.
+
+**Decisão.** O convidado lê o mesmo compromisso do organizador, com `owner=false`. As rotas de
+escrita continuam restritas ao dono e respondem 404 para o convidado, exatamente como respondiam
+antes de existir convite. O que o convidado muda é a própria resposta, por `/participants/me`.
+
+**Consequência.** O convidado não tem como mudar horário, título ou cancelar: quem organiza é que
+reagenda, e quem foi convidado responde de novo se mudou de ideia. Unificar essas regras no item
+compartilhado exigiria permissão por campo, que é complexidade sem caso de produto hoje.

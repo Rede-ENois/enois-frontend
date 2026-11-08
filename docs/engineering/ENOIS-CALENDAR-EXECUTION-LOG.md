@@ -225,3 +225,71 @@ dono, leitura da agenda incluindo os compromissos em que a pessoa é participant
 que o convidado não edita a entrada do organizador. Testes de contrato: 201 convidando, 409 convite
 repetido, 404 para convite de entrada alheia, 403 para o convidado respondendo convite de terceiro e
 a entrada aparecendo para o convidado com o estado do convite.
+
+---
+
+## EXECUÇÃO 5
+
+**DATA/HORA:** 2026-11-08, 10:10–10:40 (America/Sao_Paulo)
+
+**FASE:** 1 — fundação do calendário
+
+**TAREFA:** convites e participantes do compromisso: tabela `calendar_entry_participants`, convite
+pelo @, resposta de quem foi convidado, remoção pelo organizador e a agenda de cada pessoa
+passando a incluir o que ela foi convidada a participar.
+
+**REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
+
+**ARQUIVOS:**
+- `src/main/resources/db/migration/V258__calendar_entry_participants.sql` (novo)
+- `src/main/java/com/socialcoisa/rede/calendar/domain/` — `CalendarParticipant`,
+  `CalendarParticipantState`
+- `src/main/java/com/socialcoisa/rede/calendar/application/` — `CalendarInvitationService` (novo),
+  `CalendarAgendaItem` (novo), `CalendarQueryService` (`agenda(...)`), `port/out/CalendarParticipantRepository`
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/out/persistence/` — entidade JPA,
+  repositório Spring Data e adaptador dos participantes; consulta por janela por conjunto de ids
+  na entrada
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryController.java` —
+  rotas de convite e `AgendaItemView`
+- `src/test/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarInvitationApiTests.java` (novo)
+- `docs/engineering/ENOIS-CALENDAR-ROADMAP.md`, `ENOIS-CALENDAR-ARCHITECTURE.md` (D13, D14),
+  `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
+
+**IMPLEMENTAÇÃO:**
+- Tabela `calendar_entry_participants` com estado por pessoa (`INVITED`, `ACCEPTED`, `DECLINED`,
+  `TENTATIVE`), unicidade `(entry_id, user_id)`, quem convidou e os carimbos de convite e resposta.
+  Sem chave estrangeira, como no resto do repositório. Índice por compromisso e por pessoa.
+- `CalendarParticipant` recusa convite para o próprio dono, recusa resposta `INVITED` (pendente não
+  é resposta) e responder duas vezes a mesma coisa não mexe no carimbo.
+- Rotas novas: `POST /calendar/entries/{entryId}/participants` (só o organizador, pelo @, com
+  `Idempotency-Key`), `GET .../participants` (só o organizador), `PATCH .../participants/me` (quem
+  responde é tirado da sessão, nunca do caminho) e `DELETE .../participants/{participantId}`
+  (organizador remove). O `@` vem do perfil; a resposta não devolve id de pessoa.
+- Convite para perfil inexistente é 404, convite repetido é 409, convite para entrada cancelada é
+  409, responder convite alheio ou de terceiro é 404.
+- A leitura da agenda (`GET /calendar/entries`) passou a devolver o compromisso mais o lugar de quem
+  lê: `{ entry, owner, participation }`. O convidado vê o compromisso do organizador com o estado
+  do próprio convite; o organizador vê `owner=true` e `participation=null`.
+- O convidado **não** edita nem cancela a entrada do organizador: as rotas de escrita continuam
+  respondendo 404, como respondiam antes de existir convite.
+
+**TESTES:** `./mvnw -o test -Dtest=...` na árvore final (worktree `feat/enois-calendar-convites`
+sobre a `qa` `422d852e`) — 51 testes, 0 falhas, 0 erros: `CalendarInvitationApiTests` 11/11,
+`CalendarEntryReadApiTests` 9/9 (atualizados para o formato `{ entry, ... }`),
+`CalendarEntryWriteApiTests` 9/9, `CalendarEntryTests` 8/8, `CalendarEntryPersistenceTests` 5/5,
+`MariaDbReservedWordsTests` 2/2, `FlywayMigrationConfigTests` 5/5 e `AutomatedWritePathsTests` 2/2.
+Nenhuma rodada precisou de conserto: a suíte de convites passou de primeira.
+
+**PR:** backend [#541](https://github.com/Rede-ENois/enois-backend/pull/541), aguardando revisão
+humana. Documentação aberta nesta execução, depende do #541.
+
+**BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`) continua pendente como
+unidade própria. B5 continua valendo: unidade só de API, sem tela, então não há verificação a
+390px/1280px a registrar.
+
+**PRÓXIMA EXECUÇÃO:** Fase 1, quinta unidade — **fechamento da fundação**: `GET /calendar/entries/{id}`
+passa a devolver o mesmo lugar do leitor (dono ou convidado, com a lista de participantes para o
+dono), e entra a listagem de convites pendentes (`GET /calendar/invitations?state=INVITED`) para a
+tela conseguir mostrar "você foi convidado" sem varrer a agenda; testes de contrato do detalhe para
+convidado (200, sem convidados expostos) e de convite pendente. Com isso a Fase 1 fecha e a Fase 2
+(Design System) começa na execução seguinte.
