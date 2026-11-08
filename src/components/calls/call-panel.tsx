@@ -173,23 +173,25 @@ export function CallPanel() {
             ) : null}
 
             {session.phase === "live" ? (
+              // Duas ações lado a lado na mesma linha. No celular o par encolhe ~30% (fonte, ícone
+              // e respiro) para caber na largura da tela; a partir de `sm` volta ao tamanho cheio.
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 rounded-full"
+                  className="min-w-0 flex-1 gap-1.5 rounded-full px-2.5 text-[0.7rem] whitespace-nowrap sm:gap-2 sm:px-4 sm:text-sm"
                   onClick={() => setReportOpen(true)}
                 >
-                  <Flag className="mr-2 h-4 w-4" />
+                  <Flag className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
 
                   {texts.calls.report.action}
                 </Button>
 
                 <Button
                   variant="outline"
-                  className="flex-1 rounded-full"
+                  className="min-w-0 flex-1 gap-1.5 rounded-full px-2.5 text-[0.7rem] whitespace-nowrap sm:gap-2 sm:px-4 sm:text-sm"
                   onClick={() => void hangUp()}
                 >
-                  <PhoneOff className="mr-2 h-4 w-4" />
+                  <PhoneOff className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
 
                   {isGroup ? texts.calls.end : texts.calls.hangUp}
                 </Button>
