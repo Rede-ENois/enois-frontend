@@ -219,3 +219,38 @@ cobrindo 401 sem sessão, 404 para entrada alheia e o filtro de agenda. Sem cria
 |---|---|---|---|
 | 1 | 2026-11-08 ~09:40 | 0 | Inventário dos 4 repositórios, matriz de funcionalidades, dívida de data/hora, roadmap e arquitetura escritos; docs no PR #740 |
 | 2 | 2026-11-08 ~13:10 | 1 | `calendar_entries` (V257) + domínio + porta/adaptador + 20 testes verdes; backend PR #531 |
+
+---
+
+## 12. Critérios de encerramento do cronjob
+
+A execução horária só se encerra quando **todos** os itens abaixo forem verdadeiros, e cada um com
+prova executada nesta linha de trabalho, não com intenção:
+
+1. As fases 0 a 11 da seção 6 estão concluídas.
+2. Todas as funcionalidades da seção 4 (inventário) estão implementadas — nenhuma linha continua
+   como "A construir".
+3. Frontend, backend e Design System estão integrados: existe tela consumindo o endpoint de cada
+   fluxo, e o componente do Design System é o usado pela tela.
+4. `npm run lint`, `npm run typecheck`, `npx vitest run` e `npm run build` no front e `./mvnw test`
+   no backend verdes na árvore final.
+5. Os critérios de aceitação das seções 5 a 12 estão satisfeitos, cada um com teste ou verificação
+   de tela registrada no log.
+6. Não existe tarefa de implementação pendente na seção 10.
+7. Nenhuma funcionalidade está em placeholder, stub ou TODO.
+8. Os três documentos de `docs/engineering/` estão atualizados com a última execução.
+9. Todos os PRs produzidos estão listados na seção 7 com link.
+10. Só resta bloqueio externo (credencial OAuth de provedor) — e ele está escrito com o
+    encaminhamento, sem impedir nenhuma outra funcionalidade.
+
+PR aberto aguardando revisão humana **não** impede o encerramento: o trabalho está entregue, e o
+merge é decisão do time. Estado terminal, ao encerrar:
+
+```
+PROJECT_STATUS=COMPLETED
+CRONJOB_STATUS=DISABLED
+COMPLETED_AT=<timestamp>
+```
+
+Em dúvida, o cronjob continua ativo. Nunca encerrar com fase incompleta, teste pendente ou PR
+parcialmente implementado.
