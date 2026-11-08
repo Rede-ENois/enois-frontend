@@ -471,7 +471,14 @@ emprestados.
 
 **PR:** design system
 [#164](https://github.com/Rede-ENois/enois-design-system/pull/164), aguardando revisão humana. Esta
-documentação vai em PR próprio para a `qa` do front, declarando a dependência do #164.
+documentação em [#748](https://github.com/Rede-ENois/enois-frontend/pull/748), para a `qa` do front,
+declarando a dependência do #164. Os dois aguardam revisão humana; nenhum foi aprovado nem mergeado
+por mim.
+
+Erro meu na entrega: o primeiro push desta documentação saiu pelo remoto `origin` do worktree, que
+aponta para o fork pessoal, e não pelo `enois`. O branch `docs/enois-calendar-execucao-7` ficou nos
+dois remotos, no mesmo commit. O PR foi aberto no repositório certo e a regra é não apagar branch, por
+isso o do fork continua lá, sem PR e sem uso.
 
 **BLOQUEIOS:** nenhum bloqueio novo.
 
