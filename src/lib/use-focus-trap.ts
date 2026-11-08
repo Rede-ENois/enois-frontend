@@ -57,7 +57,10 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      if (previous?.isConnected) previous.focus();
+      // Só devolve o foco quando o painel saiu da tela. O trap também desliga enquanto o diálogo
+      // de denúncia está aberto, e ali o painel continua montado: devolver o foco nesse instante
+      // o mandaria para a página de trás com a chamada ainda aberta.
+      if (!container.isConnected && previous?.isConnected) previous.focus();
     };
   }, [ref, active]);
 }
