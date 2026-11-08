@@ -77,6 +77,7 @@ import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caug
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
+import { useFeedPullToRefresh } from "@/lib/feed/pull-to-refresh";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -301,6 +302,7 @@ function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: feedRefetch,
   } = useFeed(
     tab,
     tab === "ALL" ? typeFilter : undefined,
@@ -642,6 +644,13 @@ function Home() {
     caughtUpTab ? (lastSeenAt ?? null) : null,
   );
   const firstPostRef = useMarkFeedSeen(feedPosts, caughtUpTab);
+
+  // Puxar para renovar no topo, em toque: renova SÓ a lista do feed — o gesto é sobre o que está
+  // na tela, não sobre o aplicativo. O indicador de renovação é o mesmo da busca automática.
+  const pullToRefresh = useFeedPullToRefresh(
+    useCallback(() => void feedRefetch(), [feedRefetch]),
+    feedFetching && !isFetchingNextPage,
+  );
 
   useEffect(() => {
     const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);

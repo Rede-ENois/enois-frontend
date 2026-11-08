@@ -383,14 +383,17 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   // Dentro da sala (ou entrando nela) não toca: o toque cobriria a conversa. A da fila segue
   // visível na tela.
   const inRoom = session.phase === "live" || session.phase === "joining";
-  const ringing =
-    !inRoom &&
-    ((session.phase === "incoming" && call?.modality === "DIRECT") ||
-      session.waiting.some((held) => held.modality === "DIRECT"));
+  const ringingCall =
+    !inRoom && session.phase === "incoming" && call?.modality === "DIRECT"
+      ? call
+      : !inRoom
+        ? session.waiting.find((held) => held.modality === "DIRECT")
+        : undefined;
+  const ringing = ringingCall !== undefined;
   useEffect(() => {
-    if (!ringing) return;
-    return startRingtone({ enabled: !silent.current });
-  }, [ringing]);
+    if (!ringing || ringingCall === undefined) return;
+    return startRingtone({ enabled: !silent.current, callId: ringingCall.id });
+  }, [ringing, ringingCall]);
 
   // Chamada encerrada some sozinha depois de mostrar o motivo. A próxima da fila assume antes
   // disso: a tela do "encerrada" é da chamada anterior e não pode atrasar quem está tocando.
