@@ -161,3 +161,56 @@ que não bate com a exportação.
 **Limite conhecido.** A checagem de dono do detalhe acontece depois de carregar a linha. O custo é uma
 linha lida a mais por tentativa; a consulta da janela já filtra por dono no banco, então a lista nunca
 lê agenda alheia.
+
+---
+
+## D11 — Escrita da agenda: `Idempotency-Key`, 400 com código e 404 em vez de 403
+
+**Problema.** Criar, editar e cancelar compromisso pelo app significa um botão que a pessoa pode
+apertar duas vezes: o toque duplo, o retry depois de um timeout, a rede que caiu mas a requisição
+chegou. Sem idempotência isso vira dois compromissos ou um cancelamento com carimbo trocado.
+
+**Decisão.**
+- `POST /calendar/entries`, `PATCH /calendar/entries/{entryId}` e `DELETE /calendar/entries/{entryId}`
+  passam pelo `IdempotencyApplicationService` do repositório, com chave = método + rota +
+  `Idempotency-Key` + hash do corpo. Sem `Idempotency-Key` a resposta é 400
+  `IDEMPOTENCY_KEY_REQUIRED`; a mesma chave com corpo diferente é 409 `IDEMPOTENCY_PAYLOAD_CONFLICT`.
+- O intervalo no `PATCH` vai em par: `startsAt` e `endsAt` juntos, e trocar o fuso exige os dois.
+  Meio intervalo novo não tem significado, e aceitar só o início faria o compromisso esticar ou
+  encolher sem quem editou perceber.
+- `description` em branco limpa o texto. No JSON é a única forma de dizer "tirar a descrição" que
+  não se confunde com "não mexi nesse campo"; campo ausente continua significando "não muda".
+- `DELETE` **cancela**: a linha fica, com `state=CANCELLED` e `cancelledAt`. Cancelar de novo devolve
+  200 com o mesmo carimbo (o botão repetido não é erro). Editar entrada cancelada é 409
+  `CALENDAR_ENTRY_CANCELLED` — o registro só existe para publicar o cancelamento no `.ics`.
+- Violação de invariante do domínio sai como **400 `INVALID_CALENDAR_ENTRY`** com a mensagem do
+  domínio, que já explica a regra (fim antes do início, fuso desconhecido, texto acima do teto). O
+  controller não reescreve a mensagem: a causa muda, o código não.
+- Entrada de outra pessoa devolve o mesmo **404 `CALENDAR_ENTRY_NOT_FOUND`** de um id inexistente,
+  pela razão de D10: 403 confirmaria que o id existe.
+
+**Rejeitado.** PUT de corpo completo na edição: a tela de detalhe edita um campo por vez, e um PUT
+obrigaria o cliente a reenviar o que não mudou (e a perder a edição de outra pessoa entre a leitura
+e o envio). Flag `deleted=true` no corpo em vez de `DELETE`: a rota de cancelamento precisa existir
+de qualquer forma, e um `DELETE` que não apaga precisa ser dito no nome da rota e na doc, não
+escondido num corpo.
+
+**Limite conhecido.** A idempotência cobre 24 h (TTL do serviço). Depois disso a mesma chave cria
+outra entrada. Para repetição de clique e retry isso é mais do que suficiente; para sincronização
+externa existe a origem (`source_type`/`source_id`), que é outra garantia (D3).
+
+---
+
+## D12 — O compromisso criado pela rota de agenda não tem origem
+
+**Problema.** A entrada tem origem (`source_type`/`source_id`) para o módulo dono saber se já gravou
+o compromisso. Usar a rota de escrita do app para gravar evento ou mentoria exigiria a origem no
+corpo, e aí qualquer pessoa poderia dizer "esta entrada é o evento X" sem ser dona do evento.
+
+**Decisão.** A rota `POST /calendar/entries` cria sempre com origem vazia: é compromisso do próprio
+calendário. Módulo que grava entrada de outro tipo (evento, mentoria, vaga, chamada) usa o serviço de
+aplicação, com a origem preenchida, depois de validar a própria regra. A origem não é aceita no corpo
+da rota pública de escrita.
+
+**Consequência.** A Fase 4 e a Fase 5 (agendas social e profissional) escrevem pelo serviço, não por
+HTTP, e a rota HTTP nunca precisa confiar num `sourceId` vindo do cliente.

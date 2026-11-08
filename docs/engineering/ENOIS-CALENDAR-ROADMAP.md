@@ -14,8 +14,8 @@
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
 FASE_ATUAL=1 (fundação do calendário)
-EXECUCAO=3
-ULTIMA_ATUALIZACAO=2026-11-08T08:40:00-03:00
+EXECUCAO=4
+ULTIMA_ATUALIZACAO=2026-11-08T09:35:00-03:00
 ```
 
 ---
@@ -151,7 +151,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | Fase | Escopo | Depende de | Estado |
 |---|---|---|---|
 | 0 | Inventário + roadmap + contratos | — | **concluída** |
-| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **em andamento** (modelo + leitura entregues) |
+| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **em andamento** (modelo, leitura e escrita entregues; faltam convites) |
 | 2 | Design System: calendário mês/semana/dia/lista, alternância, estados | 1 (contrato) | pendente |
 | 3 | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes | 1, 2 | pendente |
 | 4 | Agenda social: chamadas, eventos de grupo/comunidade, pessoais | 3 | pendente |
@@ -172,7 +172,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#740](https://github.com/Rede-ENois/enois-frontend/pull/740) | enois-frontend | Documentação: roadmap, arquitetura e log | **mergeado** em `6765a46a` (2026-11-08) |
 | [#531](https://github.com/Rede-ENois/enois-backend/pull/531) | enois-backend | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela | **mergeado** em `6ac79d83` (2026-11-08, squash) |
 | [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | aberto, **aguardando revisão humana** |
-| [#742](https://github.com/Rede-ENois/enois-frontend/pull/742) | enois-frontend | Documentação: execução 3 (este PR) | aberto, **aguardando revisão humana**; depende do #536 |
+| [#742](https://github.com/Rede-ENois/enois-frontend/pull/742) | enois-frontend | Documentação: execução 3 | **mergeado** em `cd193381` (2026-11-08) |
+| [#538](https://github.com/Rede-ENois/enois-backend/pull/538) | enois-backend | Fase 1: escrita da agenda (`POST`, `PATCH`, `DELETE` cancelando) com `Idempotency-Key` e autorização por dono | aberto, **aguardando revisão humana** |
+| `PENDENTE` | enois-frontend | Documentação: execução 4 | aberto, **aguardando revisão humana**; depende do #538 |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -186,11 +188,13 @@ delimitado; dependências declaradas no corpo.
 
 | Classe | Testes | Resultado |
 |---|---|---|
+| `CalendarEntryWriteApiTests` | 9 | verde (contrato HTTP da escrita: 201, 400, 404, idempotência, cancelamento) |
 | `CalendarEntryReadApiTests` | 9 | verde (contrato HTTP da leitura) |
 | `CalendarEntryTests` | 8 | verde |
 | `CalendarEntryPersistenceTests` | 5 | verde |
 | `MariaDbReservedWordsTests` | 2 | verde (guarda de migration) |
 | `FlywayMigrationConfigTests` | 5 | verde (inclui unicidade de versão) |
+| `AutomatedWritePathsTests` | 2 | verde (rota nova de escrita nasce protegida) |
 
 O gate de cada execução fica registrado no log de execução.
 
@@ -210,7 +214,15 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 4 — Fase 1, terceira unidade:** criação e edição da entrada com `POST /calendar/entries`
+**Execução 5 — Fase 1, quarta unidade: convites e participantes.** Tabela
+`calendar_entry_participants` com estado por participante (convidado, aceito, recusado, talvez),
+`POST /calendar/entries/{entryId}/participants` e `PATCH .../participants/{userId}` restritos ao
+dono, leitura incluindo os compromissos em que a pessoa é participante e o convidado sem poder
+editar a entrada do organizador. Testes de contrato: 201 convidando, 409 convite repetido, 404 para
+entrada alheia, 403 para o convidado responder convite de terceiro, e a entrada aparecendo para o
+convidado com o estado do convite.
+
+*(Tarefa da execução 4, entregue:)* **Execução 4 — Fase 1, terceira unidade:** criação e edição da entrada com `POST /calendar/entries`
 e `PATCH /calendar/entries/{id}`, com validação do corpo (título, intervalo, fuso IANA), idempotência
 no padrão do repositório (`Idempotency-Key`) e autorização por dono; `DELETE` cancelando (`CANCELLED`,
 nunca apagando a linha). Testes de contrato: 401 sem sessão, 201 na criação, 400 para corpo inválido,
@@ -226,6 +238,7 @@ leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois dest
 | 1 | 2026-11-08 ~09:40 | 0 | Inventário dos 4 repositórios, matriz de funcionalidades, dívida de data/hora, roadmap e arquitetura escritos; docs no PR #740 |
 | 2 | 2026-11-08 ~13:10 | 1 | `calendar_entries` (V257) + domínio + porta/adaptador + 20 testes verdes; backend PR #531 |
 | 3 | 2026-11-08 ~08:40 | 1 | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #742 |
+| 4 | 2026-11-08 ~09:35 | 1 | Escrita da entrada (`POST`, `PATCH`, `DELETE` cancelando) com validação, `Idempotency-Key` e autorização por dono + 9 testes de contrato verdes; 40 testes verdes na suíte do calendário e guardas |
 
 ---
 

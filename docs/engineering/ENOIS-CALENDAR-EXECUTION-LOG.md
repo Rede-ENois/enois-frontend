@@ -157,3 +157,68 @@ verificação visual. A migração de dados de `events` (B2) continua pendente c
 **PRÓXIMA EXECUÇÃO:** Fase 1, terceira unidade — `POST /calendar/entries`, `PATCH` e `DELETE`
 (cancelamento) com validação do corpo, `Idempotency-Key` no padrão do repositório e autorização por
 dono; testes de contrato de 201, 400, 404, idempotência e cancelamento. Sem convites ainda.
+
+---
+
+## EXECUÇÃO 4
+
+**DATA/HORA:** 2026-11-08, 09:11–09:35 (America/Sao_Paulo)
+
+**FASE:** 1 — fundação do calendário
+
+**TAREFA:** criação, edição e cancelamento da entrada: `POST /calendar/entries`,
+`PATCH /calendar/entries/{entryId}` e `DELETE /calendar/entries/{entryId}`, com validação do corpo,
+`Idempotency-Key` e autorização por dono.
+
+**REPOSITÓRIOS:** `enois-backend` (código), `enois-frontend` (documentação).
+
+**ARQUIVOS:**
+- `src/main/java/com/socialcoisa/rede/calendar/application/CalendarCommandService.java` (novo)
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryController.java`
+  (as três rotas de escrita, `CalendarEntryRequest` e `CalendarEntryPatchRequest`)
+- `src/test/java/com/socialcoisa/rede/calendar/adapters/in/web/CalendarEntryWriteApiTests.java` (novo)
+- `docs/engineering/ENOIS-CALENDAR-ROADMAP.md`, `ENOIS-CALENDAR-ARCHITECTURE.md` (D11, D12),
+  `ENOIS-CALENDAR-EXECUTION-LOG.md` (este arquivo)
+
+**IMPLEMENTAÇÃO:**
+- `CalendarCommandService` concentra criação, edição parcial e cancelamento. Toda violação de
+  invariante do domínio (`IllegalArgumentException`) vira **400 `INVALID_CALENDAR_ENTRY`** com a
+  mensagem do domínio, que já é escrita para quem usa o app; tentar editar entrada cancelada
+  (`IllegalStateException`) vira **409 `CALENDAR_ENTRY_CANCELLED`**.
+- Criação com padrão para `scope` (`SOCIAL`) e `kind` (`PERSONAL`), origem vazia (a rota é só para
+  compromisso criado no próprio calendário; quem grava de outro módulo usa o serviço com a origem
+  preenchida), `startsAt`/`endsAt` em ISO-8601 UTC e `timeZoneId` IANA. Id `cal_` + UUID.
+- Edição é parcial: campo ausente não muda; `description` em branco limpa o texto; trocar horário
+  exige `startsAt` e `endsAt` juntos, e trocar o fuso exige o intervalo junto. Reagendar para o
+  mesmo horário não mexe em `updatedAt` (o `SEQUENCE` do `.ics` fica estável).
+- `DELETE` cancela: a linha continua, sai com `state=CANCELLED` e `cancelledAt`. Cancelar de novo
+  devolve 200 com o estado atual, sem mexer no carimbo, porque repetir o clique depois de um
+  timeout não é erro.
+- As três rotas passam pelo `IdempotencyApplicationService` com a chave do repositório (método +
+  rota + `Idempotency-Key` + hash do corpo): repetir a criação com a mesma chave devolve a
+  resposta guardada, e a mesma chave com corpo diferente dá **409 `IDEMPOTENCY_PAYLOAD_CONFLICT`**.
+- Autorização: `currentUserResolver.resolve(...)` em todas; entrada de outra pessoa e id
+  inexistente devolvem o mesmo **404 `CALENDAR_ENTRY_NOT_FOUND`**.
+
+**TESTES:** `./mvnw -o test -Dtest=...` na árvore final (worktree `feat/enois-calendar-escrita`
+sobre a `qa` `3a803a01`) — 40 testes, 0 falhas, 0 erros: `CalendarEntryWriteApiTests` 9/9,
+`CalendarEntryReadApiTests` 9/9, `CalendarEntryTests` 8/8, `CalendarEntryPersistenceTests` 5/5,
+`MariaDbReservedWordsTests` 2/2, `FlywayMigrationConfigTests` 5/5 e `AutomatedWritePathsTests` 2/2
+(este último confirma que as rotas novas de escrita nascem protegidas por sessão). A primeira
+rodada da suíte nova passou de primeira; a única correção no caminho foi uma acentuação na
+asserção de mensagem.
+
+**PR:** backend — [#538](https://github.com/Rede-ENois/enois-backend/pull/538), aguardando revisão
+humana. Documentação — PR aberta nesta execução, depende do #538.
+
+**BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`) continua pendente como
+unidade própria. B5 continua valendo: esta unidade é só API, sem tela, então não há verificação a
+390px/1280px a registrar. A tela entra na Fase 3, quando existir o componente da Fase 2.
+
+**PRÓXIMA EXECUÇÃO:** Fase 1, quarta unidade — **convites e participantes**: tabela
+`calendar_entry_participants` (estado por participante: convidado, aceito, recusado, talvez),
+`POST /calendar/entries/{entryId}/participants` e `PATCH .../participants/{userId}` restritos ao
+dono, leitura da agenda incluindo os compromissos em que a pessoa é participante, e verificação de
+que o convidado não edita a entrada do organizador. Testes de contrato: 201 convidando, 409 convite
+repetido, 404 para convite de entrada alheia, 403 para o convidado respondendo convite de terceiro e
+a entrada aparecendo para o convidado com o estado do convite.
