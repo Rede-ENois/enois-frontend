@@ -37,7 +37,7 @@ describe("useFeedPullToRefresh", () => {
   let root: Root;
   let host: HTMLDivElement;
   let probe: ReturnType<typeof useFeedPullToRefresh>;
-  let refresh: ReturnType<typeof vi.fn>;
+  let refresh: () => void = () => {};
 
   function Harness({ fetching }: { fetching: boolean }) {
     probe = useFeedPullToRefresh(refresh, fetching);
