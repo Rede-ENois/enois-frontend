@@ -264,3 +264,35 @@ antes de existir convite. O que o convidado muda é a própria resposta, por `/p
 **Consequência.** O convidado não tem como mudar horário, título ou cancelar: quem organiza é que
 reagenda, e quem foi convidado responde de novo se mudou de ideia. Unificar essas regras no item
 compartilhado exigiria permissão por campo, que é complexidade sem caso de produto hoje.
+
+---
+
+## D15 — O detalhe é o item da agenda, e convite pendente é consulta própria
+
+**Problema.** A leitura em lista já devolvia `{ entry, owner, participation }`, mas o detalhe
+devolvia só a entrada. A tela de detalhe teria de descobrir sozinha se o compromisso é do leitor ou
+um convite, e o convidado precisaria saber o próprio estado por outro caminho. Além disso, mostrar
+"você foi convidado" exigiria varrer a agenda inteira em toda abertura do app.
+
+**Decisão.** O detalhe (`GET /calendar/entries/{entryId}`) devolve `{ entry, owner, participation,
+participants }`, o mesmo vocabulário do item da agenda. `participants` só vem preenchido para o
+organizador; para o convidado ele é `null`. E entra `GET /calendar/invitations`, com os convites em
+`INVITED` de entrada ativa, do mais antigo ao mais novo.
+
+**Consequência.**
+- A tela tem uma forma só para lista e detalhe: a diferença é `participants`, não outro contrato.
+- O convidado não vê a lista de convidados de um compromisso da agenda de outra pessoa. A lista é
+  informação do organizador; expor para todo convidado permite montar o grafo social de alguém.
+  Se a Fase 4 precisar mostrar "quem mais vai" em evento de comunidade, isso é decisão de produto
+  sobre um compromisso público, não sobre agenda privada, e vira campo explícito.
+- `participants` nulo em vez de lista vazia: lista vazia significa "ninguém convidado", que é
+  informação diferente de "não é seu para ver". O front testa nulo para esconder a seção.
+- Convite pendente é a linha em `INVITED`; responder (aceitar, recusar, talvez) tira da lista. Entrada
+  cancelada sai da lista mesmo com o convite em `INVITED`, porque não há mais o que responder.
+- A consulta é por pessoa e por estado, com índice `(user_id, state)`, não uma varredura da agenda
+  em janela de tempo: o convite pendente pode ser de um compromisso do mês que vem.
+
+**Rejeitado.** `?state=` como filtro na rota de convites: o único estado que interessa para "o que eu
+preciso responder" é `INVITED`, e responder já muda o estado. Um parâmetro livre convidaria a
+inventar listas de "meus recusados", que é a agenda com `participation=DECLINED`. Rejeitado também
+devolver os participantes para o convidado: não há caso de produto hoje que precise disso.
