@@ -21,6 +21,7 @@ import { isTerminalState } from "@/types/application/call/is-terminal-state";
 import { callsApi } from "@/lib/api";
 import { ApiError, apiUrl } from "@/lib/api-client";
 import { callSessionStore, getCallSession, useCallSession } from "@/lib/calls/call-session";
+import { hangUpOnServer } from "@/lib/calls/use-hang-up";
 import { readEconomicMode } from "@/lib/lite-mode";
 import { subscribeToCallEvents } from "@/lib/message-stream";
 import { hasSession } from "@/lib/require-auth";
@@ -132,6 +133,25 @@ function isSlotFree(phase: CallPhase): boolean {
 }
 
 /**
+ * Estado do servidor de uma chamada que não está na tela: atualiza ou tira da fila, e uma chamada
+ * nova tocando entra nela. Nunca toma a tela da chamada de cima.
+ */
+function applyToOtherCall(next: CallView) {
+  const queued = getCallSession().waiting.some((held) => held.id === next.id);
+  if (isTerminalState(next.state)) {
+    callSessionStore.removeWaiting(next.id);
+    return;
+  }
+  if (queued) {
+    callSessionStore.updateWaiting(next);
+    return;
+  }
+  if (next.state === "RINGING") {
+    callSessionStore.ring(next, next.isInitiator ? "calling" : "incoming");
+  }
+}
+
+/**
  * Só a casca (chamadas, dock, autenticação). Os filhos são renderizados uma vez: um provider
  * condicional mudaria o tipo da árvore entre "sem sessão" e "com sessão" e remontaria tudo depois
  * da hidratação.
@@ -190,6 +210,17 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   const applyServerState = useCallback(
     (next: CallView) => {
       const phase = phaseRef.current;
+      // Resposta de outra chamada que não a da tela (a da fila, a que acabou de sair dela numa
+      // troca): mexe só na fila. Aplicada na de cima, ela trocava a chamada da tela pela antiga
+      // por um instante, ou abria a sala dela por cima da que a pessoa acabou de escolher.
+      // Lê o store, não o render: a troca muda a chamada da tela antes do próximo render.
+      const screen = getCallSession();
+      const busy = !isSlotFree(screen.phase) && screen.phase !== "error";
+      if (screen.call !== null && screen.call.id !== next.id && busy) {
+        applyToOtherCall(next);
+        refreshRelated();
+        return;
+      }
       if (isTerminalState(next.state)) {
         if (phase !== "ended") callSessionStore.ended(next);
         refreshRelated();
@@ -291,9 +322,13 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   // Toque da chamada recebida: só 1:1 (grupo nunca toca) e nunca em modo lite/BATATA. A fila
   // conta: uma 1:1 esperando atrás de uma chamada em grupo também precisa tocar, senão ela chega
   // em silêncio e a pessoa só descobre quando a de cima termina.
+  // Dentro da sala (ou entrando nela) não toca: o toque cobriria a conversa. A da fila segue
+  // visível na tela.
+  const inRoom = session.phase === "live" || session.phase === "joining";
   const ringing =
-    (session.phase === "incoming" && call?.modality === "DIRECT") ||
-    session.waiting.some((held) => held.modality === "DIRECT");
+    !inRoom &&
+    ((session.phase === "incoming" && call?.modality === "DIRECT") ||
+      session.waiting.some((held) => held.modality === "DIRECT"));
   useEffect(() => {
     if (!ringing) return;
     return startRingtone({ enabled: !silent.current });
@@ -357,12 +392,19 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   );
 
   /**
-   * Atende. Sem id, é a chamada da tela; com id, é a que está na fila — atender a de baixo não
-   * pode atropelar a de cima, então ela sai da fila e assume a tela.
+   * Atende. Sem id, é a chamada da tela; com id, é a que está na fila: ela assume a tela. Se a
+   * pessoa estava numa sala, o servidor fica sabendo que ela saiu antes de a outra ser atendida.
    */
   const answer = useCallback(
     async (callId?: string) => {
-      const current = callId ? callSessionStore.swapWaiting(callId) : getCallSession().call;
+      let current: CallView | null;
+      if (callId) {
+        const swap = callSessionStore.swapWaiting(callId);
+        current = swap?.next ?? null;
+        if (swap?.left) await hangUpOnServer(swap.left);
+      } else {
+        current = getCallSession().call;
+      }
       if (!current) return;
       try {
         const answered = await callsApi.answer(current.id);

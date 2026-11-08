@@ -7,7 +7,7 @@ const JOIN: CallJoin = {
   callId: "call_1",
   kind: "AUDIO",
   modality: "DIRECT",
-  host: "https://chamadas.example.test",
+  host: "https://meet.enois.ia.br",
   tokenTtlSeconds: 7200,
   room: "sala-sem-nome-deusuario",
   jwt: "token.assinado",
@@ -40,7 +40,7 @@ function hashParams(join: CallJoin): URLSearchParams {
 describe("callEmbedUrl", () => {
   it("leva a sala e o token que o servidor assinou", () => {
     const url = new URL(callEmbedUrl(JOIN));
-    expect(url.origin).toBe("https://chamadas.example.test");
+    expect(url.origin).toBe("https://meet.enois.ia.br");
     expect(url.pathname).toBe("/sala-sem-nome-deusuario");
     expect(url.searchParams.get("jwt")).toBe("token.assinado");
   });

@@ -201,7 +201,7 @@ describe("chamada recebida em tela cheia", () => {
         callId: "call_1",
         kind: "AUDIO",
         modality: "DIRECT",
-        host: "https://chamadas.example.test",
+        host: "https://meet.enois.ia.br",
         tokenTtlSeconds: 7200,
         room: "sala-1",
         jwt: "token",
