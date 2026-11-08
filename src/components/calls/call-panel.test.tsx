@@ -34,7 +34,11 @@ function ringingCall(): CallView {
   };
 }
 
-const actions = vi.hoisted(() => ({ answer: vi.fn(), decline: vi.fn() }));
+const actions = vi.hoisted(() => ({
+  answer: vi.fn(),
+  decline: vi.fn(),
+  leaveFromRoom: vi.fn(async () => {}),
+}));
 
 vi.mock("./calls-provider", () => ({
   useCalls: () => ({
@@ -43,6 +47,7 @@ vi.mock("./calls-provider", () => ({
     answer: actions.answer,
     decline: actions.decline,
     open: vi.fn(),
+    leaveFromRoom: actions.leaveFromRoom,
     close: () => callSessionStore.idle(),
     call: null,
   }),
@@ -160,7 +165,11 @@ describe("chamada recebida em tela cheia", () => {
     act(() => callSessionStore.ring(incoming(), "incoming"));
     const dialog = host.querySelector('[role="dialog"]');
     expect(dialog).toBeTruthy();
-    expect(dialog!.className).toContain("inset-0");
+    // A altura é `dvh`, não `inset-0`: no celular a barra do navegador aparece e some, e com
+    // `inset-0` o rodapé da sala ficava atrás dela. `dvh` acompanha a área visível.
+    expect(dialog!.className).toContain("inset-x-0");
+    expect(dialog!.className).toContain("top-0");
+    expect(dialog!.className).toContain("h-[100dvh]");
     expect(dialog!.getAttribute("aria-modal")).toBe("true");
   });
 
@@ -256,6 +265,84 @@ describe("chamada recebida em tela cheia", () => {
       }),
     );
     const dialog = host.querySelector('[role="dialog"]');
-    expect(dialog!.className).toContain("inset-0");
+    expect(dialog!.className).toContain("h-[100dvh]");
+  });
+});
+
+describe("a pessoa desligou por dentro da sala", () => {
+  let root: Root;
+  let host: HTMLDivElement;
+
+  function liveCall() {
+    return { ...ringingCall(), state: "ACTIVE" as const };
+  }
+
+  beforeEach(() => {
+    callSessionStore.idle();
+    actions.leaveFromRoom.mockClear();
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    act(() =>
+      root.render(
+        <QueryClientProvider client={new QueryClient()}>
+          <CallPanel />
+        </QueryClientProvider>,
+      ),
+    );
+    act(() =>
+      callSessionStore.live({
+        callId: "call_1",
+        kind: "AUDIO",
+        modality: "DIRECT",
+        host: "https://meet.enois.ia.br",
+        tokenTtlSeconds: 7200,
+        room: "sala-1",
+        jwt: "token",
+        call: liveCall(),
+      }),
+    );
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+    callSessionStore.idle();
+  });
+
+  it("o aviso da sala fecha o painel e avisa o servidor, sem reconectar", () => {
+    const frame = host.querySelector("iframe")!;
+    const source = frame.contentWindow;
+    expect(source).not.toBeNull();
+
+    // O Epapo avisa por postMessage, na mesma origem do iframe. Sem isso o painel ficava aberto
+    // achando que a pessoa estava na sala, e reconectar reabria a chamada que ela encerrou.
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "enois:call-room-exit" },
+          origin: "https://meet.enois.ia.br",
+          source: source as MessageEventSource,
+        }),
+      );
+    });
+
+    expect(actions.leaveFromRoom).toHaveBeenCalledWith("call_1", undefined);
+    // Fechar e reconectar são coisas diferentes: nenhum pedido de credencial nova aqui.
+    expect(getCallSession().needsCredential).toBe(false);
+  });
+
+  it("um aviso de outra origem não fecha a chamada", () => {
+    const frame = host.querySelector("iframe")!;
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "enois:call-room-exit" },
+          origin: "https://outro.exemplo",
+          source: frame.contentWindow as MessageEventSource,
+        }),
+      );
+    });
+    expect(actions.leaveFromRoom).not.toHaveBeenCalled();
   });
 });

@@ -218,12 +218,14 @@ describe("toque da chamada", () => {
 
   it("entrada recusada por limite não é repetida sozinha pela conferência", async () => {
     const { ApiError } = await import("@/lib/api-client");
+    // 1:1 com a pessoa já dentro: a conferência é a única que reabre a sala sozinha. (O grupo
+    // nem chega aqui, e é isso que o teste do `shouldAutoEnter` cobre.)
     const live = call({
-      modality: "GROUP",
-      conversationId: null,
-      groupId: "grupo_1",
+      modality: "DIRECT",
+      conversationId: "conv_1",
+      groupId: null,
       state: "ACTIVE",
-      participantCount: 1,
+      participantCount: 2,
     });
     mocks.current = live;
     mocks.join.mockRejectedValue(

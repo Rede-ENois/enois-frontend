@@ -1,6 +1,11 @@
 import type { ServerEntry } from "@/types/server/server-entry";
 
-import { CSP_NONCE_HEADER, contentSecurityPolicy, createCspNonce } from "./lib/csp";
+import {
+  CSP_NONCE_HEADER,
+  contentSecurityPolicy,
+  createCspNonce,
+  permissionsPolicy,
+} from "./lib/csp";
 import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -37,12 +42,15 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
  * Security headers on every SSR response. The CSP lives in `lib/csp.ts` (per-request nonce).
  * COOP isolates the window from cross-origin openers/popups; CORP keeps other sites from
  * embedding our responses.
+ *
+ * A política de câmera e microfone sai de `permissionsPolicy()` porque depende do servidor de
+ * reunião configurado; escrita à mão aqui, ela fechava a mídia para a sala.
  */
 const SECURITY_HEADERS: Record<string, string> = {
   "x-frame-options": "DENY",
   "x-content-type-options": "nosniff",
   "referrer-policy": "strict-origin-when-cross-origin",
-  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+  "permissions-policy": permissionsPolicy(),
   "strict-transport-security": "max-age=31536000; includeSubDomains",
   "cross-origin-opener-policy": "same-origin",
   "cross-origin-resource-policy": "same-site",

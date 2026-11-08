@@ -14,6 +14,11 @@ export interface CallsContextValue {
   decline: (callId?: string) => Promise<void>;
   /** Pede credencial ao servidor e abre a sala (usado por notificações e pelo banner do grupo). */
   open: (callId: string) => Promise<void>;
+  /**
+   * A pessoa saiu pela própria sala (desligou dentro do iframe). Fecha o painel, avisa o servidor
+   * e não reabre: a sala que ela encerrou não volta para a tela.
+   */
+  leaveFromRoom: (callId: string, reason?: string) => Promise<void>;
   close: () => void;
   call: CallView | null;
 }

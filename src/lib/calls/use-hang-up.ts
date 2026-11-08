@@ -19,7 +19,9 @@ export function useHangUp() {
   const queryClient = useQueryClient();
   return useCallback(async () => {
     const current = getCallSession().call;
-    callSessionStore.idle();
+    // A marca vem antes da tela fechar: no grupo o servidor mantém a sala ACTIVE, e a próxima
+    // resposta do stream só pode atualizar o banner, nunca reabrir o painel que a pessoa fechou.
+    if (current) callSessionStore.markLeft(current.id);
     if (!current) return;
     try {
       await hangUpOnServer(current);

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 
 import type { CallJoin } from "@/types/application/call/call-join";
+import type { CallModality } from "@/types/application/call/call-modality";
 import type { CallPhase } from "@/types/application/call/call-phase";
 import type { CallSessionState } from "@/types/application/call/call-session-state";
 import type { CallSwap } from "@/types/application/call/call-swap";
@@ -43,6 +44,26 @@ export const MAX_WAITING = 5;
 let state: CallSessionState = IDLE;
 const listeners = new Set<() => void>();
 
+/**
+ * Chamada que a pessoa largou de propósito nesta aba.
+ *
+ * No grupo a sala continua aberta no servidor (para os outros), e o stream segue avisando que ela
+ * está ACTIVE. Sem esta marca, a próxima resposta reabria a sala que a pessoa acabou de fechar.
+ * Ela não muda o desenho da tela, então fica fora do estado: só um clique explícito em entrar,
+ * atender ou começar uma chamada a apaga.
+ */
+let leftCallId: string | null = null;
+
+export function wasCallLeft(callId: string): boolean {
+  return leftCallId === callId;
+}
+
+/** Clique explícito na mesma chamada (ou pedido de teste): a marca deixa de valer. */
+export function forgetLeftCall(callId?: string): void {
+  if (callId !== undefined && leftCallId !== callId) return;
+  leftCallId = null;
+}
+
 function set(patch: Partial<CallSessionState>) {
   state = { ...state, ...patch };
   listeners.forEach((listener) => listener());
@@ -59,6 +80,19 @@ export function getCallSession(): CallSessionState {
 
 export function useCallSession(): CallSessionState {
   return useSyncExternalStore(subscribe, getCallSession, () => IDLE);
+}
+
+/**
+ * A chamada que a tela está mostrando, quando a pessoa está de fato em uma sala.
+ *
+ * `ended` fica de fora de propósito: ali a cópia da chamada é só o motivo do aviso, e tratar
+ * isso como presença mandaria um "sair" para uma chamada que já terminou.
+ */
+export function callInRoom(): { id: string; modality: CallModality } | null {
+  const current = state.call;
+  if (!current) return null;
+  if (state.phase === "idle" || state.phase === "ended") return null;
+  return { id: current.id, modality: current.modality };
 }
 
 export const callSessionStore = {
@@ -215,6 +249,18 @@ export const callSessionStore = {
     };
     listeners.forEach((listener) => listener());
     return next;
+  },
+
+  /**
+   * Fecha a tela de uma chamada que a pessoa largou e guarda a marca: no grupo a sala continua
+   * aberta para os outros, mas esta aba não reentra nela sozinha. A fila continua, como em
+   * {@link idle}.
+   */
+  markLeft(callId: string) {
+    leftCallId = callId;
+    const waiting = state.waiting.filter((held) => held.id !== callId);
+    state = waiting.length === 0 ? IDLE : { ...IDLE, waiting };
+    listeners.forEach((listener) => listener());
   },
 
   /**

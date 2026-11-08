@@ -3811,6 +3811,16 @@ export const texts = {
     join: "Entrar na chamada",
     micUnavailable: "Não achamos seu microfone. A chamada segue só para ouvir.",
     cameraUnavailable: "Não achamos sua câmera. A chamada segue sem vídeo.",
+    /**
+     * Permissão de mídia pedida antes de a sala abrir. A recusa não impede entrar: a sala tem o
+     * botão para pedir de novo, e dizer isso evita a pessoa achar que a chamada quebrou.
+     */
+    mediaDenied:
+      "O navegador bloqueou o microfone e a câmera. Entre na chamada e libere no botão do Epapo.",
+    mediaUnavailable:
+      "Não conseguimos acessar o microfone ou a câmera. Confira se outro app não está usando e entre na chamada.",
+    mediaUnsupported:
+      "Este navegador não dá acesso ao microfone e à câmera. Abra o Énóis num navegador atualizado para falar na chamada.",
     connectionLost: "A conexão caiu. Tentando de novo…",
     loadError: "A chamada não abriu. Tente de novo.",
     // Aparece quando alguém tenta ligar antes de o servidor de chamadas estar configurado.
