@@ -171,6 +171,7 @@ apertar duas vezes: o toque duplo, o retry depois de um timeout, a rede que caiu
 chegou. Sem idempotência isso vira dois compromissos ou um cancelamento com carimbo trocado.
 
 **Decisão.**
+
 - `POST /calendar/entries`, `PATCH /calendar/entries/{entryId}` e `DELETE /calendar/entries/{entryId}`
   passam pelo `IdempotencyApplicationService` do repositório, com chave = método + rota +
   `Idempotency-Key` + hash do corpo. Sem `Idempotency-Key` a resposta é 400
@@ -224,6 +225,7 @@ aceitou; o convidado precisa ver o compromisso na própria agenda com a própria
 a ser dono da entrada.
 
 **Decisão.**
+
 - Tabela própria (`calendar_entry_participants`) com estado por pessoa, em vez de coluna na entrada:
   cada participante responde por si, e um aceito com dois recusados não cabe numa coluna.
   Unicidade `(entry_id, user_id)` impede o convite repetido no banco, não só na checagem.
@@ -280,6 +282,7 @@ organizador; para o convidado ele é `null`. E entra `GET /calendar/invitations`
 `INVITED` de entrada ativa, do mais antigo ao mais novo.
 
 **Consequência.**
+
 - A tela tem uma forma só para lista e detalhe: a diferença é `participants`, não outro contrato.
 - O convidado não vê a lista de convidados de um compromisso da agenda de outra pessoa. A lista é
   informação do organizador; expor para todo convidado permite montar o grafo social de alguém.
@@ -296,3 +299,34 @@ organizador; para o convidado ele é `null`. E entra `GET /calendar/invitations`
 preciso responder" é `INVITED`, e responder já muda o estado. Um parâmetro livre convidaria a
 inventar listas de "meus recusados", que é a agenda com `participation=DECLINED`. Rejeitado também
 devolver os participantes para o convidado: não há caso de produto hoje que precise disso.
+
+---
+
+## D16 — A agenda mora na seção "explore" do menu, e aparece sempre
+
+**Problema.** O menu principal é feito de seções (`you`, `community`, `work`, `explore`), e as
+entradas de `community` e `work` dependem de módulo. A agenda não é de um módulo: a mesma tela serve
+a vida social e a profissional, e a pessoa pode ter as duas, uma ou nenhuma. Se a entrada ficar
+dentro de `work`, ela desaparece para quem só usa a rede socialmente; se nascer com módulo, a
+pendência de módulo do dia pode esconder a tela por um motivo que não existe.
+
+**Decisão.** A entrada da agenda fica na seção `explore`, com `section: "explore"` e `module: null`,
+sempre visível. Ela não é filtrada por módulo, permissão de módulo nem por plano de assinatura.
+
+**Consequência.**
+
+- Quem está logado sempre tem um caminho até a agenda, mesmo que não use nenhum dos módulos que hoje
+  ocupam o menu.
+- A seção `explore` é o lugar das telas que não pertencem a um módulo; a agenda é a primeira entrada
+  fixa ali e serve de referência para as próximas do mesmo tipo.
+- A tela da agenda (fase 3) não precisa de guarda de módulo no front: a única guarda é a sessão.
+  O backend já responde 401 sem sessão e nunca devolve compromisso de outra pessoa (D10), então a
+  visibilidade no menu não abre nada que a API não fechasse.
+- O DS não decide onde a rota mora; ele expõe a tela. A posição no menu é do app, que monta a lista
+  de `NavigationItemData` com o `CalendarAgenda` na rota. A unidade do DS que fecha este assunto é a
+  entrada de menu com a seção certa e o teste que prova que ela aparece sem módulo.
+
+**Rejeitado.** Criar um módulo "agenda" só para dar lugar ao menu: a agenda não tem tela de
+administração, não tem permissão própria e não deve poder ser desligada por módulo. Rejeitado também
+colocar a entrada duplicada em `you` e `work`: duas entradas iguais confundem e uma delas ficaria
+escondida no mesmo menu.
