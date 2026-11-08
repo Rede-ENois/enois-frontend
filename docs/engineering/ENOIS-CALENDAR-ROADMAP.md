@@ -14,8 +14,8 @@
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
 FASE_ATUAL=2 (Design System) — em andamento; a fundação (fase 1) está concluída
-EXECUCAO=7
-ULTIMA_ATUALIZACAO=2026-11-08T13:35:00-03:00
+EXECUCAO=8
+ULTIMA_ATUALIZACAO=2026-11-08T20:20:00-03:00
 ```
 
 ---
@@ -180,7 +180,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#541](https://github.com/Rede-ENois/enois-backend/pull/541)       | enois-backend       | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado)                      | **mergeado** em `358acbcc` (2026-11-08)         |
 | [#542](https://github.com/Rede-ENois/enois-backend/pull/542)       | enois-backend       | Fase 1: detalhe com o lugar do leitor e `GET /calendar/invitations` (convites pendentes)                      | aberto, **aguardando revisão humana**           |
 | [#746](https://github.com/Rede-ENois/enois-frontend/pull/746)      | enois-frontend      | Documentação: execução 6 e decisão D15                                                                        | **mergeado** em `eb80d9e2` (2026-11-08)         |
-| [#164](https://github.com/Rede-ENois/enois-design-system/pull/164) | enois-design-system | Fase 2: agenda no DS (mês, semana, dia, lista) e a alternância entre as visões                                | aberto, **aguardando revisão humana**           |
+| [#164](https://github.com/Rede-ENois/enois-design-system/pull/164) | enois-design-system | Fase 2: agenda no DS (mês, semana, dia, lista) e a alternância entre as visões                                | **mergeado** em `0edf762` (2026-11-08)          |
+| [#165](https://github.com/Rede-ENois/enois-design-system/pull/165) | enois-design-system | Fase 2: formulário de compromisso (criar/editar), relógio de parede com DST e `TimeTextInput`                 | aberto, **aguardando revisão humana**           |
+| [#750](https://github.com/Rede-ENois/enois-frontend/pull/750)      | enois-frontend      | Documentação: execução 8                                                                                      | aberto, **aguardando revisão humana**           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -189,7 +191,19 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (design system, `feat/calendar-views`, árvore final sobre a `qa` `3f7a756`,
+Última execução (design system, `feat/calendar-views`, árvore final sobre a `qa` `ed52c3c`,
+versão 0.29.9):
+
+| Comando                   | Resultado                                                                     |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `npm run lint`            | `EXIT=0`, 0 erros; 6 warnings que já existiam fora do calendário              |
+| `npm run typecheck`       | `EXIT=0`                                                                      |
+| `npm test`                | 161 arquivos, **1367 testes, 0 falhas** (54 deles desta unidade)              |
+| `npm run build`           | `EXIT=0`                                                                      |
+| `npm run test:dist`       | `EXIT=0` (`ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`)                  |
+| `npm run build-storybook` | `EXIT=0`                                                                      |
+
+Execução anterior (design system, `feat/calendar-views`, árvore final sobre a `qa` `3f7a756`,
 versão 0.29.9):
 
 | Comando                   | Resultado                                                        |
@@ -234,42 +248,17 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 8 — Fase 2, segunda unidade (Design System): a entrada da agenda no menu.** A agenda
-aparece sempre na seção "explore" do menu principal, sem depender de módulo (D16). Unidade: a entrada
-em `NavigationItemData` com `section: "explore"`, um ícone de calendário no catálogo do DS se ainda
-não houver um adequado, e o teste que prova que a seção mostra a entrada mesmo sem módulo.
-Verificação: `npm run build`, `npm run typecheck`, `npm run lint` e `npm test` no DS.
+**Execução 9 — Fase 2, terceira unidade (Design System): a superfície que monta a agenda com o
+formulário.** Um componente que recebe itens, período, rascunho aberto e os callbacks de salvar e
+responder, e compõe `CalendarAgenda` com `CalendarEntryFormDialog`; o app continua dono da consulta e
+da mutação. Fecha o ciclo de salvar (fechar o diálogo, manter o que foi digitado quando o servidor
+recusa) com teste.
 
-Antes: conferir se a revisão do #164 mudou o contrato das visões; se mudou, reconciliar primeiro.
-
-_(Tarefa da execução 7, entregue:)_ **Execução 7 — Fase 2, primeira unidade (Design System):**
-`CalendarAgenda` com as visões de mês, semana, dia e lista e a alternância entre elas, tipos em
-`src/types/domain/calendar/`, microcópia por `useMessages()`, ajudantes puros de data e grade, 24
-testes e a story. Nenhuma chamada de API dentro dos componentes. A publicação da versão fica para
-depois do merge, quando o front puder fixar o número.
-
-_(Tarefa da execução 6, entregue:)_ **Execução 6 — Fase 1, quinta unidade (fecha a fundação):**
-`GET /calendar/entries/{id}` devolvendo o lugar do leitor (dono ou convidado) e a lista de
-participantes para o dono, mais `GET /calendar/invitations` para a tela mostrar os convites
-pendentes sem varrer a agenda. Testes de contrato do detalhe para convidado e da lista de pendentes
-entregues.
-
-_(Tarefa da execução 5, entregue:)_ **Execução 5 — Fase 1, quarta unidade: convites e participantes.** Tabela
-`calendar_entry_participants` com estado por participante (convidado, aceito, recusado, talvez),
-`POST /calendar/entries/{entryId}/participants` e `PATCH .../participants/{userId}` restritos ao
-dono, leitura incluindo os compromissos em que a pessoa é participante e o convidado sem poder
-editar a entrada do organizador. Testes de contrato: 201 convidando, 409 convite repetido, 404 para
-entrada alheia, 403 para o convidado responder convite de terceiro, e a entrada aparecendo para o
-convidado com o estado do convite.
-
-_(Tarefa da execução 4, entregue:)_ **Execução 4 — Fase 1, terceira unidade:** criação e edição da entrada com `POST /calendar/entries`
-e `PATCH /calendar/entries/{id}`, com validação do corpo (título, intervalo, fuso IANA), idempotência
-no padrão do repositório (`Idempotency-Key`) e autorização por dono; `DELETE` cancelando (`CANCELLED`,
-nunca apagando a linha). Testes de contrato: 401 sem sessão, 201 na criação, 400 para corpo inválido,
-404 para edição alheia, criação repetida com a mesma chave não duplica e cancelamento aparece na
-leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois desta unidade).
-
----
+A unidade planejada para a execução 8 pela execução 7 (entrada da agenda no menu, `section:
+"explore"`, ícone no catálogo do DS) **já estava implementada**: `SECTION_ORDER` em
+`src/domain/shell/navigation-links.tsx:13` inclui `"explore"` e a seção já é renderizada em
+`src/domain/shell/navigation-links.tsx:125`; o DS não tem catálogo de ícones, o app passa os do
+lucide por prop. Não se refaz trabalho pronto.
 
 ## 11. Histórico de execuções (resumo)
 
@@ -282,6 +271,7 @@ leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois dest
 | 5   | 2026-11-08 ~10:40 | 1    | Convites e participantes (`V258`): convite pelo @, resposta por participante, remoção pelo organizador e agenda do convidado com o estado do convite + 11 testes de contrato; 51 testes verdes na suíte do calendário e guardas                        |
 | 6   | 2026-11-08 ~11:45 | 1    | Detalhe com o lugar do leitor (`{ entry, owner, participation, participants }`, lista só para o organizador) e `GET /calendar/invitations` com os pendentes + 6 testes de contrato; 57 testes verdes na suíte do calendário e guardas; backend PR #542 |
 | 7   | 2026-11-08 ~13:35 | 2    | `CalendarAgenda` no DS com mês, semana, dia e lista, alternância, 21 tipos, microcópia, quatro ajudantes de data/grade e story; 24 testes da feature e 1313 verdes na suíte inteira; DS PR #164                                                        |
+| 8   | 2026-11-08 ~20:20 | 2    | Relógio de parede com DST (`instantOf`/`wallClockOf`), `TimeTextInput`, correção de `isDay` (dia inexistente era aceito) e o diálogo de criar/editar compromisso, com as regras do rascunho nos tetos da API; 54 testes da unidade e 1367 verdes na suíte inteira; DS PR #165 |
 
 ---
 
