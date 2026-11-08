@@ -42,11 +42,20 @@ backfill separada, com relatório do que não converteu em vez de chutar fuso.
 
 ---
 
-## D3 — Idempotência por `source_ref`, não por nome (proposta, Fase 1)
+## D3 — Idempotência por `source_ref`, não por nome (Fase 1)
 
 Criar a entrada de uma mentoria duas vezes por clique duplo ou por retry do cliente não pode gerar
 dois compromissos. O índice único em (`source_type`, `source_id`) faz o banco recusar o duplicado,
 e o serviço trata o conflito como sucesso idempotente.
+
+**Ajuste de implementação (V257).** `source_type` e `source_id` são nulos nas entradas que nascem no
+próprio calendário (compromisso pessoal), e nulo em índice único não colide no MySQL/MariaDB, então
+as duas linhas nulas podem coexistir. A única origem que sem índice único gera duplicata é a
+sincronização externa, e essa nasce na Fase 10, com `source_type` preenchido desde a primeira linha.
+
+**Invariante na tabela.** `(source_type, source_id)` são nulos **juntos** ou preenchidos **juntos**
+(`CHECK`). Uma entrada com tipo e sem id não teria como ser relida, e uma com id e sem tipo confunde
+dois módulos que usem o mesmo id.
 
 ---
 
