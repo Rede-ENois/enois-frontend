@@ -6,7 +6,7 @@ import { Phone, Video } from "lucide-react";
 import { useCalls, useOpenCall } from "./calls-provider";
 
 /**
- * "Tamo junto": a chamada do grupo.
+ * "Tamo junto": a chamada aberta de um grupo ou de um encontro.
  *
  * Diferente do 1:1, aqui ninguém é chamado no telefone — a chamada fica ao vivo e quem quiser
  * entra. Por isso não há toque, nem microfone/câmera ligados sozinhos: abrir a sala é escolher
@@ -14,20 +14,23 @@ import { useCalls, useOpenCall } from "./calls-provider";
  *
  * A chamada em grupo se chama sempre "Tamo junto"; o que muda é a mídia ("Tamo junto voz" ou
  * "Tamo junto vídeo"). Com `topicId`, a barra é a sala daquele tópico — cada tópico tem a sua,
- * independente da sala geral do grupo. O nome do tópico fica no botão, não num texto ao lado, para
- * a barra ser um componente só de views do design system.
+ * independente da sala geral do grupo. Com `eventId`, a sala é a do encontro e qualquer pessoa com
+ * sessão entra pelo id dele. O nome do tópico fica no botão, não num texto ao lado, para a barra
+ * ser um componente só de views do design system.
  */
 export function TamoJuntoBar({
   groupId,
   topicId,
   topicName,
+  eventId,
 }: {
-  groupId: string;
+  groupId?: string;
   topicId?: string;
   topicName?: string;
+  eventId?: string;
 }) {
   const calls = useCalls();
-  const { call } = useOpenCall({ groupId, topicId });
+  const { call } = useOpenCall({ groupId, topicId, eventId });
   const open = call !== null && !isTerminalState(call.state);
   const mediaName =
     call?.kind === "VIDEO" ? texts.calls.tamoJuntoVideo : texts.calls.tamoJuntoAudio;
@@ -35,6 +38,21 @@ export function TamoJuntoBar({
   // Só anuncia o tópico com o nome do tópico na tela; sem ele, o rótulo do botão já basta.
   const label = (name: string) =>
     topicName ? texts.calls.tamoJuntoTopic(name, topicName) : undefined;
+  const liveText = topicName
+    ? texts.calls.tamoJuntoTopicLive(topicName)
+    : eventId
+      ? texts.calls.tamoJuntoEventLive
+      : texts.calls.tamoJuntoLive;
+  // Abrir a sala é o mesmo gesto nos dois casos; o vínculo (grupo ou encontro) decide a rota.
+  const start = (kind: "AUDIO" | "VIDEO") => {
+    if (eventId) {
+      void calls.startEvent(eventId, kind);
+      return;
+    }
+    if (groupId) {
+      void calls.startGroup(groupId, kind, topicId);
+    }
+  };
 
   if (open && call) {
     return (
@@ -45,7 +63,7 @@ export function TamoJuntoBar({
           </p>
 
           <p className="text-xs text-text-subtle">
-            {topicName ? texts.calls.tamoJuntoTopicLive(topicName) : texts.calls.tamoJuntoLive}
+            {liveText}
             {" · "}
             {texts.calls.participants(call.participantCount)}
           </p>
@@ -64,7 +82,7 @@ export function TamoJuntoBar({
         size="sm"
         className="w-auto rounded-full gap-1.5"
         aria-label={label(texts.calls.tamoJuntoAudio)}
-        onClick={() => void calls.startGroup(groupId, "AUDIO", topicId)}
+        onClick={() => start("AUDIO")}
       >
         <Phone className="h-3.5 w-3.5" />
 
@@ -76,7 +94,7 @@ export function TamoJuntoBar({
         variant="outline"
         className="w-auto rounded-full gap-1.5"
         aria-label={label(texts.calls.tamoJuntoVideo)}
-        onClick={() => void calls.startGroup(groupId, "VIDEO", topicId)}
+        onClick={() => start("VIDEO")}
       >
         <Video className="h-3.5 w-3.5" />
 

@@ -43,6 +43,7 @@ import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
+import { TamoJuntoBar } from "@/components/calls/tamo-junto-bar";
 import { ErrorBanner } from "@/components/error-banner";
 
 /** How long a deep-linked event (`?evento=id`) keeps its highlight ring. */
@@ -307,6 +308,8 @@ function Eventos() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {events.map((e) => (
               <div key={e.id} className="min-w-0 space-y-2">
+                {!e.expired && <TamoJuntoBar eventId={e.id} />}
+
                 <EventCard
                   event={withPlace(e)}
                   dateTimeLabel={texts.events.dateTime(e.date ?? "", e.time ?? "")}

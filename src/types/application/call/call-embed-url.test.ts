@@ -18,6 +18,7 @@ const JOIN: CallJoin = {
     conversationId: "conv",
     groupId: null,
     topicId: null,
+    eventId: null,
     initiatorId: "u1",
     displayName: "Ana",
     state: "ACTIVE",

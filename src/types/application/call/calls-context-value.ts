@@ -6,6 +6,8 @@ export interface CallsContextValue {
   startDirect: (conversationId: string, kind: CallKind) => Promise<void>;
   /** Sala geral do grupo, ou a sala do tópico quando `topicId` vem preenchido. */
   startGroup: (groupId: string, kind: CallKind, topicId?: string) => Promise<void>;
+  /** Sala "Tamo junto" do encontro: aberta a quem quiser entrar. */
+  startEvent: (eventId: string, kind: CallKind) => Promise<void>;
   /** Sem id, atende a chamada da tela; com id, atende a que está na fila. */
   answer: (callId?: string) => Promise<void>;
   /** Sem id, recusa a chamada da tela; com id, recusa a que está na fila. */

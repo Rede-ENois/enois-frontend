@@ -25,6 +25,13 @@ export const callsApi = {
   startTopicCall: (groupId: string, topicId: string, kind: CallKind) =>
     api.post<CallView>(`/groups/${groupId}/topics/${topicId}/calls`, { kind }),
 
+  /** Começa (ou devolve) o "Tamo junto" do encontro: sala aberta, quem quiser entra. */
+  startEvent: (eventId: string, kind: CallKind) =>
+    api.post<CallView>(`/events/${eventId}/calls`, { kind }),
+
+  /** Sala "Tamo junto" aberta do encontro, se houver (`null` quando não há). */
+  openOfEvent: (eventId: string) => api.get<CallView | null>(`/events/${eventId}/calls/open`),
+
   /** Chamada aberta do vínculo, se houver (`null` quando não há). */
   openOfConversation: (conversationId: string) =>
     api.get<CallView | null>(`/conversations/${conversationId}/calls/open`),
