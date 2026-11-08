@@ -139,3 +139,25 @@ execução entregou). Cada execução atualiza os três no fim, e são a primeir
 **Consequência prática.** Perder a lista de tarefas de uma sessão não perde trabalho, porque a lista
 real está no roadmap. Bloqueio (credencial OAuth, acesso, pacote privado) fica escrito com o
 encaminhamento em vez de ser redescoberto a cada hora.
+
+---
+
+## D10 — Cancelado aparece na leitura, e entrada alheia é indistinguível de inexistente
+
+**Problema.** A linha cancelada continua na tabela (D6 depende disso para o `.ics`). Se a consulta a
+escondesse, a tela não conseguiria mostrar "desmarcado" e o arquivo exportado divergiria do que a
+leitura diz. E a leitura por identificador precisa decidir o que responder para entrada de outra
+pessoa.
+
+**Decisão.** `GET /calendar/entries` devolve o cancelado na janela com `state=CANCELLED` e
+`cancelledAt`; quem não quer mostrar filtra na tela, mas a API não esconde o fato. O detalhe de
+entrada alheia responde o mesmo `404 CALENDAR_ENTRY_NOT_FOUND` de um id que não existe: um 403
+confirmaria que aquela agenda tem um compromisso naquele identificador.
+
+**O que foi rejeitado.** Filtrar `ACTIVE` na consulta e criar um parâmetro para "incluir cancelado".
+Seria estado escondido por padrão, e a primeira tela que esquecesse o parâmetro mostraria uma agenda
+que não bate com a exportação.
+
+**Limite conhecido.** A checagem de dono do detalhe acontece depois de carregar a linha. O custo é uma
+linha lida a mais por tentativa; a consulta da janela já filtra por dono no banco, então a lista nunca
+lê agenda alheia.

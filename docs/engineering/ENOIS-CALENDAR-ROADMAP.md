@@ -14,8 +14,8 @@
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
 FASE_ATUAL=1 (fundação do calendário)
-EXECUCAO=2
-ULTIMA_ATUALIZACAO=2026-11-08T13:10:00-03:00
+EXECUCAO=3
+ULTIMA_ATUALIZACAO=2026-11-08T08:40:00-03:00
 ```
 
 ---
@@ -37,8 +37,8 @@ calendário".
 
 | Repositório | Papel | Branch de entrega | Estado verificado em 2026-11-08 |
 |---|---|---|---|
-| `Rede-ENois/enois-backend` | API, motor de eventos, migrações, workers | `qa` → `main` | Base real em `b80e8571`; último migration `V256__call_sessions_event.sql` |
-| `Rede-ENois/enois-frontend` | Telas, navegação, tipos, cliente de API | `qa` → `main` | Base em `6610f6e6` |
+| `Rede-ENois/enois-backend` | API, motor de eventos, migrações, workers | `qa` → `main` | Base real em `6ac79d83`; último migration `V257__calendar_entries.sql` |
+| `Rede-ENois/enois-frontend` | Telas, navegação, tipos, cliente de API | `qa` → `main` | Base em `6765a46a` |
 | `Rede-ENois/enois-design-system` | Componentes e tokens compartilhados | publica pacote versionado | Consumido como `@rede-enois/design-system@0.29.9` |
 | `Rede-ENois/epapo` | Sala de reunião (fork do Jitsi) | `master` (push = produção) | Integração via JWT já existente no módulo `calls` |
 
@@ -151,7 +151,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | Fase | Escopo | Depende de | Estado |
 |---|---|---|---|
 | 0 | Inventário + roadmap + contratos | — | **concluída** |
-| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **em andamento** (modelo + persistência entregues) |
+| 1 | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0 | **em andamento** (modelo + leitura entregues) |
 | 2 | Design System: calendário mês/semana/dia/lista, alternância, estados | 1 (contrato) | pendente |
 | 3 | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes | 1, 2 | pendente |
 | 4 | Agenda social: chamadas, eventos de grupo/comunidade, pessoais | 3 | pendente |
@@ -169,8 +169,10 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 
 | PR | Repositório | Escopo | Estado |
 |---|---|---|---|
-| [#740](https://github.com/Rede-ENois/enois-frontend/pull/740) | enois-frontend | Documentação: roadmap, arquitetura e log | aberto, **aguardando revisão humana** |
-| [#531](https://github.com/Rede-ENois/enois-backend/pull/531) | enois-backend | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela | aberto, **aguardando revisão humana** |
+| [#740](https://github.com/Rede-ENois/enois-frontend/pull/740) | enois-frontend | Documentação: roadmap, arquitetura e log | **mergeado** em `6765a46a` (2026-11-08) |
+| [#531](https://github.com/Rede-ENois/enois-backend/pull/531) | enois-backend | Fase 1: modelo `calendar_entries` (V257) + persistência e consulta por janela | **mergeado** em `6ac79d83` (2026-11-08, squash) |
+| [#536](https://github.com/Rede-ENois/enois-backend/pull/536) | enois-backend | Fase 1: leitura da agenda (`GET /calendar/entries`, `GET /calendar/entries/{id}`) com autorização por dono | aberto, **aguardando revisão humana** |
+| [#537](https://github.com/Rede-ENois/enois-frontend/pull/537) | enois-frontend | Documentação: execução 3 (este PR) | aberto, **aguardando revisão humana**; depende do #536 |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -179,10 +181,12 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (backend, `feat/enois-calendar`), `./mvnw -o test`:
+Última execução (backend, `feat/enois-calendar-leitura`, árvore final sobre a `qa` `6ac79d83`),
+`./mvnw -o test -Dtest=...`:
 
 | Classe | Testes | Resultado |
 |---|---|---|
+| `CalendarEntryReadApiTests` | 9 | verde (contrato HTTP da leitura) |
 | `CalendarEntryTests` | 8 | verde |
 | `CalendarEntryPersistenceTests` | 5 | verde |
 | `MariaDbReservedWordsTests` | 2 | verde (guarda de migration) |
@@ -206,10 +210,12 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 3 — Fase 1, segunda unidade:** serviço de aplicação e endpoints de leitura da agenda
-(`GET /calendar/entries?from=&to=&scope=` e `GET /calendar/entries/{id}`), com autorização por dono
-(quem não é dono não vê a entrada) e DTO de saída que não expõe a entidade. Teste de contrato
-cobrindo 401 sem sessão, 404 para entrada alheia e o filtro de agenda. Sem criação/edição ainda.
+**Execução 4 — Fase 1, terceira unidade:** criação e edição da entrada com `POST /calendar/entries`
+e `PATCH /calendar/entries/{id}`, com validação do corpo (título, intervalo, fuso IANA), idempotência
+no padrão do repositório (`Idempotency-Key`) e autorização por dono; `DELETE` cancelando (`CANCELLED`,
+nunca apagando a linha). Testes de contrato: 401 sem sessão, 201 na criação, 400 para corpo inválido,
+404 para edição alheia, criação repetida com a mesma chave não duplica e cancelamento aparece na
+leitura com `state=CANCELLED`. Ainda sem convites (a Fase 1 continua depois desta unidade).
 
 ---
 
@@ -219,6 +225,7 @@ cobrindo 401 sem sessão, 404 para entrada alheia e o filtro de agenda. Sem cria
 |---|---|---|---|
 | 1 | 2026-11-08 ~09:40 | 0 | Inventário dos 4 repositórios, matriz de funcionalidades, dívida de data/hora, roadmap e arquitetura escritos; docs no PR #740 |
 | 2 | 2026-11-08 ~13:10 | 1 | `calendar_entries` (V257) + domínio + porta/adaptador + 20 testes verdes; backend PR #531 |
+| 3 | 2026-11-08 ~08:40 | 1 | Serviço de leitura + `GET /calendar/entries` e `/{id}` com autorização por dono + 9 testes de contrato verdes; backend PR #536; docs no PR #537 |
 
 ---
 
