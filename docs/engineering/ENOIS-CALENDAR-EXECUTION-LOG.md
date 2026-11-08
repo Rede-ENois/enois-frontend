@@ -352,7 +352,8 @@ detalhe no formato plano (`$.id`, `$.title`). A asserção foi atualizada para `
 `$.owner`; nenhum código de produção mudou por causa dela.
 
 **PR:** backend [#542](https://github.com/Rede-ENois/enois-backend/pull/542), aguardando revisão
-humana. Documentação no PR do front desta execução, que declara a dependência do #542.
+humana. Documentação [#746](https://github.com/Rede-ENois/enois-frontend/pull/746), que declara a
+dependência do #542.
 
 **BLOQUEIOS:** nenhum bloqueio novo. B2 (migração de dados de `events`, colunas de data em texto)
 continua pendente como unidade própria e não impede nenhuma fase; fica registrada para não virar

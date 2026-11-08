@@ -178,6 +178,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#745](https://github.com/Rede-ENois/enois-frontend/pull/745) | enois-frontend | Documentação: execução 5 e decisões D13/D14 | **mergeado** em `ba8ee20f` (2026-11-08) |
 | [#541](https://github.com/Rede-ENois/enois-backend/pull/541) | enois-backend | Fase 1: convites e participantes (`V258`, convite pelo @, resposta, agenda do convidado) | **mergeado** em `358acbcc` (2026-11-08) |
 | [#542](https://github.com/Rede-ENois/enois-backend/pull/542) | enois-backend | Fase 1: detalhe com o lugar do leitor e `GET /calendar/invitations` (convites pendentes) | aberto, **aguardando revisão humana** |
+| [#746](https://github.com/Rede-ENois/enois-frontend/pull/746) | enois-frontend | Documentação: execução 6 e decisão D15 | aberto, **aguardando revisão humana** |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
