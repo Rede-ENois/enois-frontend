@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   current: null as CallView | null,
   get: vi.fn(),
   join: vi.fn(),
+  answer: vi.fn(),
+  decline: vi.fn(),
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -29,6 +31,8 @@ vi.mock("@/lib/api", () => ({
     startDirect: mocks.startDirect,
     get: mocks.get,
     join: mocks.join,
+    answer: mocks.answer,
+    decline: mocks.decline,
   },
 }));
 vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => true }));
@@ -52,6 +56,12 @@ const flush = () =>
     }
     for (let i = 0; i < 5; i++) await new Promise((resolve) => setTimeout(resolve, 0));
   });
+
+/** `idle()` preserva a fila de propósito; para um teste, comece do zero de verdade. */
+function clearSession() {
+  callSessionStore.idle();
+  for (const held of [...getCallSession().waiting]) callSessionStore.removeWaiting(held.id);
+}
 
 function call(overrides: Partial<CallView>): CallView {
   return {
@@ -94,8 +104,10 @@ describe("toque da chamada", () => {
     mocks.get.mockReset();
     mocks.get.mockImplementation(() => Promise.resolve(mocks.current));
     mocks.join.mockReset();
+    mocks.answer.mockReset();
+    mocks.decline.mockReset();
     mocks.current = null;
-    callSessionStore.idle();
+    clearSession();
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const host = document.createElement("div");
     document.body.append(host);
@@ -116,7 +128,7 @@ describe("toque da chamada", () => {
   afterEach(() => {
     act(() => root.unmount());
     document.body.innerHTML = "";
-    callSessionStore.idle();
+    clearSession();
     actions.current = null;
     vi.useRealTimers();
   });
@@ -277,5 +289,157 @@ describe("toque da chamada", () => {
     expect(mocks.ringtone).toHaveBeenCalledTimes(1);
     expect(getCallSession().call?.id).toBe("call_2");
     mocks.open.mockResolvedValue([]);
+  });
+});
+
+describe("fila de chamadas no provider", () => {
+  let root: Root;
+  let client: QueryClient;
+
+  beforeEach(() => {
+    mocks.ringtone.mockClear();
+    mocks.open.mockClear();
+    mocks.open.mockResolvedValue([]);
+    mocks.get.mockReset();
+    mocks.get.mockImplementation(() => Promise.resolve(mocks.current));
+    mocks.join.mockReset();
+    mocks.answer.mockReset();
+    mocks.decline.mockReset();
+    mocks.current = null;
+    clearSession();
+    client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    act(() => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <CallsProvider>
+            <CaptureActions />
+          </CallsProvider>
+        </QueryClientProvider>,
+      );
+    });
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+    clearSession();
+    actions.current = null;
+    vi.useRealTimers();
+  });
+
+  it("a segunda chamada não tira a primeira da tela", async () => {
+    await flush();
+    act(() => callSessionStore.ring(call({}), "incoming"));
+    await flush();
+    act(() => callSessionStore.ring(call({ id: "call_2", displayName: "Bia" }), "incoming"));
+    await flush();
+    expect(getCallSession().call?.id).toBe("call_1");
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_2"]);
+  });
+
+  it("a chamada da fila assume a tela quando a de cima termina", async () => {
+    await flush();
+    act(() => callSessionStore.ring(call({}), "incoming"));
+    await flush();
+    act(() => callSessionStore.ring(call({ id: "call_2", displayName: "Bia" }), "incoming"));
+    await flush();
+
+    mocks.current = call({ id: "call_2", displayName: "Bia" });
+    act(() => callSessionStore.ended(call({ state: "ENDED" })));
+    await flush();
+
+    expect(getCallSession().call?.id).toBe("call_2");
+    expect(getCallSession().phase).toBe("incoming");
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("recusar a chamada da fila não fecha a que está na tela", async () => {
+    await flush();
+    act(() => callSessionStore.ring(call({}), "incoming"));
+    await flush();
+    act(() => callSessionStore.ring(call({ id: "call_2", displayName: "Bia" }), "incoming"));
+    await flush();
+
+    await act(async () => {
+      await actions.current?.decline("call_2");
+    });
+
+    expect(mocks.decline).toHaveBeenCalledWith("call_2");
+    expect(getCallSession().call?.id).toBe("call_1");
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("atender a chamada da fila põe ela na tela e devolve a de cima para a fila", async () => {
+    await flush();
+    act(() => callSessionStore.ring(call({}), "incoming"));
+    await flush();
+    act(() => callSessionStore.ring(call({ id: "call_2", displayName: "Bia" }), "incoming"));
+    await flush();
+
+    const answered = call({ id: "call_2", displayName: "Bia", state: "CONNECTING" });
+    mocks.answer.mockResolvedValue(answered);
+    mocks.join.mockResolvedValue({
+      call: { ...answered, state: "ACTIVE" },
+      host: "https://meet.exemplo",
+      roomId: "sala_2",
+      appId: "app",
+      jwt: "token",
+      tokenTtlSeconds: 3600,
+    });
+
+    await act(async () => {
+      await actions.current?.answer("call_2");
+    });
+    await flush();
+
+    expect(mocks.answer).toHaveBeenCalledWith("call_2");
+    expect(getCallSession().call?.id).toBe("call_2");
+    // A que estava na tela continua tocando: ninguém a recusou.
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_1"]);
+  });
+});
+
+describe("filas e toque", () => {
+  it("a 1:1 esperando atrás de uma chamada em grupo também toca", async () => {
+    clearSession();
+    const live = call({
+      modality: "GROUP",
+      conversationId: null,
+      groupId: "grupo_1",
+      state: "ACTIVE",
+    });
+    mocks.get.mockReset();
+    mocks.get.mockImplementation(() => Promise.resolve(live));
+    mocks.ringtone.mockClear();
+    const host = document.createElement("div");
+    document.body.append(host);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const root = createRoot(host);
+    act(() => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <CallsProvider>
+            <CaptureActions />
+          </CallsProvider>
+        </QueryClientProvider>,
+      );
+    });
+    await flush();
+
+    // Chamada de grupo na tela (não toca) e uma 1:1 chegando atrás dela.
+    act(() => callSessionStore.ring(live, "calling"));
+    await flush();
+    expect(mocks.ringtone).not.toHaveBeenCalled();
+
+    act(() => callSessionStore.ring(call({ id: "call_2", displayName: "Bia" }), "incoming"));
+    await flush();
+    expect(mocks.ringtone).toHaveBeenCalledTimes(1);
+
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+    clearSession();
   });
 });

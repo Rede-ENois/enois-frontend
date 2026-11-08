@@ -24,4 +24,10 @@ export interface CallSessionState {
   needsCredential: boolean;
   /** Aviso que não impede a chamada (sem câmera, conexão caindo). */
   notice: string | null;
+  /**
+   * Quem ligou com outra chamada já na tela. Não é atendida nem descartada sozinha: continua
+   * tocando no servidor e entra assim que a chamada atual terminar. A própria fila precisa estar
+   * aqui (e não só no render) porque recusar a de cima não pode perdê-la.
+   */
+  waiting: CallView[];
 }

@@ -2,6 +2,7 @@ import { type RefObject, useEffect, useRef, useState } from "react";
 
 import { texts } from "@/texts";
 import { callEmbedUrl } from "@/types/application/call/call-embed-url";
+import type { CallView } from "@/types/application/call/call-view";
 import { isTerminalState } from "@/types/application/call/is-terminal-state";
 import { Button } from "@rede-enois/design-system/ui";
 import { Flag, Minimize2, PhoneOff } from "lucide-react";
@@ -10,15 +11,20 @@ import { callSessionStore, useCallSession } from "@/lib/calls/call-session";
 import { useHangUp } from "@/lib/calls/use-hang-up";
 import { cn } from "@/lib/utils";
 
+import { CallIncomingScreen } from "./call-incoming-screen";
 import { CallReportDialog } from "./call-report-dialog";
 import { stateLabel, useCalls } from "./calls-provider";
 
 /**
- * Painel da chamada: overlay interno (não abre aba), minimizável, com o Jitsi embutido.
+ * Painel da chamada: overlay interno (não abre aba), com o Jitsi embutido.
  *
  * A mídia (microfone, câmera, sair, participantes) fica na barra do próprio Jitsi — é a interface
  * dele, chamando o participante pelo nome da conta. Aqui ficam as ações que o app precisa
  * controlar: minimizar (sem largar a sala), encerrar/sair e atender/recusar.
+ *
+ * A chamada recebida ocupa a tela inteira, como um discador: tocar no canto não é aviso suficiente
+ * para uma ligação, e o "Atender" precisa estar onde a pessoa olha. A chamada ao vivo também abre
+ * em tela cheia e pode ser minimizada para o canto — o iframe continua montado, só sai da frente.
  */
 export function CallPanel() {
   const session = useCallSession();
@@ -60,129 +66,149 @@ export function CallPanel() {
 
   const title = call.kind === "VIDEO" ? texts.calls.videoTitle : texts.calls.audioTitle;
   const isGroup = call.modality === "GROUP";
+  const held = session.waiting[0] ?? null;
 
   if (session.minimized && session.phase === "live") {
     return <CallPill title={isGroup ? texts.calls.tamoJunto : title} onExpand={expandCall} />;
   }
 
+  // Recebida e ao vivo ocupam a tela inteira, como um discador: tocar no canto não é aviso
+  // suficiente para uma ligação. Antes de entrar (chamando/conectando) e nos avisos, a moldura
+  // menor — não há mídia para ocupar a tela ainda.
+  const fullscreen = session.phase === "live" || session.phase === "incoming";
+
   return (
     <div
       className={cn(
-        "fixed z-[60] flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface-1 shadow-2xl",
-        "inset-x-2 bottom-2 max-h-[85vh] sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",
-        session.phase === "live" ? "top-2 sm:top-auto sm:h-[560px]" : "",
+        "fixed z-[60] flex flex-col overflow-hidden border-border-soft bg-surface-1 shadow-2xl",
+        fullscreen
+          ? "inset-0 justify-center rounded-none border-0 sm:inset-3 sm:rounded-2xl sm:border"
+          : "inset-x-2 bottom-2 max-h-[85vh] rounded-2xl border sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",
       )}
       role="dialog"
       aria-label={title}
+      aria-modal={fullscreen}
     >
-      <header className="flex items-center justify-between gap-2 border-b border-border-soft px-4 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-text-strong">
-            {isGroup ? `${texts.calls.tamoJunto} · ${call.displayName}` : call.displayName}
-          </p>
+      {session.phase === "incoming" ? (
+        <CallIncomingScreen
+          call={call}
+          held={held}
+          onAnswer={() => void calls.answer()}
+          onDecline={() => void calls.decline()}
+          onAnswerHeld={held ? () => void calls.answer(held.id) : undefined}
+          onDeclineHeld={held ? () => void calls.decline(held.id) : undefined}
+        />
+      ) : (
+        <>
+          <header className="flex items-center justify-between gap-2 border-b border-border-soft px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-text-strong">
+                {isGroup ? `${texts.calls.tamoJunto} · ${call.displayName}` : call.displayName}
+              </p>
 
-          <p className="text-xs text-text-muted" aria-live="polite">
-            {/* Enquanto a credencial não chega, quem clicou em entrar ainda está entrando: dizer
+              <p className="text-xs text-text-muted" aria-live="polite">
+                {/* Enquanto a credencial não chega, quem clicou em entrar ainda está entrando: dizer
                 "em andamento · N pessoas" aí mostra a sala para quem não está nela. */}
-            {session.phase === "joining" ? texts.calls.connecting : stateLabel(call.state)}
-            {session.phase !== "joining" && call.state === "ACTIVE" && call.participantCount > 0
-              ? ` · ${texts.calls.participants(call.participantCount)}`
-              : ""}
-          </p>
-        </div>
+                {session.phase === "joining" ? texts.calls.connecting : stateLabel(call.state)}
+                {session.phase !== "joining" && call.state === "ACTIVE" && call.participantCount > 0
+                  ? ` · ${texts.calls.participants(call.participantCount)}`
+                  : ""}
+              </p>
+            </div>
 
-        {session.phase === "live" ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={texts.calls.minimize}
-            onClick={() => callSessionStore.minimize()}
-          >
-            <Minimize2 className="h-4 w-4" />
-          </Button>
-        ) : null}
-      </header>
+            {session.phase === "live" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={texts.calls.minimize}
+                onClick={() => callSessionStore.minimize()}
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </header>
 
-      {session.phase === "live" && session.join ? (
-        <CallFrame
-          key={session.join.jwt}
-          frameRef={frameRef}
-          url={callEmbedUrl(session.join)}
-          title={title}
-          onClosed={() => callSessionStore.lostCredential()}
-        />
-      ) : null}
+          {session.phase === "live" && session.join ? (
+            <CallFrame
+              key={session.join.jwt}
+              frameRef={frameRef}
+              url={callEmbedUrl(session.join)}
+              title={title}
+              onClosed={() => callSessionStore.lostCredential()}
+            />
+          ) : null}
 
-      <div className="flex flex-col gap-2 px-4 py-3">
-        {session.notice ? <p className="text-xs text-text-muted">{session.notice}</p> : null}
+          <div className="flex flex-col gap-2 px-4 py-3">
+            {session.notice ? <p className="text-xs text-text-muted">{session.notice}</p> : null}
 
-        {session.phase === "incoming" ? (
-          <div className="flex gap-2">
-            <Button className="flex-1 rounded-full" onClick={() => void calls.answer()}>
-              {texts.calls.answer}
-            </Button>
+            {held ? (
+              <p className="truncate text-xs text-text-muted" aria-live="polite">
+                {texts.calls.nextInQueue(held.displayName)}
+              </p>
+            ) : null}
 
-            <Button
-              variant="outline"
-              className="flex-1 rounded-full"
-              onClick={() => void calls.decline()}
-            >
-              {texts.calls.decline}
-            </Button>
+            {session.phase === "calling" || session.phase === "joining" ? (
+              <Button
+                variant="outline"
+                className="w-full rounded-full"
+                onClick={() => void hangUp()}
+              >
+                <PhoneOff className="mr-2 h-4 w-4" />
+
+                {call.isInitiator ? texts.calls.cancel : texts.calls.end}
+              </Button>
+            ) : null}
+
+            {session.phase === "live" ? (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => setReportOpen(true)}
+                >
+                  <Flag className="mr-2 h-4 w-4" />
+
+                  {texts.calls.report.action}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-full"
+                  onClick={() => void hangUp()}
+                >
+                  <PhoneOff className="mr-2 h-4 w-4" />
+
+                  {isGroup ? texts.calls.end : texts.calls.hangUp}
+                </Button>
+              </div>
+            ) : null}
+
+            {session.phase === "error" ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-text-muted">{session.error ?? texts.calls.loadError}</p>
+
+                <Button variant="outline" className="rounded-full" onClick={() => calls.close()}>
+                  {texts.calls.end}
+                </Button>
+              </div>
+            ) : null}
+
+            {session.phase === "ended" ||
+            (session.phase === "live" && isTerminalState(call.state)) ? (
+              <p className="text-center text-sm text-text-muted">{stateLabel(call.state)}</p>
+            ) : null}
           </div>
-        ) : null}
 
-        {session.phase === "calling" || session.phase === "joining" ? (
-          <Button variant="outline" className="w-full rounded-full" onClick={() => void hangUp()}>
-            <PhoneOff className="mr-2 h-4 w-4" />
-
-            {call.isInitiator ? texts.calls.cancel : texts.calls.end}
-          </Button>
-        ) : null}
-
-        {session.phase === "live" ? (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="flex-1 rounded-full"
-              onClick={() => setReportOpen(true)}
-            >
-              <Flag className="mr-2 h-4 w-4" />
-
-              {texts.calls.report.action}
-            </Button>
-
-            <Button variant="outline" className="flex-1 rounded-full" onClick={() => void hangUp()}>
-              <PhoneOff className="mr-2 h-4 w-4" />
-
-              {isGroup ? texts.calls.end : texts.calls.hangUp}
-            </Button>
-          </div>
-        ) : null}
-
-        {session.phase === "error" ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm text-text-muted">{session.error ?? texts.calls.loadError}</p>
-
-            <Button variant="outline" className="rounded-full" onClick={() => calls.close()}>
-              {texts.calls.end}
-            </Button>
-          </div>
-        ) : null}
-
-        {session.phase === "ended" || (session.phase === "live" && isTerminalState(call.state)) ? (
-          <p className="text-center text-sm text-text-muted">{stateLabel(call.state)}</p>
-        ) : null}
-      </div>
-
-      {session.phase === "live" ? (
-        <CallReportDialog
-          callId={call.id}
-          frameRef={frameRef}
-          open={reportOpen}
-          onOpenChange={setReportOpen}
-        />
-      ) : null}
+          {session.phase === "live" ? (
+            <CallReportDialog
+              callId={call.id}
+              frameRef={frameRef}
+              open={reportOpen}
+              onOpenChange={setReportOpen}
+            />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
