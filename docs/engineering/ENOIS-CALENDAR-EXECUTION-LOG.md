@@ -489,3 +489,118 @@ documentação vai em PR próprio para a `qa` do front, declarando a dependênci
 - Um ícone de calendário no catálogo do DS, se ainda não houver um adequado.
 - Teste de que a seção "explore" mostra a entrada mesmo sem módulo.
 - Se a revisão do #164 mudar o contrato das visões, reconciliar antes de abrir a próxima unidade.
+
+---
+
+## Execução 8 — 2026-11-08 20:20 (-03:00) — Fase 2 (Design System)
+
+**TAREFA:** abrir a segunda unidade da Fase 2 no DS. A unidade planejada pela execução 7 (entrada da
+agenda no menu) já estava implementada e foi registrada como correção, não como entrega nova; a
+unidade feita foi o formulário de compromisso, com o relógio de parede e o campo de horário que ele
+precisa.
+
+**REPOSITÓRIOS:**
+
+- `Rede-ENois/enois-design-system` (código), worktree `/tmp/wt-ds-calendar`, branch
+  `feat/calendar-views`, rebaseada sobre a `qa` `ed52c3c` (versão 0.29.9). O PR #164 foi mergeado em
+  `0edf762` e esta branch parte dele.
+- `Rede-ENois/enois-frontend` (esta documentação), worktree `/tmp/wt-calendar-docs6`, branch
+  `docs/enois-calendar-execucao-8` a partir da `qa` `0dd83408`.
+
+**ARQUIVOS:**
+
+- `src/lib/calendar/calendar-clock.ts` e `calendar-clock.test.ts` (novos).
+- `src/lib/time-input.ts` e `time-input.test.ts` (novos).
+- `src/ui/time-text-input.tsx` e `time-text-input.test.tsx` (novos), mais
+  `src/types/components/ui/time-text-input-props.ts` e a microcópia em `ui-messages.ts` /
+  `defaults/ui.ts`.
+- `src/lib/calendar/calendar-dates.ts` (correção) e `calendar-dates.test.ts` (novo).
+- `src/lib/calendar/calendar-entry-draft.ts` e seu teste (novos).
+- `src/domain/calendar/calendar-entry-form-dialog.tsx` e seu teste (novos), `index.ts` da feature,
+  `calendar.stories.tsx`.
+- `src/types/domain/calendar/`: `calendar-entry-form-values.ts`, `calendar-entry-form-props.ts`,
+  `calendar-entry-form-body-props.ts`, `calendar-entry-form-draft.ts`,
+  `calendar-entry-draft-problem.ts` (um tipo por arquivo).
+- `src/types/messages/calendar-messages.ts`, `src/messages/defaults/calendar.ts`, `src/ui/index.ts`.
+
+No front, este bloco, o estado e as seções 7, 8, 10 e 11 do roadmap.
+
+**IMPLEMENTAÇÃO:**
+
+- `instantOf(day, time, zoneId)` e `wallClockOf(instant, zoneId)` convertem entre dia + relógio e
+  instante ISO em `Intl.DateTimeFormat` com fuso explícito. O deslocamento é amostrado um dia antes e
+  um dia depois do horário pedido, porque o mesmo dia pode ter dois deslocamentos. Hora repetida vira
+  o instante mais cedo; hora que não existe cai na próxima hora válida do fuso.
+- `TimeTextInput`: campo `HH:mm` com teclado numérico, irmão do `DateTextInput`. A validade vai no
+  próprio input (`setCustomValidity`), então o envio nativo também é barrado.
+- Correção em `isDay`: o dia era aceito pelo parse mesmo quando não existe no calendário, porque o
+  parse rolava para o mês seguinte. Agora o dia é conferido pelo valor arredondado. O teste falha no
+  código anterior (`expected true to be false`).
+- `CalendarEntryFormDialog`: criar e editar no mesmo diálogo, saída no formato da API. O app dona da
+  mutação, da chave de idempotência e do `saveError`.
+- Abertura: num dia escolhido começa às 09:00; em "hoje" começa na próxima hora cheia, e dia e
+  horário saem do mesmo instante. Às 23h30 isso já é 00:00 do dia seguinte, e manter a data de hoje
+  abriria um compromisso que já passou.
+- Fim que cruzaria a meia-noite para na última hora do dia (23:59), porque os campos de horário não
+  carregam data. Compromisso que passa da meia-noite se escreve movendo o dia.
+- Regras em `calendar-entry-draft`, com os mesmos tetos da API (200 de título, 2000 de descrição,
+  7 dias). Dia inválido é conferido antes do horário, para um dia inexistente não ser reportado como
+  erro de formato de hora. Problemas aparecem só depois da tentativa de salvar.
+
+**CORREÇÃO DE UMA UNIDADE PLANEJADA ERRADA:** a execução 7 registrou como próxima unidade "a entrada
+da agenda no menu" com `section: "explore"` e "um ícone de calendário no catálogo do DS". As duas
+coisas já existiam: `SECTION_ORDER` em `src/domain/shell/navigation-links.tsx:13` já inclui
+`"explore"`, e a seção já é renderizada com o espaçamento próprio em
+`src/domain/shell/navigation-links.tsx:125`. O DS não tem catálogo de ícones: o app passa os ícones
+do lucide por prop. Refazer isso seria trabalho inventado, então a unidade foi trocada.
+
+**TESTES:** no DS, na árvore final (depois do rebase na `qa` `ed52c3c`):
+
+- `npm run lint` — `EXIT=0`, 0 erros; 6 warnings de `react-hooks/exhaustive-deps`, todos em arquivos
+  fora desta unidade (`ui/date-text-input.tsx`, `ui/time-text-input.tsx`, `domain/games/`,
+  `domain/post/reactions/` ×2, `domain/wellbeing/`). O warning de `ui/time-text-input.tsx` é o mesmo
+  padrão que `ui/date-text-input.tsx` já tinha, de propósito: o efeito espelha o valor controlado e
+  não deve rodar quando o texto digitado muda.
+- `npm run typecheck` — `EXIT=0`.
+- `npm test` — 161 arquivos, **1367 testes, 0 falhas**. A unidade soma 54: 10 do relógio de parede,
+  4 de `isDay`, 7 da máscara de horário, 7 do `TimeTextInput`, 15 do rascunho e 11 do diálogo.
+- `npm run build` — `EXIT=0`. `CalendarEntryFormDialog` sai em `dist/domain/index.d.ts`.
+- `npm run test:dist` — `EXIT=0` (`ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`).
+- `npm run build-storybook` — `EXIT=0`, com quatro stories novas (criar, editar, salvando, erro ao
+  salvar).
+
+Erros meus, retificados:
+
+- A primeira versão da abertura somava uma hora e mantinha o dia. Às 23h30 o rascunho abria 00:00 do
+  dia que já tinha passado. O teste foi escrito errado na primeira tentativa (esperei 23:59 em vez de
+  observar a virada) e duas expectativas seguintes tinham o fuso trocado (02:30Z é 23:30 do dia
+  anterior em São Paulo). O código está certo agora; os testes foram refeitos e cobrem a virada e o
+  fim que cruzaria a meia-noite.
+- A primeira versão do diálogo reimplementava a máscara de data em vez de usar `DateTextInput`,
+  duplicava a faixa de rolagem em vez de usar `PillRow`, usava `bg-danger-soft` (token que não
+  existe) e repetia os tetos em constantes locais.
+
+**PR:** design system
+[#165](https://github.com/Rede-ENois/enois-design-system/pull/165), aguardando revisão humana. Esta
+documentação vai em PR próprio para a `qa` do front, e inclui o commit `b378447f` (o número do PR da
+execução 7 no log), que foi empurrado depois do merge do #748 e ficou fora dele.
+
+**BLOQUEIOS:** nenhum bloqueio novo.
+
+- Publicação da versão continua com a mantenedora. A seção Releases do AGENTS.md do DS diz que agente
+  prepara e mantenedora corta, e que não se empilha uma branch de release em cima de outra não
+  mergeada. O front continua no `0.29.9` do lock.
+- B5 (sem navegador) vale para o diálogo: não medi a 390px nem a 1280px. As quatro stories existem
+  para a revisão visual; o layout segue os padrões do DS (`min-w-0`, duas colunas no horário,
+  `max-h-[88vh] overflow-y-auto`).
+- B2 (`events.date`/`time` em texto) continua pendente como unidade própria.
+
+**PRÓXIMA EXECUÇÃO:** Fase 2, terceira unidade no DS: a superfície que monta a agenda com o
+formulário e o estado que o app alimenta.
+
+- Um componente que recebe os itens, o período, o rascunho aberto e os callbacks de salvar e
+  responder, e compõe `CalendarAgenda` com `CalendarEntryFormDialog`. O app continua dono da
+  consulta e da mutação.
+- Estados explícitos de carregando, vazio e erro para o diálogo em si (hoje o erro do servidor vem
+  por `saveError`, o que cobre o caso real; falta o caso de a lista recarregar depois de salvar).
+- Teste de que salvar fecha o diálogo e que o erro do servidor mantém o que o leitor digitou.

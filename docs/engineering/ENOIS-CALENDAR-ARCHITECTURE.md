@@ -330,3 +330,45 @@ sempre visível. Ela não é filtrada por módulo, permissão de módulo nem por
 administração, não tem permissão própria e não deve poder ser desligada por módulo. Rejeitado também
 colocar a entrada duplicada em `you` e `work`: duas entradas iguais confundem e uma delas ficaria
 escondida no mesmo menu.
+
+---
+
+## D17 — O formulário escreve relógio de parede, e o instante nasce uma vez, no salvar
+
+**Contexto.** A API guarda `Instant` e o `ZoneId` do organizador (D2). A pessoa escreve "19h no dia
+10". Entre os dois existe uma conversão, e ela é a fonte clássica de erro de agenda: um horário salvo
+com o fuso do navegador vira outro horário para quem lê de outro lugar, e as duas horas por ano em
+que o relógio muda não têm uma resposta óbvia.
+
+**Decisão.** O rascunho do formulário guarda **relógio de parede**: dia `YYYY-MM-DD` mais `HH:mm`,
+na zona da entrada, nunca um instante. A conversão para instante acontece uma vez, em `instantOf`,
+no momento de salvar, e a leitura faz o caminho de volta com `wallClockOf`.
+
+Regras da conversão, fixadas em teste:
+
+- Hora repetida no fim do horário de verão: o instante mais cedo dos dois. É o que a pessoa quer
+  dizer ao escrever 01:30 num dia em que 01:30 acontece duas vezes.
+- Hora que não existe no começo do horário de verão: cai na próxima hora válida da zona. O relógio
+  pedido não é um horário que exista, e o resultado é o primeiro instante que a zona usa depois do
+  salto.
+
+**Consequência.**
+
+- "19h" continua sendo 19h para quem escreveu, mesmo que a pessoa mude de país e leia a agenda de
+  outro fuso: o instante é o mesmo e o rótulo é derivado da zona da entrada.
+- O componente não precisa saber em que fuso a máquina está. O `Intl.DateTimeFormat` é sempre
+  chamado com `timeZone` explícito, nunca com o fuso do ambiente.
+- Os campos de horário não carregam data. Por isso um compromisso que passa da meia-noite se escreve
+  movendo o dia, e o rascunho aberto às 23h30 já nasce no dia seguinte: manter a data de hoje com
+  começo 00:00 abriria um compromisso que já passou.
+- Os tetos de validação são os da API, num só lugar (`calendar-entry-draft`), e a mensagem recebe o
+  número em vez de repeti-lo: um teto que muda no servidor muda a frase sem editar dois arquivos.
+- O diálogo não busca dado, não navega e não salva. A chave de idempotência (D11), a mutação e o erro
+  do servidor são do app, que devolve o erro pronto para o diálogo mostrar sem apagar o que a pessoa
+  digitou.
+
+**Rejeitado.** Guardar um instante no rascunho e converter ao editar: a edição de uma entrada que
+caiu numa hora repetida perderia a escolha original, e o formulário passaria a depender do fuso do
+navegador para exibir o horário. Rejeitado também deixar o navegador calcular o horário local
+(`toLocaleString` sem `timeZone`): seria o mesmo defeito de data sem fuso que o app já corrigiu em 45
+pontos.
