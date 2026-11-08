@@ -51,7 +51,7 @@ export function CallPanel() {
       <div
         className={cn(
           "fixed z-[60] flex flex-col gap-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-4 shadow-2xl",
-          "inset-x-2 bottom-2 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[340px]",
+          "inset-x-2 bottom-16 sm:inset-x-auto sm:right-4 sm:w-[340px]",
         )}
         role="alertdialog"
         aria-live="assertive"
@@ -232,7 +232,7 @@ function CallPill({ title, onExpand }: { title: string; onExpand: () => void }) 
     <button
       type="button"
       onClick={onExpand}
-      className="fixed right-4 bottom-4 z-[60] flex items-center gap-2 rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-sm font-medium text-text-strong shadow-xl"
+      className="fixed right-4 bottom-16 z-[60] flex items-center gap-2 rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-sm font-medium text-text-strong shadow-xl"
     >
       <span className="relative flex h-2.5 w-2.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />

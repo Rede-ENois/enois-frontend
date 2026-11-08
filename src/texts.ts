@@ -3835,6 +3835,7 @@ export const texts = {
     tamoJuntoVideo: "Tamo junto vídeo",
     tamoJuntoStart: "Chamar o grupo",
     tamoJuntoLive: "🔴 O grupo está ao vivo! Entre na chamada quando quiser.",
+    tamoJuntoEventLive: "🔴 O encontro está ao vivo! Entre na chamada quando quiser.",
     tamoJuntoTopicLive: (topic: string) =>
       `🔴 Tamo junto do tópico ${topic} ao vivo! Entre na chamada quando quiser.`,
     /** Nome da sala de um tópico: "Tamo junto voz · Assuntos gerais". */

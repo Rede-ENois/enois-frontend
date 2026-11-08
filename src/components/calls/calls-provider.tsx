@@ -57,6 +57,7 @@ const ENDED_DISMISS_MS = 2_500;
 const noSession: CallsContextValue = {
   startDirect: async () => {},
   startGroup: async () => {},
+  startEvent: async () => {},
   answer: async () => {},
   decline: async () => {},
   open: async () => {},
@@ -80,6 +81,7 @@ export function useOpenCall(input: {
   conversationId?: string;
   groupId?: string;
   topicId?: string;
+  eventId?: string;
 }) {
   const session = useCallSession();
   const query = useQuery({
@@ -89,25 +91,29 @@ export function useOpenCall(input: {
       input.conversationId ?? null,
       input.groupId ?? null,
       input.topicId ?? null,
+      input.eventId ?? null,
     ],
     queryFn: () =>
       input.conversationId
         ? callsApi.openOfConversation(input.conversationId)
-        : input.topicId
-          ? callsApi.openOfTopic(input.groupId ?? "", input.topicId)
-          : callsApi.openOfGroup(input.groupId ?? ""),
-    enabled: Boolean(input.conversationId || input.groupId),
+        : input.eventId
+          ? callsApi.openOfEvent(input.eventId)
+          : input.topicId
+            ? callsApi.openOfTopic(input.groupId ?? "", input.topicId)
+            : callsApi.openOfGroup(input.groupId ?? ""),
+    enabled: Boolean(input.conversationId || input.groupId || input.eventId),
     refetchInterval: POLL_MS,
   });
   const mine = session.call;
   // A sala do tópico e a sala geral do grupo são chamadas diferentes: comparar só o grupo
-  // mostraria a sala errada no banner do tópico.
+  // mostraria a sala errada no banner do tópico. O encontro também tem a sua.
   const sameLink =
     mine !== null &&
     ((input.conversationId !== undefined && mine.conversationId === input.conversationId) ||
       (input.groupId !== undefined &&
         mine.groupId === input.groupId &&
-        (mine.topicId ?? null) === (input.topicId ?? null)));
+        (mine.topicId ?? null) === (input.topicId ?? null)) ||
+      (input.eventId !== undefined && mine.eventId === input.eventId));
   if (sameLink && !isTerminalState(mine.state)) {
     return { call: mine, isLoading: false };
   }
@@ -559,6 +565,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
             ? callsApi.startTopicCall(groupId, topicId, kind)
             : callsApi.startGroup(groupId, kind),
         ),
+      startEvent: (eventId, kind) => start(() => callsApi.startEvent(eventId, kind)),
       answer,
       decline,
       open,
