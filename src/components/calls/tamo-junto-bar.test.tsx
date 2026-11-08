@@ -10,6 +10,7 @@ import { TamoJuntoBar } from "./tamo-junto-bar";
 const mocks = vi.hoisted(() => ({
   openCall: null as CallView | null,
   startGroup: vi.fn(() => Promise.resolve()),
+  startEvent: vi.fn(() => Promise.resolve()),
   open: vi.fn(() => Promise.resolve()),
 }));
 
@@ -17,6 +18,7 @@ vi.mock("./calls-provider", () => ({
   useCalls: () => ({
     startDirect: vi.fn(),
     startGroup: mocks.startGroup,
+    startEvent: mocks.startEvent,
     answer: vi.fn(),
     decline: vi.fn(),
     open: mocks.open,
@@ -36,6 +38,7 @@ function call(overrides: Partial<CallView>): CallView {
     conversationId: null,
     groupId: "grupo_1",
     topicId: null,
+    eventId: null,
     initiatorId: "user_a",
     displayName: "Rapaziada",
     state: "ACTIVE",
@@ -58,6 +61,7 @@ describe("'Tamo junto' do grupo", () => {
   beforeEach(() => {
     mocks.openCall = null;
     mocks.startGroup.mockClear();
+    mocks.startEvent.mockClear();
     mocks.open.mockClear();
     host = document.createElement("div");
     document.body.append(host);
@@ -123,6 +127,60 @@ describe("'Tamo junto' do grupo", () => {
     act(() => root.render(<></>));
     mocks.openCall = call({ state: "ENDED" });
     act(() => root.render(<TamoJuntoBar groupId="grupo_1" />));
+    expect(host.textContent).not.toContain("ao vivo");
+    expect(button("Tamo junto voz")).toBeTruthy();
+  });
+});
+
+describe("'Tamo junto' do encontro", () => {
+  let root: Root;
+  let host: HTMLDivElement;
+
+  beforeEach(() => {
+    mocks.openCall = null;
+    mocks.startGroup.mockClear();
+    mocks.startEvent.mockClear();
+    mocks.open.mockClear();
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    act(() => root.render(<TamoJuntoBar eventId="evento_1" />));
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+  });
+
+  const button = (label: string) =>
+    Array.from(host.querySelectorAll("button")).find((element) =>
+      (element.getAttribute("aria-label") ?? element.textContent ?? "").includes(label),
+    );
+
+  it("abre a sala do encontro sem tocar ninguém", () => {
+    act(() => button("Tamo junto voz")!.click());
+    expect(mocks.startEvent).toHaveBeenCalledWith("evento_1", "AUDIO");
+    act(() => button("Tamo junto vídeo")!.click());
+    expect(mocks.startEvent).toHaveBeenCalledWith("evento_1", "VIDEO");
+    expect(mocks.startGroup).not.toHaveBeenCalled();
+  });
+
+  it("com a sala ao vivo, anuncia o encontro no ar e deixa entrar", () => {
+    act(() => root.render(<></>));
+    mocks.openCall = call({ groupId: null, eventId: "evento_1", participantCount: 4 });
+    act(() => root.render(<TamoJuntoBar eventId="evento_1" />));
+    expect(host.textContent).toContain(
+      "🔴 O encontro está ao vivo! Entre na chamada quando quiser.",
+    );
+    expect(host.textContent).toContain("4 pessoas na chamada");
+    act(() => button("Entrar na chamada")!.click());
+    expect(mocks.open).toHaveBeenCalledWith("call_g");
+  });
+
+  it("sala encerrada volta ao botão de abrir", () => {
+    act(() => root.render(<></>));
+    mocks.openCall = call({ groupId: null, eventId: "evento_1", state: "ENDED" });
+    act(() => root.render(<TamoJuntoBar eventId="evento_1" />));
     expect(host.textContent).not.toContain("ao vivo");
     expect(button("Tamo junto voz")).toBeTruthy();
   });
