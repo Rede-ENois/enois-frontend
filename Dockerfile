@@ -22,7 +22,7 @@ COPY . .
 # A base da API entra no BUILD (o Vite embute as VITE_* no bundle). Sem esta linha o build cai no
 # fallback do api-client e a imagem publicada aponta para localhost — foi exatamente isso que
 # derrubou o app em 18/10: o bundle servido chamava http://localhost:8081/api.
-ARG VITE_API_BACKEND=https://enois.ia.br/api
+ARG VITE_API_BACKEND=https://api.enois.ia.br/api
 ENV VITE_API_BACKEND=$VITE_API_BACKEND
 
 # Origem pública que o SSR declara ao backend (X-Client-Origin). No browser o front usa
@@ -30,6 +30,12 @@ ENV VITE_API_BACKEND=$VITE_API_BACKEND
 # precisam de valores diferentes.
 ARG VITE_SITE_URL=https://enois.ia.br
 ENV VITE_SITE_URL=$VITE_SITE_URL
+
+# Domínios que servem este build, o principal primeiro (ex.: enois.ia.br,isweee.com). No espelho o
+# navegador chama a API do próprio domínio (api.isweee.com), onde moram os cookies de sessão dele.
+# Vazio: um domínio só, a API é sempre VITE_API_BACKEND.
+ARG VITE_SITE_DOMAINS=
+ENV VITE_SITE_DOMAINS=$VITE_SITE_DOMAINS
 
 RUN NITRO_PRESET=node-server npm run build
 
