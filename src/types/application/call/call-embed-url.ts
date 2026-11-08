@@ -23,8 +23,47 @@ const CONFIG: Array<[string, (join: CallJoin) => string]> = [
   ["config.disableDeepLinking", () => "true"],
 ];
 
+/**
+ * Origens do servidor de reunião que a gente hospeda (o Epapo). É o mesmo endereço que o backend
+ * entrega em `join.host` (`REDE_CALLS_EPAPO_URL`, em QA e produção). Outro ambiente informa as
+ * suas em `VITE_CALLS_ORIGINS`, separadas por vírgula.
+ */
+const DEFAULT_CALL_ORIGINS = ["https://meet.enois.ia.br"];
+
+function trustedCallOrigins(): string[] {
+  const configured = (import.meta.env.VITE_CALLS_ORIGINS ?? "")
+    .split(",")
+    .map((origin: string) => origin.trim())
+    .filter(Boolean);
+  return configured.length > 0 ? configured : DEFAULT_CALL_ORIGINS;
+}
+
+/**
+ * O iframe da chamada recebe câmera e microfone: só abre na origem exata do nosso servidor de
+ * reunião, nunca num endereço qualquer que venha na credencial.
+ */
+export function isTrustedCallHost(host: string): boolean {
+  let origin: string;
+  try {
+    const url = new URL(host);
+    if (
+      url.protocol !== "https:" ||
+      url.pathname.replace(/\/$/, "") !== "" ||
+      url.search ||
+      url.hash
+    ) {
+      return false;
+    }
+    origin = url.origin;
+  } catch {
+    return false;
+  }
+  return trustedCallOrigins().includes(origin);
+}
+
 /** Url do iframe do Jitsi: a sala e o token vão juntos, sem segredo nenhum no cliente. */
 export function callEmbedUrl(join: CallJoin): string {
+  if (!isTrustedCallHost(join.host)) throw new Error("untrusted call host");
   const search = new URLSearchParams({ jwt: join.jwt });
   return `${join.host}/${join.room}?${search.toString()}${callEmbedHash(join)}`;
 }

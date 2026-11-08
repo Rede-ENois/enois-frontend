@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { callEmbedHash, callEmbedUrl } from "./call-embed-url";
+import { callEmbedHash, callEmbedUrl, isTrustedCallHost } from "./call-embed-url";
 import type { CallJoin } from "./call-join";
 
 const JOIN: CallJoin = {
   callId: "call_1",
   kind: "AUDIO",
   modality: "DIRECT",
-  host: "https://chamadas.example.test",
+  host: "https://meet.enois.ia.br",
   tokenTtlSeconds: 7200,
   room: "sala-sem-nome-deusuario",
   jwt: "token.assinado",
@@ -40,7 +40,7 @@ function hashParams(join: CallJoin): URLSearchParams {
 describe("callEmbedUrl", () => {
   it("leva a sala e o token que o servidor assinou", () => {
     const url = new URL(callEmbedUrl(JOIN));
-    expect(url.origin).toBe("https://chamadas.example.test");
+    expect(url.origin).toBe("https://meet.enois.ia.br");
     expect(url.pathname).toBe("/sala-sem-nome-deusuario");
     expect(url.searchParams.get("jwt")).toBe("token.assinado");
   });
@@ -91,5 +91,33 @@ describe("callEmbedUrl — opções que o Epapo aplica de fato", () => {
     // pelo Epapo; com três ou mais a sala é remontada na ponte no meio do caminho.
     expect(hashParams(JOIN).get("config.p2p.enabled")).toBe("false");
     expect(hashParams({ ...JOIN, modality: "GROUP" }).get("config.p2p.enabled")).toBe("false");
+  });
+});
+
+describe("isTrustedCallHost", () => {
+  it("aceita só a origem exata do nosso servidor de reunião", () => {
+    expect(isTrustedCallHost("https://meet.enois.ia.br")).toBe(true);
+    expect(isTrustedCallHost("https://meet.enois.ia.br/")).toBe(true);
+  });
+
+  it("recusa outro host, parecido, sem https, com caminho ou lixo", () => {
+    for (const host of [
+      "https://outro-servidor.example",
+      "https://meet.enois.ia.br.example.org",
+      "https://evil.example/meet.enois.ia.br",
+      "http://meet.enois.ia.br",
+      "https://meet.enois.ia.br/sala",
+      "https://meet.enois.ia.br?x=1",
+      "https://user@meet.enois.ia.br.example.org",
+      "javascript:alert(1)",
+      "",
+      "não é url",
+    ]) {
+      expect(isTrustedCallHost(host), host).toBe(false);
+    }
+  });
+
+  it("a url do iframe nunca é montada para um host desconhecido", () => {
+    expect(() => callEmbedUrl({ ...JOIN, host: "https://outro-servidor.example" })).toThrow();
   });
 });

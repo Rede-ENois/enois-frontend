@@ -163,6 +163,7 @@ server function que leia chave privada.
 | `VITE_SITE_URL`              | build  | build-arg do `Dockerfile` (origem publica declarada pelo SSR)     |
 | `VITE_SITE_DOMAINS`          | build  | dominios do app, principal primeiro (`enois.ia.br,isweee.com`)    |
 | `VITE_IMAGEKIT_URL_ENDPOINT` | build  | opcional: so resolve URLs antigas de midia do ImageKit            |
+| `VITE_CALLS_ORIGINS`         | build  | opcional: origens do Epapo aceitas no iframe da chamada           |
 
 ## Pendencias (o que falta)
 

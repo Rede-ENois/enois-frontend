@@ -3,7 +3,9 @@ import { useSyncExternalStore } from "react";
 import type { CallJoin } from "@/types/application/call/call-join";
 import type { CallPhase } from "@/types/application/call/call-phase";
 import type { CallSessionState } from "@/types/application/call/call-session-state";
+import type { CallSwap } from "@/types/application/call/call-swap";
 import type { CallView } from "@/types/application/call/call-view";
+import { isTerminalState } from "@/types/application/call/is-terminal-state";
 
 /**
  * A chamada aberta na tela agora — uma por aba.
@@ -30,6 +32,13 @@ const IDLE: CallSessionState = {
   notice: null,
   waiting: [],
 };
+
+/**
+ * Quantas chamadas esperam atrás da de cima. Passando disso a nova não entra na fila: segue tocando
+ * no servidor até quem ligou desistir ou o toque vencer. Recusar por conta própria não é opção,
+ * porque nada é recusado sem um clique da pessoa.
+ */
+export const MAX_WAITING = 5;
 
 let state: CallSessionState = IDLE;
 const listeners = new Set<() => void>();
@@ -71,12 +80,20 @@ export const callSessionStore = {
       set({ ...IDLE, phase, call, waiting: state.waiting });
       return;
     }
-    set({ waiting: [...state.waiting.filter((held) => held.id !== call.id), call] });
+    const others = state.waiting.filter((held) => held.id !== call.id);
+    if (others.length === state.waiting.length && others.length >= MAX_WAITING) return;
+    set({ waiting: [...others, call] });
   },
 
   /** Atualiza o estado vindo do servidor sem perder a credencial já obtida. */
   update(call: CallView) {
     set({ call });
+  },
+
+  /** Estado novo de uma chamada da fila: a de cima não muda. */
+  updateWaiting(call: CallView) {
+    if (!state.waiting.some((held) => held.id === call.id)) return;
+    set({ waiting: state.waiting.map((held) => (held.id === call.id ? call : held)) });
   },
 
   /**
@@ -159,24 +176,28 @@ export const callSessionStore = {
   },
 
   /**
-   * A pessoa escolheu atender uma da fila antes da de cima: as duas trocam de lugar.
+   * A pessoa escolheu atender uma da fila antes da de cima: a da fila assume a tela.
    *
-   * A que estava na tela volta para a fila em vez de sumir — ela continua tocando no servidor e
-   * ninguém a recusou. Devolve a que assumiu, ou `null` se ela já não estava na fila.
+   * A que estava tocando volta para a fila em vez de sumir: ela continua tocando no servidor e
+   * ninguém a recusou. A que estava na sala (ou entrando nela) não volta: a pessoa sai dela, e
+   * quem chama avisa o servidor (`left`), senão o outro lado a veria conectada até o servidor
+   * desistir. Devolve `null` se a escolhida já não estava na fila.
    */
-  swapWaiting(callId: string): CallView | null {
+  swapWaiting(callId: string): CallSwap | null {
     const next = state.waiting.find((held) => held.id === callId);
     if (!next) return null;
     const rest = state.waiting.filter((held) => held.id !== callId);
     const previous = state.call;
+    const inRoom = state.phase === "live" || state.phase === "joining";
+    const requeue = previous !== null && !inRoom && !isTerminalState(previous.state);
     state = {
       ...IDLE,
       phase: next.isInitiator ? "calling" : "incoming",
       call: next,
-      waiting: previous ? [...rest, previous] : rest,
+      waiting: requeue ? [...rest, previous] : rest,
     };
     listeners.forEach((listener) => listener());
-    return next;
+    return { next, left: inRoom ? previous : null };
   },
 
   /**

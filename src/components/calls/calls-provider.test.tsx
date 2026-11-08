@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
   join: vi.fn(),
   answer: vi.fn(),
   decline: vi.fn(),
+  end: vi.fn<(callId: string) => Promise<void>>(() => Promise.resolve()),
+  cancel: vi.fn<(callId: string) => Promise<void>>(() => Promise.resolve()),
+  onCallEvent: null as ((callId: string) => void) | null,
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -33,11 +36,20 @@ vi.mock("@/lib/api", () => ({
     join: mocks.join,
     answer: mocks.answer,
     decline: mocks.decline,
+    end: mocks.end,
+    cancel: mocks.cancel,
   },
 }));
 vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => true }));
 vi.mock("@/lib/require-auth", () => ({ hasSession: () => true }));
-vi.mock("@/lib/message-stream", () => ({ subscribeToCallEvents: () => () => {} }));
+vi.mock("@/lib/message-stream", () => ({
+  subscribeToCallEvents: (listener: (callId: string) => void) => {
+    mocks.onCallEvent = listener;
+    return () => {
+      if (mocks.onCallEvent === listener) mocks.onCallEvent = null;
+    };
+  },
+}));
 vi.mock("@/lib/lite-mode", () => ({ readEconomicMode: () => false }));
 vi.mock("./call-ringtone", () => ({ startRingtone: mocks.ringtone }));
 vi.mock("./call-panel", () => ({ CallPanel: () => null }));
@@ -243,7 +255,7 @@ describe("toque da chamada", () => {
     mocks.current = live;
     mocks.join.mockResolvedValue({
       call: live,
-      host: "https://meet.exemplo",
+      host: "https://meet.enois.ia.br",
       roomId: "sala_1",
       appId: "app",
       jwt: "token",
@@ -383,7 +395,7 @@ describe("fila de chamadas no provider", () => {
     mocks.answer.mockResolvedValue(answered);
     mocks.join.mockResolvedValue({
       call: { ...answered, state: "ACTIVE" },
-      host: "https://meet.exemplo",
+      host: "https://meet.enois.ia.br",
       roomId: "sala_2",
       appId: "app",
       jwt: "token",
@@ -441,5 +453,185 @@ describe("filas e toque", () => {
     act(() => root.unmount());
     document.body.innerHTML = "";
     clearSession();
+  });
+});
+
+describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
+  let root: Root;
+  let client: QueryClient;
+  const byId = new Map<string, CallView>();
+
+  const joinFor = (target: CallView, host = "https://meet.enois.ia.br") => ({
+    callId: target.id,
+    kind: target.kind,
+    modality: target.modality,
+    call: { ...target, state: "ACTIVE" as const },
+    host,
+    room: `sala_${target.id}`,
+    jwt: `token_${target.id}`,
+    tokenTtlSeconds: 3600,
+  });
+
+  beforeEach(() => {
+    byId.clear();
+    mocks.ringtone.mockClear();
+    mocks.open.mockResolvedValue([]);
+    mocks.get.mockReset();
+    mocks.get.mockImplementation((id: string) =>
+      byId.has(id) ? Promise.resolve(byId.get(id)) : Promise.reject(new Error("sem chamada")),
+    );
+    mocks.join.mockReset();
+    mocks.answer.mockReset();
+    mocks.decline.mockReset();
+    mocks.end.mockClear();
+    mocks.cancel.mockClear();
+    clearSession();
+    client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    act(() => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <CallsProvider>
+            <CaptureActions />
+          </CallsProvider>
+        </QueryClientProvider>,
+      );
+    });
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+    clearSession();
+    actions.current = null;
+  });
+
+  /** Põe a pessoa dentro da sala da call_1 com a call_2 (1:1) tocando na fila. */
+  async function liveWithQueued() {
+    const live = call({ state: "ACTIVE" });
+    const queued = call({ id: "call_2", displayName: "Bia" });
+    byId.set(live.id, live);
+    byId.set(queued.id, queued);
+    await flush();
+    act(() => callSessionStore.live(joinFor(live)));
+    act(() => callSessionStore.ring(queued, "incoming"));
+    await flush();
+    return { live, queued };
+  }
+
+  it("não toca enquanto a pessoa está na sala, mesmo com uma 1:1 na fila", async () => {
+    await liveWithQueued();
+    expect(getCallSession().phase).toBe("live");
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_2"]);
+    expect(mocks.ringtone).not.toHaveBeenCalled();
+  });
+
+  it("não toca enquanto a entrada na sala está a caminho", async () => {
+    await flush();
+    act(() => callSessionStore.joining(call({ state: "ACTIVE" })));
+    act(() => callSessionStore.ring(call({ id: "call_2", displayName: "Bia" }), "incoming"));
+    await flush();
+    expect(mocks.ringtone).not.toHaveBeenCalled();
+  });
+
+  it("atender a da fila no meio da ligação avisa o servidor que a pessoa saiu da sala", async () => {
+    const { queued } = await liveWithQueued();
+    const order: string[] = [];
+    mocks.end.mockImplementation(async (id: string) => {
+      order.push(`end:${id}`);
+    });
+    mocks.answer.mockImplementation(async (id: string) => {
+      order.push(`answer:${id}`);
+      return { ...queued, state: "CONNECTING" };
+    });
+    mocks.join.mockResolvedValue(joinFor(queued));
+
+    await act(async () => {
+      await actions.current?.answer("call_2");
+    });
+    await flush();
+
+    expect(order).toEqual(["end:call_1", "answer:call_2"]);
+    expect(getCallSession()).toMatchObject({ phase: "live", call: { id: "call_2" } });
+    // A sala largada não volta para a fila.
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("evento da chamada anterior durante a troca não toma a tela", async () => {
+    await flush();
+    const first = call({});
+    const second = call({ id: "call_2", displayName: "Bia" });
+    byId.set(first.id, first);
+    byId.set(second.id, second);
+    act(() => callSessionStore.ring(first, "incoming"));
+    act(() => callSessionStore.ring(second, "incoming"));
+    await flush();
+
+    // O atendimento fica pendurado: é a janela entre a troca e a entrada na sala.
+    let release: (value: CallView) => void = () => {};
+    mocks.answer.mockImplementation(
+      () =>
+        new Promise<CallView>((resolve) => {
+          release = resolve;
+        }),
+    );
+    mocks.join.mockResolvedValue(joinFor(second));
+    let answering: Promise<void> | undefined;
+    act(() => {
+      answering = actions.current?.answer("call_2");
+    });
+    await flush();
+    expect(getCallSession().call?.id).toBe("call_2");
+
+    // Chega um evento da call_1 (que voltou para a fila).
+    byId.set(first.id, { ...first, participantCount: 2 });
+    act(() => mocks.onCallEvent?.("call_1"));
+    await flush();
+
+    expect(getCallSession().call?.id).toBe("call_2");
+    expect(getCallSession().waiting).toEqual([{ ...first, participantCount: 2 }]);
+    expect(mocks.join).not.toHaveBeenCalledWith("call_1");
+
+    await act(async () => {
+      release({ ...second, state: "CONNECTING" });
+      await answering;
+    });
+    expect(getCallSession()).toMatchObject({ phase: "live", call: { id: "call_2" } });
+  });
+
+  it("chamada da fila que terminou no servidor sai da fila sem mexer na tela", async () => {
+    await flush();
+    const first = call({});
+    const second = call({ id: "call_2", displayName: "Bia" });
+    byId.set(first.id, first);
+    act(() => callSessionStore.ring(first, "incoming"));
+    act(() => callSessionStore.ring(second, "incoming"));
+    await flush();
+
+    byId.set(second.id, { ...second, state: "CANCELLED" });
+    act(() => mocks.onCallEvent?.("call_2"));
+    await flush();
+
+    expect(getCallSession()).toMatchObject({ phase: "incoming", call: { id: "call_1" } });
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("credencial apontando para outro servidor de reunião não abre a sala", async () => {
+    const live = call({ state: "ACTIVE" });
+    byId.set(live.id, live);
+    mocks.join.mockResolvedValue(joinFor(live, "https://outro-servidor.example"));
+    await flush();
+
+    await act(async () => {
+      await actions.current?.open(live.id);
+    });
+
+    expect(getCallSession()).toMatchObject({
+      phase: "error",
+      join: null,
+      error: "Esta sala não está no nosso servidor de chamadas, então ela não foi aberta.",
+    });
   });
 });

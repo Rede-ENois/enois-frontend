@@ -42,13 +42,20 @@ export function CallIncomingScreen({
     >
       {held ? <Pill size="sm">{texts.calls.incomingHeld(held.displayName)}</Pill> : null}
 
-      <Button variant="destructive" onClick={onDecline}>
+      <Button
+        variant="destructive"
+        aria-label={held ? texts.calls.declineFrom(call.displayName) : undefined}
+        onClick={onDecline}
+      >
         <PhoneOff />
 
         {texts.calls.decline}
       </Button>
 
-      <Button onClick={onAnswer}>
+      <Button
+        aria-label={held ? texts.calls.answerFrom(call.displayName) : undefined}
+        onClick={onAnswer}
+      >
         <Phone />
 
         {texts.calls.answer}
@@ -56,11 +63,21 @@ export function CallIncomingScreen({
 
       {held && onAnswerHeld && onDeclineHeld ? (
         <>
-          <Button variant="ghost" size="sm" onClick={onDeclineHeld}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={texts.calls.declineFrom(held.displayName)}
+            onClick={onDeclineHeld}
+          >
             {texts.calls.decline}
           </Button>
 
-          <Button variant="ghost" size="sm" onClick={onAnswerHeld}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={texts.calls.answerFrom(held.displayName)}
+            onClick={onAnswerHeld}
+          >
             {texts.calls.answerHeld}
           </Button>
         </>

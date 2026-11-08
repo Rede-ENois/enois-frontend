@@ -194,6 +194,52 @@ describe("chamada recebida em tela cheia", () => {
     expect(getCallSession().call?.id).toBe("call_1");
   });
 
+  it("com duas chamadas, cada botão diz de quem é a chamada", () => {
+    for (const held of [...getCallSession().waiting]) callSessionStore.removeWaiting(held.id);
+    act(() => callSessionStore.ring(incoming(), "incoming"));
+    act(() => callSessionStore.ring(incoming({ id: "call_2", displayName: "Bia" }), "incoming"));
+    const labels = Array.from(host.querySelectorAll("button"))
+      .filter((element) => /Recusar|Atender/.test(element.textContent ?? ""))
+      .map((element) => element.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "Recusar a chamada de Ana",
+      "Atender a chamada de Ana",
+      "Recusar a chamada de Bia",
+      "Atender a chamada de Bia",
+    ]);
+    act(() => callSessionStore.removeWaiting("call_2"));
+  });
+
+  it("em tela cheia o foco entra no painel e o Tab não sai dele", () => {
+    const outside = document.createElement("button");
+    document.body.prepend(outside);
+    outside.focus();
+    act(() => callSessionStore.ring(incoming(), "incoming"));
+    const dialog = host.querySelector<HTMLElement>('[role="dialog"]')!;
+    const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>("button"));
+    expect(document.activeElement).toBe(buttons[0]);
+
+    buttons[buttons.length - 1].focus();
+    const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(tab);
+    expect(tab.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(buttons[0]);
+
+    const back = new KeyboardEvent("keydown", {
+      key: "Tab",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(back);
+    expect(document.activeElement).toBe(buttons[buttons.length - 1]);
+
+    // Fechou: o foco volta para onde estava.
+    act(() => callSessionStore.idle());
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+  });
+
   it("a chamada ao vivo também abre em tela cheia", () => {
     act(() => callSessionStore.ring(ringingCall(), "calling"));
     act(() =>
@@ -201,7 +247,7 @@ describe("chamada recebida em tela cheia", () => {
         callId: "call_1",
         kind: "AUDIO",
         modality: "DIRECT",
-        host: "https://chamadas.example.test",
+        host: "https://meet.enois.ia.br",
         tokenTtlSeconds: 7200,
         room: "sala-1",
         jwt: "token",

@@ -9,6 +9,7 @@ import { Flag, Minimize2, PhoneOff } from "lucide-react";
 
 import { callSessionStore, useCallSession } from "@/lib/calls/call-session";
 import { useHangUp } from "@/lib/calls/use-hang-up";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { cn } from "@/lib/utils";
 
 import { CallIncomingScreen } from "./call-incoming-screen";
@@ -34,6 +35,14 @@ export function CallPanel() {
   // A sala é de outro domínio: a captura da denúncia é pedida a ela por postMessage.
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  // Recebida e ao vivo ocupam a tela inteira, como um discador: tocar no canto não é aviso
+  // suficiente para uma ligação. Antes de entrar (chamando/conectando) e nos avisos, a moldura
+  // menor — não há mídia para ocupar a tela ainda.
+  const fullscreen =
+    (session.phase === "live" && !session.minimized) || session.phase === "incoming";
+  // Em tela cheia o painel é modal (`aria-modal`): o Tab não pode escapar para a página de trás.
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(dialogRef, fullscreen && !reportOpen);
 
   // Aviso de ambiente ainda em configuração: não é uma chamada, então não tem moldura de chamada.
   if (session.phase === "error" && session.notConfigured) {
@@ -72,15 +81,12 @@ export function CallPanel() {
     return <CallPill title={isGroup ? texts.calls.tamoJunto : title} onExpand={expandCall} />;
   }
 
-  // Recebida e ao vivo ocupam a tela inteira, como um discador: tocar no canto não é aviso
-  // suficiente para uma ligação. Antes de entrar (chamando/conectando) e nos avisos, a moldura
-  // menor — não há mídia para ocupar a tela ainda.
-  const fullscreen = session.phase === "live" || session.phase === "incoming";
-
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       className={cn(
-        "fixed z-[60] flex flex-col overflow-hidden border-border-soft bg-surface-1 shadow-2xl",
+        "fixed z-[60] flex flex-col overflow-hidden border-border-soft bg-surface-1 shadow-2xl focus:outline-none",
         fullscreen
           ? "inset-0 justify-center rounded-none border-0 sm:inset-3 sm:rounded-2xl sm:border"
           : "inset-x-2 bottom-2 max-h-[85vh] rounded-2xl border sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",

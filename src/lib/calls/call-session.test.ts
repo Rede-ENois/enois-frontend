@@ -2,7 +2,7 @@ import type { CallJoin } from "@/types/application/call/call-join";
 import type { CallView } from "@/types/application/call/call-view";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { callSessionStore, getCallSession } from "./call-session";
+import { MAX_WAITING, callSessionStore, getCallSession } from "./call-session";
 
 const CALL: CallView = {
   id: "call_1",
@@ -28,7 +28,7 @@ const JOIN: CallJoin = {
   callId: "call_1",
   kind: "VIDEO",
   modality: "DIRECT",
-  host: "https://chamadas.example.test",
+  host: "https://meet.enois.ia.br",
   tokenTtlSeconds: 7200,
   room: "sala-1",
   jwt: "token",
@@ -106,7 +106,11 @@ describe("callSessionStore", () => {
 describe("fila de chamadas", () => {
   const OTHER: CallView = { ...CALL, id: "call_2", displayName: "Bia", isInitiator: false };
 
-  beforeEach(() => callSessionStore.idle());
+  // `idle` mantém a fila de propósito; cada teste começa sem ninguém esperando.
+  beforeEach(() => {
+    getCallSession().waiting.forEach((held) => callSessionStore.removeWaiting(held.id));
+    callSessionStore.idle();
+  });
 
   it("a segunda chamada não apaga a que está na tela", () => {
     callSessionStore.ring(CALL, "calling");
@@ -153,10 +157,60 @@ describe("fila de chamadas", () => {
     callSessionStore.ring(CALL, "calling");
     callSessionStore.ring(OTHER, "incoming");
     const swapped = callSessionStore.swapWaiting("call_2");
-    expect(swapped?.id).toBe("call_2");
+    expect(swapped?.next.id).toBe("call_2");
+    expect(swapped?.left).toBeNull();
     expect(getCallSession()).toMatchObject({ phase: "incoming", call: { id: "call_2" } });
     // A que estava na tela continua tocando: ninguém a recusou.
     expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_1"]);
+  });
+
+  it("atender uma da fila no meio de uma ligação larga a sala em vez de devolvê-la à fila", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.ring(OTHER, "incoming");
+    const swapped = callSessionStore.swapWaiting("call_2");
+    // Quem chamou a troca precisa avisar o servidor que a pessoa saiu desta sala.
+    expect(swapped?.left?.id).toBe("call_1");
+    expect(getCallSession()).toMatchObject({
+      phase: "incoming",
+      call: { id: "call_2" },
+      join: null,
+    });
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("entrando na sala também conta como estar nela", () => {
+    callSessionStore.joining({ ...CALL, state: "ACTIVE" });
+    callSessionStore.ring(OTHER, "incoming");
+    expect(callSessionStore.swapWaiting("call_2")?.left?.id).toBe("call_1");
+    expect(getCallSession().waiting).toEqual([]);
+  });
+
+  it("a fila guarda no máximo cinco chamadas", () => {
+    callSessionStore.ring(CALL, "calling");
+    for (let index = 0; index < MAX_WAITING + 2; index += 1) {
+      callSessionStore.ring({ ...OTHER, id: `fila_${index}` }, "incoming");
+    }
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual([
+      "fila_0",
+      "fila_1",
+      "fila_2",
+      "fila_3",
+      "fila_4",
+    ]);
+    // A mesma chamada tocando de novo não conta como mais uma.
+    callSessionStore.ring({ ...OTHER, id: "fila_0" }, "incoming");
+    expect(getCallSession().waiting).toHaveLength(MAX_WAITING);
+  });
+
+  it("estado novo de uma chamada da fila não mexe na de cima", () => {
+    callSessionStore.ring(CALL, "calling");
+    callSessionStore.ring(OTHER, "incoming");
+    callSessionStore.updateWaiting({ ...OTHER, participantCount: 3 });
+    expect(getCallSession().call?.id).toBe("call_1");
+    expect(getCallSession().waiting[0]?.participantCount).toBe(3);
+    // Quem não está na fila não entra nela por atualização.
+    callSessionStore.updateWaiting({ ...OTHER, id: "estranha" });
+    expect(getCallSession().waiting.map((held) => held.id)).toEqual(["call_2"]);
   });
 
   it("recusar uma da fila só tira ela da fila", () => {
