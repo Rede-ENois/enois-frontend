@@ -19,6 +19,9 @@ import {
   LoadingState,
   Pill,
   PillRow,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
@@ -230,7 +233,7 @@ function Moderador() {
                 <Tabs
                   key={group.id}
                   value={activeTab}
-                  onValueChange={(value) => setTab(value as ModeratorTabId)}
+                  onValueChange={(value: string) => setTab(value as ModeratorTabId)}
                 >
                   {/* O nome do grupo é a primeira "aba" visual da lista, mas não é uma aba:
                       ela não troca o conteúdo — só diz a que grupo as abas ao lado pertencem.
