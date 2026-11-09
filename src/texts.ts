@@ -380,7 +380,9 @@ export const texts = {
       passwordMin: "Use ao menos 8 caracteres",
       birthDateRequired: "Informe a data de nascimento.",
       birthDateFuture: "A data de nascimento não pode estar no futuro.",
-      termsRequired: "É preciso confirmar que você tem 18 anos ou mais e aceitar os termos.",
+      birthDateMinAge: "A idade mínima para criar conta é 16 anos.",
+      termsRequired:
+        "É preciso confirmar que você tem 16 anos ou mais e aceitar os termos. Menores de 18 anos precisam da autorização de um responsável.",
     },
     password: {
       forgot: "Esqueci minha senha",
@@ -401,7 +403,7 @@ export const texts = {
     signup: {
       title: "Vamos começar.",
       subtitle: "Crie sua conta em menos de um minuto.",
-      termsPrefix: "Confirmo que tenho 18 anos ou mais e aceito os ",
+      termsPrefix: "Confirmo que tenho 16 anos ou mais e aceito os ",
       termsLink: "Termos de Uso",
       termsAnd: " e a ",
       privacyLink: "Política de Privacidade",
@@ -1531,7 +1533,7 @@ export const texts = {
     avatarFallback: "Avatar",
     edit: {
       usernameTaken: "Este username já está em uso",
-      birthDateInvalid: "Informe uma data de nascimento válida — é preciso ter 18 anos ou mais.",
+      birthDateInvalid: "Informe uma data de nascimento válida — é preciso ter 16 anos ou mais.",
     },
   },
 
@@ -3541,6 +3543,15 @@ export const texts = {
     ],
     callReportsLimit:
       "A captura de tela é feita no momento da denúncia, sem aviso para as outras pessoas da chamada, e a pessoa denunciada não é avisada de que a denúncia foi aberta contra ela. Quem decide sobre penalidades é sempre uma pessoa do time de moderação, e a decisão pode ser revista por outra pessoa do time.",
+    supervisionTitle: "Contas de 16 e 17 anos",
+    supervisionIntro:
+      "A idade mínima para criar conta no Énóis é 16 anos. Quem tem 16 ou 17 anos entra como conta de menor supervisionado.",
+    supervision: [
+      "De 16 a 17 anos, a conta não publica, não comenta, não envia mensagens e não entra em chamadas até que um responsável legal — pessoa maior de 18 anos, com conta própria na plataforma — autorize o uso.",
+      "A autorização pode ser revogada a qualquer momento pelo responsável, e a conta volta ao estado anterior (sem publicar, comentar, enviar mensagens nem entrar em chamadas). Ao completar 18 anos, a exigência de supervisão termina sozinha.",
+      "A data de nascimento é declarada por você e não é tratada como verificação oficial. As proteções da faixa etária valem a partir dela mesmo assim: declarar idade falsa para escapar da supervisão é violação destas diretrizes e pode levar ao encerramento da conta.",
+      "Contas com data de nascimento que indique menos de 16 anos não são aceitas; identificadas por outro caminho, são encerradas com remoção dos dados pessoais.",
+    ],
     penaltiesTitle: "Consequências",
     penalties: [
       "Primeira violação leve: remoção do conteúdo e aviso.",
@@ -3609,7 +3620,7 @@ export const texts = {
       sections: [
         {
           title: "1. Aceitação dos termos e idade mínima",
-          text: 'Ao criar uma conta ou usar qualquer funcionalidade da plataforma Énóis ("plataforma"), você concorda com estes Termos de Uso e com a Política de Privacidade. Se não concordar com qualquer parte deles, não utilize a plataforma.\n\nA plataforma é destinada exclusivamente a pessoas com 18 anos ou mais, por exigência legal e por decisão da comunidade. Ao criar a conta, você declara e confirma ser maior de idade, e esse aceite é registrado com data e hora.',
+          text: 'Ao criar uma conta ou usar qualquer funcionalidade da plataforma Énóis ("plataforma"), você concorda com estes Termos de Uso e com a Política de Privacidade. Se não concordar com qualquer parte deles, não utilize a plataforma.\n\nA idade mínima para criar conta é 16 anos. Quem tem 16 ou 17 anos usa a plataforma como conta de menor supervisionado: a conta é liberada, mas publicar, comentar, enviar mensagens e entrar em chamadas só fica disponível depois que um responsável legal, com conta de adulto na plataforma, autoriza o uso. Completar 18 anos encerra a exigência de supervisão automaticamente.\n\nA data de nascimento é declarada por você no cadastro. Ela não é tratada como verificação oficial de idade, e as proteções da faixa etária são aplicadas a partir dela mesmo assim. O aceite destes Termos e a declaração de idade são registrados com data e hora.',
         },
         {
           title: "2. Definições",
@@ -3617,7 +3628,7 @@ export const texts = {
         },
         {
           title: "3. Cadastro e conta",
-          text: "O cadastro é permitido apenas para maiores de 18 anos. Contas identificadas como de menores de idade serão encerradas, com remoção dos dados pessoais correspondentes.\n\nPara usar a plataforma, você deve fornecer informações verdadeiras, completas e atualizadas. Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas na sua conta.\n\nÉ proibido criar contas em nome de terceiros, criar múltiplas contas para burlar restrições ou fornecer informações falsas. Podemos suspender ou encerrar contas que violem estes Termos.",
+          text: "O cadastro é permitido a partir de 16 anos. De 16 a 17 anos, a conta não pode publicar, comentar, enviar mensagens nem entrar em chamadas até que um responsável legal — pessoa maior de 18 anos, com conta própria na plataforma — autorize o uso pelo fluxo de supervisão parental; a autorização pode ser revogada a qualquer momento, e a conta volta ao estado anterior. Cadastros com data de nascimento que indique menos de 16 anos são recusados, e contas identificadas nessa situação são encerradas, com remoção dos dados pessoais correspondentes.\n\nPara usar a plataforma, você deve fornecer informações verdadeiras, completas e atualizadas. Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas na sua conta.\n\nÉ proibido criar contas em nome de terceiros, criar múltiplas contas para burlar restrições ou fornecer informações falsas. Podemos suspender ou encerrar contas que violem estes Termos.",
         },
         {
           title: "4. Conduta do usuário",
@@ -3740,7 +3751,9 @@ export const texts = {
           {
             title: "9. Menores de idade",
             paragraphs: [
-              "A plataforma é destinada a maiores de 16 anos. Não coletamos intencionalmente dados de menores sem consentimento dos responsáveis. Se identificarmos esse caso, os dados serão removidos imediatamente.",
+              "A idade mínima para criar conta é 16 anos. De 16 a 17 anos, a conta é de menor supervisionado: a data de nascimento declarada é usada para aplicar as proteções da faixa etária, e a escrita (publicar, comentar, enviar mensagens e entrar em chamadas) só é liberada depois que um responsável legal, com conta de adulto, autoriza o uso pelo fluxo de supervisão parental. A autorização fica registrada com data e versão dos termos, pode ser revogada a qualquer momento e deixa de ser exigida automaticamente quando a pessoa completa 18 anos.",
+              "O que o responsável recebe é o estado da supervisão, o nome de usuário e o nome de exibição do adolescente supervisionado — não o conteúdo das conversas privadas, não a senha e não a data de nascimento. O vínculo pode ser revogado pelo próprio responsável pelo painel de supervisão.",
+              "Cadastros com data de nascimento que indique menos de 16 anos são recusados. Se identificarmos uma conta nessa situação por outro caminho, a conta é encerrada e os dados pessoais correspondentes são removidos. A declaração de idade não é tratada como verificação oficial: é proteção a partir do que foi declarado.",
             ],
           },
           {

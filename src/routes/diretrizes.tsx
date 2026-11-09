@@ -84,6 +84,12 @@ function Diretrizes() {
         />
       </LegalSection>
 
+      <LegalSection title={texts.guidelines.supervisionTitle}>
+        <RichText
+          content={`${texts.guidelines.supervisionIntro}\n\n${asMarkdownList(texts.guidelines.supervision)}`}
+        />
+      </LegalSection>
+
       <LegalSection title={texts.guidelines.penaltiesTitle}>
         <ul className="list-disc space-y-1.5 pl-5">
           {texts.guidelines.penalties.map((item) => (

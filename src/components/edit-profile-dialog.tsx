@@ -124,7 +124,8 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
   const handleSave = async (values: EditProfileValues): Promise<EditProfileSaveError | null> => {
     const { birthDate, badges, showRanking } = values;
     const birthDateChanged = birthDate !== (profile.birthDate ?? "");
-    // Data nova precisa ser real e maior de idade — mesma régua do cadastro. A que já está na conta
+    // Data nova precisa ser real e ter pelo menos 16 anos — mesma régua do cadastro (de 16 a 17 a
+    // conta é de menor supervisionado, e o backend decide a supervisão). A que já está na conta
     // não passa por aqui: quem é menor supervisionado não pode ficar sem salvar o resto do perfil.
     if (birthDateChanged && birthDate && (!ISO_DATE.test(birthDate) || !hasMinAge(birthDate))) {
       return { field: "general", message: texts.profile.edit.birthDateInvalid };
