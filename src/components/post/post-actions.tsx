@@ -1,14 +1,26 @@
 import { useEffect, useState } from "react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
 import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
-import { useToast } from "@rede-enois/design-system/ui";
+import {
+  Button,
+  Popover,
+  PopoverContent,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  useToast,
+} from "@rede-enois/design-system/ui";
+import { Copy, Download, ExternalLink, MessageCircle, X } from "lucide-react";
 
 import { REACTION_EMOJIS, reactionsApi } from "@/lib/api";
+import { resolveCdnUrl } from "@/lib/api/media";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import {
   savedPostsQueryOptions,
@@ -108,31 +120,99 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const [repostOpen, setRepostOpen] = useState(false);
   const repostMounted = useMountedOnce(repostOpen);
 
-  const handleShare = async () => {
-    if (!requireAuth()) return;
-    const url = shareUrl ?? `${window.location.origin}/post/${post.id}`;
+  const [shareOpen, setShareOpen] = useState(false);
+  const navigate = useNavigate();
+  const postUrl =
+    shareUrl ?? `${typeof window !== "undefined" ? window.location.origin : ""}/post/${post.id}`;
+  const isMobile =
+    typeof navigator !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
+
+  const trackShare = async () => {
     try {
       const result = await reactionsApi.share(post.id);
       updatePostInQueryCache(queryClient, post.id, (current) => ({
         ...current,
         counters: result.counters,
       }));
-      // Share nativo so no celular: no desktop o dialog rejeita sem gesto e parecia
-      // "nao fazer nada". PC copia o link (com aviso); mobile usa o sheet do sistema.
-      if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-        try {
-          await navigator.share({ url });
-          return;
-        } catch (nativeFailed) {
-          // usuario cancelou ou o navegador recusou: cai para copiar
-        }
-      }
-      await navigator.clipboard.writeText(url);
+    } catch {
+      // contagem falhou mas a acao continua
+    }
+  };
+
+  const handleShareOpen = () => {
+    if (!requireAuth()) return;
+    setShareOpen(true);
+  };
+
+  const handleCopyLink = async () => {
+    setShareOpen(false);
+    await trackShare();
+    try {
+      await navigator.clipboard.writeText(postUrl);
       toast(texts.posts.shareCopied, "success");
     } catch {
       toast(texts.posts.shareCopied, "error");
     }
   };
+
+  const handleNativeShare = async () => {
+    setShareOpen(false);
+    await trackShare();
+    try {
+      await navigator.share({ url: postUrl });
+    } catch {
+      // usuario cancelou
+    }
+  };
+
+  const handleSendViaChat = () => {
+    setShareOpen(false);
+    void trackShare();
+    void navigate({ to: "/mensagens", search: { compartilhar: postUrl } });
+  };
+
+  const firstMedia = post.media?.[0] ?? null;
+  const mediaDownloadUrl = firstMedia ? resolveCdnUrl(firstMedia.cdnUrl) : null;
+  const isVideo = firstMedia?.mimeType?.startsWith("video/") ?? false;
+
+  const handleDownloadMedia = () => {
+    if (!mediaDownloadUrl) return;
+    setShareOpen(false);
+    const a = document.createElement("a");
+    a.href = mediaDownloadUrl;
+    a.download = "";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.click();
+  };
+
+  const shareOptions = (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => void handleSendViaChat()}>
+        <MessageCircle /> Enviar via chat
+      </Button>
+
+      <Button variant="ghost" size="sm" onClick={() => void handleCopyLink()}>
+        <Copy /> Copiar link
+      </Button>
+
+      {typeof navigator !== "undefined" && "share" in navigator && (
+        <Button variant="ghost" size="sm" onClick={() => void handleNativeShare()}>
+          <ExternalLink /> Compartilhar via...
+        </Button>
+      )}
+
+      {mediaDownloadUrl && (
+        <Button variant="ghost" size="sm" onClick={handleDownloadMedia}>
+          <Download /> {isVideo ? "Baixar vídeo" : "Baixar imagem"}
+        </Button>
+      )}
+
+      <Button variant="ghost" size="sm" onClick={() => setShareOpen(false)}>
+        <X /> Cancelar
+      </Button>
+    </>
+  );
 
   return (
     <PostActionsView
@@ -155,7 +235,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
         if (!requireAuth()) return;
         setRepostOpen(true);
       }}
-      onShare={handleShare}
+      onShare={handleShareOpen}
       onReport={() => setShowReport(post.id, true)}
       onSave={handleSave}
       dialogs={
@@ -177,6 +257,23 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
               open={showReport}
               onOpenChange={(next) => setShowReport(post.id, next)}
             />
+          )}
+
+          {isMobile ? (
+            <Sheet open={shareOpen} onOpenChange={setShareOpen}>
+              <SheetContent side="bottom">
+                <SheetHeader>
+                  <SheetTitle>Compartilhar</SheetTitle>
+                </SheetHeader>
+                {shareOptions}
+              </SheetContent>
+            </Sheet>
+          ) : (
+            <Popover open={shareOpen} onOpenChange={setShareOpen}>
+              <PopoverContent align="start" side="top">
+                {shareOptions}
+              </PopoverContent>
+            </Popover>
           )}
         </>
       }
