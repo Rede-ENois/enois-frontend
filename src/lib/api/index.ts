@@ -15,6 +15,7 @@ export { communitiesApi } from "./communities";
 export { groupsApi } from "./groups";
 export { jobsApi } from "./jobs";
 export { eventsApi } from "./events";
+export { calendarApi } from "./calendar";
 export { mentorsApi } from "./mentors";
 export { messagesApi } from "./messages";
 export { callsApi } from "./calls";
