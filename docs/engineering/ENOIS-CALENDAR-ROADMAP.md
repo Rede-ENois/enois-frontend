@@ -189,7 +189,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#568](https://github.com/Rede-ENois/enois-backend/pull/568)       | enois-backend       | Fase 1: origem da mentoria na agenda central (`CalendarSourceService`, V260 com índice único por dono)          | **mergeado** em `83515ce8` (2026-11-09); a V260 foi renumerada para V262 no #584 |
 | [#584](https://github.com/Rede-ENois/enois-backend/pull/584)       | enois-backend       | Colisão de migração: a `qa` tinha duas V260 e o boot quebrava; a do calendário virou V262                      | **mergeado** em `a14cb468` (2026-11-09)         |
 | [#171](https://github.com/Rede-ENois/enois-design-system/issues/171) | enois-design-system | Issue do release 0.30.0: publica o módulo `domain/calendar`, que nunca saiu no pacote                        | aberta                                          |
-| [#172](https://github.com/Rede-ENois/enois-design-system/pull/172) | enois-design-system | Release `chore(release): 0.30.0` a partir do `main`; falta a mantenedora empurrar a tag                      | aberto, **aguardando revisão humana**           |
+| [#172](https://github.com/Rede-ENois/enois-design-system/pull/172) | enois-design-system | Release `chore(release): 0.30.0` a partir do `main`; falta a mantenedora empurrar a tag                      | aberto, **CI verde e aprovado** em 2026-11-09; falta o merge e a tag |
 | [#769](https://github.com/Rede-ENois/enois-frontend/pull/769)      | enois-frontend      | Fase 3: rota `/agenda` com as quatro visões, alternância de agenda, criação e resposta a convite              | aberto em **draft** (depende do #172)           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
