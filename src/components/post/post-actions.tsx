@@ -9,18 +9,15 @@ import type { PostActionsProps } from "@/types/components/post/post-actions-prop
 import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
 import {
   Button,
-  Popover,
-  PopoverContent,
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { Copy, Download, ExternalLink, MessageCircle, X } from "lucide-react";
+import { Copy, ExternalLink, MessageCircle, X } from "lucide-react";
 
 import { REACTION_EMOJIS, reactionsApi } from "@/lib/api";
-import { resolveCdnUrl } from "@/lib/api/media";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import {
   savedPostsQueryOptions,
@@ -122,10 +119,6 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
 
   const [shareOpen, setShareOpen] = useState(false);
   const navigate = useNavigate();
-  const postUrl =
-    shareUrl ?? `${typeof window !== "undefined" ? window.location.origin : ""}/post/${post.id}`;
-  const isMobile =
-    typeof navigator !== "undefined" && /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
   const trackShare = async () => {
     try {
@@ -139,6 +132,8 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     }
   };
 
+  const resolvePostUrl = () => shareUrl ?? `${window.location.origin}/post/${post.id}`;
+
   const handleShareOpen = () => {
     if (!requireAuth()) return;
     setShareOpen(true);
@@ -148,7 +143,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     setShareOpen(false);
     await trackShare();
     try {
-      await navigator.clipboard.writeText(postUrl);
+      await navigator.clipboard.writeText(resolvePostUrl());
       toast(texts.posts.shareCopied, "success");
     } catch {
       toast(texts.posts.shareCopied, "error");
@@ -159,9 +154,9 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     setShareOpen(false);
     await trackShare();
     try {
-      await navigator.share({ url: postUrl });
+      await navigator.share({ url: resolvePostUrl() });
     } catch {
-      // usuario cancelou
+      // usuario cancelou o dialog nativo
     }
   };
 
@@ -169,28 +164,16 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     setShareOpen(false);
     void trackShare();
     try {
-      await navigator.clipboard.writeText(postUrl);
+      await navigator.clipboard.writeText(resolvePostUrl());
       toast("Link copiado. Cole na conversa.", "success");
+      void navigate({ to: "/mensagens" });
     } catch {
-      // fallback silencioso
+      toast("Não foi possível copiar o link.", "error");
     }
-    void navigate({ to: "/mensagens" });
   };
 
-  const firstMedia = post.media?.[0] ?? null;
-  const mediaDownloadUrl = firstMedia ? resolveCdnUrl(firstMedia.cdnUrl) : null;
-  const isVideo = firstMedia?.mimeType?.startsWith("video/") ?? false;
-
-  const handleDownloadMedia = () => {
-    if (!mediaDownloadUrl) return;
-    setShareOpen(false);
-    const a = document.createElement("a");
-    a.href = mediaDownloadUrl;
-    a.download = "";
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.click();
-  };
+  // Disponibilidade de APIs checada no handler, nao no render (evita mismatch de hidratacao SSR).
+  const canNativeShare = () => typeof navigator !== "undefined" && "share" in navigator;
 
   const shareOptions = (
     <>
@@ -202,17 +185,13 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
         <Copy /> Copiar link
       </Button>
 
-      {typeof navigator !== "undefined" && "share" in navigator && (
-        <Button variant="ghost" size="sm" onClick={() => void handleNativeShare()}>
-          <ExternalLink /> Compartilhar via...
-        </Button>
-      )}
-
-      {mediaDownloadUrl && (
-        <Button variant="ghost" size="sm" onClick={handleDownloadMedia}>
-          <Download /> {isVideo ? "Baixar vídeo" : "Baixar imagem"}
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => void (canNativeShare() ? handleNativeShare() : handleCopyLink())}
+      >
+        <ExternalLink /> Compartilhar via...
+      </Button>
 
       <Button variant="ghost" size="sm" onClick={() => setShareOpen(false)}>
         <X /> Cancelar
@@ -265,22 +244,14 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
             />
           )}
 
-          {isMobile ? (
-            <Sheet open={shareOpen} onOpenChange={setShareOpen}>
-              <SheetContent side="bottom">
-                <SheetHeader>
-                  <SheetTitle>Compartilhar</SheetTitle>
-                </SheetHeader>
-                {shareOptions}
-              </SheetContent>
-            </Sheet>
-          ) : (
-            <Popover open={shareOpen} onOpenChange={setShareOpen}>
-              <PopoverContent align="start" side="top">
-                {shareOptions}
-              </PopoverContent>
-            </Popover>
-          )}
+          <Sheet open={shareOpen} onOpenChange={setShareOpen}>
+            <SheetContent side="bottom">
+              <SheetHeader>
+                <SheetTitle>Compartilhar</SheetTitle>
+              </SheetHeader>
+              {shareOptions}
+            </SheetContent>
+          </Sheet>
         </>
       }
     >
