@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=2 (Design System) — em andamento; a fundação (fase 1) está concluída
-EXECUCAO=8
-ULTIMA_ATUALIZACAO=2026-11-08T20:20:00-03:00
+FASE_ATUAL=3 (telas das agendas) — o DS da fase 2 está entregue em código (PRs #164/#165/#166), aguardando revisão e publicação; a fundação (fase 1) está concluída
+EXECUCAO=9
+ULTIMA_ATUALIZACAO=2026-11-08T21:20:00-03:00
 ```
 
 ---
@@ -153,7 +153,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | ---- | ------------------------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0    | Inventário + roadmap + contratos                                         | —            | **concluída**                                                                                                                                  |
 | 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
-| 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **em andamento** (visões e alternância no DS PR #164; falta a entrada de menu)                                                                 |
+| 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída em código** (visões #164, formulário #165, superfície #166; todos aguardando revisão e publicação)                                 |
 | 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | pendente                                                                                                                                       |
 | 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | pendente                                                                                                                                       |
 | 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
@@ -182,7 +182,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#746](https://github.com/Rede-ENois/enois-frontend/pull/746)      | enois-frontend      | Documentação: execução 6 e decisão D15                                                                        | **mergeado** em `eb80d9e2` (2026-11-08)         |
 | [#164](https://github.com/Rede-ENois/enois-design-system/pull/164) | enois-design-system | Fase 2: agenda no DS (mês, semana, dia, lista) e a alternância entre as visões                                | **mergeado** em `0edf762` (2026-11-08)          |
 | [#165](https://github.com/Rede-ENois/enois-design-system/pull/165) | enois-design-system | Fase 2: formulário de compromisso (criar/editar), relógio de parede com DST e `TimeTextInput`                 | aberto, **aguardando revisão humana**           |
-| [#750](https://github.com/Rede-ENois/enois-frontend/pull/750)      | enois-frontend      | Documentação: execução 8                                                                                      | aberto, **aguardando revisão humana**           |
+| [#750](https://github.com/Rede-ENois/enois-frontend/pull/750)      | enois-frontend      | Documentação: execução 8                                                                                      | **mergeado** em `3f272c14` (2026-11-08)         |
+| [#166](https://github.com/Rede-ENois/enois-design-system/pull/166) | enois-design-system | Fase 2: superfície que monta a agenda com o formulário (criar/editar, fechar só no salvamento aprovado)       | aberto, **aguardando revisão humana**; parte do #165 |
+| [#751](https://github.com/Rede-ENois/enois-frontend/pull/751)      | enois-frontend      | Documentação: execução 9 e decisão D18                                                                        | aberto, **aguardando revisão humana**           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -191,7 +193,19 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (design system, `feat/calendar-views`, árvore final sobre a `qa` `ed52c3c`,
+Última execução (design system, `feat/calendar-agenda-surface` sobre `feat/calendar-views` `585e911`,
+versão 0.29.9):
+
+| Comando                   | Resultado                                                                     |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `npm run lint`            | `EXIT=0`, 0 erros; 6 warnings que já existiam fora do calendário              |
+| `npm run typecheck`       | `EXIT=0`                                                                      |
+| `npm test`                | 162 arquivos, **1373 testes, 0 falhas** (6 deles desta unidade)               |
+| `npm run build`           | `EXIT=0`                                                                      |
+| `npm run test:dist`       | `EXIT=0` (`ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`)                  |
+| `npm run build-storybook` | `EXIT=0`                                                                      |
+
+Execução anterior (design system, `feat/calendar-views`, árvore final sobre a `qa` `ed52c3c`,
 versão 0.29.9):
 
 | Comando                   | Resultado                                                                     |
@@ -248,11 +262,20 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 9 — Fase 2, terceira unidade (Design System): a superfície que monta a agenda com o
-formulário.** Um componente que recebe itens, período, rascunho aberto e os callbacks de salvar e
-responder, e compõe `CalendarAgenda` com `CalendarEntryFormDialog`; o app continua dono da consulta e
-da mutação. Fecha o ciclo de salvar (fechar o diálogo, manter o que foi digitado quando o servidor
-recusa) com teste.
+**Execução 10 — Fase 3, primeira tela: a agenda no front.** O DS já tem o que a tela precisa:
+visões (PR #164), alternância, formulário (#165) e a superfície que junta os dois (#166). Falta a
+tela consumir isso.
+
+- Rota `/agenda` no front (`src/routes/agenda.tsx`) com `beforeLoad` protegido, entrada no menu na
+  seção `explore` e o módulo em `/me/preferences`.
+- Consulta da janela por `periodWindow(view, period)` contra `GET /calendar/entries`, com
+  `loading`, `error` e `onRetry` ligados nos props que a agenda já aceita.
+- Estado do período, da visualização e da entrada em edição na URL (`search` da rota), para
+  recarregar e voltar do navegador não perderem o contexto.
+- Mutação de criar/editar com `Idempotency-Key` (D11), devolvendo `Promise<boolean>` para a
+  superfície, e recarga da janela depois do `true`.
+- Enquanto o DS não tiver versão publicada com #165/#166, o front usa o `vX.Y.Z-rc.N` que a
+  mantenedora cortar da branch em revisão. Nunca empilhar release.
 
 A unidade planejada para a execução 8 pela execução 7 (entrada da agenda no menu, `section:
 "explore"`, ícone no catálogo do DS) **já estava implementada**: `SECTION_ORDER` em
@@ -272,7 +295,7 @@ lucide por prop. Não se refaz trabalho pronto.
 | 6   | 2026-11-08 ~11:45 | 1    | Detalhe com o lugar do leitor (`{ entry, owner, participation, participants }`, lista só para o organizador) e `GET /calendar/invitations` com os pendentes + 6 testes de contrato; 57 testes verdes na suíte do calendário e guardas; backend PR #542 |
 | 7   | 2026-11-08 ~13:35 | 2    | `CalendarAgenda` no DS com mês, semana, dia e lista, alternância, 21 tipos, microcópia, quatro ajudantes de data/grade e story; 24 testes da feature e 1313 verdes na suíte inteira; DS PR #164                                                        |
 | 8   | 2026-11-08 ~20:20 | 2    | Relógio de parede com DST (`instantOf`/`wallClockOf`), `TimeTextInput`, correção de `isDay` (dia inexistente era aceito) e o diálogo de criar/editar compromisso, com as regras do rascunho nos tetos da API; 54 testes da unidade e 1367 verdes na suíte inteira; DS PR #165 |
-
+| 9   | 2026-11-08 ~21:20 | 2    | `CalendarAgendaSurface` no DS: agenda + formulário com salvar controlado (fecha só no `true`, recusa mantém o digitado), dia inicial do que está na tela; 6 testes e 1373 verdes na suíte inteira; DS PR #166 |
 ---
 
 ## 12. Critérios de encerramento do cronjob
