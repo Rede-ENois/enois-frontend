@@ -3516,6 +3516,24 @@ export const texts = {
       "Você acompanha o estado das suas denúncias em Minhas denúncias, no menu da conta.",
       "Denúncia falsa e repetida, feita para prejudicar alguém, também é violação.",
     ],
+    callsTitle: "Chamadas e salas abertas (Tamo junto)",
+    callsIntro:
+      "As chamadas entre pessoas e as salas abertas de comunidade (grupos, tópicos e eventos) seguem as mesmas regras de respeito do resto da rede — e o que vale na fala e na imagem ao vivo vale tanto quanto no texto.",
+    calls: [
+      "Respeite o consentimento: ninguém é obrigado a manter a câmera ou o microfone ligados, e quem pedir para encerrar a conversa, encerrou.",
+      "É proibido assediar, ameaçar, expor, humilhar, exibir conteúdo íntimo sem consentimento ou usar a chamada para qualquer fim ilegal.",
+      "Não grave, fotografe ou redistribua a fala ou a imagem de outra pessoa sem autorização dela — dentro ou fora da plataforma.",
+      "Em salas abertas, você está falando com pessoas reais que estão ao vivo: como em qualquer espaço público da rede, o comportamento responsável é esperado de todo mundo.",
+    ],
+    callReportsTitle: "Denúncias em chamadas",
+    callReports: [
+      "Você pode denunciar outra pessoa da chamada pelo próprio app. No momento da denúncia, o app captura automaticamente uma imagem estática da tela da chamada (os vídeos visíveis no momento) e envia essa imagem junto com o seu relato — não é feita gravação de áudio ou de vídeo.",
+      "A imagem vai com a denúncia para o time de moderação. Um sistema automatizado pode usar essa imagem para orientar a análise, mas nenhuma penalidade por denúncia de chamada é aplicada sem que uma pessoa do time examine o caso.",
+      "Uma denúncia não garante que haja imagem armazenada para análise: a captura depende do momento do app e nem todo caso terá prova visual disponível.",
+      "Denúncia feita de má-fé, para prejudicar alguém sem motivo real, também é violação destas diretrizes.",
+    ],
+    callReportsLimit:
+      "A captura de tela é feita no momento da denúncia, sem aviso para as outras pessoas da chamada, e a pessoa denunciada não é avisada de que a denúncia foi aberta contra ela. Quem decide sobre penalidades é sempre uma pessoa do time de moderação, e a decisão pode ser revista por outra pessoa do time.",
     penaltiesTitle: "Consequências",
     penalties: [
       "Primeira violação leve: remoção do conteúdo e aviso.",
@@ -3524,7 +3542,7 @@ export const texts = {
     ],
     appealsTitle: "Recurso",
     appeals:
-      "Se você acredita que uma medida foi aplicada por engano, fale com o suporte. Toda decisão pode ser revista por uma segunda pessoa do time.",
+      "Se você acredita que uma medida foi aplicada por engano, fale com o suporte. Toda decisão pode ser revista por uma segunda pessoa do time. Quem recebeu uma penalidade pode recorrer pela página Minhas penalidades, no menu da conta.",
   },
 
   post: {
@@ -3575,7 +3593,7 @@ export const texts = {
       backPrefix: "Voltar para a ",
       home: "página inicial",
     },
-    updatedAt: "29 de outubro de 2026",
+    updatedAt: "9 de novembro de 2026",
     terms: {
       seoTitle: "Termos de Uso · Énóis",
       seoDescription:
@@ -3641,6 +3659,10 @@ export const texts = {
         {
           title: "15. Figurinhas de terceiros",
           text: "As figurinhas disponíveis nas conversas do Énóis não são criadas nem de propriedade da plataforma. Elas vêm de dois catálogos públicos de emotes, o BetterTTV e o FrankerFaceZ, e cada imagem continua pertencendo a quem a criou. A plataforma não reivindica direito autoral sobre essas artes.\n\nO Énóis não vende, não licencia, não sublicencia e não explora comercialmente essas imagens. O uso é acessório e não comercial: a plataforma mantém uma cópia temporária em cache, para que a figurinha abra imediatamente nas conversas em vez de depender do tempo de resposta dos sites de origem. Essa cópia não é oferecida para download, para redistribuição nem para uso fora do Énóis.\n\nSe você é autor ou titular de uma figurinha e não quer que ela apareça na plataforma, escreva pela página de contato (enois.ia.br/contato) informando o código e o endereço da figurinha. A remoção é feita assim que o pedido é confirmado, sem necessidade de justificativa, e o código correspondente passa a não ser mais exibido nas conversas.\n\nAs marcas, os nomes e os logotipos do BetterTTV e do FrankerFaceZ pertencem aos seus respectivos titulares. O Énóis não tem vínculo, patrocínio ou endosso dessas plataformas.",
+        },
+        {
+          title: "16. Chamadas de voz e vídeo e salas abertas (Tamo junto)",
+          text: 'A plataforma oferece chamadas de voz e vídeo entre usuários e salas abertas de comunidade ("Tamo junto"), associadas a grupos, tópicos e eventos, por meio do serviço próprio de chamadas épapo, hospedado pela própria plataforma.\n\nAo entrar em uma chamada, você concorda com as regras de conduta destes Termos e das Diretrizes da Comunidade, que valem também para o que é dito e exibido ao vivo. Assediar, ameaçar, expor, humilhar, exibir conteúdo íntimo sem consentimento ou usar a chamada para fins ilegais pode levar à remoção de recursos, suspensão ou banimento da conta, além das medidas legais cabíveis.\n\nAs chamadas não são gravadas em áudio ou vídeo pela plataforma. Ao denunciar outra pessoa de uma chamada, o aplicativo captura uma imagem estática da tela no momento da denúncia (os vídeos visíveis) e envia essa imagem junto com o relato. A imagem pode ser analisada por ferramenta automatizada para orientar a revisão, mas qualquer penalidade decorrente de denúncia de chamada é decidida por uma pessoa do time de moderação — nenhum sistema automatizado aplica penalidade sozinho nesse caso.\n\nA captura feita para denúncia é acessível apenas à equipe de moderação e não é divulgada às demais pessoas da chamada. Não há gravação contínua, e a plataforma não se responsabiliza por gravações ou capturas feitas por outros participantes com recursos externos ao serviço.\n\nAs chamadas dependem de serviços técnicos (conexão de internet, navegadores e infraestrutura de rede) e podem sofrer falhas, atrasos ou indisponibilidade. A plataforma não garante qualidade de transmissão nem disponibilidade ininterrupta do serviço de chamadas.',
         },
       ],
     },
@@ -3721,7 +3743,24 @@ export const texts = {
             ],
           },
           {
-            title: "11. Alterações desta política",
+            title: "11. Chamadas de voz e vídeo e salas abertas (Tamo junto)",
+            paragraphs: [
+              "As chamadas entre usuários e as salas abertas de comunidade funcionam pelo serviço próprio de chamadas épapo, hospedado pela própria plataforma. O áudio e o vídeo das chamadas transitam em tempo real pelos servidores do serviço e não são gravados nem armazenados: não há gravação de chamadas na plataforma.",
+              "O transporte entre cada trecho da conexão é criptografado (HTTPS e criptografia de mídia), mas o serviço de retransmissão que distribui o áudio e o vídeo entre os participantes recebe as mídias para repassá-las. Por isso, as chamadas do Énóis não têm criptografia ponta a ponta entre participantes, e o serviço opera sob a administração da plataforma, que tem acesso técnico aos elementos de infraestrutura que processa esse tráfego.",
+              "Dados técnicos da chamada (identificadores da sala e do usuário, horário de entrada e de saída) são processados para permitir que apenas participantes autorizados entrem na sala e para que uma chamada abandonada seja encerrada automaticamente. Dados técnicos como endereço IP podem aparecer em registros operacionais de infraestrutura, com finalidade de segurança e operação do serviço.",
+              "Quando você denuncia outra pessoa de uma chamada, o aplicativo captura automaticamente uma imagem estática da tela no momento da denúncia (os vídeos visíveis) e envia essa imagem com o seu relato, que inclui o motivo, o texto que você escreveu e a lista de quem estava na sala. Não há gravação de áudio ou de vídeo das chamadas. A captura é feita sem aviso visível para os demais participantes e a pessoa denunciada não é avisada de que uma denúncia foi aberta contra ela.",
+              "A imagem da denúncia é armazenada com acesso restrito à equipe de moderação e não é divulgada às demais pessoas da chamada. Para acelerar a análise, a imagem e o relato podem ser avaliados por um serviço automatizado de análise de conteúdo operado por provedor externo, apenas com essa finalidade de moderação; nenhuma penalidade por denúncia de chamada é aplicada sem revisão humana. As denúncias de chamada e o material anexado permanecem armazenados enquanto necessários para a moderação, a defesa de direitos em processos e o cumprimento de obrigações legais — nesse caso, a exclusão da conta não apaga o registro de moderação correspondente.",
+              "As bases legais deste tratamento são o cumprimento de obrigação legal ou regulatória e o exercício regular de direitos (moderação e defesa em processos), conforme o art. 7º da LGPD.",
+            ],
+          },
+          {
+            title: "12. Pedidos de autoridades",
+            paragraphs: [
+              "A plataforma só disponibiliza dados a autoridades mediante requisição judicial ou pedido formal de autoridade competente, na medida do que a requisição indicar. Conteúdo de chamadas não é gravado, portanto não existe áudio ou vídeo de chamadas a disponibilizar; podem existir denúncias, imagens de captura enviadas com denúncias e registros técnicos, conforme descrito nesta política.",
+            ],
+          },
+          {
+            title: "13. Alterações desta política",
             paragraphs: [
               "Esta Política pode ser atualizada para refletir mudanças legais ou no serviço. A data de atualização estará sempre indicada no topo da página e alterações relevantes serão comunicadas pela plataforma.",
             ],
