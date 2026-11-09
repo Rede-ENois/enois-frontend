@@ -165,10 +165,16 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     }
   };
 
-  const handleSendViaChat = () => {
+  const handleSendViaChat = async () => {
     setShareOpen(false);
     void trackShare();
-    void navigate({ to: "/mensagens", search: { compartilhar: postUrl } });
+    try {
+      await navigator.clipboard.writeText(postUrl);
+      toast("Link copiado. Cole na conversa.", "success");
+    } catch {
+      // fallback silencioso
+    }
+    void navigate({ to: "/mensagens" });
   };
 
   const firstMedia = post.media?.[0] ?? null;
