@@ -372,3 +372,41 @@ caiu numa hora repetida perderia a escolha original, e o formulário passaria a 
 navegador para exibir o horário. Rejeitado também deixar o navegador calcular o horário local
 (`toLocaleString` sem `timeZone`): seria o mesmo defeito de data sem fuso que o app já corrigiu em 45
 pontos.
+
+## D18 — A superfície guarda a entrada do formulário; o app guarda o resto
+
+**Contexto.** Até aqui o DS tinha as visões (`CalendarAgenda`) e o formulário
+(`CalendarEntryFormDialog`) separados, e cada tela ligaria os dois à mão: guardar qual entrada está
+em edição, abrir o diálogo certo, fechar quando salva. Três telas (social, profissional e
+consolidada) repetiriam esse fio, e é nele que mora o erro que o leitor mais percebe: o diálogo
+fechando antes de o servidor responder, ou abrindo de novo com o que ele já tinha descartado.
+
+**Decisão.** Um componente do DS, `CalendarAgendaSurface`, compõe a agenda com o formulário e é dono
+de **uma** coisa: qual entrada está no formulário (`{ kind: "new" }` ou `{ kind: "edit", entry }`).
+
+- O app continua dono da consulta, do período, da visualização, da chave de idempotência e da
+  mutação. A superfície não busca dado, não navega e não chama API.
+- `onSave(values, entry)` devolve `Promise<boolean>`, com `entry` nulo ao criar e a entrada ao
+  editar. O diálogo fecha **só** no `true`; no `false` os campos digitados e o `saveError` continuam
+  na tela. Fechar por otimismo e reabrir com erro é o que apaga o que a pessoa escreveu.
+- A entrada que o app manda editar ganha do rascunho local. Ao abrir um compromisso novo, a
+  superfície chama `onEditingChange(null)` para o app limpar a seleção; sem isso a entrada volta a
+  abrir no render seguinte e a pessoa não consegue criar.
+- Um compromisso novo nasce no dia que está na tela: o dia escolhido na grade do mês quando existe,
+  senão o período. Salvar em "hoje" com o leitor olhando outro mês é o defeito óbvio.
+- `CalendarAgenda` ganhou `newEntryLabel` e `onNewEntry` opcionais. Sem eles o componente desenha
+  exatamente o que desenhava, então quem já usa a agenda não muda nada.
+
+**Consequência.**
+
+- As três telas da Fase 3 viram consulta e mutação, sem repetir o estado do diálogo. Uma correção no
+  ciclo de salvar vale para as três.
+- O padrão é o mesmo de `ProjectsManager` no DS: o app diz qual item está em edição, o DS desenha e
+  devolve o resultado. Nada de estado duplicado.
+- O teste do ciclo de salvar fica no DS, com app de mentira que devolve `true`/`false`. O teste da
+  tela, na Fase 3, só prova que a mutação certa foi chamada e que a janela recarregou.
+
+**Rejeitado.** Deixar o diálogo fechar sozinho no submit e o app avisar o erro depois: perde o que
+foi digitado e faz o erro aparecer sobre uma tela que já voltou. Rejeitado também guardar o rascunho
+do formulário no app (o estado do campo subiria para três telas e cada uma teria uma cópia da regra
+de quando fechar).

@@ -604,3 +604,113 @@ formulário e o estado que o app alimenta.
 - Estados explícitos de carregando, vazio e erro para o diálogo em si (hoje o erro do servidor vem
   por `saveError`, o que cobre o caso real; falta o caso de a lista recarregar depois de salvar).
 - Teste de que salvar fecha o diálogo e que o erro do servidor mantém o que o leitor digitou.
+
+---
+
+## Execução 9 — 2026-11-08 21:20 (-03:00) — Fase 2 (Design System)
+
+**TAREFA:** terceira unidade da Fase 2 no DS: a superfície que monta a agenda com o formulário. Um
+componente que recebe os itens, o período e os callbacks, compõe `CalendarAgenda` com
+`CalendarEntryFormDialog`, e fecha o ciclo de salvar: o diálogo só fecha quando o app responde que
+salvou, e uma recusa do servidor mantém o que a pessoa digitou.
+
+**REPOSITÓRIOS:**
+
+- `Rede-ENois/enois-design-system` (código), worktree `/tmp/wt-ds-calendar`, branch nova
+  `feat/calendar-agenda-surface` a partir de `feat/calendar-views` (o PR #165, ainda em revisão),
+  que por sua vez parte da `qa` `ed52c3c` (versão 0.29.9).
+- `Rede-ENois/enois-frontend` (esta documentação), worktree `/tmp/wt-calendar-docs9`, branch
+  `docs/enois-calendar-execucao-9` a partir da `qa` `0b598b78`.
+
+**ARQUIVOS:**
+
+- `src/domain/calendar/calendar-agenda-surface.tsx` e `calendar-agenda-surface.test.tsx` (novos).
+- `src/domain/calendar/calendar-agenda.tsx` (o cabeçalho ganha o botão de novo compromisso).
+- `src/domain/calendar/index.ts` (exporta `CalendarAgendaSurface` e o tipo das props).
+- `src/domain/calendar/calendar.stories.tsx` (duas stories novas do ciclo completo).
+- `src/types/domain/calendar/calendar-agenda-surface-props.ts`,
+  `calendar-agenda-surface-draft.ts`, e `calendar-agenda-props.ts` (dois props novos).
+- `src/types/messages/calendar-messages.ts`, `src/messages/defaults/calendar.ts` (`newEntry`).
+
+No front, este bloco, o estado e as seções 6, 7, 8, 10 e 11 do roadmap, e a decisão D18 na
+arquitetura.
+
+**IMPLEMENTAÇÃO:**
+
+- `CalendarAgendaSurface` é composição controlada, o mesmo padrão de `ProjectsManager` no DS: o app
+  é dono da consulta, do período, da visualização, da chave de idempotência e da mutação; a
+  superfície é dona de uma coisa só, qual entrada está no formulário.
+- `onSave(values, entry)` devolve `Promise<boolean>`. `entry` é `null` ao criar e a entrada ao
+  editar; `true` fecha o diálogo, `false` mantém aberto com os campos e mostra o `saveError` que o
+  app passar. Nada de fechar por otimismo.
+- A entrada que o app manda editar ganha do rascunho local: abrir pelo detalhe tem de mostrar aquela
+  entrada, não o que ficou pela metade aqui. Ao abrir um compromisso novo, a superfície devolve
+  `onEditingChange(null)` para o app limpar a seleção, senão a entrada voltaria a abrir no próximo
+  render.
+- Compromisso novo nasce no dia que a pessoa está vendo: o dia escolhido na grade do mês quando
+  existe (`selectedDay`), senão o período na tela (`dayOfPeriod`). É o que evita salvar num dia fora
+  da vista.
+- `CalendarAgenda` ganhou `newEntryLabel` e `onNewEntry`, os dois opcionais: sem eles o cabeçalho
+  desenha exatamente o que desenhava antes, então o PR não muda nada de quem já usa a agenda.
+- O botão fica ao lado da alternância de visão, no `flex shrink-0`, para não competir com o título do
+  período no celular.
+
+**CORREÇÃO DE UM ITEM PLANEJADO:** a próxima execução da rodada 8 pedia "estados explícitos de
+carregando, vazio e erro para o diálogo em si". Os três já existem: `calendar-day-view.tsx:34`,
+`:38` e `:54` desenham `LoadingState`, `CalendarErrorState` e `EmptyState`, e a superfície repassa
+`loading`, `error` e `onRetry` para a agenda via `...agenda`. Inventar um quarto estado seria
+trabalho duplicado. O que falta de verdade é o app recarregar a janela depois de salvar, e isso é da
+Fase 3, quando existe tela.
+
+**TESTES:** no DS, na árvore final (`feat/calendar-agenda-surface` sobre `feat/calendar-views`
+`585e911`):
+
+- `npm run lint` — `EXIT=0`, 0 erros; os mesmos 6 warnings de `react-hooks/exhaustive-deps` em
+  arquivos fora desta unidade (`ui/date-text-input.tsx`, `ui/time-text-input.tsx`, `domain/games/`,
+  `domain/post/reactions/` ×2, `domain/wellbeing/`).
+- `npm run typecheck` — `EXIT=0`.
+- `npx vitest run` — 162 arquivos, **1373 testes, 0 falhas**. A unidade soma 6 testes, todos em
+  `calendar-agenda-surface.test.tsx`.
+- `npm run build` — `EXIT=0`.
+- `npm run test:dist` — `EXIT=0` (`ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`).
+- `npm run build-storybook` — `EXIT=0`, com as stories `AgendaWithForm` e `AgendaEditRefused`.
+
+Os seis testes cobrem: abrir do cabeçalho com o diálogo fechado e fechar só depois do salvamento
+aprovado; recusa do servidor mantendo campo digitado e mensagem de erro; dia inicial vindo do dia
+escolhido na grade; agenda inicial vinda do app e troca pelo leitor dentro do formulário; edição
+abrindo preenchida com a entrada e reportando a mesma entrada ao salvar; e o app limpando a entrada em
+edição ao abrir uma nova.
+
+Erro meu, retificado: o primeiro teste de edição usava um `onEditingChange` de mentira que não
+guardava o valor, e o teste media um diálogo que continuava aberto porque ninguém tinha limpado a
+entrada no app. O teste passou a manter o estado do lado do app, que é como o componente é usado de
+verdade; a asserção final é sobre o estado do app, não sobre um espião.
+
+**PR:** design system
+[#166](https://github.com/Rede-ENois/enois-design-system/pull/166), aguardando revisão humana.
+Dependência declarada no corpo: a branch parte do PR #165 e o merge tem de vir depois dele. Esta
+documentação vai em PR próprio para a `qa` do front.
+
+**BLOQUEIOS:** nenhum bloqueio novo.
+
+- Publicação da versão continua com a mantenedora (seção Releases do AGENTS.md do DS: agente prepara,
+  mantenedora corta, e não se empilha branch de release em cima de outra não mergeada). O front segue
+  no `0.29.9` do lock.
+- B5 (sem navegador) vale para esta unidade: não medi a 390px nem a 1280px. As duas stories novas
+  existem para a revisão visual; o layout reaproveita os padrões já usados na agenda (o botão entra no
+  `flex shrink-0` do cabeçalho, o diálogo já tem `max-h-[88vh] overflow-y-auto`).
+- B2 (`events.date`/`time` em texto) continua pendente como unidade própria.
+
+**PRÓXIMA EXECUÇÃO:** Fase 2 está com o que a Fase 3 precisa do DS (visões, alternância, formulário e
+a superfície que os junta). A próxima unidade é a **Fase 3, primeira tela: a agenda no front**.
+
+- Rota `/agenda` no front (`src/routes/agenda.tsx`) com `beforeLoad` protegido, entrada no menu na
+  seção `explore` e o módulo em `/me/preferences`.
+- Consulta da janela por `periodWindow(view, period)` contra `GET /calendar/entries`, com
+  `loading`/`error`/`onRetry` ligados nos props que a agenda já aceita.
+- Estado do período, da visualização e da entrada em edição na URL (`search` da rota), para o
+  recarregar e o voltar do navegador não perderem o contexto.
+- Mutação de criar/editar com chave de idempotência (D11), devolvendo `Promise<boolean>` para a
+  superfície, e recarga da janela depois do `true`.
+- Se o DS ainda não tiver versão publicada com #165/#166, usar o `vX.Y.Z-rc.N` que a mantenedora
+  cortar da branch em revisão, nunca empilhar release.
