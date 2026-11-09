@@ -2815,7 +2815,14 @@ export const texts = {
    * Admins (allowlist de username no backend) decidem candidaturas e podem punir qualquer usuário.
    */
   moderator: {
-    tabSelector: "Escolher a aba do painel",
+    tabSelector: "Seções do painel",
+    groups: {
+      queue: "Fila do dia",
+      content: "Conteúdo",
+      community: "Comunidade e código",
+      admin: "Administração",
+    },
+    groupLabel: (name: string) => `Ir para: ${name}`,
     panic: {
       done: (active: boolean) => (active ? "Modo pânico ATIVADO." : "Modo pânico desativado."),
       error: "Não foi possível alterar o modo pânico.",

@@ -623,7 +623,7 @@
   },
   "src/routes/moderador.tsx": {
     "local/no-front-markup": {
-      "count": 328
+      "count": 324
     }
   },
   "src/routes/notificacoes.index.tsx": {
