@@ -715,3 +715,91 @@ a superfície que os junta). A próxima unidade é a **Fase 3, primeira tela: a 
   superfície, e recarga da janela depois do `true`.
 - Se o DS ainda não tiver versão publicada com #165/#166, usar o `vX.Y.Z-rc.N` que a mantenedora
   cortar da branch em revisão, nunca empilhar release.
+
+---
+
+## Execução 10 — 2026-11-08 22:00 (-03:00) — Fase 3 (telas das agendas)
+
+**TAREFA:** abrir a Fase 3 no front. A unidade planejada era a tela `/agenda`, mas ela depende do
+pacote do DS publicado com o módulo de calendário, e a publicação está com a mantenedora. A unidade
+entregue é a camada que a tela consome e que não depende da publicação: os tipos do contrato e o
+cliente `calendarApi` no front.
+
+**REPOSITÓRIOS:**
+
+- `Rede-ENois/enois-frontend` (código e documentação). Worktree novo `/tmp/wt-calendar-front`,
+  branch `feat/enois-calendar-api` a partir da `qa` `1d0e9694`. A árvore principal do workspace está
+  numa branch de outra sessão com trabalho não commitado, por isso o worktree separado.
+- Nenhuma mudança de backend e nenhuma do DS nesta rodada.
+
+**ARQUIVOS:**
+
+- `src/lib/api/calendar.ts` e `src/lib/api/calendar.test.ts` (novos).
+- `src/lib/api/index.ts` exporta `calendarApi`.
+- `src/types/application/calendar/` (novos, um tipo por arquivo): `calendar-scope.ts`,
+  `calendar-entry-kind.ts`, `calendar-entry-state.ts`, `calendar-participation.ts`,
+  `calendar-entry-view.ts`, `calendar-agenda-item-view.ts`, `calendar-agenda-detail-view.ts`,
+  `calendar-participant-view.ts`, `calendar-window-query.ts`, `create-calendar-entry-input.ts`,
+  `update-calendar-entry-input.ts`.
+
+**IMPLEMENTAÇÃO:**
+
+- Os tipos foram escritos a partir do contrato real do backend (`CalendarEntryController` na `qa`):
+  `AgendaItemView`, `AgendaDetailView`, `CalendarEntryView`, `ParticipantView`, os dois corpos de
+  escrita e a rota de convites pendentes. Os enums são uniões de string com o mesmo vocabulário do
+  servidor, não tipo inventado.
+- `calendarApi.list` exige `from`/`to` e omite `scope` em branco. A janela do servidor é obrigatória
+  e meio aberta, então pedir sem intervalo é 400: o tipo obriga a mandar.
+- `calendarApi.respond` aceita só `ACCEPTED`, `DECLINED` e `TENTATIVE`. `INVITED` é o estado de quem
+  ainda não respondeu e o servidor recusa como resposta; o tipo impede antes de sair pela rede.
+- As escritas usam `api.post`/`patch`/`delete`, que já mandam `Idempotency-Key` (o backend exige em
+  toda escrita da agenda). Não inventei um caminho novo de escrita.
+- O cancelamento devolve a entrada com `state: "CANCELLED"`, e o tipo diz isso: a tela não deve
+  tratar a resposta como lista vazia nem sumir com a linha.
+
+**TESTES:** no front, na árvore final do worktree `/tmp/wt-calendar-front`:
+
+- `npm run typecheck` — `EXIT=0`.
+- `npm run lint` — sem erro.
+- `npx vitest run src/lib/api/calendar.test.ts` — 9 testes verdes.
+- `npx vitest run` (suíte inteira) — **1196 testes, 0 falhas**.
+- `npm run build` — `EXIT=0`.
+
+Os nove testes travam: a query da janela como o servidor a espera (datas URL-encoded), a omissão de
+`scope` vazio, o envio de `scope` quando a tela está em uma agenda só, a rota sem query quando não há
+data (em vez de `undefined` na URL), o POST de criação, o PATCH só com os campos que mudaram, o
+cancelamento devolvendo a entrada marcada, a trava de tipo que impede responder `INVITED`, e a
+leitura dos convites pendentes em rota própria.
+
+**PR:** enois-frontend
+[#752](https://github.com/Rede-ENois/enois-frontend/pull/752), aguardando revisão humana. O corpo
+declara que a tela `/agenda` ainda não entrou e por quê, e que este PR não depende de nenhum PR
+aberto.
+
+**BLOQUEIOS:** um bloqueio externo novo, com encaminhamento.
+
+- **B6 — o pacote do DS publicado não tem o módulo de calendário.** O `@rede-enois/design-system`
+  instalado é `0.29.9` e `node_modules/@rede-enois/design-system/dist/domain/` não tem `calendar/`
+  nem exporta `CalendarAgenda`. Os PRs #164 (mergeado em código), #165 e #166 estão no repositório do
+  DS, mas a versão publicada não os inclui: a publicação é da mantenedora (seção Releases do
+  AGENTS.md do DS) e a branch de release não pode ser empilhada em cima de outra não mergeada.
+  Enquanto isso, a rota `/agenda` não pode importar `CalendarAgenda` sem o front apontar para uma
+  versão ainda não publicada. Encaminhamento: pedir à mantenedora o corte de um `v0.30.0-rc.1` a
+  partir de `feat/calendar-views` depois do merge de #165/#166, e então o front sobe a dependência
+  e a tela entra. Nada disso é decisão de agente.
+- B5 (sem navegador) continua, mas não se aplica: esta rodada não desenha tela.
+- B2 (`events.date`/`time` em texto) continua pendente como unidade própria.
+
+**PRÓXIMA EXECUÇÃO:** duas frentes, na ordem de valor e sem depender de decisão de terceiro.
+
+1. **Se B6 estiver resolvido** (versão do DS publicada com o calendário), a tela `/agenda` como
+   planejado: rota protegida, entrada no menu em `explore`, janela por `periodWindow` contra
+   `calendarApi.list`, período e visualização na URL, mutação devolvendo `Promise<boolean>` e recarga
+   da janela.
+2. **Sem B6**, avançar na Fase 1 do backend com o que não depende da tela: lembrete de compromisso
+   pelo worker de outbox e o `sourceRef` de mentoria (reagendamento atualizando a mesma entrada em
+   vez de criar outra), cada um com teste de contrato.
+
+**CORREÇÃO REGISTRADA:** a seção 10 do roadmap, atualizada na execução 9, supunha que a tela poderia
+consumir o DS pelo pacote. A leitura do pacote instalado nesta rodada mostra que não: falta a versão
+publicada. O roadmap foi corrigido na mesma entrega.
