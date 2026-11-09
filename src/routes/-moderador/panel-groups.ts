@@ -193,6 +193,8 @@ export function nextTabIndexByKey(key: string, currentIndex: number, total: numb
  * aba ativa mantém a navegação em uma faixa e deixa o conteúdo visível.</p>
  */
 export function tabsOfActiveGroup(activeTab: ModeratorTabId, isAdmin: boolean): PanelTab[] {
-  const entry = visiblePanelGroups(isAdmin).find(({ group }) => group.id === TAB_GROUP_OF[activeTab]);
+  const entry = visiblePanelGroups(isAdmin).find(
+    ({ group }) => group.id === TAB_GROUP_OF[activeTab],
+  );
   return entry ? entry.tabs : [];
 }
