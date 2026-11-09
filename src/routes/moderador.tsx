@@ -24,9 +24,6 @@ import {
   LoadingState,
   Pill,
   PillRow,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
@@ -228,116 +225,43 @@ function Moderador() {
 
         {canModerate ? (
           <div className="space-y-4">
-            {/* Navegação em dois níveis, para caber no celular.
-                Antes eram QUATRO listas de abas empilhadas: no mobile cada lista estourava a
-                largura (o TabsList é `flex` sem quebra) e as abas das pontas ficavam cortadas,
-                com um bloco de navegação enorme antes do conteúdo.
-                Agora o primeiro nível são os GRUPOS (uma linha que quebra) e só o grupo ativo
-                mostra as suas abas, também quebrando em linhas. Nada é escondido atrás de scroll
-                horizontal, e a área de toque das abas sobe para 36px no celular. */}
+            {/* Navegação em dois níveis, tudo pelo design system.
+                Antes eram QUATRO listas de abas empilhadas: no celular cada faixa estourava a
+                largura e as abas das pontas ficavam cortadas, com um bloco de navegação enorme
+                antes do conteúdo.
+                Celular: um PillRow rolável com os grupos e outro com as abas do grupo ativo — o
+                mesmo gesto lateral do feed (arrasto natural no toque, nada cortado).
+                Desktop: os mesmos dados viram uma faixa de grupos e a faixa de abas do grupo. */}
             <div className="space-y-3">
-              {/* Celular: UM seletor nativo por grupo e OUTRO com as abas do grupo ativo.
-                  Alvo de toque grande, uma linha cada, nada cortado — o `select` do sistema é o
-                  controle mais confortável no celular. No desktop (md+) os mesmos dados viram
-                  chips e abas, que cabem na largura. */}
-              <div className="space-y-2 md:hidden">
-                <select
-                  aria-label={texts.moderator.groupSelector}
-                  value={TAB_GROUP_OF[activeTab]}
-                  onChange={(event) => {
-                    const escolhido = groups.find(({ group }) => group.id === event.target.value);
-                    if (escolhido) setTab(escolhido.tabs[0].id);
-                  }}
-                  className="h-11 w-full rounded-lg border border-border-soft bg-surface-card px-3 text-sm text-text-strong"
-                >
-                  {groups.map(({ group }) => (
-                    <option key={group.id} value={group.id}>
-                      {group.label}
-                    </option>
-                  ))}
-                </select>
+              <PillRow label={texts.moderator.groupSelector}>
+                {groups.map(({ group, tabs: groupTabs }) => (
+                  <Pill
+                    key={group.id}
+                    active={group.id === TAB_GROUP_OF[activeTab]}
+                    onClick={() => setTab(groupTabs[0].id)}
+                  >
+                    {(() => {
+                      const GroupIcon = GROUP_ICON[group.id];
+                      return <GroupIcon className="h-3.5 w-3.5" />;
+                    })()}
 
-                <select
-                  aria-label={texts.moderator.tabSelector}
-                  value={activeTab}
-                  onChange={(event) => setTab(event.target.value as ModeratorTabId)}
-                  className="h-11 w-full rounded-lg border border-border-soft bg-surface-card px-3 text-sm text-text-strong"
-                >
-                  {tabsOfActiveGroup(activeTab, me.admin).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                    <>{group.label}</>
+                  </Pill>
+                ))}
+              </PillRow>
 
-              <div
-                role="tablist"
-                aria-label={texts.moderator.groupSelector}
-                className="hidden flex-wrap gap-1.5 md:flex"
-              >
-                {groups.map(({ group, tabs: groupTabs }) => {
-                  const GroupIcon = GROUP_ICON[group.id];
-                  const active = group.id === TAB_GROUP_OF[activeTab];
+              <PillRow label={texts.moderator.tabSelector}>
+                {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
+                  const Icon = TAB_ICON[item.id];
                   return (
-                    <button
-                      key={group.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      aria-controls={`grupo-${group.id}`}
-                      id={`grupo-tab-${group.id}`}
-                      tabIndex={active ? 0 : -1}
-                      onClick={() => setTab(groupTabs[0].id)}
-                      className={cn(
-                        "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                        active
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-surface-2 text-text-subtle hover:bg-surface-card hover:text-text-strong",
-                      )}
-                    >
-                      <GroupIcon className="h-3.5 w-3.5" />
+                    <Pill key={item.id} active={item.id === activeTab} onClick={() => setTab(item.id)}>
+                      <Icon className="h-3.5 w-3.5" />
 
-                      <>{group.label}</>
-                    </button>
+                      <>{item.label}</>
+                    </Pill>
                   );
                 })}
-              </div>
-
-              {(() => {
-                // A regra "só o grupo da aba ativa" vive em panel-groups (testada lá); a tela só
-                // desenha o que ela devolve.
-                const groupTabs = tabsOfActiveGroup(activeTab, me.admin);
-                const group = groups.find(({ group: g }) => g.id === TAB_GROUP_OF[activeTab]);
-                if (!group) return null;
-                return (
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={(value: string) => setTab(value as ModeratorTabId)}
-                    className="hidden md:block"
-                  >
-                    {/* Só o grupo ATIVO monta a lista de abas: uma lista por vez, com quebra de
-                        linha, em vez de quatro listas empilhadas que não cabiam na tela. */}
-                    <TabsList
-                      id={`grupo-${group.id}`}
-                      aria-labelledby={`grupo-tab-${group.id}`}
-                      className="flex-wrap gap-1.5"
-                    >
-                      {groupTabs.map((item) => {
-                        const Icon = TAB_ICON[item.id];
-                        return (
-                          <TabsTrigger key={item.id} value={item.id} className="h-9">
-                            <Icon className="h-3.5 w-3.5" />
-
-                            <>{item.label}</>
-                          </TabsTrigger>
-                        );
-                      })}
-                    </TabsList>
-                  </Tabs>
-                );
-              })()}
+              </PillRow>
             </div>
 
             {activeTab === "reports" && <ReportsSection admin={me.admin} />}
