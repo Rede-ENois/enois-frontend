@@ -410,3 +410,43 @@ de **uma** coisa: qual entrada está no formulário (`{ kind: "new" }` ou `{ kin
 foi digitado e faz o erro aparecer sobre uma tela que já voltou. Rejeitado também guardar o rascunho
 do formulário no app (o estado do campo subiria para três telas e cada uma teria uma cópia da regra
 de quando fechar).
+
+## D19 — Entrada com origem tem dono, chave e ciclo de vida próprios (decisão, Fase 1)
+
+**Contexto.** A D3 prometeu idempotência por origem (`source_ref`), mas a V257 criou só um índice
+comum em (`source_type`, `source_id`) e `findBySource` não tinha chamador de produção: nenhum módulo
+escrevia na agenda central a partir de uma origem. Sem isso, marcar a mesma sessão de mentoria duas
+vezes criaria duas entradas, e cancelar deixaria a entrada viva na agenda.
+
+**Decisão.** A escrita de uma entrada com origem passa por um serviço único, `CalendarSourceService`,
+e a chave da idempotência é (`owner_id`, `source_type`, `source_id`).
+
+- **O dono faz parte da chave.** Dois donos podem ter entrada para a mesma origem ao mesmo tempo (o
+  mentorado e o mentor veem a mesma reunião, cada um na própria agenda). O índice único é por dono, e
+  um teste prova que a segunda pessoa consegue gravar a própria linha.
+- **Upsert, não insert.** Se já existe linha ativa para a origem, o serviço reagenda, renomeia e
+  reescreve a descrição na mesma linha e devolve `moved=true` quando a janela mudou. Reagendar a
+  sessão move a entrada, não cria uma segunda.
+- **Cancelado não volta.** Se a linha existe cancelada, um upsert posterior da origem não a revive. O
+  cancelamento é estado (`CANCELLED`), não remoção, coerente com a D10. Quem cancela mantém o
+  histórico.
+- **A origem nunca entra pelo HTTP público.** Vale a D12: o corpo da rota de agenda não aceita
+  origem. O `CalendarSourceService` é chamado pelo serviço de aplicação do módulo dono (aqui, o de
+  mentoria), que é quem conhece a origem de verdade.
+- **O fuso da origem tem padrão.** Sem `timeZoneId` explícito o serviço usa o fuso padrão do módulo
+  de agenda, não o fuso do processo do servidor. Um instant sozinho não diz o relógio de parede que a
+  pessoa marcou.
+
+**Consequência.**
+
+- Todo módulo que quiser aparecer na agenda central passa por `CalendarSourceService.upsert` com uma
+  origem estável (aqui, `MENTORING` + id da sessão). Nenhum módulo escreve `calendar_entries` direto.
+- A entrada da mentoria é do mentorado (`owner = menteeId`), porque é ele quem tem a reunião na
+  própria agenda. O mentor não recebe cópia nesta rodada; se passar a receber, será outra origem, com
+  a própria chave.
+- Trocar o índice comum pelo único na V260 é compatível com o que já está gravado: só existia linha
+  de agenda sem origem até agora, então o índice é criado sobre zero duplicatas.
+
+**Rejeitado.** Chave só com (`source_type`, `source_id`), sem o dono: impediria duas pessoas de terem
+a mesma reunião na própria agenda. Rejeitado também permitir que o upsert revivesse uma entrada
+cancelada: reintroduziria na agenda algo que a pessoa tirou.

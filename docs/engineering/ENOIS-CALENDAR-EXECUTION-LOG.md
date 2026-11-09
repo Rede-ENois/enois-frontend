@@ -803,3 +803,80 @@ aberto.
 **CORREÇÃO REGISTRADA:** a seção 10 do roadmap, atualizada na execução 9, supunha que a tela poderia
 consumir o DS pelo pacote. A leitura do pacote instalado nesta rodada mostra que não: falta a versão
 publicada. O roadmap foi corrigido na mesma entrega.
+
+---
+
+## EXECUÇÃO 11
+
+**DATA/HORA:** 2026-11-09T00:30:00-03:00
+
+**FASE:** 1 (fundação do calendário) — contrato entre módulo de origem e agenda central
+
+**TAREFA:** fechar o vínculo entre a sessão de mentoria e a agenda central pela origem: upsert
+idempotente por (`owner`, `source_type`, `source_id`), índice único que a D3 prometia e a V257 não
+entregou, e o MentorService escrevendo e cancelando a entrada.
+
+**REPOSITÓRIOS:** `Rede-ENois/enois-backend` (worktree `/tmp/wt-cal-backend`, branch
+`feat/enois-calendar-mentoring-source` sobre a `qa` `da71ae95`)
+
+**ARQUIVOS:**
+
+- `src/main/resources/db/migration/V260__calendar_entries_source_unique.sql` (novo)
+- `src/main/java/com/socialcoisa/rede/calendar/application/CalendarSourceService.java` (novo)
+- `src/main/java/com/socialcoisa/rede/calendar/adapters/out/persistence/CalendarEntryJpaEntity.java`
+  (índice único declarado na entidade)
+- `src/main/java/com/socialcoisa/rede/mentoring/application/MentorService.java` (fiação)
+- `src/test/java/com/socialcoisa/rede/calendar/CalendarSourceServiceTests.java` (novo, 7 testes)
+- `src/test/java/com/socialcoisa/rede/mentoring/adapters/in/web/MentoringCalendarSyncTests.java`
+  (novo, 2 testes)
+
+**IMPLEMENTAÇÃO:**
+
+- `CalendarSourceService` é o único caminho de escrita para uma entrada que tem origem. `upsert`
+  procura por (`ownerId`, `sourceType`, `sourceId`): se existe e está ativa, reagenda, renomeia e
+  reescreve a descrição na mesma linha; se existe e está cancelada, não mexe (entrada cancelada não
+  volta por um upsert do sistema de origem). Se não existe, cria com `scope`/`kind` do origem.
+  `cancel` acha pela origem e devolve a entrada cancelada, ou vazio quando a origem não existe,
+  sem virar erro.
+- V260 troca `idx_calendar_entries_source` por `uq_calendar_entries_source` em (`owner_id`,
+  `source_type`, `source_id`). O índice é por dono porque dois donos podem ter entrada para a mesma
+  origem, e isso está coberto por teste.
+- `MentorService.scheduleSession` chama `syncCalendar` depois de gravar a sessão: entrada em
+  `PROFESSIONAL`/`MENTORING`, título com as especialidades do mentor, descrição com a mensagem da
+  sessão, fuso `AGENDA_ZONE` que o serviço de mentoria já usa. `cancelSession` chama
+  `calendar.cancel` com a origem da sessão. A entrada é do mentorado, porque é ele quem participa da
+  reunião marcada.
+- Sem `timeZoneId` explícito o serviço cai no fuso padrão do módulo (`America/Sao_Paulo`), o mesmo
+  que a agenda usa na escrita web, em vez de usar o fuso do servidor.
+
+**TESTES:** no worktree do backend, `./mvnw -o test -Dtest=...`:
+
+| Classe                             | Testes | Resultado                                                                                                  |
+| ---------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
+| `CalendarSourceServiceTests`       | 7      | verde (repetição mantém uma linha, reagendar move, violação de unicidade, dono separado, cancelado não volta, origem desconhecida, título/descrição) |
+| `MentoringCalendarSyncTests`       | 2      | verde (sessão marcada aparece na agenda do mentorado e não na do mentor; cancelamento cancela a entrada e a linha fica) |
+| `CalendarEntryPersistenceTests`    | 5      | verde                                                                                                      |
+| `Calendar*Tests`, `Mentor*Tests`, `Mentoring*Tests` (regressão) | 83 | **0 falhas**, BUILD SUCCESS (9m08s)                                                                        |
+
+O teste de unicidade falha antes do conserto: com o índice comum que a V257 criou, a segunda linha
+com a mesma origem entrava e o `upsert` duplicava. A prova agora é a violação 23505 do H2 na
+tentativa de gravar a segunda linha direto pelo repositório.
+
+**PR:** enois-backend
+[#568](https://github.com/Rede-ENois/enois-backend/pull/568), aguardando revisão humana. Não depende
+de nenhum PR aberto.
+
+**BLOQUEIOS:** nenhum novo. Continuam:
+
+- **B6** (DS publicado sem o módulo de calendário) segue de pé e ainda é o que impede a tela
+  `/agenda`. O caminho adotado nesta rodada foi avançar pela camada que não depende dela.
+- B2 (`events.date`/`time` em texto) continua pendente como unidade própria.
+
+**PRÓXIMA EXECUÇÃO:** a tela `/agenda` da Fase 3, resolvendo B6 sem depender da mantenedora cortar
+release, na ordem: (1) conferir se `@rede-enois/design-system@0.29.10-rc.1` no registro já aponta
+para código com o calendário (a tag `v0.29.10-rc.1` existe mas aponta para `7c0d17e`, anterior aos
+PRs de calendário); (2) se ainda não tiver, publicar um `v0.30.0-rc.1` a partir da branch de
+calendário do DS por quem tem permissão, e enquanto isso montar a rota `/agenda` no front com o
+cliente `calendarApi` que já está na `qa`, usando os componentes do DS instalados a partir de um
+link local declarado no PR, para a tela existir e ser revisada; (3) lembrete de compromisso pelo
+worker de outbox como unidade seguinte.
