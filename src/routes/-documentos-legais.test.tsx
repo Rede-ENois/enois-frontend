@@ -81,6 +81,25 @@ describe("documentos oficiais", () => {
     expect(texto).toContain("decidida por uma pessoa do time de moderação");
   });
 
+  it("Termos de Uso e Diretrizes trazem a regra de 16 anos com supervisão", async () => {
+    await render(Termos);
+    const termos = host.textContent ?? "";
+    // A regra real do código: cadastro a partir de 16, supervisão de um adulto até os 18.
+    expect(termos).toContain("A idade mínima para criar conta é 16 anos");
+    expect(termos).toContain("menor supervisionado");
+    expect(termos).toContain("Completar 18 anos encerra a exigência de supervisão");
+    expect(termos).not.toContain("destinada exclusivamente a pessoas com 18 anos ou mais");
+
+    await render(Diretrizes);
+    const diretrizes = host.textContent ?? "";
+    expect(diretrizes).toContain("Contas de 16 e 17 anos");
+    expect(diretrizes).toContain("não entra em chamadas");
+
+    await render(Privacidade);
+    const privacidade = host.textContent ?? "";
+    expect(privacidade).toContain("A idade mínima para criar conta é 16 anos");
+  });
+
   it("Diretrizes explicam conduta em chamada, denúncia e o limite da prova", async () => {
     await render(Diretrizes);
 
