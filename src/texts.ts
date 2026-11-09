@@ -2821,6 +2821,7 @@ export const texts = {
    */
   moderator: {
     tabSelector: "Seções do painel",
+    groupSelector: "Grupos do painel",
     groups: {
       queue: "Fila do dia",
       content: "Conteúdo",

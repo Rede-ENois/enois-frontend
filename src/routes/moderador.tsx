@@ -3,7 +3,12 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
-import { resolveActiveTab, visiblePanelGroups } from "@/routes/-moderador/panel-groups";
+import {
+  TAB_GROUP_OF,
+  resolveActiveTab,
+  tabsOfActiveGroup,
+  visiblePanelGroups,
+} from "@/routes/-moderador/panel-groups";
 import { texts } from "@/texts";
 import type { ModeratorApplicationView } from "@/types/application/moderation/moderator-application-view";
 import type { ModeratorMeView } from "@/types/application/moderation/moderator-me-view";
@@ -223,42 +228,117 @@ function Moderador() {
 
         {canModerate ? (
           <div className="space-y-4">
-            {groups.map(({ group, tabs: groupTabs }) => {
-              // Cada grupo é um Tabs próprio: o Radix garante role="tablist"/role="tab",
-              // aria-selected, aria-controls, roving tabindex e as setas/Home/End. Um Tabs por
-              // grupo porque o Radix espera uma lista por Root — e porque o grupo é a unidade de
-              // navegação aqui.
-              const GroupIcon = GROUP_ICON[group.id];
-              return (
-                <Tabs
-                  key={group.id}
-                  value={activeTab}
-                  onValueChange={(value: string) => setTab(value as ModeratorTabId)}
+            {/* Navegação em dois níveis, para caber no celular.
+                Antes eram QUATRO listas de abas empilhadas: no mobile cada lista estourava a
+                largura (o TabsList é `flex` sem quebra) e as abas das pontas ficavam cortadas,
+                com um bloco de navegação enorme antes do conteúdo.
+                Agora o primeiro nível são os GRUPOS (uma linha que quebra) e só o grupo ativo
+                mostra as suas abas, também quebrando em linhas. Nada é escondido atrás de scroll
+                horizontal, e a área de toque das abas sobe para 36px no celular. */}
+            <div className="space-y-3">
+              {/* Celular: UM seletor nativo por grupo e OUTRO com as abas do grupo ativo.
+                  Alvo de toque grande, uma linha cada, nada cortado — o `select` do sistema é o
+                  controle mais confortável no celular. No desktop (md+) os mesmos dados viram
+                  chips e abas, que cabem na largura. */}
+              <div className="space-y-2 md:hidden">
+                <select
+                  aria-label={texts.moderator.groupSelector}
+                  value={TAB_GROUP_OF[activeTab]}
+                  onChange={(event) => {
+                    const escolhido = groups.find(({ group }) => group.id === event.target.value);
+                    if (escolhido) setTab(escolhido.tabs[0].id);
+                  }}
+                  className="h-11 w-full rounded-lg border border-border-soft bg-surface-card px-3 text-sm text-text-strong"
                 >
-                  {/* O nome do grupo é a primeira "aba" visual da lista, mas não é uma aba:
-                      ela não troca o conteúdo — só diz a que grupo as abas ao lado pertencem.
-                      O TabsList carrega o aria-label, que é o que o leitor de tela anuncia. */}
-                  <TabsList aria-label={texts.moderator.groupLabel(group.label)}>
-                    <span className="inline-flex items-center gap-1.5 px-2 text-xs font-medium uppercase tracking-wide text-text-subtle">
+                  {groups.map(({ group }) => (
+                    <option key={group.id} value={group.id}>
+                      {group.label}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  aria-label={texts.moderator.tabSelector}
+                  value={activeTab}
+                  onChange={(event) => setTab(event.target.value as ModeratorTabId)}
+                  className="h-11 w-full rounded-lg border border-border-soft bg-surface-card px-3 text-sm text-text-strong"
+                >
+                  {tabsOfActiveGroup(activeTab, me.admin).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div
+                role="tablist"
+                aria-label={texts.moderator.groupSelector}
+                className="hidden flex-wrap gap-1.5 md:flex"
+              >
+                {groups.map(({ group, tabs: groupTabs }) => {
+                  const GroupIcon = GROUP_ICON[group.id];
+                  const active = group.id === TAB_GROUP_OF[activeTab];
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      aria-controls={`grupo-${group.id}`}
+                      id={`grupo-tab-${group.id}`}
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => setTab(groupTabs[0].id)}
+                      className={cn(
+                        "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                        active
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-surface-2 text-text-subtle hover:bg-surface-card hover:text-text-strong",
+                      )}
+                    >
                       <GroupIcon className="h-3.5 w-3.5" />
 
                       <>{group.label}</>
-                    </span>
+                    </button>
+                  );
+                })}
+              </div>
 
-                    {groupTabs.map((item) => {
-                      const Icon = TAB_ICON[item.id];
-                      return (
-                        <TabsTrigger key={item.id} value={item.id}>
-                          <Icon className="h-3.5 w-3.5" />
+              {(() => {
+                // A regra "só o grupo da aba ativa" vive em panel-groups (testada lá); a tela só
+                // desenha o que ela devolve.
+                const groupTabs = tabsOfActiveGroup(activeTab, me.admin);
+                const group = groups.find(({ group: g }) => g.id === TAB_GROUP_OF[activeTab]);
+                if (!group) return null;
+                return (
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={(value: string) => setTab(value as ModeratorTabId)}
+                    className="hidden md:block"
+                  >
+                    {/* Só o grupo ATIVO monta a lista de abas: uma lista por vez, com quebra de
+                        linha, em vez de quatro listas empilhadas que não cabiam na tela. */}
+                    <TabsList
+                      id={`grupo-${group.id}`}
+                      aria-labelledby={`grupo-tab-${group.id}`}
+                      className="flex-wrap gap-1.5"
+                    >
+                      {groupTabs.map((item) => {
+                        const Icon = TAB_ICON[item.id];
+                        return (
+                          <TabsTrigger key={item.id} value={item.id} className="h-9">
+                            <Icon className="h-3.5 w-3.5" />
 
-                          <>{item.label}</>
-                        </TabsTrigger>
-                      );
-                    })}
-                  </TabsList>
-                </Tabs>
-              );
-            })}
+                            <>{item.label}</>
+                          </TabsTrigger>
+                        );
+                      })}
+                    </TabsList>
+                  </Tabs>
+                );
+              })()}
+            </div>
 
             {activeTab === "reports" && <ReportsSection admin={me.admin} />}
             {activeTab === "games" && <GamesReviewSection />}
