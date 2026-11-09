@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=3 (telas das agendas) — o DS da fase 2 está entregue em código (PRs #164/#165/#166), aguardando revisão e publicação; a fundação (fase 1) está concluída
-EXECUCAO=10
-ULTIMA_ATUALIZACAO=2026-11-08T22:00:00-03:00
+FASE_ATUAL=3 (telas das agendas) — o DS da fase 2 está entregue em código (PRs #164/#165/#166), aguardando revisão e publicação; a fundação (fase 1) está concluída e a origem da mentoria já escreve na agenda central
+EXECUCAO=11
+ULTIMA_ATUALIZACAO=2026-11-09T00:30:00-03:00
 ```
 
 ---
@@ -186,6 +186,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#166](https://github.com/Rede-ENois/enois-design-system/pull/166) | enois-design-system | Fase 2: superfície que monta a agenda com o formulário (criar/editar, fechar só no salvamento aprovado)       | aberto, **aguardando revisão humana**; parte do #165 |
 | [#751](https://github.com/Rede-ENois/enois-frontend/pull/751)      | enois-frontend      | Documentação: execução 9 e decisão D18                                                                        | **mergeado** em `1d0e9694` (2026-11-08)         |
 | [#752](https://github.com/Rede-ENois/enois-frontend/pull/752)      | enois-frontend      | Fase 3: tipos do contrato e cliente `calendarApi` (janela obrigatória, convite sem `INVITED`)                    | aberto, **aguardando revisão humana**           |
+| [#568](https://github.com/Rede-ENois/enois-backend/pull/568)       | enois-backend       | Fase 1: origem da mentoria na agenda central (`CalendarSourceService`, V260 com índice único por dono)          | aberto, **aguardando revisão humana**           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -194,7 +195,17 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (front, `feat/enois-calendar-api` sobre a `qa` `1d0e9694`):
+Última execução (backend, `feat/enois-calendar-mentoring-source` sobre a `qa` `da71ae95`),
+`./mvnw -o test -Dtest=...`:
+
+| Classe                                                          | Testes | Resultado                                                                                     |
+| --------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------- |
+| `CalendarSourceServiceTests`                                    | 7      | verde (upsert idempotente, reagendamento na mesma linha, unicidade por dono, cancelado não volta) |
+| `MentoringCalendarSyncTests`                                    | 2      | verde (sessão marcada entra na agenda do mentorado; cancelamento cancela a entrada)            |
+| `CalendarEntryPersistenceTests`                                 | 5      | verde                                                                                          |
+| `Calendar*Tests`, `Mentor*Tests`, `Mentoring*Tests` (regressão)  | 83     | **0 falhas**, BUILD SUCCESS (9m08s)                                                            |
+
+Execução anterior (front, `feat/enois-calendar-api` sobre a `qa` `1d0e9694`):
 
 | Comando                   | Resultado                                                             |
 | ------------------------- | --------------------------------------------------------------------- |
@@ -273,20 +284,22 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 11 — duas frentes, na ordem de valor, sem depender de decisão de terceiro.**
+**Execução 12 — a tela `/agenda` da Fase 3, resolvendo B6 sem esperar release de terceiro.**
 
-1. **Se B6 estiver resolvido** (versão do DS publicada com o calendário), a tela `/agenda` da Fase 3:
-   rota protegida, entrada no menu em `explore`, janela por `periodWindow` contra
-   `calendarApi.list`, período e visualização na URL, mutação devolvendo `Promise<boolean>` e recarga
-   da janela depois do `true`.
-2. **Sem B6**, avançar na Fase 1 do backend com o que não depende da tela: lembrete de compromisso
-   pelo worker de outbox e o `sourceRef` de mentoria (reagendamento atualizando a mesma entrada em vez
-   de criar outra), cada um com teste de contrato.
+1. Conferir no registro se `@rede-enois/design-system@0.29.10-rc.1` já aponta para código com o
+   calendário. A tag `v0.29.10-rc.1` existe mas aponta para `7c0d17e`, anterior aos PRs de
+   calendário, então hoje não serve.
+2. Se não servir, montar a rota `/agenda` no front com o `calendarApi` que já está na `qa`, ligando
+   os componentes do DS por link local declarado no corpo do PR, para a tela existir e ser revisada
+   sem depender de publicação. A rota é protegida, entra no menu em `explore`, guarda período e
+   visualização na URL, e a mutação devolve `Promise<boolean>` com recarga da janela depois do
+   `true`.
+3. Unidade seguinte: lembrete de compromisso pelo worker de outbox.
 
 **Correção da suposição anterior:** a seção 10 da execução 9 supunha que a tela poderia consumir o DS
 pelo pacote publicado. A leitura do pacote instalado (execução 10) mostra que não: `0.29.9` não tem
-`calendar/` em `dist/domain/`. Enquanto a versão não for publicada, a tela fica bloqueada (B6) e a
-Fase 3 avança pela camada que não depende dela.
+`calendar/` em `dist/domain/`. A execução 11 avançou pela camada que não depende da tela (origem da
+mentoria no backend) e a execução 12 ataca a tela pelo caminho que não depende de release.
 
 ## 11. Histórico de execuções (resumo)
 
@@ -302,6 +315,7 @@ Fase 3 avança pela camada que não depende dela.
 | 8   | 2026-11-08 ~20:20 | 2    | Relógio de parede com DST (`instantOf`/`wallClockOf`), `TimeTextInput`, correção de `isDay` (dia inexistente era aceito) e o diálogo de criar/editar compromisso, com as regras do rascunho nos tetos da API; 54 testes da unidade e 1367 verdes na suíte inteira; DS PR #165 |
 | 9   | 2026-11-08 ~21:20 | 2    | `CalendarAgendaSurface` no DS: agenda + formulário com salvar controlado (fecha só no `true`, recusa mantém o digitado), dia inicial do que está na tela; 6 testes e 1373 verdes na suíte inteira; DS PR #166 |
 | 10  | 2026-11-08 ~22:00 | 3    | Tipos do contrato do calendário e `calendarApi` no front (janela obrigatória, `scope` omitido em branco, resposta de convite sem `INVITED`, cancelamento devolvendo a entrada marcada); 9 testes de contrato; bloqueio B6 registrado (DS publicado sem o módulo) |
+| 11  | 2026-11-09 ~00:30 | 1    | Origem da mentoria na agenda central: `CalendarSourceService` (upsert/cancel idempotente por origem), V260 com índice único por dono, `MentorService` gravando e cancelando a entrada; 9 testes da unidade e 83 verdes na regressão; backend PR #568 |
 ---
 
 ## 12. Critérios de encerramento do cronjob
