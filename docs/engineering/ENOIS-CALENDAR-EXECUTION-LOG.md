@@ -689,7 +689,8 @@ verdade; a asserção final é sobre o estado do app, não sobre um espião.
 **PR:** design system
 [#166](https://github.com/Rede-ENois/enois-design-system/pull/166), aguardando revisão humana.
 Dependência declarada no corpo: a branch parte do PR #165 e o merge tem de vir depois dele. Esta
-documentação vai em PR próprio para a `qa` do front.
+documentação vai no PR [#751](https://github.com/Rede-ENois/enois-frontend/pull/751), para a `qa` do
+front.
 
 **BLOQUEIOS:** nenhum bloqueio novo.
 
