@@ -37,21 +37,19 @@ export function buildPostShareMeta(input: {
   media?: { mimeType: string | null; cdnUrl: string | null } | null;
 }): ShareMeta {
   const { post, postUrl, fallbackImageUrl, pagePreviewUrl, media } = input;
-  const author = post.authorName || `@${post.authorUsername}`;
+  const name = post.authorName || post.authorUsername;
+  const handle = `@${post.authorUsername}`;
+  const author = post.authorName ? `${post.authorName} (${handle})` : handle;
   const text = collapse(post.content);
 
   const isPage = post.type === "PAGE";
-  const title = isPage
-    ? `${author} publicou uma página`
-    : text
-      ? excerpt(text, TITLE_LIMIT)
-      : `${author} publicou no Énóis`;
+  const title = isPage ? `${author} publicou uma página` : author;
 
   const description = isPage
-    ? `Página publicada por ${author} no Énóis.`
+    ? `Página publicada por ${name} no Énóis.`
     : text
-      ? `${excerpt(text, DESCRIPTION_LIMIT)} · ${author}`
-      : `Publicação de ${author} no Énóis.`;
+      ? excerpt(text, DESCRIPTION_LIMIT)
+      : `Publicação de ${name} no Énóis.`;
 
   const mediaUrl = resolveCdnUrl(media?.cdnUrl ?? null);
   const mimeType = media?.mimeType ?? "";
