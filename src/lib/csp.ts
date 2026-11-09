@@ -45,15 +45,23 @@ export function contentSecurityPolicy(nonce: string | null): string {
  * página pode usar as duas (é ela que pede a permissão ao usuário antes de abrir a sala) e só o
  * servidor de reunião hospedado por nós entra no `allow`, que é o mesmo que vai no iframe. Um
  * endereço de reunião de outro domínio não ganha a câmera. O resto continua fechado.
+ *
+ * A origem vai entre aspas porque a gramática da política exige: sem elas o navegador descarta o
+ * item e a lista fica só com `self` — a sala abre e a mídia continua bloqueada, mesmo com a
+ * permissão liberada no navegador. `self` é palavra-chave e não se cita.
  */
 export function permissionsPolicy(origins: string[] = trustedCallOrigins()): string {
-  const callHosts = origins.map((origin) => origin.replace(/\/$/, "")).join(" ");
+  const callHosts = origins
+    .map((origin) => origin.replace(/\/$/, ""))
+    .filter(Boolean)
+    .map((origin) => `"${origin}"`)
+    .join(" ");
   const media = callHosts ? `self ${callHosts}` : "self";
   return [
     "geolocation=()",
     `microphone=(${media})`,
     `camera=(${media})`,
-    "display-capture=(self)",
+    `display-capture=(${media})`,
     "payment=()",
     "usb=()",
   ].join(", ");

@@ -34,8 +34,22 @@ describe("createCspNonce", () => {
 describe("permissionsPolicy", () => {
   it("abre microfone e câmera para a própria página e para o servidor de reunião", () => {
     const policy = permissionsPolicy(["https://meet.enois.ia.br"]);
-    expect(policy).toContain("microphone=(self https://meet.enois.ia.br)");
-    expect(policy).toContain("camera=(self https://meet.enois.ia.br)");
+    expect(policy).toContain('microphone=(self "https://meet.enois.ia.br")');
+    expect(policy).toContain('camera=(self "https://meet.enois.ia.br")');
+  });
+
+  it("cita a origem: sem aspas o navegador descarta o item e a mídia fica bloqueada", () => {
+    const policy = permissionsPolicy(["https://meet.enois.ia.br"]);
+    // A gramática da política exige a origem entre aspas; `self` é palavra-chave e não se cita.
+    expect(policy).not.toMatch(/camera=\(self https:\/\//);
+    expect(policy).not.toMatch(/microphone=\(self https:\/\//);
+    expect(policy).toContain('camera=(self "https://meet.enois.ia.br")');
+  });
+
+  it("libera compartilhar tela para o servidor de reunião", () => {
+    expect(permissionsPolicy(["https://meet.enois.ia.br"])).toContain(
+      'display-capture=(self "https://meet.enois.ia.br")',
+    );
   });
 
   it("não abre câmera para um servidor de reunião que não é o nosso", () => {
@@ -50,11 +64,12 @@ describe("permissionsPolicy", () => {
     const policy = permissionsPolicy([]);
     expect(policy).toContain("microphone=(self)");
     expect(policy).toContain("camera=(self)");
+    expect(policy).toContain("display-capture=(self)");
   });
 
   it("a barra final da origem não vira origem inválida na política", () => {
     expect(permissionsPolicy(["https://meet.enois.ia.br/"])).toContain(
-      "camera=(self https://meet.enois.ia.br)",
+      'camera=(self "https://meet.enois.ia.br")',
     );
   });
 });
