@@ -880,3 +880,85 @@ calendário do DS por quem tem permissão, e enquanto isso montar a rota `/agend
 cliente `calendarApi` que já está na `qa`, usando os componentes do DS instalados a partir de um
 link local declarado no PR, para a tela existir e ser revisada; (3) lembrete de compromisso pelo
 worker de outbox como unidade seguinte.
+
+---
+
+## EXECUÇÃO 12
+
+**DATA/HORA:** 2026-11-09T19:10:00-03:00
+
+**FASE:** 3 (telas das agendas), com a preparação da Fase 2 que a bloqueava
+
+**CONTEXTO:** esta execução **retoma o trabalho após a sessão anterior ter morrido**. O primeiro
+ato não foi implementar: foi confrontar o roadmap com o estado real dos quatro repositórios.
+
+**TAREFA:** destravar o bloqueio B6 e entregar a rota `/agenda`.
+
+**REPOSITÓRIOS:** `Rede-ENois/enois-backend` (consulta), `Rede-ENois/enois-design-system`
+(release), `Rede-ENois/enois-frontend` (tela)
+
+**O QUE O INVENTÁRIO MUDOU EM RELAÇÃO AO QUE O ROADMAP DIZIA:**
+
+| O roadmap dizia | O estado real |
+|---|---|
+| #542 (detalhe e convites pendentes) aberto, aguardando revisão | **mergeado** em 2026-11-08 |
+| #165 e #166 (formulário e superfície do DS) abertos | **mergeados** em 2026-11-09 |
+| #752 (tipos e `calendarApi`) aberto | **mergeado** |
+| #568 (origem da mentoria) aberto | **mergeado** em 2026-11-09 — e foi ele que trouxe a segunda V260 que quebrou a `qa` |
+| "a tela depende da publicação do DS" | confirmado, e mais grave: **nenhuma** versão publicada tem o módulo. A tag `v0.29.10-rc.1` aponta para `7c0d17e`, 24 commits antes do calendário (`git ls-tree 7c0d17e \| grep -c calendar` → 0) |
+
+**IMPLEMENTAÇÃO:**
+
+1. **Release do DS (destrava B6).** Bump de `0.29.9` para `0.30.0` a partir do `main`, que já tem o
+   módulo — o mesmo diff de 3 linhas dos releases anteriores. Issue [#171](https://github.com/Rede-ENois/enois-design-system/issues/171),
+   PR [#172](https://github.com/Rede-ENois/enois-design-system/pull/172). **Não empurrei a tag:** o
+   CONTRIBUTING do DS diz, textualmente, que publicar é ação de mantenedora ("agents prepare, they
+   do not publish... Never push tags, edit the publish workflow or publish by hand").
+2. **Rota `/agenda`** (front [#769](https://github.com/Rede-ENois/enois-frontend/pull/769), em
+   draft): protegida por sessão; visão, período e agenda na URL; `periodWindow` decide os dias da
+   visão e `instantOf` converte para instante no fuso do navegador — o mesmo em que o calendário lê
+   os cliques; criar usa `calendarApi.create` e o formulário só fecha quando o servidor aceitou;
+   responder convite recarrega a janela; entrada no menu na seção `explore` sem módulo (D16).
+
+**ARQUIVOS:**
+
+- `src/routes/agenda.tsx` (novo), `src/routes/agenda.test.tsx` (novo)
+- `src/lib/query-options/calendar.ts` (novo)
+- `src/components/navigation-items.ts`, `src/lib/require-auth.ts`, `src/texts.ts`,
+  `src/routeTree.gen.ts` (21 linhas adicionadas), `package.json`
+
+**TESTES:** front, no worktree `feat/enois-calendar-agenda` sobre a `qa` `ebb0a81c`, com o
+`@rede-enois/design-system@0.30.0` **empacotado localmente** (`npm pack` da `main`, o caminho que o
+CONTRIBUTING do DS indica):
+
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | EXIT=0 |
+| `npx eslint` nos arquivos tocados | EXIT=0, 0 erros |
+| `npx vitest run src/routes/agenda.test.tsx` | **3/3 verde** |
+| `npx vitest run` (suíte inteira) | **1220/1223**; as 3 falhas são `src/lib/e2e/key-manager.test.ts` (crypto/IndexedDB lentos sob carga). Verificado que **passam** isolados neste worktree, na pasta `src/lib/e2e/` inteira, e numa árvore limpa da `qa` — flaky pré-existente, sem relação com a mudança |
+| `npx vite build` | EXIT=0; `agenda-*.mjs` (SSR) e `agenda-*.js` (cliente) no bundle |
+
+O teste novo falha no código anterior: com a regex antiga `/^\d{4}-\d{2}(-\d{2})?$/`,
+`?period=2026-13` passava e virava janela inválida (400 da API). A validação agora confere o mês e o
+dia de verdade.
+
+Design System, na `main` `c1d44c1` (base do release):
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | EXIT=0, 0 erros, 6 warnings `exhaustive-deps` pré-existentes |
+| `npx tsc --noEmit` | EXIT=0 |
+| `npm test` | **163 arquivos, 1558 testes, 0 falhas** |
+| `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain` |
+
+**PR:** DS [#172](https://github.com/Rede-ENois/enois-design-system/pull/172) (issue #171) e front
+[#769](https://github.com/Rede-ENois/enois-frontend/pull/769).
+
+**BLOQUEIOS:** **B6** continua aberto até a mantenedora publicar `v0.30.0` — o #769 está em draft e
+o CI dele vai falhar antes disso. **B7** (novo): sem token `read:packages` nesta máquina, o
+`package-lock.json` do #769 não pôde ser regerado aqui e precisa de um `npm install` depois do
+release.
+
+**PRÓXIMA EXECUÇÃO:** ver roadmap §10 — destravar o #769 assim que a tag sair, e então a rota de
+detalhe (`/agenda/$entryId`) sobre o `GET /calendar/entries/{id}` que já existe.

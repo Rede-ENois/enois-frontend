@@ -450,3 +450,41 @@ e a chave da idempotência é (`owner_id`, `source_type`, `source_id`).
 **Rejeitado.** Chave só com (`source_type`, `source_id`), sem o dono: impediria duas pessoas de terem
 a mesma reunião na própria agenda. Rejeitado também permitir que o upsert revivesse uma entrada
 cancelada: reintroduziria na agenda algo que a pessoa tirou.
+
+---
+
+## D20 — O pacote do DS só existe quando a mantenedora empurra a tag (execução 12)
+
+**Contexto.** A fase 2 entregou o calendário no código do Design System (#164/#165/#166), mas o
+projeto continuou parado porque a tela não podia importá-lo. O inventário da execução 12 mostra por
+quê, e não é o que o roadmap supunha: **nenhuma versão publicada tem o módulo**. A tag
+`v0.29.10-rc.1` — a mais recente, e a que o front fixa — aponta para `7c0d17e`, 24 commits antes dos
+merges do calendário. Mergear no `main` do DS não publica nada: o workflow só publica quando recebe
+uma tag `v*`.
+
+**Decisão.** O release se resolve pelo caminho que o repositório já tem, sem atalho:
+
+1. PR `chore(release): X.Y.Z` a partir do `main`, mudando só a versão em `package.json` e no
+   lockfile (3 linhas, como todos os releases anteriores).
+2. Merge e **push da tag** pela mantenedora — o CONTRIBUTING é explícito: "Releasing is a maintainer
+   action. Agents prepare, they do not publish... Never push tags, edit the publish workflow or
+   publish by hand."
+3. O front sobe o pin e usa o pacote publicado.
+
+**Consequência.**
+
+- O agente prepara, testa e documenta o release; a publicação é humana. Isso não é limitação do
+  agente, é o contrato do repositório, e o projeto precisa de uma execução que dependa disso estar
+  registrado como bloqueio externo — como já é o OAuth do Google/Microsoft na fase 10.
+- Enquanto o pacote não sai, o trabalho da tela **não fica parado**: ela é escrita e verificada
+  contra o tarball que o próprio CONTRIBUTING do DS indica para validar consumidores
+  (`npm run build && npm pack`). O PR fica em draft, com a dependência declarada.
+- O `package-lock.json` do front **nunca** é editado à mão com `resolved`/`integrity` inventados:
+  eles precisam vir do registro. Um lock errado quebra `npm ci` no Docker e o erro aparece longe da
+  causa.
+- A regra vale para qualquer pacote compartilhado da organização: "mergeado" não é "publicado".
+
+**Rejeitado.** Publicar com `npm publish` da máquina de trabalho — o workflow é o único caminho
+aprovado, e o token de publicação não é do agente. Rejeitado também apontar o front para um link
+`file:`/`link:` local do DS: resolveria a máquina, quebraria o CI e o Docker, e esconderia o
+bloqueio real.
