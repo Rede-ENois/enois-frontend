@@ -14,8 +14,8 @@
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
 FASE_ATUAL=3 (telas das agendas) — o DS da fase 2 está entregue em código (PRs #164/#165/#166), aguardando revisão e publicação; a fundação (fase 1) está concluída
-EXECUCAO=9
-ULTIMA_ATUALIZACAO=2026-11-08T21:20:00-03:00
+EXECUCAO=10
+ULTIMA_ATUALIZACAO=2026-11-08T22:00:00-03:00
 ```
 
 ---
@@ -154,7 +154,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 0    | Inventário + roadmap + contratos                                         | —            | **concluída**                                                                                                                                  |
 | 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
 | 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída em código** (visões #164, formulário #165, superfície #166; todos aguardando revisão e publicação)                                 |
-| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | pendente                                                                                                                                       |
+| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **em andamento** — tipos e cliente da API entregues; a tela depende da publicação do DS (B6)                                                                   |
 | 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | pendente                                                                                                                                       |
 | 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
 | 6    | Disponibilidade e conflitos                                              | 1            | pendente                                                                                                                                       |
@@ -184,7 +184,8 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#165](https://github.com/Rede-ENois/enois-design-system/pull/165) | enois-design-system | Fase 2: formulário de compromisso (criar/editar), relógio de parede com DST e `TimeTextInput`                 | aberto, **aguardando revisão humana**           |
 | [#750](https://github.com/Rede-ENois/enois-frontend/pull/750)      | enois-frontend      | Documentação: execução 8                                                                                      | **mergeado** em `3f272c14` (2026-11-08)         |
 | [#166](https://github.com/Rede-ENois/enois-design-system/pull/166) | enois-design-system | Fase 2: superfície que monta a agenda com o formulário (criar/editar, fechar só no salvamento aprovado)       | aberto, **aguardando revisão humana**; parte do #165 |
-| [#751](https://github.com/Rede-ENois/enois-frontend/pull/751)      | enois-frontend      | Documentação: execução 9 e decisão D18                                                                        | aberto, **aguardando revisão humana**           |
+| [#751](https://github.com/Rede-ENois/enois-frontend/pull/751)      | enois-frontend      | Documentação: execução 9 e decisão D18                                                                        | **mergeado** em `1d0e9694` (2026-11-08)         |
+| [#752](https://github.com/Rede-ENois/enois-frontend/pull/752)      | enois-frontend      | Fase 3: tipos do contrato e cliente `calendarApi` (janela obrigatória, convite sem `INVITED`)                    | aberto, **aguardando revisão humana**           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -193,7 +194,16 @@ delimitado; dependências declaradas no corpo.
 
 ## 8. Testes executados
 
-Última execução (design system, `feat/calendar-agenda-surface` sobre `feat/calendar-views` `585e911`,
+Última execução (front, `feat/enois-calendar-api` sobre a `qa` `1d0e9694`):
+
+| Comando                   | Resultado                                                             |
+| ------------------------- | --------------------------------------------------------------------- |
+| `npm run typecheck`       | `EXIT=0`                                                              |
+| `npm run lint`            | `EXIT=0`, 0 erros; 9 warnings que já existiam fora desta unidade     |
+| `npm test`                | **1196 testes, 0 falhas** (9 deles desta unidade)                     |
+| `npm run build`           | `EXIT=0`                                                              |
+
+Execução anterior (design system, `feat/calendar-agenda-surface` sobre `feat/calendar-views` `585e911`,
 versão 0.29.9):
 
 | Comando                   | Resultado                                                                     |
@@ -257,31 +267,26 @@ O gate de cada execução fica registrado no log de execução.
 | B3  | Sem `timezone` no domínio                                                            | recorrência e ICS errados                           | decidir na arquitetura (guardar `Instant` + `ZoneId` do organizer)               |
 | B4  | `@rede-enois/design-system` é pacote privado e o token local não tem `read:packages` | build/typecheck local falha fora da versão em cache | usar o tarball da versão do lock quando disponível; declarar no PR               |
 | B5  | Sem navegador utilizável para prova visual nesta máquina                             | não há captura de tela                              | usar Chrome headless + CDP; quando não der, declarar a limitação no PR           |
+| B6  | O pacote do DS publicado (`0.29.9`) não tem o módulo de calendário                   | a tela `/agenda` não pode importar `CalendarAgenda`  | pedir à mantenedora o corte de `v0.30.0-rc.1` a partir de `feat/calendar-views` após o merge de #165/#166; o front sobe a dependência e a tela entra |
 
 ---
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 10 — Fase 3, primeira tela: a agenda no front.** O DS já tem o que a tela precisa:
-visões (PR #164), alternância, formulário (#165) e a superfície que junta os dois (#166). Falta a
-tela consumir isso.
+**Execução 11 — duas frentes, na ordem de valor, sem depender de decisão de terceiro.**
 
-- Rota `/agenda` no front (`src/routes/agenda.tsx`) com `beforeLoad` protegido, entrada no menu na
-  seção `explore` e o módulo em `/me/preferences`.
-- Consulta da janela por `periodWindow(view, period)` contra `GET /calendar/entries`, com
-  `loading`, `error` e `onRetry` ligados nos props que a agenda já aceita.
-- Estado do período, da visualização e da entrada em edição na URL (`search` da rota), para
-  recarregar e voltar do navegador não perderem o contexto.
-- Mutação de criar/editar com `Idempotency-Key` (D11), devolvendo `Promise<boolean>` para a
-  superfície, e recarga da janela depois do `true`.
-- Enquanto o DS não tiver versão publicada com #165/#166, o front usa o `vX.Y.Z-rc.N` que a
-  mantenedora cortar da branch em revisão. Nunca empilhar release.
+1. **Se B6 estiver resolvido** (versão do DS publicada com o calendário), a tela `/agenda` da Fase 3:
+   rota protegida, entrada no menu em `explore`, janela por `periodWindow` contra
+   `calendarApi.list`, período e visualização na URL, mutação devolvendo `Promise<boolean>` e recarga
+   da janela depois do `true`.
+2. **Sem B6**, avançar na Fase 1 do backend com o que não depende da tela: lembrete de compromisso
+   pelo worker de outbox e o `sourceRef` de mentoria (reagendamento atualizando a mesma entrada em vez
+   de criar outra), cada um com teste de contrato.
 
-A unidade planejada para a execução 8 pela execução 7 (entrada da agenda no menu, `section:
-"explore"`, ícone no catálogo do DS) **já estava implementada**: `SECTION_ORDER` em
-`src/domain/shell/navigation-links.tsx:13` inclui `"explore"` e a seção já é renderizada em
-`src/domain/shell/navigation-links.tsx:125`; o DS não tem catálogo de ícones, o app passa os do
-lucide por prop. Não se refaz trabalho pronto.
+**Correção da suposição anterior:** a seção 10 da execução 9 supunha que a tela poderia consumir o DS
+pelo pacote publicado. A leitura do pacote instalado (execução 10) mostra que não: `0.29.9` não tem
+`calendar/` em `dist/domain/`. Enquanto a versão não for publicada, a tela fica bloqueada (B6) e a
+Fase 3 avança pela camada que não depende dela.
 
 ## 11. Histórico de execuções (resumo)
 
@@ -296,6 +301,7 @@ lucide por prop. Não se refaz trabalho pronto.
 | 7   | 2026-11-08 ~13:35 | 2    | `CalendarAgenda` no DS com mês, semana, dia e lista, alternância, 21 tipos, microcópia, quatro ajudantes de data/grade e story; 24 testes da feature e 1313 verdes na suíte inteira; DS PR #164                                                        |
 | 8   | 2026-11-08 ~20:20 | 2    | Relógio de parede com DST (`instantOf`/`wallClockOf`), `TimeTextInput`, correção de `isDay` (dia inexistente era aceito) e o diálogo de criar/editar compromisso, com as regras do rascunho nos tetos da API; 54 testes da unidade e 1367 verdes na suíte inteira; DS PR #165 |
 | 9   | 2026-11-08 ~21:20 | 2    | `CalendarAgendaSurface` no DS: agenda + formulário com salvar controlado (fecha só no `true`, recusa mantém o digitado), dia inicial do que está na tela; 6 testes e 1373 verdes na suíte inteira; DS PR #166 |
+| 10  | 2026-11-08 ~22:00 | 3    | Tipos do contrato do calendário e `calendarApi` no front (janela obrigatória, `scope` omitido em branco, resposta de convite sem `INVITED`, cancelamento devolvendo a entrada marcada); 9 testes de contrato; bloqueio B6 registrado (DS publicado sem o módulo) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
