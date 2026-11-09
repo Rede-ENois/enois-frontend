@@ -37,6 +37,10 @@ vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
 vi.mock("@/components/app-container", () => ({
   AppContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+// A barra tem teste próprio; aqui interessa só QUANDO o card a mostra.
+vi.mock("@/components/calls/tamo-junto-bar", () => ({
+  TamoJuntoBar: ({ eventId }: { eventId?: string }) => <span data-tamo-junto={eventId ?? ""} />,
+}));
 
 const { Route } = await import("./eventos");
 const Eventos = (Route as unknown as { options: { component: () => React.JSX.Element } }).options
@@ -128,6 +132,28 @@ describe("/eventos", () => {
 
     expect(mocks.list).toHaveBeenLastCalledWith(undefined, null, 20, true);
     expect(host.textContent).toContain("Nenhum ritual por aqui ainda.");
+  });
+
+  it("shows the Tamo junto bar only for an event that opted in", async () => {
+    mocks.list.mockResolvedValue({
+      items: [event({ id: "ev-1", tamoJunto: false }), event({ id: "ev-2", tamoJunto: true })],
+      nextCursor: null,
+    });
+    await render();
+
+    // A barra é irmã do card no grid: existe só para o evento que optou.
+    expect(host.querySelector('[data-tamo-junto="ev-1"]')).toBeNull();
+    expect(host.querySelector('[data-tamo-junto="ev-2"]')).not.toBeNull();
+  });
+
+  it("keeps the Tamo junto bar away from an event already over", async () => {
+    mocks.list.mockResolvedValue({
+      items: [event({ tamoJunto: true, expired: true })],
+      nextCursor: null,
+    });
+    await render();
+
+    expect(host.querySelector("[data-tamo-junto]")).toBeNull();
   });
 
   it("lets the creator stop the series and shows the API refusal inline", async () => {
@@ -279,5 +305,45 @@ describe("/eventos", () => {
     expect(dialog.querySelector('[role="alert"]')?.textContent).toBe(
       "Eventos que se repetem precisam de horário.",
     );
+  });
+
+  it("creates an event carrying the Tamo junto opt-in", async () => {
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+    mocks.create.mockResolvedValue(event({}));
+    await render();
+
+    const openForm = [...host.querySelectorAll("button")].find(
+      (b) => b.textContent === "Criar evento",
+    );
+    await act(async () => openForm!.click());
+
+    const dialog = document.querySelector('[role="dialog"]')!;
+    const fill = (element: HTMLInputElement, value: string) => {
+      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element) as object, "value")!.set!.call(
+        element,
+        value,
+      );
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    const inputs = dialog.querySelectorAll("input:not([type=file])");
+    await act(async () => {
+      fill(inputs[0] as HTMLInputElement, "Ritual de estudo");
+      fill(inputs[1] as HTMLInputElement, "2026-11-06");
+      fill(inputs[3] as HTMLInputElement, "Comunidade");
+    });
+
+    // A caixinha nasce desligada: quem cria escolhe a sala.
+    const toggle = dialog.querySelector('button[role="switch"][aria-checked="false"]');
+    expect(toggle).not.toBeNull();
+    await act(async () => (toggle as HTMLButtonElement).click());
+
+    const submit = [...dialog.querySelectorAll("button")].find(
+      (b) => b.textContent === "Criar evento",
+    );
+    await act(async () => submit!.click());
+    await settle();
+
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(mocks.create.mock.calls[0][0]).toMatchObject({ tamoJunto: true });
   });
 });

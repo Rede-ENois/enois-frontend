@@ -2023,6 +2023,9 @@ export const texts = {
       streamUrlPlaceholder: "https://...",
       location: "Localização",
       locationPlaceholder: "Rua, número, cidade",
+      tamoJunto: "Tamo junto",
+      tamoJuntoHint:
+        "Cria a sala de chamada do evento: quem quiser aparece por ela, sem precisar ser convidado.",
     },
   },
 

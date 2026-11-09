@@ -31,6 +31,7 @@ import {
   Label,
   LoadingState,
   PageHeader,
+  Switch,
   useToast,
 } from "@rede-enois/design-system/ui";
 import { Calendar, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
@@ -308,7 +309,7 @@ function Eventos() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {events.map((e) => (
               <div key={e.id} className="min-w-0 space-y-2">
-                {!e.expired && <TamoJuntoBar eventId={e.id} />}
+                {!e.expired && e.tamoJunto && <TamoJuntoBar eventId={e.id} />}
 
                 <EventCard
                   event={withPlace(e)}
@@ -415,6 +416,8 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
   const [cover, setCover] = useState<string | null>(initial?.cover ?? null);
   const [streamUrl, setStreamUrl] = useState(initial?.streamUrl ?? "");
   const [location, setLocation] = useState(initial?.location ?? "");
+  // A sala "Tamo junto" é escolha: quem cria o evento decide se o card ganha a chamada.
+  const [tamoJunto, setTamoJunto] = useState(initial?.tamoJunto ?? false);
   // A recorrência só existe na criação: mudá-la depois é o controle próprio do card.
   const [recurrence, setRecurrence] = useState<EventRecurrence>("NONE");
   // The time rule shows only after a save attempt, not while the person is still filling the form.
@@ -581,6 +584,15 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
         </select>
       </Field>
 
+      <Field label={texts.events.form.tamoJunto}>
+        <Switch
+          aria-label={texts.events.form.tamoJuntoHint}
+          checked={tamoJunto}
+          onCheckedChange={setTamoJunto}
+          disabled={isPending}
+        />
+      </Field>
+
       <Button
         className="w-full rounded-full"
         disabled={!title.trim() || !date || !host.trim() || isPending}
@@ -598,6 +610,7 @@ function EventForm({ initial, onSave, isPending, error }: EventFormProps) {
             streamUrl: streamUrl.trim() || undefined,
             location: location.trim() || undefined,
             recurrence,
+            tamoJunto,
             ...(inPerson && place.payload.state ? place.payload : {}),
           });
         }}
