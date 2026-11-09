@@ -34,6 +34,8 @@ const PROTECTED_ROUTES = [
   "/notificacoes",
   "/explorar",
   "/par-de-estudo",
+  // A agenda é do dono: a API exige sessão e responde 401 sem ela, então o deep link também.
+  "/agenda",
 ];
 
 export function hasSession(): boolean {

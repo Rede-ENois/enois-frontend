@@ -115,6 +115,7 @@ export const texts = {
       services: "Contratar serviços",
       professionalProfile: "Perfil profissional",
       explore: "Explorar",
+      agenda: "Agenda",
     },
     context: { social: "Social", professional: "Profissional" },
   },
@@ -166,7 +167,24 @@ export const texts = {
       services: { label: "Serviços", description: "Contrate quem é da comunidade" },
       companies: { label: "Empresas", description: "Quem contrata e o que faz" },
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+      agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
     },
+  },
+
+  /**
+   * A tela da agenda. O calendário desenha; aqui ficam só as frases do app: título da página, o
+   * que cada escopo significa e o erro que a API devolve sem tradução.
+   */
+  agenda: {
+    seoTitle: "Agenda · Énóis",
+    title: "Agenda",
+    subtitle: "Seus compromissos sociais e profissionais, juntos ou separados.",
+    scopeAll: "Tudo",
+    scopeSocial: "Social",
+    scopeProfessional: "Profissional",
+    scopeLabel: "Agenda mostrada",
+    errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
+    errorRespond: "Não foi possível responder ao convite. Tente de novo.",
   },
 
   groups: {
