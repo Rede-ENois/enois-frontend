@@ -254,7 +254,11 @@ function Moderador() {
                 {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
                   const Icon = TAB_ICON[item.id];
                   return (
-                    <Pill key={item.id} active={item.id === activeTab} onClick={() => setTab(item.id)}>
+                    <Pill
+                      key={item.id}
+                      active={item.id === activeTab}
+                      onClick={() => setTab(item.id)}
+                    >
                       <Icon className="h-3.5 w-3.5" />
 
                       <>{item.label}</>
