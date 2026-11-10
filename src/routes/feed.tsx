@@ -42,6 +42,8 @@ import {
   EventTicket,
   Input,
   LoadingState,
+  Pill,
+  PillRow,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -1326,24 +1328,22 @@ function Home() {
           )}
 
           {tab === "ALL" && (
-            <div className="flex flex-wrap gap-2 pb-2">
+            /* Doze tipos em `flex-wrap` ocupavam QUATRO linhas no celular antes de qualquer
+               post — a primeira dobra era so filtro. O PillRow rola para o lado (o mesmo gesto
+               dos filtros do feed), ocupa UMA linha e nada fica cortado nem escondido: os
+               tipos continuam todos alcancaveis. */
+            <PillRow label={texts.feed.tabs.type} className="pb-2">
               {POST_TYPE_FILTERS.map((f) => (
-                <button
+                <Pill
                   key={f.value}
-                  type="button"
+                  size="sm"
+                  active={typeFilter === f.value}
                   onClick={() => setTypeFilter(f.value)}
-                  aria-pressed={typeFilter === f.value}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-medium transition",
-                    typeFilter === f.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-text-strong",
-                  )}
                 >
-                  {f.label}
-                </button>
+                  <>{f.label}</>
+                </Pill>
               ))}
-            </div>
+            </PillRow>
           )}
 
           {questionsFeed && (
