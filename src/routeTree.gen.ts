@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as ApoiarRouteImport } from './routes/apoiar'
 import { Route as BlogsRouteImport } from './routes/blogs'
 import { Route as BloqueadosRouteImport } from './routes/bloqueados'
@@ -88,6 +89,11 @@ import { Route as ComunidadesCommunityIdCanaisChannelIdRouteImport } from './rou
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApoiarRoute = ApoiarRouteImport.update({
@@ -466,6 +472,7 @@ const ComunidadesCommunityIdCanaisChannelIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -543,6 +550,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -621,6 +629,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -700,6 +709,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agenda'
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
@@ -777,6 +787,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agenda'
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
@@ -854,6 +865,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/agenda'
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
@@ -932,6 +944,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
   ApoiarRoute: typeof ApoiarRoute
   BlogsRoute: typeof BlogsRoute
   BloqueadosRoute: typeof BloqueadosRoute
@@ -1004,6 +1017,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apoiar': {
@@ -1638,6 +1658,7 @@ const ProjetosUsernameRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
   ApoiarRoute: ApoiarRoute,
   BlogsRoute: BlogsRoute,
   BloqueadosRoute: BloqueadosRoute,
