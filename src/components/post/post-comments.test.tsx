@@ -319,7 +319,8 @@ describe("envio recusado não some com a conversa", () => {
 
     await act(async () => usePostCardStore.getState().setDraft("post", "Primeira"));
     await send();
-    expect(container.textContent).toContain("Não foi possível enviar o comentário.");
+    // A recusa simulada é um ApiError com motivo: o detalhe manda sobre o texto genérico.
+    expect(container.textContent).toContain("Você já publicou este conteúdo recentemente.");
 
     await act(async () => usePostCardStore.getState().setDraft("post", "Segunda"));
     await send();
