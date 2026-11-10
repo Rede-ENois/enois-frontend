@@ -17,6 +17,16 @@ jobs:
           node-version: 22
           registry-url: https://npm.pkg.github.com
           scope: "@rede-enois"
+      - name: Remove a entrada antiga do pacote para forçar resolução limpa
+        run: python3 - <<'PY'
+import json
+p = "package-lock.json"
+data = json.load(open(p))
+data["packages"].pop("node_modules/@rede-enois/design-system", None)
+data["dependencies"].pop("@rede-enois/design-system", None) if "dependencies" in data else None
+json.dump(data, open(p, "w"), indent=2)
+open(p, "a").write("\n")
+PY
       - run: npm install --package-lock-only --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
