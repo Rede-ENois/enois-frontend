@@ -295,7 +295,11 @@ describe("envio recusado não some com a conversa", () => {
 
   it("some com o aviso na tentativa seguinte", async () => {
     mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
-    mocks.create.mockRejectedValueOnce(new Error("duplicado")).mockResolvedValue(comment("new", 2));
+    mocks.create
+      .mockRejectedValueOnce(
+        new ApiError(409, "DUPLICATE_CONTENT", "Você já publicou este conteúdo recentemente."),
+      )
+      .mockResolvedValue(comment("new", 2));
     await act(async () =>
       root.render(
         <QueryClientProvider client={client}>

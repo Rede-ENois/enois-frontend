@@ -14,6 +14,7 @@ import {
 } from "@rede-enois/design-system/domain";
 
 import { commentsApi } from "@/lib/api";
+import { ApiError } from "@/lib/api-client";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAcceptedAnswer } from "@/lib/feed/use-accepted-answer";
 import { litePageSize } from "@/lib/lite-mode";
@@ -228,7 +229,9 @@ export function PostComments({
       // A razão que a API deu (ex.: conteúdo duplicado) acompanha o aviso: é acionável, e o
       // texto genérico não é.
       setError(media.length > 0 ? "upload" : "send");
-      setSendErrorDetail(failure instanceof Error ? failure.message : null);
+      // Só o ApiError traz mensagem da API de verdade; um Error qualquer de rede/bug não é
+      // acionável — sem detalhe, o aviso volta ao texto genérico ("Tente de novo").
+      setSendErrorDetail(failure instanceof ApiError ? failure.message : null);
       return false;
     } finally {
       setPosting(false);
