@@ -187,6 +187,12 @@ export const texts = {
     scopeLabel: "Agenda mostrada",
     errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
     errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    availability: {
+      seoTitle: "Disponibilidade · Énóis",
+      title: "Sua disponibilidade",
+      subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
+      errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
+    },
   },
 
   groups: {
