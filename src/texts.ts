@@ -1689,6 +1689,9 @@ export const texts = {
     dailyEnter: "Entrar para jogar",
     mostPlayed: "Mais jogados",
     alphabetical: "A-Z",
+    /** Nome acessível das duas faixas de filtro do catálogo (o leitor de tela anuncia o grupo). */
+    stageFilterLabel: "Filtrar por estágio",
+    genreFilterLabel: "Filtrar por gênero",
     loadMore: "Carregar mais",
     empty: "Nenhum jogo encontrado com esses filtros.",
     loading: "Carregando…",

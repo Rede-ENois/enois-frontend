@@ -578,7 +578,7 @@
   },
   "src/routes/games.tsx": {
     "local/no-front-markup": {
-      "count": 161
+      "count": 149
     }
   },
   "src/routes/grupos.$slug.tsx": {
