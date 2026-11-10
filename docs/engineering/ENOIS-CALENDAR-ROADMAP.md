@@ -293,7 +293,12 @@ O gate de cada execução fica registrado no log de execução.
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 15 — lembretes no front e começo da disponibilidade.**
+> **Modo de execução (decisão da mantenedora, 2026-11-09):** a partir da execução 15, cada rodada
+> entrega um **bloco de 2–4 unidades verificáveis** (uma fase ou um recorte dela), não uma unidade
+> só. Quando uma frente travar em revisão humana ou release, a rodada avança uma unidade
+> independente de outra fase no mesmo bloco.
+
+**Execução 15 (bloco) — lembretes no front, disponibilidade e o que destravar.**
 
 1. **Destravar o #777** quando o DS #177 for revisado e uma versão nova (0.30.1) publicada: rodar
    `npm install @rede-enois/design-system@<nova>` no worktree do `feat/enois-calendar-detail`,
