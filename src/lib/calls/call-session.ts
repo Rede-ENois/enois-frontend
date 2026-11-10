@@ -11,10 +11,9 @@ import { isTerminalState } from "@/types/application/call/is-terminal-state";
 /**
  * A chamada aberta na tela agora — uma por aba.
  *
- * Sair da página (inclusive minimizar) desmonta o iframe do Jitsi: então "minimizar" aqui é só
- * esconder visualmente o painel e reinjetar a credencial quando ele volta. Quando a entrada volta
- * falha (token vencido, chamada encerrada), o estado guardado permite reconectar pelo servidor em
- * vez de abrir a sala às cegas.
+ * Minimizar e expandir alteram só a apresentação: o painel mantém o iframe e a credencial.
+ * Uma falha de entrada ou perda de credencial pede recuperação pelo servidor separadamente,
+ * sem transformar cada expansão em uma nova entrada na sala.
  *
  * Uma chamada por vez na tela, nunca por atropelo: quem liga com outra já aberta fica em
  * {@link CallSessionState.waiting} e assume quando a atual termina. Nada é atendido nem recusado
@@ -166,10 +165,14 @@ export const callSessionStore = {
   },
 
   expand() {
-    set({ minimized: false, needsRejoin: true, needsCredential: true, phase: "joining" });
+    if (state.phase === "live" && (!state.join || state.needsRejoin)) {
+      set({ minimized: false, needsRejoin: true, needsCredential: true, phase: "joining" });
+      return;
+    }
+    set({ minimized: false });
   },
 
-  /** O iframe caiu: a próxima abertura pede credencial nova ao servidor. */
+  /** Falha real do iframe: pede credencial nova ao servidor, sem esperar a expansão. */
   lostCredential() {
     set({ needsRejoin: true, needsCredential: true, phase: "joining" });
   },

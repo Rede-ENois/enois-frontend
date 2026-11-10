@@ -59,15 +59,42 @@ describe("callSessionStore", () => {
     expect(getCallSession()).toMatchObject({ phase: "live", minimized: true, needsRejoin: false });
   });
 
-  it("reabrir pede reconexão ao servidor em vez de reusar o token", () => {
+  it("reabrir preserva a sessão e a credencial da sala montada", () => {
     callSessionStore.live(JOIN);
     callSessionStore.minimize();
+    callSessionStore.expand();
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: false,
+      needsRejoin: false,
+      needsCredential: false,
+      join: JOIN,
+    });
+  });
+
+  it("expandir durante a recuperação preserva o pedido pendente", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.minimize();
+    callSessionStore.lostCredential();
     callSessionStore.expand();
     expect(getCallSession()).toMatchObject({
       phase: "joining",
       minimized: false,
       needsRejoin: true,
-      join: JOIN,
+      needsCredential: true,
+    });
+  });
+
+  it("expandir após o fim não reabre a chamada", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.minimize();
+    callSessionStore.ended({ ...CALL, state: "ENDED" });
+    callSessionStore.expand();
+    expect(getCallSession()).toMatchObject({
+      phase: "ended",
+      minimized: false,
+      join: null,
+      needsCredential: false,
     });
   });
 
