@@ -13,7 +13,8 @@ import { isTerminalState } from "@/types/application/call/is-terminal-state";
  *
  * Minimizar e expandir alteram só a apresentação: o painel mantém o iframe e a credencial.
  * Uma falha de entrada ou perda de credencial pede recuperação pelo servidor separadamente,
- * sem transformar cada expansão em uma nova entrada na sala.
+ * sem transformar cada expansão em uma nova entrada na sala. A recuperação da mesma chamada
+ * mantém a minimização; uma entrada explícita continua abrindo o painel.
  *
  * Uma chamada por vez na tela, nunca por atropelo: quem liga com outra já aberta fica em
  * {@link CallSessionState.waiting} e assume quando a atual termina. Nada é atendido nem recusado
@@ -135,7 +136,13 @@ export const callSessionStore = {
    * pronta, e quem estava de fora não via nada acontecer até ela chegar).
    */
   joining(call?: CallView) {
-    set({ phase: "joining", call: call ?? state.call, error: null, notConfigured: false });
+    set({
+      phase: "joining",
+      call: call ?? state.call,
+      error: null,
+      notConfigured: false,
+      minimized: state.minimized && state.needsRejoin && (!call || call.id === state.call?.id),
+    });
   },
 
   /** A tela pediu credencial nova; o provider consome e zera na mesma volta. */
@@ -148,6 +155,11 @@ export const callSessionStore = {
   },
 
   live(join: CallJoin) {
+    const minimized =
+      state.phase === "joining" &&
+      state.needsRejoin &&
+      state.minimized &&
+      state.call?.id === join.callId;
     set({
       phase: "live",
       call: join.call,
@@ -156,7 +168,7 @@ export const callSessionStore = {
       notConfigured: false,
       needsRejoin: false,
       needsCredential: false,
-      minimized: false,
+      minimized,
     });
   },
 

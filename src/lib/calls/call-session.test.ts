@@ -72,6 +72,50 @@ describe("callSessionStore", () => {
     });
   });
 
+  it("recuperar a credencial da mesma chamada preserva a minimização", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.minimize();
+    callSessionStore.lostCredential();
+    callSessionStore.credentialConsumed();
+    callSessionStore.joining(JOIN.call);
+    expect(getCallSession()).toMatchObject({
+      phase: "joining",
+      minimized: true,
+      needsRejoin: true,
+    });
+    const renewed = { ...JOIN, jwt: "token_renovado" };
+    callSessionStore.live(renewed);
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: true,
+      needsRejoin: false,
+      needsCredential: false,
+    });
+    expect(getCallSession().join).toBe(renewed);
+  });
+
+  it("entrar em outra chamada durante a recuperação não herda a minimização", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.minimize();
+    callSessionStore.lostCredential();
+    const other = { ...JOIN.call, id: "call_2" };
+    callSessionStore.joining(other);
+    expect(getCallSession()).toMatchObject({
+      phase: "joining",
+      minimized: false,
+      call: { id: "call_2" },
+    });
+    callSessionStore.live({ ...JOIN, callId: other.id, call: other });
+    expect(getCallSession()).toMatchObject({ phase: "live", minimized: false });
+  });
+
+  it("entrada explícita sem recuperação abre o painel", () => {
+    callSessionStore.live(JOIN);
+    callSessionStore.minimize();
+    callSessionStore.joining(JOIN.call);
+    expect(getCallSession()).toMatchObject({ phase: "joining", minimized: false });
+  });
+
   it("expandir durante a recuperação preserva o pedido pendente", () => {
     callSessionStore.live(JOIN);
     callSessionStore.minimize();

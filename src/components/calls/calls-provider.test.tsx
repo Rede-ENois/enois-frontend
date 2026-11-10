@@ -553,6 +553,45 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
     expect(mocks.end).not.toHaveBeenCalled();
   });
 
+  it("reconecta a mesma chamada sem expandir enquanto a credencial é renovada", async () => {
+    const target = call({ state: "ACTIVE" });
+    byId.set(target.id, target);
+    mocks.join.mockResolvedValue(joinFor(target));
+    await flush();
+    await act(async () => {
+      await actions.current!.open(target.id);
+    });
+    act(() => callSessionStore.minimize());
+    let finish: ((value: ReturnType<typeof joinFor>) => void) | undefined;
+    mocks.join.mockImplementationOnce(
+      () =>
+        new Promise<ReturnType<typeof joinFor>>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    act(() => callSessionStore.lostCredential());
+    await flush();
+    expect(getCallSession()).toMatchObject({
+      phase: "joining",
+      minimized: true,
+      needsCredential: false,
+      needsRejoin: true,
+    });
+    expect(mocks.join).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      finish!({ ...joinFor(target), jwt: "token_renovado" });
+    });
+    await flush();
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: true,
+      needsCredential: false,
+      needsRejoin: false,
+    });
+    expect(mocks.join).toHaveBeenCalledTimes(2);
+    expect(mocks.leave).not.toHaveBeenCalled();
+  });
+
   it("perder a credencial minimizada ainda permite uma única reconexão", async () => {
     const target = call({ state: "ACTIVE" });
     byId.set(target.id, target);
