@@ -19,7 +19,7 @@ vi.mock("@/lib/api", () => {
   const lista = { list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() };
   return {
     ApiError: class extends Error {},
-    preferencesApi: { setBadges: vi.fn() },
+    preferencesApi: { setBadges: vi.fn(), badgeKits: vi.fn().mockResolvedValue([]) },
     profileApi: {
       me: mocks.me,
       update: mocks.update,
