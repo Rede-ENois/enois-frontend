@@ -22,4 +22,16 @@ export const calendarQueries = {
       queryKey: ["agenda", "convites-pendentes"] as const,
       queryFn: () => calendarApi.pendingInvitations(),
     }),
+
+  /**
+   * O que já ocupa a janela que a tela desenha (D23). A chave não leva o escopo de propósito: o
+   * aviso vale para as duas agendas, então trocar de aba não invalida a leitura. É referência para o
+   * formulário, não bloqueio — a tela segue desenhando mesmo se a consulta falhar.
+   */
+  conflicts: ({ from, to }: { from: string; to: string }) =>
+    queryOptions({
+      queryKey: ["agenda", "conflitos", from, to] as const,
+      queryFn: () => calendarApi.conflicts({ from, to }),
+      staleTime: 30_000,
+    }),
 };
