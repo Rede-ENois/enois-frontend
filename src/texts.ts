@@ -192,6 +192,10 @@ export const texts = {
     errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
     detailNotFound: "Compromisso não encontrado",
     detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
+    exportIcs: "Baixar .ics",
+    exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
+    exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
+    exportIcsDone: "Arquivo da agenda baixado.",
     availability: {
       seoTitle: "Disponibilidade · Énóis",
       title: "Sua disponibilidade",
