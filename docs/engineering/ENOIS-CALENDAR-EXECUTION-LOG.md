@@ -1659,8 +1659,10 @@ privada, D7) ou fase 4 (fonte de eventos de grupo).
 - **O DS instalado no worktree do front era o 0.30.1**, sem o slot novo. Construí o pacote a partir
   do branch do DS (`npm run build && npm pack`) e troquei o `node_modules/@rede-enois/design-system`
   pelo tarball; `tsc` só passou a enxergar `reminder` depois disso.
-- **A suíte inteira do front tem 4 falhas em 2 arquivos** que não são deste bloco; as suítes
-  tocadas (`agenda*`, `texts`) passam 18/18.
+- **A suíte inteira do front tem 3 falhas em 2 arquivos** (`src/lib/e2e/crypto.test.ts` e
+  `key-manager.test.ts`), todas `Test timed out in 5000ms` sob carga paralela. Rodadas isoladas com
+  `--testTimeout=30000` passam **33/33**: é flake de tempo, não regressão deste bloco (o branch não
+  toca `src/lib/e2e`). As suítes tocadas (`agenda*`, `texts`) passam 18/18.
 
 ### PRs
 
