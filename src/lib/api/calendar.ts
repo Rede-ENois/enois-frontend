@@ -1,5 +1,6 @@
 import type { CalendarAgendaDetailView } from "@/types/application/calendar/calendar-agenda-detail-view";
 import type { CalendarAgendaItemView } from "@/types/application/calendar/calendar-agenda-item-view";
+import type { CalendarConflictQuery } from "@/types/application/calendar/calendar-conflict-query";
 import type { CalendarEntryView } from "@/types/application/calendar/calendar-entry-view";
 import type { CalendarParticipantView } from "@/types/application/calendar/calendar-participant-view";
 import type { CalendarParticipation } from "@/types/application/calendar/calendar-participation";
@@ -79,4 +80,20 @@ export const calendarApi = {
   /** Tira uma antecedência. Tirar duas vezes não é erro no servidor. */
   clearReminder: (entryId: string, minutesBefore: number) =>
     api.delete<void>(`/calendar/entries/${entryId}/reminders${buildQuery({ minutesBefore })}`),
+
+  /**
+   * O que já ocupa o intervalo proposto para quem lê. É consulta, não bloqueio: a agenda permite
+   * sobreposição de propósito, e o formulário usa a lista para avisar antes de salvar.
+   *
+   * `entryId` mantém a própria entrada de fora na edição.
+   */
+  conflicts: ({ from, to, scope, entryId }: CalendarConflictQuery) =>
+    api.get<CalendarAgendaItemView[]>(
+      `/calendar/entries/conflicts${buildQuery({
+        from,
+        to,
+        scope: scope ?? undefined,
+        entryId: entryId ?? undefined,
+      })}`,
+    ),
 };
