@@ -488,3 +488,40 @@ uma tag `v*`.
 aprovado, e o token de publicação não é do agente. Rejeitado também apontar o front para um link
 `file:`/`link:` local do DS: resolveria a máquina, quebraria o CI e o Docker, e esconderia o
 bloqueio real.
+
+---
+
+## D21 — O lembrete é do compromisso e da pessoa, e quem decide é o envio (execução 13)
+
+**Contexto.** A D4 escolheu o mecanismo (tabela + worker com `attempts`). Faltava decidir o que é um
+lembrete, quem recebe e quando.
+
+**Decisão.**
+
+1. **A chave é (entrada, pessoa, antecedência).** O organizador e cada convidado têm o próprio
+   lembrete; duas pessoas não compartilham aviso. Um índice único na tabela garante isso, e o serviço
+   só evita violar o índice — quem recusa a duplicata é o banco.
+2. **Quem recebe é decidido no envio, não na criação.** A pessoa cria o lembrete quando entra no
+   compromisso; se ela foi convidada e ainda não respondeu, o lembrete existe mas não notifica até
+   aceitar. Fazer a checagem na criação exigiria reescrever a linha no instante da resposta e deixaria
+   um buraco: quem aceita às 18h59 para um compromisso de 19h não seria avisado.
+3. **Antecedência é lista fechada** (5, 15, 30, 60 minutos, 1 dia), validada no domínio e na
+   `check constraint`. "Quero ser avisado 7 minutos antes" não é uma opção da tela; aceitar qualquer
+   inteiro convida a API pública a virar cronômetro.
+4. **Cancelar ou reagendar encerra os pendentes.** O aviso do horário antigo não sai. A linha não é
+   apagada: `sentAt` marca "resolvido" e o motivo fica em `lastError`, o que preserva a diferença
+   entre avisado, cancelado e encerrado.
+5. **A notificação tem autor `system`.** `notifications.actor_id` é `not null` e não existe
+   notificação sem ator no repositório; um lembrete não tem pessoa por trás e usar o id do compromisso
+   misturaria entidade com pessoa.
+
+**Consequência.**
+
+- O lembrete sobrevive ao reinício do processo: ele é uma linha, não um `Runnable` agendado (razão
+  original da D4).
+- Compromisso criado em cima da hora gera lembrete já vencido, e ele sai **uma vez** no ciclo
+  seguinte — o que a pessoa quer é o aviso agora.
+- A tela só vê os lembretes **pendentes**; o histórico não entra na leitura.
+
+**Rejeitado.** Notificar todo mundo que recebeu convite (`INVITED` incluso): o aviso de "começa em
+5 min" para alguém que nunca disse que ia é ruído que ensina a pessoa a ignorar a notificação.
