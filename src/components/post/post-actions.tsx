@@ -9,6 +9,9 @@ import type { PostActionsProps } from "@/types/components/post/post-actions-prop
 import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
 import {
   Button,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
   Sheet,
   SheetContent,
   SheetHeader,
@@ -118,6 +121,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const repostMounted = useMountedOnce(repostOpen);
 
   const [shareOpen, setShareOpen] = useState(false);
+  const [shareAsMobile, setShareAsMobile] = useState(false);
   const navigate = useNavigate();
 
   const trackShare = async () => {
@@ -136,6 +140,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
 
   const handleShareOpen = () => {
     if (!requireAuth()) return;
+    setShareAsMobile(window.matchMedia("(max-width: 767px)").matches);
     setShareOpen(true);
   };
 
@@ -200,62 +205,70 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   );
 
   return (
-    <PostActionsView
-      emojis={REACTION_EMOJIS}
-      reactionStatus={post.currentUserReaction ?? null}
-      onReact={toggleReaction}
-      // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
-      reactionPending={card?.reactionPending ?? false}
-      motionAllowed={motionAllowed}
-      reactionCount={reactionCount}
-      commentsCount={postCounters.comments}
-      repostsCount={postCounters.reposts ?? 0}
-      savesCount={postCounters.saves}
-      saved={saved}
-      canRepost={canRepost}
-      reposted={post.currentUserReposted ?? false}
-      onShowReactions={() => setShowReactions(post.id, true)}
-      onComments={onComments}
-      onRepost={() => {
-        if (!requireAuth()) return;
-        setRepostOpen(true);
-      }}
-      onShare={handleShareOpen}
-      onReport={() => setShowReport(post.id, true)}
-      onSave={handleSave}
-      dialogs={
-        <>
-          {repostMounted && (
-            <RepostDialog
-              postId={post.id}
-              reposted={post.currentUserReposted ?? false}
-              open={repostOpen}
-              onOpenChange={setRepostOpen}
-            />
-          )}
-          {reactionsMounted && <ReactionsDialog postId={post.id} />}
-          {sealsMounted && <SealsDialog postId={post.id} />}
-          {reportMounted && (
-            <ReportDialog
-              targetId={post.id}
-              targetType="POST"
-              open={showReport}
-              onOpenChange={(next) => setShowReport(post.id, next)}
-            />
-          )}
+    <Popover open={shareOpen && !shareAsMobile} onOpenChange={setShareOpen}>
+      <PopoverAnchor asChild>
+        <PostActionsView
+          emojis={REACTION_EMOJIS}
+          reactionStatus={post.currentUserReaction ?? null}
+          onReact={toggleReaction}
+          // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
+          reactionPending={card?.reactionPending ?? false}
+          motionAllowed={motionAllowed}
+          reactionCount={reactionCount}
+          commentsCount={postCounters.comments}
+          repostsCount={postCounters.reposts ?? 0}
+          savesCount={postCounters.saves}
+          saved={saved}
+          canRepost={canRepost}
+          reposted={post.currentUserReposted ?? false}
+          onShowReactions={() => setShowReactions(post.id, true)}
+          onComments={onComments}
+          onRepost={() => {
+            if (!requireAuth()) return;
+            setRepostOpen(true);
+          }}
+          onShare={handleShareOpen}
+          onReport={() => setShowReport(post.id, true)}
+          onSave={handleSave}
+          dialogs={
+            <>
+              {repostMounted && (
+                <RepostDialog
+                  postId={post.id}
+                  reposted={post.currentUserReposted ?? false}
+                  open={repostOpen}
+                  onOpenChange={setRepostOpen}
+                />
+              )}
+              {reactionsMounted && <ReactionsDialog postId={post.id} />}
+              {sealsMounted && <SealsDialog postId={post.id} />}
+              {reportMounted && (
+                <ReportDialog
+                  targetId={post.id}
+                  targetType="POST"
+                  open={showReport}
+                  onOpenChange={(next) => setShowReport(post.id, next)}
+                />
+              )}
 
-          <Sheet open={shareOpen} onOpenChange={setShareOpen}>
-            <SheetContent side="bottom">
-              <SheetHeader>
-                <SheetTitle>Compartilhar</SheetTitle>
-              </SheetHeader>
-              {shareOptions}
-            </SheetContent>
-          </Sheet>
-        </>
-      }
-    >
-      {children}
-    </PostActionsView>
+              <PopoverContent align="start" side="top">
+                {shareOptions}
+              </PopoverContent>
+
+              <Sheet open={shareOpen && shareAsMobile} onOpenChange={setShareOpen}>
+                <SheetContent side="bottom">
+                  <SheetHeader>
+                    <SheetTitle>Compartilhar</SheetTitle>
+                  </SheetHeader>
+                  {shareOptions}
+                </SheetContent>
+              </Sheet>
+            </>
+          }
+        >
+          {children}
+        </PostActionsView>
+      </PopoverAnchor>
+    </Popover>
   );
 }

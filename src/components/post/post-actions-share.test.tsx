@@ -82,6 +82,21 @@ describe("PostActions share menu", () => {
     navigate.mockReset();
     toast.mockReset();
     clipboard.mockReset();
+    // jsdom nao tem matchMedia; mocka como mobile pra abrir Sheet
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      configurable: true,
+      value: (query: string) => ({
+        matches: query.includes("max-width"),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        onchange: null,
+        dispatchEvent: () => false,
+      }),
+    });
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
