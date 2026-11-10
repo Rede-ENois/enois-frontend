@@ -187,6 +187,11 @@ export const texts = {
     scopeLabel: "Agenda mostrada",
     errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
     errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
+    errorInvite: "Não foi possível convidar. Tente de novo.",
+    errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
+    detailNotFound: "Compromisso não encontrado",
+    detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
     exportIcs: "Baixar .ics",
     exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
     exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
