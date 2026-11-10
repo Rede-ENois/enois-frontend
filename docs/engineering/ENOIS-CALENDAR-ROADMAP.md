@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=3 (telas das agendas) + 6 (disponibilidade e conflitos) em paralelo — fase 3 espera revisão humana (#777 detalhe, #792 cliente de conflito mergeado pelo bot) e o release do DS com o seletor de lembrete (#187). Fase 6 do backend **pronta**: conflito em `GET /calendar/entries/conflicts` (#607) e disponibilidade semanal em `GET`/`PUT /calendar/availability` (V267, #613); no DS, o aviso de conflito está pronto no #195; no front, o cliente de disponibilidade no #801
+FASE_ATUAL=3 (telas das agendas) + 6 (disponibilidade e conflitos) em paralelo — fase 3 espera revisão humana (#777 detalhe, #792 cliente de conflito mergeado pelo bot) e o release do DS com o seletor de lembrete (#187). Fase 6 do backend **pronta**: conflito em `GET /calendar/entries/conflicts` (#607) e disponibilidade semanal em `GET`/`PUT /calendar/availability` (V267, #613); no DS, o aviso de conflito está pronto no #195; no front, o cliente de disponibilidade mergeado no #801. O único PR do bloco ainda aberto é o aviso de conflito no DS (#195)
 EXECUCAO=18
-ULTIMA_ATUALIZACAO=2026-11-10T09:30:00-03:00
+ULTIMA_ATUALIZACAO=2026-11-10T12:25:00-03:00
 ```
 
 ---
@@ -199,11 +199,12 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#786](https://github.com/Rede-ENois/enois-frontend/pull/786)      | enois-frontend      | Fase 3: cliente de API dos lembretes (`list/set/clearReminder`)                                               | **mergeado** em `4b9c3cf9` (2026-11-10) pelo bot `kof-agent-worker` — **antes do push da unidade de conflito**, que ficou de fora; ver B8 |
 | [#607](https://github.com/Rede-ENois/enois-backend/pull/607)       | enois-backend       | Fase 6: `CalendarConflictService` + `GET /calendar/entries/conflicts` (leitura, não bloqueio; sem migração)   | **mergeado** em `b1e65d92` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#792](https://github.com/Rede-ENois/enois-frontend/pull/792)      | enois-frontend      | Fase 6: cliente de API do conflito (`CalendarConflictQuery` + `calendarApi.conflicts`), recortado da `qa` atual | **mergeado** em `7e160805` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
-| [#195](https://github.com/Rede-ENois/enois-design-system/pull/195) | enois-design-system | Fase 6: aviso de conflito no `CalendarEntryFormDialog` (recorte no rascunho, meio-aberto, sem bloquear o salvar) | aberto, **aguardando revisão humana**; CI verde |
-| [#613](https://github.com/Rede-ENois/enois-backend/pull/613)       | enois-backend       | Fase 6: disponibilidade semanal da agenda (`calendar_availability` V267, `GET`/`PUT /calendar/availability`) | aberto, **aguardando revisão humana** |
-| [#801](https://github.com/Rede-ENois/enois-frontend/pull/801)      | enois-frontend      | Fase 6: cliente de API da disponibilidade (`availability`/`setAvailability`)                                  | aberto, **aguardando revisão humana** |
+| [#195](https://github.com/Rede-ENois/enois-design-system/pull/195) | enois-design-system | Fase 6: aviso de conflito no `CalendarEntryFormDialog` (recorte no rascunho, meio-aberto, sem bloquear o salvar) | aberto, **aguardando revisão humana**; CI verde — único PR do bloco 18 ainda aberto |
+| [#613](https://github.com/Rede-ENois/enois-backend/pull/613)       | enois-backend       | Fase 6: disponibilidade semanal da agenda (`calendar_availability` V267, `GET`/`PUT /calendar/availability`) | **mergeado** em `0bd98c2c` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
+| [#801](https://github.com/Rede-ENois/enois-frontend/pull/801)      | enois-frontend      | Fase 6: cliente de API da disponibilidade (`availability`/`setAvailability`)                                  | **mergeado** em `b089837b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#778](https://github.com/Rede-ENois/enois-frontend/pull/778)      | enois-frontend      | Documentação: execução 14 (detalhe do compromisso e estado real dos PRs)                                     | **mergeado** em `517a3b9b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#791](https://github.com/Rede-ENois/enois-frontend/pull/791)      | enois-frontend      | Documentação: execução 17 em bloco (lembretes, conflito, fase 6) e decisão D23                              | **mergeado** em `52c1a5d4` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
+| [#802](https://github.com/Rede-ENois/enois-frontend/pull/802)      | enois-frontend      | Documentação: execução 18 em bloco (disponibilidade, aviso de conflito) e decisão D24                       | **mergeado** em `09a75b9b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#774](https://github.com/Rede-ENois/enois-frontend/pull/774)      | enois-frontend      | Documentação: B6 fechado (tag `v0.30.0`, tela verde)                                                         | aberto (conteúdo absorvido no #778); pode ser fechado |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
