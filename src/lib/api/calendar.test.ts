@@ -5,6 +5,7 @@ import { calendarApi } from "./calendar";
 
 vi.mock("../api-client", () => ({
   api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  apiUrl: (path: string) => `http://api.test${path}`,
   // O cliente real monta a query; aqui só interessa o caminho que sai.
   buildQuery: (params: Record<string, unknown>) => {
     const search = new URLSearchParams();
@@ -227,5 +228,25 @@ describe("calendarApi", () => {
     await calendarApi.setAvailability([]);
 
     expect(api.put).toHaveBeenCalledWith("/calendar/availability", { windows: [] });
+  });
+
+  it("aponta o export para o .ics da janela, com o scope quando há agenda escolhida", () => {
+    expect(
+      calendarApi.exportUrl({
+        from: "2026-11-01T03:00:00Z",
+        to: "2026-12-01T03:00:00Z",
+        scope: null,
+      }),
+    ).toBe(
+      "http://api.test/calendar/entries/export.ics?from=2026-11-01T03%3A00%3A00Z&to=2026-12-01T03%3A00%3A00Z",
+    );
+
+    expect(
+      calendarApi.exportUrl({
+        from: "2026-11-01T03:00:00Z",
+        to: "2026-12-01T03:00:00Z",
+        scope: "SOCIAL",
+      }),
+    ).toContain("scope=SOCIAL");
   });
 });

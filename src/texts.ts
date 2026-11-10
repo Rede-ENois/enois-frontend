@@ -187,6 +187,10 @@ export const texts = {
     scopeLabel: "Agenda mostrada",
     errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
     errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    exportIcs: "Baixar .ics",
+    exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
+    exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
+    exportIcsDone: "Arquivo da agenda baixado.",
     availability: {
       seoTitle: "Disponibilidade · Énóis",
       title: "Sua disponibilidade",

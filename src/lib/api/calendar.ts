@@ -11,7 +11,7 @@ import type { CalendarAvailabilityWindowInput } from "@/types/application/calend
 import type { CreateCalendarEntryInput } from "@/types/application/calendar/create-calendar-entry-input";
 import type { UpdateCalendarEntryInput } from "@/types/application/calendar/update-calendar-entry-input";
 
-import { api, buildQuery } from "../api-client";
+import { api, apiUrl, buildQuery } from "../api-client";
 
 /**
  * Compromissos do próprio usuário. Toda rota exige sessão: sem ela a resposta é 401, e o id de
@@ -111,4 +111,11 @@ export const calendarApi = {
    */
   setAvailability: (windows: CalendarAvailabilityWindowInput[]) =>
     api.put<CalendarAvailabilityWindowView[]>("/calendar/availability", { windows }),
+
+  /**
+   * Endereço do `.ics` da janela mostrada. O download não passa pelo cliente `api` porque a
+   * resposta é arquivo, não JSON: quem baixa é o navegador, com sessão de cookie.
+   */
+  exportUrl: ({ from, to, scope }: CalendarWindowQuery) =>
+    apiUrl(`/calendar/entries/export.ics${buildQuery({ from, to, scope: scope ?? undefined })}`),
 };
