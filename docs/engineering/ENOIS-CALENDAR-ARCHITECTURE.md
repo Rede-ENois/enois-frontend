@@ -560,3 +560,42 @@ correção.
 **Rejeitado.** Modal de detalhe sobre a agenda: perde link direto e complica o retorno depois de
 editar. Rejeitado também o DS buscar os próprios dados: acoplaria o pacote ao cliente de API do
 app e impediria o storybook de renderizar o componente com dados fixos.
+
+---
+
+## D23 — Conflito é leitura da mesma agenda, não um segundo motor (execução 17)
+
+**Contexto.** A fase 6 pede "disponibilidade e conflitos". O inventário da execução 17 mostrou que
+o backend já tinha as peças para uma _disponibilidade de mentor_ (`MentorAvailability` com dia da
+semana + `HH:mm`, `MentorSlot` com instante único e `book`/`release`, geração de 28 dias em
+`MentorService.saveAvailability`) — mas **nada** no nível da agenda: nenhuma consulta respondia
+"o que já ocupa este intervalo?" e a escrita aceitava qualquer sobreposição sem avisar.
+
+**Decisão.** Conflito é uma **consulta** sobre a agenda que a pessoa já vê, não um motor novo:
+
+1. Fonte única: `CalendarQueryService.agenda` — dono mais convites **ACCEPTED** e **TENTATIVE**.
+   Convite `INVITED` ou `DECLINED` não ocupa horário: ninguém deixa de marcar uma consulta por
+   causa de um convite parado na caixa, e "recusei" é resposta, não compromisso.
+2. **Leitura, não bloqueio.** A escrita continua aceitando sobreposição; a agenda social tem casos
+   legítimos de duas coisas no mesmo horário. Um 409 transformaria o aviso em proibição e mudaria o
+   contrato da escrita que já está em produção.
+3. Intervalo **meio-aberto** nos dois lados (o mesmo de `CalendarEntry.overlaps` e da consulta por
+   janela): 12h–13h e 13h–14h são contíguos, não sobrepostos.
+4. `entryId` exclui a própria entrada: na edição, o compromisso não conflita consigo mesmo.
+5. O filtro por `scope` é o da leitura; sem ele, as duas agendas.
+6. Reaproveitar a consulta evita divergência de autorização (D5/D10): a lista nunca inclui agenda
+   alheia porque a consulta é sempre `ownerId = quem lê`.
+
+**Consequência.**
+
+- A rota nasceu sem migração: não há tabela de conflito nem índice novo, porque conflito é derivado.
+- A janela semanal de disponibilidade **continua faltando** e é coisa distinta: aquela é uma regra
+  persistida (dia, início/fim, fuso) que gera janelas candidatas — o `MentorAvailability` de hoje
+  é do perfil do mentor e não serve à agenda geral. Ficou como a próxima unidade da fase 6.
+- O aviso na tela é decisão do formulário do DS: ele recebe a lista de conflitos e decide mostrar o
+  texto; o app não bloqueia o salvar. Isso mantém a D18 (a superfície não busca dados sozinha).
+
+**Rejeitado.** Devolver 409 na criação/edição quando há sobreposição: quebra o uso legítimo e
+obriga o cliente a tratar erro para um aviso que é informativo. Rejeitado também calcular conflito
+no front com a agenda já carregada: a agenda da tela é uma janela (mês/semana), e o formulário pode
+estar criando num intervalo fora dela — o servidor precisa ser a fonte.

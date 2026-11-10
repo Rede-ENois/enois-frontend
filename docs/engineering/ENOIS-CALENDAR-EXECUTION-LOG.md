@@ -1055,6 +1055,41 @@ de lembrete no DS é o par do #604 na tela.
 
 ---
 
+## EXECUÇÃO 13 — desdobramento (destravar B6)
+
+**DATA/HORA:** 2026-11-10T01:45:00-03:00
+
+**TAREFA:** a tag do design system, mandada pela Mel, não publicou nada. Descobrir por quê e fechar
+o bloqueio que parou a tela `/agenda`.
+
+**CAUSA RAIZ:** a release/tag foi criada como **`0.30.0`**, sem o prefixo `v`. O workflow do DS
+dispara em `refs/tags/v*` (`if: startsWith(github.ref, 'refs/tags/v')`), então **nenhum run foi
+criado** — o repositório tinha a tag e o pacote não existia. Todas as releases anteriores
+(`v0.27.5`, `v0.27.4`…) usam o `v`; esta foi a primeira sem.
+
+**CORREÇÃO:**
+
+1. Tag `v0.30.0` criada no **mesmo commit** da `0.30.0` (`7d40855`, o `main`). Publish
+   `enois-design-system#42735841594` → **verde** (`Lint, typecheck, test and build` e
+   `Publish to GitHub Packages`).
+2. Lockfile do front: o `package.json` já pedia `0.30.0`, mas o `package-lock.json` continuava em
+   `0.29.10-rc.1` (por isso `npm ci` falhava com `ETARGET`). Sem `read:packages` local, o lock foi
+   regerado **pelo registro** dentro do CI (`npm install --package-lock-only --ignore-scripts` com
+   o `GITHUB_TOKEN`, que tem `packages: read`), num workflow descartável que commitou o arquivo e
+   foi removido da árvore em seguida — `resolved`/`integrity` vieram do npm, não de valor escrito à
+   mão (regra da D20).
+3. `#769` saiu do draft. CI **verde** (`verificar`, `Validar build`, CodeQL, Analyze); o build
+   gerou os chunks `agenda-*`, provando que a rota entra no bundle servido.
+
+**ARQUIVOS:** `package-lock.json` (front, commit `4bae42fc`); tag `v0.30.0` no design system.
+
+**LIÇÃO PARA A D20:** *mergear* e *publicar* são coisas diferentes, e agora também **o nome da tag
+importa**. Uma tag criada pela interface do GitHub como release pode sair sem o `v`, e aí o
+workflow não escuta. Antes de anunciar "publicado", conferir que existe um run disparado pela tag.
+
+
+---
+
 ## Execução 14 — 2026-11-09 ~23:30 (fase 3: telas das agendas)
 
 **TAREFA:** roadmap §10 item 2 — rota de detalhe do compromisso (`/agenda/$entryId`) sobre o
@@ -1113,6 +1148,29 @@ conflitos (fase 6).
 
 ---
 
+## EXECUÇÃO 15 — 2026-11-09 ~23:45 (fase 3: telas das agendas)
+
+> **Entrada reconstruída na execução 17.** A execução 15 nunca teve seção própria neste arquivo —
+> a unificação das execuções 13–16 no commit `78eae7d8` pulou do 14 para o 16. O resumo abaixo vem
+> da linha 15 do histórico do roadmap (§11), que foi escrita na época e não foi alterada.
+
+**TAREFA:** rota de detalhe do compromisso no front.
+
+**IMPLEMENTAÇÃO:** `/agenda/$entryId` com o detalhe do compromisso e o lugar de quem lê (editar,
+cancelar, responder ao convite, convidar e remover participante), sobre o `CalendarEntryDetail` do
+DS #177.
+
+**TESTES:** 5 testes da rota de detalhe (8 com os da `/agenda`); `tsc`, `eslint` e `vite build`
+verdes.
+
+**PRs:** front [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — aberto em draft,
+porque o DS #177 ainda não estava publicado (B6).
+
+**NOTAS:** o estado real dos PRs foi reconferido e §7/§9 corrigidos; **B8 registrado** (o bot
+`kof-agent-worker` mergeando PRs na `qa` sem aprovação humana).
+
+---
+
 ## EXECUÇÃO 16 — 2026-11-10T01:45:00-03:00 — Fase 3 (telas das agendas)
 
 **TAREFA:** publicar o Design System com o `CalendarEntryDetail` (pedido explícito da mantenedora:
@@ -1154,3 +1212,86 @@ verde** aguardando revisão humana.
 pedido explícito da mantenedora (D20 registra que publicar é ação humana).
 
 **PRÓXIMA EXECUÇÃO:** ver §10 — seletor de lembrete no DS + tela, e início da fase 6.
+
+---
+
+## EXECUÇÃO 17 (bloco) — 2026-11-10T03:00–04:10-03:00 — Fases 3 e 6 (5 unidades verificáveis)
+
+**TAREFA:** primeira rodada em blocos (pedido da mantenedora: "cada rodada deve entregar 2 a 4
+unidades verificáveis, não uma só"). Unidades: (A) incorporar o conteúdo único do docs PR #774 no
+PR #778; (B) seletor de lembrete no DS; (C) cliente de API dos lembretes no front; (D) fase 6 no
+backend: inventário + detecção de conflito; (E) cliente de API do conflito no front.
+
+**REPOSITÓRIOS:** `enois-design-system` (`feat/calendar-reminder-selector` sobre `main` pós-#180),
+`enois-frontend` (`feat/enois-calendar-reminders` sobre `qa` `9d89d063`),
+`enois-backend` (`feat/enois-calendar-conflict` sobre `qa` `4f22a6d7`).
+
+**IMPLEMENTAÇÃO:**
+
+1. **(A) Docs**: o conteúdo único do #774 (causa raiz da tag sem `v` e o processo do lockfile
+   regerado pelo registro) foi trazido para o branch do #778 — mas o **bot mergeou o #778 antes**,
+   pegando só o commit antigo: o conteúdo da unidade A chegou à `qa` por este PR de docs aqui
+   (bloco 17), não pelo #778. O #774 segue aberto para fechar em revisão. Corrigimos também um
+   resíduo de patch (`+++ b/...` literal) que tinha entrado no log.
+2. **(B) DS**: `CalendarReminderSelector` — radiogroup acessível (`aria-label`, `aria-busy`), seis
+   opções (`CalendarReminderMinutes` = união literal `{5,15,30,60,1440}` do backend), opção "não
+   avisar", estado `saving` que desabilita tudo e `error` como `role="alert"`. Microcópia própria no
+   `calendar.ts` de mensagens. Story com harness de estado e estados de saving/erro.
+3. **(C) Front**: `CalendarReminderView` + `listReminders`/`setReminder`/`clearReminder` em
+   `calendarApi` (PUT/DELETE com `minutesBefore` na query, como o `@RequestParam` do backend lê).
+4. **(D) Backend (fase 6)**: inventário antes de codar — o que existe: `MentorAvailability`
+   (regra semanal dia+HH:mm, São Paulo), `MentorSlot` (instante único, book/release), geração de 28
+   dias em `MentorService.saveAvailability`, upsert da mentoria na agenda central
+   (`CalendarSourceService`, D12/D19), `CalendarEntry.overlaps` meio-aberto e leitura por janela.
+   O que **não** existe: detecção de conflito no nível da agenda. Entregue:
+   `CalendarConflictService` reutilizando `CalendarQueryService.agenda` (D13: conflito é a mesma
+   agenda que a tela mostra — dono + ACCEPTED/TENTATIVE; pendente e recusado não ocupam horário;
+   cancelado não conflita; `entryId` exclui a própria entrada na edição). **Leitura, não bloqueio**:
+   sobrepor de propósito continua possível, a escrita não virou 409 (D23). Rota
+   `GET /calendar/entries/conflicts?from&to[&scope][&entryId]`. **Sem migração Flyway** — zero
+   schema novo; a semântica meio-aberta já vem da consulta existente.
+5. **(E) Front**: `CalendarConflictQuery` + `calendarApi.conflicts({from,to,scope?,entryId?})` para
+   a rota do item 4.
+
+**TESTES:**
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| DS (B) | testes novos do seletor | **8/8** |
+| DS (B) | módulo calendar | **61/61** |
+| DS (B) | suíte inteira | **1578/1578** |
+| DS (B) | lint / tsc / build / test:dist | EXIT=0 nos quatro |
+| Front (C+E) | `calendar.test.ts` | **14/14** (3 de lembrete + 2 de conflito) |
+| Front (E, após o cherry-pick no #792) | `calendar.test.ts` / `tsc --noEmit` | **14/14** / EXIT=0 |
+| Front (C+E) | `tsc --noEmit` / `eslint src` | EXIT=0 / 0 erros, 9 warnings pré-existentes |
+| Backend (D) | `CalendarConflictServiceTests` | **9/9** |
+| Backend (D) | `CalendarConflictApiTests` | **4/4** |
+| Backend (D) | regressão do módulo calendar (9 suítes) | **78 verdes** |
+
+**PRs:** DS [#187](https://github.com/Rede-ENois/enois-design-system/pull/187), front
+[#786](https://github.com/Rede-ENois/enois-frontend/pull/786), backend
+[#607](https://github.com/Rede-ENois/enois-backend/pull/607), docs (este).
+
+**FALHA REAL DA RODADA (perda de unidade por merge automático):** o bot mergeou o #786 às
+05:47Z, **antes** do push da unidade E (cliente de conflito). O merge carregou só o commit
+`6d731488` (lembretes); `calendarApi.conflicts` não está na `qa`. Conferido com
+`git show enois/qa:src/lib/api/calendar.ts`. Correção: cherry-pick do commit `9bc6c0fe` sobre a
+`qa` atual, testes e tsc de novo (**14/14**, EXIT=0), PR de seguimento
+[#792](https://github.com/Rede-ENois/enois-frontend/pull/792). É o custo concreto do B8: o merge
+automático publicou um PR declarado "aguardando revisão" **no meio da rodada**, e a unidade que
+chegou depois ficou de fora.
+
+**BLOQUEIOS/NOTAS:**
+
+- **B8 agravado**: durante a própria rodada, o bot `kof-agent-worker` mergeou #778, #786 e #607 —
+  no #786 com `REVIEW_REQUIRED` ainda marcado e a única aprovação sendo a do próprio bot. Os PRs
+  foram escritos para revisão humana; nenhum merge foi feito por mim. Segue decisão da mantenedora.
+- Ferramenta local: um `V260__calendar_entries_source_unique.sql` **antigo** em `target/classes`
+  (da execução 11) sombreava o V260 real da `qa` e derrubava o contexto Flyway dos testes — limpar
+  o `target` resolveu. Armadilha de `/tmp` registrada para as próximas sessões.
+- Decisão **D23** registrada na arquitetura (conflito é leitura da mesma agenda, não um segundo
+  motor).
+
+**PRÓXIMA RODADA (§10, proposta de execução 18):** disponibilidade semanal no nível da agenda
+(migração nova), aviso de conflito no formulário do DS, e — se o #187 mergear — release do DS e
+seletor de lembrete na tela de detalhe.
