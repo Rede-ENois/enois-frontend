@@ -7,6 +7,7 @@ import {
   Briefcase,
   Building2,
   Calendar,
+  CalendarDays,
   Compass,
   GraduationCap,
   Handshake,
@@ -170,6 +171,17 @@ export const navigationItems: {
     to: "/explorar",
     label: texts.navigation.items.explore,
     icon: LayoutGrid,
+    module: null,
+    context: null,
+    section: "explore",
+  },
+  // Both: a agenda atende a vida social e a profissional, então não pertence a nenhuma interface nem
+  // a um módulo desligável (D16). O backend responde 401 sem sessão e nunca devolve compromisso de
+  // outra pessoa, então aparecer sempre não abre nada.
+  {
+    to: "/agenda",
+    label: texts.navigation.items.agenda,
+    icon: CalendarDays,
     module: null,
     context: null,
     section: "explore",

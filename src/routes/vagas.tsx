@@ -41,6 +41,7 @@ import {
   Label,
   LoadingState,
   Pill,
+  PillRow,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -328,60 +329,56 @@ export function JobsListPage({
             </p>
           )}
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground mr-1">
-                {texts.jobs.filters.level}
-              </span>
-              {JOB_LEVELS.map((l) => (
-                <Pill
-                  key={l}
-                  size="sm"
-                  active={level === l}
-                  onClick={() => setLevel(level === l ? "" : l)}
-                >
-                  {jobLevelLabel(l)}
-                </Pill>
-              ))}
-            </div>
-          </div>
+          {/* Uma linha por grupo, rolando para o lado: quebrados, Nível/Local/Tipo empurravam
+              busca, abas e a primeira vaga para fora da tela do celular. */}
+          <PillRow label={texts.jobs.filters.level} className="mt-4">
+            <span className="shrink-0 pr-1 text-xs font-medium text-muted-foreground">
+              {texts.jobs.filters.level}
+            </span>
+            {JOB_LEVELS.map((l) => (
+              <Pill
+                key={l}
+                size="sm"
+                active={level === l}
+                onClick={() => setLevel(level === l ? "" : l)}
+              >
+                {jobLevelLabel(l)}
+              </Pill>
+            ))}
+          </PillRow>
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground mr-1">
-                {texts.jobs.filters.location}
-              </span>
-              {JOB_LOCATIONS.map((l, index) => (
-                <Pill
-                  key={l}
-                  size="sm"
-                  active={location === l}
-                  onClick={() => setLocation(location === l ? "" : l)}
-                >
-                  {texts.jobs.filters.locations[index]}
-                </Pill>
-              ))}
-            </div>
-          </div>
+          <PillRow label={texts.jobs.filters.location} className="mt-2">
+            <span className="shrink-0 pr-1 text-xs font-medium text-muted-foreground">
+              {texts.jobs.filters.location}
+            </span>
+            {JOB_LOCATIONS.map((l, index) => (
+              <Pill
+                key={l}
+                size="sm"
+                active={location === l}
+                onClick={() => setLocation(location === l ? "" : l)}
+              >
+                {texts.jobs.filters.locations[index]}
+              </Pill>
+            ))}
+          </PillRow>
 
           {!lockedType && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground mr-1">
-                  {texts.jobs.filters.type}
-                </span>
-                {JOB_TYPES.map((t) => (
-                  <Pill
-                    key={t}
-                    size="sm"
-                    active={type === t}
-                    onClick={() => setType(type === t ? "" : t)}
-                  >
-                    {jobTypeLabel(t)}
-                  </Pill>
-                ))}
-              </div>
-            </div>
+            <PillRow label={texts.jobs.filters.type} className="mt-2">
+              <span className="shrink-0 pr-1 text-xs font-medium text-muted-foreground">
+                {texts.jobs.filters.type}
+              </span>
+              {JOB_TYPES.map((t) => (
+                <Pill
+                  key={t}
+                  size="sm"
+                  active={type === t}
+                  onClick={() => setType(type === t ? "" : t)}
+                >
+                  {jobTypeLabel(t)}
+                </Pill>
+              ))}
+            </PillRow>
           )}
 
           <div className="mt-4 flex flex-wrap gap-3">

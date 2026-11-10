@@ -3,7 +3,12 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
-import { resolveActiveTab, visiblePanelGroups } from "@/routes/-moderador/panel-groups";
+import {
+  TAB_GROUP_OF,
+  resolveActiveTab,
+  tabsOfActiveGroup,
+  visiblePanelGroups,
+} from "@/routes/-moderador/panel-groups";
 import { texts } from "@/texts";
 import type { ModeratorApplicationView } from "@/types/application/moderation/moderator-application-view";
 import type { ModeratorMeView } from "@/types/application/moderation/moderator-me-view";
@@ -19,9 +24,6 @@ import {
   LoadingState,
   Pill,
   PillRow,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
@@ -68,6 +70,7 @@ import { ContributorsSection } from "@/components/moderation/contributors-sectio
 import { DisputesSection } from "@/components/moderation/disputes-section";
 import { EmailLogSection } from "@/components/moderation/email-log-section";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
+import { IdentityReleaseSection } from "@/components/moderation/identity-release-section";
 import { MonitoringSection } from "@/components/moderation/monitoring-section";
 import { NotesSection } from "@/components/moderation/notes-section";
 import { NoticesSection } from "@/components/moderation/notices-section";
@@ -133,6 +136,7 @@ const TAB_ICON: Record<ModeratorTabId, typeof Flag> = {
   monitoring: Activity,
   contributors: Users,
   githubContributions: GitPullRequest,
+  identityRelease: ShieldCheck,
 };
 
 /**
@@ -223,42 +227,48 @@ function Moderador() {
 
         {canModerate ? (
           <div className="space-y-4">
-            {groups.map(({ group, tabs: groupTabs }) => {
-              // Cada grupo é um Tabs próprio: o Radix garante role="tablist"/role="tab",
-              // aria-selected, aria-controls, roving tabindex e as setas/Home/End. Um Tabs por
-              // grupo porque o Radix espera uma lista por Root — e porque o grupo é a unidade de
-              // navegação aqui.
-              const GroupIcon = GROUP_ICON[group.id];
-              return (
-                <Tabs
+            {/* Navegação em dois níveis, tudo pelo design system.
+                Antes eram QUATRO listas de abas empilhadas: no celular cada faixa estourava a
+                largura e as abas das pontas ficavam cortadas, com um bloco de navegação enorme
+                antes do conteúdo.
+                Celular: um PillRow rolável com os grupos e outro com as abas do grupo ativo — o
+                mesmo gesto lateral do feed (arrasto natural no toque, nada cortado).
+                Desktop: os mesmos dados viram uma faixa de grupos e a faixa de abas do grupo. */}
+            {/* O espacamento entre as faixas vem do className do proprio PillRow: mais um
+                container div aqui seria markup a mais no route, que a casa proibe. */}
+            <PillRow label={texts.moderator.groupSelector} className="mb-3">
+              {groups.map(({ group, tabs: groupTabs }) => (
+                <Pill
                   key={group.id}
-                  value={activeTab}
-                  onValueChange={(value: string) => setTab(value as ModeratorTabId)}
+                  active={group.id === TAB_GROUP_OF[activeTab]}
+                  onClick={() => setTab(groupTabs[0].id)}
                 >
-                  {/* O nome do grupo é a primeira "aba" visual da lista, mas não é uma aba:
-                      ela não troca o conteúdo — só diz a que grupo as abas ao lado pertencem.
-                      O TabsList carrega o aria-label, que é o que o leitor de tela anuncia. */}
-                  <TabsList aria-label={texts.moderator.groupLabel(group.label)}>
-                    <span className="inline-flex items-center gap-1.5 px-2 text-xs font-medium uppercase tracking-wide text-text-subtle">
-                      <GroupIcon className="h-3.5 w-3.5" />
+                  {(() => {
+                    const GroupIcon = GROUP_ICON[group.id];
+                    return <GroupIcon className="h-3.5 w-3.5" />;
+                  })()}
 
-                      <>{group.label}</>
-                    </span>
+                  <>{group.label}</>
+                </Pill>
+              ))}
+            </PillRow>
 
-                    {groupTabs.map((item) => {
-                      const Icon = TAB_ICON[item.id];
-                      return (
-                        <TabsTrigger key={item.id} value={item.id}>
-                          <Icon className="h-3.5 w-3.5" />
+            <PillRow label={texts.moderator.tabSelector}>
+              {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
+                const Icon = TAB_ICON[item.id];
+                return (
+                  <Pill
+                    key={item.id}
+                    active={item.id === activeTab}
+                    onClick={() => setTab(item.id)}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
 
-                          <>{item.label}</>
-                        </TabsTrigger>
-                      );
-                    })}
-                  </TabsList>
-                </Tabs>
-              );
-            })}
+                    <>{item.label}</>
+                  </Pill>
+                );
+              })}
+            </PillRow>
 
             {activeTab === "reports" && <ReportsSection admin={me.admin} />}
             {activeTab === "games" && <GamesReviewSection />}
@@ -283,6 +293,7 @@ function Moderador() {
             {canModerate && activeTab === "notes" && <NotesSection />}
             {me.admin && activeTab === "notices" && <NoticesSection />}
             {me.admin && activeTab === "releaseNotes" && <ReleaseNotesSection />}
+            {me.admin && activeTab === "identityRelease" && <IdentityReleaseSection />}
           </div>
         ) : (
           <ApplicationSection me={me} />

@@ -851,12 +851,12 @@ entregou, e o MentorService escrevendo e cancelando a entrada.
 
 **TESTES:** no worktree do backend, `./mvnw -o test -Dtest=...`:
 
-| Classe                             | Testes | Resultado                                                                                                  |
-| ---------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
-| `CalendarSourceServiceTests`       | 7      | verde (repetição mantém uma linha, reagendar move, violação de unicidade, dono separado, cancelado não volta, origem desconhecida, título/descrição) |
-| `MentoringCalendarSyncTests`       | 2      | verde (sessão marcada aparece na agenda do mentorado e não na do mentor; cancelamento cancela a entrada e a linha fica) |
-| `CalendarEntryPersistenceTests`    | 5      | verde                                                                                                      |
-| `Calendar*Tests`, `Mentor*Tests`, `Mentoring*Tests` (regressão) | 83 | **0 falhas**, BUILD SUCCESS (9m08s)                                                                        |
+| Classe                                                          | Testes | Resultado                                                                                                                                            |
+| --------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CalendarSourceServiceTests`                                    | 7      | verde (repetição mantém uma linha, reagendar move, violação de unicidade, dono separado, cancelado não volta, origem desconhecida, título/descrição) |
+| `MentoringCalendarSyncTests`                                    | 2      | verde (sessão marcada aparece na agenda do mentorado e não na do mentor; cancelamento cancela a entrada e a linha fica)                              |
+| `CalendarEntryPersistenceTests`                                 | 5      | verde                                                                                                                                                |
+| `Calendar*Tests`, `Mentor*Tests`, `Mentoring*Tests` (regressão) | 83     | **0 falhas**, BUILD SUCCESS (9m08s)                                                                                                                  |
 
 O teste de unicidade falha antes do conserto: com o índice comum que a V257 criou, a segunda linha
 com a mesma origem entrava e o `upsert` duplicava. A prova agora é a violação 23505 do H2 na
@@ -899,13 +899,13 @@ ato não foi implementar: foi confrontar o roadmap com o estado real dos quatro 
 
 **O QUE O INVENTÁRIO MUDOU EM RELAÇÃO AO QUE O ROADMAP DIZIA:**
 
-| O roadmap dizia | O estado real |
-|---|---|
-| #542 (detalhe e convites pendentes) aberto, aguardando revisão | **mergeado** em 2026-11-08 |
-| #165 e #166 (formulário e superfície do DS) abertos | **mergeados** em 2026-11-09 |
-| #752 (tipos e `calendarApi`) aberto | **mergeado** |
-| #568 (origem da mentoria) aberto | **mergeado** em 2026-11-09 — e foi ele que trouxe a segunda V260 que quebrou a `qa` |
-| "a tela depende da publicação do DS" | confirmado, e mais grave: **nenhuma** versão publicada tem o módulo. A tag `v0.29.10-rc.1` aponta para `7c0d17e`, 24 commits antes do calendário (`git ls-tree 7c0d17e \| grep -c calendar` → 0) |
+| O roadmap dizia                                                | O estado real                                                                                                                                                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| #542 (detalhe e convites pendentes) aberto, aguardando revisão | **mergeado** em 2026-11-08                                                                                                                                                                       |
+| #165 e #166 (formulário e superfície do DS) abertos            | **mergeados** em 2026-11-09                                                                                                                                                                      |
+| #752 (tipos e `calendarApi`) aberto                            | **mergeado**                                                                                                                                                                                     |
+| #568 (origem da mentoria) aberto                               | **mergeado** em 2026-11-09 — e foi ele que trouxe a segunda V260 que quebrou a `qa`                                                                                                              |
+| "a tela depende da publicação do DS"                           | confirmado, e mais grave: **nenhuma** versão publicada tem o módulo. A tag `v0.29.10-rc.1` aponta para `7c0d17e`, 24 commits antes do calendário (`git ls-tree 7c0d17e \| grep -c calendar` → 0) |
 
 **IMPLEMENTAÇÃO:**
 
@@ -931,13 +931,13 @@ ato não foi implementar: foi confrontar o roadmap com o estado real dos quatro 
 `@rede-enois/design-system@0.30.0` **empacotado localmente** (`npm pack` da `main`, o caminho que o
 CONTRIBUTING do DS indica):
 
-| Comando | Resultado |
-|---|---|
-| `npx tsc --noEmit` | EXIT=0 |
-| `npx eslint` nos arquivos tocados | EXIT=0, 0 erros |
-| `npx vitest run src/routes/agenda.test.tsx` | **3/3 verde** |
-| `npx vitest run` (suíte inteira) | **1220/1223**; as 3 falhas são `src/lib/e2e/key-manager.test.ts` (crypto/IndexedDB lentos sob carga). Verificado que **passam** isolados neste worktree, na pasta `src/lib/e2e/` inteira, e numa árvore limpa da `qa` — flaky pré-existente, sem relação com a mudança |
-| `npx vite build` | EXIT=0; `agenda-*.mjs` (SSR) e `agenda-*.js` (cliente) no bundle |
+| Comando                                     | Resultado                                                                                                                                                                                                                                                              |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx tsc --noEmit`                          | EXIT=0                                                                                                                                                                                                                                                                 |
+| `npx eslint` nos arquivos tocados           | EXIT=0, 0 erros                                                                                                                                                                                                                                                        |
+| `npx vitest run src/routes/agenda.test.tsx` | **3/3 verde**                                                                                                                                                                                                                                                          |
+| `npx vitest run` (suíte inteira)            | **1220/1223**; as 3 falhas são `src/lib/e2e/key-manager.test.ts` (crypto/IndexedDB lentos sob carga). Verificado que **passam** isolados neste worktree, na pasta `src/lib/e2e/` inteira, e numa árvore limpa da `qa` — flaky pré-existente, sem relação com a mudança |
+| `npx vite build`                            | EXIT=0; `agenda-*.mjs` (SSR) e `agenda-*.js` (cliente) no bundle                                                                                                                                                                                                       |
 
 O teste novo falha no código anterior: com a regex antiga `/^\d{4}-\d{2}(-\d{2})?$/`,
 `?period=2026-13` passava e virava janela inválida (400 da API). A validação agora confere o mês e o
@@ -945,12 +945,12 @@ dia de verdade.
 
 Design System, na `main` `c1d44c1` (base do release):
 
-| Comando | Resultado |
-|---|---|
-| `npm run lint` | EXIT=0, 0 erros, 6 warnings `exhaustive-deps` pré-existentes |
-| `npx tsc --noEmit` | EXIT=0 |
-| `npm test` | **163 arquivos, 1558 testes, 0 falhas** |
-| `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain` |
+| Comando                               | Resultado                                                    |
+| ------------------------------------- | ------------------------------------------------------------ |
+| `npm run lint`                        | EXIT=0, 0 erros, 6 warnings `exhaustive-deps` pré-existentes |
+| `npx tsc --noEmit`                    | EXIT=0                                                       |
+| `npm test`                            | **163 arquivos, 1558 testes, 0 falhas**                      |
+| `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`   |
 
 **PR:** DS [#172](https://github.com/Rede-ENois/enois-design-system/pull/172) (issue #171) e front
 [#769](https://github.com/Rede-ENois/enois-frontend/pull/769).
@@ -965,36 +965,94 @@ detalhe (`/agenda/$entryId`) sobre o `GET /calendar/entries/{id}` que já existe
 
 ---
 
-## EXECUÇÃO 13 — desdobramento (destravar B6)
+## EXECUÇÃO 13
 
-**DATA/HORA:** 2026-11-10T01:45:00-03:00
+**DATA/HORA:** 2026-11-09T21:40:00-03:00
 
-**TAREFA:** a tag do design system, mandada pela Mel, não publicou nada. Descobrir por quê e
-fechar o bloqueio que parou a tela `/agenda`.
+**FASE:** 1/6 — contrato de lembrete (a fase 6 depende dele)
 
-**CAUSA RAIZ:** a release/tag foi criada como **`0.30.0`**, sem o prefixo `v`. O workflow do DS
-dispara em `refs/tags/v*` (`if: startsWith(github.ref, 'refs/tags/v')`), então **nenhum run foi
-criado** — o repositório tinha a tag e o pacote não existia. Todas as releases anteriores
-(`v0.27.5`, `v0.27.4`…) usam o `v`; esta foi a primeira sem.
+**INVENTÁRIO ANTES DE IMPLEMENTAR:** a `qa` do front avançou para `4edcdd13` (o docs #770 foi
+mergeado — pelo bot, sem revisão humana). O PR do release do DS (#172) foi **mergeado** por
+`melmonfre` e o `main` do DS está em `0.30.0`, **mas a tag `v0.30.0` não existe**
+(`git ls-remote --tags` → nenhuma `v0.30`). Sem tag não há pacote: o front #769 continua em draft,
+com o CI falhando em `ETARGET`. B6, portanto, **não** fechou.
 
-**CORREÇÃO:**
+**TAREFA:** em vez de reescrever o diagnóstico do B6 (terceira vez), pegar a unidade independente
+que o roadmap lista na fase 1/6: **lembretes de compromisso**, decisão D4.
 
-1. Tag `v0.30.0` criada no **mesmo commit** da `0.30.0` (`7d40855`, o `main`). Publish
-   `enois-design-system#42735841594` → **verde** (`Lint, typecheck, test and build` e
-   `Publish to GitHub Packages`).
-2. Lockfile do front: o `package.json` já pedia `0.30.0`, mas o `package-lock.json` continuava em
-   `0.29.10-rc.1` (por isso `npm ci` falhava com `ETARGET`). Sem `read:packages` local, o lock foi
-   regerado **pelo registro** dentro do CI (`npm install --package-lock-only --ignore-scripts` com
-   o `GITHUB_TOKEN`, que tem `packages: read`), num workflow descartável que commitou o arquivo e
-   foi removido da árvore em seguida — `resolved`/`integrity` vieram do npm, não de valor escrito à
-   mão (regra da D20).
-3. `#769` saiu do draft. CI **verde** (`verificar`, `Validar build`, CodeQL, Analyze); o build
-   gerou os chunks `agenda-*`, provando que a rota entra no bundle servido.
+**REPOSITÓRIO:** `Rede-ENois/enois-backend` (worktree `feat/enois-calendar-reminders`, sobre a `qa`
+`25c648ad`)
 
-**ARQUIVOS:** `package-lock.json` (front, commit `4bae42fc`); tag `v0.30.0` no design system.
+**ARQUIVOS:**
 
-**LIÇÃO PARA A D20:** *mergear* e *publicar* são coisas diferentes, e agora também **o nome da tag
-importa**. Uma tag criada pela interface do GitHub como release pode sair sem o `v`, e aí o
-workflow não escuta. Antes de anunciar "publicado", conferir que existe um run disparado pela tag.
+- `src/main/resources/db/migration/V264__calendar_reminders.sql` (novo)
+- `calendar/domain/CalendarReminder.java` (novo)
+- `calendar/application/CalendarReminderService.java` (novo)
+- `calendar/application/CalendarReminderWorker.java` (novo)
+- `calendar/application/port/out/CalendarReminderRepository.java` (novo)
+- `calendar/adapters/out/persistence/{CalendarReminderJpaEntity,CalendarReminderPersistenceAdapter,SpringDataCalendarReminderJpaRepository}.java` (novos)
+- `calendar/application/CalendarCommandService.java` (cancelar/reagendar encerram os pendentes)
+- `calendar/adapters/in/web/CalendarEntryController.java` (rotas `/{entryId}/reminders`)
+- `CalendarReminderServiceTests` (10) e `CalendarRemindersApiTests` (5) — novos
 
-**PRÓXIMA EXECUÇÃO:** roadmap §10 — detalhe do compromisso (`/agenda/$entryId`).
+**IMPLEMENTAÇÃO:**
+
+- Tabela com `due_at`, `attempts`, `sent_at`, `last_error` e **índice único** em (entrada, pessoa,
+  antecedência) — a duplicata é recusada pelo banco, não pela aplicação.
+- Worker `@Scheduled(fixedDelayString = "${rede.calendar.reminder-delay-ms:30000}")`, mesmo desenho
+  do `ScheduledPostPublishWorker`: o lote por ciclo é 20, a falha é contada na linha e o laço
+  continua.
+- **Participação checada no envio**, não na criação: convidado que aceita depois do lembrete criado
+  passa a ser avisado, e convite não respondido encerra o lembrete sem notificar.
+- Cancelar e reagendar chamam `clearPendingForEntry`: aviso do horário antigo não sai.
+- Antecedências: 5, 15, 30, 60, 1440 — no domínio **e** na `check constraint` da migration.
+
+**DECISÕES DE IMPLEMENTAÇÃO QUE VIRARAM CÓDIGO:**
+
+1. `notifications.actor_id` é `not null` e não há precedente de notificação sem ator no repositório.
+   Um lembrete não tem pessoa por trás, então o autor é o literal `system`
+   (`CalendarReminderService.SYSTEM_ACTOR`), documentado no ponto de uso.
+2. As rotas ficaram **dentro** do `CalendarEntryController`, e não num controller novo com
+   `@RequestMapping("/calendar/entries/{entryId}/reminders")`: o primeiro teste deu 404 em todas as
+   rotas do dono porque o mapeamento de classe não compunha com o `/{entryId}` do controller pai.
+   O padrão do repositório (`participants`) declara as rotas aninhadas no pai.
+3. `ofReader` lista só os **pendentes**. O primeiro teste falhou porque a lista devolvia o lembrete
+   já encerrado — a tela escolhe lembrete, não histórico.
+
+**TESTES:** `./mvnw -o test` no worktree:
+
+| Classe                                                                       | Testes | Resultado                                           |
+| ---------------------------------------------------------------------------- | ------ | --------------------------------------------------- |
+| `CalendarReminderServiceTests`                                               | 10     | verde                                               |
+| `CalendarRemindersApiTests`                                                  | 5      | verde                                               |
+| `CalendarSourceServiceTests`                                                 | 7      | verde                                               |
+| `CalendarEntryTests` / `CalendarEntryPersistenceTests`                       | 8 + 5  | verde                                               |
+| `CalendarEntryReadApiTests` / `CalendarEntryWriteApiTests`                   | 9 + 9  | verde                                               |
+| `CalendarInvitationApiTests` / `CalendarDetailAndPendingInvitationsApiTests` | 11 + 6 | verde                                               |
+| `MentoringCalendarSyncTests`                                                 | 2      | verde                                               |
+| `FlywayMigrationConfigTests` / `MariaDbReservedWordsTests`                   | 5 + 2  | verde (migração V264 aceita)                        |
+| `AutomatedWritePathsTests`                                                   | 2      | verde (a rota nova de escrita exige 401 sem sessão) |
+
+**81 testes, 0 falhas.**
+
+Quatro falhas reais foram encontradas e corrigidas durante a unidade (não eram flakes): query derivada
+`findByEntryIdAndUserIdAndMinutesBefore` não compila no Spring Data ("MinutesBefore" vira
+`minutes`+`Before`) — resolvida com `@Query`; `actor_id` nulo derrubava o insert; o teste de API
+usava o apelido da conta em vez do id real do banco como dono da entrada; e a **guarda
+`NotificationCategoryTests`** — que varre os pontos de `NotificationService.create` e recusa qualquer
+`kind` sem categoria de push — pegou o `CALENDAR_REMINDER` no CI da suíte completa (os 81 testes da
+unidade não a incluíam). Mapeado como `SYSTEM`. **Lição: roda de notificação nova tem que entrar no
+`NotificationCategory`, e a suíte completa é quem cobra isso.**
+
+**PR:** enois-backend [#604](https://github.com/Rede-ENois/enois-backend/pull/604), aguardando
+revisão humana. Guarda `🧪 Migrações sem versão duplicada` já verde no PR.
+
+**BLOQUEIOS:** B6 continua — **mergear não publica**. O #172 está mergeado e o `main` em `0.30.0`;
+falta a tag, que é ação da mantenedora (D20). B7 também continua (sem `read:packages` local).
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 — a tag quando sair, e então o detalhe do compromisso; o seletor
+de lembrete no DS é o par do #604 na tela.
+
+---
+
+> > > > > > > origin/qa

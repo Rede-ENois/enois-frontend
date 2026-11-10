@@ -68,8 +68,10 @@ export const texts = {
   /** Contas da comunidade no painel de monitorabilidade. */
   userMetrics: {
     title: "Contas da comunidade",
-    hint: "O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual.",
+    hint: 'O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual. "Ativos hoje" conta quem usou a plataforma nas últimas 24 horas.',
     total: "Total de contas",
+    /** Quem abriu o app nas últimas 24h — medido pelo heartbeat de presença. */
+    active24h: "Ativos hoje (24h)",
     newToday: "Entraram hoje",
     new7: "Últimos 7 dias",
     new30: "Últimos 30 dias",
@@ -115,6 +117,7 @@ export const texts = {
       services: "Contratar serviços",
       professionalProfile: "Perfil profissional",
       explore: "Explorar",
+      agenda: "Agenda",
     },
     context: { social: "Social", professional: "Profissional" },
   },
@@ -166,6 +169,33 @@ export const texts = {
       services: { label: "Serviços", description: "Contrate quem é da comunidade" },
       companies: { label: "Empresas", description: "Quem contrata e o que faz" },
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+      agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
+    },
+  },
+
+  /**
+   * A tela da agenda. O calendário desenha; aqui ficam só as frases do app: título da página, o
+   * que cada escopo significa e o erro que a API devolve sem tradução.
+   */
+  agenda: {
+    seoTitle: "Agenda · Énóis",
+    title: "Agenda",
+    subtitle: "Seus compromissos sociais e profissionais, juntos ou separados.",
+    scopeAll: "Tudo",
+    scopeSocial: "Social",
+    scopeProfessional: "Profissional",
+    scopeLabel: "Agenda mostrada",
+    errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
+    errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    exportIcs: "Baixar .ics",
+    exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
+    exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
+    exportIcsDone: "Arquivo da agenda baixado.",
+    availability: {
+      seoTitle: "Disponibilidade · Énóis",
+      title: "Sua disponibilidade",
+      subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
+      errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
     },
   },
 
@@ -305,6 +335,21 @@ export const texts = {
         "Não foi possível confirmar que o pedido veio do Énóis. Recarregue a página e tente de novo.",
       UNSAFE_LINK:
         "Um dos links não é permitido. Use endereços que comecem com http://, https:// ou mailto:.",
+      /** A capacidade do ciclo do provedor acabou: nao e falha da pessoa, e o que o §3 do projeto pede. */
+      IDENTITY_CAPACITY_EXHAUSTED:
+        "As vagas desta etapa já foram usadas. Continue participando: avisamos aqui quando abrir de novo.",
+      /** Tentar verificar sem convite da rodada: a tela mostra "esta chegando" e nada quebra. */
+      IDENTITY_NOT_RELEASED:
+        "Sua verificação ainda não foi liberada. Sua vez chega conforme sua participação na comunidade.",
+      IDENTITY_IN_USE: "Você já tem uma verificação em andamento.",
+      /** Provedor sem credenciais ou fora do ar: indisponibilidade, nunca culpa do usuario. */
+      IDENTITY_PROVIDER_UNAVAILABLE:
+        "A verificação de identidade não está disponível no momento. Tente novamente mais tarde.",
+      IDENTITY_PROVIDER_ERROR:
+        "O provedor de identidade não respondeu. Tente novamente em instantes.",
+      /** Trava financeira: a integracao nao pode cobrar sem supervisao humana. */
+      IDENTITY_BILLING_LOCKED:
+        "A verificação está pausada enquanto confirmamos a capacidade. Voltamos assim que possível.",
       /** O mesmo código de verificação chegou duas vezes (ex.: clique duplo); só o primeiro vale. */
       TWO_FACTOR_CHALLENGE_ALREADY_USED:
         "Este código já foi usado. Se você já entrou, recarregue a página; senão, comece o login de novo.",
@@ -718,6 +763,8 @@ export const texts = {
     publicProfile: {
       notFoundTitle: "Perfil profissional não encontrado",
       notFoundBody: "Este perfil pode não existir ou estar desativado.",
+      loadErrorTitle: "Não foi possível carregar este perfil",
+      loadErrorBody: "Pode ser a conexão. Tente abrir de novo daqui a pouco.",
       postsTitle: "Publicações",
       empty: "Nenhuma publicação por aqui ainda.",
       editMine: "Editar o meu perfil profissional",
@@ -1205,6 +1252,7 @@ export const texts = {
       mediaCount: (count: number) => `${count} ${count === 1 ? "mídia" : "mídias"}`,
       mediaSpoiler: "Marcar mídias como spoiler",
       mediaSpoilerActive: "Mídias marcadas como spoiler",
+      captionRequired: "Escreva uma legenda para publicar",
       uploadProgress: (progress: number) => `Enviando… ${progress}%`,
       imageChecking: "Verificando imagem…",
       imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",
@@ -1670,6 +1718,9 @@ export const texts = {
     dailyEnter: "Entrar para jogar",
     mostPlayed: "Mais jogados",
     alphabetical: "A-Z",
+    /** Nome acessível das duas faixas de filtro do catálogo (o leitor de tela anuncia o grupo). */
+    stageFilterLabel: "Filtrar por estágio",
+    genreFilterLabel: "Filtrar por gênero",
     loadMore: "Carregar mais",
     empty: "Nenhum jogo encontrado com esses filtros.",
     loading: "Carregando…",
@@ -2622,8 +2673,8 @@ export const texts = {
 
   identity: {
     unavailable:
-      "A verificação de identidade ainda não está disponível: o Énóis precisa de um provedor autorizado. Assim que houver, o botão fica ativo aqui.",
-    resultOk: "Identidade verificada com sucesso.",
+      "A verificação de identidade não está disponível no momento. Tente novamente mais tarde.",
+    resultOk: "Verificação concluída. O selo Humanidade Comprovada já está no seu perfil.",
     resultError: "Não foi possível concluir a verificação. Você pode tentar de novo.",
   },
 
@@ -2821,6 +2872,7 @@ export const texts = {
    */
   moderator: {
     tabSelector: "Seções do painel",
+    groupSelector: "Grupos do painel",
     groups: {
       queue: "Fila do dia",
       content: "Conteúdo",
@@ -2939,6 +2991,14 @@ export const texts = {
       suspiciousPosts: "Posts suspeitos",
       notices: "Avisos",
       releaseNotes: "Novidades",
+      identityRelease: "Verificação de identidade",
+    },
+    identityRelease: {
+      saved: "Regras da rodada salvas.",
+      error: "Não foi possível salvar. Tente de novo.",
+      roundDone: (released: number, eligible: number) =>
+        `Rodada concluída: ${released} de ${eligible} liberadas.`,
+      roundEmpty: "Rodada concluída: ninguém elegível nesta rodada.",
     },
     suspiciousPosts: {
       result: (deleted: number, failed: number) =>
@@ -3682,6 +3742,10 @@ export const texts = {
           title: "16. Chamadas de voz e vídeo e salas abertas (Tamo junto)",
           text: 'A plataforma oferece chamadas de voz e vídeo entre usuários e salas abertas de comunidade ("Tamo junto"), associadas a grupos, tópicos e eventos, por meio do serviço próprio de chamadas épapo, hospedado pela própria plataforma.\n\nAo entrar em uma chamada, você concorda com as regras de conduta destes Termos e das Diretrizes da Comunidade, que valem também para o que é dito e exibido ao vivo. Assediar, ameaçar, expor, humilhar, exibir conteúdo íntimo sem consentimento ou usar a chamada para fins ilegais pode levar à remoção de recursos, suspensão ou banimento da conta, além das medidas legais cabíveis.\n\nAs chamadas não são gravadas em áudio ou vídeo pela plataforma. Ao denunciar outra pessoa de uma chamada, o aplicativo captura uma imagem estática da tela no momento da denúncia (os vídeos visíveis) e envia essa imagem junto com o relato. A imagem pode ser analisada por ferramenta automatizada para orientar a revisão, mas qualquer penalidade decorrente de denúncia de chamada é decidida por uma pessoa do time de moderação — nenhum sistema automatizado aplica penalidade sozinho nesse caso.\n\nA captura feita para denúncia é acessível apenas à equipe de moderação e não é divulgada às demais pessoas da chamada. Não há gravação contínua, e a plataforma não se responsabiliza por gravações ou capturas feitas por outros participantes com recursos externos ao serviço.\n\nAs chamadas dependem de serviços técnicos (conexão de internet, navegadores e infraestrutura de rede) e podem sofrer falhas, atrasos ou indisponibilidade. A plataforma não garante qualidade de transmissão nem disponibilidade ininterrupta do serviço de chamadas.',
         },
+        {
+          title: "17. Verificação de identidade e selo Humanidade Comprovada",
+          text: "O Énóis pode oferecer, de forma opcional e progressiva, a verificação de identidade por meio de provedor especializado (atualmente a Didit), que realiza a conferência do documento e da biometria facial em ambiente próprio. A verificação é sempre voluntária: não é requisito para criar conta, participar ou usar qualquer recurso da plataforma, e a liberação acompanha a credibilidade acumulada na comunidade.\n\nAo iniciar uma verificação, você interage diretamente com o provedor e o tratamento dos seus dados de identificação segue os termos e a política de privacidade dele. O Énóis não armazena documentos de identidade, fotografias, selfies, vídeos ou dados biométricos: recebe apenas o resultado (aprovado, recusado ou em análise) e registra o estado da verificação e as datas, para conceder o selo Humanidade Comprovada quando o resultado é aprovado.\n\nO selo é apenas um indicador visual de que o perfil passou pelo processo; ele não é moeda de troca, não gera vantagem de reputação e não é requisito para nada na plataforma. A administração não consegue conceder o selo manualmente nem acessar seus documentos ou resultados biométricos.",
+        },
       ],
     },
     privacy: {
@@ -3780,7 +3844,15 @@ export const texts = {
             ],
           },
           {
-            title: "13. Alterações desta política",
+            title: "13. Verificação de identidade (Didit)",
+            paragraphs: [
+              "A verificação de identidade é opcional e voluntária. Quando você decide verificá-la, o processo é realizado por provedor especializado (atualmente a Didit), que trata o documento de identificação e a biometria facial como controlador desse tratamento específico, conforme os termos e a política de privacidade dele.",
+              "O Énóis não recebe nem armazena documentos de identidade, fotografias, selfies, vídeos ou dados biométricos. Recebe e guarda apenas o resultado da verificação (aprovado, recusado, em análise ou expirado), o identificador da sessão junto ao provedor, o estado e as datas do processo — o mínimo necessário para conceder o selo Humanidade Comprovada e permitir novas tentativas. O resultado também serve à segurança da plataforma (prevenção de contas duplicadas e de fraude).",
+              "O provedor opera como operador quanto aos dados tratados em nome da plataforma e como controlador do documento e da biometria em si. As bases legais são o seu consentimento (art. 7º, I, da LGPD), que pode ser revogado a qualquer momento ao não iniciar ou ao solicitar a desvinculação da verificação, e o legítimo interesse para segurança (art. 7º, IX).",
+            ],
+          },
+          {
+            title: "14. Alterações desta política",
             paragraphs: [
               "Esta Política pode ser atualizada para refletir mudanças legais ou no serviço. A data de atualização estará sempre indicada no topo da página e alterações relevantes serão comunicadas pela plataforma.",
             ],

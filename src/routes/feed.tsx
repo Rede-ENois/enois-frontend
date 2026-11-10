@@ -42,9 +42,12 @@ import {
   EventTicket,
   Input,
   LoadingState,
+  Pill,
+  PillRow,
   Popover,
   PopoverContent,
   PopoverTrigger,
+  PullIndicator,
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
@@ -73,7 +76,9 @@ import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } fro
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
+import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
@@ -269,6 +274,30 @@ function useEvents() {
   });
 }
 
+/**
+ * A fileira de um post no feed. O wrapper existe sempre, no mesmo índice da árvore, porque o
+ * `ref` (observer de "visto") só é condicional ao índice 0 — se o wrapper some quando o post sai
+ * do topo, o React vê um tipo de elemento diferente ali e remonta o `PostCard`, perdendo estado
+ * local (comentários abertos) sempre que uma publicação nova chega (issue #743).
+ */
+export function FeedPostRow({
+  post,
+  index,
+  feedTab,
+  firstPostRef,
+}: {
+  post: PostView;
+  index: number;
+  feedTab: HomeTab;
+  firstPostRef: (element: HTMLElement | null) => void;
+}) {
+  return (
+    <div ref={index === 0 ? firstPostRef : undefined}>
+      <PostCard post={post} feedTab={feedTab} virtualized />
+    </div>
+  );
+}
+
 function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -379,9 +408,15 @@ function Home() {
   }, [identity]);
 
   const pageMode = postType === "PAGE";
-  // Anything in progress keeps the full composer open (a draft, media, an article or a page).
-  const composerExpanded =
-    composerOpen || draft.trim() !== "" || media.length > 0 || postType !== "INSIGHT";
+  // Qualquer trabalho em andamento mantém o compositor inteiro aberto (rascunho, mídia, tipo
+  // diferente do de repouso). BUSINESS é o repouso da identidade profissional: contá-lo prendia
+  // o compositor expandido para sempre e o launcher nunca aparecia.
+  const composerExpanded = composerExpandedWith({
+    open: composerOpen,
+    draft,
+    mediaCount: media.length,
+    postType,
+  });
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
@@ -1214,6 +1249,14 @@ function Home() {
                 </div>
               )}
 
+              {/* Com mídia e sem texto o Publicar fica desabilitado: diz o que falta. Fica na linha
+                de baixo, como o erro, para não apertar os botões no celular. */}
+              {!publishError && captionRequired({ postType, mediaCount: media.length, draft }) && (
+                <p role="status" className="mt-2 text-right text-xs font-normal text-text-subtle">
+                  {texts.feed.composer.captionRequired}
+                </p>
+              )}
+
               {publishError && (
                 <p className="mt-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-normal text-destructive">
                   {publishError}
@@ -1317,24 +1360,22 @@ function Home() {
           )}
 
           {tab === "ALL" && (
-            <div className="flex flex-wrap gap-2 pb-2">
+            /* Doze tipos em `flex-wrap` ocupavam QUATRO linhas no celular antes de qualquer
+               post — a primeira dobra era so filtro. O PillRow rola para o lado (o mesmo gesto
+               dos filtros do feed), ocupa UMA linha e nada fica cortado nem escondido: os
+               tipos continuam todos alcancaveis. */
+            <PillRow label={texts.feed.tabs.type} className="pb-2">
               {POST_TYPE_FILTERS.map((f) => (
-                <button
+                <Pill
                   key={f.value}
-                  type="button"
+                  size="sm"
+                  active={typeFilter === f.value}
                   onClick={() => setTypeFilter(f.value)}
-                  aria-pressed={typeFilter === f.value}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-medium transition",
-                    typeFilter === f.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-text-strong",
-                  )}
                 >
-                  {f.label}
-                </button>
+                  <>{f.label}</>
+                </Pill>
               ))}
-            </div>
+            </PillRow>
           )}
 
           {questionsFeed && (
@@ -1373,19 +1414,21 @@ function Home() {
               </div>
             )}
 
+            {/* Feedback do gesto de puxar: o ponto acompanha o dedo, passa do limite girando
+                contínuo e ao soltar vira o "Atualizando..." de cima. Sem isso o gesto parecia
+                não fazer nada — e, sem o overscroll do documento bloqueado, o Chrome assumia
+                o gesto e recarregava a página inteira. */}
+            {pullToRefresh.pulling && !feedFetching && (
+              <PullIndicator pull={pullToRefresh.pull} trigger={pullToRefresh.trigger} />
+            )}
+
             <div className="space-y-4">
               {!feedLoading &&
                 feedPosts.map((p, index) => (
                   <Fragment key={p.id}>
                     {index === caughtUpAt && <CaughtUpDivider />}
 
-                    {index === 0 ? (
-                      <div ref={firstPostRef}>
-                        <PostCard post={p} feedTab={tab} virtualized />
-                      </div>
-                    ) : (
-                      <PostCard post={p} feedTab={tab} virtualized />
-                    )}
+                    <FeedPostRow post={p} index={index} feedTab={tab} firstPostRef={firstPostRef} />
                   </Fragment>
                 ))}
 

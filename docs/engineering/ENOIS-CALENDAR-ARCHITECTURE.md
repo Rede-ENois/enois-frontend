@@ -488,3 +488,218 @@ uma tag `v*`.
 aprovado, e o token de publicação não é do agente. Rejeitado também apontar o front para um link
 `file:`/`link:` local do DS: resolveria a máquina, quebraria o CI e o Docker, e esconderia o
 bloqueio real.
+
+---
+
+## D21 — O lembrete é do compromisso e da pessoa, e quem decide é o envio (execução 13)
+
+**Contexto.** A D4 escolheu o mecanismo (tabela + worker com `attempts`). Faltava decidir o que é um
+lembrete, quem recebe e quando.
+
+**Decisão.**
+
+1. **A chave é (entrada, pessoa, antecedência).** O organizador e cada convidado têm o próprio
+   lembrete; duas pessoas não compartilham aviso. Um índice único na tabela garante isso, e o serviço
+   só evita violar o índice — quem recusa a duplicata é o banco.
+2. **Quem recebe é decidido no envio, não na criação.** A pessoa cria o lembrete quando entra no
+   compromisso; se ela foi convidada e ainda não respondeu, o lembrete existe mas não notifica até
+   aceitar. Fazer a checagem na criação exigiria reescrever a linha no instante da resposta e deixaria
+   um buraco: quem aceita às 18h59 para um compromisso de 19h não seria avisado.
+3. **Antecedência é lista fechada** (5, 15, 30, 60 minutos, 1 dia), validada no domínio e na
+   `check constraint`. "Quero ser avisado 7 minutos antes" não é uma opção da tela; aceitar qualquer
+   inteiro convida a API pública a virar cronômetro.
+4. **Cancelar ou reagendar encerra os pendentes.** O aviso do horário antigo não sai. A linha não é
+   apagada: `sentAt` marca "resolvido" e o motivo fica em `lastError`, o que preserva a diferença
+   entre avisado, cancelado e encerrado.
+5. **A notificação tem autor `system`.** `notifications.actor_id` é `not null` e não existe
+   notificação sem ator no repositório; um lembrete não tem pessoa por trás e usar o id do compromisso
+   misturaria entidade com pessoa.
+
+**Consequência.**
+
+- O lembrete sobrevive ao reinício do processo: ele é uma linha, não um `Runnable` agendado (razão
+  original da D4).
+- Compromisso criado em cima da hora gera lembrete já vencido, e ele sai **uma vez** no ciclo
+  seguinte — o que a pessoa quer é o aviso agora.
+- A tela só vê os lembretes **pendentes**; o histórico não entra na leitura.
+
+**Rejeitado.** Notificar todo mundo que recebeu convite (`INVITED` incluso): o aviso de "começa em
+5 min" para alguém que nunca disse que ia é ruído que ensina a pessoa a ignorar a notificação.
+
+---
+
+## D22 — O detalhe é rota própria (`/agenda/$entryId`), e o DS só recebe dados já traduzidos (execução 14)
+
+**Contexto.** D15 decidiu que o item da agenda carrega o estado do convite. Faltava o lugar onde se
+responde ao convite, se edita, se cancela e se convida mais gente. O `GET /calendar/entries/{id}`
+já devolve `{ entry, owner, participation, participants }` (participants só para o organizador) e
+aceita `PATCH`, `DELETE`, resposta de participante e convite — tudo pronto na `qa`.
+
+**Decisão.**
+
+1. O detalhe é **rota** (`/agenda/$entryId`), não modal sobre a lista: ganha URL própria, sobrevive
+   a recarregar, e a lista continua sendo só leitura rápida. O `itemHref` da agenda aponta para ela.
+2. O componente do DS (`CalendarEntryDetail`) é **burro**: recebe `entry`, `owner`, `participation`,
+   `participants` e callbacks; não sabe de rota, query nem API. Toda tradução de instante para hora
+   de parede acontece no app, com `wallClockOf(instant, timeZoneId)` (D17), e o app converte de volta
+   com `instantOf` no salvar.
+3. As mutações vivem na rota e **invalidam `['agenda']` inteiro**, não só o detalhe: responder,
+   cancelar ou editar muda a lista, o detalhe e o estado do convite, e uma invalidação parcial deixa
+   a lista mostrando estado velho que o usuário acabou de mudar.
+4. Quem não é organizador recebe `participants: null` da API e a tela **não** monta a lista nem o
+   formulário de convite — esconder por papel no cliente seria decoração, não autorização; a
+   autorização é do backend (D5).
+
+**Consequência.** O detalhe entrou no DS como `CalendarEntryDetail` (PR #177), com a microcópia no
+pacote (`messages.detail.*`), e a rota no front usa exatamente esse componente (PR #777). Enquanto
+o #177 não for mergeado e publicado, o `package.json` do front não tem de onde importar o
+componente: o PR fica em draft com a dependência declarada, como D20 manda — não se cria uma cópia
+local do componente na app, que violaria `local/no-front-markup` e divergiria do DS na primeira
+correção.
+
+**Rejeitado.** Modal de detalhe sobre a agenda: perde link direto e complica o retorno depois de
+editar. Rejeitado também o DS buscar os próprios dados: acoplaria o pacote ao cliente de API do
+app e impediria o storybook de renderizar o componente com dados fixos.
+
+---
+
+## D23 — Conflito é leitura da mesma agenda, não um segundo motor (execução 17)
+
+**Contexto.** A fase 6 pede "disponibilidade e conflitos". O inventário da execução 17 mostrou que
+o backend já tinha as peças para uma _disponibilidade de mentor_ (`MentorAvailability` com dia da
+semana + `HH:mm`, `MentorSlot` com instante único e `book`/`release`, geração de 28 dias em
+`MentorService.saveAvailability`) — mas **nada** no nível da agenda: nenhuma consulta respondia
+"o que já ocupa este intervalo?" e a escrita aceitava qualquer sobreposição sem avisar.
+
+**Decisão.** Conflito é uma **consulta** sobre a agenda que a pessoa já vê, não um motor novo:
+
+1. Fonte única: `CalendarQueryService.agenda` — dono mais convites **ACCEPTED** e **TENTATIVE**.
+   Convite `INVITED` ou `DECLINED` não ocupa horário: ninguém deixa de marcar uma consulta por
+   causa de um convite parado na caixa, e "recusei" é resposta, não compromisso.
+2. **Leitura, não bloqueio.** A escrita continua aceitando sobreposição; a agenda social tem casos
+   legítimos de duas coisas no mesmo horário. Um 409 transformaria o aviso em proibição e mudaria o
+   contrato da escrita que já está em produção.
+3. Intervalo **meio-aberto** nos dois lados (o mesmo de `CalendarEntry.overlaps` e da consulta por
+   janela): 12h–13h e 13h–14h são contíguos, não sobrepostos.
+4. `entryId` exclui a própria entrada: na edição, o compromisso não conflita consigo mesmo.
+5. O filtro por `scope` é o da leitura; sem ele, as duas agendas.
+6. Reaproveitar a consulta evita divergência de autorização (D5/D10): a lista nunca inclui agenda
+   alheia porque a consulta é sempre `ownerId = quem lê`.
+
+**Consequência.**
+
+- A rota nasceu sem migração: não há tabela de conflito nem índice novo, porque conflito é derivado.
+- A janela semanal de disponibilidade **continua faltando** e é coisa distinta: aquela é uma regra
+  persistida (dia, início/fim, fuso) que gera janelas candidatas — o `MentorAvailability` de hoje
+  é do perfil do mentor e não serve à agenda geral. Ficou como a próxima unidade da fase 6.
+- O aviso na tela é decisão do formulário do DS: ele recebe a lista de conflitos e decide mostrar o
+  texto; o app não bloqueia o salvar. Isso mantém a D18 (a superfície não busca dados sozinha).
+
+**Rejeitado.** Devolver 409 na criação/edição quando há sobreposição: quebra o uso legítimo e
+obriga o cliente a tratar erro para um aviso que é informativo. Rejeitado também calcular conflito
+no front com a agenda já carregada: a agenda da tela é uma janela (mês/semana), e o formulário pode
+estar criando num intervalo fora dela — o servidor precisa ser a fonte.
+
+---
+
+## D24 — Disponibilidade é regra da pessoa, guardada como semana substituível (execução 18)
+
+**Contexto.** A fase 6 pedia "disponibilidade". O que existia era `MentorAvailability` no perfil de
+mentor: dia da semana + `HH:mm`, sem fim nem duração, e `MentorSlot` com instante único. Nenhum dos
+dois responde "quando esta pessoa aceita compromisso", e a agenda não tinha onde guardar isso. A
+detecção de conflito da D23 só olha o que já está marcado; a disponibilidade é o outro lado — o que
+a pessoa declara possível antes de qualquer compromisso existir.
+
+**Decisão.**
+
+- Tabela própria, `calendar_availability`, por **pessoa** (não por agenda social/profissional): o
+  corpo é um só; quem separa as agendas é o compromisso, não a disponibilidade.
+- Janela = `(dia ISO 1–7, início, fim, fuso IANA)`. Os horários são **de parede** (`time` no banco,
+  `LocalTime` no domínio), não instantes: a regra é semanal e precisa continuar às 9h depois da
+  mudança de horário da cidade. Guardar `Instant` obrigaria a reescrever a regra a cada mudança.
+- **Meio-aberta**, igual à D13/D23: 9h–12h e 12h–18h se encostam sem sobrepor. Cruzar no mesmo dia
+  é 400 `INVALID_AVAILABILITY` e a transação não grava nada — a semana anterior continua inteira.
+- **Nenhuma janela atravessa a meia-noite.** Quem precisa das 22h às 2h declara duas janelas, uma
+  em cada dia. Guardar uma janela com um horário só perderia o dia do fim, e o `time` do banco não
+  tem como dizer "o dia seguinte".
+- **Escrita por substituição** (`PUT /calendar/availability` com a semana inteira): a regra é o
+  conjunto, não a linha. Isso elimina "apagar janela por id" e o estado em que a tela acha que
+  apagou e o banco não; repetir o mesmo `PUT` é idempotente por natureza.
+- Leitura e escrita sempre pela sessão (D10): não existe rota para a disponibilidade de outra
+  pessoa, e não há id de pessoa no caminho.
+- `check` no banco para dia 1–7 e fim depois do começo, e índice único por
+  `(pessoa, dia, começo)`; a recusa de cruzamento fica no serviço, porque o banco não expressa
+  "intervalos disjuntos" sem trigger.
+
+**Rejeitado.** Guardar a disponibilidade em `Instant`s por semana concreta ("terça 12/11, 9h–12h"):
+a regra se repete toda semana e materializar 52 semanas por ano faria a tela manter um calendário
+paralelo. Rejeitado também reaproveitar `MentorAvailability`: é do perfil de mentor, não tem fim nem
+fuso e mudá-la acoplaria a agenda geral à mentoria. Rejeitado, ainda, bloquear a criação de
+compromisso fora da disponibilidade: disponibilidade é declaração, não cerca (mesmo raciocínio da
+D23 — aviso, não 409).
+
+**Limite conhecido.** Não há exceção por data (feriado, folga pontual) nem fuso por janela dentro da
+mesma semana. Quando aparecer, o caminho é uma tabela de exceções por data, não colunas novas aqui.
+
+---
+
+## D25 — Contrato das superfícies de disponibilidade e do aviso de conflito (execução 19)
+
+**Contexto.** Com o backend da disponibilidade (#613) e o aviso de conflito no formulário (#195), a
+última peça era a tela: declarar a semana e ser avisado de sobreposição ao digitar. A pergunta de
+desenho era onde ficam o rascunho da semana e a lista de conflito.
+
+**Decisão.**
+
+1. **`CalendarAvailabilitySurface` não busca e não salva** (D18 aplicada): recebe `windows` (o que
+   o servidor devolveu), `timeZoneId`, `savePending`, `saveError` e `onSave(windows) => Promise<boolean>`.
+   O estado editável vive na superfície porque é rascunho; a verdade vive no app.
+2. **Semana nova do app substitui o rascunho** — comparação por identidade do array (`windows`), não
+   por conteúdo: o app troca o array quando a consulta devolve algo novo, e um `useEffect` sobre
+   conteúdo lutaria com a digitação.
+3. **Salvar é substituição**: a superfície entrega a semana inteira (`CalendarAvailabilityWindowInput[]`),
+   nunca "a janela X mudou". Espelha o `PUT` do backend e elimina a divergência de três operações.
+4. **As regras de validação são duplicadas de propósito** no cliente (`calendar-availability-draft.ts`)
+   com os mesmos limites do `CalendarAvailabilityService` (dia 1–7, `hh:mm`, fim estrito, meio-aberto,
+   50 janelas). O servidor continua sendo a autoridade: o cliente só evita mandar o que se sabe
+   recusável. Se divergirem, o erro do servidor aparece em `saveError` e os campos ficam.
+5. **`conflicts` atravessa a `CalendarAgendaSurface`** até o formulário: a props existe na superfície
+   porque a `/agenda` usa a superfície, não o diálogo. A app busca a lista por **janela visível, sem
+   escopo** (o aviso vale para as duas agendas) e passa `CalendarAgendaItemData[]`; o recorte final é
+   do formulário, contra o intervalo **nos campos** (D23), nunca contra a janela buscada.
+6. **Falha da consulta de conflito é silenciosa**: sem lista, sem aviso. Um aviso ausente é melhor que
+   um erro bloqueando a criação, e o salvar nunca depende dessa leitura.
+
+**Consequência.** O app `/agenda` faz duas leituras da mesma janela (agenda e conflito). A chave do
+conflito não leva `scope`, então trocar de aba não refaz a busca; `staleTime` de 30 s evita repetir a
+leitura ao abrir o formulário várias vezes. `CalendarAgendaSurfaceProps.conflicts` é opcional: os
+consumidores existentes seguem compilando sem mudança.
+
+---
+
+## D26 — O `.ics` é derivado da entrada, o import entra pela porta de origem (execução 20)
+
+Exportar e importar iCalendar é função da entrada central, não de cada módulo — D6 na prática. O
+que a execução 20 fechou de decisão:
+
+1. **`UID` é função determinística da entrada:** a origem quando existe (`TIPO-ID`), `enois-`+id
+   quando não. Duas exportações do mesmo banco produzem o mesmo arquivo; o leitor externo
+   reconhece o compromisso entre exportações sem nenhuma coluna nova. `SEQUENCE` derivado de
+   `updatedAt−createdAt` segue o mesmo princípio (sem contador persistido).
+2. **Cancelamento é publicado, não apagado:** `STATUS:CANCELLED` com o mesmo `UID` — evento que
+   some do arquivo nunca é removido em quem assina. É a D10 transplantada para o formato.
+3. **Fuso no arquivo é real, não aproximado:** `VTIMEZONE` derivado das transições do `ZoneRules`
+   do fuso de cada compromisso. Um deslocamento fixo (ou um `VTIMEZONE` de uma observância só)
+   erraria o instante em metade do ano para fuso com horário de verão.
+4. **Import entra pela porta de origem, não por INSERT:** cada `VEVENT` vira
+   `CalendarSourceService.upsert` com origem `ICS`+`UID`. A idempotência do arquivo é a mesma
+   idempotência da mentoria (D3): repetir o arquivo atualiza, não duplica. Import **não mescla**
+   com compromisso criado na agenda — um não tem origem, e mesclar por título/horário seria
+   adivinhação com dado pessoal.
+5. **Import é escrita com teto:** `Idempotency-Key` obrigatória (D11), 512 KB e 500 eventos.
+   Permissivo no formato (linha estranha não derruba o arquivo; `TZID` desconhecido cai no fuso
+   padrão e o evento entra), estrito no volume — o que protege é o limite, não a recusa.
+6. **O download é da janela visível:** o botão da `/agenda` exporta o que a tela desenha (janela
+   do período + escopo da aba), não "tudo". Arquivo gigante e desalinhado do que se vê é pior que
+   baixar de novo. A assinatura privada da fase 9 (D7) é que serve ao caso "agenda inteira,
+   sempre atualizada" no leitor externo.
