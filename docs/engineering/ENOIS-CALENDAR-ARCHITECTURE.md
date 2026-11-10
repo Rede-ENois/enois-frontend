@@ -640,3 +640,37 @@ D23 — aviso, não 409).
 
 **Limite conhecido.** Não há exceção por data (feriado, folga pontual) nem fuso por janela dentro da
 mesma semana. Quando aparecer, o caminho é uma tabela de exceções por data, não colunas novas aqui.
+
+---
+
+## D25 — Contrato das superfícies de disponibilidade e do aviso de conflito (execução 19)
+
+**Contexto.** Com o backend da disponibilidade (#613) e o aviso de conflito no formulário (#195), a
+última peça era a tela: declarar a semana e ser avisado de sobreposição ao digitar. A pergunta de
+desenho era onde ficam o rascunho da semana e a lista de conflito.
+
+**Decisão.**
+
+1. **`CalendarAvailabilitySurface` não busca e não salva** (D18 aplicada): recebe `windows` (o que
+   o servidor devolveu), `timeZoneId`, `savePending`, `saveError` e `onSave(windows) => Promise<boolean>`.
+   O estado editável vive na superfície porque é rascunho; a verdade vive no app.
+2. **Semana nova do app substitui o rascunho** — comparação por identidade do array (`windows`), não
+   por conteúdo: o app troca o array quando a consulta devolve algo novo, e um `useEffect` sobre
+   conteúdo lutaria com a digitação.
+3. **Salvar é substituição**: a superfície entrega a semana inteira (`CalendarAvailabilityWindowInput[]`),
+   nunca "a janela X mudou". Espelha o `PUT` do backend e elimina a divergência de três operações.
+4. **As regras de validação são duplicadas de propósito** no cliente (`calendar-availability-draft.ts`)
+   com os mesmos limites do `CalendarAvailabilityService` (dia 1–7, `hh:mm`, fim estrito, meio-aberto,
+   50 janelas). O servidor continua sendo a autoridade: o cliente só evita mandar o que se sabe
+   recusável. Se divergirem, o erro do servidor aparece em `saveError` e os campos ficam.
+5. **`conflicts` atravessa a `CalendarAgendaSurface`** até o formulário: a props existe na superfície
+   porque a `/agenda` usa a superfície, não o diálogo. A app busca a lista por **janela visível, sem
+   escopo** (o aviso vale para as duas agendas) e passa `CalendarAgendaItemData[]`; o recorte final é
+   do formulário, contra o intervalo **nos campos** (D23), nunca contra a janela buscada.
+6. **Falha da consulta de conflito é silenciosa**: sem lista, sem aviso. Um aviso ausente é melhor que
+   um erro bloqueando a criação, e o salvar nunca depende dessa leitura.
+
+**Consequência.** O app `/agenda` faz duas leituras da mesma janela (agenda e conflito). A chave do
+conflito não leva `scope`, então trocar de aba não refaz a busca; `staleTime` de 30 s evita repetir a
+leitura ao abrir o formulário várias vezes. `CalendarAgendaSurfaceProps.conflicts` é opcional: os
+consumidores existentes seguem compilando sem mudança.
