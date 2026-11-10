@@ -12,9 +12,10 @@ import {
 import { Button, EmptyState, useToast } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Globe, MessageCircle, UserX } from "lucide-react";
 
-import { ApiError, corporateApi, feedApi, messagesApi } from "@/lib/api";
+import { corporateApi, feedApi, messagesApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
+import { publicProfileErrorCopy } from "@/lib/corporate/public-profile-error";
 import { monthsBetween, partesDaData, shortMonthYear } from "@/lib/date/format";
 import { litePageSize } from "@/lib/lite-mode";
 import { safeHref } from "@/lib/safe-url";
@@ -89,20 +90,18 @@ function ProfessionalProfile() {
   }
 
   if (profile.isError) {
-    const notFound = profile.error instanceof ApiError && profile.error.status === 404;
+    // O 404 e a falha de rede são telas diferentes: a de "não encontrado" diz que o perfil
+    // pode não existir, a de falha convida a tentar de novo. Antes o título era sempre
+    // "não encontrado" e a descrição de uma falha de rede virava "Não foi possível salvar",
+    // que não tem nada a ver com abrir um perfil.
+    const copy = publicProfileErrorCopy(profile.error);
     return (
       <AppContainer>
         <div className="mx-auto w-full max-w-3xl space-y-4">
           <BackToFeed />
 
           <div className="surface-card">
-            <EmptyState
-              icon={UserX}
-              title={texts.corporate.publicProfile.notFoundTitle}
-              description={
-                notFound ? texts.corporate.publicProfile.notFoundBody : texts.corporate.saveError
-              }
-            />
+            <EmptyState icon={UserX} title={copy.title} description={copy.description} />
           </div>
         </div>
       </AppContainer>
