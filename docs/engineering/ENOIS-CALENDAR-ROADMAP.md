@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=3 (telas das agendas) + 6 (disponibilidade e conflitos) em paralelo — fase 3 espera só revisão humana (#777 detalhe; #786 lembretes e conflito no cliente de API, CI verde; DS #187 seletor de lembrete aberto). Fase 6 andou no backend: detecção de conflito em `GET /calendar/entries/conflicts` (#607), sem migração
-EXECUCAO=17
-ULTIMA_ATUALIZACAO=2026-11-10T04:10:00-03:00
+FASE_ATUAL=3 (telas das agendas) + 6 (disponibilidade e conflitos) em paralelo — fase 3 espera revisão humana (#777 detalhe, #792 cliente de conflito mergeado pelo bot) e o release do DS com o seletor de lembrete (#187). Fase 6 do backend **pronta**: conflito em `GET /calendar/entries/conflicts` (#607) e disponibilidade semanal em `GET`/`PUT /calendar/availability` (V267, #613); no DS, o aviso de conflito está pronto no #195; no front, o cliente de disponibilidade no #801
+EXECUCAO=18
+ULTIMA_ATUALIZACAO=2026-11-10T09:30:00-03:00
 ```
 
 ---
@@ -113,7 +113,7 @@ ou de disponibilidade.
 | Chamadas Épapo                | painel de chamada + iframe          | `calls` com `event_id` (V256)                                   | —                                                     | **Existe**, sem agendamento                                  |
 | Salas do Tamo Junto           | barra do encontro                   | `calls` (sala por evento)                                       | —                                                     | **Existe**, sem compromisso com hora                         |
 | Convites / participantes      | parcial em eventos                  | `calendar_entry_participants` (V258), convite pelo @ e resposta | linha de convite com Aceitar/Talvez/Recusar (PR #164) | **Parcial** — falta a tela                                   |
-| Disponibilidade / conflitos   | não existe                          | slot de mentor isolado                                          | não existe                                            | **A construir**                                              |
+| Disponibilidade / conflitos   | cliente pronto (#801)               | conflito (#607) + janela semanal (V267, #613)                   | aviso no formulário (#195)                            | **Parcial** — falta a tela de disponibilidade e ligar o aviso na `/agenda` |
 | Lembretes                     | não existe (o DS não tem seletor)   | `calendar_reminders` (V264), worker de 30 s e rotas por entrada | não existe                                            | **Backend pronto** (#604); falta o seletor no DS e a tela    |
 | ICS export/import             | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
 | Assinatura privada `.ics`     | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
@@ -154,10 +154,10 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 0    | Inventário + roadmap + contratos                                         | —            | **concluída**                                                                                                                                  |
 | 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
 | 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída** — #164/#165/#166 **mergeados**; falta só o release 0.30.0 (enois-design-system#172) |
-| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **em andamento** — `/agenda` mergeada (#769); detalhe `/agenda/$entryId` pronto (DS #177 mergeado, release 0.30.1 publicado, front #777 CI verde, aguardando revisão); seletor de lembrete pronto no DS (#187) e cliente de API pronto (#786); falta o release do DS e ligar o seletor na tela |
+| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **em andamento** — `/agenda` mergeada (#769); detalhe `/agenda/$entryId` no #777 (CI verde, aguardando revisão); lembretes e conflito no cliente (`#786`/`#792`, na `qa`); seletor de lembrete pronto no DS (#187, aberto) — falta o release do DS e ligar na tela |
 | 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | pendente                                                                                                                                       |
 | 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
-| 6    | Disponibilidade e conflitos                                              | 1            | **em andamento** — detecção de conflito (`GET /calendar/entries/conflicts`) entregue no #607; faltam a janela semanal da agenda e o aviso no formulário do DS |
+| 6    | Disponibilidade e conflitos                                              | 1            | **backend concluído, telas pendentes** — conflito (`GET /calendar/entries/conflicts`, #607) e disponibilidade semanal (`GET`/`PUT /calendar/availability`, V267, #613); aviso no formulário do DS pronto no #195; cliente no front no #801. Faltam as telas (disponibilidade e o aviso ligado na `/agenda`), que dependem da revisão/publicação |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
 | 8    | iCalendar export/import                                                  | 1            | pendente                                                                                                                                       |
 | 9    | Assinatura privada e cache                                               | 8            | pendente                                                                                                                                       |
@@ -198,8 +198,13 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#187](https://github.com/Rede-ENois/enois-design-system/pull/187) | enois-design-system | Fase 3/6: `CalendarReminderSelector` (radiogroup acessível, 5 antecedências + "não avisar", saving/erro)      | aberto, **aguardando revisão humana**           |
 | [#786](https://github.com/Rede-ENois/enois-frontend/pull/786)      | enois-frontend      | Fase 3: cliente de API dos lembretes (`list/set/clearReminder`)                                               | **mergeado** em `4b9c3cf9` (2026-11-10) pelo bot `kof-agent-worker` — **antes do push da unidade de conflito**, que ficou de fora; ver B8 |
 | [#607](https://github.com/Rede-ENois/enois-backend/pull/607)       | enois-backend       | Fase 6: `CalendarConflictService` + `GET /calendar/entries/conflicts` (leitura, não bloqueio; sem migração)   | **mergeado** em `b1e65d92` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
-| [#792](https://github.com/Rede-ENois/enois-frontend/pull/792)      | enois-frontend      | Fase 6: cliente de API do conflito (`CalendarConflictQuery` + `calendarApi.conflicts`), recortado da `qa` atual | aberto, **aguardando revisão humana** — repõe a unidade perdida no #786 |
+| [#792](https://github.com/Rede-ENois/enois-frontend/pull/792)      | enois-frontend      | Fase 6: cliente de API do conflito (`CalendarConflictQuery` + `calendarApi.conflicts`), recortado da `qa` atual | **mergeado** em `7e160805` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
+| [#195](https://github.com/Rede-ENois/enois-design-system/pull/195) | enois-design-system | Fase 6: aviso de conflito no `CalendarEntryFormDialog` (recorte no rascunho, meio-aberto, sem bloquear o salvar) | aberto, **aguardando revisão humana**; CI verde |
+| [#613](https://github.com/Rede-ENois/enois-backend/pull/613)       | enois-backend       | Fase 6: disponibilidade semanal da agenda (`calendar_availability` V267, `GET`/`PUT /calendar/availability`) | aberto, **aguardando revisão humana** |
+| [#801](https://github.com/Rede-ENois/enois-frontend/pull/801)      | enois-frontend      | Fase 6: cliente de API da disponibilidade (`availability`/`setAvailability`)                                  | aberto, **aguardando revisão humana** |
 | [#778](https://github.com/Rede-ENois/enois-frontend/pull/778)      | enois-frontend      | Documentação: execução 14 (detalhe do compromisso e estado real dos PRs)                                     | **mergeado** em `517a3b9b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
+| [#791](https://github.com/Rede-ENois/enois-frontend/pull/791)      | enois-frontend      | Documentação: execução 17 em bloco (lembretes, conflito, fase 6) e decisão D23                              | **mergeado** em `52c1a5d4` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
+| [#774](https://github.com/Rede-ENois/enois-frontend/pull/774)      | enois-frontend      | Documentação: B6 fechado (tag `v0.30.0`, tela verde)                                                         | aberto (conteúdo absorvido no #778); pode ser fechado |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -293,7 +298,7 @@ O gate de cada execução fica registrado no log de execução.
 | B5  | Sem navegador utilizável para prova visual nesta máquina                             | não há captura de tela                              | usar Chrome headless + CDP; quando não der, declarar a limitação no PR           |
 | B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **fechado**: `v0.30.0` (agenda) e `v0.30.1` (detalhe) publicadas; os dois PRs do front compilam contra o registro |
 | B7  | Sem token `read:packages` nesta máquina                                              | não dá para `npm ci`/`npm install` do front nem regerar o lockfile | **mitigado**: workflow descartável com `GITHUB_TOKEN` regerou os lockfiles do #769 (0.30.0) e do #777 (0.30.1). Processo: `.github/workflows/relock-ds.tmp.yml`, removido depois de cada uso |
-| B8  | O bot `kof-agent-worker` mergea PRs na `qa` sem aprovação humana — **agravado na execução 17**: mergeou #778, #786 e #607 em ~1h, sempre com a própria aprovação (`REVIEW_REQUIRED` ignorado no #786) | contraria a regra absoluta do projeto: nenhum merge automático | reportado à mantenedora (execuções 14 e 17); decisão sobre a proteção de branch é do time — nenhum bypass foi feito por mim. Mitigação do lado do agente: PRs continuam declarando "não mergear" e a revisão humana ainda é necessária para o release do DS (#187), que o bot não dispara |
+| B8  | O bot `kof-agent-worker` mergea PRs na `qa` sem aprovação humana — **agravado nas execuções 17 e 18**: mergeou #778, #786, #607, #792 e #791 (o #792 e o #791 durante/após a rodada 17), sempre com a própria aprovação (`REVIEW_REQUIRED` ignorado no #786) | contraria a regra absoluta do projeto: nenhum merge automático | reportado à mantenedora (execuções 14 e 17); decisão sobre a proteção de branch é do time — nenhum bypass foi feito por mim. Mitigação do lado do agente: PRs continuam declarando "não mergear" e a revisão humana ainda é necessária para o release do DS (#187), que o bot não dispara |
 
 ---
 
@@ -319,11 +324,23 @@ O gate de cada execução fica registrado no log de execução.
    dia da semana + HH:mm, sem duração nem exceção) e o aviso de conflito dentro do
    `CalendarEntryFormDialog` do DS.
 
-**Execução 18 (próximo bloco) — proposta.** (1) Fase 6: modelo e rota de disponibilidade semanal da
-agenda (`calendar_availability`: dia, início/fim, fuso; migração com número novo), com a semântica
-meio-aberta da D13; (2) aviso de conflito no formulário do DS — a superfície recebe a lista e decide
-mostrar/ocultar, com o cliente já pronto; (3) se o DS #187 mergear, release e seletor de lembrete na
-tela de detalhe. Reconferir cada PR aberto antes de começar (§9).
+**Execução 18 (bloco) — disponibilidade semanal, aviso de conflito e cliente.**
+*Executada em 2026-11-10 (~05:00–09:30). Três unidades: (A) disponibilidade semanal da agenda no
+backend (V267, `GET`/`PUT /calendar/availability`, #613); (B) aviso de conflito no
+`CalendarEntryFormDialog` do DS (#195); (C) cliente de API da disponibilidade no front (#801).
+Detalhe no log, execução 18.*
+
+1. **Disponibilidade semanal** — **feito no backend e no cliente**. Falta a tela.
+2. **Aviso de conflito no formulário** — **feito no DS** (#195). Falta ligar na `/agenda` depois do
+   release.
+3. **Seletor de lembrete** — **ainda bloqueado** no #187 (aberto, `REVIEW_REQUIRED`, CI verde).
+
+**Execução 19 (próximo bloco) — proposta.** (1) Superfície de disponibilidade no DS (semana por
+dia, janelas com início/fim, fuso; microcópia própria; superfície controlada como as demais);
+(2) tela de disponibilidade no front sobre o cliente do #801 e a superfície do item 1;
+(3) ligar `conflicts` no formulário de `/agenda` (o `calendarApi.conflicts` já está na `qa`) quando
+o #195 estiver publicado; (4) se o #187 e o #195 mergearem, preparar o release do DS. Reconferir cada
+PR aberto antes de começar (§9).
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -358,6 +375,7 @@ e evitou construir sobre premissa errada.
 | 15  | 2026-11-09 ~23:45 | 3    | Rota `/agenda/$entryId` no front (#777, draft): detalhe com o lugar do leitor, editar, cancelar, responder, convidar e remover; 5 testes (8 com a `/agenda`), tsc/eslint/build verdes. Estado real dos PRs reconferido e §7/§9 corrigidos; B8 registrado (merge automático do bot) |
 | 16  | 2026-11-10 ~01:45 | 3    | Release 0.30.1 do DS: #177 mergeado, PR de release #180, tag `v0.30.1` empurrada e publicada. Front #777 no 0.30.1 com lockfile real, `qa` mesclada (eliminou lint de arquivo desatualizado), CI **100% verde** e PR fora do draft. Merge da `qa` no branch de docs e conflitos resolvidos preservando D21 e as execuções 11–13 |
 | 17  | 2026-11-10 ~04:10 | 3/6  | **Bloco de 5 unidades.** (A) #774 absorvido no #778; (B) `CalendarReminderSelector` no DS (#187, 8 testes, 1578 na suíte); (C) cliente de API dos lembretes no front (#786); (D) fase 6: inventário + `CalendarConflictService` e `GET /calendar/entries/conflicts` (#607, 9+4 testes, 78 na regressão, sem migração); (E) cliente de API do conflito, **perdido no merge automático do #786** e reaberto no #792. D23 registrada; #778, #607 e #786 foram mergeados pelo bot `kof-agent-worker` (B8) |
+| 18  | 2026-11-10 ~09:30 | 6    | Disponibilidade semanal da agenda no backend (V267, `GET`/`PUT /calendar/availability`, 9+7 testes, 99 de regressão) e o cliente no front (#801, 17/17); aviso de conflito no formulário do DS (#195, 18/18, 1577 na suíte inteira). A V265 que eu tinha escrito colidiu com `user_presence` e virou V267. #792/#791 mergeados pelo bot (B8) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
