@@ -367,7 +367,9 @@ function SuggestedGroupCard({
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 w-auto rounded-full px-3 text-xs font-medium gap-1"
+            // 32px de desenho + pseudo-elemento até os 44px de toque: no celular, o cartão do
+            // grupo termina a poucos pixels do botão e o chip de h-7 (28px) pedia mira.
+            className="relative h-8 w-auto rounded-full px-3 text-xs font-medium gap-1 before:absolute before:-inset-y-1.5 before:-inset-x-1 before:content-['']"
             disabled={isJoining}
             onClick={() => {
               if (!authenticated) {
