@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=8 (iCalendar) export+import entregues (backend #629, botão de download na /agenda #809), fase 6 COMPLETA na qa: #804 mergeado e o release 0.31.0 publicado pela mantenedora (tag v0.31.0, DS #197 incluso). Fase 3 segue esperando revisão humana do #777 (detalhe) para depois ligar o seletor de lembrete.
-EXECUCAO=20
-ULTIMA_ATUALIZACAO=2026-11-10T17:30:00-03:00
+FASE_ATUAL=4 (agenda social) iniciada: a presença confirmada em evento de grupo cria/reagenda/remove a entrada na agenda (origem EVENT), e a porta de origem passou a encerrar lembrete pendente ao reagendar/cancelar. Fase 8 (iCalendar) segue com export+import no #629 e o botão de download no #809, ambos aguardando revisão humana. Fase 3 segue esperando revisão humana do #777 (detalhe) para depois ligar o seletor de lembrete.
+EXECUCAO=21
+ULTIMA_ATUALIZACAO=2026-11-10T19:30:00-03:00
 ```
 
 ---
@@ -154,12 +154,12 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 0    | Inventário + roadmap + contratos                                         | —            | **concluída**                                                                                                                                  |
 | 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
 | 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída** — #164/#165/#166 **mergeados**; falta só o release 0.30.0 (enois-design-system#172) |
-| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **em andamento** — `/agenda` mergeada (#769); detalhe `/agenda/$entryId` no #777 (CI verde, aguardando revisão); lembretes e conflito no cliente (`#786`/`#792`, na `qa`); **seletor de lembrete mergeado no DS (#187)** e no release aberto #196 — falta o release e ligar na tela |
-| 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | pendente                                                                                                                                       |
+| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **concluída** — `/agenda` (#769) e detalhe `/agenda/$entryId` (#777) mergeados; lembretes, conflito e disponibilidade no cliente; seletor de lembrete no DS (#187, 0.31.0) e **ligado na tela** (execução 21) |
+| 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | **em andamento** — eventos de grupo: presença confirmada cria/reagenda/remove a entrada (origem `EVENT`, D27); faltam chamadas e compromissos pessoais |
 | 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
 | 6    | Disponibilidade e conflitos                                              | 1            | **concluída** — backend (#607, #613), DS #197 (mergeado `bdf7370`), front #804 **mergeado na `qa`**; release **0.31.0 publicado** pela mantenedora (tag `v0.31.0`) |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
-| 8    | iCalendar export/import                                                  | 1            | pendente                                                                                                                                       |
+| 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa` |
 | 9    | Assinatura privada e cache                                               | 8            | pendente                                                                                                                                       |
 | 10   | Provedores externos (Google/Microsoft/Apple)                             | 8, 9         | pendente                                                                                                                                       |
 | 11   | Revisão geral: regressão, segurança, a11y, performance                   | todas        | pendente                                                                                                                                       |
@@ -193,8 +193,8 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#769](https://github.com/Rede-ENois/enois-frontend/pull/769)      | enois-frontend      | Fase 3: rota `/agenda` com as quatro visões, alternância de agenda, criação e resposta a convite              | aberto, **aguardando revisão humana**           |
 | [#604](https://github.com/Rede-ENois/enois-backend/pull/604)       | enois-backend       | Lembrete de compromisso: `CalendarReminder` (V264), CRUD em `/calendar/entries/{id}/reminders`, entrega única pelo worker de outbox (D4/D21) | **mergeado** em `59cb2018` (2026-11-10); mergeado pelo bot `kof-agent-worker` sem aprovação humana — ver B8 |
 | [#177](https://github.com/Rede-ENois/enois-design-system/pull/177) | enois-design-system | Fase 3: `CalendarEntryDetail` (detalhe do compromisso com o lugar do leitor, convites e microcópia)          | **mergeado** em `3776208` (2026-11-10)          |
-| [#180](https://github.com/Rede-ENois/enois-design-system/pull/180) | enois-design-system | Release `chore(release): 0.30.1` a partir do `main`                                                          | aberto; **tag `v0.30.1` já publicada** e pacote no registro |
-| [#777](https://github.com/Rede-ENois/enois-frontend/pull/777)      | enois-frontend      | Fase 3: rota `/agenda/$entryId` (detalhe do compromisso, editar, cancelar, responder, convidar)              | aberto, **aguardando revisão humana**; CI 100% verde com o DS 0.30.1 |
+| [#180](https://github.com/Rede-ENois/enois-design-system/pull/180) | enois-design-system | Release `chore(release): 0.30.1` a partir do `main`                                                          | **mergeado**; tag `v0.30.1` publicada |
+| [#777](https://github.com/Rede-ENois/enois-frontend/pull/777)      | enois-frontend      | Fase 3: rota `/agenda/$entryId` (detalhe do compromisso, editar, cancelar, responder, convidar)              | **mergeado** na `qa` (`66e5f330`, 2026-11-10) |
 | [#187](https://github.com/Rede-ENois/enois-design-system/pull/187) | enois-design-system | Fase 3/6: `CalendarReminderSelector` (radiogroup acessível, 5 antecedências + "não avisar", saving/erro)      | **mergeado** em `d1d128f0` (2026-11-10) pelo bot `kof-agent-worker` — ver B8; entra no release #196 |
 | [#786](https://github.com/Rede-ENois/enois-frontend/pull/786)      | enois-frontend      | Fase 3: cliente de API dos lembretes (`list/set/clearReminder`)                                               | **mergeado** em `4b9c3cf9` (2026-11-10) pelo bot `kof-agent-worker` — **antes do push da unidade de conflito**, que ficou de fora; ver B8 |
 | [#607](https://github.com/Rede-ENois/enois-backend/pull/607)       | enois-backend       | Fase 6: `CalendarConflictService` + `GET /calendar/entries/conflicts` (leitura, não bloqueio; sem migração)   | **mergeado** em `b1e65d92` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
@@ -205,12 +205,16 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#778](https://github.com/Rede-ENois/enois-frontend/pull/778)      | enois-frontend      | Documentação: execução 14 (detalhe do compromisso e estado real dos PRs)                                     | **mergeado** em `517a3b9b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#791](https://github.com/Rede-ENois/enois-frontend/pull/791)      | enois-frontend      | Documentação: execução 17 em bloco (lembretes, conflito, fase 6) e decisão D23                              | **mergeado** em `52c1a5d4` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#802](https://github.com/Rede-ENois/enois-frontend/pull/802)      | enois-frontend      | Documentação: execução 18 em bloco (disponibilidade, aviso de conflito) e decisão D24                       | **mergeado** em `09a75b9b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
-| [#774](https://github.com/Rede-ENois/enois-frontend/pull/774)      | enois-frontend      | Documentação: B6 fechado (tag `v0.30.0`, tela verde)                                                         | aberto (conteúdo absorvido no #778); pode ser fechado |
-| [#196](https://github.com/Rede-ENois/enois-design-system/pull/196) | enois-design-system | Release `chore(release): 0.31.0` (pull-indicator, seletor de lembrete, aviso de conflito, badge kits)        | aberto; CI verde, publish SKIPADO (tag `v*` ainda não existe); **publicação é ação humana (D20)** |
+| [#774](https://github.com/Rede-ENois/enois-frontend/pull/774)      | enois-frontend      | Documentação: B6 fechado (tag `v0.30.0`, tela verde)                                                         | **mergeado** na `qa` (`0ad051d9`) |
+| [#196](https://github.com/Rede-ENois/enois-design-system/pull/196) | enois-design-system | Release `chore(release): 0.31.0` (pull-indicator, seletor de lembrete, aviso de conflito, badge kits)        | **mergeado**; tag `v0.31.0` publicada pela mantenedora (D20) |
 | [#197](https://github.com/Rede-ENois/enois-design-system/pull/197) | enois-design-system | Fase 6: superfície de disponibilidade semanal (D24) + repasse de `conflicts` pela `CalendarAgendaSurface`    | **mergeado** em `bdf7370`; incluído no **0.31.0 publicado** (tag `v0.31.0`, run 42869575669) |
 | [#804](https://github.com/Rede-ENois/enois-frontend/pull/804)      | enois-frontend      | Fase 6: tela `/agenda/disponibilidade` + aviso de conflito ligado na `/agenda`                              | **mergeado** na `qa` (após sair do draft com o lockfile real do 0.31.0) |
-| [#629](https://github.com/Rede-ENois/enois-backend/pull/629)       | enois-backend       | Fase 8: export e import de iCalendar (`export.ics` + `import` multipart)                                   | aberto, aguardando revisão humana |
-| [#809](https://github.com/Rede-ENois/enois-frontend/pull/809)      | enois-frontend      | Fase 8: botão "Baixar .ics" na `/agenda` com a janela/escopo da tela                                       | aberto, aguardando revisão humana; depende do #629 |
+| [#629](https://github.com/Rede-ENois/enois-backend/pull/629)       | enois-backend       | Fase 8: export e import de iCalendar (`export.ics` + `import` multipart)                                   | **mergeado** na `qa` (2026-11-10) |
+| [#809](https://github.com/Rede-ENois/enois-frontend/pull/809)      | enois-frontend      | Fase 8: botão "Baixar .ics" na `/agenda` com a janela/escopo da tela                                       | **mergeado** na `qa` (2026-11-10) |
+| [#810](https://github.com/Rede-ENois/enois-frontend/pull/810)      | enois-frontend      | Documentação: bloco 20 (iCalendar de ponta a ponta)                                                         | **mergeado** na `qa` (2026-11-10) |
+| (backend, exec. 21)                                                | enois-backend       | Fase 4: presença em evento cria/reagenda/remove a entrada na agenda + porta de origem encerra lembrete      | aberto, aguardando revisão humana |
+| (DS, exec. 21)                                                     | enois-design-system | Fase 3: slot `reminder` no `CalendarEntryDetail`                                                            | aberto, aguardando revisão humana |
+| (front, exec. 21)                                                  | enois-frontend      | Fase 3: seletor de lembrete ligado em `/agenda/$entryId`                                                    | aberto, aguardando revisão humana; depende do slot no DS |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -387,13 +391,40 @@ Detalhe no log, execução 20.*
 4. **Fase 6 fechada na mesma rodada:** o **#804 foi mergeado** na `qa` (a tela de disponibilidade
    está no ar) e o release **0.31.0** está publicado — o roadmap ainda dizia "aguardando release".
 
-**Execução 21 (próximo bloco) — proposta.** (1) **Import na tela**: hoje o backend aceita o
-arquivo e o front só exporta; a unidade natural é subir o `.ics` na `/agenda` com o conflito
-avisado antes de aplicar (D23) — o `calendarApi` precisa de um `postMultipart`. (2) **Ligar o
-seletor de lembrete** em `/agenda/$entryId` quando o #777 for revisado (componente no 0.31.0).
-(3) Avançar **fase 9 (assinatura privada `.ics`)** — D7 já define token com hash, `ETag` e rate
-limit — ou **fase 4** (fonte de eventos de grupo), que ainda não tem entrada de agenda.
-(4) Reconferir os PRs abertos antes de começar (§9); #629/#809 e #777 seguem aguardando revisão.
+**Execução 21 (bloco) — fase 4 iniciada, correção da porta de origem e seletor de lembrete na tela.**
+*Executada em 2026-11-10 (~18:00–20:30). Três unidades: (A) presença em evento de grupo cria,
+reagenda e remove a entrada na agenda; (B) a porta de origem encerra lembrete pendente ao
+reagendar/cancelar; (C) seletor de lembrete ligado em `/agenda/$entryId`. Detalhe no log,
+execução 21.*
+
+1. **Evento → agenda** — **entregue**: `EventService` grava a entrada do participante pela
+   `CalendarSourceService` com origem `EVENT`+`eventId` (D27). `attend` cria, `cancelAttendance`
+   remove, `update` move a de todos os participantes, `delete`/`sanitizeExpired` removem de todos.
+   O evento não tem hora de fim, então a entrada ocupa uma hora a partir do começo. 5 testes de
+   integração.
+2. **Lembrete na porta de origem** — **entregue**: `upsert` (quando move) e `cancel` agora chamam
+   `clearPendingForEntry`, igual ao caminho direto. Era um buraco real: o aviso do horário antigo
+   continuaria agendado. 2 testes novos (12 na suíte de lembretes, 7 na de origem).
+3. **Seletor de lembrete na tela** — **entregue**: o #777 mergeou, então a unidade que estava
+   esperando revisão humana destravou. O `CalendarEntryDetail` do DS ganhou um slot `reminder`
+   (o app não pode escrever markup), e a rota `/agenda/$entryId` busca os lembretes, mostra a
+   escolha única e troca de opção apagando as outras — o servidor guarda um por antecedência, e
+   duas ligadas avisariam duas vezes por uma escolha só. 3 testes no DS, 4 no front.
+4. **Por que não o import na tela:** o contrato do import está no #629, que **mergeou** nesta
+   rodada, mas o front teria de reimplementar o parser `.ics`; fica para a próxima, com o
+   contrato já estável. A fase 9 (assinatura privada) depende do mesmo serviço `.ics` — adiada
+   sem duplicar trabalho.
+5. **Defasagem corrigida:** a `qa` dizia `EXECUCAO=20` e o **log de execuções estava corrompido**
+   — um merge posterior o sobrescreveu com a versão da execução 13, com marcador de conflito
+   (`>>>>>>> origin/qa`) no fim, perdendo as execuções 14–20. Este PR restaura o log a partir do
+   commit do bloco 20 e acrescenta a execução 21.
+
+**Execução 22 (próximo bloco) — proposta.** (1) **Import na tela**: o #629 mergeou, então o
+contrato está estável; subir o `.ics` na `/agenda` com o conflito avisado antes de aplicar (D23).
+(2) **Fase 4 adiante**: compromissos pessoais já existem (rota de agenda); a próxima fonte social
+natural é a chamada/vídeo — verificar se há módulo com data/hora legível antes de prometer.
+(3) **Fase 9 (assinatura privada `.ics`)**: o serviço `.ics` do #629 está na `qa`, então D7 já
+pode ser implementada sem duplicar. (4) Reconferir os PRs abertos antes de começar (§9).
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -431,6 +462,7 @@ e evitou construir sobre premissa errada.
 | 18  | 2026-11-10 ~09:30 | 6    | Disponibilidade semanal da agenda no backend (V267, `GET`/`PUT /calendar/availability`, 9+7 testes, 99 de regressão) e o cliente no front (#801, 17/17); aviso de conflito no formulário do DS (#195, 18/18, 1577 na suíte inteira). A V265 que eu tinha escrito colidiu com `user_presence` e virou V267. #792/#791 mergeados pelo bot (B8) |
 | 19  | 2026-11-10 ~14:30 | 6    | **Bloco de 3 unidades.** (A) `CalendarAvailability`/`CalendarAvailabilitySurface` no DS com as regras do backend (12+14 testes); (B) `conflicts` repassado pela `CalendarAgendaSurface` (2 testes, 1655 na suíte inteira); (C) tela `/agenda/disponibilidade` e aviso de conflito ligado na `/agenda` no front (7/7, build verde). DS #197 aberto; front #804 em draft até o release. O bot mergeou #187/#195 e abriu o release #196 (B8). Armadilhas: cache do Nitro e `--force-with-lease` com refspec longa |
 | 20  | 2026-11-10 ~17:30 | 8    | **Bloco de 3 unidades — fase 8.** (A) export `.ics` no backend (UID estável, VTIMEZONE real, folding 75 octets; 11 testes); (B) import multipart idempotente por ICS+UID (7 testes de contrato) — backend PR #629; (C) `exportUrl` + botão "Baixar .ics" na `/agenda` com a janela da tela (18+3 testes, tsc/build verdes) — front PR #809. Fase 6 confirmada fechada: #804 mergeado e 0.31.0 publicado. D26 registrada |
+| 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
