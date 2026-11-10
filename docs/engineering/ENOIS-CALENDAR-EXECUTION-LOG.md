@@ -1398,3 +1398,101 @@ revisão humana para o aviso de conflito existir no pacote.
 cliente do #801) e a superfície de disponibilidade no DS; ligar `conflicts` no `CalendarEntryFormDialog`
 da tela `/agenda` quando o #195 for publicado; e, se o #187 mergear, o release do DS com o seletor de
 lembrete.
+
+## EXECUÇÃO 19 (bloco) — 2026-11-10T11:00–14:30-03:00 — Fase 6 (3 unidades verificáveis)
+
+**TAREFA.** Bloco da execução 19 do roadmap: (1) superfície de disponibilidade no DS;
+(2) tela de disponibilidade no front; (3) ligar `conflicts` na `/agenda`; (4) release do DS se
+#187/#195 mergearem.
+
+**ESTADO REAL CONFERIDO ANTES.** O roadmap dizia "#187 e #195 abertos"; `gh pr view` mostrou os dois
+**mergeados** em `d1d128f0` (#187) e `3604673a` (#195) — de novo pelo bot `kof-agent-worker` (B8) —
+e um **PR de release aberto pelo bot**: [#196](https://github.com/Rede-ENois/enois-design-system/pull/196)
+(`chore/release-0.31.0`, CI verde, publish SKIPADO como esperado antes da tag). O item 4 do bloco já
+estava em andamento fora de mim; **não foi aberto PR duplicado**. Nenhuma tag `v0.31.0` existe ainda.
+
+### Unidades
+
+1. **(A) DS — superfície de disponibilidade semanal.** Tipos
+   (`CalendarAvailabilityDraft`, `CalendarAvailabilityWindowInput/Data`, problemas
+   `day|clock|endBeforeStart|overlaps|tooMany`), regras puras em
+   `src/lib/calendar/calendar-availability-draft.ts` (`MAX_WINDOWS=50`, relógio `hh:mm`, fim
+   estritamente depois do começo, meio-aberto: janelas que se encostam **não** sobrepõem, teto de
+   50), editor `CalendarAvailability` (linha por janela, dia em pílulas 1=segunda…7=domingo,
+   `TimeTextInput`, lixeira, validação só na tentativa de salvar) e
+   `CalendarAvailabilitySurface` controlada (D18: props entram, callbacks saem; semana nova do app
+   substitui o rascunho). Microcópia nova `calendar.availability`.
+2. **(B) DS — `conflicts` na `CalendarAgendaSurface`.** O aviso do #195 (#195 mergeado) tinha a
+   props só no `CalendarEntryFormDialog`; a superfície da agenda não repassava, então a `/agenda`
+   não tinha caminho. `CalendarAgendaSurfaceProps.conflicts?: CalendarAgendaItemData[] | null`
+   com repasse direto ao diálogo. Commit `1a7ec87` empilhado no PR da unidade A.
+3. **(C) Front — tela de disponibilidade + aviso ligado na `/agenda`.** Rota
+   `/agenda/disponibilidade` (arquivo `agenda_.disponibilidade.tsx` — o `_` quebra o aninhamento:
+   `/agenda` não tem `Outlet`), `requireAuth`, `calendarApi.availability()`/`setAvailability()`
+   (cliente do #801, já na `qa`), `setQueryData` com a resposta do servidor. Na `/agenda`,
+   `calendarQueries.conflicts({from,to})` — a mesma janela que a agenda desenha, **sem escopo na
+   chave** (o aviso vale para as duas agendas) — repassada a
+   `CalendarAgendaSurface.conflicts`; falha da consulta é silenciosa (sem lista, sem aviso, sem
+   bloqueio — D23).
+
+### Arquivos
+
+- DS: `src/domain/calendar/calendar-availability.tsx` e `calendar-availability-surface.tsx` (+2 testes),
+  `src/lib/calendar/calendar-availability-draft.ts` (+teste), 5 tipos novos em
+  `src/types/domain/calendar/`, `calendar-agenda-surface.tsx` e `calendar-agenda-surface-props.ts` com `conflicts`,
+  `src/types/messages/calendar-messages.ts` + `src/messages/defaults/calendar.ts`.
+  Branch `feat/calendar-availability-surface` sobre `main` `fabb777`, commits `5800e56` + `1a7ec87`.
+- Front: `src/routes/agenda_.disponibilidade{.tsx,.test.tsx}`, `src/routes/agenda.tsx`,
+  `src/lib/query-options/calendar.ts` (+ `calendar.test.ts` novo), `src/texts.ts`,
+  `src/routeTree.gen.ts` (regenerado pelo build). Branch
+  `feat/enois-calendar-availability-screen` sobre `qa` `1ed7284d`, commits `8a3770bf` + `5c979ba0`.
+
+**TESTES:**
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| DS (A) | `calendar-availability-surface.test.tsx` | **12/12** |
+| DS (A) | `calendar-availability-draft.test.ts` | **14/14** |
+| DS (B) | `calendar-agenda-surface.test.tsx` | **8/8** (2 novos: repasse de `conflicts` com `role="status"` e sem aviso quando nada toca o intervalo) |
+| DS (A+B) | suíte inteira (commit `1a7ec87`) | **1655/1655** |
+| DS | lint / tsc / build | 0 erros / EXIT=0 / EXIT=0 |
+| Front (C) | `agenda_.disponibilidade` + `agenda` + `query-options/calendar` | **7/7** |
+| Front | suíte inteira | 1249/1254 — 5 falhas de **timeout PBKDF2 (5s) em `lib/e2e`** que passam **isoladas** (20/20); flake de carga, nenhum teste de agenda falhou; [prova comentada no PR](https://github.com/Rede-ENois/enois-frontend/pull/804#issuecomment-6773706799) |
+| Front | `tsc --noEmit` | só 2 erros **pré-existentes** de `badgeKits` (DS `main` pós-#195 exige a prop; front na `qa` ainda não) — comprovados com `git stash` na base limpa |
+| Front | `eslint` nos arquivos tocados / `vite build` | 0 erros / EXIT=0 (`routeTree.gen.ts` com `/agenda/disponibilidade`) |
+
+**PRs:** DS [#197](https://github.com/Rede-ENois/enois-design-system/pull/197) (A+B, aberto,
+`REVIEW_REQUIRED`), front [#804](https://github.com/Rede-ENois/enois-frontend/pull/804) (C, em
+**draft** até o release do DS com as duas peças), docs (este).
+
+**ARMADILHAS DA RODADA:**
+
+- **Cache do Nitro**: o build do front falhou com "`CalendarAvailabilitySurface` is not exported"
+  vindo de `node_modules/.nitro/vite/services/ssr/assets/agenda_*.js` — bundle **antigo** do
+  tarball anterior. `rm -rf node_modules/.nitro` e o build passou. Nova armadilha de B6: trocou o
+  tarball, limpe o cache do Nitro.
+- **`push --force-with-lease` com refspec longa**: `--force-with-lease=<branch>:<sha> <branch>` só
+  funciona se a ref remota está no `refs/remotes` local; com worktree novo, resolver com
+  `git ls-remote` + o SHA esperado exato.
+- **`gh pr edit --body`** falha com erro GraphQL de Projects (classic); PATCH JSON em
+  `gh api repos/.../pulls/N -X PATCH --input -` funciona.
+
+**BLOQUEIOS/NOTAS:**
+
+- **B8**: #187 e #195 mergeados pelo bot durante/entre as rodadas; o bot também abriu o PR de
+  release #196 (0.31.0, com seletor de lembrete + aviso de conflito). A superfície da unidade A e
+  o `conflicts` da unidade B **não estão** no escopo do 0.31.0; o #804 fica em draft até um
+  release posterior. Publicação é ação humana (D20): tag `v*`.
+- O pacote publicado (0.30.2-rc.3) não tem nenhuma peça nova; o branch do front valida contra o
+  tarball do #197 via `npm pack` (B6/B4).
+- **B6 nota**: `tsc --noEmit` do front na base limpa tem 2 erros de `badgeKits` — a `qa` do front
+  exige um release do DS que inclua o `main` atual; registrado para não culpar o diff errado.
+
+**PRÓXIMA RODADA (§10, proposta de execução 20):** (1) revisão/tag do release #196 (humano,
+D20) e release seguinte com o #197 quando revisarem; (2) ligar o seletor de lembrete na rota de
+detalhe `/agenda/$entryId` (#777 em revisão; o componente está no #187, já mergeado no `main` do
+DS); (3) destravar o #804 do draft quando o pacote sair (regerar lockfile pelo workflow
+descartável, B7); (4) iniciar a fase 4 (agenda social: eventos de grupo na agenda) ou a fase 8
+(ICS export), que não dependem do release.
+
+---
