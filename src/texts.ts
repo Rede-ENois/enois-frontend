@@ -68,8 +68,10 @@ export const texts = {
   /** Contas da comunidade no painel de monitorabilidade. */
   userMetrics: {
     title: "Contas da comunidade",
-    hint: "O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual.",
+    hint: 'O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual. "Ativos hoje" conta quem usou a plataforma nas últimas 24 horas.',
     total: "Total de contas",
+    /** Quem abriu o app nas últimas 24h — medido pelo heartbeat de presença. */
+    active24h: "Ativos hoje (24h)",
     newToday: "Entraram hoje",
     new7: "Últimos 7 dias",
     new30: "Últimos 30 dias",
