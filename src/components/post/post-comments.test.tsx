@@ -3,11 +3,12 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { createRoot } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { ApiError } from "@/lib/api-client";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { CommentView } from "@/types/application/comment/comment-view";
-import { createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PostComments } from "./post-comments";
 
