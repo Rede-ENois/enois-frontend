@@ -9,10 +9,12 @@ import type { CalendarParticipation } from "@/types/application/calendar/calenda
 import type {
   CalendarEntryDetailData,
   CalendarEntryDetailParticipant,
+  CalendarReminderMinutes,
 } from "@rede-enois/design-system/domain";
 import {
   CalendarEntryDetail,
   CalendarEntryFormDialog,
+  CalendarReminderSelector,
   wallClockOf,
 } from "@rede-enois/design-system/domain";
 import { Button, EmptyState, LoadingState, useToast } from "@rede-enois/design-system/ui";
@@ -47,10 +49,16 @@ function EntryDetailPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
 
   const detail = useQuery({
     queryKey: ["agenda", "detalhe", entryId] as const,
     queryFn: () => calendarApi.get(entryId),
+  });
+
+  const reminders = useQuery({
+    queryKey: ["agenda", "lembretes", entryId] as const,
+    queryFn: () => calendarApi.listReminders(entryId),
   });
 
   const refresh = () => {
@@ -103,6 +111,24 @@ function EntryDetailPage() {
     onError: () => toast(texts.agenda.errorInvite, "error"),
   });
 
+  const setReminder = useMutation({
+    mutationFn: async (minutes: CalendarReminderMinutes | null) => {
+      for (const change of reminderChanges(reminders.data ?? [], minutes)) {
+        if (change.clear !== undefined) {
+          await calendarApi.clearReminder(entryId, change.clear);
+        }
+        if (change.set !== undefined) {
+          await calendarApi.setReminder(entryId, change.set);
+        }
+      }
+    },
+    onSuccess: () => {
+      setReminderError(null);
+      void queryClient.invalidateQueries({ queryKey: ["agenda", "lembretes", entryId] });
+    },
+    onError: () => setReminderError(texts.agenda.errorReminder),
+  });
+
   if (detail.isPending) {
     return (
       <AppContainer>
@@ -128,10 +154,22 @@ function EntryDetailPage() {
   }
 
   const view = detailOf(detail.data);
+  // O servidor devolve o que ainda vai tocar; a tela mostra a escolha única, então a primeira
+  // antecedência é a que está ligada. Sem lembrete, o seletor abre em "não avisar".
+  const chosenReminder = (reminders.data?.[0]?.minutesBefore ??
+    null) as CalendarReminderMinutes | null;
 
   return (
     <AppContainer>
       <CalendarEntryDetail
+        reminder={
+          <CalendarReminderSelector
+            value={chosenReminder}
+            onChange={(minutes) => setReminder.mutate(minutes)}
+            saving={setReminder.isPending}
+            error={reminderError}
+          />
+        }
         entry={view.entry}
         owner={view.owner}
         participation={view.participation}
@@ -180,6 +218,28 @@ function EntryDetailPage() {
       />
     </AppContainer>
   );
+}
+
+/**
+ * O seletor escolhe **um** aviso, mas o servidor guarda um por antecedência. Trocar de opção apaga
+ * as outras antes de gravar a nova: deixar duas ligadas faria a pessoa ser avisada duas vezes por
+ * uma escolha só. "Não avisar" (`null`) apaga todas. A lista de mudanças é pura para o teste
+ * prender a regra sem montar a tela.
+ */
+export function reminderChanges(
+  current: { minutesBefore: number }[],
+  chosen: CalendarReminderMinutes | null,
+): { clear?: number; set?: CalendarReminderMinutes }[] {
+  const changes: { clear?: number; set?: CalendarReminderMinutes }[] = [];
+  for (const reminder of current) {
+    if (reminder.minutesBefore !== chosen) {
+      changes.push({ clear: reminder.minutesBefore });
+    }
+  }
+  if (chosen !== null && !current.some((reminder) => reminder.minutesBefore === chosen)) {
+    changes.push({ set: chosen });
+  }
+  return changes;
 }
 
 /**

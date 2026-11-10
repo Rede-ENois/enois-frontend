@@ -190,6 +190,7 @@ export const texts = {
     /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
     errorInvite: "Não foi possível convidar. Tente de novo.",
     errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
+    errorReminder: "Não foi possível salvar o lembrete. Tente de novo.",
     detailNotFound: "Compromisso não encontrado",
     detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
     exportIcs: "Baixar .ics",
