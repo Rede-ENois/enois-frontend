@@ -1638,7 +1638,7 @@ privada, D7) ou fase 4 (fonte de eventos de grupo).
 | DS (C) | suíte inteira `npx vitest run` | **1659/1659** (175 arquivos) |
 | DS (C) | `npx tsc --noEmit` / `npm run lint` / `npm run build` | EXIT=0 / 0 erros / EXIT=0 |
 | Front (C) | `agenda.$entryId.test.tsx` | **9/9** |
-| Front (C) | `tsc --noEmit` / `eslint` | EXIT=0 / 0 erros (2 avisos pré-existentes de fast-refresh) |
+| Front (C) | `tsc --noEmit` / `eslint` / `vite build` | EXIT=0 / 0 erros (2 avisos pré-existentes de fast-refresh) / EXIT=0 |
 
 ### Armadilhas e notas
 
