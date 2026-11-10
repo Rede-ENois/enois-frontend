@@ -20,6 +20,7 @@ import {
   todayIn,
 } from "@rede-enois/design-system/domain";
 import {
+  Button,
   LoadingState,
   PageHeader,
   Tabs,
@@ -27,9 +28,10 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Download } from "lucide-react";
 
 import { calendarApi } from "@/lib/api";
+import { downloadCalendarExport } from "@/lib/calendar-export";
 import { calendarQueries } from "@/lib/query-options/calendar";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -119,6 +121,7 @@ function AgendaPage() {
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // `periodWindow` devolve dias; a API pede instantes. O `to` já é o dia seguinte (janela meio aberta).
   const window = useMemo(() => {
@@ -180,6 +183,26 @@ function AgendaPage() {
     void navigate({ search: next, replace: true });
   };
 
+  // O arquivo é o da janela e do escopo que a tela está mostrando: baixar "a agenda" vendo o mês
+  // de novembro e receber o ano inteiro confundiria mais do que ajudaria.
+  const exportCalendar = async () => {
+    setExporting(true);
+    try {
+      await downloadCalendarExport(
+        calendarApi.exportUrl({
+          from: window.from,
+          to: window.to,
+          scope: scope ?? null,
+        }),
+      );
+      toast(texts.agenda.exportIcsDone, "success");
+    } catch {
+      toast(texts.agenda.exportIcsError, "error");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const eyebrow =
     scope === "SOCIAL"
       ? texts.agenda.scopeSocial
@@ -193,6 +216,18 @@ function AgendaPage() {
         title={texts.agenda.title}
         description={texts.agenda.subtitle}
         icon={CalendarDays}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void exportCalendar()}
+            disabled={exporting}
+            title={texts.agenda.exportIcsHint}
+          >
+            <Download aria-hidden="true" />
+            {texts.agenda.exportIcs}
+          </Button>
+        }
       >
         <Tabs
           value={scope ?? "all"}
