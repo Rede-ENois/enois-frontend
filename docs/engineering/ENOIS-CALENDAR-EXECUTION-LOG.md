@@ -1385,6 +1385,15 @@ DS [#195](https://github.com/Rede-ENois/enois-design-system/pull/195) (aviso de 
 - **Bloqueado por revisão:** #187 (seletor de lembrete no DS), #195 (aviso de conflito no DS),
   #613 (disponibilidade), #801 (cliente). As telas dependem do #613 e do release do DS.
 
+**FECHAMENTO DA RODADA — o que o bot mergeou.** Pouco depois da abertura, o bot
+`kof-agent-worker` mergeou **#613** (`0bd98c2c`), **#801** (`b089837b`) e **#802**
+(`09a75b9b`), de novo sem revisão humana (B8). Conferido com `git ls-tree`/`git show` que o
+conteúdo chegou íntegro: a `qa` tem `V267__calendar_availability.sql` (a V265 da `qa` é a de
+`user_presence` e a V266 é a de `badge_kits` — nenhuma sobrescrita), os oito arquivos de
+disponibilidade no backend, os dois tipos e os dois métodos do cliente no front, a D24 na
+arquitetura e a execução 18 no log. O único PR do bloco ainda aberto é o **DS #195**; ele precisa de
+revisão humana para o aviso de conflito existir no pacote.
+
 **PRÓXIMA RODADA (§10, proposta de execução 19):** a tela de disponibilidade no front (a partir do
 cliente do #801) e a superfície de disponibilidade no DS; ligar `conflicts` no `CalendarEntryFormDialog`
 da tela `/agenda` quando o #195 for publicado; e, se o #187 mergear, o release do DS com o seletor de
