@@ -78,7 +78,7 @@ import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
+import { Route as AgendaDisponibilidadeRouteImport } from './routes/agenda_.disponibilidade'
 import { Route as VagasJobIdCandidaturasRouteImport } from './routes/vagas.$jobId.candidaturas'
 import { Route as ProjetosUsernameProjectSlugRouteImport } from './routes/projetos.$username.$projectSlug'
 import { Route as GamesUsernameGameSlugRouteImport } from './routes/games.$username.$gameSlug'
@@ -433,10 +433,10 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AgendaEntryIdRoute = AgendaEntryIdRouteImport.update({
-  id: '/$entryId',
-  path: '/$entryId',
-  getParentRoute: () => AgendaRoute,
+const AgendaDisponibilidadeRoute = AgendaDisponibilidadeRouteImport.update({
+  id: '/agenda_/disponibilidade',
+  path: '/agenda/disponibilidade',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const VagasJobIdCandidaturasRoute = VagasJobIdCandidaturasRouteImport.update({
   id: '/candidaturas',
@@ -478,7 +478,7 @@ const ComunidadesCommunityIdCanaisChannelIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/agenda': typeof AgendaRouteWithChildren
+  '/agenda': typeof AgendaRoute
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -524,7 +524,7 @@ export interface FileRoutesByFullPath {
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
-  '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
@@ -557,7 +557,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/agenda': typeof AgendaRouteWithChildren
+  '/agenda': typeof AgendaRoute
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -603,7 +603,7 @@ export interface FileRoutesByTo {
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
-  '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
@@ -637,7 +637,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/agenda': typeof AgendaRouteWithChildren
+  '/agenda': typeof AgendaRoute
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -683,7 +683,7 @@ export interface FileRoutesById {
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
-  '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda_/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
@@ -764,7 +764,7 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/termos'
     | '/vagas'
-    | '/agenda/$entryId'
+    | '/agenda/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
@@ -843,7 +843,7 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/termos'
     | '/vagas'
-    | '/agenda/$entryId'
+    | '/agenda/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
@@ -922,7 +922,7 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/termos'
     | '/vagas'
-    | '/agenda/$entryId'
+    | '/agenda_/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
@@ -956,7 +956,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AgendaRoute: typeof AgendaRouteWithChildren
+  AgendaRoute: typeof AgendaRoute
   ApoiarRoute: typeof ApoiarRoute
   BlogsRoute: typeof BlogsRoute
   BloqueadosRoute: typeof BloqueadosRoute
@@ -1002,6 +1002,7 @@ export interface RootRouteChildren {
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
+  AgendaDisponibilidadeRoute: typeof AgendaDisponibilidadeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthResetRoute: typeof AuthResetRoute
   AuthVerifyRoute: typeof AuthVerifyRoute
@@ -1507,12 +1508,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agenda/$entryId': {
-      id: '/agenda/$entryId'
-      path: '/$entryId'
-      fullPath: '/agenda/$entryId'
-      preLoaderRoute: typeof AgendaEntryIdRouteImport
-      parentRoute: typeof AgendaRoute
+    '/agenda_/disponibilidade': {
+      id: '/agenda_/disponibilidade'
+      path: '/agenda/disponibilidade'
+      fullPath: '/agenda/disponibilidade'
+      preLoaderRoute: typeof AgendaDisponibilidadeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/vagas/$jobId/candidaturas': {
       id: '/vagas/$jobId/candidaturas'
@@ -1565,17 +1566,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AgendaRouteChildren {
-  AgendaEntryIdRoute: typeof AgendaEntryIdRoute
-}
-
-const AgendaRouteChildren: AgendaRouteChildren = {
-  AgendaEntryIdRoute: AgendaEntryIdRoute,
-}
-
-const AgendaRouteWithChildren =
-  AgendaRoute._addFileChildren(AgendaRouteChildren)
 
 interface ComunidadesCommunityIdRouteChildren {
   ComunidadesCommunityIdCanaisChannelIdRoute: typeof ComunidadesCommunityIdCanaisChannelIdRoute
@@ -1688,7 +1678,7 @@ const ProjetosUsernameRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AgendaRoute: AgendaRouteWithChildren,
+  AgendaRoute: AgendaRoute,
   ApoiarRoute: ApoiarRoute,
   BlogsRoute: BlogsRoute,
   BloqueadosRoute: BloqueadosRoute,
@@ -1734,6 +1724,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
+  AgendaDisponibilidadeRoute: AgendaDisponibilidadeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthResetRoute: AuthResetRoute,
   AuthVerifyRoute: AuthVerifyRoute,

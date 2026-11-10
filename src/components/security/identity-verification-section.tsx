@@ -9,12 +9,15 @@ import { useToast } from "@rede-enois/design-system/ui";
 import { ApiError, identityApi } from "@/lib/api";
 
 /**
- * Verificação de identidade civil. O estado vem SEMPRE do backend; o botão só existe quando há um
- * provedor autorizado configurado — sem isso, mostramos indisponibilidade em vez de um botão morto.
- */
-/**
- * Enquanto a funcionalidade nao estiver pronta/homologada, a secao fica INVISIVEL: nada de UI
- * mostrando "verificacao" sem provedor. Ligue com VITE_IDENTITY_ENABLED=true.
+ * Verificação de identidade civil com liberação progressiva. O estado vem SEMPRE do backend: quem
+ * decide se a vez chegou é a rodada de liberação; quem aprova é o provedor, via webhook conferido
+ * no servidor. O navegador aqui não tem voto — nenhum parâmetro de retorno aprova ninguém.
+ *
+ * Sem convite (released=false) a seção mostra "está chegando": nada de nota de credibilidade,
+ * posição no ranking ou prazo. Ela é opcional e nunca é requisito para usar o Énóis.
+ *
+ * Enquanto a funcionalidade nao estiver homologada, a secao fica INVISIVEL: nada de UI mostrando
+ * "verificacao" sem provedor. Ligue com VITE_IDENTITY_ENABLED=true.
  */
 const IDENTITY_UI_ENABLED = import.meta.env.VITE_IDENTITY_ENABLED === "true";
 
@@ -44,25 +47,24 @@ export function IdentityVerificationSection() {
       invalidate();
       if (result?.redirectUrl) window.location.href = result.redirectUrl;
     },
+    // O erro do provedor chega com codigo estavel (capacidade, sem convite, indisponivel, trava
+    // financeira): a mensagem certa vem do mapa de codigos, nunca de um "algo deu errado".
     onError: (err) =>
-      toast(
-        err instanceof ApiError && err.code === "IDENTITY_PROVIDER_UNAVAILABLE"
-          ? texts.identity.unavailable
-          : texts.communities.actionError,
-        "error",
-      ),
+      toast(err instanceof ApiError ? err.message : texts.identity.resultError, "error"),
   });
 
   const refresh = useMutation({
     mutationFn: () => identityApi.refresh(),
     onSuccess: invalidate,
-    onError: () => toast(texts.communities.actionError, "error"),
+    onError: (err) =>
+      toast(err instanceof ApiError ? err.message : texts.communities.actionError, "error"),
   });
 
   const revoke = useMutation({
     mutationFn: () => identityApi.revoke(),
     onSuccess: invalidate,
-    onError: () => toast(texts.communities.actionError, "error"),
+    onError: (err) =>
+      toast(err instanceof ApiError ? err.message : texts.communities.actionError, "error"),
   });
 
   // Escondida ate a flag ser ligada (tudo implementado, nada visivel).

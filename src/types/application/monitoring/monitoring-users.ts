@@ -5,6 +5,8 @@ import type { MonitoringUsersProjection } from "@/types/application/monitoring/m
 export type MonitoringUsers = {
   generatedAt: string;
   total: number;
+  /** Usuários com atividade (heartbeat de presença) nas últimas 24 horas. */
+  activeLast24Hours: number;
   newToday: number;
   newLast7Days: number;
   newLast30Days: number;

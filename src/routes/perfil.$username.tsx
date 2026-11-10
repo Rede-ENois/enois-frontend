@@ -13,6 +13,7 @@ import type { SectionProps } from "@/types/routes/profile/section-props";
 import {
   ContributorTag,
   EMPTY_PROFILE_LOOK,
+  HumanitySeal,
   PostCardSkeletons,
   ProfileCard,
   ProfileEditMenu,
@@ -524,6 +525,9 @@ function Profile() {
             }
             bio={
               <div className="space-y-3">
+                {/* Selo "Humanidade Comprovada": so quando o backend confirma a verificacao. */}
+                {user.humanityVerified && <HumanitySeal variant="full" />}
+
                 {isContributor && <ContributorTag color={user.contributorTagColor} />}
 
                 {user.headline && (

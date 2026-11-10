@@ -35,6 +35,8 @@ export type Profile = {
   portfolio: string | null;
   externalLinks: string[];
   openToWork: boolean;
+  /** Selo "Humanidade Comprovada": verificação de identidade aprovada (Didit); ausente em leituras antigas. */
+  humanityVerified?: boolean;
   /** Preferencia da conta: mostrar a secao de ranking no perfil (padrao true). */
   showRanking?: boolean;
   isMentor: boolean;

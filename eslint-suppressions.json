@@ -578,7 +578,7 @@
   },
   "src/routes/games.tsx": {
     "local/no-front-markup": {
-      "count": 161
+      "count": 149
     }
   },
   "src/routes/grupos.$slug.tsx": {
@@ -598,7 +598,7 @@
   },
   "src/routes/mensagens.tsx": {
     "local/no-front-markup": {
-      "count": 68
+      "count": 67
     }
   },
   "src/routes/mentoria.tsx": {
@@ -764,7 +764,7 @@
   },
   "src/routes/vagas.tsx": {
     "local/no-front-markup": {
-      "count": 298
+      "count": 289
     }
   }
 }

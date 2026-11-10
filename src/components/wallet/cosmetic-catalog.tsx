@@ -235,10 +235,13 @@ export function CosmeticCatalog({
 
   const pieceAction = (item: CosmeticShopItem) => {
     if (item.owned) {
+      // Alvo de toque inflado pelo pseudo-elemento (mesmo recurso das pílulas de reação): o chip
+      // media 22px de altura, apertado demais para o dedo — o desenho continua o mesmo, o clique
+      // passa a pegar num raio confortável.
       return (
         <button
           type="button"
-          className="shrink-0 rounded-full border border-border-soft px-2 py-0.5 font-medium text-text-subtle transition hover:border-primary hover:text-primary disabled:opacity-50"
+          className="relative shrink-0 rounded-full border border-border-soft px-2 py-0.5 font-medium text-text-subtle transition before:absolute before:-inset-y-2 before:-inset-x-1 before:content-[''] hover:border-primary hover:text-primary disabled:opacity-50"
           disabled={actionPending}
           onClick={() => (item.equipped ? onUnequip(item.id) : onEquip(item.id))}
         >
@@ -250,7 +253,7 @@ export function CosmeticCatalog({
     return (
       <button
         type="button"
-        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/50 px-2 py-0.5 font-medium text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+        className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/50 px-2 py-0.5 font-medium text-primary transition before:absolute before:-inset-y-2 before:-inset-x-1 before:content-[''] hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
         aria-label={texts.cosmetics.buyPiece(item.name, item.priceLabel)}
         title={texts.cosmetics.buyPiece(item.name, item.priceLabel)}
         disabled={actionPending}
@@ -328,9 +331,11 @@ export function CosmeticCatalog({
           {worn ? (
             <span className="cos-shop__owned">{texts.cosmetics.lookWearing}</span>
           ) : owned ? (
+            // "Vestir" é texto sublinhado por desenho, mas o alvo de toque infla para os 44px:
+            // a palavra tem 18px de altura e ficava em cima do avatar ao errar o dedo.
             <button
               type="button"
-              className="font-extrabold text-growth underline underline-offset-2 disabled:opacity-60"
+              className="relative font-extrabold text-growth underline underline-offset-2 before:absolute before:-inset-y-2.5 before:-inset-x-2 before:content-[''] disabled:opacity-60"
               disabled={pending}
               onClick={() => toggleLook(entry)}
             >
@@ -375,7 +380,7 @@ export function CosmeticCatalog({
                           <span className="min-w-0 flex-1">
                             <button
                               type="button"
-                              className="block w-full break-words text-left leading-snug text-text-strong hover:underline"
+                              className="relative block w-full break-words text-left leading-snug text-text-strong before:absolute before:-inset-y-1.5 before:-inset-x-1 before:content-[''] hover:underline"
                               aria-pressed={tryOn.items[item.kind] === item.id}
                               aria-label={messages.tryItem(item.name)}
                               onClick={() => tryItem(item)}

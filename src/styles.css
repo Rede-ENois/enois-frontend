@@ -2,6 +2,19 @@
 @source "../src";
 @import "@rede-enois/design-system/styles.css";
 
+/*
+ * Puxar o feed para baixo renova o feed (o gesto próprio do app), não recarrega a página.
+ *
+ * Sem esta regra, no celular o Chrome assume o gesto para si: o pull-to-refresh NATIVO recarrega
+ * o documento inteiro por cima do `useFeedPullToRefresh` — a pessoa puxa para ver novidades e
+ * perde a posição, a aba e o estado. O app já tem o próprio gesto de renovação no topo do feed,
+ * então o do navegador não traz nada aqui. `overscroll-behavior-y` no `html` basta para os dois
+ * navegadores móveis; o custo é zero no desktop, onde não existe overscroll do documento.
+ */
+html {
+  overscroll-behavior-y: none;
+}
+
 /* Limita o link para que o título da evidência trunque dentro do cartão do selo. */
 .cos-card__body:has([aria-labelledby="profile-seals-title"]) {
   grid-template-columns: minmax(0, 1fr);

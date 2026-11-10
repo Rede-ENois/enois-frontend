@@ -3,6 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import type { CallView } from "@/types/application/call/call-view";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -344,5 +345,258 @@ describe("a pessoa desligou por dentro da sala", () => {
       );
     });
     expect(actions.leaveFromRoom).not.toHaveBeenCalled();
+  });
+});
+
+describe("minimizar preserva o iframe", () => {
+  let root: Root;
+  let host: HTMLDivElement;
+
+  beforeEach(() => {
+    for (const held of [...getCallSession().waiting]) callSessionStore.removeWaiting(held.id);
+    callSessionStore.idle();
+    actions.leaveFromRoom.mockClear();
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    act(() =>
+      root.render(
+        <QueryClientProvider client={new QueryClient()}>
+          <CallPanel />
+        </QueryClientProvider>,
+      ),
+    );
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    document.body.innerHTML = "";
+    for (const held of [...getCallSession().waiting]) callSessionStore.removeWaiting(held.id);
+    callSessionStore.idle();
+  });
+
+  function enter(kind: "AUDIO" | "VIDEO" = "AUDIO") {
+    act(() =>
+      callSessionStore.live({
+        callId: "call_1",
+        kind,
+        modality: "DIRECT",
+        host: "https://meet.enois.ia.br",
+        tokenTtlSeconds: 7200,
+        room: "sala-1",
+        jwt: "token",
+        call: { ...ringingCall(), kind, state: "ACTIVE" },
+      }),
+    );
+    return host.querySelector("iframe")!;
+  }
+
+  it.each(["AUDIO", "VIDEO"] as const)(
+    "%s mantém a mesma janela em quatro ciclos",
+    async (kind) => {
+      const frames: HTMLIFrameElement[] = [];
+      const removed: HTMLIFrameElement[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const [nodes, target] of [
+            [record.addedNodes, frames],
+            [record.removedNodes, removed],
+          ] as const) {
+            for (const node of nodes) {
+              if (node instanceof HTMLIFrameElement) target.push(node);
+              else if (node instanceof Element) target.push(...node.querySelectorAll("iframe"));
+            }
+          }
+        }
+      });
+      observer.observe(host, { childList: true, subtree: true });
+      try {
+        const frame = enter(kind);
+        const source = frame.contentWindow;
+        const join = getCallSession().join;
+        const url = frame.src;
+        for (let cycle = 0; cycle < 4; cycle++) {
+          act(() =>
+            host
+              .querySelector<HTMLButtonElement>(`[aria-label="${texts.calls.minimize}"]`)!
+              .click(),
+          );
+          expect(host.querySelector("iframe")).toBe(frame);
+          expect(frame.isConnected).toBe(true);
+          expect(getCallSession()).toMatchObject({
+            phase: "live",
+            minimized: true,
+            needsCredential: false,
+          });
+          const pill = Array.from(host.querySelectorAll("button")).find((button) =>
+            button.textContent?.includes(
+              kind === "VIDEO" ? texts.calls.videoTitle : texts.calls.audioTitle,
+            ),
+          )!;
+          act(() => pill.click());
+          expect(host.querySelector("iframe")).toBe(frame);
+          expect(frame.contentWindow).toBe(source);
+          expect(frame.src).toBe(url);
+          expect(getCallSession().join).toBe(join);
+          expect(getCallSession()).toMatchObject({
+            phase: "live",
+            minimized: false,
+            needsCredential: false,
+            needsRejoin: false,
+          });
+        }
+        await Promise.resolve();
+        expect(frames).toEqual([frame]);
+        expect(removed).toEqual([]);
+        expect(actions.leaveFromRoom).not.toHaveBeenCalled();
+      } finally {
+        observer.disconnect();
+      }
+    },
+  );
+
+  it("não prende o foco nem mantém um modal ao minimizar", () => {
+    const outside = document.createElement("button");
+    document.body.prepend(outside);
+    enter();
+    act(() =>
+      host.querySelector<HTMLButtonElement>(`[aria-label="${texts.calls.minimize}"]`)!.click(),
+    );
+    const frame = host.querySelector("iframe");
+    expect(frame).not.toBeNull();
+    expect(frame!.closest("[inert]")).not.toBeNull();
+    expect(host.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(document.activeElement?.closest("[inert]")).toBeNull();
+    outside.focus();
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(outside);
+  });
+
+  it("mantém a recuperação minimizada sem tirar o foco da página", () => {
+    const outside = document.createElement("button");
+    document.body.prepend(outside);
+    const frame = enter();
+    const renewed = { ...getCallSession().join!, jwt: "token_renovado" };
+    act(() => callSessionStore.minimize());
+    const pill = Array.from(host.querySelectorAll("button")).find(
+      (button) => button.textContent === texts.calls.audioTitle,
+    )!;
+    outside.focus();
+
+    act(() => callSessionStore.lostCredential());
+    expect(getCallSession()).toMatchObject({
+      phase: "joining",
+      minimized: true,
+      needsCredential: true,
+    });
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(pill.isConnected).toBe(true);
+    expect(document.activeElement).toBe(outside);
+    expect(frame.isConnected).toBe(false);
+
+    act(() => callSessionStore.credentialConsumed());
+    act(() => callSessionStore.joining(renewed.call));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(outside);
+
+    act(() => callSessionStore.live(renewed));
+    const recoveredFrame = host.querySelector("iframe")!;
+    expect(recoveredFrame).not.toBeNull();
+    expect(recoveredFrame).not.toBe(frame);
+    expect(recoveredFrame.closest("[inert]")).not.toBeNull();
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: true,
+      needsCredential: false,
+    });
+    expect(pill.isConnected).toBe(true);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(outside);
+
+    const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(tab);
+    expect(tab.defaultPrevented).toBe(false);
+    expect(actions.leaveFromRoom).not.toHaveBeenCalled();
+
+    act(() => pill.click());
+    const dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(host.querySelector("iframe")).toBe(recoveredFrame);
+  });
+
+  it("preserva o botão da pílula e seu foco durante a recuperação", () => {
+    enter();
+    act(() => callSessionStore.minimize());
+    const pill = document.activeElement;
+    expect(pill?.textContent).toBe(texts.calls.audioTitle);
+    const renewed = { ...getCallSession().join!, jwt: "token_renovado" };
+    act(() => callSessionStore.lostCredential());
+    expect(document.activeElement).toBe(pill);
+    expect(pill?.isConnected).toBe(true);
+    act(() => callSessionStore.live(renewed));
+    expect(document.activeElement).toBe(pill);
+    expect(pill?.isConnected).toBe(true);
+  });
+
+  it("mostra erro de recuperação sem prender o foco da página", () => {
+    const outside = document.createElement("button");
+    document.body.prepend(outside);
+    enter();
+    act(() => callSessionStore.minimize());
+    outside.focus();
+    act(() => callSessionStore.lostCredential());
+    act(() => callSessionStore.error("Falha na recuperação da chamada."));
+    expect(host.textContent).toContain("Falha na recuperação da chamada.");
+    expect(host.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(host.querySelector('[role="dialog"]')?.closest("[inert]")).toBeNull();
+    expect(host.querySelector("iframe")).toBeNull();
+    expect(document.activeElement).toBe(outside);
+  });
+
+  it("receber outra chamada e atualizar a presença preserva a sala minimizada", () => {
+    const frame = enter();
+    act(() => callSessionStore.minimize());
+    act(() =>
+      callSessionStore.ring({ ...ringingCall(), id: "call_2", isInitiator: false }, "incoming"),
+    );
+    act(() => callSessionStore.update({ ...getCallSession().call!, participantCount: 2 }));
+    expect(host.querySelector("iframe")).toBe(frame);
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: true,
+      call: { id: "call_1" },
+      waiting: [{ id: "call_2" }],
+    });
+    expect(actions.answer).not.toHaveBeenCalled();
+    expect(actions.leaveFromRoom).not.toHaveBeenCalled();
+  });
+
+  it("continua escutando a saída da sala minimizada", () => {
+    const frame = enter();
+    const source = frame.contentWindow;
+    act(() => callSessionStore.minimize());
+    act(() =>
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "enois:call-room-exit", reason: "hangup" },
+          origin: "https://meet.enois.ia.br",
+          source: source as MessageEventSource,
+        }),
+      ),
+    );
+    expect(actions.leaveFromRoom).toHaveBeenCalledExactlyOnceWith("call_1", "hangup");
+    expect(getCallSession().needsCredential).toBe(false);
+  });
+
+  it("encerramento remoto remove o iframe minimizado", () => {
+    const frame = enter();
+    act(() => callSessionStore.minimize());
+    act(() => callSessionStore.ended({ ...ringingCall(), state: "ENDED" }));
+    expect(frame.isConnected).toBe(false);
+    expect(host.querySelector("iframe")).toBeNull();
+    expect(getCallSession()).toMatchObject({ phase: "ended", join: null, needsCredential: false });
   });
 });

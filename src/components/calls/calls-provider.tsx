@@ -304,7 +304,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     [enterRoom, refreshRelated],
   );
 
-  // Reconexão: painel reaberto (ou sem mídia) pede credencial nova em vez de abrir a sala às cegas.
+  // Recuperação de credencial: minimizar/expandir a sala montada não gera uma nova entrada.
   // O pedido é consumido antes da entrada, para não ser rearmado pela resposta que vem:
   // `needsCredential` é um pedido de uma vez, não um estado de espera.
   useEffect(() => {

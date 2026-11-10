@@ -20,6 +20,7 @@ const dia = (date: string, newUsers: number, total: number, growthPercent: numbe
 const base: MonitoringUsers = {
   generatedAt: "2026-10-30T12:00:00Z",
   total: 1_234,
+  activeLast24Hours: 87,
   newToday: 12,
   newLast7Days: 78,
   newLast30Days: 300,
@@ -64,6 +65,9 @@ describe("UsersCard", () => {
 
     expect(container.textContent).toContain(texts.userMetrics.total);
     expect(container.textContent).toContain("1.234");
+    // Ativos nas últimas 24h: a métrica de uso, ao lado do total de contas.
+    expect(container.textContent).toContain(texts.userMetrics.active24h);
+    expect(container.textContent).toContain("87");
     expect(container.textContent).toContain(texts.userMetrics.newToday);
     expect(container.textContent).toContain("+0,98%");
   });
