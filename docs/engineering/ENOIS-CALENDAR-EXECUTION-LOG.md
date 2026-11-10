@@ -1148,6 +1148,29 @@ conflitos (fase 6).
 
 ---
 
+## EXECUÇÃO 15 — 2026-11-09 ~23:45 (fase 3: telas das agendas)
+
+> **Entrada reconstruída na execução 17.** A execução 15 nunca teve seção própria neste arquivo —
+> a unificação das execuções 13–16 no commit `78eae7d8` pulou do 14 para o 16. O resumo abaixo vem
+> da linha 15 do histórico do roadmap (§11), que foi escrita na época e não foi alterada.
+
+**TAREFA:** rota de detalhe do compromisso no front.
+
+**IMPLEMENTAÇÃO:** `/agenda/$entryId` com o detalhe do compromisso e o lugar de quem lê (editar,
+cancelar, responder ao convite, convidar e remover participante), sobre o `CalendarEntryDetail` do
+DS #177.
+
+**TESTES:** 5 testes da rota de detalhe (8 com os da `/agenda`); `tsc`, `eslint` e `vite build`
+verdes.
+
+**PRs:** front [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — aberto em draft,
+porque o DS #177 ainda não estava publicado (B6).
+
+**NOTAS:** o estado real dos PRs foi reconferido e §7/§9 corrigidos; **B8 registrado** (o bot
+`kof-agent-worker` mergeando PRs na `qa` sem aprovação humana).
+
+---
+
 ## EXECUÇÃO 16 — 2026-11-10T01:45:00-03:00 — Fase 3 (telas das agendas)
 
 **TAREFA:** publicar o Design System com o `CalendarEntryDetail` (pedido explícito da mantenedora:
