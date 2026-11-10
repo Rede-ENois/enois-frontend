@@ -18,6 +18,8 @@ export type CommentView = {
   authorStyle?: AuthorNameStyle | null;
   /** Tag "Contribuinte" quando o autor tem selo ativo. */
   authorContributor?: AuthorContributorTag | null;
+  /** Selo "Humanidade Comprovada" do autor (em lote, uma consulta por página). */
+  authorHumanityVerified?: boolean;
   /** Todos os emblemas (até 5), na ordem escolhida. */
   authorBadges?: string[] | null;
   parentCommentId: string | null;

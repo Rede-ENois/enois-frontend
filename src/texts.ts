@@ -305,6 +305,21 @@ export const texts = {
         "Não foi possível confirmar que o pedido veio do Énóis. Recarregue a página e tente de novo.",
       UNSAFE_LINK:
         "Um dos links não é permitido. Use endereços que comecem com http://, https:// ou mailto:.",
+      /** A capacidade do ciclo do provedor acabou: nao e falha da pessoa, e o que o §3 do projeto pede. */
+      IDENTITY_CAPACITY_EXHAUSTED:
+        "As vagas desta etapa já foram usadas. Continue participando: avisamos aqui quando abrir de novo.",
+      /** Tentar verificar sem convite da rodada: a tela mostra "esta chegando" e nada quebra. */
+      IDENTITY_NOT_RELEASED:
+        "Sua verificação ainda não foi liberada. Sua vez chega conforme sua participação na comunidade.",
+      IDENTITY_IN_USE: "Você já tem uma verificação em andamento.",
+      /** Provedor sem credenciais ou fora do ar: indisponibilidade, nunca culpa do usuario. */
+      IDENTITY_PROVIDER_UNAVAILABLE:
+        "A verificação de identidade não está disponível no momento. Tente novamente mais tarde.",
+      IDENTITY_PROVIDER_ERROR:
+        "O provedor de identidade não respondeu. Tente novamente em instantes.",
+      /** Trava financeira: a integracao nao pode cobrar sem supervisao humana. */
+      IDENTITY_BILLING_LOCKED:
+        "A verificação está pausada enquanto confirmamos a capacidade. Voltamos assim que possível.",
       /** O mesmo código de verificação chegou duas vezes (ex.: clique duplo); só o primeiro vale. */
       TWO_FACTOR_CHALLENGE_ALREADY_USED:
         "Este código já foi usado. Se você já entrou, recarregue a página; senão, comece o login de novo.",
@@ -2622,8 +2637,8 @@ export const texts = {
 
   identity: {
     unavailable:
-      "A verificação de identidade ainda não está disponível: o Énóis precisa de um provedor autorizado. Assim que houver, o botão fica ativo aqui.",
-    resultOk: "Identidade verificada com sucesso.",
+      "A verificação de identidade não está disponível no momento. Tente novamente mais tarde.",
+    resultOk: "Verificação concluída. O selo Humanidade Comprovada já está no seu perfil.",
     resultError: "Não foi possível concluir a verificação. Você pode tentar de novo.",
   },
 
@@ -2939,6 +2954,14 @@ export const texts = {
       suspiciousPosts: "Posts suspeitos",
       notices: "Avisos",
       releaseNotes: "Novidades",
+      identityRelease: "Verificação de identidade",
+    },
+    identityRelease: {
+      saved: "Regras da rodada salvas.",
+      error: "Não foi possível salvar. Tente de novo.",
+      roundDone: (released: number, eligible: number) =>
+        `Rodada concluída: ${released} de ${eligible} liberadas.`,
+      roundEmpty: "Rodada concluída: ninguém elegível nesta rodada.",
     },
     suspiciousPosts: {
       result: (deleted: number, failed: number) =>

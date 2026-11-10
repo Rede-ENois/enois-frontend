@@ -68,6 +68,7 @@ import { ContributorsSection } from "@/components/moderation/contributors-sectio
 import { DisputesSection } from "@/components/moderation/disputes-section";
 import { EmailLogSection } from "@/components/moderation/email-log-section";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
+import { IdentityReleaseSection } from "@/components/moderation/identity-release-section";
 import { MonitoringSection } from "@/components/moderation/monitoring-section";
 import { NotesSection } from "@/components/moderation/notes-section";
 import { NoticesSection } from "@/components/moderation/notices-section";
@@ -133,6 +134,7 @@ const TAB_ICON: Record<ModeratorTabId, typeof Flag> = {
   monitoring: Activity,
   contributors: Users,
   githubContributions: GitPullRequest,
+  identityRelease: ShieldCheck,
 };
 
 /**
@@ -283,6 +285,7 @@ function Moderador() {
             {canModerate && activeTab === "notes" && <NotesSection />}
             {me.admin && activeTab === "notices" && <NoticesSection />}
             {me.admin && activeTab === "releaseNotes" && <ReleaseNotesSection />}
+            {me.admin && activeTab === "identityRelease" && <IdentityReleaseSection />}
           </div>
         ) : (
           <ApplicationSection me={me} />
