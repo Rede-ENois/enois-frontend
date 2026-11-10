@@ -77,6 +77,7 @@ import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format"
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
 import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
+import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
@@ -382,9 +383,15 @@ function Home() {
   }, [identity]);
 
   const pageMode = postType === "PAGE";
-  // Anything in progress keeps the full composer open (a draft, media, an article or a page).
-  const composerExpanded =
-    composerOpen || draft.trim() !== "" || media.length > 0 || postType !== "INSIGHT";
+  // Qualquer trabalho em andamento mantém o compositor inteiro aberto (rascunho, mídia, tipo
+  // diferente do de repouso). BUSINESS é o repouso da identidade profissional: contá-lo prendia
+  // o compositor expandido para sempre e o launcher nunca aparecia.
+  const composerExpanded = composerExpandedWith({
+    open: composerOpen,
+    draft,
+    mediaCount: media.length,
+    postType,
+  });
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
