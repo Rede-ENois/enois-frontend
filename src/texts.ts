@@ -736,6 +736,8 @@ export const texts = {
     publicProfile: {
       notFoundTitle: "Perfil profissional não encontrado",
       notFoundBody: "Este perfil pode não existir ou estar desativado.",
+      loadErrorTitle: "Não foi possível carregar este perfil",
+      loadErrorBody: "Pode ser a conexão. Tente abrir de novo daqui a pouco.",
       postsTitle: "Publicações",
       empty: "Nenhuma publicação por aqui ainda.",
       editMine: "Editar o meu perfil profissional",
