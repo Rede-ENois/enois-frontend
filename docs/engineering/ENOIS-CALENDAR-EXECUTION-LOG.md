@@ -1488,11 +1488,21 @@ estava em andamento fora de mim; **não foi aberto PR duplicado**. Nenhuma tag `
 - **B6 nota**: `tsc --noEmit` do front na base limpa tem 2 erros de `badgeKits` — a `qa` do front
   exige um release do DS que inclua o `main` atual; registrado para não culpar o diff errado.
 
-**PRÓXIMA RODADA (§10, proposta de execução 20):** (1) revisão/tag do release #196 (humano,
-D20) e release seguinte com o #197 quando revisarem; (2) ligar o seletor de lembrete na rota de
-detalhe `/agenda/$entryId` (#777 em revisão; o componente está no #187, já mergeado no `main` do
-DS); (3) destravar o #804 do draft quando o pacote sair (regerar lockfile pelo workflow
-descartável, B7); (4) iniciar a fase 4 (agenda social: eventos de grupo na agenda) ou a fase 8
-(ICS export), que não dependem do release.
+**DESBLOQUEIO NA MESMA RODADA (autorização da mantenedora: "mergeia tudo do DS e faz o pacote").**
+Com a autorização explícita: **#197 mergeado** (`bdf7370`, admin — a política de revisão continuava
+`REVIEW_REQUIRED`), **#196 mergeado** (`0afbc88b`) resolvendo o conflito de `package.json` para
+**incluir o #197 no 0.31.0** (tsc e lint da árvore mesclada verdes antes de empurrar), **tag
+`v0.31.0`** no commit de merge — run de publish verde (`+ @rede-enois/design-system@0.31.0`, tag
+`latest`). No front: `package.json` no 0.31.0, lockfile regerado pelo workflow descartável (B7 — a
+primeira passada gravou `resolved`/`integrity` do 0.30.0; corrigido apagando a entrada antiga antes
+do `npm install --package-lock-only`), `qa` mesclada (traz o wiring de `badgeKits`, que o `tsc` do
+0.31.0 exige), workflow removido. **#804 fora do draft**, pronto para revisão: `tsc` EXIT=0,
+eslint 0 erros, 7/7 nos testes de agenda, `vite build` EXIT=0 — agora contra o **pacote publicado**,
+não tarball.
+
+**PRÓXIMA RODADA (§10, proposta de execução 20):** (1) ligar o seletor de lembrete na rota de
+detalhe `/agenda/$entryId` (o componente está publicado no 0.31.0; o #777 segue em revisão —
+preparar no branch do #777 ou num PR empilhado); (2) avançar fase 8 (ICS export) ou fase 4 (fonte
+de eventos de grupo na agenda); (3) revisão humana pendente no #804 e #777.
 
 ---

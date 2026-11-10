@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=3 (telas das agendas) e 6 (disponibilidade e conflitos) em paralelo — fase 6 com as duas telas entregues (DS #197: superfície de disponibilidade + repasse de `conflicts` pela `CalendarAgendaSurface`; front #804: `/agenda/disponibilidade` e aviso ligado na `/agenda`), ambas aguardando revisão humana e o release seguinte do DS. O seletor de lembrete (#187) e o aviso de conflito (#195) foram mergeados pelo bot e estão no PR de release aberto #196 (0.31.0). Fase 3 continua esperando revisão humana do #777 (detalhe) e do release para ligar o seletor na tela.
+FASE_ATUAL=3 (telas das agendas) e 6 (disponibilidade e conflitos) em paralelo — fase 6 **integrada e publicada**: DS #197 e release #196 mergeados, tag `v0.31.0` publicada no registro (run verde) com a superfície de disponibilidade, o repasse de `conflicts` e o seletor de lembrete; front #804 pronto para revisão (fora do draft, lockfile real do 0.31.0, `tsc` EXIT=0). Falta a revisão humana do #804, do #777 (detalhe) e ligar o seletor de lembrete na tela de detalhe.
 EXECUCAO=19
-ULTIMA_ATUALIZACAO=2026-11-10T14:30:00-03:00
+ULTIMA_ATUALIZACAO=2026-11-10T15:30:00-03:00
 ```
 
 ---
@@ -206,9 +206,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#791](https://github.com/Rede-ENois/enois-frontend/pull/791)      | enois-frontend      | Documentação: execução 17 em bloco (lembretes, conflito, fase 6) e decisão D23                              | **mergeado** em `52c1a5d4` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#802](https://github.com/Rede-ENois/enois-frontend/pull/802)      | enois-frontend      | Documentação: execução 18 em bloco (disponibilidade, aviso de conflito) e decisão D24                       | **mergeado** em `09a75b9b` (2026-11-10) pelo bot `kof-agent-worker` — ver B8 |
 | [#774](https://github.com/Rede-ENois/enois-frontend/pull/774)      | enois-frontend      | Documentação: B6 fechado (tag `v0.30.0`, tela verde)                                                         | aberto (conteúdo absorvido no #778); pode ser fechado |
-| [#196](https://github.com/Rede-ENois/enois-design-system/pull/196) | enois-design-system | Release `chore(release): 0.31.0` (pull-indicator, seletor de lembrete, aviso de conflito, badge kits)        | aberto; CI verde, publish SKIPADO (tag `v*` ainda não existe); **publicação é ação humana (D20)** |
-| [#197](https://github.com/Rede-ENois/enois-design-system/pull/197) | enois-design-system | Fase 6: superfície de disponibilidade semanal (D24) + repasse de `conflicts` pela `CalendarAgendaSurface`    | aberto, **aguardando revisão humana**; CI verde; fora do escopo do 0.31.0 — precisa de release seguinte |
-| [#804](https://github.com/Rede-ENois/enois-frontend/pull/804)      | enois-frontend      | Fase 6: tela `/agenda/disponibilidade` + aviso de conflito ligado na `/agenda`                              | **draft** até o release do DS com o #197; testes e build verdes contra o tarball |
+| [#196](https://github.com/Rede-ENois/enois-design-system/pull/196) | enois-design-system | Release `chore(release): 0.31.0` (pull-indicator, seletor de lembrete, aviso de conflito, badge kits **+ disponibilidade #197**) | **mergeado** em `0afbc88b`; **tag `v0.31.0` publicada** (run verde, tag `latest`) com autorização da mantenedora |
+| [#197](https://github.com/Rede-ENois/enois-design-system/pull/197) | enois-design-system | Fase 6: superfície de disponibilidade semanal (D24) + repasse de `conflicts` pela `CalendarAgendaSurface`    | **mergeado** em `bdf7370` com autorização da mantenedora; incluído no release 0.31.0 |
+| [#804](https://github.com/Rede-ENois/enois-frontend/pull/804)      | enois-frontend      | Fase 6: tela `/agenda/disponibilidade` + aviso de conflito ligado na `/agenda`                              | **fora do draft**, pronto para revisão: lockfile real do 0.31.0, `qa` mesclada (traz `badgeKits`), `tsc` EXIT=0, build verde |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -314,7 +314,7 @@ O gate de cada execução fica registrado no log de execução.
 | B3  | Sem `timezone` no domínio                                                            | recorrência e ICS errados                           | decidir na arquitetura (guardar `Instant` + `ZoneId` do organizer)               |
 | B4  | `@rede-enois/design-system` é pacote privado e o token local não tem `read:packages` | build/typecheck local falha fora da versão em cache | usar o tarball da versão do lock quando disponível; declarar no PR               |
 | B5  | Sem navegador utilizável para prova visual nesta máquina                             | não há captura de tela                              | usar Chrome headless + CDP; quando não der, declarar a limitação no PR           |
-| B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **reaberto em parte**: `v0.30.0`/`v0.30.1` publicadas, mas a disponibilidade (#197) e o seletor de lembrete (#187) só existem no `main`; o #804 valida contra o tarball. **Nova armadilha**: ao trocar o tarball, `rm -rf node_modules/.nitro` ou o build usa o bundle SSR antigo |
+| B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **fechado de novo**: `v0.31.0` publicada com disponibilidade, `conflicts` e seletor de lembrete; o #804 valida contra o registro (lockfile pelo workflow descartável, removido). **Armadilhas**: (1) trocou o tarball, `rm -rf node_modules/.nitro`; (2) regerando lockfile, apague a entrada antiga do pacote antes do `npm install --package-lock-only`, senão o npm mantém `resolved`/`integrity` da versão anterior |
 | B7  | Sem token `read:packages` nesta máquina                                              | não dá para `npm ci`/`npm install` do front nem regerar o lockfile | **mitigado**: workflow descartável com `GITHUB_TOKEN` regerou os lockfiles do #769 (0.30.0) e do #777 (0.30.1). Processo: `.github/workflows/relock-ds.tmp.yml`, removido depois de cada uso |
 | B8  | O bot `kof-agent-worker` mergea PRs sem aprovação humana — **execução 19**: mergeou #187 e #195 no DS e **abriu o PR de release #196** sozinho | contraria a regra absoluta do projeto: nenhum merge automático | reportado à mantenedora (execuções 14, 17 e 19); a publicação do release continua humana (D20: tag `v*`) e o bot não a dispara. Mitigação: PRs seguem declarando "não mergear" e a rodada não abriu PR duplicado do release |
 
@@ -367,14 +367,12 @@ DS (#197); (B) repasse de `conflicts` pela `CalendarAgendaSurface` (#197, mesmo 
 4. **Release do DS** — o bot mergeou #187/#195 e abriu o #196 (0.31.0) **sozinho**; o #197 não está
    no escopo dele. Publicação segue humana (D20): nenhuma tag `v0.31.0` existe.
 
-**Execução 20 (próximo bloco) — proposta.** (1) Se o release #196 for revisado/taggeado (humano),
-conferir o pacote publicado e, depois de outro release com o #197, tirar o #804 do draft (lockfile
-pelo workflow descartável, B7). (2) **Ligar o seletor de lembrete** na rota de detalhe
-`/agenda/$entryId` (o componente está no `main` do DS desde o #187; o #777 segue em revisão, então
-preparar a unidade no branch do #777 ou num PR empilhado). (3) Avançar uma unidade independente de
-release: **fase 8 (ICS export)** no backend — sem migração se derivado do `calendar_entries`, com
-teste de contrato — ou **fase 4** (fonte de eventos de grupo na agenda). (4) Reconferir cada PR
-aberto antes de começar (§9).
+**Execução 20 (próximo bloco) — proposta.** (1) **Ligar o seletor de lembrete** na rota de detalhe
+`/agenda/$entryId` (o componente está publicado no 0.31.0 desde o #187; o #777 segue em revisão,
+então preparar a unidade no branch do #777 ou num PR empilhado). (2) Avançar uma unidade de outra
+fase: **fase 8 (ICS export)** no backend — sem migração se derivado do `calendar_entries`, com
+teste de contrato — ou **fase 4** (fonte de eventos de grupo na agenda). (3) Revisão humana segue
+pendendo nos PRs abertos (#804, #777); reconferir cada PR aberto antes de começar (§9).
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -410,7 +408,7 @@ e evitou construir sobre premissa errada.
 | 16  | 2026-11-10 ~01:45 | 3    | Release 0.30.1 do DS: #177 mergeado, PR de release #180, tag `v0.30.1` empurrada e publicada. Front #777 no 0.30.1 com lockfile real, `qa` mesclada (eliminou lint de arquivo desatualizado), CI **100% verde** e PR fora do draft. Merge da `qa` no branch de docs e conflitos resolvidos preservando D21 e as execuções 11–13 |
 | 17  | 2026-11-10 ~04:10 | 3/6  | **Bloco de 5 unidades.** (A) #774 absorvido no #778; (B) `CalendarReminderSelector` no DS (#187, 8 testes, 1578 na suíte); (C) cliente de API dos lembretes no front (#786); (D) fase 6: inventário + `CalendarConflictService` e `GET /calendar/entries/conflicts` (#607, 9+4 testes, 78 na regressão, sem migração); (E) cliente de API do conflito, **perdido no merge automático do #786** e reaberto no #792. D23 registrada; #778, #607 e #786 foram mergeados pelo bot `kof-agent-worker` (B8) |
 | 18  | 2026-11-10 ~09:30 | 6    | Disponibilidade semanal da agenda no backend (V267, `GET`/`PUT /calendar/availability`, 9+7 testes, 99 de regressão) e o cliente no front (#801, 17/17); aviso de conflito no formulário do DS (#195, 18/18, 1577 na suíte inteira). A V265 que eu tinha escrito colidiu com `user_presence` e virou V267. #792/#791 mergeados pelo bot (B8) |
-| 19  | 2026-11-10 ~14:30 | 6    | **Bloco de 3 unidades.** (A) `CalendarAvailability`/`CalendarAvailabilitySurface` no DS com as regras do backend (12+14 testes); (B) `conflicts` repassado pela `CalendarAgendaSurface` (2 testes, 1655 na suíte inteira); (C) tela `/agenda/disponibilidade` e aviso de conflito ligado na `/agenda` no front (7/7, build verde). DS #197 aberto; front #804 em draft até o release. O bot mergeou #187/#195 e abriu o release #196 (B8). Armadilhas: cache do Nitro e `--force-with-lease` com refspec longa |
+| 19  | 2026-11-10 ~14:30 | 6    | **Bloco de 3 unidades.** (A) `CalendarAvailability`/`CalendarAvailabilitySurface` no DS com as regras do backend (12+14 testes); (B) `conflicts` repassado pela `CalendarAgendaSurface` (2 testes, 1655 na suíte inteira); (C) tela `/agenda/disponibilidade` e aviso de conflito ligado na `/agenda` no front (7/7, build verde). DS #197 aberto; front #804 em draft até o release. O bot mergeou #187/#195 e abriu o release #196 (B8). **Com autorização da mantenedora:** #197 e #196 mergeados (conflito de versão resolvido para incluir o #197), tag `v0.31.0` publicada (run verde), lockfile do #804 regerado pelo workflow descartável e PR fora do draft. Armadilhas: cache do Nitro, `--force-with-lease` com refspec longa e lockfile que mantém `resolved` antigo |
 ---
 
 ## 12. Critérios de encerramento do cronjob
