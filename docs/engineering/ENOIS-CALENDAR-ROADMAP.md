@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=3 (telas das agendas) — o DS da fase 2 está entregue em código (PRs #164/#165/#166), aguardando revisão e publicação; a fundação (fase 1) está concluída e a origem da mentoria já escreve na agenda central
-EXECUCAO=11
-ULTIMA_ATUALIZACAO=2026-11-09T00:30:00-03:00
+FASE_ATUAL=3 (telas das agendas) — o release 0.30.0 do DS está MERGEADO no main mas a tag não foi publicada, então B6 segue aberto; enquanto isso a fase 1 avançou com os lembretes (backend #604)
+EXECUCAO=13
+ULTIMA_ATUALIZACAO=2026-11-09T21:40:00-03:00
 ```
 
 ---
@@ -114,7 +114,7 @@ ou de disponibilidade.
 | Salas do Tamo Junto           | barra do encontro                   | `calls` (sala por evento)                                       | —                                                     | **Existe**, sem compromisso com hora                         |
 | Convites / participantes      | parcial em eventos                  | `calendar_entry_participants` (V258), convite pelo @ e resposta | linha de convite com Aceitar/Talvez/Recusar (PR #164) | **Parcial** — falta a tela                                   |
 | Disponibilidade / conflitos   | não existe                          | slot de mentor isolado                                          | não existe                                            | **A construir**                                              |
-| Lembretes                     | não existe                          | workers existem, sem lembrete                                   | não existe                                            | **A construir**                                              |
+| Lembretes                     | não existe (o DS não tem seletor)   | `calendar_reminders` (V264), worker de 30 s e rotas por entrada | não existe                                            | **Backend pronto** (#604); falta o seletor no DS e a tela    |
 | ICS export/import             | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
 | Assinatura privada `.ics`     | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
 | Google/Microsoft/Apple        | não existe                          | OAuth existe no `identity` como base                            | —                                                     | **A construir**                                              |
@@ -153,8 +153,8 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | ---- | ------------------------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0    | Inventário + roadmap + contratos                                         | —            | **concluída**                                                                                                                                  |
 | 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
-| 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída em código** (visões #164, formulário #165, superfície #166; todos aguardando revisão e publicação)                                 |
-| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **em andamento** — tipos e cliente da API entregues; a tela depende da publicação do DS (B6)                                                                   |
+| 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída** — #164/#165/#166 **mergeados**; falta só o release 0.30.0 (enois-design-system#172) |
+| 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **em andamento** — `/agenda` pronta no front #769 (visões, alternância de agenda, criação, resposta a convite); falta o release do DS (B6) e a rota de detalhe |
 | 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | pendente                                                                                                                                       |
 | 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
 | 6    | Disponibilidade e conflitos                                              | 1            | pendente                                                                                                                                       |
@@ -186,7 +186,12 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#166](https://github.com/Rede-ENois/enois-design-system/pull/166) | enois-design-system | Fase 2: superfície que monta a agenda com o formulário (criar/editar, fechar só no salvamento aprovado)       | aberto, **aguardando revisão humana**; parte do #165 |
 | [#751](https://github.com/Rede-ENois/enois-frontend/pull/751)      | enois-frontend      | Documentação: execução 9 e decisão D18                                                                        | **mergeado** em `1d0e9694` (2026-11-08)         |
 | [#752](https://github.com/Rede-ENois/enois-frontend/pull/752)      | enois-frontend      | Fase 3: tipos do contrato e cliente `calendarApi` (janela obrigatória, convite sem `INVITED`)                    | aberto, **aguardando revisão humana**           |
-| [#568](https://github.com/Rede-ENois/enois-backend/pull/568)       | enois-backend       | Fase 1: origem da mentoria na agenda central (`CalendarSourceService`, V260 com índice único por dono)          | aberto, **aguardando revisão humana**           |
+| [#568](https://github.com/Rede-ENois/enois-backend/pull/568)       | enois-backend       | Fase 1: origem da mentoria na agenda central (`CalendarSourceService`, V260 com índice único por dono)          | **mergeado** em `83515ce8` (2026-11-09); a V260 foi renumerada para V262 no #584 |
+| [#584](https://github.com/Rede-ENois/enois-backend/pull/584)       | enois-backend       | Colisão de migração: a `qa` tinha duas V260 e o boot quebrava; a do calendário virou V262                      | **mergeado** em `a14cb468` (2026-11-09)         |
+| [#171](https://github.com/Rede-ENois/enois-design-system/issues/171) | enois-design-system | Issue do release 0.30.0: publica o módulo `domain/calendar`, que nunca saiu no pacote                        | aberta                                          |
+| [#172](https://github.com/Rede-ENois/enois-design-system/pull/172) | enois-design-system | Release `chore(release): 0.30.0` a partir do `main`; falta a mantenedora empurrar a tag                      | aberto, **CI verde e aprovado** em 2026-11-09; falta o merge e a tag |
+| [#769](https://github.com/Rede-ENois/enois-frontend/pull/769)      | enois-frontend      | Fase 3: rota `/agenda` com as quatro visões, alternância de agenda, criação e resposta a convite              | aberto em **draft** (depende da tag `v0.30.0`)  |
+| [#604](https://github.com/Rede-ENois/enois-backend/pull/604)       | enois-backend       | Fase 1/6: lembretes de compromisso (`V264`, worker de 30 s, rotas por entrada)                               | aberto, **aguardando revisão humana**           |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -278,28 +283,30 @@ O gate de cada execução fica registrado no log de execução.
 | B3  | Sem `timezone` no domínio                                                            | recorrência e ICS errados                           | decidir na arquitetura (guardar `Instant` + `ZoneId` do organizer)               |
 | B4  | `@rede-enois/design-system` é pacote privado e o token local não tem `read:packages` | build/typecheck local falha fora da versão em cache | usar o tarball da versão do lock quando disponível; declarar no PR               |
 | B5  | Sem navegador utilizável para prova visual nesta máquina                             | não há captura de tela                              | usar Chrome headless + CDP; quando não der, declarar a limitação no PR           |
-| B6  | O pacote do DS publicado (`0.29.9`) não tem o módulo de calendário                   | a tela `/agenda` não pode importar `CalendarAgenda`  | pedir à mantenedora o corte de `v0.30.0-rc.1` a partir de `feat/calendar-views` após o merge de #165/#166; o front sobe a dependência e a tela entra |
+| B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **à espera da tag**: #164/#165/#166 mergeados, #172 **mergeado** e `main` em `0.30.0`, mas `v0.30.0` não existe no registro. Falta a mantenedora empurrar a tag (D20) |
+| B7  | Sem token `read:packages` nesta máquina                                              | não dá para `npm ci`/`npm install` do front nem regerar o lockfile | todo o trabalho do front foi verificado contra o tarball do `npm pack` da `main` do DS; o `package-lock.json` do #769 precisa de um `npm install` depois do release |
 
 ---
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 12 — a tela `/agenda` da Fase 3, resolvendo B6 sem esperar release de terceiro.**
+**Execução 14 — destravar a tag, e depois o detalhe do compromisso.**
 
-1. Conferir no registro se `@rede-enois/design-system@0.29.10-rc.1` já aponta para código com o
-   calendário. A tag `v0.29.10-rc.1` existe mas aponta para `7c0d17e`, anterior aos PRs de
-   calendário, então hoje não serve.
-2. Se não servir, montar a rota `/agenda` no front com o `calendarApi` que já está na `qa`, ligando
-   os componentes do DS por link local declarado no corpo do PR, para a tela existir e ser revisada
-   sem depender de publicação. A rota é protegida, entra no menu em `explore`, guarda período e
-   visualização na URL, e a mutação devolve `Promise<boolean>` com recarga da janela depois do
-   `true`.
-3. Unidade seguinte: lembrete de compromisso pelo worker de outbox.
+1. **B6 só fecha com a tag.** O PR enois-design-system#172 foi **mergeado** (2026-11-09, `melmonfre`), e
+   `main` está em `0.30.0` — mas `git ls-remote --tags` não mostra `v0.30.0`, então o pacote **não
+   existe** e o front #769 continua em draft. Publicar é ação da mantenedora (D20) e o agente não
+   empurra tag. Se quem mantém publicar, o passo seguinte é mecânico: `npm install
+   @rede-enois/design-system@0.30.0` na branch `feat/enois-calendar-agenda`, commit do lockfile,
+   tirar do draft, CI.
+2. Rota de detalhe do compromisso (`/agenda/$entryId`) sobre `GET /calendar/entries/{id}` (#542). O DS
+   já expõe `CalendarEntryFormDialog`; a superfície aceita `editingEntry`.
+3. Seletor de lembrete no DS (5/15/30/60/1440) para a tela usar o backend entregue no #604 — a
+   regra de quais antecedências existem já está no domínio e na V264.
 
-**Correção da suposição anterior:** a seção 10 da execução 9 supunha que a tela poderia consumir o DS
-pelo pacote publicado. A leitura do pacote instalado (execução 10) mostra que não: `0.29.9` não tem
-`calendar/` em `dist/domain/`. A execução 11 avançou pela camada que não depende da tela (origem da
-mentoria no backend) e a execução 12 ataca a tela pelo caminho que não depende de release.
+**O que a execução 13 fez em vez de repetir a análise.** B6 estava na mesma situação da execução 12
+(bloqueado por uma tag que o agente não pode empurrar). Em vez de reescrever o diagnóstico, a
+execução pegou uma unidade **independente** do bloqueio — os lembretes, que são backend puro e
+estavam na lista da fase 1/6.
 
 ## 11. Histórico de execuções (resumo)
 
@@ -316,6 +323,8 @@ mentoria no backend) e a execução 12 ataca a tela pelo caminho que não depend
 | 9   | 2026-11-08 ~21:20 | 2    | `CalendarAgendaSurface` no DS: agenda + formulário com salvar controlado (fecha só no `true`, recusa mantém o digitado), dia inicial do que está na tela; 6 testes e 1373 verdes na suíte inteira; DS PR #166 |
 | 10  | 2026-11-08 ~22:00 | 3    | Tipos do contrato do calendário e `calendarApi` no front (janela obrigatória, `scope` omitido em branco, resposta de convite sem `INVITED`, cancelamento devolvendo a entrada marcada); 9 testes de contrato; bloqueio B6 registrado (DS publicado sem o módulo) |
 | 11  | 2026-11-09 ~00:30 | 1    | Origem da mentoria na agenda central: `CalendarSourceService` (upsert/cancel idempotente por origem), V260 com índice único por dono, `MentorService` gravando e cancelando a entrada; 9 testes da unidade e 83 verdes na regressão; backend PR #568 |
+| 13  | 2026-11-09 ~21:40 | 1/6  | Lembretes de compromisso de ponta a ponta no backend: `calendar_reminders` (V264), domínio com teto de 3 tentativas, worker de 30 s enviando pelo `NotificationService`, checagem de participação no envio, encerramento no cancelamento/reagendamento e rotas no controller de entradas; 15 testes da unidade e 81 na regressão; backend PR #604 |
+| 12  | 2026-11-09 ~19:10 | 3    | Retomada após a sessão anterior morrer. Inventário do estado real (todos os PRs de calendário mergeados; o bloqueio era só o release). Release 0.30.0 preparado no DS (#172/#171) com o gate completo verde; rota `/agenda` escrita no front (#769) com 3 testes, typecheck, lint e build verdes contra o tarball do DS; menu em `explore` (D16), período/visão/agenda na URL, janela convertida com `instantOf` |
 ---
 
 ## 12. Critérios de encerramento do cronjob

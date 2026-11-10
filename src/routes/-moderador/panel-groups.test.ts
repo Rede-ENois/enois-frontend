@@ -7,6 +7,7 @@ import {
   TAB_GROUP_OF,
   nextTabIndexByKey,
   resolveActiveTab,
+  tabsOfActiveGroup,
   visiblePanelGroups,
 } from "./panel-groups";
 
@@ -80,5 +81,30 @@ describe("painel de moderador: grupos de navegação", () => {
   it("aba que a pessoa não pode ver cai na primeira da fila", () => {
     const pedida = "applications" as ModeratorTabId;
     expect(resolveActiveTab(pedida, false)).toBe("reports");
+  });
+
+  /**
+   * A tela desenha SÓ o grupo da aba ativa. Foi o erro da versão anterior: quatro listas
+   * empilhadas, cada uma `flex` sem quebra — no celular as abas das pontas ficavam cortadas e a
+   * navegação tomava a tela antes do conteúdo.
+   */
+  it("só o grupo da aba ativa é desenhado", () => {
+    for (const tab of PANEL_TABS) {
+      const visiveis = tabsOfActiveGroup(tab.id, true);
+      expect(visiveis.length, `aba ${tab.id}`).toBeGreaterThan(0);
+      for (const item of visiveis) {
+        expect(TAB_GROUP_OF[item.id], `aba ${item.id} vazando de grupo`).toBe(TAB_GROUP_OF[tab.id]);
+      }
+      // O conjunto devolvido é MENOR que o total: é a prova de que não empilhamos tudo.
+      expect(visiveis.length).toBeLessThan(PANEL_TABS.length);
+    }
+  });
+
+  it("o grupo da aba ativa nunca traz aba de admin para quem não é admin", () => {
+    for (const tab of PANEL_TABS) {
+      for (const item of tabsOfActiveGroup(tab.id, false)) {
+        expect(item.adminOnly, `aba ${item.id}`).toBe(false);
+      }
+    }
   });
 });

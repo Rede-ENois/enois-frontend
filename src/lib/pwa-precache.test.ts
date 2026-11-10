@@ -19,8 +19,9 @@ function precachePaths(): string[] {
 }
 
 function existeNoPublic(caminho: string): boolean {
+  // No Windows o `readdirSync` recursivo devolve `brand\x.svg`; o precache usa `/`.
   return readdirSync(PUBLIC, { recursive: true }).some(
-    (arquivo) => `/${String(arquivo)}` === caminho,
+    (arquivo) => `/${String(arquivo).replaceAll("\\", "/")}` === caminho,
   );
 }
 
