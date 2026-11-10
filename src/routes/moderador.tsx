@@ -232,41 +232,41 @@ function Moderador() {
                 Celular: um PillRow rolável com os grupos e outro com as abas do grupo ativo — o
                 mesmo gesto lateral do feed (arrasto natural no toque, nada cortado).
                 Desktop: os mesmos dados viram uma faixa de grupos e a faixa de abas do grupo. */}
-            <div className="space-y-3">
-              <PillRow label={texts.moderator.groupSelector}>
-                {groups.map(({ group, tabs: groupTabs }) => (
+            {/* O espacamento entre as faixas vem do className do proprio PillRow: mais um
+                container div aqui seria markup a mais no route, que a casa proibe. */}
+            <PillRow label={texts.moderator.groupSelector} className="mb-3">
+              {groups.map(({ group, tabs: groupTabs }) => (
+                <Pill
+                  key={group.id}
+                  active={group.id === TAB_GROUP_OF[activeTab]}
+                  onClick={() => setTab(groupTabs[0].id)}
+                >
+                  {(() => {
+                    const GroupIcon = GROUP_ICON[group.id];
+                    return <GroupIcon className="h-3.5 w-3.5" />;
+                  })()}
+
+                  <>{group.label}</>
+                </Pill>
+              ))}
+            </PillRow>
+
+            <PillRow label={texts.moderator.tabSelector}>
+              {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
+                const Icon = TAB_ICON[item.id];
+                return (
                   <Pill
-                    key={group.id}
-                    active={group.id === TAB_GROUP_OF[activeTab]}
-                    onClick={() => setTab(groupTabs[0].id)}
+                    key={item.id}
+                    active={item.id === activeTab}
+                    onClick={() => setTab(item.id)}
                   >
-                    {(() => {
-                      const GroupIcon = GROUP_ICON[group.id];
-                      return <GroupIcon className="h-3.5 w-3.5" />;
-                    })()}
+                    <Icon className="h-3.5 w-3.5" />
 
-                    <>{group.label}</>
+                    <>{item.label}</>
                   </Pill>
-                ))}
-              </PillRow>
-
-              <PillRow label={texts.moderator.tabSelector}>
-                {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
-                  const Icon = TAB_ICON[item.id];
-                  return (
-                    <Pill
-                      key={item.id}
-                      active={item.id === activeTab}
-                      onClick={() => setTab(item.id)}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-
-                      <>{item.label}</>
-                    </Pill>
-                  );
-                })}
-              </PillRow>
-            </div>
+                );
+              })}
+            </PillRow>
 
             {activeTab === "reports" && <ReportsSection admin={me.admin} />}
             {activeTab === "games" && <GamesReviewSection />}
