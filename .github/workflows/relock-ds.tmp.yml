@@ -1,11 +1,16 @@
 name: Reescrever lockfile do DS (temporário)
 on:
+  push:
+    branches: [feat/enois-calendar-detail]
+    paths:
+      - '.github/workflows/relock-ds.tmp.yml'
   workflow_dispatch:
 permissions:
   contents: write
   packages: read
 jobs:
   relock:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
