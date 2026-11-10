@@ -8,7 +8,7 @@ import { texts } from "@/texts";
 import type { GameView } from "@/types/application/games/game-view";
 import type { GamesCategory } from "@/types/routes/games/games-category";
 import { GameIcon } from "@rede-enois/design-system/domain";
-import { Button, Input, PageHeader, Textarea } from "@rede-enois/design-system/ui";
+import { Button, Input, PageHeader, Pill, PillRow, Textarea } from "@rede-enois/design-system/ui";
 import { ExternalLink, Gamepad2, Pencil, Rocket, Send, Star } from "lucide-react";
 
 import { gamesApi } from "@/lib/api";
@@ -200,70 +200,56 @@ function GamesHub() {
                 aria-label={texts.games.searchPlaceholder}
               />
 
-              <div className="flex flex-wrap items-center gap-1.5">
+              {/* Faixas únicas que rolam para o lado (o mesmo gesto dos filtros do feed, de
+                 /vagas e de /mensagens): em `flex-wrap` a fileira de estágio quebrava em TRÊS
+                 linhas e a de gêneros em QUATRO — 152px de filtro antes do primeiro jogo, com
+                 chips de 20px de altura, difíceis de acertar com o dedo. No PillRow cada fileira
+                 ocupa uma linha e o chip passa a 32px de altura. */}
+              <PillRow label={texts.games.stageFilterLabel} className="pb-0.5">
                 {GAME_STAGES.map((item) => (
-                  <button
+                  <Pill
                     key={item.id}
-                    type="button"
+                    size="sm"
+                    active={stage === item.id}
                     onClick={() => setStage(stage === item.id ? "" : item.id)}
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-xs font-medium transition",
-                      stage === item.id
-                        ? "border-primary bg-primary-soft text-primary-text"
-                        : "border-border-soft text-text-subtle hover:bg-surface-2",
-                    )}
                   >
-                    {item.label}
-                  </button>
+                    <>{item.label}</>
+                  </Pill>
                 ))}
 
-                <span className="mx-1 h-4 w-px bg-border-soft" aria-hidden />
-
-                <button
-                  type="button"
+                {/* A ordenação vem na mesma faixa, depois dos estágios: são dois grupos, e o
+                    divisor visual que existia antes exigiria markup cru na rota — o rótulo da
+                    faixa ("Filtrar por estágio") já diz o que é o quê. */}
+                <Pill
+                  size="sm"
+                  active={order === "plays"}
                   onClick={() => setOrder(order === "plays" ? "recent" : "plays")}
-                  className={cn(
-                    "rounded-full border px-2.5 py-1 text-xs font-medium transition",
-                    order === "plays"
-                      ? "border-primary bg-primary-soft text-primary-text"
-                      : "border-border-soft text-text-subtle hover:bg-surface-2",
-                  )}
                 >
-                  {texts.games.mostPlayed}
-                </button>
+                  <>{texts.games.mostPlayed}</>
+                </Pill>
 
-                <button
-                  type="button"
+                <Pill
+                  size="sm"
+                  active={order === "title"}
                   onClick={() => setOrder(order === "title" ? "recent" : "title")}
-                  className={cn(
-                    "rounded-full border px-2.5 py-1 text-xs font-medium transition",
-                    order === "title"
-                      ? "border-primary bg-primary-soft text-primary-text"
-                      : "border-border-soft text-text-subtle hover:bg-surface-2",
-                  )}
                 >
-                  {texts.games.alphabetical}
-                </button>
-              </div>
+                  <>{texts.games.alphabetical}</>
+                </Pill>
+              </PillRow>
 
               {GAME_GENRES.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
+                <PillRow label={texts.games.genreFilterLabel} className="pb-0.5">
                   {GAME_GENRES.map((item) => (
-                    <button
+                    <Pill
                       key={item}
-                      type="button"
+                      size="sm"
+                      active={genre === item}
                       onClick={() => setGenre(genre === item ? "" : item)}
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-normal transition",
-                        genre === item
-                          ? "bg-primary text-primary-foreground"
-                          : "text-text-subtle hover:bg-surface-2",
-                      )}
                     >
-                      {item}
-                    </button>
+                      <>{item}</>
+                    </Pill>
                   ))}
-                </div>
+                </PillRow>
               )}
             </div>
 
