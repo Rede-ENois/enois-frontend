@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -8,6 +7,8 @@ import { describe, expect, it } from "vitest";
  * `overscroll-behavior-y: none` no documento, o Chrome Mobile executa o pull-to-refresh NATIVO e
  * recarrega a página inteira por cima do `useFeedPullToRefresh` (a pessoa perde a posição, a aba
  * e o estado). A regra é global (documento inteiro), então a prova é sobre o CSS compilado do app.
+ * Roda no ambiente node (padrão): sem DOM o `import.meta.url` mantém o scheme file, que é o que
+ * `fileURLToPath` exige para ler o CSS.
  */
 describe("overscroll do documento", () => {
   const css = readFileSync(fileURLToPath(new URL("../../styles.css", import.meta.url)), "utf8");
