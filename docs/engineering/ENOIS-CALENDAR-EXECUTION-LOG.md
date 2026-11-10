@@ -962,3 +962,39 @@ release.
 
 **PRÓXIMA EXECUÇÃO:** ver roadmap §10 — destravar o #769 assim que a tag sair, e então a rota de
 detalhe (`/agenda/$entryId`) sobre o `GET /calendar/entries/{id}` que já existe.
+
+---
+
+## EXECUÇÃO 13 — desdobramento (destravar B6)
+
+**DATA/HORA:** 2026-11-10T01:45:00-03:00
+
+**TAREFA:** a tag do design system, mandada pela Mel, não publicou nada. Descobrir por quê e
+fechar o bloqueio que parou a tela `/agenda`.
+
+**CAUSA RAIZ:** a release/tag foi criada como **`0.30.0`**, sem o prefixo `v`. O workflow do DS
+dispara em `refs/tags/v*` (`if: startsWith(github.ref, 'refs/tags/v')`), então **nenhum run foi
+criado** — o repositório tinha a tag e o pacote não existia. Todas as releases anteriores
+(`v0.27.5`, `v0.27.4`…) usam o `v`; esta foi a primeira sem.
+
+**CORREÇÃO:**
+
+1. Tag `v0.30.0` criada no **mesmo commit** da `0.30.0` (`7d40855`, o `main`). Publish
+   `enois-design-system#42735841594` → **verde** (`Lint, typecheck, test and build` e
+   `Publish to GitHub Packages`).
+2. Lockfile do front: o `package.json` já pedia `0.30.0`, mas o `package-lock.json` continuava em
+   `0.29.10-rc.1` (por isso `npm ci` falhava com `ETARGET`). Sem `read:packages` local, o lock foi
+   regerado **pelo registro** dentro do CI (`npm install --package-lock-only --ignore-scripts` com
+   o `GITHUB_TOKEN`, que tem `packages: read`), num workflow descartável que commitou o arquivo e
+   foi removido da árvore em seguida — `resolved`/`integrity` vieram do npm, não de valor escrito à
+   mão (regra da D20).
+3. `#769` saiu do draft. CI **verde** (`verificar`, `Validar build`, CodeQL, Analyze); o build
+   gerou os chunks `agenda-*`, provando que a rota entra no bundle servido.
+
+**ARQUIVOS:** `package-lock.json` (front, commit `4bae42fc`); tag `v0.30.0` no design system.
+
+**LIÇÃO PARA A D20:** *mergear* e *publicar* são coisas diferentes, e agora também **o nome da tag
+importa**. Uma tag criada pela interface do GitHub como release pode sair sem o `v`, e aí o
+workflow não escuta. Antes de anunciar "publicado", conferir que existe um run disparado pela tag.
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 — detalhe do compromisso (`/agenda/$entryId`).

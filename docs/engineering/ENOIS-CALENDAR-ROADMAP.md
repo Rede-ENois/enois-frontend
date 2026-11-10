@@ -282,29 +282,26 @@ O gate de cada execução fica registrado no log de execução.
 | B3  | Sem `timezone` no domínio                                                            | recorrência e ICS errados                           | decidir na arquitetura (guardar `Instant` + `ZoneId` do organizer)               |
 | B4  | `@rede-enois/design-system` é pacote privado e o token local não tem `read:packages` | build/typecheck local falha fora da versão em cache | usar o tarball da versão do lock quando disponível; declarar no PR               |
 | B5  | Sem navegador utilizável para prova visual nesta máquina                             | não há captura de tela                              | usar Chrome headless + CDP; quando não der, declarar a limitação no PR           |
-| B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **encaminhado**: #164/#165/#166 mergeados; release preparado em #172 (issue #171). Falta a mantenedora empurrar a tag `v0.30.0` — o CONTRIBUTING do DS diz que publicar é ação de mantenedora |
+| B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **FECHADO** em 2026-11-10: #164/#165/#166 mergeados, #172 mergeado, tag `v0.30.0` publicada (o publish rodou verde) e o front #769 passou no CI com o pacote real |
 | B7  | Sem token `read:packages` nesta máquina                                              | não dá para `npm ci`/`npm install` do front nem regerar o lockfile | todo o trabalho do front foi verificado contra o tarball do `npm pack` da `main` do DS; o `package-lock.json` do #769 precisa de um `npm install` depois do release |
 
 ---
 
 ## 10. Próxima tarefa prioritária
 
-**Execução 13 — destravar a tela e entregar o lembrete.**
+**Execução 14 — detalhe do compromisso, agora sem bloqueio na frente.**
 
-1. Assim que a tag `v0.30.0` sair (enois-design-system#172), rodar `npm install
-   @rede-enois/design-system@0.30.0` na branch `feat/enois-calendar-agenda`, commitar o lockfile,
-   tirar o #769 do draft e acompanhar o CI. **Sem isso o PR não compila** — o pin aponta para um
-   pacote que não está no registro.
-2. Rota de detalhe do compromisso (`/agenda/$entryId`) usando `GET /calendar/entries/{id}`,
-   que o backend já entrega com o lugar do leitor e os convites pendentes (#542). O DS expõe
-   `CalendarEntryFormDialog` para editar; a superfície já aceita `editingEntry`.
-3. Unidade seguinte: lembrete de compromisso pelo worker de outbox (D4).
+1. Rota de detalhe (`/agenda/$entryId`) sobre `GET /calendar/entries/{id}` (#542): o backend já
+   devolve o lugar do leitor e os convites pendentes, e o DS expõe `CalendarEntryFormDialog` para
+   editar — a superfície já aceita `editingEntry`. A tela `/agenda` (#769) hoje não tem `itemHref`,
+   então o clique no compromisso não abre nada.
+2. Seletor de lembrete no DS (5/15/30/60/1440) para a tela usar o backend do #604.
+3. Depois: disponibilidade e conflitos (fase 6), que é o que fecha a agenda profissional.
 
-**Lição desta execução.** O roadmap dizia "Fase 2 concluída em código, aguardando revisão" e
-listava os PRs de calendário como abertos — mas todos já estavam **mergeados** e a única coisa que
-faltava era o release. Reler o estado real (PRs, tags e pacote publicado) antes de assumir o que o
-roadmap diz é parte do trabalho; o roadmap agora aponta o que está mergeado e o que está só na
-branch.
+**O que destravou B6 (2026-11-10).** A tag foi criada como `0.30.0`, **sem o `v`**, e o workflow do
+DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo commit
+(`7d40855`), o publish rodou verde. O lockfile do front foi regerado **pelo registro** (não escrito à
+mão) num workflow descartável que commitou e foi removido; o #769 saiu do draft e passou no CI.
 
 ## 11. Histórico de execuções (resumo)
 
