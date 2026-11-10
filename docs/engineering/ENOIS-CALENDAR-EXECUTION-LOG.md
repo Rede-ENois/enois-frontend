@@ -1035,10 +1035,14 @@ que o roadmap lista na fase 1/6: **lembretes de compromisso**, decisão D4.
 
 **81 testes, 0 falhas.**
 
-Três falhas reais foram encontradas e corrigidas durante a unidade (não eram flakes): query derivada
+Quatro falhas reais foram encontradas e corrigidas durante a unidade (não eram flakes): query derivada
 `findByEntryIdAndUserIdAndMinutesBefore` não compila no Spring Data ("MinutesBefore" vira
-`minutes`+`Before`) — resolvida com `@Query`; `actor_id` nulo derrubava o insert; e o teste de API
-usava o apelido da conta em vez do id real do banco como dono da entrada.
+`minutes`+`Before`) — resolvida com `@Query`; `actor_id` nulo derrubava o insert; o teste de API
+usava o apelido da conta em vez do id real do banco como dono da entrada; e a **guarda
+`NotificationCategoryTests`** — que varre os pontos de `NotificationService.create` e recusa qualquer
+`kind` sem categoria de push — pegou o `CALENDAR_REMINDER` no CI da suíte completa (os 81 testes da
+unidade não a incluíam). Mapeado como `SYSTEM`. **Lição: roda de notificação nova tem que entrar no
+`NotificationCategory`, e a suíte completa é quem cobra isso.**
 
 **PR:** enois-backend [#604](https://github.com/Rede-ENois/enois-backend/pull/604), aguardando
 revisão humana. Guarda `🧪 Migrações sem versão duplicada` já verde no PR.
