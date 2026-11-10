@@ -8,9 +8,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useNotificationsList } from "./use-notifications-list";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn() }));
+const mocks = vi.hoisted(() => ({ list: vi.fn(), live: vi.fn() }));
+
+/** Intervalo curto de verdade: o teste espera a recarga acontecer, sem relógio falso. */
+const POLL_MS = 20;
 
 vi.mock("@/lib/api", () => ({ notificationsApi: { list: mocks.list } }));
+
+// O intervalo vem do stream: com o stream aberto ele é `false` (o aviso chega por evento), sem
+// ele é a recarga de segurança. Aqui o stream é controlado pelo teste.
+vi.mock("@/lib/message-stream", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/message-stream")>()),
+  useInboxPollInterval: () => (mocks.live() ? false : POLL_MS),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -45,6 +55,7 @@ describe("lista de avisos compartilhada", () => {
 
   beforeEach(() => {
     mocks.list.mockReset().mockResolvedValue(PAGE);
+    mocks.live.mockReset().mockReturnValue(false);
     host = document.createElement("div");
     document.body.appendChild(host);
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -109,5 +120,32 @@ describe("lista de avisos compartilhada", () => {
     await act(async () => release(PAGE));
     await flush();
     expect(page.items).toHaveLength(1);
+  });
+
+  it("recarrega sozinha quando o stream está fora", async () => {
+    // Antes não havia recarga nenhuma: sem stream, o aviso só aparecia ao carregar a página de novo.
+    await render();
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
+    });
+    await flush();
+
+    // O que importa é que a recarga aconteceu sozinha, sem ninguém pedir.
+    expect(mocks.list.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("não consulta enquanto o stream entrega os avisos", async () => {
+    mocks.live.mockReturnValue(true);
+    await render();
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
+    });
+    await flush();
+
+    expect(mocks.list).toHaveBeenCalledTimes(1);
   });
 });

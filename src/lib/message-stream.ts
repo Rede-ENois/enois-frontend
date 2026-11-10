@@ -69,6 +69,23 @@ export function handleConversationChanged(queryClient: QueryClient, data: string
 }
 
 /**
+ * "Chegou aviso para você" (`event: notification`): o sino e a lista recarregam na hora. Antes o
+ * stream só falava de conversa e chamada, então um aviso criado com a aba aberta só aparecia no
+ * próximo carregamento da página. O corpo traz só id e tipo; o texto vem do endpoint de avisos.
+ */
+export function handleNotificationCreated(queryClient: QueryClient, data: string) {
+  let payload: { notificationId?: unknown; kind?: unknown };
+  try {
+    payload = JSON.parse(data) as { notificationId?: unknown; kind?: unknown };
+  } catch {
+    return;
+  }
+  if (typeof payload.notificationId !== "string") return;
+  // Prefixo: lista, resumo do menu e contadores vivem todos sob "notifications".
+  void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+}
+
+/**
  * "A chamada X mudou" (`event: call`): só ids e estado. Quem consome busca o estado real pelas
  * rotas de chamadas (que autorizam de novo) e atualiza a tela.
  */
@@ -106,9 +123,13 @@ export function useMessageStream(onCall?: (callId: string, state: string) => voi
         setLive(true);
         // Whatever changed while disconnected was missed: catch up once.
         void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
       };
       source.addEventListener("conversation", (event) =>
         handleConversationChanged(queryClient, (event as MessageEvent<string>).data),
+      );
+      source.addEventListener("notification", (event) =>
+        handleNotificationCreated(queryClient, (event as MessageEvent<string>).data),
       );
       source.addEventListener("call", (event) =>
         handleCallChanged(queryClient, (event as MessageEvent<string>).data, (id, state) => {

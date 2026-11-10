@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   handleConversationChanged,
+  handleNotificationCreated,
   useInboxPollInterval,
   useMessageStream,
 } from "./message-stream";
@@ -100,6 +101,35 @@ describe("message stream", () => {
     handleConversationChanged(queryClient, "not json");
     handleConversationChanged(queryClient, JSON.stringify({ conversationId: 42 }));
     expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it("refetches the notices when a notification arrives", () => {
+    const { queryClient, invalidate } = setup();
+    handleNotificationCreated(
+      queryClient,
+      JSON.stringify({ notificationId: "n1", kind: "POST_REPOSTED" }),
+    );
+    // Prefixo: lista do sino, página inteira e resumo do menu vivem sob "notifications".
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["notifications"] });
+  });
+
+  it("ignores a notification signal without an id", () => {
+    const { queryClient, invalidate } = setup();
+    handleNotificationCreated(queryClient, "not json");
+    handleNotificationCreated(queryClient, JSON.stringify({ kind: "POST_REPOSTED" }));
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it("delivers the notification event from the stream to the cache", () => {
+    const { queryClient, invalidate } = setup();
+    mountStream(queryClient);
+    const source = FakeEventSource.instances[0];
+
+    act(() =>
+      source.emit("notification", JSON.stringify({ notificationId: "n2", kind: "NEW_COMMENT" })),
+    );
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["notifications"] });
   });
 
   it("stops polling while the stream is live and polls again when it drops", () => {
