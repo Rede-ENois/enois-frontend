@@ -1239,6 +1239,7 @@ backend: inventário + detecção de conflito; (E) cliente de API do conflito no
 | DS (B) | suíte inteira | **1578/1578** |
 | DS (B) | lint / tsc / build / test:dist | EXIT=0 nos quatro |
 | Front (C+E) | `calendar.test.ts` | **14/14** (3 de lembrete + 2 de conflito) |
+| Front (E, após o cherry-pick no #792) | `calendar.test.ts` / `tsc --noEmit` | **14/14** / EXIT=0 |
 | Front (C+E) | `tsc --noEmit` / `eslint src` | EXIT=0 / 0 erros, 9 warnings pré-existentes |
 | Backend (D) | `CalendarConflictServiceTests` | **9/9** |
 | Backend (D) | `CalendarConflictApiTests` | **4/4** |
@@ -1247,6 +1248,15 @@ backend: inventário + detecção de conflito; (E) cliente de API do conflito no
 **PRs:** DS [#187](https://github.com/Rede-ENois/enois-design-system/pull/187), front
 [#786](https://github.com/Rede-ENois/enois-frontend/pull/786), backend
 [#607](https://github.com/Rede-ENois/enois-backend/pull/607), docs (este).
+
+**FALHA REAL DA RODADA (perda de unidade por merge automático):** o bot mergeou o #786 às
+05:47Z, **antes** do push da unidade E (cliente de conflito). O merge carregou só o commit
+`6d731488` (lembretes); `calendarApi.conflicts` não está na `qa`. Conferido com
+`git show enois/qa:src/lib/api/calendar.ts`. Correção: cherry-pick do commit `9bc6c0fe` sobre a
+`qa` atual, testes e tsc de novo (**14/14**, EXIT=0), PR de seguimento
+[#792](https://github.com/Rede-ENois/enois-frontend/pull/792). É o custo concreto do B8: o merge
+automático publicou um PR declarado "aguardando revisão" **no meio da rodada**, e a unidade que
+chegou depois ficou de fora.
 
 **BLOQUEIOS/NOTAS:**
 
