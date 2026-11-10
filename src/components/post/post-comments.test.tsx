@@ -3,6 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { ApiError } from "@/lib/api-client";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { CommentView } from "@/types/application/comment/comment-view";
 import { createRoot } from "react-dom/client";
@@ -261,6 +262,34 @@ describe("envio recusado não some com a conversa", () => {
     expect(order()).toEqual(["root"]);
     expect(container.textContent).toContain("Não foi possível enviar o comentário.");
     expect(container.textContent).not.toContain("Não foi possível carregar os comentários.");
+  });
+
+  it("mostra a razao que a API deu no lugar do texto generico", async () => {
+    mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
+    // O 409 DUPLICATE_CONTENT do backend traz "Você já publicou este conteúdo recentemente."
+    // O texto generico ("Tente de novo") e inutil aqui: a nova tentativa falha igual.
+    mocks.create.mockRejectedValue(
+      new ApiError(409, "DUPLICATE_CONTENT", "Você já publicou este conteúdo recentemente."),
+    );
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    await act(async () => usePostCardStore.getState().setDraft("post", "Repetido"));
+    await act(async () =>
+      container
+        .querySelector("form")!
+        .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
+    );
+    await settle();
+
+    expect(container.textContent).toContain("Você já publicou este conteúdo recentemente.");
+    expect(container.textContent).not.toContain("Tente de novo");
+    expect(order()).toEqual(["root"]);
   });
 
   it("some com o aviso na tentativa seguinte", async () => {

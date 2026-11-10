@@ -64,6 +64,8 @@ export function PostComments({
   const [loadingMore, setLoadingMore] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<CommentsError | null>(null);
+  /** Razao da recusa vinda da API: sem ela, "tente de novo" nao diz o que corrigir. */
+  const [sendErrorDetail, setSendErrorDetail] = useState<string | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [gifOpen, setGifOpen] = useState(false);
@@ -136,6 +138,7 @@ export function PostComments({
   const loadFirstPage = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setSendErrorDetail(null);
     setComments([]);
     setCursor(null);
     setHasMore(false);
@@ -183,6 +186,7 @@ export function PostComments({
     setSending(true);
     // A nova tentativa apaga o aviso da anterior.
     setError(null);
+    setSendErrorDetail(null);
     try {
       let mediaIds: string[] = [];
       let finalContent = content;
@@ -217,11 +221,14 @@ export function PostComments({
       setMedia([]);
       setMediaSpoiler(false);
       return true;
-    } catch {
+    } catch (failure) {
       // Envio recusado não é a lista falhando: o erro fica junto do campo e os comentários já
       // carregados continuam na tela. Antes isso caía em "load" e a thread inteira virava
       // "Não foi possível carregar os comentários" — o sintoma do comentário que some ao enviar.
+      // A razão que a API deu (ex.: conteúdo duplicado) acompanha o aviso: é acionável, e o
+      // texto genérico não é.
       setError(media.length > 0 ? "upload" : "send");
+      setSendErrorDetail(failure instanceof Error ? failure.message : null);
       return false;
     } finally {
       setPosting(false);
@@ -246,6 +253,7 @@ export function PostComments({
       loadingMore={loadingMore}
       hasMore={hasMore}
       error={error}
+      sendErrorDetail={sendErrorDetail}
       onRetry={loadFirstPage}
       onLoadMore={loadMore}
       renderComment={(comment, replyingTo) => (
