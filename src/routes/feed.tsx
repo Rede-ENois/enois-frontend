@@ -47,6 +47,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  PullIndicator,
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
@@ -1387,6 +1388,14 @@ function Home() {
                   {texts.feed.refreshing}
                 </span>
               </div>
+            )}
+
+            {/* Feedback do gesto de puxar: o ponto acompanha o dedo, passa do limite girando
+                contínuo e ao soltar vira o "Atualizando..." de cima. Sem isso o gesto parecia
+                não fazer nada — e, sem o overscroll do documento bloqueado, o Chrome assumia
+                o gesto e recarregava a página inteira. */}
+            {pullToRefresh.pulling && !feedFetching && (
+              <PullIndicator pull={pullToRefresh.pull} trigger={pullToRefresh.trigger} />
             )}
 
             <div className="space-y-4">
