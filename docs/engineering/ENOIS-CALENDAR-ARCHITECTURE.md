@@ -599,3 +599,44 @@ semana + `HH:mm`, `MentorSlot` com instante único e `book`/`release`, geração
 obriga o cliente a tratar erro para um aviso que é informativo. Rejeitado também calcular conflito
 no front com a agenda já carregada: a agenda da tela é uma janela (mês/semana), e o formulário pode
 estar criando num intervalo fora dela — o servidor precisa ser a fonte.
+
+---
+
+## D24 — Disponibilidade é regra da pessoa, guardada como semana substituível (execução 18)
+
+**Contexto.** A fase 6 pedia "disponibilidade". O que existia era `MentorAvailability` no perfil de
+mentor: dia da semana + `HH:mm`, sem fim nem duração, e `MentorSlot` com instante único. Nenhum dos
+dois responde "quando esta pessoa aceita compromisso", e a agenda não tinha onde guardar isso. A
+detecção de conflito da D23 só olha o que já está marcado; a disponibilidade é o outro lado — o que
+a pessoa declara possível antes de qualquer compromisso existir.
+
+**Decisão.**
+
+- Tabela própria, `calendar_availability`, por **pessoa** (não por agenda social/profissional): o
+  corpo é um só; quem separa as agendas é o compromisso, não a disponibilidade.
+- Janela = `(dia ISO 1–7, início, fim, fuso IANA)`. Os horários são **de parede** (`time` no banco,
+  `LocalTime` no domínio), não instantes: a regra é semanal e precisa continuar às 9h depois da
+  mudança de horário da cidade. Guardar `Instant` obrigaria a reescrever a regra a cada mudança.
+- **Meio-aberta**, igual à D13/D23: 9h–12h e 12h–18h se encostam sem sobrepor. Cruzar no mesmo dia
+  é 400 `INVALID_AVAILABILITY` e a transação não grava nada — a semana anterior continua inteira.
+- **Nenhuma janela atravessa a meia-noite.** Quem precisa das 22h às 2h declara duas janelas, uma
+  em cada dia. Guardar uma janela com um horário só perderia o dia do fim, e o `time` do banco não
+  tem como dizer "o dia seguinte".
+- **Escrita por substituição** (`PUT /calendar/availability` com a semana inteira): a regra é o
+  conjunto, não a linha. Isso elimina "apagar janela por id" e o estado em que a tela acha que
+  apagou e o banco não; repetir o mesmo `PUT` é idempotente por natureza.
+- Leitura e escrita sempre pela sessão (D10): não existe rota para a disponibilidade de outra
+  pessoa, e não há id de pessoa no caminho.
+- `check` no banco para dia 1–7 e fim depois do começo, e índice único por
+  `(pessoa, dia, começo)`; a recusa de cruzamento fica no serviço, porque o banco não expressa
+  "intervalos disjuntos" sem trigger.
+
+**Rejeitado.** Guardar a disponibilidade em `Instant`s por semana concreta ("terça 12/11, 9h–12h"):
+a regra se repete toda semana e materializar 52 semanas por ano faria a tela manter um calendário
+paralelo. Rejeitado também reaproveitar `MentorAvailability`: é do perfil de mentor, não tem fim nem
+fuso e mudá-la acoplaria a agenda geral à mentoria. Rejeitado, ainda, bloquear a criação de
+compromisso fora da disponibilidade: disponibilidade é declaração, não cerca (mesmo raciocínio da
+D23 — aviso, não 409).
+
+**Limite conhecido.** Não há exceção por data (feriado, folga pontual) nem fuso por janela dentro da
+mesma semana. Quando aparecer, o caminho é uma tabela de exceções por data, não colunas novas aqui.

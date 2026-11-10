@@ -1295,3 +1295,97 @@ chegou depois ficou de fora.
 **PRÓXIMA RODADA (§10, proposta de execução 18):** disponibilidade semanal no nível da agenda
 (migração nova), aviso de conflito no formulário do DS, e — se o #187 mergear — release do DS e
 seletor de lembrete na tela de detalhe.
+
+---
+
+## EXECUÇÃO 18 (bloco) — 2026-11-10T05:00–09:30-03:00 — Fase 6 (3 unidades verificáveis)
+
+**TAREFA.** Fase 6 (disponibilidade e conflitos), o que faltava depois do #607: a janela semanal
+persistida da agenda, o aviso de conflito na superfície do formulário e o cliente do front para a
+disponibilidade. A tela de lembrete continua bloqueada no DS #187 (aberto, sem release novo).
+
+**ESTADO REAL CONFERIDO ANTES.** O roadmap dizia #792/#791 abertos; `gh pr view` mostrou os dois
+**mergeados** — de novo pelo bot `kof-agent-worker` (#792 em `7e160805` às 07:06Z, #791 em
+`52c1a5d4` às 07:12Z). O
+conteúdo está na `qa`: `calendarApi.conflicts` e o tipo `CalendarConflictQuery` conferidos com
+`git show enois/qa:`. O DS #187 segue aberto com `REVIEW_REQUIRED` e CI verde.
+
+### Unidades
+
+1. **(A) Backend — disponibilidade semanal da agenda.** `CalendarAvailabilityWindow` (record:
+   pessoa, dia ISO 1–7, `LocalTime` início/fim, fuso, criação; `overlaps` meio-aberto),
+   `CalendarAvailabilityService` (semana substituída de uma vez, no máximo 50 janelas, cruzamento
+   no mesmo dia recusado com 400 `INVALID_AVAILABILITY` e **nada gravado**, semana isolada por
+   pessoa), porta + adaptador JPA + rotas `GET`/`PUT /calendar/availability`, e a migração
+   **V267**. Sem janela atravessando a meia-noite: 22h–2h são duas janelas, porque um horário só
+   perderia o dia do fim.
+2. **(B) DS — aviso de conflito no formulário.** `CalendarEntryFormProps` ganhou
+   `conflicts?: CalendarAgendaItemData[]`; o `FormBody` recorta a lista contra o intervalo **que
+   está nos campos** (não contra a janela buscada) com a mesma semântica da D23, e mostra uma linha
+   `role="status"`. Ignora cancelado e a própria entrada em edição; dia inteiro cobre o dia; rascunho
+   sem intervalo válido não avisa. **Não bloqueia o salvar** — é a decisão da D23 preservada na
+   superfície. Microcópia nova em `calendar.form.conflictWarning(count)` (singular e plural).
+3. **(C) Front — cliente de API da disponibilidade.** `CalendarAvailabilityWindowView`,
+   `CreateCalendarAvailabilityWindowInput` (arquivo próprio por causa do
+   `local/type-boundaries`), `calendarApi.availability()` e `calendarApi.setAvailability(windows)`.
+
+### Arquivos
+
+- Backend: `calendar/domain/CalendarAvailabilityWindow.java`,
+  `calendar/application/CalendarAvailabilityService.java`,
+  `calendar/application/port/out/CalendarAvailabilityRepository.java`,
+  `calendar/adapters/out/persistence/CalendarAvailability{JpaEntity,PersistenceAdapter}.java`,
+  `calendar/adapters/out/persistence/SpringDataCalendarAvailabilityJpaRepository.java`,
+  `calendar/adapters/in/web/CalendarAvailabilityController.java`,
+  `src/main/resources/db/migration/V267__calendar_availability.sql`,
+  `src/test/java/.../CalendarAvailabilityServiceTests.java`,
+  `src/test/java/.../adapters/in/web/CalendarAvailabilityApiTests.java`.
+- DS: `src/domain/calendar/calendar-entry-form-dialog.tsx`,
+  `src/types/domain/calendar/calendar-entry-form-props.ts`,
+  `src/types/messages/calendar-messages.ts`, `src/messages/defaults/calendar.ts`,
+  `src/domain/calendar/calendar-entry-form-dialog.test.tsx`.
+- Front: `src/types/application/calendar/calendar-availability-window-view.ts`,
+  `src/types/application/calendar/create-calendar-availability-window-input.ts`,
+  `src/lib/api/calendar.ts`, `src/lib/api/calendar.test.ts`.
+
+### Testes (executados)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (A) | `CalendarAvailabilityServiceTests` | **9/9** |
+| Backend (A) | `CalendarAvailabilityApiTests` | **7/7** |
+| Backend (A) | regressão do módulo calendar (11 suítes) | **99/99** |
+| DS (B) | `calendar-entry-form-dialog.test.tsx` | **18/18** (7 novos) |
+| DS (B) | `src/domain/calendar` + `src/lib/calendar` | **89/89** |
+| DS (B) | suíte inteira | **1577/1577** |
+| DS (B) | lint / tsc / build | 0 erros (6 warnings pré-existentes) / EXIT=0 / EXIT=0 |
+| Front (C) | `src/lib/api/calendar.test.ts` | **17/17** (3 novos) |
+| Front (C) | `src/lib/api` | **125/125** |
+| Front (C) | `tsc --noEmit` / `eslint` nos arquivos / `vite build` | EXIT=0 / 0 erros / EXIT=0 |
+
+### PRs
+
+DS [#195](https://github.com/Rede-ENois/enois-design-system/pull/195) (aviso de conflito; CI
+"Lint, typecheck, test and build" verde), backend
+[#613](https://github.com/Rede-ENois/enois-backend/pull/613) (disponibilidade), front
+[#801](https://github.com/Rede-ENois/enois-frontend/pull/801) (cliente), docs (este).
+
+### Bloqueios / notas
+
+- **Colisão de migração, de novo.** A V265 que eu tinha escrito virou **V267**: na mesma janela, a
+  `qa` recebeu `V265__user_presence_last_seen_index` e `V266__badge_kits` de outras frentes. O CI
+  do #613 reprovou em "Migrações sem versão duplicada" — o check funcionou. Rebasing na `qa` e
+  renumerando, os três checks (migração, schema, testes) voltaram. **Lição:** conferir
+  `git ls-tree enois/qa` **imediatamente antes** de escolher o número, não no começo da rodada.
+- **Bug de teste meu, não do produto.** O helper do teste de API envolvia a lista já entre
+  colchetes, produzindo `{"windows":[[...]]}` e um 400 genérico. O produto estava certo; corrigi o
+  helper. Vale a nota porque o sintoma (400 `BAD_REQUEST`) não apontava para o teste.
+- **B8 continua:** #792 e #791 foram mergeados pelo bot durante a rodada anterior, sem revisão
+  humana. Nenhum merge foi feito por mim.
+- **Bloqueado por revisão:** #187 (seletor de lembrete no DS), #195 (aviso de conflito no DS),
+  #613 (disponibilidade), #801 (cliente). As telas dependem do #613 e do release do DS.
+
+**PRÓXIMA RODADA (§10, proposta de execução 19):** a tela de disponibilidade no front (a partir do
+cliente do #801) e a superfície de disponibilidade no DS; ligar `conflicts` no `CalendarEntryFormDialog`
+da tela `/agenda` quando o #195 for publicado; e, se o #187 mergear, o release do DS com o seletor de
+lembrete.
