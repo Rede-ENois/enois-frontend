@@ -474,6 +474,88 @@ describe("minimizar preserva o iframe", () => {
     expect(document.activeElement).toBe(outside);
   });
 
+  it("mantém a recuperação minimizada sem tirar o foco da página", () => {
+    const outside = document.createElement("button");
+    document.body.prepend(outside);
+    const frame = enter();
+    const renewed = { ...getCallSession().join!, jwt: "token_renovado" };
+    act(() => callSessionStore.minimize());
+    const pill = Array.from(host.querySelectorAll("button")).find(
+      (button) => button.textContent === texts.calls.audioTitle,
+    )!;
+    outside.focus();
+
+    act(() => callSessionStore.lostCredential());
+    expect(getCallSession()).toMatchObject({
+      phase: "joining",
+      minimized: true,
+      needsCredential: true,
+    });
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(pill.isConnected).toBe(true);
+    expect(document.activeElement).toBe(outside);
+    expect(frame.isConnected).toBe(false);
+
+    act(() => callSessionStore.credentialConsumed());
+    act(() => callSessionStore.joining(renewed.call));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(outside);
+
+    act(() => callSessionStore.live(renewed));
+    const recoveredFrame = host.querySelector("iframe")!;
+    expect(recoveredFrame).not.toBeNull();
+    expect(recoveredFrame).not.toBe(frame);
+    expect(recoveredFrame.closest("[inert]")).not.toBeNull();
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: true,
+      needsCredential: false,
+    });
+    expect(pill.isConnected).toBe(true);
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(outside);
+
+    const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    document.dispatchEvent(tab);
+    expect(tab.defaultPrevented).toBe(false);
+    expect(actions.leaveFromRoom).not.toHaveBeenCalled();
+
+    act(() => pill.click());
+    const dialog = host.querySelector('[role="dialog"]')!;
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(host.querySelector("iframe")).toBe(recoveredFrame);
+  });
+
+  it("preserva o botão da pílula e seu foco durante a recuperação", () => {
+    enter();
+    act(() => callSessionStore.minimize());
+    const pill = document.activeElement;
+    expect(pill?.textContent).toBe(texts.calls.audioTitle);
+    const renewed = { ...getCallSession().join!, jwt: "token_renovado" };
+    act(() => callSessionStore.lostCredential());
+    expect(document.activeElement).toBe(pill);
+    expect(pill?.isConnected).toBe(true);
+    act(() => callSessionStore.live(renewed));
+    expect(document.activeElement).toBe(pill);
+    expect(pill?.isConnected).toBe(true);
+  });
+
+  it("mostra erro de recuperação sem prender o foco da página", () => {
+    const outside = document.createElement("button");
+    document.body.prepend(outside);
+    enter();
+    act(() => callSessionStore.minimize());
+    outside.focus();
+    act(() => callSessionStore.lostCredential());
+    act(() => callSessionStore.error("Falha na recuperação da chamada."));
+    expect(host.textContent).toContain("Falha na recuperação da chamada.");
+    expect(host.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(host.querySelector('[role="dialog"]')?.closest("[inert]")).toBeNull();
+    expect(host.querySelector("iframe")).toBeNull();
+    expect(document.activeElement).toBe(outside);
+  });
+
   it("receber outra chamada e atualizar a presença preserva a sala minimizada", () => {
     const frame = enter();
     act(() => callSessionStore.minimize());

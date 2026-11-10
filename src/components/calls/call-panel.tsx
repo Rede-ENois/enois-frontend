@@ -36,7 +36,7 @@ export function CallPanel() {
   // A sala é de outro domínio: a captura da denúncia é pedida a ela por postMessage.
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
-  const minimized = session.minimized && session.phase === "live";
+  const minimized = session.minimized && (session.phase === "live" || session.phase === "joining");
   const pillRef = useRef<HTMLButtonElement | null>(null);
   // Recebida e ao vivo ocupam a tela inteira, como um discador: tocar no canto não é aviso
   // suficiente para uma ligação. Antes de entrar (chamando/conectando) e nos avisos, a moldura
