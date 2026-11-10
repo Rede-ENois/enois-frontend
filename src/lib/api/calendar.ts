@@ -1,11 +1,13 @@
 import type { CalendarAgendaDetailView } from "@/types/application/calendar/calendar-agenda-detail-view";
 import type { CalendarAgendaItemView } from "@/types/application/calendar/calendar-agenda-item-view";
+import type { CalendarAvailabilityWindowView } from "@/types/application/calendar/calendar-availability-window-view";
 import type { CalendarConflictQuery } from "@/types/application/calendar/calendar-conflict-query";
 import type { CalendarEntryView } from "@/types/application/calendar/calendar-entry-view";
 import type { CalendarParticipantView } from "@/types/application/calendar/calendar-participant-view";
 import type { CalendarParticipation } from "@/types/application/calendar/calendar-participation";
 import type { CalendarReminderView } from "@/types/application/calendar/calendar-reminder-view";
 import type { CalendarWindowQuery } from "@/types/application/calendar/calendar-window-query";
+import type { CalendarAvailabilityWindowInput } from "@/types/application/calendar/create-calendar-availability-window-input";
 import type { CreateCalendarEntryInput } from "@/types/application/calendar/create-calendar-entry-input";
 import type { UpdateCalendarEntryInput } from "@/types/application/calendar/update-calendar-entry-input";
 
@@ -96,4 +98,17 @@ export const calendarApi = {
         entryId: entryId ?? undefined,
       })}`,
     ),
+
+  /**
+   * A semana de disponibilidade de quem está lendo, ordenada por dia e começo. Não há rota para a
+   * agenda de outra pessoa: o servidor tira a pessoa da sessão.
+   */
+  availability: () => api.get<CalendarAvailabilityWindowView[]>("/calendar/availability"),
+
+  /**
+   * Substitui a semana inteira, não uma janela: o corpo é o conjunto que a pessoa quer e o que não
+   * vier deixa de existir. É `PUT` de representação, então repetir a mesma semana não duplica nada.
+   */
+  setAvailability: (windows: CalendarAvailabilityWindowInput[]) =>
+    api.put<CalendarAvailabilityWindowView[]>("/calendar/availability", { windows }),
 };
