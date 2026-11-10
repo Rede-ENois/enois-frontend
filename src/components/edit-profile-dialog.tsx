@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { BadgeKit } from "@/types/application/profile/badge-kit";
 import type { CertificationRequest } from "@/types/application/profile/certification-request";
 import type { EducationRequest } from "@/types/application/profile/education-request";
 import type { ExperienceRequest } from "@/types/application/profile/experience-request";
@@ -19,6 +20,7 @@ import {
 
 import { ApiError, preferencesApi, profileApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
+import { dataCurta } from "@/lib/date/format";
 import { ISO_DATE, hasMinAge } from "@/lib/min-age";
 import { profileQueries } from "@/lib/query-options/profiles";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -106,6 +108,13 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
     queryKey: ["me", "certifications"],
     queryFn: () => profileApi.certifications.list(),
     enabled: open && tab === "certifications",
+  });
+
+  // Histórico de kits: só na aba de informações, onde fica o seletor de emblemas.
+  const { data: badgeKits = [], isLoading: kitsLoading } = useQuery({
+    queryKey: ["me", "badge-kits"],
+    queryFn: () => preferencesApi.badgeKits(),
+    enabled: open && tab === "info",
   });
 
   const lists = {
@@ -221,6 +230,12 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
         savePending={updateProfile.isPending}
         onSave={handleSave}
         onUploadBadge={uploadBadge}
+        badgeKits={badgeKits.map((kit: BadgeKit) => ({
+          id: kit.id,
+          badges: kit.badges,
+          createdAtLabel: dataCurta(kit.createdAt),
+        }))}
+        kitsLoading={kitsLoading}
         experiences={experiences}
         education={education}
         certifications={certifications}
