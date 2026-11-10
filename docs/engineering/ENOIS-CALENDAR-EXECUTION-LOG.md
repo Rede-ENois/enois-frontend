@@ -1496,3 +1496,88 @@ descartável, B7); (4) iniciar a fase 4 (agenda social: eventos de grupo na agen
 (ICS export), que não dependem do release.
 
 ---
+
+## EXECUÇÃO 20 (bloco) — 2026-11-10T15:00–17:30-03:00 — Fase 8 (iCalendar, 3 unidades)
+
+**TAREFA.** Bloco proposto no §10: (1) destravar o que o release mergeou; (2) ligar o seletor de
+lembrete no detalhe; (3) avançar fase 8 (ICS export) no backend. O item 1 se resolveu sozinho
+conferido antes de começar (abaixo); o seletor segue dependendo da revisão do #777, então o bloco
+foi a fase 8 inteira de ponta a ponta: export + import no backend e a tela no front.
+
+**ESTADO REAL CONFERIDO ANTES.** O roadmap da `qa` dizia "#804 em draft" e "nenhuma tag v0.31.0";
+`gh pr view`/`gh pr list` mostraram **#804 MERGEADO** e **#808 (docs 19) MERGEADO**, o release
+**0.31.0 publicado** (tag `v0.31.0` no merge do #196, run 42869575669, `latest`) e o DS **#201**
+(ajuste de relógio no teste do conflito) também mergeado. Fase 6 está completa na `qa` — corrigido
+no roadmap na mesma rodada. Sem PR duplicado a abrir: ninguém tinha começado ICS
+(`git grep -il "VCALENDAR"` só achava comentários).
+
+### Unidades
+
+1. **(A) Backend — export `.ics`.** `CalendarIcsService.export` + `GET /calendar/entries/export.ics`
+   (`CalendarIcsController`, `text/calendar` com `Content-Disposition: attachment`). `UID` estável
+   (origem `TIPO-ID` quando existe; `enois-<entryId>` quando não), `SEQUENCE` derivado de
+   `updatedAt−createdAt`, `STATUS:CANCELLED` publicando o cancelamento com o mesmo `UID`,
+   `DTSTAMP` em UTC e `DTSTART/DTEND` com `TZID` do fuso de cada compromisso. `VTIMEZONE` por fuso
+   usado, **derivado das transições reais** do `ZoneRules` (um `STANDARD` fixo erraria metade do
+   ano; teto de 400 observâncias/10 anos, fixa quando o fuso não tem transição). Folding em 75
+   octets contando UTF-8 sem partir codepoint. Janela obrigatória, meio-aberta, teto de 1 ano.
+   Convidado entra no arquivo junto com o que organiza (a mesma união da leitura da agenda).
+2. **(B) Backend — import `.ics`.** `CalendarIcsService.importCalendar` +
+   `POST /calendar/entries/import` **multipart** (padrão do `/me/import/resume`), com
+   `Idempotency-Key` obrigatória (D11: escrita). Cada `VEVENT` vira entrada com origem `ICS`+`UID`
+   via `CalendarSourceService` — repetir o arquivo não duplica (D3) e o reagendamento do arquivo
+   move a entrada que já existe. Parser próprio (sem dependência nova, no espírito de D8):
+   unfolding de continuação, escape/unescape de `,;\n\`, `TZID` explícito, UTC (`Z`) e
+   `VALUE=DATE` (dia inteiro — `UpsertInput` ganhou `allDay`, com construtor de 10 args
+   preservado). `TZID` desconhecido cai no fuso padrão em vez de recusar o arquivo; `VEVENT` sem
+   `UID`/sem horário ou acima do `MAX_DURATION` é contado em `skipped`. Teto de 512 KB e 500
+   eventos: import não é dump.
+3. **(C) Front — botão de download na `/agenda`.** `calendarApi.exportUrl({from,to,scope})`
+   (endereço pronto; a resposta é arquivo, não JSON), `src/lib/calendar-export.ts` com fetch
+   **com sessão** (cookie + headers de origem) e download por `blob:`/âncora — 401 ali é toast de
+   erro, não deslogamento. Botão `Button` do DS (0.31.0 real) em `PageHeader.actions`, com a
+   janela e o escopo **que a tela está mostrando**: ver o mês e receber o ano confundiria. Textos
+   novos em `texts.agenda`. Markup cru: zero.
+
+### Arquivos
+
+- Backend: `calendar/application/CalendarIcsService.java` (novo), `calendar/adapters/in/web/CalendarIcsController.java`
+  (novo), `calendar/application/CalendarSourceService.java` (`allDay` no `UpsertInput`),
+  testes `CalendarIcsServiceTests.java` (11) e `adapters/in/web/CalendarIcsApiTests.java` (7).
+- Front: `src/lib/api/calendar.ts` (`exportUrl`), `src/lib/api/calendar.test.ts` (+2, e mock ganhou
+  `apiUrl`), `src/lib/calendar-export.ts` (novo), `src/routes/agenda.tsx` (botão + estado),
+  `src/texts.ts` (4 chaves).
+
+### Testes (rodados de verdade nesta árvore)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (A+B) | `CalendarIcsServiceTests` | **11/11** |
+| Backend (A+B) | `CalendarIcsApiTests` | **7/7** |
+| Backend | regressão `-Dtest='Calendar*'` (todas as suítes do módulo, incluindo os 18 novos) | **117/117 verdes**, EXIT=0 |
+| Front (C) | `calendar.test.ts` | **18/18** |
+| Front (C) | `agenda.test.tsx` | **3/3** |
+| Front (C) | `tsc --noEmit` / `eslint` / `vite build` | EXIT=0 / 0 erros / EXIT=0 |
+
+### Armadilhas e notas
+
+- O `node_modules` do worktree novo saiu do clone da mantenedora com o **DS 0.30.x** — `tsc`
+  apontava `badgeKits`/`PullIndicator` ausentes (pré-existente, não do bloco). Construí o 0.31.0
+  do `main` do DS num clone limpo (`npm ci && npm run build`) e substituí o `dist` no worktree;
+  `tsc` foi a EXIT=0 com o pacote real.
+- `MockMultipartHttpServletRequestBuilder` não é subclasse de `MockHttpServletRequestBuilder`
+  (é de `Abstract...`): o helper de teste teve de receber o tipo multipart direto.
+- Primeira tentativa de escrever o serviço saiu corrompida no Write (arquivo com linhas duplicadas
+  de import); detectado no mesmo passo e reescrito inteiro antes de compilar.
+
+### PRs
+
+- Backend [#629](https://github.com/Rede-ENois/enois-backend/pull/629) — export + import (fase 8).
+- Front [#809](https://github.com/Rede-ENois/enois-frontend/pull/809) — botão "Baixar .ics"
+  (declara dependência do #629).
+- Docs (este PR).
+
+**PRÓXIMA RODADA (§10, proposta de execução 21):** import na tela (upload do `.ics` com aviso de
+conflito antes de aplicar), seletor de lembrete quando o #777 for revisado, e fase 9 (assinatura
+privada, D7) ou fase 4 (fonte de eventos de grupo).
+

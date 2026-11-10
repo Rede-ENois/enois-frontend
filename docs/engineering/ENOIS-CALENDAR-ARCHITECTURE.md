@@ -674,3 +674,32 @@ desenho era onde ficam o rascunho da semana e a lista de conflito.
 conflito não leva `scope`, então trocar de aba não refaz a busca; `staleTime` de 30 s evita repetir a
 leitura ao abrir o formulário várias vezes. `CalendarAgendaSurfaceProps.conflicts` é opcional: os
 consumidores existentes seguem compilando sem mudança.
+
+---
+
+## D26 — O `.ics` é derivado da entrada, o import entra pela porta de origem (execução 20)
+
+Exportar e importar iCalendar é função da entrada central, não de cada módulo — D6 na prática. O
+que a execução 20 fechou de decisão:
+
+1. **`UID` é função determinística da entrada:** a origem quando existe (`TIPO-ID`), `enois-`+id
+   quando não. Duas exportações do mesmo banco produzem o mesmo arquivo; o leitor externo
+   reconhece o compromisso entre exportações sem nenhuma coluna nova. `SEQUENCE` derivado de
+   `updatedAt−createdAt` segue o mesmo princípio (sem contador persistido).
+2. **Cancelamento é publicado, não apagado:** `STATUS:CANCELLED` com o mesmo `UID` — evento que
+   some do arquivo nunca é removido em quem assina. É a D10 transplantada para o formato.
+3. **Fuso no arquivo é real, não aproximado:** `VTIMEZONE` derivado das transições do `ZoneRules`
+   do fuso de cada compromisso. Um deslocamento fixo (ou um `VTIMEZONE` de uma observância só)
+   erraria o instante em metade do ano para fuso com horário de verão.
+4. **Import entra pela porta de origem, não por INSERT:** cada `VEVENT` vira
+   `CalendarSourceService.upsert` com origem `ICS`+`UID`. A idempotência do arquivo é a mesma
+   idempotência da mentoria (D3): repetir o arquivo atualiza, não duplica. Import **não mescla**
+   com compromisso criado na agenda — um não tem origem, e mesclar por título/horário seria
+   adivinhação com dado pessoal.
+5. **Import é escrita com teto:** `Idempotency-Key` obrigatória (D11), 512 KB e 500 eventos.
+   Permissivo no formato (linha estranha não derruba o arquivo; `TZID` desconhecido cai no fuso
+   padrão e o evento entra), estrito no volume — o que protege é o limite, não a recusa.
+6. **O download é da janela visível:** o botão da `/agenda` exporta o que a tela desenha (janela
+   do período + escopo da aba), não "tudo". Arquivo gigante e desalinhado do que se vê é pior que
+   baixar de novo. A assinatura privada da fase 9 (D7) é que serve ao caso "agenda inteira,
+   sempre atualizada" no leitor externo.
