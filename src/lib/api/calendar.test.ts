@@ -172,4 +172,32 @@ describe("calendarApi", () => {
     await calendarApi.clearReminder("cal_1", 30);
     expect(api.delete).toHaveBeenCalledWith("/calendar/entries/cal_1/reminders?minutesBefore=30");
   });
+
+  it("consulta o conflito com a janela e o scope, sem entryId na criação", async () => {
+    vi.mocked(api.get).mockResolvedValue([]);
+
+    await calendarApi.conflicts({
+      from: "2026-11-10T15:00:00Z",
+      to: "2026-11-10T16:00:00Z",
+      scope: "PROFESSIONAL",
+    });
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/calendar/entries/conflicts?from=2026-11-10T15%3A00%3A00Z&to=2026-11-10T16%3A00%3A00Z&scope=PROFESSIONAL",
+    );
+  });
+
+  it("manda o entryId na edição para o compromisso não conflitar com ele mesmo", async () => {
+    vi.mocked(api.get).mockResolvedValue([]);
+
+    await calendarApi.conflicts({
+      from: "2026-11-10T15:00:00Z",
+      to: "2026-11-10T16:00:00Z",
+      entryId: "cal_1",
+    });
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/calendar/entries/conflicts?from=2026-11-10T15%3A00%3A00Z&to=2026-11-10T16%3A00%3A00Z&entryId=cal_1",
+    );
+  });
 });
