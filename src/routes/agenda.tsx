@@ -134,6 +134,11 @@ function AgendaPage() {
 
   const agenda = useQuery(calendarQueries.agenda({ ...window, scope: scope ?? null }));
 
+  // Aviso de conflito (D23): a mesma janela que a agenda desenha, sem escopo — um compromisso novo
+  // pode cair na outra agenda. É leitura de referência: o formulário recorta a lista contra o que
+  // está nos campos, e nada aqui bloqueia o salvar. Falha silenciosa: sem lista, sem aviso.
+  const conflicts = useQuery(calendarQueries.conflicts(window));
+
   const save = useMutation({
     mutationFn: (values: CalendarEntryFormValues) =>
       calendarApi.create({
@@ -177,6 +182,17 @@ function AgendaPage() {
         participation: item.participation,
       })),
     [agenda.data],
+  );
+
+  // Mesma conversão do `items`, para a lista de conflito: o formulário só le o compromisso.
+  const conflictItems: CalendarAgendaItemData[] = useMemo(
+    () =>
+      (conflicts.data ?? []).map((item) => ({
+        entry: toEntryData(item),
+        owner: item.owner,
+        participation: item.participation,
+      })),
+    [conflicts.data],
   );
 
   const go = (next: { view: CalendarView; period: string; scope?: CalendarScope }) => {
@@ -259,6 +275,7 @@ function AgendaPage() {
           timeZoneId={timeZoneId}
           today={today}
           newEntryScope={scope}
+          conflicts={conflictItems}
           savePending={save.isPending}
           saveError={saveError}
           onSave={async (values) => {

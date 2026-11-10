@@ -191,6 +191,12 @@ export const texts = {
     exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
     exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
     exportIcsDone: "Arquivo da agenda baixado.",
+    availability: {
+      seoTitle: "Disponibilidade · Énóis",
+      title: "Sua disponibilidade",
+      subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
+      errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
+    },
   },
 
   groups: {
