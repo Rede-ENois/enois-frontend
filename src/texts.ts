@@ -68,8 +68,10 @@ export const texts = {
   /** Contas da comunidade no painel de monitorabilidade. */
   userMetrics: {
     title: "Contas da comunidade",
-    hint: "O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual.",
+    hint: 'O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual. "Ativos hoje" conta quem usou a plataforma nas últimas 24 horas.',
     total: "Total de contas",
+    /** Quem abriu o app nas últimas 24h — medido pelo heartbeat de presença. */
+    active24h: "Ativos hoje (24h)",
     newToday: "Entraram hoje",
     new7: "Últimos 7 dias",
     new30: "Últimos 30 dias",
@@ -115,6 +117,7 @@ export const texts = {
       services: "Contratar serviços",
       professionalProfile: "Perfil profissional",
       explore: "Explorar",
+      agenda: "Agenda",
     },
     context: { social: "Social", professional: "Profissional" },
   },
@@ -166,6 +169,38 @@ export const texts = {
       services: { label: "Serviços", description: "Contrate quem é da comunidade" },
       companies: { label: "Empresas", description: "Quem contrata e o que faz" },
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+      agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
+    },
+  },
+
+  /**
+   * A tela da agenda. O calendário desenha; aqui ficam só as frases do app: título da página, o
+   * que cada escopo significa e o erro que a API devolve sem tradução.
+   */
+  agenda: {
+    seoTitle: "Agenda · Énóis",
+    title: "Agenda",
+    subtitle: "Seus compromissos sociais e profissionais, juntos ou separados.",
+    scopeAll: "Tudo",
+    scopeSocial: "Social",
+    scopeProfessional: "Profissional",
+    scopeLabel: "Agenda mostrada",
+    errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
+    errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
+    errorInvite: "Não foi possível convidar. Tente de novo.",
+    errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
+    detailNotFound: "Compromisso não encontrado",
+    detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
+    exportIcs: "Baixar .ics",
+    exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
+    exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
+    exportIcsDone: "Arquivo da agenda baixado.",
+    availability: {
+      seoTitle: "Disponibilidade · Énóis",
+      title: "Sua disponibilidade",
+      subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
+      errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
     },
   },
 
@@ -305,6 +340,21 @@ export const texts = {
         "Não foi possível confirmar que o pedido veio do Énóis. Recarregue a página e tente de novo.",
       UNSAFE_LINK:
         "Um dos links não é permitido. Use endereços que comecem com http://, https:// ou mailto:.",
+      /** A capacidade do ciclo do provedor acabou: nao e falha da pessoa, e o que o §3 do projeto pede. */
+      IDENTITY_CAPACITY_EXHAUSTED:
+        "As vagas desta etapa já foram usadas. Continue participando: avisamos aqui quando abrir de novo.",
+      /** Tentar verificar sem convite da rodada: a tela mostra "esta chegando" e nada quebra. */
+      IDENTITY_NOT_RELEASED:
+        "Sua verificação ainda não foi liberada. Sua vez chega conforme sua participação na comunidade.",
+      IDENTITY_IN_USE: "Você já tem uma verificação em andamento.",
+      /** Provedor sem credenciais ou fora do ar: indisponibilidade, nunca culpa do usuario. */
+      IDENTITY_PROVIDER_UNAVAILABLE:
+        "A verificação de identidade não está disponível no momento. Tente novamente mais tarde.",
+      IDENTITY_PROVIDER_ERROR:
+        "O provedor de identidade não respondeu. Tente novamente em instantes.",
+      /** Trava financeira: a integracao nao pode cobrar sem supervisao humana. */
+      IDENTITY_BILLING_LOCKED:
+        "A verificação está pausada enquanto confirmamos a capacidade. Voltamos assim que possível.",
       /** O mesmo código de verificação chegou duas vezes (ex.: clique duplo); só o primeiro vale. */
       TWO_FACTOR_CHALLENGE_ALREADY_USED:
         "Este código já foi usado. Se você já entrou, recarregue a página; senão, comece o login de novo.",
@@ -380,7 +430,9 @@ export const texts = {
       passwordMin: "Use ao menos 8 caracteres",
       birthDateRequired: "Informe a data de nascimento.",
       birthDateFuture: "A data de nascimento não pode estar no futuro.",
-      termsRequired: "É preciso confirmar que você tem 18 anos ou mais e aceitar os termos.",
+      birthDateMinAge: "A idade mínima para criar conta é 16 anos.",
+      termsRequired:
+        "É preciso confirmar que você tem 16 anos ou mais e aceitar os termos. Menores de 18 anos precisam da autorização de um responsável.",
     },
     password: {
       forgot: "Esqueci minha senha",
@@ -401,7 +453,7 @@ export const texts = {
     signup: {
       title: "Vamos começar.",
       subtitle: "Crie sua conta em menos de um minuto.",
-      termsPrefix: "Confirmo que tenho 18 anos ou mais e aceito os ",
+      termsPrefix: "Confirmo que tenho 16 anos ou mais e aceito os ",
       termsLink: "Termos de Uso",
       termsAnd: " e a ",
       privacyLink: "Política de Privacidade",
@@ -716,6 +768,8 @@ export const texts = {
     publicProfile: {
       notFoundTitle: "Perfil profissional não encontrado",
       notFoundBody: "Este perfil pode não existir ou estar desativado.",
+      loadErrorTitle: "Não foi possível carregar este perfil",
+      loadErrorBody: "Pode ser a conexão. Tente abrir de novo daqui a pouco.",
       postsTitle: "Publicações",
       empty: "Nenhuma publicação por aqui ainda.",
       editMine: "Editar o meu perfil profissional",
@@ -1203,6 +1257,7 @@ export const texts = {
       mediaCount: (count: number) => `${count} ${count === 1 ? "mídia" : "mídias"}`,
       mediaSpoiler: "Marcar mídias como spoiler",
       mediaSpoilerActive: "Mídias marcadas como spoiler",
+      captionRequired: "Escreva uma legenda para publicar",
       uploadProgress: (progress: number) => `Enviando… ${progress}%`,
       imageChecking: "Verificando imagem…",
       imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",
@@ -1531,7 +1586,7 @@ export const texts = {
     avatarFallback: "Avatar",
     edit: {
       usernameTaken: "Este username já está em uso",
-      birthDateInvalid: "Informe uma data de nascimento válida — é preciso ter 18 anos ou mais.",
+      birthDateInvalid: "Informe uma data de nascimento válida — é preciso ter 16 anos ou mais.",
     },
   },
 
@@ -1668,6 +1723,9 @@ export const texts = {
     dailyEnter: "Entrar para jogar",
     mostPlayed: "Mais jogados",
     alphabetical: "A-Z",
+    /** Nome acessível das duas faixas de filtro do catálogo (o leitor de tela anuncia o grupo). */
+    stageFilterLabel: "Filtrar por estágio",
+    genreFilterLabel: "Filtrar por gênero",
     loadMore: "Carregar mais",
     empty: "Nenhum jogo encontrado com esses filtros.",
     loading: "Carregando…",
@@ -2023,6 +2081,9 @@ export const texts = {
       streamUrlPlaceholder: "https://...",
       location: "Localização",
       locationPlaceholder: "Rua, número, cidade",
+      tamoJunto: "Tamo junto",
+      tamoJuntoHint:
+        "Cria a sala de chamada do evento: quem quiser aparece por ela, sem precisar ser convidado.",
     },
   },
 
@@ -2617,8 +2678,8 @@ export const texts = {
 
   identity: {
     unavailable:
-      "A verificação de identidade ainda não está disponível: o Énóis precisa de um provedor autorizado. Assim que houver, o botão fica ativo aqui.",
-    resultOk: "Identidade verificada com sucesso.",
+      "A verificação de identidade não está disponível no momento. Tente novamente mais tarde.",
+    resultOk: "Verificação concluída. O selo Humanidade Comprovada já está no seu perfil.",
     resultError: "Não foi possível concluir a verificação. Você pode tentar de novo.",
   },
 
@@ -2815,7 +2876,15 @@ export const texts = {
    * Admins (allowlist de username no backend) decidem candidaturas e podem punir qualquer usuário.
    */
   moderator: {
-    tabSelector: "Escolher a aba do painel",
+    tabSelector: "Seções do painel",
+    groupSelector: "Grupos do painel",
+    groups: {
+      queue: "Fila do dia",
+      content: "Conteúdo",
+      community: "Comunidade e código",
+      admin: "Administração",
+    },
+    groupLabel: (name: string) => `Ir para: ${name}`,
     panic: {
       done: (active: boolean) => (active ? "Modo pânico ATIVADO." : "Modo pânico desativado."),
       error: "Não foi possível alterar o modo pânico.",
@@ -2927,6 +2996,14 @@ export const texts = {
       suspiciousPosts: "Posts suspeitos",
       notices: "Avisos",
       releaseNotes: "Novidades",
+      identityRelease: "Verificação de identidade",
+    },
+    identityRelease: {
+      saved: "Regras da rodada salvas.",
+      error: "Não foi possível salvar. Tente de novo.",
+      roundDone: (released: number, eligible: number) =>
+        `Rodada concluída: ${released} de ${eligible} liberadas.`,
+      roundEmpty: "Rodada concluída: ninguém elegível nesta rodada.",
     },
     suspiciousPosts: {
       result: (deleted: number, failed: number) =>
@@ -3513,6 +3590,33 @@ export const texts = {
       "Você acompanha o estado das suas denúncias em Minhas denúncias, no menu da conta.",
       "Denúncia falsa e repetida, feita para prejudicar alguém, também é violação.",
     ],
+    callsTitle: "Chamadas e salas abertas (Tamo junto)",
+    callsIntro:
+      "As chamadas entre pessoas e as salas abertas de comunidade (grupos, tópicos e eventos) seguem as mesmas regras de respeito do resto da rede — e o que vale na fala e na imagem ao vivo vale tanto quanto no texto.",
+    calls: [
+      "Respeite o consentimento: ninguém é obrigado a manter a câmera ou o microfone ligados, e quem pedir para encerrar a conversa, encerrou.",
+      "É proibido assediar, ameaçar, expor, humilhar, exibir conteúdo íntimo sem consentimento ou usar a chamada para qualquer fim ilegal.",
+      "Não grave, fotografe ou redistribua a fala ou a imagem de outra pessoa sem autorização dela — dentro ou fora da plataforma.",
+      "Em salas abertas, você está falando com pessoas reais que estão ao vivo: como em qualquer espaço público da rede, o comportamento responsável é esperado de todo mundo.",
+    ],
+    callReportsTitle: "Denúncias em chamadas",
+    callReports: [
+      "Você pode denunciar outra pessoa da chamada pelo próprio app. No momento da denúncia, o app captura automaticamente uma imagem estática da tela da chamada (os vídeos visíveis no momento) e envia essa imagem junto com o seu relato — não é feita gravação de áudio ou de vídeo.",
+      "A imagem vai com a denúncia para o time de moderação. Um sistema automatizado pode usar essa imagem para orientar a análise, mas nenhuma penalidade por denúncia de chamada é aplicada sem que uma pessoa do time examine o caso.",
+      "Uma denúncia não garante que haja imagem armazenada para análise: a captura depende do momento do app e nem todo caso terá prova visual disponível.",
+      "Denúncia feita de má-fé, para prejudicar alguém sem motivo real, também é violação destas diretrizes.",
+    ],
+    callReportsLimit:
+      "A captura de tela é feita no momento da denúncia, sem aviso para as outras pessoas da chamada, e a pessoa denunciada não é avisada de que a denúncia foi aberta contra ela. Quem decide sobre penalidades é sempre uma pessoa do time de moderação, e a decisão pode ser revista por outra pessoa do time.",
+    supervisionTitle: "Contas de 16 e 17 anos",
+    supervisionIntro:
+      "A idade mínima para criar conta no Énóis é 16 anos. Quem tem 16 ou 17 anos entra como conta de menor supervisionado.",
+    supervision: [
+      "De 16 a 17 anos, a conta não publica, não comenta, não envia mensagens e não entra em chamadas até que um responsável legal — pessoa maior de 18 anos, com conta própria na plataforma — autorize o uso.",
+      "A autorização pode ser revogada a qualquer momento pelo responsável, e a conta volta ao estado anterior (sem publicar, comentar, enviar mensagens nem entrar em chamadas). Ao completar 18 anos, a exigência de supervisão termina sozinha.",
+      "A data de nascimento é declarada por você e não é tratada como verificação oficial. As proteções da faixa etária valem a partir dela mesmo assim: declarar idade falsa para escapar da supervisão é violação destas diretrizes e pode levar ao encerramento da conta.",
+      "Contas com data de nascimento que indique menos de 16 anos não são aceitas; identificadas por outro caminho, são encerradas com remoção dos dados pessoais.",
+    ],
     penaltiesTitle: "Consequências",
     penalties: [
       "Primeira violação leve: remoção do conteúdo e aviso.",
@@ -3521,7 +3625,7 @@ export const texts = {
     ],
     appealsTitle: "Recurso",
     appeals:
-      "Se você acredita que uma medida foi aplicada por engano, fale com o suporte. Toda decisão pode ser revista por uma segunda pessoa do time.",
+      "Se você acredita que uma medida foi aplicada por engano, fale com o suporte. Toda decisão pode ser revista por uma segunda pessoa do time. Quem recebeu uma penalidade pode recorrer pela página Minhas penalidades, no menu da conta.",
   },
 
   post: {
@@ -3572,7 +3676,7 @@ export const texts = {
       backPrefix: "Voltar para a ",
       home: "página inicial",
     },
-    updatedAt: "29 de outubro de 2026",
+    updatedAt: "9 de novembro de 2026",
     terms: {
       seoTitle: "Termos de Uso · Énóis",
       seoDescription:
@@ -3581,7 +3685,7 @@ export const texts = {
       sections: [
         {
           title: "1. Aceitação dos termos e idade mínima",
-          text: 'Ao criar uma conta ou usar qualquer funcionalidade da plataforma Énóis ("plataforma"), você concorda com estes Termos de Uso e com a Política de Privacidade. Se não concordar com qualquer parte deles, não utilize a plataforma.\n\nA plataforma é destinada exclusivamente a pessoas com 18 anos ou mais, por exigência legal e por decisão da comunidade. Ao criar a conta, você declara e confirma ser maior de idade, e esse aceite é registrado com data e hora.',
+          text: 'Ao criar uma conta ou usar qualquer funcionalidade da plataforma Énóis ("plataforma"), você concorda com estes Termos de Uso e com a Política de Privacidade. Se não concordar com qualquer parte deles, não utilize a plataforma.\n\nA idade mínima para criar conta é 16 anos. Quem tem 16 ou 17 anos usa a plataforma como conta de menor supervisionado: a conta é liberada, mas publicar, comentar, enviar mensagens e entrar em chamadas só fica disponível depois que um responsável legal, com conta de adulto na plataforma, autoriza o uso. Completar 18 anos encerra a exigência de supervisão automaticamente.\n\nA data de nascimento é declarada por você no cadastro. Ela não é tratada como verificação oficial de idade, e as proteções da faixa etária são aplicadas a partir dela mesmo assim. O aceite destes Termos e a declaração de idade são registrados com data e hora.',
         },
         {
           title: "2. Definições",
@@ -3589,7 +3693,7 @@ export const texts = {
         },
         {
           title: "3. Cadastro e conta",
-          text: "O cadastro é permitido apenas para maiores de 18 anos. Contas identificadas como de menores de idade serão encerradas, com remoção dos dados pessoais correspondentes.\n\nPara usar a plataforma, você deve fornecer informações verdadeiras, completas e atualizadas. Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas na sua conta.\n\nÉ proibido criar contas em nome de terceiros, criar múltiplas contas para burlar restrições ou fornecer informações falsas. Podemos suspender ou encerrar contas que violem estes Termos.",
+          text: "O cadastro é permitido a partir de 16 anos. De 16 a 17 anos, a conta não pode publicar, comentar, enviar mensagens nem entrar em chamadas até que um responsável legal — pessoa maior de 18 anos, com conta própria na plataforma — autorize o uso pelo fluxo de supervisão parental; a autorização pode ser revogada a qualquer momento, e a conta volta ao estado anterior. Cadastros com data de nascimento que indique menos de 16 anos são recusados, e contas identificadas nessa situação são encerradas, com remoção dos dados pessoais correspondentes.\n\nPara usar a plataforma, você deve fornecer informações verdadeiras, completas e atualizadas. Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas na sua conta.\n\nÉ proibido criar contas em nome de terceiros, criar múltiplas contas para burlar restrições ou fornecer informações falsas. Podemos suspender ou encerrar contas que violem estes Termos.",
         },
         {
           title: "4. Conduta do usuário",
@@ -3638,6 +3742,14 @@ export const texts = {
         {
           title: "15. Figurinhas de terceiros",
           text: "As figurinhas disponíveis nas conversas do Énóis não são criadas nem de propriedade da plataforma. Elas vêm de dois catálogos públicos de emotes, o BetterTTV e o FrankerFaceZ, e cada imagem continua pertencendo a quem a criou. A plataforma não reivindica direito autoral sobre essas artes.\n\nO Énóis não vende, não licencia, não sublicencia e não explora comercialmente essas imagens. O uso é acessório e não comercial: a plataforma mantém uma cópia temporária em cache, para que a figurinha abra imediatamente nas conversas em vez de depender do tempo de resposta dos sites de origem. Essa cópia não é oferecida para download, para redistribuição nem para uso fora do Énóis.\n\nSe você é autor ou titular de uma figurinha e não quer que ela apareça na plataforma, escreva pela página de contato (enois.ia.br/contato) informando o código e o endereço da figurinha. A remoção é feita assim que o pedido é confirmado, sem necessidade de justificativa, e o código correspondente passa a não ser mais exibido nas conversas.\n\nAs marcas, os nomes e os logotipos do BetterTTV e do FrankerFaceZ pertencem aos seus respectivos titulares. O Énóis não tem vínculo, patrocínio ou endosso dessas plataformas.",
+        },
+        {
+          title: "16. Chamadas de voz e vídeo e salas abertas (Tamo junto)",
+          text: 'A plataforma oferece chamadas de voz e vídeo entre usuários e salas abertas de comunidade ("Tamo junto"), associadas a grupos, tópicos e eventos, por meio do serviço próprio de chamadas épapo, hospedado pela própria plataforma.\n\nAo entrar em uma chamada, você concorda com as regras de conduta destes Termos e das Diretrizes da Comunidade, que valem também para o que é dito e exibido ao vivo. Assediar, ameaçar, expor, humilhar, exibir conteúdo íntimo sem consentimento ou usar a chamada para fins ilegais pode levar à remoção de recursos, suspensão ou banimento da conta, além das medidas legais cabíveis.\n\nAs chamadas não são gravadas em áudio ou vídeo pela plataforma. Ao denunciar outra pessoa de uma chamada, o aplicativo captura uma imagem estática da tela no momento da denúncia (os vídeos visíveis) e envia essa imagem junto com o relato. A imagem pode ser analisada por ferramenta automatizada para orientar a revisão, mas qualquer penalidade decorrente de denúncia de chamada é decidida por uma pessoa do time de moderação — nenhum sistema automatizado aplica penalidade sozinho nesse caso.\n\nA captura feita para denúncia é acessível apenas à equipe de moderação e não é divulgada às demais pessoas da chamada. Não há gravação contínua, e a plataforma não se responsabiliza por gravações ou capturas feitas por outros participantes com recursos externos ao serviço.\n\nAs chamadas dependem de serviços técnicos (conexão de internet, navegadores e infraestrutura de rede) e podem sofrer falhas, atrasos ou indisponibilidade. A plataforma não garante qualidade de transmissão nem disponibilidade ininterrupta do serviço de chamadas.',
+        },
+        {
+          title: "17. Verificação de identidade e selo Humanidade Comprovada",
+          text: "O Énóis pode oferecer, de forma opcional e progressiva, a verificação de identidade por meio de provedor especializado (atualmente a Didit), que realiza a conferência do documento e da biometria facial em ambiente próprio. A verificação é sempre voluntária: não é requisito para criar conta, participar ou usar qualquer recurso da plataforma, e a liberação acompanha a credibilidade acumulada na comunidade.\n\nAo iniciar uma verificação, você interage diretamente com o provedor e o tratamento dos seus dados de identificação segue os termos e a política de privacidade dele. O Énóis não armazena documentos de identidade, fotografias, selfies, vídeos ou dados biométricos: recebe apenas o resultado (aprovado, recusado ou em análise) e registra o estado da verificação e as datas, para conceder o selo Humanidade Comprovada quando o resultado é aprovado.\n\nO selo é apenas um indicador visual de que o perfil passou pelo processo; ele não é moeda de troca, não gera vantagem de reputação e não é requisito para nada na plataforma. A administração não consegue conceder o selo manualmente nem acessar seus documentos ou resultados biométricos.",
         },
       ],
     },
@@ -3708,7 +3820,9 @@ export const texts = {
           {
             title: "9. Menores de idade",
             paragraphs: [
-              "A plataforma é destinada a maiores de 16 anos. Não coletamos intencionalmente dados de menores sem consentimento dos responsáveis. Se identificarmos esse caso, os dados serão removidos imediatamente.",
+              "A idade mínima para criar conta é 16 anos. De 16 a 17 anos, a conta é de menor supervisionado: a data de nascimento declarada é usada para aplicar as proteções da faixa etária, e a escrita (publicar, comentar, enviar mensagens e entrar em chamadas) só é liberada depois que um responsável legal, com conta de adulto, autoriza o uso pelo fluxo de supervisão parental. A autorização fica registrada com data e versão dos termos, pode ser revogada a qualquer momento e deixa de ser exigida automaticamente quando a pessoa completa 18 anos.",
+              "O que o responsável recebe é o estado da supervisão, o nome de usuário e o nome de exibição do adolescente supervisionado — não o conteúdo das conversas privadas, não a senha e não a data de nascimento. O vínculo pode ser revogado pelo próprio responsável pelo painel de supervisão.",
+              "Cadastros com data de nascimento que indique menos de 16 anos são recusados. Se identificarmos uma conta nessa situação por outro caminho, a conta é encerrada e os dados pessoais correspondentes são removidos. A declaração de idade não é tratada como verificação oficial: é proteção a partir do que foi declarado.",
             ],
           },
           {
@@ -3718,7 +3832,32 @@ export const texts = {
             ],
           },
           {
-            title: "11. Alterações desta política",
+            title: "11. Chamadas de voz e vídeo e salas abertas (Tamo junto)",
+            paragraphs: [
+              "As chamadas entre usuários e as salas abertas de comunidade funcionam pelo serviço próprio de chamadas épapo, hospedado pela própria plataforma. O áudio e o vídeo das chamadas transitam em tempo real pelos servidores do serviço e não são gravados nem armazenados: não há gravação de chamadas na plataforma.",
+              "O transporte entre cada trecho da conexão é criptografado (HTTPS e criptografia de mídia), mas o serviço de retransmissão que distribui o áudio e o vídeo entre os participantes recebe as mídias para repassá-las. Por isso, as chamadas do Énóis não têm criptografia ponta a ponta entre participantes, e o serviço opera sob a administração da plataforma, que tem acesso técnico aos elementos de infraestrutura que processa esse tráfego.",
+              "Dados técnicos da chamada (identificadores da sala e do usuário, horário de entrada e de saída) são processados para permitir que apenas participantes autorizados entrem na sala e para que uma chamada abandonada seja encerrada automaticamente. Dados técnicos como endereço IP podem aparecer em registros operacionais de infraestrutura, com finalidade de segurança e operação do serviço.",
+              "Quando você denuncia outra pessoa de uma chamada, o aplicativo captura automaticamente uma imagem estática da tela no momento da denúncia (os vídeos visíveis) e envia essa imagem com o seu relato, que inclui o motivo, o texto que você escreveu e a lista de quem estava na sala. Não há gravação de áudio ou de vídeo das chamadas. A captura é feita sem aviso visível para os demais participantes e a pessoa denunciada não é avisada de que uma denúncia foi aberta contra ela.",
+              "A imagem da denúncia é armazenada com acesso restrito à equipe de moderação e não é divulgada às demais pessoas da chamada. Para acelerar a análise, a imagem e o relato podem ser avaliados por um serviço automatizado de análise de conteúdo operado por provedor externo, apenas com essa finalidade de moderação; nenhuma penalidade por denúncia de chamada é aplicada sem revisão humana. As denúncias de chamada e o material anexado permanecem armazenados enquanto necessários para a moderação, a defesa de direitos em processos e o cumprimento de obrigações legais — nesse caso, a exclusão da conta não apaga o registro de moderação correspondente.",
+              "As bases legais deste tratamento são o cumprimento de obrigação legal ou regulatória e o exercício regular de direitos (moderação e defesa em processos), conforme o art. 7º da LGPD.",
+            ],
+          },
+          {
+            title: "12. Pedidos de autoridades",
+            paragraphs: [
+              "A plataforma só disponibiliza dados a autoridades mediante requisição judicial ou pedido formal de autoridade competente, na medida do que a requisição indicar. Conteúdo de chamadas não é gravado, portanto não existe áudio ou vídeo de chamadas a disponibilizar; podem existir denúncias, imagens de captura enviadas com denúncias e registros técnicos, conforme descrito nesta política.",
+            ],
+          },
+          {
+            title: "13. Verificação de identidade (Didit)",
+            paragraphs: [
+              "A verificação de identidade é opcional e voluntária. Quando você decide verificá-la, o processo é realizado por provedor especializado (atualmente a Didit), que trata o documento de identificação e a biometria facial como controlador desse tratamento específico, conforme os termos e a política de privacidade dele.",
+              "O Énóis não recebe nem armazena documentos de identidade, fotografias, selfies, vídeos ou dados biométricos. Recebe e guarda apenas o resultado da verificação (aprovado, recusado, em análise ou expirado), o identificador da sessão junto ao provedor, o estado e as datas do processo — o mínimo necessário para conceder o selo Humanidade Comprovada e permitir novas tentativas. O resultado também serve à segurança da plataforma (prevenção de contas duplicadas e de fraude).",
+              "O provedor opera como operador quanto aos dados tratados em nome da plataforma e como controlador do documento e da biometria em si. As bases legais são o seu consentimento (art. 7º, I, da LGPD), que pode ser revogado a qualquer momento ao não iniciar ou ao solicitar a desvinculação da verificação, e o legítimo interesse para segurança (art. 7º, IX).",
+            ],
+          },
+          {
+            title: "14. Alterações desta política",
             paragraphs: [
               "Esta Política pode ser atualizada para refletir mudanças legais ou no serviço. A data de atualização estará sempre indicada no topo da página e alterações relevantes serão comunicadas pela plataforma.",
             ],

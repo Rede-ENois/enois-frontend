@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as ApoiarRouteImport } from './routes/apoiar'
 import { Route as BlogsRouteImport } from './routes/blogs'
 import { Route as BloqueadosRouteImport } from './routes/bloqueados'
@@ -55,6 +56,8 @@ import { Route as SugestoesRouteImport } from './routes/sugestoes'
 import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
+import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
+import { Route as AgendaDisponibilidadeRouteImport } from './routes/agenda_.disponibilidade'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
@@ -88,6 +91,11 @@ import { Route as ComunidadesCommunityIdCanaisChannelIdRouteImport } from './rou
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApoiarRoute = ApoiarRouteImport.update({
@@ -315,6 +323,16 @@ const VagasRoute = VagasRouteImport.update({
   path: '/vagas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgendaEntryIdRoute = AgendaEntryIdRouteImport.update({
+  id: '/$entryId',
+  path: '/$entryId',
+  getParentRoute: () => AgendaRoute,
+} as any)
+const AgendaDisponibilidadeRoute = AgendaDisponibilidadeRouteImport.update({
+  id: '/agenda_/disponibilidade',
+  path: '/agenda/disponibilidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -466,6 +484,7 @@ const ComunidadesCommunityIdCanaisChannelIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRouteWithChildren
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -511,6 +530,8 @@ export interface FileRoutesByFullPath {
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
@@ -543,6 +564,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRouteWithChildren
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -588,6 +610,8 @@ export interface FileRoutesByTo {
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
@@ -621,6 +645,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRouteWithChildren
   '/apoiar': typeof ApoiarRoute
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
@@ -666,6 +691,8 @@ export interface FileRoutesById {
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda_/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
@@ -700,6 +727,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agenda'
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
@@ -745,6 +773,8 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/termos'
     | '/vagas'
+    | '/agenda/$entryId'
+    | '/agenda/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
@@ -777,6 +807,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agenda'
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
@@ -822,6 +853,8 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/termos'
     | '/vagas'
+    | '/agenda/$entryId'
+    | '/agenda/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
@@ -854,6 +887,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/agenda'
     | '/apoiar'
     | '/blogs'
     | '/bloqueados'
@@ -899,6 +933,8 @@ export interface FileRouteTypes {
     | '/suporte'
     | '/termos'
     | '/vagas'
+    | '/agenda/$entryId'
+    | '/agenda_/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
@@ -932,6 +968,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRouteWithChildren
   ApoiarRoute: typeof ApoiarRoute
   BlogsRoute: typeof BlogsRoute
   BloqueadosRoute: typeof BloqueadosRoute
@@ -977,6 +1014,7 @@ export interface RootRouteChildren {
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
+  AgendaDisponibilidadeRoute: typeof AgendaDisponibilidadeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthResetRoute: typeof AuthResetRoute
   AuthVerifyRoute: typeof AuthVerifyRoute
@@ -1004,6 +1042,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apoiar': {
@@ -1321,6 +1366,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VagasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agenda/$entryId': {
+      id: '/agenda/$entryId'
+      path: '/$entryId'
+      fullPath: '/agenda/$entryId'
+      preLoaderRoute: typeof AgendaEntryIdRouteImport
+      parentRoute: typeof AgendaRoute
+    }
+    '/agenda_/disponibilidade': {
+      id: '/agenda_/disponibilidade'
+      path: '/agenda/disponibilidade'
+      fullPath: '/agenda/disponibilidade'
+      preLoaderRoute: typeof AgendaDisponibilidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -1527,6 +1586,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AgendaRouteChildren {
+  AgendaEntryIdRoute: typeof AgendaEntryIdRoute
+}
+
+const AgendaRouteChildren: AgendaRouteChildren = {
+  AgendaEntryIdRoute: AgendaEntryIdRoute,
+}
+
+const AgendaRouteWithChildren =
+  AgendaRoute._addFileChildren(AgendaRouteChildren)
+
 interface ComunidadesCommunityIdRouteChildren {
   ComunidadesCommunityIdCanaisChannelIdRoute: typeof ComunidadesCommunityIdCanaisChannelIdRoute
 }
@@ -1638,6 +1708,7 @@ const ProjetosUsernameRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRouteWithChildren,
   ApoiarRoute: ApoiarRoute,
   BlogsRoute: BlogsRoute,
   BloqueadosRoute: BloqueadosRoute,
@@ -1683,6 +1754,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
+  AgendaDisponibilidadeRoute: AgendaDisponibilidadeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthResetRoute: AuthResetRoute,
   AuthVerifyRoute: AuthVerifyRoute,

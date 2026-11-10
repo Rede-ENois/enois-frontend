@@ -6,6 +6,7 @@ import { LegalLastUpdated, LegalSection } from "@rede-enois/design-system/domain
 import { ogMetas } from "@/lib/seo";
 
 import { LegalLayout } from "@/components/legal-layout";
+import { RichText } from "@/components/post/rich-text";
 
 export const Route = createFileRoute("/privacidade")({
   head: () => ({
@@ -23,8 +24,19 @@ export const Route = createFileRoute("/privacidade")({
 
 function Privacidade() {
   const { whoWeAre, collectedData, other } = texts.legal.privacy.sections;
-  const [legalBasis, sharing, storage, retention, rights, cookies, minors, contact, changes] =
-    other;
+  const [
+    legalBasis,
+    sharing,
+    storage,
+    retention,
+    rights,
+    cookies,
+    minors,
+    contact,
+    calls,
+    legalRequests,
+    changes,
+  ] = other;
 
   return (
     <LegalLayout>
@@ -94,6 +106,14 @@ function Privacidade() {
 
       <LegalSection title={contact.title}>
         <p>{contact.paragraphs[0]}</p>
+      </LegalSection>
+
+      <LegalSection title={calls.title}>
+        <RichText content={calls.paragraphs.join("\n\n")} />
+      </LegalSection>
+
+      <LegalSection title={legalRequests.title}>
+        <RichText content={legalRequests.paragraphs[0]} />
       </LegalSection>
 
       <LegalSection title={changes.title}>

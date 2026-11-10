@@ -28,4 +28,9 @@ export type Event = {
   nextOccurrenceDate?: string | null;
   /** True only when the signed-in viewer created the event. */
   canManageRecurrence?: boolean;
+  /**
+   * O evento tem a sala "Tamo junto". É escolha de quem cria: sem ela, o card não mostra a barra
+   * e a sala não pode ser aberta.
+   */
+  tamoJunto?: boolean;
 };

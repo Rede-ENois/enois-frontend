@@ -391,6 +391,11 @@ no cartão do selo no perfil (`ProfileSeals`, via `emblemSrc` do design system).
 emblema: ele é consequência do nível calculado pelo backend. Regras em `docs/CONTRIBUTION_SEALS.md`
 do backend.
 
+Os links das evidências no perfil têm largura máxima de 100% do contêiner (`src/styles.css`),
+permitindo truncar títulos longos sem estourar o cartão no mobile; URLs e paginação são preservadas.
+O corpo do `ProfileCard` que contém os selos usa coluna `minmax(0, 1fr)` para impedir que a largura
+intrínseca das evidências expanda o grid antes do truncamento.
+
 ## Feed scroll probe
 
 `VirtualizedFeedList` carries an opt-in probe for people who see the feed jump. Opening

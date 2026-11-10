@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import type { BadgeKit } from "@/types/application/profile/badge-kit";
 import {
   IdentitySection as IdentitySectionView,
   type IdentityValues,
@@ -12,6 +13,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 
 import { preferencesApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
+import { dataCurta } from "@/lib/date/format";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { BadgeMediaProvider } from "@/components/badge-media-provider";
@@ -50,12 +52,34 @@ export function IdentitySection() {
     onError: () => toast(texts.account.identity.error, "error"),
   });
 
+  // Os últimos 3 conjuntos salvos: trocar emblemas guarda o anterior, então a lista muda a cada
+  // gravação e precisa ser relida junto com o perfil.
+  const { data: badgeKits = [], isLoading: kitsLoading } = useQuery({
+    queryKey: ["me", "badge-kits"],
+    queryFn: () => preferencesApi.badgeKits(),
+  });
+
+  const refreshBadges = () => {
+    void queryClient.invalidateQueries({ queryKey: ["me"] });
+    void queryClient.invalidateQueries({ queryKey: ["me", "badge-kits"] });
+  };
+
   const saveBadges = useMutation({
     mutationFn: (next: string[]) => preferencesApi.setBadges(next),
-    onSuccess: () => {
+    onSuccess: refreshBadges,
+    onError: () => toast(texts.account.identity.error, "error"),
+  });
+
+  const applyBadgeKit = useMutation({
+    mutationFn: (kitId: string) => preferencesApi.applyBadgeKit(kitId),
+    onSuccess: refreshBadges,
+    // A lista local anda junto antes da resposta; se o servidor recusar, ela volta ao estado
+    // real da conta em vez de mostrar um kit que não foi gravado.
+    onError: () => {
+      toast(texts.account.identity.error, "error");
+      setBadges(me?.badges ?? (me?.badge ? [me.badge] : []));
       void queryClient.invalidateQueries({ queryKey: ["me"] });
     },
-    onError: () => toast(texts.account.identity.error, "error"),
   });
 
   const addBadge = async (file: File) => {
@@ -88,7 +112,19 @@ export function IdentitySection() {
         badges={badges}
         onAddBadge={(file) => void addBadge(file)}
         onRemoveBadge={(url) => void removeBadge(url)}
-        badgesPending={saveBadges.isPending}
+        badgeKits={badgeKits.map((kit: BadgeKit) => ({
+          id: kit.id,
+          badges: kit.badges,
+          createdAtLabel: dataCurta(kit.createdAt),
+        }))}
+        onApplyBadgeKit={(kit) => {
+          // O servidor devolve o perfil já com o kit aplicado; a lista local anda junto para a
+          // tela não piscar de volta enquanto o /me recarrega.
+          setBadges(kit.badges);
+          applyBadgeKit.mutate(kit.id);
+        }}
+        badgesPending={saveBadges.isPending || applyBadgeKit.isPending}
+        kitsLoading={kitsLoading}
         uploading={badgeUpload.status === "uploading"}
       />
     </BadgeMediaProvider>

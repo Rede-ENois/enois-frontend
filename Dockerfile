@@ -37,6 +37,12 @@ ENV VITE_SITE_URL=$VITE_SITE_URL
 ARG VITE_SITE_DOMAINS=
 ENV VITE_SITE_DOMAINS=$VITE_SITE_DOMAINS
 
+# Verificação de identidade (Didit) no painel de Segurança e Verificação. Não é segredo: só
+# mostra/esconde a seção; quem autoriza de verdade é o backend. Sem a flag o painel não exibe a
+# verificação — é o estado "homologação pendente" documentado no componente.
+ARG VITE_IDENTITY_ENABLED=
+ENV VITE_IDENTITY_ENABLED=$VITE_IDENTITY_ENABLED
+
 RUN NITRO_PRESET=node-server npm run build
 
 FROM node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 AS runner

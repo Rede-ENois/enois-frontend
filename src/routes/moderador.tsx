@@ -3,11 +3,18 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
+import {
+  TAB_GROUP_OF,
+  resolveActiveTab,
+  tabsOfActiveGroup,
+  visiblePanelGroups,
+} from "@/routes/-moderador/panel-groups";
 import { texts } from "@/texts";
 import type { ModeratorApplicationView } from "@/types/application/moderation/moderator-application-view";
 import type { ModeratorMeView } from "@/types/application/moderation/moderator-me-view";
 import type { SanctionProposalDecision } from "@/types/application/moderation/sanction-proposal-decision";
 import type { SanctionProposalView } from "@/types/application/moderation/sanction-proposal-view";
+import type { ModeratorGroupId } from "@/types/routes/moderador/moderator-group-id";
 import type { ModeratorTabId } from "@/types/routes/moderador/moderator-tab-id";
 import {
   Button,
@@ -15,6 +22,8 @@ import {
   EmptyState,
   Input,
   LoadingState,
+  Pill,
+  PillRow,
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
@@ -23,12 +32,14 @@ import {
   ArrowLeft,
   Bug,
   Check,
+  FileText,
   Flag,
   FolderKanban,
   Gamepad2,
   Gavel,
   GitPullRequest,
   History,
+  Inbox,
   LifeBuoy,
   Lightbulb,
   Mail,
@@ -59,6 +70,7 @@ import { ContributorsSection } from "@/components/moderation/contributors-sectio
 import { DisputesSection } from "@/components/moderation/disputes-section";
 import { EmailLogSection } from "@/components/moderation/email-log-section";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
+import { IdentityReleaseSection } from "@/components/moderation/identity-release-section";
 import { MonitoringSection } from "@/components/moderation/monitoring-section";
 import { NotesSection } from "@/components/moderation/notes-section";
 import { NoticesSection } from "@/components/moderation/notices-section";
@@ -79,77 +91,53 @@ export const Route = createFileRoute("/moderador")({
   component: Moderador,
 });
 
-const ALL_TABS: { id: ModeratorTabId; label: string; icon: typeof Flag; adminOnly: boolean }[] = [
-  { id: "reports", label: texts.moderator.tabs.reports, icon: Flag, adminOnly: false },
-  { id: "games", label: texts.moderator.tabs.games, icon: Gamepad2, adminOnly: false },
-  { id: "projects", label: texts.moderator.tabs.projects, icon: FolderKanban, adminOnly: false },
-  { id: "support", label: texts.moderator.tabs.support, icon: LifeBuoy, adminOnly: false },
-  {
-    id: "suggestions",
-    label: texts.moderator.tabs.suggestions,
-    icon: Lightbulb,
-    adminOnly: false,
-  },
-  { id: "issues", label: texts.moderator.tabs.issues, icon: Bug, adminOnly: false },
-  { id: "pulls", label: texts.moderator.tabs.pulls, icon: GitPullRequest, adminOnly: false },
-  { id: "notes", label: texts.moderator.tabs.notes, icon: StickyNote, adminOnly: false },
-  { id: "history", label: texts.moderator.tabs.history, icon: History, adminOnly: false },
-  { id: "appeals", label: texts.moderator.tabs.appeals, icon: ShieldAlert, adminOnly: false },
-  { id: "disputes", label: texts.moderator.tabs.disputes, icon: Scale, adminOnly: false },
-  {
-    id: "applications",
-    label: texts.moderator.tabs.applications,
-    icon: UserCheck,
-    adminOnly: true,
-  },
-  { id: "users", label: texts.moderator.tabs.users, icon: Gavel, adminOnly: false },
-  // Triagem de contas em série é trabalho do time inteiro (decisão da dona): qualquer moderador
-  // aprovado vê a fila e pode banir em lote.
-  {
-    id: "notices",
-    label: texts.moderator.tabs.notices,
-    icon: Megaphone,
-    adminOnly: true,
-  },
-  {
-    id: "releaseNotes",
-    label: texts.moderator.tabs.releaseNotes,
-    icon: Sparkles,
-    adminOnly: true,
-  },
-  {
-    id: "suspicious",
-    label: texts.moderator.tabs.suspicious,
-    icon: ScanEye,
-    adminOnly: false,
-  },
-  // Posts denunciados com score alto: exclusão em lote pelo time inteiro, como as contas.
-  {
-    id: "suspiciousPosts",
-    label: texts.moderator.tabs.suspiciousPosts,
-    icon: Trash2,
-    adminOnly: false,
-  },
-  { id: "emails", label: texts.moderator.tabs.emails, icon: Mail, adminOnly: false },
-  {
-    id: "monitoring",
-    label: texts.moderator.tabs.monitoring,
-    icon: Activity,
-    adminOnly: false,
-  },
-  {
-    id: "contributors",
-    label: texts.moderator.tabs.contributors,
-    icon: Users,
-    adminOnly: true,
-  },
-  {
-    id: "githubContributions",
-    label: texts.moderator.tabs.githubContributions,
-    icon: GitPullRequest,
-    adminOnly: true,
-  },
-];
+/**
+ * Uma aba do painel, e o grupo em que ela vive.
+ *
+ * <p>As abas são o trabalho do dia a dia do time de moderação: o que chegou para decidir. O grupo
+ * importa porque a lista ANTES era um `select` único com 22 opções — não dava para saber o que era
+ * urgente, o que era rotina e o que era administração, e o item certo ficava a três cliques dentro
+ * de uma lista sem ordem.</p>
+ */
+/**
+ * O ícone de cada grupo. Fica aqui, não em `panel-groups`, porque ícone é decisão de tela: o
+ * módulo de dados não depende da biblioteca de ícones.
+ */
+const GROUP_ICON: Record<ModeratorGroupId, typeof Flag> = {
+  queue: Inbox,
+  content: FileText,
+  community: Users,
+  admin: ShieldCheck,
+};
+
+/**
+ * O ícone de cada aba. Fica aqui, não em `panel-groups`, porque ícone é decisão de tela: o
+ * módulo de dados não depende da biblioteca de ícones.
+ */
+const TAB_ICON: Record<ModeratorTabId, typeof Flag> = {
+  reports: Flag,
+  games: Gamepad2,
+  projects: FolderKanban,
+  support: LifeBuoy,
+  suggestions: Lightbulb,
+  issues: Bug,
+  pulls: GitPullRequest,
+  notes: StickyNote,
+  history: History,
+  appeals: ShieldAlert,
+  disputes: Scale,
+  applications: UserCheck,
+  users: Gavel,
+  notices: Megaphone,
+  releaseNotes: Sparkles,
+  suspicious: ScanEye,
+  suspiciousPosts: Trash2,
+  emails: Mail,
+  monitoring: Activity,
+  contributors: Users,
+  githubContributions: GitPullRequest,
+  identityRelease: ShieldCheck,
+};
 
 /**
  * Painel de moderador.
@@ -195,8 +183,9 @@ function Moderador() {
   }
 
   const canModerate = me.moderator || me.admin;
-  const visibleTabs = ALL_TABS.filter((item) => me.admin || !item.adminOnly);
-  const activeTab = visibleTabs.some((item) => item.id === tab) ? tab : "reports";
+  const activeTab = resolveActiveTab(tab, me.admin);
+  // Os grupos visíveis: quem não é admin não vê o grupo de administração (que ficaria vazio).
+  const groups = visiblePanelGroups(me.admin);
 
   return (
     <AppContainer>
@@ -238,32 +227,48 @@ function Moderador() {
 
         {canModerate ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-2" role="tablist">
-              <select
-                value={activeTab}
-                onChange={(event) => setTab(event.target.value as ModeratorTabId)}
-                aria-label={texts.moderator.tabSelector}
-                className="h-9 w-full max-w-72 rounded-lg border border-border-soft bg-surface-card px-3 text-sm text-text-strong sm:w-auto sm:flex-1"
-              >
-                {visibleTabs.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
+            {/* Navegação em dois níveis, tudo pelo design system.
+                Antes eram QUATRO listas de abas empilhadas: no celular cada faixa estourava a
+                largura e as abas das pontas ficavam cortadas, com um bloco de navegação enorme
+                antes do conteúdo.
+                Celular: um PillRow rolável com os grupos e outro com as abas do grupo ativo — o
+                mesmo gesto lateral do feed (arrasto natural no toque, nada cortado).
+                Desktop: os mesmos dados viram uma faixa de grupos e a faixa de abas do grupo. */}
+            {/* O espacamento entre as faixas vem do className do proprio PillRow: mais um
+                container div aqui seria markup a mais no route, que a casa proibe. */}
+            <PillRow label={texts.moderator.groupSelector} className="mb-3">
+              {groups.map(({ group, tabs: groupTabs }) => (
+                <Pill
+                  key={group.id}
+                  active={group.id === TAB_GROUP_OF[activeTab]}
+                  onClick={() => setTab(groupTabs[0].id)}
+                >
+                  {(() => {
+                    const GroupIcon = GROUP_ICON[group.id];
+                    return <GroupIcon className="h-3.5 w-3.5" />;
+                  })()}
 
-              <div
-                className={cn(
-                  "hidden h-9 items-center gap-1.5 rounded-lg px-3 text-xs sm:flex",
-                  "bg-surface-2 text-text-subtle",
-                )}
-              >
-                {(() => {
-                  const Current = visibleTabs.find((item) => item.id === activeTab)?.icon;
-                  return Current ? <Current className="h-4 w-4 text-primary" /> : null;
-                })()}
-              </div>
-            </div>
+                  <>{group.label}</>
+                </Pill>
+              ))}
+            </PillRow>
+
+            <PillRow label={texts.moderator.tabSelector}>
+              {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
+                const Icon = TAB_ICON[item.id];
+                return (
+                  <Pill
+                    key={item.id}
+                    active={item.id === activeTab}
+                    onClick={() => setTab(item.id)}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+
+                    <>{item.label}</>
+                  </Pill>
+                );
+              })}
+            </PillRow>
 
             {activeTab === "reports" && <ReportsSection admin={me.admin} />}
             {activeTab === "games" && <GamesReviewSection />}
@@ -288,6 +293,7 @@ function Moderador() {
             {canModerate && activeTab === "notes" && <NotesSection />}
             {me.admin && activeTab === "notices" && <NoticesSection />}
             {me.admin && activeTab === "releaseNotes" && <ReleaseNotesSection />}
+            {me.admin && activeTab === "identityRelease" && <IdentityReleaseSection />}
           </div>
         ) : (
           <ApplicationSection me={me} />
@@ -473,7 +479,9 @@ function ReportsSection({ admin }: { admin: boolean }) {
       moderationApi.vote(reportId, vote),
     onSuccess: (result) => {
       toast(result.message, "success");
-      void queryClient.invalidateQueries({ queryKey: ["moderator", "reports"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["moderator", "reports"],
+      });
     },
     onError: () => toast(texts.moderator.reports.voteError, "error"),
   });
@@ -503,7 +511,9 @@ function ReportsSection({ admin }: { admin: boolean }) {
             : texts.moderator.reports.warnDone,
         "success",
       );
-      void queryClient.invalidateQueries({ queryKey: ["moderator", "reports"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["moderator", "reports"],
+      });
     },
     onError: () => toast(texts.moderator.reports.actionError, "error"),
   });
@@ -701,7 +711,12 @@ function ReportsSection({ admin }: { admin: boolean }) {
                           "ring-2 ring-primary ring-offset-2 ring-offset-surface-card",
                       )}
                       disabled={vote.isPending}
-                      onClick={() => vote.mutate({ reportId: report.reportId, vote: "PUNISH" })}
+                      onClick={() =>
+                        vote.mutate({
+                          reportId: report.reportId,
+                          vote: "PUNISH",
+                        })
+                      }
                     >
                       <Check className="h-3.5 w-3.5" />
 
@@ -717,7 +732,12 @@ function ReportsSection({ admin }: { admin: boolean }) {
                           "ring-2 ring-primary ring-offset-2 ring-offset-surface-card",
                       )}
                       disabled={vote.isPending}
-                      onClick={() => vote.mutate({ reportId: report.reportId, vote: "DISMISS" })}
+                      onClick={() =>
+                        vote.mutate({
+                          reportId: report.reportId,
+                          vote: "DISMISS",
+                        })
+                      }
                     >
                       <X className="h-3.5 w-3.5" />
 
@@ -761,7 +781,10 @@ function ReportsSection({ admin }: { admin: boolean }) {
                         className="rounded-full"
                         disabled={adminAction.isPending}
                         onClick={() =>
-                          adminAction.mutate({ reportId: report.reportId, action: "warn" })
+                          adminAction.mutate({
+                            reportId: report.reportId,
+                            action: "warn",
+                          })
                         }
                       >
                         {texts.moderator.reports.warn}
@@ -803,7 +826,10 @@ function ReportsSection({ admin }: { admin: boolean }) {
         pending={adminAction.isPending}
         onConfirm={() => {
           if (!removeCompanyTarget) return;
-          adminAction.mutate({ reportId: removeCompanyTarget, action: "remove-company" });
+          adminAction.mutate({
+            reportId: removeCompanyTarget,
+            action: "remove-company",
+          });
           setRemoveCompanyTarget(null);
         }}
       />
@@ -931,8 +957,12 @@ function ApplicationsSection() {
   });
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["moderator", "applications"] });
-    void queryClient.invalidateQueries({ queryKey: ["moderator", "moderators"] });
+    void queryClient.invalidateQueries({
+      queryKey: ["moderator", "applications"],
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ["moderator", "moderators"],
+    });
     void queryClient.invalidateQueries({ queryKey: ["moderator", "me"] });
   };
 
@@ -1352,7 +1382,9 @@ function SanctionVoting() {
       setUsername("");
       setReason("");
       setType("RESTRICTION");
-      void queryClient.invalidateQueries({ queryKey: ["moderator", "sanction-proposals"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["moderator", "sanction-proposals"],
+      });
     },
     onError: (error) =>
       toast(
@@ -1505,7 +1537,9 @@ function SanctionProposalCard({
     onSuccess: (result: SanctionProposalDecision) => {
       toast(result.message || texts.moderator.sanction.voted, "success");
       setNote("");
-      void queryClient.invalidateQueries({ queryKey: ["moderator", "sanction-proposals"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["moderator", "sanction-proposals"],
+      });
       void queryClient.invalidateQueries({ queryKey: ["moderator", "me"] });
     },
     onError: () => toast(texts.moderator.sanction.voteError, "error"),
@@ -1516,7 +1550,9 @@ function SanctionProposalCard({
     onSuccess: () => {
       toast(texts.moderator.sanction.cancelled, "success");
       setConfirmCancel(false);
-      void queryClient.invalidateQueries({ queryKey: ["moderator", "sanction-proposals"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["moderator", "sanction-proposals"],
+      });
     },
     onError: () => toast(texts.moderator.sanction.cancelError, "error"),
   });

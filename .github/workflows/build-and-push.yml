@@ -42,6 +42,12 @@ env:
   VITE_SITE_URL_PROD: https://enois.ia.br
   # isweee.com espelha o app (enois.ia.br segue o principal); a QA tem um domínio só.
   VITE_SITE_DOMAINS_PROD: enois.ia.br,isweee.com
+  # Verificação de identidade (selo Humanidade Comprovada). A flag só mostra a seção no painel de
+  # Segurança e Verificação: quem decide se alguém foi verificado é sempre o backend, via webhook
+  # do provedor lido pelo servidor. Ligada na QA para homologar; desligada em produção até a
+  # revisão da Didit terminar.
+  VITE_IDENTITY_ENABLED_QA: "true"
+  VITE_IDENTITY_ENABLED_PROD: "false"
 
 permissions:
   contents: read
@@ -76,6 +82,7 @@ jobs:
           build-args: |
             VITE_API_BACKEND=${{ env.VITE_API_BACKEND_QA }}
             VITE_SITE_URL=${{ env.VITE_SITE_URL_QA }}
+            VITE_IDENTITY_ENABLED=true
           secrets: |
             npm_token=${{ secrets.GITHUB_TOKEN }}
           cache-from: type=gha
@@ -143,10 +150,12 @@ jobs:
             echo "api_backend=${VITE_API_BACKEND_PROD}" >> "$GITHUB_OUTPUT"
             echo "site_url=${VITE_SITE_URL_PROD}" >> "$GITHUB_OUTPUT"
             echo "site_domains=${VITE_SITE_DOMAINS_PROD}" >> "$GITHUB_OUTPUT"
+            echo "identity_enabled=${VITE_IDENTITY_ENABLED_PROD}" >> "$GITHUB_OUTPUT"
           else
             echo "api_backend=${VITE_API_BACKEND_QA}" >> "$GITHUB_OUTPUT"
             echo "site_url=${VITE_SITE_URL_QA}" >> "$GITHUB_OUTPUT"
             echo "site_domains=" >> "$GITHUB_OUTPUT"
+            echo "identity_enabled=${VITE_IDENTITY_ENABLED_QA}" >> "$GITHUB_OUTPUT"
           fi
 
       # push:true direto no buildx (buildkit) dá 400 no token service do Harbor com
@@ -164,6 +173,7 @@ jobs:
             VITE_API_BACKEND=${{ steps.buildargs.outputs.api_backend }}
             VITE_SITE_URL=${{ steps.buildargs.outputs.site_url }}
             VITE_SITE_DOMAINS=${{ steps.buildargs.outputs.site_domains }}
+            VITE_IDENTITY_ENABLED=${{ steps.buildargs.outputs.identity_enabled }}
           secrets: |
             npm_token=${{ secrets.GITHUB_TOKEN }}
           tags: |

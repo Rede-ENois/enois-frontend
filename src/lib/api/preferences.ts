@@ -1,5 +1,6 @@
 import { texts } from "@/texts";
 import type { Personalization } from "@/types/application/preferences/personalization";
+import type { BadgeKit } from "@/types/application/profile/badge-kit";
 import type { LinkedinImportPreview } from "@/types/application/profile/linkedin-import-preview";
 import type { Profile } from "@/types/application/profile/profile";
 
@@ -38,6 +39,13 @@ export const preferencesApi = {
 
   /** Até 5 emblemas (URLs do CDN); lista vazia limpa. */
   setBadges: (badges: string[]) => api.put<Profile>("/me/badges", { badges }),
+
+  /** Os últimos 3 kits de emblemas salvos, do mais recente para o mais antigo. */
+  badgeKits: () => api.get<BadgeKit[]>("/me/badge-kits"),
+
+  /** Volta a exibir um kit do histórico; o conjunto substituído entra no histórico por si. */
+  applyBadgeKit: (kitId: string) =>
+    api.post<Profile>(`/me/badge-kits/${encodeURIComponent(kitId)}/apply`),
 
   /**
    * Importar o ARQUIVO DE DADOS do LinkedIn (multipart): devolve o retrato parseado

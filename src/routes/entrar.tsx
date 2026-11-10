@@ -31,6 +31,7 @@ import { z } from "zod";
 
 import { ApiError, authApi, clearSession } from "@/lib/api";
 import { anoAtual } from "@/lib/date/format";
+import { hasMinAge } from "@/lib/min-age";
 import { landingPathForStoredUser } from "@/lib/onboarding";
 import { ogMetas } from "@/lib/seo";
 import { storeSession } from "@/lib/session";
@@ -69,12 +70,16 @@ const signupSchema = z.object({
   name: z.string().trim().min(2, texts.auth.validation.signupNameMin).max(80),
   email: z.string().trim().email(texts.auth.validation.invalidEmail).max(255),
   password: z.string().min(8, texts.auth.validation.passwordMin).max(128),
-  // ECA Digital: a data de nascimento e obrigatoria no cadastro (o backend recalcula a idade).
+  // ECA Digital: a data de nascimento e obrigatoria no cadastro e a idade minima e 16 (o backend
+  // recalcula; de 16 a 17 a conta nasce como menor supervisionado).
   birthDate: z
     .string()
     .min(1, texts.auth.validation.birthDateRequired)
     .refine((value) => value <= new Date().toISOString().slice(0, 10), {
       message: texts.auth.validation.birthDateFuture,
+    })
+    .refine((value) => value === "" || hasMinAge(value), {
+      message: texts.auth.validation.birthDateMinAge,
     }),
   // Checkbox marcado chega como "on"; ausente significa nao aceito.
   acceptedTerms: z

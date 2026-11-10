@@ -304,7 +304,7 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     [enterRoom, refreshRelated],
   );
 
-  // Reconexão: painel reaberto (ou sem mídia) pede credencial nova em vez de abrir a sala às cegas.
+  // Recuperação de credencial: minimizar/expandir a sala montada não gera uma nova entrada.
   // O pedido é consumido antes da entrada, para não ser rearmado pela resposta que vem:
   // `needsCredential` é um pedido de uma vez, não um estado de espera.
   useEffect(() => {
@@ -383,14 +383,17 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   // Dentro da sala (ou entrando nela) não toca: o toque cobriria a conversa. A da fila segue
   // visível na tela.
   const inRoom = session.phase === "live" || session.phase === "joining";
-  const ringing =
-    !inRoom &&
-    ((session.phase === "incoming" && call?.modality === "DIRECT") ||
-      session.waiting.some((held) => held.modality === "DIRECT"));
+  const ringingCall =
+    !inRoom && session.phase === "incoming" && call?.modality === "DIRECT"
+      ? call
+      : !inRoom
+        ? session.waiting.find((held) => held.modality === "DIRECT")
+        : undefined;
+  const ringing = ringingCall !== undefined;
   useEffect(() => {
-    if (!ringing) return;
-    return startRingtone({ enabled: !silent.current });
-  }, [ringing]);
+    if (!ringing || ringingCall === undefined) return;
+    return startRingtone({ enabled: !silent.current, callId: ringingCall.id });
+  }, [ringing, ringingCall]);
 
   // Chamada encerrada some sozinha depois de mostrar o motivo. A próxima da fila assume antes
   // disso: a tela do "encerrada" é da chamada anterior e não pode atrasar quem está tocando.

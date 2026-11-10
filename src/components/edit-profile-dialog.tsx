@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { BadgeKit } from "@/types/application/profile/badge-kit";
 import type { CertificationRequest } from "@/types/application/profile/certification-request";
 import type { EducationRequest } from "@/types/application/profile/education-request";
 import type { ExperienceRequest } from "@/types/application/profile/experience-request";
@@ -19,6 +20,7 @@ import {
 
 import { ApiError, preferencesApi, profileApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
+import { dataCurta } from "@/lib/date/format";
 import { ISO_DATE, hasMinAge } from "@/lib/min-age";
 import { profileQueries } from "@/lib/query-options/profiles";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -108,6 +110,13 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
     enabled: open && tab === "certifications",
   });
 
+  // Histórico de kits: só na aba de informações, onde fica o seletor de emblemas.
+  const { data: badgeKits = [], isLoading: kitsLoading } = useQuery({
+    queryKey: ["me", "badge-kits"],
+    queryFn: () => preferencesApi.badgeKits(),
+    enabled: open && tab === "info",
+  });
+
   const lists = {
     experiences: useListMutations<ExperienceRequest>(profileApi.experiences, ["me", "experiences"]),
     education: useListMutations<EducationRequest>(profileApi.education, ["me", "education"]),
@@ -124,7 +133,8 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
   const handleSave = async (values: EditProfileValues): Promise<EditProfileSaveError | null> => {
     const { birthDate, badges, showRanking } = values;
     const birthDateChanged = birthDate !== (profile.birthDate ?? "");
-    // Data nova precisa ser real e maior de idade — mesma régua do cadastro. A que já está na conta
+    // Data nova precisa ser real e ter pelo menos 16 anos — mesma régua do cadastro (de 16 a 17 a
+    // conta é de menor supervisionado, e o backend decide a supervisão). A que já está na conta
     // não passa por aqui: quem é menor supervisionado não pode ficar sem salvar o resto do perfil.
     if (birthDateChanged && birthDate && (!ISO_DATE.test(birthDate) || !hasMinAge(birthDate))) {
       return { field: "general", message: texts.profile.edit.birthDateInvalid };
@@ -220,6 +230,12 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
         savePending={updateProfile.isPending}
         onSave={handleSave}
         onUploadBadge={uploadBadge}
+        badgeKits={badgeKits.map((kit: BadgeKit) => ({
+          id: kit.id,
+          badges: kit.badges,
+          createdAtLabel: dataCurta(kit.createdAt),
+        }))}
+        kitsLoading={kitsLoading}
         experiences={experiences}
         education={education}
         certifications={certifications}

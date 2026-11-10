@@ -13,6 +13,7 @@ import { Coins, RefreshCw, Users } from "lucide-react";
 import { monitoringApi } from "@/lib/api";
 import { hora, valorDeDataLocal } from "@/lib/date/format";
 import { formatBrlMicros, formatFaisca } from "@/lib/faisca";
+import { metricFormat, userMetricCells } from "@/lib/moderation/user-metric-cells";
 import { cn } from "@/lib/utils";
 
 const LEVELS = ["ERROR", "WARN", "INFO", "DEBUG"];
@@ -186,31 +187,15 @@ export function MonitoringSection() {
   );
 }
 
-const numero = (valor: number) =>
-  new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(valor);
-
-const percentual = (valor: number) =>
-  `${valor > 0 ? "+" : ""}${new Intl.NumberFormat("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(valor)}%`;
+// Formatação dos números do cartão: mora em lib para a conta ser testável sem o design system.
+const { numero, percentual } = metricFormat;
 
 /**
  * Contas da comunidade: total, entradas do dia, ritmo de crescimento e projeção. O cartão fica
  * acima da economia porque a curva de cadastros é o primeiro número que se olha pela manhã.
  */
 export function UsersCard({ users }: { users: MonitoringUsers }) {
-  const celulas: [string, string][] = [
-    [texts.userMetrics.total, numero(users.total)],
-    [texts.userMetrics.newToday, numero(users.newToday)],
-    [texts.userMetrics.new7, numero(users.newLast7Days)],
-    [texts.userMetrics.new30, numero(users.newLast30Days)],
-    [texts.userMetrics.growthToday, percentual(users.growthTodayPercent)],
-    [texts.userMetrics.growth7, percentual(users.growth7DaysPercent)],
-    [texts.userMetrics.growth30, percentual(users.growth30DaysPercent)],
-    [texts.userMetrics.average7, numero(users.averageDailyNew7Days)],
-    [texts.userMetrics.average30, numero(users.averageDailyNew30Days)],
-  ];
+  const celulas = userMetricCells(users);
 
   return (
     <section className="surface-card min-w-0 p-4">

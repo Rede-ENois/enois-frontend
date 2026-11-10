@@ -19,7 +19,7 @@ vi.mock("@/lib/api", () => {
   const lista = { list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() };
   return {
     ApiError: class extends Error {},
-    preferencesApi: { setBadges: vi.fn() },
+    preferencesApi: { setBadges: vi.fn(), badgeKits: vi.fn().mockResolvedValue([]) },
     profileApi: {
       me: mocks.me,
       update: mocks.update,
@@ -186,17 +186,17 @@ describe("Data de nascimento na edição do perfil", () => {
     expect(mocks.update.mock.calls[0]?.[0].birthDate).toBe("1991-02-03");
   });
 
-  it("menor de idade com a data já na conta consegue salvar o resto do perfil", async () => {
-    mocks.me.mockResolvedValue({ ...perfilPublico, birthDate: "2015-01-01" });
+  it("menor supervisionado com a data já na conta consegue salvar o resto do perfil", async () => {
+    mocks.me.mockResolvedValue({ ...perfilPublico, birthDate: "2009-06-01" });
     await montar();
-    expect(campo()?.value).toBe("2015-01-01");
+    expect(campo()?.value).toBe("2009-06-01");
 
     await salvar();
 
     expect(mocks.update).toHaveBeenCalledOnce();
   });
 
-  it("data nova de menor de idade continua recusada", async () => {
+  it("data nova abaixo de 16 anos é recusada", async () => {
     await montar();
 
     await digitar("2015-01-01");
@@ -204,5 +204,17 @@ describe("Data de nascimento na edição do perfil", () => {
 
     expect(mocks.update).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain(texts.profile.edit.birthDateInvalid);
+  });
+
+  it("data nova de 16 anos é aceita (conta nasce como menor supervisionado)", async () => {
+    await montar();
+
+    const dezesseis = new Date();
+    dezesseis.setFullYear(dezesseis.getFullYear() - 16);
+    const valor = dezesseis.toISOString().slice(0, 10);
+    await digitar(valor);
+    await salvar();
+
+    expect(mocks.update.mock.calls[0]?.[0].birthDate).toBe(valor);
   });
 });
