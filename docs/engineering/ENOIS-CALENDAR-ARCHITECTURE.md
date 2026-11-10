@@ -488,3 +488,41 @@ uma tag `v*`.
 aprovado, e o token de publicação não é do agente. Rejeitado também apontar o front para um link
 `file:`/`link:` local do DS: resolveria a máquina, quebraria o CI e o Docker, e esconderia o
 bloqueio real.
+
+---
+
+> Numeração: D21 (lembrete é do compromisso e da pessoa) está no PR #772, ainda aberto; esta
+> decisão entra como D22 para não colidir quando o #772 mergear.
+
+## D22 — O detalhe é rota própria (`/agenda/$entryId`), e o DS só recebe dados já traduzidos (execução 14)
+
+**Contexto.** D15 decidiu que o item da agenda carrega o estado do convite. Faltava o lugar onde se
+responde ao convite, se edita, se cancela e se convida mais gente. O `GET /calendar/entries/{id}`
+já devolve `{ entry, owner, participation, participants }` (participants só para o organizador) e
+aceita `PATCH`, `DELETE`, resposta de participante e convite — tudo pronto na `qa`.
+
+**Decisão.**
+
+1. O detalhe é **rota** (`/agenda/$entryId`), não modal sobre a lista: ganha URL própria, sobrevive
+   a recarregar, e a lista continua sendo só leitura rápida. O `itemHref` da agenda aponta para ela.
+2. O componente do DS (`CalendarEntryDetail`) é **burro**: recebe `entry`, `owner`, `participation`,
+   `participants` e callbacks; não sabe de rota, query nem API. Toda tradução de instante para hora
+   de parede acontece no app, com `wallClockOf(instant, timeZoneId)` (D17), e o app converte de volta
+   com `instantOf` no salvar.
+3. As mutações vivem na rota e **invalidam `['agenda']` inteiro**, não só o detalhe: responder,
+   cancelar ou editar muda a lista, o detalhe e o estado do convite, e uma invalidação parcial deixa
+   a lista mostrando estado velho que o usuário acabou de mudar.
+4. Quem não é organizador recebe `participants: null` da API e a tela **não** monta a lista nem o
+   formulário de convite — esconder por papel no cliente seria decoração, não autorização; a
+   autorização é do backend (D5).
+
+**Consequência.** O detalhe entrou no DS como `CalendarEntryDetail` (PR #177), com a microcópia no
+pacote (`messages.detail.*`), e a rota no front usa exatamente esse componente (PR #777). Enquanto
+o #177 não for mergeado e publicado, o `package.json` do front não tem de onde importar o
+componente: o PR fica em draft com a dependência declarada, como D20 manda — não se cria uma cópia
+local do componente na app, que violaria `local/no-front-markup` e divergiria do DS na primeira
+correção.
+
+**Rejeitado.** Modal de detalhe sobre a agenda: perde link direto e complica o retorno depois de
+editar. Rejeitado também o DS buscar os próprios dados: acoplaria o pacote ao cliente de API do
+app e impediria o storybook de renderizar o componente com dados fixos.

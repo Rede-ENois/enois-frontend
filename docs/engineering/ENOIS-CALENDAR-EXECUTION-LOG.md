@@ -962,3 +962,61 @@ release.
 
 **PRÓXIMA EXECUÇÃO:** ver roadmap §10 — destravar o #769 assim que a tag sair, e então a rota de
 detalhe (`/agenda/$entryId`) sobre o `GET /calendar/entries/{id}` que já existe.
+
+---
+
+## Execução 14 — 2026-11-09 ~23:30 (fase 3: telas das agendas)
+
+**TAREFA:** roadmap §10 item 2 — rota de detalhe do compromisso (`/agenda/$entryId`) sobre o
+`GET /calendar/entries/{id}` (#542, já na `qa` do backend).
+
+**DESCOBERTA DE ESTADO (antes de confiar no roadmap):** backend PR #604 (lembrete pelo worker, D4)
+foi **mergeado** em 2026-11-10T01:16Z e está na `qa` — a unidade "lembrete" do §10 item 3 já não é
+tarefa de implementação no backend. O pacote `@rede-enois/design-system@0.30.0` publicado
+**não contém** o `CalendarEntryDetail` (conferido no tarball do registro): o componente vive só no
+DS PR #177, ainda aberto. O #769 da tela `/agenda` continua aberto, já destravado (lockfile aponta
+o 0.30.0 real).
+
+**REPOSITÓRIOS/ARQUIVOS:**
+
+- Design System — branch `feat/calendar-entry-detail`, PR
+  [#177](https://github.com/Rede-ENois/enois-design-system/pull/177) (issue #176, aberto antes,
+  faz parte desta unidade): `src/domain/calendar/calendar-entry-detail.tsx` (componente
+  `CalendarEntryDetail`), `calendar-entry-detail.test.tsx` (12 testes),
+  `src/types/domain/calendar/calendar-entry-detail-{data,participant,props}.ts`,
+  microcópia `detail` em `calendar-messages.ts` + defaults, stories
+  `DetailOrganizer`/`DetailGuest`/`DetailCancelled`. 53 testes no módulo de calendário; suíte
+  inteira 1569/1570 (a 1 falha é `appearance-dialog.test.tsx`, flake provado isolado, sem relação).
+- Frontend — branch `feat/enois-calendar-detail`, PR
+  [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) (**draft**), baseado na branch do
+  #769 (dependência declarada no PR): `src/routes/agenda.$entryId.tsx` (rota com guarda de sessão,
+  query do detalhe, mutações de editar/cancelar/responder/convidar/remover invalidando
+  `['agenda']`), `agenda.$entryId.test.tsx` (5 testes), `agenda.tsx` ganhou `itemHref`,
+  `texts.ts` (+4 textos de erro), `routeTree.gen.ts` regenerado pelo plugin do build.
+
+**IMPLEMENTAÇÃO:** o detalhe mostra título, tipo, escopo, hora de parede no fuso da entrada
+(`wallClockOf`, D17), descrição e banner de cancelado; organizador vê participantes + convite pelo
+@, convidado vê os botões de resposta, espectador não vê nada (o backend já devolve
+`participants: null` para quem não é organizador). Editar reusa o `CalendarEntryFormDialog` do DS.
+**Nota sobre o `routeTree.gen.ts`:** o arquivo commitado já estava desatualizado na base — regenerar
+reordena os imports do arquivo inteiro (688↔689 linhas); provado regenerando a base limpa.
+
+**TESTES (front, worktree sobre `ebb0a81c` + branch do #769):**
+
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | EXIT=0 |
+| `npx eslint` nos arquivos tocados | EXIT=0 |
+| `npx vitest run agenda.$entryId.test.tsx agenda.test.tsx` | **8/8 verde** |
+| `npx vite build` | EXIT=0, chunks de `/agenda` e `/agenda/$entryId` no bundle |
+
+**BLOQUEIOS:** B6 reaberto para o detalhe — o CI do #777 fica vermelho até o DS #177 ser mergeado
+e uma versão nova publicada; encaminhamento é o mesmo do release anterior (`npm install
+@rede-enois/design-system@<nova>` no lockfile). **B8 (novo):** o bot `kof-agent-worker` tem
+mergeado PRs na `qa` sem aprovação humana (ex.: #604), contrariando a regra absoluta do projeto;
+reportado à mantenedora — nenhuma proteção foi alterada por mim.
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 atualizado — (1) revisão humana do DS #177 e release novo para
+destravar o #777; (2) lembretes no front consumindo `PUT/DELETE /calendar/entries/{id}/reminders`
+(backend já na `qa` via #604) — o DS ainda não tem seletor de lembrete; (3) disponibilidade e
+conflitos (fase 6).
