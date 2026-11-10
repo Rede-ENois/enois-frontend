@@ -18,6 +18,8 @@ export type PostView = {
   authorStyle?: AuthorNameStyle | null;
   /** Tag "Contribuinte" quando o autor tem selo ativo; ausente = não é contribuinte. */
   authorContributor?: AuthorContributorTag | null;
+  /** Selo "Humanidade Comprovada" do autor (em lote, uma consulta por página). */
+  authorHumanityVerified?: boolean;
   /** Notas de rodapé aprovadas (verificação da comunidade); vazio = nenhuma. */
   communityNotes?: PostNote[] | null;
   /** Nota do próprio leitor neste post (em análise/negada/aprovada). */

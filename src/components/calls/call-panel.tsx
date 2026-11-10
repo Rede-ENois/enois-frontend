@@ -36,6 +36,8 @@ export function CallPanel() {
   // A sala é de outro domínio: a captura da denúncia é pedida a ela por postMessage.
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const minimized = session.minimized && (session.phase === "live" || session.phase === "joining");
+  const pillRef = useRef<HTMLButtonElement | null>(null);
   // Recebida e ao vivo ocupam a tela inteira, como um discador: tocar no canto não é aviso
   // suficiente para uma ligação. Antes de entrar (chamando/conectando) e nos avisos, a moldura
   // menor — não há mídia para ocupar a tela ainda.
@@ -44,6 +46,13 @@ export function CallPanel() {
   // Em tela cheia o painel é modal (`aria-modal`): o Tab não pode escapar para a página de trás.
   const dialogRef = useRef<HTMLDivElement | null>(null);
   useFocusTrap(dialogRef, fullscreen && !reportOpen);
+  useEffect(() => {
+    // O painel continua no DOM: o foco precisa sair dele antes de ficar inerte.
+    if (minimized) {
+      setReportOpen(false);
+      pillRef.current?.focus();
+    }
+  }, [minimized]);
 
   // Aviso de ambiente ainda em configuração: não é uma chamada, então não tem moldura de chamada.
   if (session.phase === "error" && session.notConfigured) {
@@ -78,160 +87,183 @@ export function CallPanel() {
   const isGroup = call.modality === "GROUP";
   const held = session.waiting[0] ?? null;
 
-  if (session.minimized && session.phase === "live") {
-    return <CallPill title={isGroup ? texts.calls.tamoJunto : title} onExpand={expandCall} />;
-  }
-
   return (
-    <div
-      ref={dialogRef}
-      tabIndex={-1}
-      className={cn(
-        // `dvh` e não `inset-0` no celular: com `inset-0` a altura é a do viewport de layout, que
-        // fica atrás da barra do navegador — os botões de encerrar e denunciar terminam embaixo
-        // dela. `dvh` acompanha a barra, e a folga de baixo respeita a área segura do aparelho.
-        "fixed z-[60] flex flex-col overflow-hidden border-border-soft bg-surface-1 shadow-2xl focus:outline-none",
-        fullscreen
-          ? "inset-x-0 top-0 h-[100dvh] justify-center rounded-none border-0 sm:inset-3 sm:h-auto sm:rounded-2xl sm:border"
-          : "inset-x-2 bottom-2 max-h-[85dvh] rounded-2xl border sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",
-      )}
-      role="dialog"
-      aria-label={title}
-      aria-modal={fullscreen}
-    >
-      {session.phase === "incoming" ? (
-        <CallIncomingScreen
-          call={call}
-          held={held}
-          onAnswer={() => void calls.answer()}
-          onDecline={() => void calls.decline()}
-          onAnswerHeld={held ? () => void calls.answer(held.id) : undefined}
-          onDeclineHeld={held ? () => void calls.decline(held.id) : undefined}
-        />
-      ) : (
-        <>
-          <header className="flex items-center justify-between gap-2 border-b border-border-soft px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-text-strong">
-                {isGroup ? `${texts.calls.tamoJunto} · ${call.displayName}` : call.displayName}
-              </p>
+    <>
+      <div
+        ref={dialogRef}
+        inert={minimized}
+        aria-hidden={minimized || undefined}
+        tabIndex={minimized ? undefined : -1}
+        className={cn(
+          // `dvh` e não `inset-0` no celular: com `inset-0` a altura é a do viewport de layout, que
+          // fica atrás da barra do navegador — os botões de encerrar e denunciar terminam embaixo
+          // dela. `dvh` acompanha a barra, e a folga de baixo respeita a área segura do aparelho.
+          "fixed z-[60] flex flex-col overflow-hidden border-border-soft bg-surface-1 shadow-2xl focus:outline-none",
+          fullscreen || minimized
+            ? "inset-x-0 top-0 h-[100dvh] justify-center rounded-none border-0 sm:inset-3 sm:h-auto sm:rounded-2xl sm:border"
+            : "inset-x-2 bottom-2 max-h-[85dvh] rounded-2xl border sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[420px]",
+          // Mantém a janela e suas dimensões; não usa display:none nem desmonta a mídia.
+          minimized && "pointer-events-none -translate-x-[200vw] opacity-0",
+        )}
+        role={minimized ? undefined : "dialog"}
+        aria-label={title}
+        aria-modal={minimized ? undefined : fullscreen}
+      >
+        {session.phase === "incoming" ? (
+          <CallIncomingScreen
+            call={call}
+            held={held}
+            onAnswer={() => void calls.answer()}
+            onDecline={() => void calls.decline()}
+            onAnswerHeld={held ? () => void calls.answer(held.id) : undefined}
+            onDeclineHeld={held ? () => void calls.decline(held.id) : undefined}
+          />
+        ) : (
+          <>
+            <header className="flex items-center justify-between gap-2 border-b border-border-soft px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-text-strong">
+                  {isGroup ? `${texts.calls.tamoJunto} · ${call.displayName}` : call.displayName}
+                </p>
 
-              <p className="text-xs text-text-muted" aria-live="polite">
-                {/* Enquanto a credencial não chega, quem clicou em entrar ainda está entrando: dizer
+                <p className="text-xs text-text-muted" aria-live="polite">
+                  {/* Enquanto a credencial não chega, quem clicou em entrar ainda está entrando: dizer
                 "em andamento · N pessoas" aí mostra a sala para quem não está nela. */}
-                {session.phase === "joining" ? texts.calls.connecting : stateLabel(call.state)}
-                {session.phase !== "joining" && call.state === "ACTIVE" && call.participantCount > 0
-                  ? ` · ${texts.calls.participants(call.participantCount)}`
-                  : ""}
-              </p>
+                  {session.phase === "joining" ? texts.calls.connecting : stateLabel(call.state)}
+                  {session.phase !== "joining" &&
+                  call.state === "ACTIVE" &&
+                  call.participantCount > 0
+                    ? ` · ${texts.calls.participants(call.participantCount)}`
+                    : ""}
+                </p>
+              </div>
+
+              {session.phase === "live" ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={texts.calls.minimize}
+                  onClick={() => callSessionStore.minimize()}
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              ) : null}
+            </header>
+
+            {session.phase === "live" && session.join ? (
+              <CallFrame
+                key={session.join.jwt}
+                frameRef={frameRef}
+                url={callEmbedUrl(session.join)}
+                title={title}
+                onClosed={() => callSessionStore.lostCredential()}
+                // A pessoa desligou dentro da sala: fecha o painel e avisa o servidor. Não é
+                // "credencial perdida" — reconectar ali reabriria a chamada que ela encerrou.
+                onLeft={(reason) => void calls.leaveFromRoom(session.join!.callId, reason)}
+              />
+            ) : null}
+
+            <div className="flex flex-col gap-2 px-4 py-3">
+              {session.notice ? <p className="text-xs text-text-muted">{session.notice}</p> : null}
+
+              {held ? (
+                <p className="truncate text-xs text-text-muted" aria-live="polite">
+                  {texts.calls.nextInQueue(held.displayName)}
+                </p>
+              ) : null}
+
+              {session.phase === "calling" || session.phase === "joining" ? (
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full"
+                  onClick={() => void hangUp()}
+                >
+                  <PhoneOff className="mr-2 h-4 w-4" />
+
+                  {call.isInitiator ? texts.calls.cancel : texts.calls.end}
+                </Button>
+              ) : null}
+
+              {session.phase === "live" ? (
+                // Duas ações lado a lado na mesma linha. No celular o par encolhe ~30% (fonte, ícone
+                // e respiro) para caber na largura da tela; a partir de `sm` volta ao tamanho cheio.
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="min-w-0 flex-1 gap-1.5 rounded-full px-2.5 text-[0.7rem] whitespace-nowrap sm:gap-2 sm:px-4 sm:text-sm"
+                    onClick={() => setReportOpen(true)}
+                  >
+                    <Flag className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
+
+                    {texts.calls.report.action}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="min-w-0 flex-1 gap-1.5 rounded-full px-2.5 text-[0.7rem] whitespace-nowrap sm:gap-2 sm:px-4 sm:text-sm"
+                    onClick={() => void hangUp()}
+                  >
+                    <PhoneOff className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
+
+                    {isGroup ? texts.calls.end : texts.calls.hangUp}
+                  </Button>
+                </div>
+              ) : null}
+
+              {session.phase === "error" ? (
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-text-muted">
+                    {session.error ?? texts.calls.loadError}
+                  </p>
+
+                  <Button variant="outline" className="rounded-full" onClick={() => calls.close()}>
+                    {texts.calls.end}
+                  </Button>
+                </div>
+              ) : null}
+
+              {session.phase === "ended" ||
+              (session.phase === "live" && isTerminalState(call.state)) ? (
+                <p className="text-center text-sm text-text-muted">{stateLabel(call.state)}</p>
+              ) : null}
             </div>
 
             {session.phase === "live" ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={texts.calls.minimize}
-                onClick={() => callSessionStore.minimize()}
-              >
-                <Minimize2 className="h-4 w-4" />
-              </Button>
+              <CallReportDialog
+                callId={call.id}
+                frameRef={frameRef}
+                open={reportOpen}
+                onOpenChange={setReportOpen}
+              />
             ) : null}
-          </header>
+          </>
+        )}
+      </div>
 
-          {session.phase === "live" && session.join ? (
-            <CallFrame
-              key={session.join.jwt}
-              frameRef={frameRef}
-              url={callEmbedUrl(session.join)}
-              title={title}
-              onClosed={() => callSessionStore.lostCredential()}
-              // A pessoa desligou dentro da sala: fecha o painel e avisa o servidor. Não é
-              // "credencial perdida" — reconectar ali reabriria a chamada que ela encerrou.
-              onLeft={(reason) => void calls.leaveFromRoom(session.join!.callId, reason)}
-            />
-          ) : null}
-
-          <div className="flex flex-col gap-2 px-4 py-3">
-            {session.notice ? <p className="text-xs text-text-muted">{session.notice}</p> : null}
-
-            {held ? (
-              <p className="truncate text-xs text-text-muted" aria-live="polite">
-                {texts.calls.nextInQueue(held.displayName)}
-              </p>
-            ) : null}
-
-            {session.phase === "calling" || session.phase === "joining" ? (
-              <Button
-                variant="outline"
-                className="w-full rounded-full"
-                onClick={() => void hangUp()}
-              >
-                <PhoneOff className="mr-2 h-4 w-4" />
-
-                {call.isInitiator ? texts.calls.cancel : texts.calls.end}
-              </Button>
-            ) : null}
-
-            {session.phase === "live" ? (
-              // Duas ações lado a lado na mesma linha. No celular o par encolhe ~30% (fonte, ícone
-              // e respiro) para caber na largura da tela; a partir de `sm` volta ao tamanho cheio.
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="min-w-0 flex-1 gap-1.5 rounded-full px-2.5 text-[0.7rem] whitespace-nowrap sm:gap-2 sm:px-4 sm:text-sm"
-                  onClick={() => setReportOpen(true)}
-                >
-                  <Flag className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
-
-                  {texts.calls.report.action}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="min-w-0 flex-1 gap-1.5 rounded-full px-2.5 text-[0.7rem] whitespace-nowrap sm:gap-2 sm:px-4 sm:text-sm"
-                  onClick={() => void hangUp()}
-                >
-                  <PhoneOff className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" />
-
-                  {isGroup ? texts.calls.end : texts.calls.hangUp}
-                </Button>
-              </div>
-            ) : null}
-
-            {session.phase === "error" ? (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-text-muted">{session.error ?? texts.calls.loadError}</p>
-
-                <Button variant="outline" className="rounded-full" onClick={() => calls.close()}>
-                  {texts.calls.end}
-                </Button>
-              </div>
-            ) : null}
-
-            {session.phase === "ended" ||
-            (session.phase === "live" && isTerminalState(call.state)) ? (
-              <p className="text-center text-sm text-text-muted">{stateLabel(call.state)}</p>
-            ) : null}
-          </div>
-
-          {session.phase === "live" ? (
-            <CallReportDialog
-              callId={call.id}
-              frameRef={frameRef}
-              open={reportOpen}
-              onOpenChange={setReportOpen}
-            />
-          ) : null}
-        </>
-      )}
-    </div>
+      {minimized ? (
+        <CallPill
+          pillRef={pillRef}
+          title={isGroup ? texts.calls.tamoJunto : title}
+          onExpand={expandCall}
+        />
+      ) : null}
+    </>
   );
 }
 
 /** Aviso pequeno no canto: a chamada continua, o iframe segue montado fora da tela. */
-function CallPill({ title, onExpand }: { title: string; onExpand: () => void }) {
+function CallPill({
+  title,
+  onExpand,
+  pillRef,
+}: {
+  title: string;
+  onExpand: () => void;
+  pillRef: RefObject<HTMLButtonElement | null>;
+}) {
   return (
     <button
+      ref={pillRef}
       type="button"
       onClick={onExpand}
       className="fixed right-4 bottom-16 z-[60] flex items-center gap-2 rounded-full border border-border-soft bg-surface-1 px-4 py-2 text-sm font-medium text-text-strong shadow-xl"
@@ -246,7 +278,7 @@ function CallPill({ title, onExpand }: { title: string; onExpand: () => void }) 
   );
 }
 
-/** Reabrir pede credencial nova ao servidor: o provider reconecta ao ver "joining" sem token. */
+/** Reabrir a apresentação preserva a sala; falhas de credencial têm recuperação própria. */
 function expandCall() {
   callSessionStore.expand();
 }

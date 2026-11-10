@@ -1,3 +1,6 @@
+import type { IdentityReleaseAdminOverview } from "@/types/application/identity/identity-release-admin-overview";
+import type { IdentityReleasePolicy } from "@/types/application/identity/identity-release-policy";
+import type { IdentityReleaseRound } from "@/types/application/identity/identity-release-round";
 import type { IdentityStatus } from "@/types/application/identity/identity-status";
 import type { JobEligibility } from "@/types/application/identity/job-eligibility";
 
@@ -21,4 +24,17 @@ export const identityApi = {
 
   /** Elegibilidade para publicar vaga (a decisão final é sempre do backend). */
   eligibility: () => api.get<JobEligibility>("/identity/eligibility"),
+
+  /** Visão da administração: fila, consumo do ciclo e as réguas da rodada. */
+  releaseOverview: () => api.get<IdentityReleaseAdminOverview>("/admin/identity/release"),
+
+  /** Ajusta as réguas da rodada; campos ausentes mantêm o valor atual (decisão do backend). */
+  updateReleaseSettings: (settings: Partial<IdentityReleasePolicy>) =>
+    api.patch<IdentityReleaseAdminOverview>("/admin/identity/release", settings),
+
+  /** Roda uma rodada de liberação agora. Idempotente no backend. */
+  runReleaseRound: () => api.post<IdentityReleaseRound | null>("/admin/identity/release/rounds"),
+
+  /** Histórico de rodadas executadas. */
+  releaseRounds: () => api.get<IdentityReleaseRound[]>("/admin/identity/release/rounds"),
 };

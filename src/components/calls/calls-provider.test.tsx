@@ -527,6 +527,123 @@ describe("revisão da fila: sala, toque e eventos fora de ordem", () => {
     return { live, queued };
   }
 
+  it("quatro ciclos de minimizar e expandir fazem uma única entrada", async () => {
+    const target = call({ state: "ACTIVE" });
+    byId.set(target.id, target);
+    mocks.join.mockResolvedValue(joinFor(target));
+    await flush();
+    await act(async () => {
+      await actions.current!.open(target.id);
+    });
+    const credential = getCallSession().join;
+    for (let cycle = 0; cycle < 4; cycle++) {
+      act(() => callSessionStore.minimize());
+      await flush();
+      act(() => callSessionStore.expand());
+      await flush();
+    }
+    expect(mocks.join).toHaveBeenCalledExactlyOnceWith(target.id);
+    expect(getCallSession().join).toBe(credential);
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      needsCredential: false,
+      needsRejoin: false,
+    });
+    expect(mocks.leave).not.toHaveBeenCalled();
+    expect(mocks.end).not.toHaveBeenCalled();
+  });
+
+  it("reconecta a mesma chamada sem expandir enquanto a credencial é renovada", async () => {
+    const target = call({ state: "ACTIVE" });
+    byId.set(target.id, target);
+    mocks.join.mockResolvedValue(joinFor(target));
+    await flush();
+    await act(async () => {
+      await actions.current!.open(target.id);
+    });
+    act(() => callSessionStore.minimize());
+    let finish: ((value: ReturnType<typeof joinFor>) => void) | undefined;
+    mocks.join.mockImplementationOnce(
+      () =>
+        new Promise<ReturnType<typeof joinFor>>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    act(() => callSessionStore.lostCredential());
+    await flush();
+    expect(getCallSession()).toMatchObject({
+      phase: "joining",
+      minimized: true,
+      needsCredential: false,
+      needsRejoin: true,
+    });
+    expect(mocks.join).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      finish!({ ...joinFor(target), jwt: "token_renovado" });
+    });
+    await flush();
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: true,
+      needsCredential: false,
+      needsRejoin: false,
+    });
+    expect(mocks.join).toHaveBeenCalledTimes(2);
+    expect(mocks.leave).not.toHaveBeenCalled();
+  });
+
+  it("perder a credencial minimizada ainda permite uma única reconexão", async () => {
+    const target = call({ state: "ACTIVE" });
+    byId.set(target.id, target);
+    mocks.join.mockResolvedValue(joinFor(target));
+    await flush();
+    await act(async () => {
+      await actions.current!.open(target.id);
+    });
+    act(() => callSessionStore.minimize());
+    mocks.join.mockResolvedValue({ ...joinFor(target), jwt: "token_renovado" });
+    act(() => callSessionStore.lostCredential());
+    act(() => callSessionStore.expand());
+    await flush();
+    expect(mocks.join).toHaveBeenCalledTimes(2);
+    expect(getCallSession()).toMatchObject({
+      phase: "live",
+      minimized: false,
+      join: { jwt: "token_renovado" },
+      needsCredential: false,
+    });
+    expect(mocks.leave).not.toHaveBeenCalled();
+  });
+
+  it("falha de rede na conferência não encerra a sessão minimizada", async () => {
+    const target = call({ state: "ACTIVE" });
+    byId.set(target.id, target);
+    await flush();
+    act(() => callSessionStore.live(joinFor(target)));
+    await flush();
+    act(() => callSessionStore.minimize());
+    const credential = getCallSession().join;
+    mocks.get.mockRejectedValueOnce(new Error("rede fora"));
+    act(() => mocks.onCallEvent?.(target.id));
+    await flush();
+    expect(getCallSession()).toMatchObject({ phase: "live", minimized: true });
+    expect(getCallSession().join).toBe(credential);
+    expect(mocks.join).not.toHaveBeenCalled();
+    expect(mocks.leave).not.toHaveBeenCalled();
+  });
+
+  it("desligar pela sala minimizada remove presença uma única vez", async () => {
+    const { live } = await liveWithQueued();
+    act(() => callSessionStore.minimize());
+    await act(async () => {
+      await actions.current!.leaveFromRoom(live.id, "hangup");
+    });
+    expect(mocks.leave).toHaveBeenCalledExactlyOnceWith(live.id);
+    expect(mocks.join).not.toHaveBeenCalled();
+    expect(getCallSession().join).toBeNull();
+    expect(getCallSession().call?.id).toBe("call_2");
+  });
+
   it("não toca enquanto a pessoa está na sala, mesmo com uma 1:1 na fila", async () => {
     await liveWithQueued();
     expect(getCallSession().phase).toBe("live");
