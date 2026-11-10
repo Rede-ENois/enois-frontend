@@ -273,6 +273,30 @@ function useEvents() {
   });
 }
 
+/**
+ * A fileira de um post no feed. O wrapper existe sempre, no mesmo índice da árvore, porque o
+ * `ref` (observer de "visto") só é condicional ao índice 0 — se o wrapper some quando o post sai
+ * do topo, o React vê um tipo de elemento diferente ali e remonta o `PostCard`, perdendo estado
+ * local (comentários abertos) sempre que uma publicação nova chega (issue #743).
+ */
+export function FeedPostRow({
+  post,
+  index,
+  feedTab,
+  firstPostRef,
+}: {
+  post: PostView;
+  index: number;
+  feedTab: HomeTab;
+  firstPostRef: (element: HTMLElement | null) => void;
+}) {
+  return (
+    <div ref={index === 0 ? firstPostRef : undefined}>
+      <PostCard post={post} feedTab={feedTab} virtualized />
+    </div>
+  );
+}
+
 function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -1395,13 +1419,7 @@ function Home() {
                   <Fragment key={p.id}>
                     {index === caughtUpAt && <CaughtUpDivider />}
 
-                    {index === 0 ? (
-                      <div ref={firstPostRef}>
-                        <PostCard post={p} feedTab={tab} virtualized />
-                      </div>
-                    ) : (
-                      <PostCard post={p} feedTab={tab} virtualized />
-                    )}
+                    <FeedPostRow post={p} index={index} feedTab={tab} firstPostRef={firstPostRef} />
                   </Fragment>
                 ))}
 
