@@ -42,6 +42,8 @@ import {
   EventTicket,
   Input,
   LoadingState,
+  Pill,
+  PillRow,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -73,6 +75,7 @@ import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } fro
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
+import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
@@ -1214,6 +1217,14 @@ function Home() {
                 </div>
               )}
 
+              {/* Com mídia e sem texto o Publicar fica desabilitado: diz o que falta. Fica na linha
+                de baixo, como o erro, para não apertar os botões no celular. */}
+              {!publishError && captionRequired({ postType, mediaCount: media.length, draft }) && (
+                <p role="status" className="mt-2 text-right text-xs font-normal text-text-subtle">
+                  {texts.feed.composer.captionRequired}
+                </p>
+              )}
+
               {publishError && (
                 <p className="mt-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-normal text-destructive">
                   {publishError}
@@ -1317,24 +1328,22 @@ function Home() {
           )}
 
           {tab === "ALL" && (
-            <div className="flex flex-wrap gap-2 pb-2">
+            /* Doze tipos em `flex-wrap` ocupavam QUATRO linhas no celular antes de qualquer
+               post — a primeira dobra era so filtro. O PillRow rola para o lado (o mesmo gesto
+               dos filtros do feed), ocupa UMA linha e nada fica cortado nem escondido: os
+               tipos continuam todos alcancaveis. */
+            <PillRow label={texts.feed.tabs.type} className="pb-2">
               {POST_TYPE_FILTERS.map((f) => (
-                <button
+                <Pill
                   key={f.value}
-                  type="button"
+                  size="sm"
+                  active={typeFilter === f.value}
                   onClick={() => setTypeFilter(f.value)}
-                  aria-pressed={typeFilter === f.value}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-medium transition",
-                    typeFilter === f.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-2 text-text-subtle hover:bg-surface-3 hover:text-text-strong",
-                  )}
                 >
-                  {f.label}
-                </button>
+                  <>{f.label}</>
+                </Pill>
               ))}
-            </div>
+            </PillRow>
           )}
 
           {questionsFeed && (

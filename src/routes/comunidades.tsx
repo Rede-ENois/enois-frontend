@@ -229,26 +229,6 @@ function Comunidades() {
           }
         />
 
-        {isAuthenticated && me && (
-          <LocalCommunitiesSection
-            viewerCity={viewerCity}
-            viewerState={me.state ?? null}
-            items={(local.data?.items ?? []).map((c) => ({
-              id: c.id,
-              name: c.name,
-              avatar: c.avatar,
-              members: c.members,
-              city: c.city,
-              state: c.state,
-              href: `/comunidades/${c.id}`,
-            }))}
-            loading={local.isLoading}
-            error={local.isError}
-            onRetry={() => void local.refetch()}
-            onSetCity={() => setCityDialogOpen(true)}
-          />
-        )}
-
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           {/* Sem `maxLength`: o contador que ele acende abaixo do campo cresce este container e
@@ -281,6 +261,26 @@ function Comunidades() {
           }
           onClear={() => void navigate({ search: {}, replace: true })}
         />
+
+        {isAuthenticated && me && (
+          <LocalCommunitiesSection
+            viewerCity={viewerCity}
+            viewerState={me.state ?? null}
+            items={(local.data?.items ?? []).map((c) => ({
+              id: c.id,
+              name: c.name,
+              avatar: c.avatar,
+              members: c.members,
+              city: c.city,
+              state: c.state,
+              href: `/comunidades/${c.id}`,
+            }))}
+            loading={local.isLoading}
+            error={local.isError}
+            onRetry={() => void local.refetch()}
+            onSetCity={() => setCityDialogOpen(true)}
+          />
+        )}
 
         {mineItems.length > 0 && (
           <section className="space-y-3">

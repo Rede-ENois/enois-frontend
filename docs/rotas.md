@@ -35,6 +35,7 @@ Funcionalidades:
 - **Abas de filtro:** Para você, Tudo, Seguindo, Discussões, Projetos. "Para você" is the default tab (the one that shows the "você está em dia" marker).
 - **Topic is required** on every post published here (standalone posts): there is no "Sem assunto" option, and publish/schedule stay disabled until one is picked. The last topic used is preselected. The backend answers `400 TOPIC_REQUIRED` otherwise.
 - **Profile shortcuts:** the profile composer never publishes; it opens this composer. `?compor=ARTICLE` opens it in article mode; `?compor=MEDIA` attaches the photos/video picked on the profile (handed over in memory by `lib/composer-handoff`). Both params are dropped from the URL after use.
+- **Caption required with media:** the backend refuses a post without text (except PAGE), so "Publicar" stays disabled while the field is empty. With media attached and an empty field, the composer says so below the buttons ("Escreva uma legenda para publicar"); article and poll are left out, since there the field is the title or the question (`lib/feed/caption-required`).
 - **Feed infinito** de `PostCard` components
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does

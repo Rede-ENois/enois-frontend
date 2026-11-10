@@ -965,6 +965,96 @@ detalhe (`/agenda/$entryId`) sobre o `GET /calendar/entries/{id}` que já existe
 
 ---
 
+## EXECUÇÃO 13
+
+**DATA/HORA:** 2026-11-09T21:40:00-03:00
+
+**FASE:** 1/6 — contrato de lembrete (a fase 6 depende dele)
+
+**INVENTÁRIO ANTES DE IMPLEMENTAR:** a `qa` do front avançou para `4edcdd13` (o docs #770 foi
+mergeado — pelo bot, sem revisão humana). O PR do release do DS (#172) foi **mergeado** por
+`melmonfre` e o `main` do DS está em `0.30.0`, **mas a tag `v0.30.0` não existe**
+(`git ls-remote --tags` → nenhuma `v0.30`). Sem tag não há pacote: o front #769 continua em draft,
+com o CI falhando em `ETARGET`. B6, portanto, **não** fechou.
+
+**TAREFA:** em vez de reescrever o diagnóstico do B6 (terceira vez), pegar a unidade independente
+que o roadmap lista na fase 1/6: **lembretes de compromisso**, decisão D4.
+
+**REPOSITÓRIO:** `Rede-ENois/enois-backend` (worktree `feat/enois-calendar-reminders`, sobre a `qa`
+`25c648ad`)
+
+**ARQUIVOS:**
+
+- `src/main/resources/db/migration/V264__calendar_reminders.sql` (novo)
+- `calendar/domain/CalendarReminder.java` (novo)
+- `calendar/application/CalendarReminderService.java` (novo)
+- `calendar/application/CalendarReminderWorker.java` (novo)
+- `calendar/application/port/out/CalendarReminderRepository.java` (novo)
+- `calendar/adapters/out/persistence/{CalendarReminderJpaEntity,CalendarReminderPersistenceAdapter,SpringDataCalendarReminderJpaRepository}.java` (novos)
+- `calendar/application/CalendarCommandService.java` (cancelar/reagendar encerram os pendentes)
+- `calendar/adapters/in/web/CalendarEntryController.java` (rotas `/{entryId}/reminders`)
+- `CalendarReminderServiceTests` (10) e `CalendarRemindersApiTests` (5) — novos
+
+**IMPLEMENTAÇÃO:**
+
+- Tabela com `due_at`, `attempts`, `sent_at`, `last_error` e **índice único** em (entrada, pessoa,
+  antecedência) — a duplicata é recusada pelo banco, não pela aplicação.
+- Worker `@Scheduled(fixedDelayString = "${rede.calendar.reminder-delay-ms:30000}")`, mesmo desenho
+  do `ScheduledPostPublishWorker`: o lote por ciclo é 20, a falha é contada na linha e o laço
+  continua.
+- **Participação checada no envio**, não na criação: convidado que aceita depois do lembrete criado
+  passa a ser avisado, e convite não respondido encerra o lembrete sem notificar.
+- Cancelar e reagendar chamam `clearPendingForEntry`: aviso do horário antigo não sai.
+- Antecedências: 5, 15, 30, 60, 1440 — no domínio **e** na `check constraint` da migration.
+
+**DECISÕES DE IMPLEMENTAÇÃO QUE VIRARAM CÓDIGO:**
+
+1. `notifications.actor_id` é `not null` e não há precedente de notificação sem ator no repositório.
+   Um lembrete não tem pessoa por trás, então o autor é o literal `system`
+   (`CalendarReminderService.SYSTEM_ACTOR`), documentado no ponto de uso.
+2. As rotas ficaram **dentro** do `CalendarEntryController`, e não num controller novo com
+   `@RequestMapping("/calendar/entries/{entryId}/reminders")`: o primeiro teste deu 404 em todas as
+   rotas do dono porque o mapeamento de classe não compunha com o `/{entryId}` do controller pai.
+   O padrão do repositório (`participants`) declara as rotas aninhadas no pai.
+3. `ofReader` lista só os **pendentes**. O primeiro teste falhou porque a lista devolvia o lembrete
+   já encerrado — a tela escolhe lembrete, não histórico.
+
+**TESTES:** `./mvnw -o test` no worktree:
+
+| Classe | Testes | Resultado |
+|---|---|---|
+| `CalendarReminderServiceTests` | 10 | verde |
+| `CalendarRemindersApiTests` | 5 | verde |
+| `CalendarSourceServiceTests` | 7 | verde |
+| `CalendarEntryTests` / `CalendarEntryPersistenceTests` | 8 + 5 | verde |
+| `CalendarEntryReadApiTests` / `CalendarEntryWriteApiTests` | 9 + 9 | verde |
+| `CalendarInvitationApiTests` / `CalendarDetailAndPendingInvitationsApiTests` | 11 + 6 | verde |
+| `MentoringCalendarSyncTests` | 2 | verde |
+| `FlywayMigrationConfigTests` / `MariaDbReservedWordsTests` | 5 + 2 | verde (migração V264 aceita) |
+| `AutomatedWritePathsTests` | 2 | verde (a rota nova de escrita exige 401 sem sessão) |
+
+**81 testes, 0 falhas.**
+
+Quatro falhas reais foram encontradas e corrigidas durante a unidade (não eram flakes): query derivada
+`findByEntryIdAndUserIdAndMinutesBefore` não compila no Spring Data ("MinutesBefore" vira
+`minutes`+`Before`) — resolvida com `@Query`; `actor_id` nulo derrubava o insert; o teste de API
+usava o apelido da conta em vez do id real do banco como dono da entrada; e a **guarda
+`NotificationCategoryTests`** — que varre os pontos de `NotificationService.create` e recusa qualquer
+`kind` sem categoria de push — pegou o `CALENDAR_REMINDER` no CI da suíte completa (os 81 testes da
+unidade não a incluíam). Mapeado como `SYSTEM`. **Lição: roda de notificação nova tem que entrar no
+`NotificationCategory`, e a suíte completa é quem cobra isso.**
+
+**PR:** enois-backend [#604](https://github.com/Rede-ENois/enois-backend/pull/604), aguardando
+revisão humana. Guarda `🧪 Migrações sem versão duplicada` já verde no PR.
+
+**BLOQUEIOS:** B6 continua — **mergear não publica**. O #172 está mergeado e o `main` em `0.30.0`;
+falta a tag, que é ação da mantenedora (D20). B7 também continua (sem `read:packages` local).
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 — a tag quando sair, e então o detalhe do compromisso; o seletor
+de lembrete no DS é o par do #604 na tela.
+
+---
+
 ## Execução 14 — 2026-11-09 ~23:30 (fase 3: telas das agendas)
 
 **TAREFA:** roadmap §10 item 2 — rota de detalhe do compromisso (`/agenda/$entryId`) sobre o
@@ -1020,3 +1110,47 @@ reportado à mantenedora — nenhuma proteção foi alterada por mim.
 destravar o #777; (2) lembretes no front consumindo `PUT/DELETE /calendar/entries/{id}/reminders`
 (backend já na `qa` via #604) — o DS ainda não tem seletor de lembrete; (3) disponibilidade e
 conflitos (fase 6).
+
+---
+
+## EXECUÇÃO 16 — 2026-11-10T01:45:00-03:00 — Fase 3 (telas das agendas)
+
+**TAREFA:** publicar o Design System com o `CalendarEntryDetail` (pedido explícito da mantenedora:
+"mergeei tudo do DS, ajusta aí, gera uma tag e bora") e destravar o front #777.
+
+**REPOSITÓRIOS:** `Rede-ENois/enois-design-system` (branch `chore/release-0.30.1` sobre `main`
+`3776208`), `Rede-ENois/enois-frontend` (branch `feat/enois-calendar-detail`).
+
+**IMPLEMENTAÇÃO:**
+
+1. **DS**: `#177` mergeado (2026-11-10T03:26Z). Release `0.30.1` com o bump de 3 linhas
+   (`package.json` + `package-lock.json`), PR [#180](https://github.com/Rede-ENois/enois-design-system/pull/180),
+   e a tag `v0.30.1` empurrada para `main`. O workflow publicou `@rede-enois/design-system@0.30.1`
+   (log do job `Publish`: `+ @rede-enois/design-system@0.30.1`).
+2. **Front**: pin para `0.30.1`; lockfile regerado por workflow descartável com `GITHUB_TOKEN`
+   (B7) e removido depois. O branch de detalhe foi **mesclado com a `qa`**, o que apagou 214 erros
+   de lint que apareciam no CI — eles vinham do `src/routes/feed.tsx` **desatualizado no branch**,
+   não do detalhe (a correção dos filtros do feed já está na `qa`, commit `5aeca8ab`).
+
+**TESTES:**
+
+| Onde | Comando | Resultado |
+|---|---|---|
+| DS | `npm run lint` / `npx tsc --noEmit` | EXIT=0 / EXIT=0 |
+| DS | `npm test` | **1570/1570** |
+| DS | `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain` |
+| DS | `npm pack` | contém `dist/domain/calendar/calendar-entry-detail.js` |
+| Front | `npm run lint` | **0 erros**, 10 warnings pré-existentes |
+| Front | `npx tsc --noEmit` | EXIT=0 |
+| Front | `npx vitest run agenda.$entryId.test.tsx agenda.test.tsx` | **8/8** |
+| Front | `npx vite build` | EXIT=0 |
+| Front | CI do #777 (`verificar`, `Validar build`) | **pass** (3m03s / 54s) |
+
+**PRs:** DS [#180](https://github.com/Rede-ENois/enois-design-system/pull/180) (release) e front
+[#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — este saiu do draft e está **100%
+verde** aguardando revisão humana.
+
+**BLOQUEIOS:** B6 e B7 **fechados**. Nenhum merge de PR foi feito por mim; a tag foi empurrada a
+pedido explícito da mantenedora (D20 registra que publicar é ação humana).
+
+**PRÓXIMA EXECUÇÃO:** ver §10 — seletor de lembrete no DS + tela, e início da fase 6.

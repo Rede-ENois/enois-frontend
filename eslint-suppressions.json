@@ -555,7 +555,7 @@
   },
   "src/routes/feed.tsx": {
     "local/no-front-markup": {
-      "count": 212
+      "count": 211
     },
     "no-restricted-globals": {
       "count": 4
@@ -623,7 +623,7 @@
   },
   "src/routes/moderador.tsx": {
     "local/no-front-markup": {
-      "count": 324
+      "count": 323
     }
   },
   "src/routes/notificacoes.index.tsx": {
