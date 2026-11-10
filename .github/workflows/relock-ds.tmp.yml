@@ -1,0 +1,28 @@
+name: Reescrever lockfile do DS (temporário)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  packages: read
+jobs:
+  relock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/enois-calendar-detail
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@rede-enois"
+      - run: npm install --package-lock-only --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          git config user.name "melissa"
+          git config user.email "melissa@users.noreply.github.com"
+          git add package-lock.json
+          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): lockfile aponta o design-system 0.30.1 publicado"
+          git push
