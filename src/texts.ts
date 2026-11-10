@@ -3705,6 +3705,10 @@ export const texts = {
           title: "16. Chamadas de voz e vídeo e salas abertas (Tamo junto)",
           text: 'A plataforma oferece chamadas de voz e vídeo entre usuários e salas abertas de comunidade ("Tamo junto"), associadas a grupos, tópicos e eventos, por meio do serviço próprio de chamadas épapo, hospedado pela própria plataforma.\n\nAo entrar em uma chamada, você concorda com as regras de conduta destes Termos e das Diretrizes da Comunidade, que valem também para o que é dito e exibido ao vivo. Assediar, ameaçar, expor, humilhar, exibir conteúdo íntimo sem consentimento ou usar a chamada para fins ilegais pode levar à remoção de recursos, suspensão ou banimento da conta, além das medidas legais cabíveis.\n\nAs chamadas não são gravadas em áudio ou vídeo pela plataforma. Ao denunciar outra pessoa de uma chamada, o aplicativo captura uma imagem estática da tela no momento da denúncia (os vídeos visíveis) e envia essa imagem junto com o relato. A imagem pode ser analisada por ferramenta automatizada para orientar a revisão, mas qualquer penalidade decorrente de denúncia de chamada é decidida por uma pessoa do time de moderação — nenhum sistema automatizado aplica penalidade sozinho nesse caso.\n\nA captura feita para denúncia é acessível apenas à equipe de moderação e não é divulgada às demais pessoas da chamada. Não há gravação contínua, e a plataforma não se responsabiliza por gravações ou capturas feitas por outros participantes com recursos externos ao serviço.\n\nAs chamadas dependem de serviços técnicos (conexão de internet, navegadores e infraestrutura de rede) e podem sofrer falhas, atrasos ou indisponibilidade. A plataforma não garante qualidade de transmissão nem disponibilidade ininterrupta do serviço de chamadas.',
         },
+        {
+          title: "17. Verificação de identidade e selo Humanidade Comprovada",
+          text: "O Énóis pode oferecer, de forma opcional e progressiva, a verificação de identidade por meio de provedor especializado (atualmente a Didit), que realiza a conferência do documento e da biometria facial em ambiente próprio. A verificação é sempre voluntária: não é requisito para criar conta, participar ou usar qualquer recurso da plataforma, e a liberação acompanha a credibilidade acumulada na comunidade.\n\nAo iniciar uma verificação, você interage diretamente com o provedor e o tratamento dos seus dados de identificação segue os termos e a política de privacidade dele. O Énóis não armazena documentos de identidade, fotografias, selfies, vídeos ou dados biométricos: recebe apenas o resultado (aprovado, recusado ou em análise) e registra o estado da verificação e as datas, para conceder o selo Humanidade Comprovada quando o resultado é aprovado.\n\nO selo é apenas um indicador visual de que o perfil passou pelo processo; ele não é moeda de troca, não gera vantagem de reputação e não é requisito para nada na plataforma. A administração não consegue conceder o selo manualmente nem acessar seus documentos ou resultados biométricos.",
+        },
       ],
     },
     privacy: {
@@ -3803,7 +3807,15 @@ export const texts = {
             ],
           },
           {
-            title: "13. Alterações desta política",
+            title: "13. Verificação de identidade (Didit)",
+            paragraphs: [
+              "A verificação de identidade é opcional e voluntária. Quando você decide verificá-la, o processo é realizado por provedor especializado (atualmente a Didit), que trata o documento de identificação e a biometria facial como controlador desse tratamento específico, conforme os termos e a política de privacidade dele.",
+              "O Énóis não recebe nem armazena documentos de identidade, fotografias, selfies, vídeos ou dados biométricos. Recebe e guarda apenas o resultado da verificação (aprovado, recusado, em análise ou expirado), o identificador da sessão junto ao provedor, o estado e as datas do processo — o mínimo necessário para conceder o selo Humanidade Comprovada e permitir novas tentativas. O resultado também serve à segurança da plataforma (prevenção de contas duplicadas e de fraude).",
+              "O provedor opera como operador quanto aos dados tratados em nome da plataforma e como controlador do documento e da biometria em si. As bases legais são o seu consentimento (art. 7º, I, da LGPD), que pode ser revogado a qualquer momento ao não iniciar ou ao solicitar a desvinculação da verificação, e o legítimo interesse para segurança (art. 7º, IX).",
+            ],
+          },
+          {
+            title: "14. Alterações desta política",
             paragraphs: [
               "Esta Política pode ser atualizada para refletir mudanças legais ou no serviço. A data de atualização estará sempre indicada no topo da página e alterações relevantes serão comunicadas pela plataforma.",
             ],
