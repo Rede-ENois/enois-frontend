@@ -703,3 +703,33 @@ que a execução 20 fechou de decisão:
    do período + escopo da aba), não "tudo". Arquivo gigante e desalinhado do que se vê é pior que
    baixar de novo. A assinatura privada da fase 9 (D7) é que serve ao caso "agenda inteira,
    sempre atualizada" no leitor externo.
+
+## D27 — A presença no evento é o fato; a entrada da agenda é consequência (execução 21)
+
+A fase 4 começa pela fonte que já existe: o evento de grupo. O evento guarda data e hora como
+texto livre (B2), mas `Event.startsAt()`/`expiresAt()` já leem esse texto no fuso da rede
+(`America/Sao_Paulo`), então a agenda não precisa esperar a coluna tipada para desenhar o
+compromisso. O que a execução 21 decidiu:
+
+1. **A direção é evento → agenda, nunca o contrário.** `EventService` chama
+   `CalendarSourceService` com origem `EVENT`+`eventId`; o calendário não conhece o módulo de
+   eventos. É a D19 aplicada: quem é dono do fato grava a entrada, e o calendário só guarda.
+2. **A presença confirmada é o gatilho, não a existência do evento.** O evento não vira
+   compromisso de todo mundo: `attend` grava a entrada do participante, `cancelAttendance` a
+   remove. Quem organiza e não confirmou presença não ganha entrada — a agenda é de quem vai.
+3. **Sair do evento apaga a entrada; cancelar o evento também.** `delete` e `sanitizeExpired`
+   removem a entrada de todos os participantes. Apagar é o oposto de cancelar (D10/D26): o fato
+   deixou de existir, então não há cancelamento a publicar no `.ics` — a linha some. Por isso a
+   porta ganhou `deleteBySource`, separada de `cancel`.
+4. **O evento não tem hora de fim; a entrada ocupa uma hora.** `expiresAt()` devolve o começo
+   quando não há fim, e a constraint exige `ends_at > starts_at`. Duração zero não existe na
+   agenda, e "dia inteiro" mentiria sobre um encontro com hora marcada. Uma hora é o padrão
+   explícito (`DEFAULT_EVENT_DURATION`), não um palpite escondido.
+5. **Editar o evento move a entrada de todos os participantes.** `update` reescreve a entrada de
+   cada um pela mesma origem (D3): o horário novo substitui o antigo, sem duplicar. E, como na
+   edição direta, o lembrete pendente do horário antigo é encerrado — aviso no horário errado é
+   pior que aviso nenhum (D21).
+6. **A porta de origem limpa lembrete ao reagendar e ao cancelar.** Era um buraco real: o
+   caminho direto (`CalendarCommandService`) já encerrava o pendente, mas o caminho de origem
+   não. Agora `upsert` (quando move) e `cancel` chamam `clearPendingForEntry`, e o comportamento
+   é o mesmo venha o compromisso da agenda, da mentoria, do import ou do evento.

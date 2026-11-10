@@ -851,12 +851,12 @@ entregou, e o MentorService escrevendo e cancelando a entrada.
 
 **TESTES:** no worktree do backend, `./mvnw -o test -Dtest=...`:
 
-| Classe                                                          | Testes | Resultado                                                                                                                                            |
-| --------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CalendarSourceServiceTests`                                    | 7      | verde (repetição mantém uma linha, reagendar move, violação de unicidade, dono separado, cancelado não volta, origem desconhecida, título/descrição) |
-| `MentoringCalendarSyncTests`                                    | 2      | verde (sessão marcada aparece na agenda do mentorado e não na do mentor; cancelamento cancela a entrada e a linha fica)                              |
-| `CalendarEntryPersistenceTests`                                 | 5      | verde                                                                                                                                                |
-| `Calendar*Tests`, `Mentor*Tests`, `Mentoring*Tests` (regressão) | 83     | **0 falhas**, BUILD SUCCESS (9m08s)                                                                                                                  |
+| Classe                             | Testes | Resultado                                                                                                  |
+| ---------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------- |
+| `CalendarSourceServiceTests`       | 7      | verde (repetição mantém uma linha, reagendar move, violação de unicidade, dono separado, cancelado não volta, origem desconhecida, título/descrição) |
+| `MentoringCalendarSyncTests`       | 2      | verde (sessão marcada aparece na agenda do mentorado e não na do mentor; cancelamento cancela a entrada e a linha fica) |
+| `CalendarEntryPersistenceTests`    | 5      | verde                                                                                                      |
+| `Calendar*Tests`, `Mentor*Tests`, `Mentoring*Tests` (regressão) | 83 | **0 falhas**, BUILD SUCCESS (9m08s)                                                                        |
 
 O teste de unicidade falha antes do conserto: com o índice comum que a V257 criou, a segunda linha
 com a mesma origem entrava e o `upsert` duplicava. A prova agora é a violação 23505 do H2 na
@@ -899,13 +899,13 @@ ato não foi implementar: foi confrontar o roadmap com o estado real dos quatro 
 
 **O QUE O INVENTÁRIO MUDOU EM RELAÇÃO AO QUE O ROADMAP DIZIA:**
 
-| O roadmap dizia                                                | O estado real                                                                                                                                                                                    |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| #542 (detalhe e convites pendentes) aberto, aguardando revisão | **mergeado** em 2026-11-08                                                                                                                                                                       |
-| #165 e #166 (formulário e superfície do DS) abertos            | **mergeados** em 2026-11-09                                                                                                                                                                      |
-| #752 (tipos e `calendarApi`) aberto                            | **mergeado**                                                                                                                                                                                     |
-| #568 (origem da mentoria) aberto                               | **mergeado** em 2026-11-09 — e foi ele que trouxe a segunda V260 que quebrou a `qa`                                                                                                              |
-| "a tela depende da publicação do DS"                           | confirmado, e mais grave: **nenhuma** versão publicada tem o módulo. A tag `v0.29.10-rc.1` aponta para `7c0d17e`, 24 commits antes do calendário (`git ls-tree 7c0d17e \| grep -c calendar` → 0) |
+| O roadmap dizia | O estado real |
+|---|---|
+| #542 (detalhe e convites pendentes) aberto, aguardando revisão | **mergeado** em 2026-11-08 |
+| #165 e #166 (formulário e superfície do DS) abertos | **mergeados** em 2026-11-09 |
+| #752 (tipos e `calendarApi`) aberto | **mergeado** |
+| #568 (origem da mentoria) aberto | **mergeado** em 2026-11-09 — e foi ele que trouxe a segunda V260 que quebrou a `qa` |
+| "a tela depende da publicação do DS" | confirmado, e mais grave: **nenhuma** versão publicada tem o módulo. A tag `v0.29.10-rc.1` aponta para `7c0d17e`, 24 commits antes do calendário (`git ls-tree 7c0d17e \| grep -c calendar` → 0) |
 
 **IMPLEMENTAÇÃO:**
 
@@ -931,13 +931,13 @@ ato não foi implementar: foi confrontar o roadmap com o estado real dos quatro 
 `@rede-enois/design-system@0.30.0` **empacotado localmente** (`npm pack` da `main`, o caminho que o
 CONTRIBUTING do DS indica):
 
-| Comando                                     | Resultado                                                                                                                                                                                                                                                              |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npx tsc --noEmit`                          | EXIT=0                                                                                                                                                                                                                                                                 |
-| `npx eslint` nos arquivos tocados           | EXIT=0, 0 erros                                                                                                                                                                                                                                                        |
-| `npx vitest run src/routes/agenda.test.tsx` | **3/3 verde**                                                                                                                                                                                                                                                          |
-| `npx vitest run` (suíte inteira)            | **1220/1223**; as 3 falhas são `src/lib/e2e/key-manager.test.ts` (crypto/IndexedDB lentos sob carga). Verificado que **passam** isolados neste worktree, na pasta `src/lib/e2e/` inteira, e numa árvore limpa da `qa` — flaky pré-existente, sem relação com a mudança |
-| `npx vite build`                            | EXIT=0; `agenda-*.mjs` (SSR) e `agenda-*.js` (cliente) no bundle                                                                                                                                                                                                       |
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | EXIT=0 |
+| `npx eslint` nos arquivos tocados | EXIT=0, 0 erros |
+| `npx vitest run src/routes/agenda.test.tsx` | **3/3 verde** |
+| `npx vitest run` (suíte inteira) | **1220/1223**; as 3 falhas são `src/lib/e2e/key-manager.test.ts` (crypto/IndexedDB lentos sob carga). Verificado que **passam** isolados neste worktree, na pasta `src/lib/e2e/` inteira, e numa árvore limpa da `qa` — flaky pré-existente, sem relação com a mudança |
+| `npx vite build` | EXIT=0; `agenda-*.mjs` (SSR) e `agenda-*.js` (cliente) no bundle |
 
 O teste novo falha no código anterior: com a regex antiga `/^\d{4}-\d{2}(-\d{2})?$/`,
 `?period=2026-13` passava e virava janela inválida (400 da API). A validação agora confere o mês e o
@@ -945,12 +945,12 @@ dia de verdade.
 
 Design System, na `main` `c1d44c1` (base do release):
 
-| Comando                               | Resultado                                                    |
-| ------------------------------------- | ------------------------------------------------------------ |
-| `npm run lint`                        | EXIT=0, 0 erros, 6 warnings `exhaustive-deps` pré-existentes |
-| `npx tsc --noEmit`                    | EXIT=0                                                       |
-| `npm test`                            | **163 arquivos, 1558 testes, 0 falhas**                      |
-| `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain`   |
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | EXIT=0, 0 erros, 6 warnings `exhaustive-deps` pré-existentes |
+| `npx tsc --noEmit` | EXIT=0 |
+| `npm test` | **163 arquivos, 1558 testes, 0 falhas** |
+| `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain` |
 
 **PR:** DS [#172](https://github.com/Rede-ENois/enois-design-system/pull/172) (issue #171) e front
 [#769](https://github.com/Rede-ENois/enois-frontend/pull/769).
@@ -1021,17 +1021,17 @@ que o roadmap lista na fase 1/6: **lembretes de compromisso**, decisão D4.
 
 **TESTES:** `./mvnw -o test` no worktree:
 
-| Classe                                                                       | Testes | Resultado                                           |
-| ---------------------------------------------------------------------------- | ------ | --------------------------------------------------- |
-| `CalendarReminderServiceTests`                                               | 10     | verde                                               |
-| `CalendarRemindersApiTests`                                                  | 5      | verde                                               |
-| `CalendarSourceServiceTests`                                                 | 7      | verde                                               |
-| `CalendarEntryTests` / `CalendarEntryPersistenceTests`                       | 8 + 5  | verde                                               |
-| `CalendarEntryReadApiTests` / `CalendarEntryWriteApiTests`                   | 9 + 9  | verde                                               |
-| `CalendarInvitationApiTests` / `CalendarDetailAndPendingInvitationsApiTests` | 11 + 6 | verde                                               |
-| `MentoringCalendarSyncTests`                                                 | 2      | verde                                               |
-| `FlywayMigrationConfigTests` / `MariaDbReservedWordsTests`                   | 5 + 2  | verde (migração V264 aceita)                        |
-| `AutomatedWritePathsTests`                                                   | 2      | verde (a rota nova de escrita exige 401 sem sessão) |
+| Classe | Testes | Resultado |
+|---|---|---|
+| `CalendarReminderServiceTests` | 10 | verde |
+| `CalendarRemindersApiTests` | 5 | verde |
+| `CalendarSourceServiceTests` | 7 | verde |
+| `CalendarEntryTests` / `CalendarEntryPersistenceTests` | 8 + 5 | verde |
+| `CalendarEntryReadApiTests` / `CalendarEntryWriteApiTests` | 9 + 9 | verde |
+| `CalendarInvitationApiTests` / `CalendarDetailAndPendingInvitationsApiTests` | 11 + 6 | verde |
+| `MentoringCalendarSyncTests` | 2 | verde |
+| `FlywayMigrationConfigTests` / `MariaDbReservedWordsTests` | 5 + 2 | verde (migração V264 aceita) |
+| `AutomatedWritePathsTests` | 2 | verde (a rota nova de escrita exige 401 sem sessão) |
 
 **81 testes, 0 falhas.**
 
@@ -1055,4 +1055,621 @@ de lembrete no DS é o par do #604 na tela.
 
 ---
 
-> > > > > > > origin/qa
+## EXECUÇÃO 13 — desdobramento (destravar B6)
+
+**DATA/HORA:** 2026-11-10T01:45:00-03:00
+
+**TAREFA:** a tag do design system, mandada pela Mel, não publicou nada. Descobrir por quê e fechar
+o bloqueio que parou a tela `/agenda`.
+
+**CAUSA RAIZ:** a release/tag foi criada como **`0.30.0`**, sem o prefixo `v`. O workflow do DS
+dispara em `refs/tags/v*` (`if: startsWith(github.ref, 'refs/tags/v')`), então **nenhum run foi
+criado** — o repositório tinha a tag e o pacote não existia. Todas as releases anteriores
+(`v0.27.5`, `v0.27.4`…) usam o `v`; esta foi a primeira sem.
+
+**CORREÇÃO:**
+
+1. Tag `v0.30.0` criada no **mesmo commit** da `0.30.0` (`7d40855`, o `main`). Publish
+   `enois-design-system#42735841594` → **verde** (`Lint, typecheck, test and build` e
+   `Publish to GitHub Packages`).
+2. Lockfile do front: o `package.json` já pedia `0.30.0`, mas o `package-lock.json` continuava em
+   `0.29.10-rc.1` (por isso `npm ci` falhava com `ETARGET`). Sem `read:packages` local, o lock foi
+   regerado **pelo registro** dentro do CI (`npm install --package-lock-only --ignore-scripts` com
+   o `GITHUB_TOKEN`, que tem `packages: read`), num workflow descartável que commitou o arquivo e
+   foi removido da árvore em seguida — `resolved`/`integrity` vieram do npm, não de valor escrito à
+   mão (regra da D20).
+3. `#769` saiu do draft. CI **verde** (`verificar`, `Validar build`, CodeQL, Analyze); o build
+   gerou os chunks `agenda-*`, provando que a rota entra no bundle servido.
+
+**ARQUIVOS:** `package-lock.json` (front, commit `4bae42fc`); tag `v0.30.0` no design system.
+
+**LIÇÃO PARA A D20:** *mergear* e *publicar* são coisas diferentes, e agora também **o nome da tag
+importa**. Uma tag criada pela interface do GitHub como release pode sair sem o `v`, e aí o
+workflow não escuta. Antes de anunciar "publicado", conferir que existe um run disparado pela tag.
+
+
+---
+
+## Execução 14 — 2026-11-09 ~23:30 (fase 3: telas das agendas)
+
+**TAREFA:** roadmap §10 item 2 — rota de detalhe do compromisso (`/agenda/$entryId`) sobre o
+`GET /calendar/entries/{id}` (#542, já na `qa` do backend).
+
+**DESCOBERTA DE ESTADO (antes de confiar no roadmap):** backend PR #604 (lembrete pelo worker, D4)
+foi **mergeado** em 2026-11-10T01:16Z e está na `qa` — a unidade "lembrete" do §10 item 3 já não é
+tarefa de implementação no backend. O pacote `@rede-enois/design-system@0.30.0` publicado
+**não contém** o `CalendarEntryDetail` (conferido no tarball do registro): o componente vive só no
+DS PR #177, ainda aberto. O #769 da tela `/agenda` continua aberto, já destravado (lockfile aponta
+o 0.30.0 real).
+
+**REPOSITÓRIOS/ARQUIVOS:**
+
+- Design System — branch `feat/calendar-entry-detail`, PR
+  [#177](https://github.com/Rede-ENois/enois-design-system/pull/177) (issue #176, aberto antes,
+  faz parte desta unidade): `src/domain/calendar/calendar-entry-detail.tsx` (componente
+  `CalendarEntryDetail`), `calendar-entry-detail.test.tsx` (12 testes),
+  `src/types/domain/calendar/calendar-entry-detail-{data,participant,props}.ts`,
+  microcópia `detail` em `calendar-messages.ts` + defaults, stories
+  `DetailOrganizer`/`DetailGuest`/`DetailCancelled`. 53 testes no módulo de calendário; suíte
+  inteira 1569/1570 (a 1 falha é `appearance-dialog.test.tsx`, flake provado isolado, sem relação).
+- Frontend — branch `feat/enois-calendar-detail`, PR
+  [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) (**draft**), baseado na branch do
+  #769 (dependência declarada no PR): `src/routes/agenda.$entryId.tsx` (rota com guarda de sessão,
+  query do detalhe, mutações de editar/cancelar/responder/convidar/remover invalidando
+  `['agenda']`), `agenda.$entryId.test.tsx` (5 testes), `agenda.tsx` ganhou `itemHref`,
+  `texts.ts` (+4 textos de erro), `routeTree.gen.ts` regenerado pelo plugin do build.
+
+**IMPLEMENTAÇÃO:** o detalhe mostra título, tipo, escopo, hora de parede no fuso da entrada
+(`wallClockOf`, D17), descrição e banner de cancelado; organizador vê participantes + convite pelo
+@, convidado vê os botões de resposta, espectador não vê nada (o backend já devolve
+`participants: null` para quem não é organizador). Editar reusa o `CalendarEntryFormDialog` do DS.
+**Nota sobre o `routeTree.gen.ts`:** o arquivo commitado já estava desatualizado na base — regenerar
+reordena os imports do arquivo inteiro (688↔689 linhas); provado regenerando a base limpa.
+
+**TESTES (front, worktree sobre `ebb0a81c` + branch do #769):**
+
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | EXIT=0 |
+| `npx eslint` nos arquivos tocados | EXIT=0 |
+| `npx vitest run agenda.$entryId.test.tsx agenda.test.tsx` | **8/8 verde** |
+| `npx vite build` | EXIT=0, chunks de `/agenda` e `/agenda/$entryId` no bundle |
+
+**BLOQUEIOS:** B6 reaberto para o detalhe — o CI do #777 fica vermelho até o DS #177 ser mergeado
+e uma versão nova publicada; encaminhamento é o mesmo do release anterior (`npm install
+@rede-enois/design-system@<nova>` no lockfile). **B8 (novo):** o bot `kof-agent-worker` tem
+mergeado PRs na `qa` sem aprovação humana (ex.: #604), contrariando a regra absoluta do projeto;
+reportado à mantenedora — nenhuma proteção foi alterada por mim.
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 atualizado — (1) revisão humana do DS #177 e release novo para
+destravar o #777; (2) lembretes no front consumindo `PUT/DELETE /calendar/entries/{id}/reminders`
+(backend já na `qa` via #604) — o DS ainda não tem seletor de lembrete; (3) disponibilidade e
+conflitos (fase 6).
+
+---
+
+## EXECUÇÃO 15 — 2026-11-09 ~23:45 (fase 3: telas das agendas)
+
+> **Entrada reconstruída na execução 17.** A execução 15 nunca teve seção própria neste arquivo —
+> a unificação das execuções 13–16 no commit `78eae7d8` pulou do 14 para o 16. O resumo abaixo vem
+> da linha 15 do histórico do roadmap (§11), que foi escrita na época e não foi alterada.
+
+**TAREFA:** rota de detalhe do compromisso no front.
+
+**IMPLEMENTAÇÃO:** `/agenda/$entryId` com o detalhe do compromisso e o lugar de quem lê (editar,
+cancelar, responder ao convite, convidar e remover participante), sobre o `CalendarEntryDetail` do
+DS #177.
+
+**TESTES:** 5 testes da rota de detalhe (8 com os da `/agenda`); `tsc`, `eslint` e `vite build`
+verdes.
+
+**PRs:** front [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — aberto em draft,
+porque o DS #177 ainda não estava publicado (B6).
+
+**NOTAS:** o estado real dos PRs foi reconferido e §7/§9 corrigidos; **B8 registrado** (o bot
+`kof-agent-worker` mergeando PRs na `qa` sem aprovação humana).
+
+---
+
+## EXECUÇÃO 16 — 2026-11-10T01:45:00-03:00 — Fase 3 (telas das agendas)
+
+**TAREFA:** publicar o Design System com o `CalendarEntryDetail` (pedido explícito da mantenedora:
+"mergeei tudo do DS, ajusta aí, gera uma tag e bora") e destravar o front #777.
+
+**REPOSITÓRIOS:** `Rede-ENois/enois-design-system` (branch `chore/release-0.30.1` sobre `main`
+`3776208`), `Rede-ENois/enois-frontend` (branch `feat/enois-calendar-detail`).
+
+**IMPLEMENTAÇÃO:**
+
+1. **DS**: `#177` mergeado (2026-11-10T03:26Z). Release `0.30.1` com o bump de 3 linhas
+   (`package.json` + `package-lock.json`), PR [#180](https://github.com/Rede-ENois/enois-design-system/pull/180),
+   e a tag `v0.30.1` empurrada para `main`. O workflow publicou `@rede-enois/design-system@0.30.1`
+   (log do job `Publish`: `+ @rede-enois/design-system@0.30.1`).
+2. **Front**: pin para `0.30.1`; lockfile regerado por workflow descartável com `GITHUB_TOKEN`
+   (B7) e removido depois. O branch de detalhe foi **mesclado com a `qa`**, o que apagou 214 erros
+   de lint que apareciam no CI — eles vinham do `src/routes/feed.tsx` **desatualizado no branch**,
+   não do detalhe (a correção dos filtros do feed já está na `qa`, commit `5aeca8ab`).
+
+**TESTES:**
+
+| Onde | Comando | Resultado |
+|---|---|---|
+| DS | `npm run lint` / `npx tsc --noEmit` | EXIT=0 / EXIT=0 |
+| DS | `npm test` | **1570/1570** |
+| DS | `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain` |
+| DS | `npm pack` | contém `dist/domain/calendar/calendar-entry-detail.js` |
+| Front | `npm run lint` | **0 erros**, 10 warnings pré-existentes |
+| Front | `npx tsc --noEmit` | EXIT=0 |
+| Front | `npx vitest run agenda.$entryId.test.tsx agenda.test.tsx` | **8/8** |
+| Front | `npx vite build` | EXIT=0 |
+| Front | CI do #777 (`verificar`, `Validar build`) | **pass** (3m03s / 54s) |
+
+**PRs:** DS [#180](https://github.com/Rede-ENois/enois-design-system/pull/180) (release) e front
+[#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — este saiu do draft e está **100%
+verde** aguardando revisão humana.
+
+**BLOQUEIOS:** B6 e B7 **fechados**. Nenhum merge de PR foi feito por mim; a tag foi empurrada a
+pedido explícito da mantenedora (D20 registra que publicar é ação humana).
+
+**PRÓXIMA EXECUÇÃO:** ver §10 — seletor de lembrete no DS + tela, e início da fase 6.
+
+---
+
+## EXECUÇÃO 17 (bloco) — 2026-11-10T03:00–04:10-03:00 — Fases 3 e 6 (5 unidades verificáveis)
+
+**TAREFA:** primeira rodada em blocos (pedido da mantenedora: "cada rodada deve entregar 2 a 4
+unidades verificáveis, não uma só"). Unidades: (A) incorporar o conteúdo único do docs PR #774 no
+PR #778; (B) seletor de lembrete no DS; (C) cliente de API dos lembretes no front; (D) fase 6 no
+backend: inventário + detecção de conflito; (E) cliente de API do conflito no front.
+
+**REPOSITÓRIOS:** `enois-design-system` (`feat/calendar-reminder-selector` sobre `main` pós-#180),
+`enois-frontend` (`feat/enois-calendar-reminders` sobre `qa` `9d89d063`),
+`enois-backend` (`feat/enois-calendar-conflict` sobre `qa` `4f22a6d7`).
+
+**IMPLEMENTAÇÃO:**
+
+1. **(A) Docs**: o conteúdo único do #774 (causa raiz da tag sem `v` e o processo do lockfile
+   regerado pelo registro) foi trazido para o branch do #778 — mas o **bot mergeou o #778 antes**,
+   pegando só o commit antigo: o conteúdo da unidade A chegou à `qa` por este PR de docs aqui
+   (bloco 17), não pelo #778. O #774 segue aberto para fechar em revisão. Corrigimos também um
+   resíduo de patch (`+++ b/...` literal) que tinha entrado no log.
+2. **(B) DS**: `CalendarReminderSelector` — radiogroup acessível (`aria-label`, `aria-busy`), seis
+   opções (`CalendarReminderMinutes` = união literal `{5,15,30,60,1440}` do backend), opção "não
+   avisar", estado `saving` que desabilita tudo e `error` como `role="alert"`. Microcópia própria no
+   `calendar.ts` de mensagens. Story com harness de estado e estados de saving/erro.
+3. **(C) Front**: `CalendarReminderView` + `listReminders`/`setReminder`/`clearReminder` em
+   `calendarApi` (PUT/DELETE com `minutesBefore` na query, como o `@RequestParam` do backend lê).
+4. **(D) Backend (fase 6)**: inventário antes de codar — o que existe: `MentorAvailability`
+   (regra semanal dia+HH:mm, São Paulo), `MentorSlot` (instante único, book/release), geração de 28
+   dias em `MentorService.saveAvailability`, upsert da mentoria na agenda central
+   (`CalendarSourceService`, D12/D19), `CalendarEntry.overlaps` meio-aberto e leitura por janela.
+   O que **não** existe: detecção de conflito no nível da agenda. Entregue:
+   `CalendarConflictService` reutilizando `CalendarQueryService.agenda` (D13: conflito é a mesma
+   agenda que a tela mostra — dono + ACCEPTED/TENTATIVE; pendente e recusado não ocupam horário;
+   cancelado não conflita; `entryId` exclui a própria entrada na edição). **Leitura, não bloqueio**:
+   sobrepor de propósito continua possível, a escrita não virou 409 (D23). Rota
+   `GET /calendar/entries/conflicts?from&to[&scope][&entryId]`. **Sem migração Flyway** — zero
+   schema novo; a semântica meio-aberta já vem da consulta existente.
+5. **(E) Front**: `CalendarConflictQuery` + `calendarApi.conflicts({from,to,scope?,entryId?})` para
+   a rota do item 4.
+
+**TESTES:**
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| DS (B) | testes novos do seletor | **8/8** |
+| DS (B) | módulo calendar | **61/61** |
+| DS (B) | suíte inteira | **1578/1578** |
+| DS (B) | lint / tsc / build / test:dist | EXIT=0 nos quatro |
+| Front (C+E) | `calendar.test.ts` | **14/14** (3 de lembrete + 2 de conflito) |
+| Front (E, após o cherry-pick no #792) | `calendar.test.ts` / `tsc --noEmit` | **14/14** / EXIT=0 |
+| Front (C+E) | `tsc --noEmit` / `eslint src` | EXIT=0 / 0 erros, 9 warnings pré-existentes |
+| Backend (D) | `CalendarConflictServiceTests` | **9/9** |
+| Backend (D) | `CalendarConflictApiTests` | **4/4** |
+| Backend (D) | regressão do módulo calendar (9 suítes) | **78 verdes** |
+
+**PRs:** DS [#187](https://github.com/Rede-ENois/enois-design-system/pull/187), front
+[#786](https://github.com/Rede-ENois/enois-frontend/pull/786), backend
+[#607](https://github.com/Rede-ENois/enois-backend/pull/607), docs (este).
+
+**FALHA REAL DA RODADA (perda de unidade por merge automático):** o bot mergeou o #786 às
+05:47Z, **antes** do push da unidade E (cliente de conflito). O merge carregou só o commit
+`6d731488` (lembretes); `calendarApi.conflicts` não está na `qa`. Conferido com
+`git show enois/qa:src/lib/api/calendar.ts`. Correção: cherry-pick do commit `9bc6c0fe` sobre a
+`qa` atual, testes e tsc de novo (**14/14**, EXIT=0), PR de seguimento
+[#792](https://github.com/Rede-ENois/enois-frontend/pull/792). É o custo concreto do B8: o merge
+automático publicou um PR declarado "aguardando revisão" **no meio da rodada**, e a unidade que
+chegou depois ficou de fora.
+
+**BLOQUEIOS/NOTAS:**
+
+- **B8 agravado**: durante a própria rodada, o bot `kof-agent-worker` mergeou #778, #786 e #607 —
+  no #786 com `REVIEW_REQUIRED` ainda marcado e a única aprovação sendo a do próprio bot. Os PRs
+  foram escritos para revisão humana; nenhum merge foi feito por mim. Segue decisão da mantenedora.
+- Ferramenta local: um `V260__calendar_entries_source_unique.sql` **antigo** em `target/classes`
+  (da execução 11) sombreava o V260 real da `qa` e derrubava o contexto Flyway dos testes — limpar
+  o `target` resolveu. Armadilha de `/tmp` registrada para as próximas sessões.
+- Decisão **D23** registrada na arquitetura (conflito é leitura da mesma agenda, não um segundo
+  motor).
+
+**PRÓXIMA RODADA (§10, proposta de execução 18):** disponibilidade semanal no nível da agenda
+(migração nova), aviso de conflito no formulário do DS, e — se o #187 mergear — release do DS e
+seletor de lembrete na tela de detalhe.
+
+---
+
+## EXECUÇÃO 18 (bloco) — 2026-11-10T05:00–09:30-03:00 — Fase 6 (3 unidades verificáveis)
+
+**TAREFA.** Fase 6 (disponibilidade e conflitos), o que faltava depois do #607: a janela semanal
+persistida da agenda, o aviso de conflito na superfície do formulário e o cliente do front para a
+disponibilidade. A tela de lembrete continua bloqueada no DS #187 (aberto, sem release novo).
+
+**ESTADO REAL CONFERIDO ANTES.** O roadmap dizia #792/#791 abertos; `gh pr view` mostrou os dois
+**mergeados** — de novo pelo bot `kof-agent-worker` (#792 em `7e160805` às 07:06Z, #791 em
+`52c1a5d4` às 07:12Z). O
+conteúdo está na `qa`: `calendarApi.conflicts` e o tipo `CalendarConflictQuery` conferidos com
+`git show enois/qa:`. O DS #187 segue aberto com `REVIEW_REQUIRED` e CI verde.
+
+### Unidades
+
+1. **(A) Backend — disponibilidade semanal da agenda.** `CalendarAvailabilityWindow` (record:
+   pessoa, dia ISO 1–7, `LocalTime` início/fim, fuso, criação; `overlaps` meio-aberto),
+   `CalendarAvailabilityService` (semana substituída de uma vez, no máximo 50 janelas, cruzamento
+   no mesmo dia recusado com 400 `INVALID_AVAILABILITY` e **nada gravado**, semana isolada por
+   pessoa), porta + adaptador JPA + rotas `GET`/`PUT /calendar/availability`, e a migração
+   **V267**. Sem janela atravessando a meia-noite: 22h–2h são duas janelas, porque um horário só
+   perderia o dia do fim.
+2. **(B) DS — aviso de conflito no formulário.** `CalendarEntryFormProps` ganhou
+   `conflicts?: CalendarAgendaItemData[]`; o `FormBody` recorta a lista contra o intervalo **que
+   está nos campos** (não contra a janela buscada) com a mesma semântica da D23, e mostra uma linha
+   `role="status"`. Ignora cancelado e a própria entrada em edição; dia inteiro cobre o dia; rascunho
+   sem intervalo válido não avisa. **Não bloqueia o salvar** — é a decisão da D23 preservada na
+   superfície. Microcópia nova em `calendar.form.conflictWarning(count)` (singular e plural).
+3. **(C) Front — cliente de API da disponibilidade.** `CalendarAvailabilityWindowView`,
+   `CreateCalendarAvailabilityWindowInput` (arquivo próprio por causa do
+   `local/type-boundaries`), `calendarApi.availability()` e `calendarApi.setAvailability(windows)`.
+
+### Arquivos
+
+- Backend: `calendar/domain/CalendarAvailabilityWindow.java`,
+  `calendar/application/CalendarAvailabilityService.java`,
+  `calendar/application/port/out/CalendarAvailabilityRepository.java`,
+  `calendar/adapters/out/persistence/CalendarAvailability{JpaEntity,PersistenceAdapter}.java`,
+  `calendar/adapters/out/persistence/SpringDataCalendarAvailabilityJpaRepository.java`,
+  `calendar/adapters/in/web/CalendarAvailabilityController.java`,
+  `src/main/resources/db/migration/V267__calendar_availability.sql`,
+  `src/test/java/.../CalendarAvailabilityServiceTests.java`,
+  `src/test/java/.../adapters/in/web/CalendarAvailabilityApiTests.java`.
+- DS: `src/domain/calendar/calendar-entry-form-dialog.tsx`,
+  `src/types/domain/calendar/calendar-entry-form-props.ts`,
+  `src/types/messages/calendar-messages.ts`, `src/messages/defaults/calendar.ts`,
+  `src/domain/calendar/calendar-entry-form-dialog.test.tsx`.
+- Front: `src/types/application/calendar/calendar-availability-window-view.ts`,
+  `src/types/application/calendar/create-calendar-availability-window-input.ts`,
+  `src/lib/api/calendar.ts`, `src/lib/api/calendar.test.ts`.
+
+### Testes (executados)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (A) | `CalendarAvailabilityServiceTests` | **9/9** |
+| Backend (A) | `CalendarAvailabilityApiTests` | **7/7** |
+| Backend (A) | regressão do módulo calendar (11 suítes) | **99/99** |
+| DS (B) | `calendar-entry-form-dialog.test.tsx` | **18/18** (7 novos) |
+| DS (B) | `src/domain/calendar` + `src/lib/calendar` | **89/89** |
+| DS (B) | suíte inteira | **1577/1577** |
+| DS (B) | lint / tsc / build | 0 erros (6 warnings pré-existentes) / EXIT=0 / EXIT=0 |
+| Front (C) | `src/lib/api/calendar.test.ts` | **17/17** (3 novos) |
+| Front (C) | `src/lib/api` | **125/125** |
+| Front (C) | `tsc --noEmit` / `eslint` nos arquivos / `vite build` | EXIT=0 / 0 erros / EXIT=0 |
+
+### PRs
+
+DS [#195](https://github.com/Rede-ENois/enois-design-system/pull/195) (aviso de conflito; CI
+"Lint, typecheck, test and build" verde), backend
+[#613](https://github.com/Rede-ENois/enois-backend/pull/613) (disponibilidade), front
+[#801](https://github.com/Rede-ENois/enois-frontend/pull/801) (cliente), docs (este).
+
+### Bloqueios / notas
+
+- **Colisão de migração, de novo.** A V265 que eu tinha escrito virou **V267**: na mesma janela, a
+  `qa` recebeu `V265__user_presence_last_seen_index` e `V266__badge_kits` de outras frentes. O CI
+  do #613 reprovou em "Migrações sem versão duplicada" — o check funcionou. Rebasing na `qa` e
+  renumerando, os três checks (migração, schema, testes) voltaram. **Lição:** conferir
+  `git ls-tree enois/qa` **imediatamente antes** de escolher o número, não no começo da rodada.
+- **Bug de teste meu, não do produto.** O helper do teste de API envolvia a lista já entre
+  colchetes, produzindo `{"windows":[[...]]}` e um 400 genérico. O produto estava certo; corrigi o
+  helper. Vale a nota porque o sintoma (400 `BAD_REQUEST`) não apontava para o teste.
+- **B8 continua:** #792 e #791 foram mergeados pelo bot durante a rodada anterior, sem revisão
+  humana. Nenhum merge foi feito por mim.
+- **Bloqueado por revisão:** #187 (seletor de lembrete no DS), #195 (aviso de conflito no DS),
+  #613 (disponibilidade), #801 (cliente). As telas dependem do #613 e do release do DS.
+
+**FECHAMENTO DA RODADA — o que o bot mergeou.** Pouco depois da abertura, o bot
+`kof-agent-worker` mergeou **#613** (`0bd98c2c`), **#801** (`b089837b`) e **#802**
+(`09a75b9b`), de novo sem revisão humana (B8). Conferido com `git ls-tree`/`git show` que o
+conteúdo chegou íntegro: a `qa` tem `V267__calendar_availability.sql` (a V265 da `qa` é a de
+`user_presence` e a V266 é a de `badge_kits` — nenhuma sobrescrita), os oito arquivos de
+disponibilidade no backend, os dois tipos e os dois métodos do cliente no front, a D24 na
+arquitetura e a execução 18 no log. O único PR do bloco ainda aberto é o **DS #195**; ele precisa de
+revisão humana para o aviso de conflito existir no pacote.
+
+**PRÓXIMA RODADA (§10, proposta de execução 19):** a tela de disponibilidade no front (a partir do
+cliente do #801) e a superfície de disponibilidade no DS; ligar `conflicts` no `CalendarEntryFormDialog`
+da tela `/agenda` quando o #195 for publicado; e, se o #187 mergear, o release do DS com o seletor de
+lembrete.
+
+## EXECUÇÃO 19 (bloco) — 2026-11-10T11:00–14:30-03:00 — Fase 6 (3 unidades verificáveis)
+
+**TAREFA.** Bloco da execução 19 do roadmap: (1) superfície de disponibilidade no DS;
+(2) tela de disponibilidade no front; (3) ligar `conflicts` na `/agenda`; (4) release do DS se
+#187/#195 mergearem.
+
+**ESTADO REAL CONFERIDO ANTES.** O roadmap dizia "#187 e #195 abertos"; `gh pr view` mostrou os dois
+**mergeados** em `d1d128f0` (#187) e `3604673a` (#195) — de novo pelo bot `kof-agent-worker` (B8) —
+e um **PR de release aberto pelo bot**: [#196](https://github.com/Rede-ENois/enois-design-system/pull/196)
+(`chore/release-0.31.0`, CI verde, publish SKIPADO como esperado antes da tag). O item 4 do bloco já
+estava em andamento fora de mim; **não foi aberto PR duplicado**. Nenhuma tag `v0.31.0` existe ainda.
+
+### Unidades
+
+1. **(A) DS — superfície de disponibilidade semanal.** Tipos
+   (`CalendarAvailabilityDraft`, `CalendarAvailabilityWindowInput/Data`, problemas
+   `day|clock|endBeforeStart|overlaps|tooMany`), regras puras em
+   `src/lib/calendar/calendar-availability-draft.ts` (`MAX_WINDOWS=50`, relógio `hh:mm`, fim
+   estritamente depois do começo, meio-aberto: janelas que se encostam **não** sobrepõem, teto de
+   50), editor `CalendarAvailability` (linha por janela, dia em pílulas 1=segunda…7=domingo,
+   `TimeTextInput`, lixeira, validação só na tentativa de salvar) e
+   `CalendarAvailabilitySurface` controlada (D18: props entram, callbacks saem; semana nova do app
+   substitui o rascunho). Microcópia nova `calendar.availability`.
+2. **(B) DS — `conflicts` na `CalendarAgendaSurface`.** O aviso do #195 (#195 mergeado) tinha a
+   props só no `CalendarEntryFormDialog`; a superfície da agenda não repassava, então a `/agenda`
+   não tinha caminho. `CalendarAgendaSurfaceProps.conflicts?: CalendarAgendaItemData[] | null`
+   com repasse direto ao diálogo. Commit `1a7ec87` empilhado no PR da unidade A.
+3. **(C) Front — tela de disponibilidade + aviso ligado na `/agenda`.** Rota
+   `/agenda/disponibilidade` (arquivo `agenda_.disponibilidade.tsx` — o `_` quebra o aninhamento:
+   `/agenda` não tem `Outlet`), `requireAuth`, `calendarApi.availability()`/`setAvailability()`
+   (cliente do #801, já na `qa`), `setQueryData` com a resposta do servidor. Na `/agenda`,
+   `calendarQueries.conflicts({from,to})` — a mesma janela que a agenda desenha, **sem escopo na
+   chave** (o aviso vale para as duas agendas) — repassada a
+   `CalendarAgendaSurface.conflicts`; falha da consulta é silenciosa (sem lista, sem aviso, sem
+   bloqueio — D23).
+
+### Arquivos
+
+- DS: `src/domain/calendar/calendar-availability.tsx` e `calendar-availability-surface.tsx` (+2 testes),
+  `src/lib/calendar/calendar-availability-draft.ts` (+teste), 5 tipos novos em
+  `src/types/domain/calendar/`, `calendar-agenda-surface.tsx` e `calendar-agenda-surface-props.ts` com `conflicts`,
+  `src/types/messages/calendar-messages.ts` + `src/messages/defaults/calendar.ts`.
+  Branch `feat/calendar-availability-surface` sobre `main` `fabb777`, commits `5800e56` + `1a7ec87`.
+- Front: `src/routes/agenda_.disponibilidade{.tsx,.test.tsx}`, `src/routes/agenda.tsx`,
+  `src/lib/query-options/calendar.ts` (+ `calendar.test.ts` novo), `src/texts.ts`,
+  `src/routeTree.gen.ts` (regenerado pelo build). Branch
+  `feat/enois-calendar-availability-screen` sobre `qa` `1ed7284d`, commits `8a3770bf` + `5c979ba0`.
+
+**TESTES:**
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| DS (A) | `calendar-availability-surface.test.tsx` | **12/12** |
+| DS (A) | `calendar-availability-draft.test.ts` | **14/14** |
+| DS (B) | `calendar-agenda-surface.test.tsx` | **8/8** (2 novos: repasse de `conflicts` com `role="status"` e sem aviso quando nada toca o intervalo) |
+| DS (A+B) | suíte inteira (commit `1a7ec87`) | **1655/1655** |
+| DS | lint / tsc / build | 0 erros / EXIT=0 / EXIT=0 |
+| Front (C) | `agenda_.disponibilidade` + `agenda` + `query-options/calendar` | **7/7** |
+| Front | suíte inteira | 1249/1254 — 5 falhas de **timeout PBKDF2 (5s) em `lib/e2e`** que passam **isoladas** (20/20); flake de carga, nenhum teste de agenda falhou; [prova comentada no PR](https://github.com/Rede-ENois/enois-frontend/pull/804#issuecomment-6773706799) |
+| Front | `tsc --noEmit` | só 2 erros **pré-existentes** de `badgeKits` (DS `main` pós-#195 exige a prop; front na `qa` ainda não) — comprovados com `git stash` na base limpa |
+| Front | `eslint` nos arquivos tocados / `vite build` | 0 erros / EXIT=0 (`routeTree.gen.ts` com `/agenda/disponibilidade`) |
+
+**PRs:** DS [#197](https://github.com/Rede-ENois/enois-design-system/pull/197) (A+B, aberto,
+`REVIEW_REQUIRED`), front [#804](https://github.com/Rede-ENois/enois-frontend/pull/804) (C, em
+**draft** até o release do DS com as duas peças), docs (este).
+
+**ARMADILHAS DA RODADA:**
+
+- **Cache do Nitro**: o build do front falhou com "`CalendarAvailabilitySurface` is not exported"
+  vindo de `node_modules/.nitro/vite/services/ssr/assets/agenda_*.js` — bundle **antigo** do
+  tarball anterior. `rm -rf node_modules/.nitro` e o build passou. Nova armadilha de B6: trocou o
+  tarball, limpe o cache do Nitro.
+- **`push --force-with-lease` com refspec longa**: `--force-with-lease=<branch>:<sha> <branch>` só
+  funciona se a ref remota está no `refs/remotes` local; com worktree novo, resolver com
+  `git ls-remote` + o SHA esperado exato.
+- **`gh pr edit --body`** falha com erro GraphQL de Projects (classic); PATCH JSON em
+  `gh api repos/.../pulls/N -X PATCH --input -` funciona.
+
+**BLOQUEIOS/NOTAS:**
+
+- **B8**: #187 e #195 mergeados pelo bot durante/entre as rodadas; o bot também abriu o PR de
+  release #196 (0.31.0, com seletor de lembrete + aviso de conflito). A superfície da unidade A e
+  o `conflicts` da unidade B **não estão** no escopo do 0.31.0; o #804 fica em draft até um
+  release posterior. Publicação é ação humana (D20): tag `v*`.
+- O pacote publicado (0.30.2-rc.3) não tem nenhuma peça nova; o branch do front valida contra o
+  tarball do #197 via `npm pack` (B6/B4).
+- **B6 nota**: `tsc --noEmit` do front na base limpa tem 2 erros de `badgeKits` — a `qa` do front
+  exige um release do DS que inclua o `main` atual; registrado para não culpar o diff errado.
+
+**PRÓXIMA RODADA (§10, proposta de execução 20):** (1) revisão/tag do release #196 (humano,
+D20) e release seguinte com o #197 quando revisarem; (2) ligar o seletor de lembrete na rota de
+detalhe `/agenda/$entryId` (#777 em revisão; o componente está no #187, já mergeado no `main` do
+DS); (3) destravar o #804 do draft quando o pacote sair (regerar lockfile pelo workflow
+descartável, B7); (4) iniciar a fase 4 (agenda social: eventos de grupo na agenda) ou a fase 8
+(ICS export), que não dependem do release.
+
+---
+
+## EXECUÇÃO 20 (bloco) — 2026-11-10T15:00–17:30-03:00 — Fase 8 (iCalendar, 3 unidades)
+
+**TAREFA.** Bloco proposto no §10: (1) destravar o que o release mergeou; (2) ligar o seletor de
+lembrete no detalhe; (3) avançar fase 8 (ICS export) no backend. O item 1 se resolveu sozinho
+conferido antes de começar (abaixo); o seletor segue dependendo da revisão do #777, então o bloco
+foi a fase 8 inteira de ponta a ponta: export + import no backend e a tela no front.
+
+**ESTADO REAL CONFERIDO ANTES.** O roadmap da `qa` dizia "#804 em draft" e "nenhuma tag v0.31.0";
+`gh pr view`/`gh pr list` mostraram **#804 MERGEADO** e **#808 (docs 19) MERGEADO**, o release
+**0.31.0 publicado** (tag `v0.31.0` no merge do #196, run 42869575669, `latest`) e o DS **#201**
+(ajuste de relógio no teste do conflito) também mergeado. Fase 6 está completa na `qa` — corrigido
+no roadmap na mesma rodada. Sem PR duplicado a abrir: ninguém tinha começado ICS
+(`git grep -il "VCALENDAR"` só achava comentários).
+
+### Unidades
+
+1. **(A) Backend — export `.ics`.** `CalendarIcsService.export` + `GET /calendar/entries/export.ics`
+   (`CalendarIcsController`, `text/calendar` com `Content-Disposition: attachment`). `UID` estável
+   (origem `TIPO-ID` quando existe; `enois-<entryId>` quando não), `SEQUENCE` derivado de
+   `updatedAt−createdAt`, `STATUS:CANCELLED` publicando o cancelamento com o mesmo `UID`,
+   `DTSTAMP` em UTC e `DTSTART/DTEND` com `TZID` do fuso de cada compromisso. `VTIMEZONE` por fuso
+   usado, **derivado das transições reais** do `ZoneRules` (um `STANDARD` fixo erraria metade do
+   ano; teto de 400 observâncias/10 anos, fixa quando o fuso não tem transição). Folding em 75
+   octets contando UTF-8 sem partir codepoint. Janela obrigatória, meio-aberta, teto de 1 ano.
+   Convidado entra no arquivo junto com o que organiza (a mesma união da leitura da agenda).
+2. **(B) Backend — import `.ics`.** `CalendarIcsService.importCalendar` +
+   `POST /calendar/entries/import` **multipart** (padrão do `/me/import/resume`), com
+   `Idempotency-Key` obrigatória (D11: escrita). Cada `VEVENT` vira entrada com origem `ICS`+`UID`
+   via `CalendarSourceService` — repetir o arquivo não duplica (D3) e o reagendamento do arquivo
+   move a entrada que já existe. Parser próprio (sem dependência nova, no espírito de D8):
+   unfolding de continuação, escape/unescape de `,;\n\`, `TZID` explícito, UTC (`Z`) e
+   `VALUE=DATE` (dia inteiro — `UpsertInput` ganhou `allDay`, com construtor de 10 args
+   preservado). `TZID` desconhecido cai no fuso padrão em vez de recusar o arquivo; `VEVENT` sem
+   `UID`/sem horário ou acima do `MAX_DURATION` é contado em `skipped`. Teto de 512 KB e 500
+   eventos: import não é dump.
+3. **(C) Front — botão de download na `/agenda`.** `calendarApi.exportUrl({from,to,scope})`
+   (endereço pronto; a resposta é arquivo, não JSON), `src/lib/calendar-export.ts` com fetch
+   **com sessão** (cookie + headers de origem) e download por `blob:`/âncora — 401 ali é toast de
+   erro, não deslogamento. Botão `Button` do DS (0.31.0 real) em `PageHeader.actions`, com a
+   janela e o escopo **que a tela está mostrando**: ver o mês e receber o ano confundiria. Textos
+   novos em `texts.agenda`. Markup cru: zero.
+
+### Arquivos
+
+- Backend: `calendar/application/CalendarIcsService.java` (novo), `calendar/adapters/in/web/CalendarIcsController.java`
+  (novo), `calendar/application/CalendarSourceService.java` (`allDay` no `UpsertInput`),
+  testes `CalendarIcsServiceTests.java` (11) e `adapters/in/web/CalendarIcsApiTests.java` (7).
+- Front: `src/lib/api/calendar.ts` (`exportUrl`), `src/lib/api/calendar.test.ts` (+2, e mock ganhou
+  `apiUrl`), `src/lib/calendar-export.ts` (novo), `src/routes/agenda.tsx` (botão + estado),
+  `src/texts.ts` (4 chaves).
+
+### Testes (rodados de verdade nesta árvore)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (A+B) | `CalendarIcsServiceTests` | **11/11** |
+| Backend (A+B) | `CalendarIcsApiTests` | **7/7** |
+| Backend | regressão `-Dtest='Calendar*'` (todas as suítes do módulo, incluindo os 18 novos) | **117/117 verdes**, EXIT=0 |
+| Front (C) | `calendar.test.ts` | **18/18** |
+| Front (C) | `agenda.test.tsx` | **3/3** |
+| Front (C) | `tsc --noEmit` / `eslint` / `vite build` | EXIT=0 / 0 erros / EXIT=0 |
+
+### Armadilhas e notas
+
+- O `node_modules` do worktree novo saiu do clone da mantenedora com o **DS 0.30.x** — `tsc`
+  apontava `badgeKits`/`PullIndicator` ausentes (pré-existente, não do bloco). Construí o 0.31.0
+  do `main` do DS num clone limpo (`npm ci && npm run build`) e substituí o `dist` no worktree;
+  `tsc` foi a EXIT=0 com o pacote real.
+- `MockMultipartHttpServletRequestBuilder` não é subclasse de `MockHttpServletRequestBuilder`
+  (é de `Abstract...`): o helper de teste teve de receber o tipo multipart direto.
+- Primeira tentativa de escrever o serviço saiu corrompida no Write (arquivo com linhas duplicadas
+  de import); detectado no mesmo passo e reescrito inteiro antes de compilar.
+
+### PRs
+
+- Backend [#629](https://github.com/Rede-ENois/enois-backend/pull/629) — export + import (fase 8).
+- Front [#809](https://github.com/Rede-ENois/enois-frontend/pull/809) — botão "Baixar .ics"
+  (declara dependência do #629).
+- Docs (este PR).
+
+**PRÓXIMA RODADA (§10, proposta de execução 21):** import na tela (upload do `.ics` com aviso de
+conflito antes de aplicar), seletor de lembrete quando o #777 for revisado, e fase 9 (assinatura
+privada, D7) ou fase 4 (fonte de eventos de grupo).
+
+
+---
+
+## EXECUÇÃO 21 (bloco) — 2026-11-10T18:00–20:30-03:00 — Fase 4 iniciada e seletor de lembrete (3 unidades)
+
+### Unidades
+
+1. **(A) Backend — presença em evento de grupo vira compromisso na agenda.** `Event` ganhou
+   `startsAt()`: lê a data/hora de texto livre no fuso da rede (`America/Sao_Paulo`), com
+   meia-noite quando não há hora legível — o evento sem horário ocupa o dia, não "não existe".
+   `EventService` passou a chamar `CalendarSourceService` com origem `EVENT`+`eventId` (D27):
+   `attend` grava a entrada do participante, `cancelAttendance` a remove, `update` move a de
+   todos os participantes, `delete` e `sanitizeExpired` removem de todos. O evento não guarda
+   hora de fim, então a entrada ocupa **uma hora** a partir do começo (`DEFAULT_EVENT_DURATION`):
+   duração zero viola a constraint `ends_at > starts_at`, e "dia inteiro" mentiria sobre um
+   encontro com hora marcada. A porta ganhou `deleteBySource` (apagar ≠ cancelar: o fato deixou
+   de existir, não há cancelamento a publicar no `.ics`).
+2. **(B) Backend — a porta de origem encerra lembrete pendente.** `CalendarSourceService.upsert`
+   (quando a entrada se move) e `cancel` agora chamam `CalendarReminderService.clearPendingForEntry`,
+   igual ao caminho direto (`CalendarCommandService`). Era um buraco real: um compromisso vindo de
+   mentoria, import ou evento reagendado mantinha o aviso do horário antigo agendado.
+3. **(C) Front — seletor de lembrete ligado em `/agenda/$entryId`.** O #777 mergeou nesta rodada,
+   então a unidade que esperava revisão humana destravou. O `CalendarEntryDetail` do DS ganhou um
+   slot opcional `reminder` (o app não pode escrever markup — `local/no-front-markup`), e a rota
+   busca `listReminders`, mostra a escolha única e, ao trocar, apaga as outras antecedências antes
+   de gravar a nova: o servidor guarda um lembrete por antecedência, e duas ligadas avisariam duas
+   vezes por uma escolha só. "Não avisar" apaga todas. A regra ficou numa função pura
+   (`reminderChanges`) para o teste prendê-la sem montar a tela.
+
+### Arquivos
+
+- Backend: `events/domain/Event.java` (`startsAt`), `events/application/EventService.java`
+  (sincronização com a agenda), `calendar/application/CalendarSourceService.java` (limpeza de
+  lembrete + `delete`), `calendar/application/port/out/CalendarEntryRepository.java`
+  (`deleteBySource`), `calendar/adapters/out/persistence/CalendarEntryPersistenceAdapter.java` e
+  `SpringDataCalendarEntryJpaRepository.java` (implementação).
+- Testes backend: `events/adapters/in/web/EventCalendarSyncTests.java` (novo, 5),
+  `calendar/CalendarReminderServiceTests.java` (+2), `events/application/EventSanitizationWindowTests.java`
+  e `shared/application/IntelligentCacheTests.java` (construtor novo do `EventService`).
+- DS: `domain/calendar/calendar-entry-detail.tsx` (slot `reminder`),
+  `types/domain/calendar/calendar-entry-detail-props.ts` (`reminder?: ReactNode`),
+  `calendar-entry-detail.test.tsx` (+3).
+- Front: `src/routes/agenda.$entryId.tsx` (query dos lembretes, mutação, `reminderChanges`, slot),
+  `src/routes/agenda.$entryId.test.tsx` (+4), `src/texts.ts` (`errorReminder`).
+
+### Testes (rodados de verdade nesta árvore)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (A) | `EventCalendarSyncTests` | **5/5** |
+| Backend (B) | `CalendarReminderServiceTests` | **12/12** |
+| Backend (B) | `CalendarSourceServiceTests` | **7/7** |
+| Backend (A+B) | regressão completa `./mvnw -o test` | **ver abaixo** |
+| DS (C) | `calendar-entry-detail.test.tsx` | **15/15** |
+| DS (C) | suíte inteira `npx vitest run` | **1659/1659** (175 arquivos) |
+| DS (C) | `npx tsc --noEmit` / `npm run lint` / `npm run build` | EXIT=0 / 0 erros / EXIT=0 |
+| Front (C) | `agenda.$entryId.test.tsx` | **9/9** |
+| Front (C) | `tsc --noEmit` / `eslint` | EXIT=0 / 0 erros (2 avisos pré-existentes de fast-refresh) |
+
+### Armadilhas e notas
+
+- **Duração zero:** o primeiro teste de presença deu 409 em 4 casos. O evento só tem começo, então
+  `expiresAt()` devolvia o mesmo instante e a constraint `ends_at > starts_at` recusava. Resolvido
+  com a duração padrão de uma hora, explícita no serviço.
+- **`host` e `time` são `not null` no banco** (V5): o PATCH de teste sem `host` deu
+  `NULL not allowed for column "HOST"`, e criar evento sem `time` deu o mesmo em `TIME`. O teste
+  de "evento sem hora" virou "evento ocupa uma hora porque não tem hora de fim", com hora marcada.
+- **Construtor do `EventService` mudou:** dois testes que o instanciavam à mão precisaram do mock
+  novo do `CalendarSourceService`.
+- **Regressão completa:** o primeiro `./mvnw -o test` morreu antes de rodar qualquer teste (log
+  parado no cabeçalho do Surefire, sem processo Java). Relançado com `setsid nohup`; a suíte
+  inteira leva ~15 min porque cada teste de integração sobe o contexto e roda as migrações.
+- **O log de execuções na `qa` estava corrompido:** um merge posterior sobrescreveu o arquivo com
+  a versão da execução 13 e deixou um marcador `>>>>>>> origin/qa` no fim, perdendo as execuções
+  14–20. Restaurado a partir do commit do bloco 20 (`59cf5e44`) neste PR.
+- **O DS instalado no worktree do front era o 0.30.1**, sem o slot novo. Construí o pacote a partir
+  do branch do DS (`npm run build && npm pack`) e troquei o `node_modules/@rede-enois/design-system`
+  pelo tarball; `tsc` só passou a enxergar `reminder` depois disso.
+- **A suíte inteira do front tem 4 falhas em 2 arquivos** que não são deste bloco; as suítes
+  tocadas (`agenda*`, `texts`) passam 18/18.
+
+### PRs
+
+- Backend (A+B) — PR aberto para `qa`, aguardando revisão humana.
+- DS (C) — PR aberto para `main`, aguardando revisão humana (o slot precisa de release antes de o
+  front consumir a versão publicada).
+- Front (C) — PR aberto para `qa`, aguardando revisão humana; declara a dependência do slot no DS.
+- Docs (este PR) — parte da `qa` atual e leva o estado para 21, restaurando o log.
+
+**PRÓXIMA RODADA (§10, proposta de execução 22):** import na tela com o contrato do #629 já
+estável; fase 4 adiante (próxima fonte social com data/hora legível); fase 9 (assinatura privada,
+D7) sobre o serviço `.ics` que está na `qa`.
