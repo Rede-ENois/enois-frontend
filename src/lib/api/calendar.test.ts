@@ -200,4 +200,32 @@ describe("calendarApi", () => {
       "/calendar/entries/conflicts?from=2026-11-10T15%3A00%3A00Z&to=2026-11-10T16%3A00%3A00Z&entryId=cal_1",
     );
   });
+
+  it("lê a semana de disponibilidade da própria pessoa", async () => {
+    vi.mocked(api.get).mockResolvedValue([]);
+
+    await calendarApi.availability();
+
+    expect(api.get).toHaveBeenCalledWith("/calendar/availability");
+  });
+
+  it("manda a semana inteira na escrita, sem id: o servidor substitui o conjunto", async () => {
+    vi.mocked(api.put).mockResolvedValue([]);
+    const week = [
+      { dayOfWeek: 1, startsAt: "09:00", endsAt: "12:00", timezone: "America/Sao_Paulo" },
+      { dayOfWeek: 3, startsAt: "14:00", endsAt: "18:00", timezone: "America/Sao_Paulo" },
+    ];
+
+    await calendarApi.setAvailability(week);
+
+    expect(api.put).toHaveBeenCalledWith("/calendar/availability", { windows: week });
+  });
+
+  it("manda a semana vazia quando a pessoa limpa a disponibilidade", async () => {
+    vi.mocked(api.put).mockResolvedValue([]);
+
+    await calendarApi.setAvailability([]);
+
+    expect(api.put).toHaveBeenCalledWith("/calendar/availability", { windows: [] });
+  });
 });
