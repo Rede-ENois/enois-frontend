@@ -4,7 +4,7 @@ import { api } from "../api-client";
 import { calendarApi } from "./calendar";
 
 vi.mock("../api-client", () => ({
-  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
   // O cliente real monta a query; aqui só interessa o caminho que sai.
   buildQuery: (params: Record<string, unknown>) => {
     const search = new URLSearchParams();
@@ -134,5 +134,70 @@ describe("calendarApi", () => {
 
     expect(await calendarApi.pendingInvitations()).toEqual([entry]);
     expect(api.get).toHaveBeenCalledWith("/calendar/invitations");
+  });
+
+  it("lê os lembretes pendentes na rota do compromisso", async () => {
+    const reminders = [
+      {
+        id: "rem_1",
+        entryId: "cal_1",
+        minutesBefore: 15,
+        dueAt: "2026-11-10T14:45:00Z",
+        sent: false,
+      },
+    ];
+    vi.mocked(api.get).mockResolvedValue(reminders);
+
+    expect(await calendarApi.listReminders("cal_1")).toEqual(reminders);
+    expect(api.get).toHaveBeenCalledWith("/calendar/entries/cal_1/reminders");
+  });
+
+  it("põe o lembrete com a antecedência na query, como o PUT do backend espera", async () => {
+    const reminder = {
+      id: "rem_2",
+      entryId: "cal_1",
+      minutesBefore: 1440,
+      dueAt: "2026-11-09T15:00:00Z",
+      sent: false,
+    };
+    vi.mocked(api.put).mockResolvedValue(reminder);
+
+    expect(await calendarApi.setReminder("cal_1", 1440)).toEqual(reminder);
+    expect(api.put).toHaveBeenCalledWith("/calendar/entries/cal_1/reminders?minutesBefore=1440");
+  });
+
+  it("tira o lembrete com a mesma query do PUT; repetir não é erro no servidor", async () => {
+    vi.mocked(api.delete).mockResolvedValue(undefined);
+
+    await calendarApi.clearReminder("cal_1", 30);
+    expect(api.delete).toHaveBeenCalledWith("/calendar/entries/cal_1/reminders?minutesBefore=30");
+  });
+
+  it("consulta o conflito com a janela e o scope, sem entryId na criação", async () => {
+    vi.mocked(api.get).mockResolvedValue([]);
+
+    await calendarApi.conflicts({
+      from: "2026-11-10T15:00:00Z",
+      to: "2026-11-10T16:00:00Z",
+      scope: "PROFESSIONAL",
+    });
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/calendar/entries/conflicts?from=2026-11-10T15%3A00%3A00Z&to=2026-11-10T16%3A00%3A00Z&scope=PROFESSIONAL",
+    );
+  });
+
+  it("manda o entryId na edição para o compromisso não conflitar com ele mesmo", async () => {
+    vi.mocked(api.get).mockResolvedValue([]);
+
+    await calendarApi.conflicts({
+      from: "2026-11-10T15:00:00Z",
+      to: "2026-11-10T16:00:00Z",
+      entryId: "cal_1",
+    });
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/calendar/entries/conflicts?from=2026-11-10T15%3A00%3A00Z&to=2026-11-10T16%3A00%3A00Z&entryId=cal_1",
+    );
   });
 });

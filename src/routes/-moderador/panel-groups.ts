@@ -189,3 +189,18 @@ export function nextTabIndexByKey(key: string, currentIndex: number, total: numb
   }
   return null;
 }
+
+/**
+ * As abas do grupo que a aba ativa pertence — e as ÚNICAS que a tela deve desenhar.
+ *
+ * <p>A navegação antiga empilhava os quatro grupos, cada um com a sua lista de abas: no celular
+ * eram vinte e poucas abas em quatro faixas `flex` que não quebram, então as abas das pontas
+ * ficavam cortadas e a navegação ocupava a tela inteira antes do conteúdo. Mostrar só o grupo da
+ * aba ativa mantém a navegação em uma faixa e deixa o conteúdo visível.</p>
+ */
+export function tabsOfActiveGroup(activeTab: ModeratorTabId, isAdmin: boolean): PanelTab[] {
+  const entry = visiblePanelGroups(isAdmin).find(
+    ({ group }) => group.id === TAB_GROUP_OF[activeTab],
+  );
+  return entry ? entry.tabs : [];
+}

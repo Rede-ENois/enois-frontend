@@ -68,8 +68,10 @@ export const texts = {
   /** Contas da comunidade no painel de monitorabilidade. */
   userMetrics: {
     title: "Contas da comunidade",
-    hint: "O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual.",
+    hint: 'O crescimento é a variação sobre a base do dia anterior. A projeção estende o ritmo médio dos últimos 7 dias: o mês inteiro dilui uma semana de lançamento e esconde a tendência atual. "Ativos hoje" conta quem usou a plataforma nas últimas 24 horas.',
     total: "Total de contas",
+    /** Quem abriu o app nas últimas 24h — medido pelo heartbeat de presença. */
+    active24h: "Ativos hoje (24h)",
     newToday: "Entraram hoje",
     new7: "Últimos 7 dias",
     new30: "Últimos 30 dias",
@@ -115,6 +117,7 @@ export const texts = {
       services: "Contratar serviços",
       professionalProfile: "Perfil profissional",
       explore: "Explorar",
+      agenda: "Agenda",
     },
     context: { social: "Social", professional: "Profissional" },
   },
@@ -166,7 +169,24 @@ export const texts = {
       services: { label: "Serviços", description: "Contrate quem é da comunidade" },
       companies: { label: "Empresas", description: "Quem contrata e o que faz" },
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+      agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
     },
+  },
+
+  /**
+   * A tela da agenda. O calendário desenha; aqui ficam só as frases do app: título da página, o
+   * que cada escopo significa e o erro que a API devolve sem tradução.
+   */
+  agenda: {
+    seoTitle: "Agenda · Énóis",
+    title: "Agenda",
+    subtitle: "Seus compromissos sociais e profissionais, juntos ou separados.",
+    scopeAll: "Tudo",
+    scopeSocial: "Social",
+    scopeProfessional: "Profissional",
+    scopeLabel: "Agenda mostrada",
+    errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
+    errorRespond: "Não foi possível responder ao convite. Tente de novo.",
   },
 
   groups: {
@@ -733,6 +753,8 @@ export const texts = {
     publicProfile: {
       notFoundTitle: "Perfil profissional não encontrado",
       notFoundBody: "Este perfil pode não existir ou estar desativado.",
+      loadErrorTitle: "Não foi possível carregar este perfil",
+      loadErrorBody: "Pode ser a conexão. Tente abrir de novo daqui a pouco.",
       postsTitle: "Publicações",
       empty: "Nenhuma publicação por aqui ainda.",
       editMine: "Editar o meu perfil profissional",
@@ -1220,6 +1242,7 @@ export const texts = {
       mediaCount: (count: number) => `${count} ${count === 1 ? "mídia" : "mídias"}`,
       mediaSpoiler: "Marcar mídias como spoiler",
       mediaSpoilerActive: "Mídias marcadas como spoiler",
+      captionRequired: "Escreva uma legenda para publicar",
       uploadProgress: (progress: number) => `Enviando… ${progress}%`,
       imageChecking: "Verificando imagem…",
       imageCheckError: "Não foi possível verificar a imagem. Remova e tente de novo.",
@@ -1685,6 +1708,9 @@ export const texts = {
     dailyEnter: "Entrar para jogar",
     mostPlayed: "Mais jogados",
     alphabetical: "A-Z",
+    /** Nome acessível das duas faixas de filtro do catálogo (o leitor de tela anuncia o grupo). */
+    stageFilterLabel: "Filtrar por estágio",
+    genreFilterLabel: "Filtrar por gênero",
     loadMore: "Carregar mais",
     empty: "Nenhum jogo encontrado com esses filtros.",
     loading: "Carregando…",
@@ -2836,6 +2862,7 @@ export const texts = {
    */
   moderator: {
     tabSelector: "Seções do painel",
+    groupSelector: "Grupos do painel",
     groups: {
       queue: "Fila do dia",
       content: "Conteúdo",

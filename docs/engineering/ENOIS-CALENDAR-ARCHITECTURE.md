@@ -488,3 +488,114 @@ uma tag `v*`.
 aprovado, e o token de publicação não é do agente. Rejeitado também apontar o front para um link
 `file:`/`link:` local do DS: resolveria a máquina, quebraria o CI e o Docker, e esconderia o
 bloqueio real.
+
+---
+
+## D21 — O lembrete é do compromisso e da pessoa, e quem decide é o envio (execução 13)
+
+**Contexto.** A D4 escolheu o mecanismo (tabela + worker com `attempts`). Faltava decidir o que é um
+lembrete, quem recebe e quando.
+
+**Decisão.**
+
+1. **A chave é (entrada, pessoa, antecedência).** O organizador e cada convidado têm o próprio
+   lembrete; duas pessoas não compartilham aviso. Um índice único na tabela garante isso, e o serviço
+   só evita violar o índice — quem recusa a duplicata é o banco.
+2. **Quem recebe é decidido no envio, não na criação.** A pessoa cria o lembrete quando entra no
+   compromisso; se ela foi convidada e ainda não respondeu, o lembrete existe mas não notifica até
+   aceitar. Fazer a checagem na criação exigiria reescrever a linha no instante da resposta e deixaria
+   um buraco: quem aceita às 18h59 para um compromisso de 19h não seria avisado.
+3. **Antecedência é lista fechada** (5, 15, 30, 60 minutos, 1 dia), validada no domínio e na
+   `check constraint`. "Quero ser avisado 7 minutos antes" não é uma opção da tela; aceitar qualquer
+   inteiro convida a API pública a virar cronômetro.
+4. **Cancelar ou reagendar encerra os pendentes.** O aviso do horário antigo não sai. A linha não é
+   apagada: `sentAt` marca "resolvido" e o motivo fica em `lastError`, o que preserva a diferença
+   entre avisado, cancelado e encerrado.
+5. **A notificação tem autor `system`.** `notifications.actor_id` é `not null` e não existe
+   notificação sem ator no repositório; um lembrete não tem pessoa por trás e usar o id do compromisso
+   misturaria entidade com pessoa.
+
+**Consequência.**
+
+- O lembrete sobrevive ao reinício do processo: ele é uma linha, não um `Runnable` agendado (razão
+  original da D4).
+- Compromisso criado em cima da hora gera lembrete já vencido, e ele sai **uma vez** no ciclo
+  seguinte — o que a pessoa quer é o aviso agora.
+- A tela só vê os lembretes **pendentes**; o histórico não entra na leitura.
+
+**Rejeitado.** Notificar todo mundo que recebeu convite (`INVITED` incluso): o aviso de "começa em
+5 min" para alguém que nunca disse que ia é ruído que ensina a pessoa a ignorar a notificação.
+
+---
+
+## D22 — O detalhe é rota própria (`/agenda/$entryId`), e o DS só recebe dados já traduzidos (execução 14)
+
+**Contexto.** D15 decidiu que o item da agenda carrega o estado do convite. Faltava o lugar onde se
+responde ao convite, se edita, se cancela e se convida mais gente. O `GET /calendar/entries/{id}`
+já devolve `{ entry, owner, participation, participants }` (participants só para o organizador) e
+aceita `PATCH`, `DELETE`, resposta de participante e convite — tudo pronto na `qa`.
+
+**Decisão.**
+
+1. O detalhe é **rota** (`/agenda/$entryId`), não modal sobre a lista: ganha URL própria, sobrevive
+   a recarregar, e a lista continua sendo só leitura rápida. O `itemHref` da agenda aponta para ela.
+2. O componente do DS (`CalendarEntryDetail`) é **burro**: recebe `entry`, `owner`, `participation`,
+   `participants` e callbacks; não sabe de rota, query nem API. Toda tradução de instante para hora
+   de parede acontece no app, com `wallClockOf(instant, timeZoneId)` (D17), e o app converte de volta
+   com `instantOf` no salvar.
+3. As mutações vivem na rota e **invalidam `['agenda']` inteiro**, não só o detalhe: responder,
+   cancelar ou editar muda a lista, o detalhe e o estado do convite, e uma invalidação parcial deixa
+   a lista mostrando estado velho que o usuário acabou de mudar.
+4. Quem não é organizador recebe `participants: null` da API e a tela **não** monta a lista nem o
+   formulário de convite — esconder por papel no cliente seria decoração, não autorização; a
+   autorização é do backend (D5).
+
+**Consequência.** O detalhe entrou no DS como `CalendarEntryDetail` (PR #177), com a microcópia no
+pacote (`messages.detail.*`), e a rota no front usa exatamente esse componente (PR #777). Enquanto
+o #177 não for mergeado e publicado, o `package.json` do front não tem de onde importar o
+componente: o PR fica em draft com a dependência declarada, como D20 manda — não se cria uma cópia
+local do componente na app, que violaria `local/no-front-markup` e divergiria do DS na primeira
+correção.
+
+**Rejeitado.** Modal de detalhe sobre a agenda: perde link direto e complica o retorno depois de
+editar. Rejeitado também o DS buscar os próprios dados: acoplaria o pacote ao cliente de API do
+app e impediria o storybook de renderizar o componente com dados fixos.
+
+---
+
+## D23 — Conflito é leitura da mesma agenda, não um segundo motor (execução 17)
+
+**Contexto.** A fase 6 pede "disponibilidade e conflitos". O inventário da execução 17 mostrou que
+o backend já tinha as peças para uma _disponibilidade de mentor_ (`MentorAvailability` com dia da
+semana + `HH:mm`, `MentorSlot` com instante único e `book`/`release`, geração de 28 dias em
+`MentorService.saveAvailability`) — mas **nada** no nível da agenda: nenhuma consulta respondia
+"o que já ocupa este intervalo?" e a escrita aceitava qualquer sobreposição sem avisar.
+
+**Decisão.** Conflito é uma **consulta** sobre a agenda que a pessoa já vê, não um motor novo:
+
+1. Fonte única: `CalendarQueryService.agenda` — dono mais convites **ACCEPTED** e **TENTATIVE**.
+   Convite `INVITED` ou `DECLINED` não ocupa horário: ninguém deixa de marcar uma consulta por
+   causa de um convite parado na caixa, e "recusei" é resposta, não compromisso.
+2. **Leitura, não bloqueio.** A escrita continua aceitando sobreposição; a agenda social tem casos
+   legítimos de duas coisas no mesmo horário. Um 409 transformaria o aviso em proibição e mudaria o
+   contrato da escrita que já está em produção.
+3. Intervalo **meio-aberto** nos dois lados (o mesmo de `CalendarEntry.overlaps` e da consulta por
+   janela): 12h–13h e 13h–14h são contíguos, não sobrepostos.
+4. `entryId` exclui a própria entrada: na edição, o compromisso não conflita consigo mesmo.
+5. O filtro por `scope` é o da leitura; sem ele, as duas agendas.
+6. Reaproveitar a consulta evita divergência de autorização (D5/D10): a lista nunca inclui agenda
+   alheia porque a consulta é sempre `ownerId = quem lê`.
+
+**Consequência.**
+
+- A rota nasceu sem migração: não há tabela de conflito nem índice novo, porque conflito é derivado.
+- A janela semanal de disponibilidade **continua faltando** e é coisa distinta: aquela é uma regra
+  persistida (dia, início/fim, fuso) que gera janelas candidatas — o `MentorAvailability` de hoje
+  é do perfil do mentor e não serve à agenda geral. Ficou como a próxima unidade da fase 6.
+- O aviso na tela é decisão do formulário do DS: ele recebe a lista de conflitos e decide mostrar o
+  texto; o app não bloqueia o salvar. Isso mantém a D18 (a superfície não busca dados sozinha).
+
+**Rejeitado.** Devolver 409 na criação/edição quando há sobreposição: quebra o uso legítimo e
+obriga o cliente a tratar erro para um aviso que é informativo. Rejeitado também calcular conflito
+no front com a agenda já carregada: a agenda da tela é uma janela (mês/semana), e o formulário pode
+estar criando num intervalo fora dela — o servidor precisa ser a fonte.

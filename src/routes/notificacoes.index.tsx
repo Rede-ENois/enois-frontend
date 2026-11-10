@@ -1,14 +1,13 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { NotificationsPanel } from "@rede-enois/design-system/domain";
 
-import { notificationsApi } from "@/lib/api";
 import { useInterfaceContext } from "@/lib/interface-context";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
+import { useNotificationsList } from "@/components/notifications/use-notifications-list";
 import { useNotificationsPanel } from "@/components/notifications/use-notifications-panel";
 
 export const Route = createFileRoute("/notificacoes/")({
@@ -20,14 +19,12 @@ export const Route = createFileRoute("/notificacoes/")({
 /** Every notice, grouped by day, with more pages on demand: where a tapped push lands. */
 function NotificationsPage() {
   const context = useInterfaceContext();
-  const list = useInfiniteQuery({
-    queryKey: ["notifications", "page", context],
-    queryFn: ({ pageParam }) => notificationsApi.list(pageParam, 30, context),
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
-  });
+  // A MESMA lista do sino do header (uma chave, um fetch): abrir Avisos pelo dock reusa o que
+  // já veio — no celular o sino segue montado (escondido abaixo de lg), e ter duas consultas
+  // com limites diferentes duplicava a chamada e fazia a página piscar em toda revalidação.
+  const list = useNotificationsList(context);
 
-  const panel = useNotificationsPanel(list.data?.pages.flatMap((page) => page.items) ?? [], {
+  const panel = useNotificationsPanel(list.items, {
     requestsEnabled: true,
   });
 

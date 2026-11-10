@@ -962,3 +962,336 @@ release.
 
 **PRÓXIMA EXECUÇÃO:** ver roadmap §10 — destravar o #769 assim que a tag sair, e então a rota de
 detalhe (`/agenda/$entryId`) sobre o `GET /calendar/entries/{id}` que já existe.
+
+---
+
+## EXECUÇÃO 13
+
+**DATA/HORA:** 2026-11-09T21:40:00-03:00
+
+**FASE:** 1/6 — contrato de lembrete (a fase 6 depende dele)
+
+**INVENTÁRIO ANTES DE IMPLEMENTAR:** a `qa` do front avançou para `4edcdd13` (o docs #770 foi
+mergeado — pelo bot, sem revisão humana). O PR do release do DS (#172) foi **mergeado** por
+`melmonfre` e o `main` do DS está em `0.30.0`, **mas a tag `v0.30.0` não existe**
+(`git ls-remote --tags` → nenhuma `v0.30`). Sem tag não há pacote: o front #769 continua em draft,
+com o CI falhando em `ETARGET`. B6, portanto, **não** fechou.
+
+**TAREFA:** em vez de reescrever o diagnóstico do B6 (terceira vez), pegar a unidade independente
+que o roadmap lista na fase 1/6: **lembretes de compromisso**, decisão D4.
+
+**REPOSITÓRIO:** `Rede-ENois/enois-backend` (worktree `feat/enois-calendar-reminders`, sobre a `qa`
+`25c648ad`)
+
+**ARQUIVOS:**
+
+- `src/main/resources/db/migration/V264__calendar_reminders.sql` (novo)
+- `calendar/domain/CalendarReminder.java` (novo)
+- `calendar/application/CalendarReminderService.java` (novo)
+- `calendar/application/CalendarReminderWorker.java` (novo)
+- `calendar/application/port/out/CalendarReminderRepository.java` (novo)
+- `calendar/adapters/out/persistence/{CalendarReminderJpaEntity,CalendarReminderPersistenceAdapter,SpringDataCalendarReminderJpaRepository}.java` (novos)
+- `calendar/application/CalendarCommandService.java` (cancelar/reagendar encerram os pendentes)
+- `calendar/adapters/in/web/CalendarEntryController.java` (rotas `/{entryId}/reminders`)
+- `CalendarReminderServiceTests` (10) e `CalendarRemindersApiTests` (5) — novos
+
+**IMPLEMENTAÇÃO:**
+
+- Tabela com `due_at`, `attempts`, `sent_at`, `last_error` e **índice único** em (entrada, pessoa,
+  antecedência) — a duplicata é recusada pelo banco, não pela aplicação.
+- Worker `@Scheduled(fixedDelayString = "${rede.calendar.reminder-delay-ms:30000}")`, mesmo desenho
+  do `ScheduledPostPublishWorker`: o lote por ciclo é 20, a falha é contada na linha e o laço
+  continua.
+- **Participação checada no envio**, não na criação: convidado que aceita depois do lembrete criado
+  passa a ser avisado, e convite não respondido encerra o lembrete sem notificar.
+- Cancelar e reagendar chamam `clearPendingForEntry`: aviso do horário antigo não sai.
+- Antecedências: 5, 15, 30, 60, 1440 — no domínio **e** na `check constraint` da migration.
+
+**DECISÕES DE IMPLEMENTAÇÃO QUE VIRARAM CÓDIGO:**
+
+1. `notifications.actor_id` é `not null` e não há precedente de notificação sem ator no repositório.
+   Um lembrete não tem pessoa por trás, então o autor é o literal `system`
+   (`CalendarReminderService.SYSTEM_ACTOR`), documentado no ponto de uso.
+2. As rotas ficaram **dentro** do `CalendarEntryController`, e não num controller novo com
+   `@RequestMapping("/calendar/entries/{entryId}/reminders")`: o primeiro teste deu 404 em todas as
+   rotas do dono porque o mapeamento de classe não compunha com o `/{entryId}` do controller pai.
+   O padrão do repositório (`participants`) declara as rotas aninhadas no pai.
+3. `ofReader` lista só os **pendentes**. O primeiro teste falhou porque a lista devolvia o lembrete
+   já encerrado — a tela escolhe lembrete, não histórico.
+
+**TESTES:** `./mvnw -o test` no worktree:
+
+| Classe | Testes | Resultado |
+|---|---|---|
+| `CalendarReminderServiceTests` | 10 | verde |
+| `CalendarRemindersApiTests` | 5 | verde |
+| `CalendarSourceServiceTests` | 7 | verde |
+| `CalendarEntryTests` / `CalendarEntryPersistenceTests` | 8 + 5 | verde |
+| `CalendarEntryReadApiTests` / `CalendarEntryWriteApiTests` | 9 + 9 | verde |
+| `CalendarInvitationApiTests` / `CalendarDetailAndPendingInvitationsApiTests` | 11 + 6 | verde |
+| `MentoringCalendarSyncTests` | 2 | verde |
+| `FlywayMigrationConfigTests` / `MariaDbReservedWordsTests` | 5 + 2 | verde (migração V264 aceita) |
+| `AutomatedWritePathsTests` | 2 | verde (a rota nova de escrita exige 401 sem sessão) |
+
+**81 testes, 0 falhas.**
+
+Quatro falhas reais foram encontradas e corrigidas durante a unidade (não eram flakes): query derivada
+`findByEntryIdAndUserIdAndMinutesBefore` não compila no Spring Data ("MinutesBefore" vira
+`minutes`+`Before`) — resolvida com `@Query`; `actor_id` nulo derrubava o insert; o teste de API
+usava o apelido da conta em vez do id real do banco como dono da entrada; e a **guarda
+`NotificationCategoryTests`** — que varre os pontos de `NotificationService.create` e recusa qualquer
+`kind` sem categoria de push — pegou o `CALENDAR_REMINDER` no CI da suíte completa (os 81 testes da
+unidade não a incluíam). Mapeado como `SYSTEM`. **Lição: roda de notificação nova tem que entrar no
+`NotificationCategory`, e a suíte completa é quem cobra isso.**
+
+**PR:** enois-backend [#604](https://github.com/Rede-ENois/enois-backend/pull/604), aguardando
+revisão humana. Guarda `🧪 Migrações sem versão duplicada` já verde no PR.
+
+**BLOQUEIOS:** B6 continua — **mergear não publica**. O #172 está mergeado e o `main` em `0.30.0`;
+falta a tag, que é ação da mantenedora (D20). B7 também continua (sem `read:packages` local).
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 — a tag quando sair, e então o detalhe do compromisso; o seletor
+de lembrete no DS é o par do #604 na tela.
+
+---
+
+## EXECUÇÃO 13 — desdobramento (destravar B6)
+
+**DATA/HORA:** 2026-11-10T01:45:00-03:00
+
+**TAREFA:** a tag do design system, mandada pela Mel, não publicou nada. Descobrir por quê e fechar
+o bloqueio que parou a tela `/agenda`.
+
+**CAUSA RAIZ:** a release/tag foi criada como **`0.30.0`**, sem o prefixo `v`. O workflow do DS
+dispara em `refs/tags/v*` (`if: startsWith(github.ref, 'refs/tags/v')`), então **nenhum run foi
+criado** — o repositório tinha a tag e o pacote não existia. Todas as releases anteriores
+(`v0.27.5`, `v0.27.4`…) usam o `v`; esta foi a primeira sem.
+
+**CORREÇÃO:**
+
+1. Tag `v0.30.0` criada no **mesmo commit** da `0.30.0` (`7d40855`, o `main`). Publish
+   `enois-design-system#42735841594` → **verde** (`Lint, typecheck, test and build` e
+   `Publish to GitHub Packages`).
+2. Lockfile do front: o `package.json` já pedia `0.30.0`, mas o `package-lock.json` continuava em
+   `0.29.10-rc.1` (por isso `npm ci` falhava com `ETARGET`). Sem `read:packages` local, o lock foi
+   regerado **pelo registro** dentro do CI (`npm install --package-lock-only --ignore-scripts` com
+   o `GITHUB_TOKEN`, que tem `packages: read`), num workflow descartável que commitou o arquivo e
+   foi removido da árvore em seguida — `resolved`/`integrity` vieram do npm, não de valor escrito à
+   mão (regra da D20).
+3. `#769` saiu do draft. CI **verde** (`verificar`, `Validar build`, CodeQL, Analyze); o build
+   gerou os chunks `agenda-*`, provando que a rota entra no bundle servido.
+
+**ARQUIVOS:** `package-lock.json` (front, commit `4bae42fc`); tag `v0.30.0` no design system.
+
+**LIÇÃO PARA A D20:** *mergear* e *publicar* são coisas diferentes, e agora também **o nome da tag
+importa**. Uma tag criada pela interface do GitHub como release pode sair sem o `v`, e aí o
+workflow não escuta. Antes de anunciar "publicado", conferir que existe um run disparado pela tag.
+
+
+---
+
+## Execução 14 — 2026-11-09 ~23:30 (fase 3: telas das agendas)
+
+**TAREFA:** roadmap §10 item 2 — rota de detalhe do compromisso (`/agenda/$entryId`) sobre o
+`GET /calendar/entries/{id}` (#542, já na `qa` do backend).
+
+**DESCOBERTA DE ESTADO (antes de confiar no roadmap):** backend PR #604 (lembrete pelo worker, D4)
+foi **mergeado** em 2026-11-10T01:16Z e está na `qa` — a unidade "lembrete" do §10 item 3 já não é
+tarefa de implementação no backend. O pacote `@rede-enois/design-system@0.30.0` publicado
+**não contém** o `CalendarEntryDetail` (conferido no tarball do registro): o componente vive só no
+DS PR #177, ainda aberto. O #769 da tela `/agenda` continua aberto, já destravado (lockfile aponta
+o 0.30.0 real).
+
+**REPOSITÓRIOS/ARQUIVOS:**
+
+- Design System — branch `feat/calendar-entry-detail`, PR
+  [#177](https://github.com/Rede-ENois/enois-design-system/pull/177) (issue #176, aberto antes,
+  faz parte desta unidade): `src/domain/calendar/calendar-entry-detail.tsx` (componente
+  `CalendarEntryDetail`), `calendar-entry-detail.test.tsx` (12 testes),
+  `src/types/domain/calendar/calendar-entry-detail-{data,participant,props}.ts`,
+  microcópia `detail` em `calendar-messages.ts` + defaults, stories
+  `DetailOrganizer`/`DetailGuest`/`DetailCancelled`. 53 testes no módulo de calendário; suíte
+  inteira 1569/1570 (a 1 falha é `appearance-dialog.test.tsx`, flake provado isolado, sem relação).
+- Frontend — branch `feat/enois-calendar-detail`, PR
+  [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) (**draft**), baseado na branch do
+  #769 (dependência declarada no PR): `src/routes/agenda.$entryId.tsx` (rota com guarda de sessão,
+  query do detalhe, mutações de editar/cancelar/responder/convidar/remover invalidando
+  `['agenda']`), `agenda.$entryId.test.tsx` (5 testes), `agenda.tsx` ganhou `itemHref`,
+  `texts.ts` (+4 textos de erro), `routeTree.gen.ts` regenerado pelo plugin do build.
+
+**IMPLEMENTAÇÃO:** o detalhe mostra título, tipo, escopo, hora de parede no fuso da entrada
+(`wallClockOf`, D17), descrição e banner de cancelado; organizador vê participantes + convite pelo
+@, convidado vê os botões de resposta, espectador não vê nada (o backend já devolve
+`participants: null` para quem não é organizador). Editar reusa o `CalendarEntryFormDialog` do DS.
+**Nota sobre o `routeTree.gen.ts`:** o arquivo commitado já estava desatualizado na base — regenerar
+reordena os imports do arquivo inteiro (688↔689 linhas); provado regenerando a base limpa.
+
+**TESTES (front, worktree sobre `ebb0a81c` + branch do #769):**
+
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | EXIT=0 |
+| `npx eslint` nos arquivos tocados | EXIT=0 |
+| `npx vitest run agenda.$entryId.test.tsx agenda.test.tsx` | **8/8 verde** |
+| `npx vite build` | EXIT=0, chunks de `/agenda` e `/agenda/$entryId` no bundle |
+
+**BLOQUEIOS:** B6 reaberto para o detalhe — o CI do #777 fica vermelho até o DS #177 ser mergeado
+e uma versão nova publicada; encaminhamento é o mesmo do release anterior (`npm install
+@rede-enois/design-system@<nova>` no lockfile). **B8 (novo):** o bot `kof-agent-worker` tem
+mergeado PRs na `qa` sem aprovação humana (ex.: #604), contrariando a regra absoluta do projeto;
+reportado à mantenedora — nenhuma proteção foi alterada por mim.
+
+**PRÓXIMA EXECUÇÃO:** roadmap §10 atualizado — (1) revisão humana do DS #177 e release novo para
+destravar o #777; (2) lembretes no front consumindo `PUT/DELETE /calendar/entries/{id}/reminders`
+(backend já na `qa` via #604) — o DS ainda não tem seletor de lembrete; (3) disponibilidade e
+conflitos (fase 6).
+
+---
+
+## EXECUÇÃO 15 — 2026-11-09 ~23:45 (fase 3: telas das agendas)
+
+> **Entrada reconstruída na execução 17.** A execução 15 nunca teve seção própria neste arquivo —
+> a unificação das execuções 13–16 no commit `78eae7d8` pulou do 14 para o 16. O resumo abaixo vem
+> da linha 15 do histórico do roadmap (§11), que foi escrita na época e não foi alterada.
+
+**TAREFA:** rota de detalhe do compromisso no front.
+
+**IMPLEMENTAÇÃO:** `/agenda/$entryId` com o detalhe do compromisso e o lugar de quem lê (editar,
+cancelar, responder ao convite, convidar e remover participante), sobre o `CalendarEntryDetail` do
+DS #177.
+
+**TESTES:** 5 testes da rota de detalhe (8 com os da `/agenda`); `tsc`, `eslint` e `vite build`
+verdes.
+
+**PRs:** front [#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — aberto em draft,
+porque o DS #177 ainda não estava publicado (B6).
+
+**NOTAS:** o estado real dos PRs foi reconferido e §7/§9 corrigidos; **B8 registrado** (o bot
+`kof-agent-worker` mergeando PRs na `qa` sem aprovação humana).
+
+---
+
+## EXECUÇÃO 16 — 2026-11-10T01:45:00-03:00 — Fase 3 (telas das agendas)
+
+**TAREFA:** publicar o Design System com o `CalendarEntryDetail` (pedido explícito da mantenedora:
+"mergeei tudo do DS, ajusta aí, gera uma tag e bora") e destravar o front #777.
+
+**REPOSITÓRIOS:** `Rede-ENois/enois-design-system` (branch `chore/release-0.30.1` sobre `main`
+`3776208`), `Rede-ENois/enois-frontend` (branch `feat/enois-calendar-detail`).
+
+**IMPLEMENTAÇÃO:**
+
+1. **DS**: `#177` mergeado (2026-11-10T03:26Z). Release `0.30.1` com o bump de 3 linhas
+   (`package.json` + `package-lock.json`), PR [#180](https://github.com/Rede-ENois/enois-design-system/pull/180),
+   e a tag `v0.30.1` empurrada para `main`. O workflow publicou `@rede-enois/design-system@0.30.1`
+   (log do job `Publish`: `+ @rede-enois/design-system@0.30.1`).
+2. **Front**: pin para `0.30.1`; lockfile regerado por workflow descartável com `GITHUB_TOKEN`
+   (B7) e removido depois. O branch de detalhe foi **mesclado com a `qa`**, o que apagou 214 erros
+   de lint que apareciam no CI — eles vinham do `src/routes/feed.tsx` **desatualizado no branch**,
+   não do detalhe (a correção dos filtros do feed já está na `qa`, commit `5aeca8ab`).
+
+**TESTES:**
+
+| Onde | Comando | Resultado |
+|---|---|---|
+| DS | `npm run lint` / `npx tsc --noEmit` | EXIT=0 / EXIT=0 |
+| DS | `npm test` | **1570/1570** |
+| DS | `npm run build` / `npm run test:dist` | EXIT=0 / `ok .`, `ok ./ui`, `ok ./patterns`, `ok ./domain` |
+| DS | `npm pack` | contém `dist/domain/calendar/calendar-entry-detail.js` |
+| Front | `npm run lint` | **0 erros**, 10 warnings pré-existentes |
+| Front | `npx tsc --noEmit` | EXIT=0 |
+| Front | `npx vitest run agenda.$entryId.test.tsx agenda.test.tsx` | **8/8** |
+| Front | `npx vite build` | EXIT=0 |
+| Front | CI do #777 (`verificar`, `Validar build`) | **pass** (3m03s / 54s) |
+
+**PRs:** DS [#180](https://github.com/Rede-ENois/enois-design-system/pull/180) (release) e front
+[#777](https://github.com/Rede-ENois/enois-frontend/pull/777) — este saiu do draft e está **100%
+verde** aguardando revisão humana.
+
+**BLOQUEIOS:** B6 e B7 **fechados**. Nenhum merge de PR foi feito por mim; a tag foi empurrada a
+pedido explícito da mantenedora (D20 registra que publicar é ação humana).
+
+**PRÓXIMA EXECUÇÃO:** ver §10 — seletor de lembrete no DS + tela, e início da fase 6.
+
+---
+
+## EXECUÇÃO 17 (bloco) — 2026-11-10T03:00–04:10-03:00 — Fases 3 e 6 (5 unidades verificáveis)
+
+**TAREFA:** primeira rodada em blocos (pedido da mantenedora: "cada rodada deve entregar 2 a 4
+unidades verificáveis, não uma só"). Unidades: (A) incorporar o conteúdo único do docs PR #774 no
+PR #778; (B) seletor de lembrete no DS; (C) cliente de API dos lembretes no front; (D) fase 6 no
+backend: inventário + detecção de conflito; (E) cliente de API do conflito no front.
+
+**REPOSITÓRIOS:** `enois-design-system` (`feat/calendar-reminder-selector` sobre `main` pós-#180),
+`enois-frontend` (`feat/enois-calendar-reminders` sobre `qa` `9d89d063`),
+`enois-backend` (`feat/enois-calendar-conflict` sobre `qa` `4f22a6d7`).
+
+**IMPLEMENTAÇÃO:**
+
+1. **(A) Docs**: o conteúdo único do #774 (causa raiz da tag sem `v` e o processo do lockfile
+   regerado pelo registro) foi trazido para o branch do #778 — mas o **bot mergeou o #778 antes**,
+   pegando só o commit antigo: o conteúdo da unidade A chegou à `qa` por este PR de docs aqui
+   (bloco 17), não pelo #778. O #774 segue aberto para fechar em revisão. Corrigimos também um
+   resíduo de patch (`+++ b/...` literal) que tinha entrado no log.
+2. **(B) DS**: `CalendarReminderSelector` — radiogroup acessível (`aria-label`, `aria-busy`), seis
+   opções (`CalendarReminderMinutes` = união literal `{5,15,30,60,1440}` do backend), opção "não
+   avisar", estado `saving` que desabilita tudo e `error` como `role="alert"`. Microcópia própria no
+   `calendar.ts` de mensagens. Story com harness de estado e estados de saving/erro.
+3. **(C) Front**: `CalendarReminderView` + `listReminders`/`setReminder`/`clearReminder` em
+   `calendarApi` (PUT/DELETE com `minutesBefore` na query, como o `@RequestParam` do backend lê).
+4. **(D) Backend (fase 6)**: inventário antes de codar — o que existe: `MentorAvailability`
+   (regra semanal dia+HH:mm, São Paulo), `MentorSlot` (instante único, book/release), geração de 28
+   dias em `MentorService.saveAvailability`, upsert da mentoria na agenda central
+   (`CalendarSourceService`, D12/D19), `CalendarEntry.overlaps` meio-aberto e leitura por janela.
+   O que **não** existe: detecção de conflito no nível da agenda. Entregue:
+   `CalendarConflictService` reutilizando `CalendarQueryService.agenda` (D13: conflito é a mesma
+   agenda que a tela mostra — dono + ACCEPTED/TENTATIVE; pendente e recusado não ocupam horário;
+   cancelado não conflita; `entryId` exclui a própria entrada na edição). **Leitura, não bloqueio**:
+   sobrepor de propósito continua possível, a escrita não virou 409 (D23). Rota
+   `GET /calendar/entries/conflicts?from&to[&scope][&entryId]`. **Sem migração Flyway** — zero
+   schema novo; a semântica meio-aberta já vem da consulta existente.
+5. **(E) Front**: `CalendarConflictQuery` + `calendarApi.conflicts({from,to,scope?,entryId?})` para
+   a rota do item 4.
+
+**TESTES:**
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| DS (B) | testes novos do seletor | **8/8** |
+| DS (B) | módulo calendar | **61/61** |
+| DS (B) | suíte inteira | **1578/1578** |
+| DS (B) | lint / tsc / build / test:dist | EXIT=0 nos quatro |
+| Front (C+E) | `calendar.test.ts` | **14/14** (3 de lembrete + 2 de conflito) |
+| Front (E, após o cherry-pick no #792) | `calendar.test.ts` / `tsc --noEmit` | **14/14** / EXIT=0 |
+| Front (C+E) | `tsc --noEmit` / `eslint src` | EXIT=0 / 0 erros, 9 warnings pré-existentes |
+| Backend (D) | `CalendarConflictServiceTests` | **9/9** |
+| Backend (D) | `CalendarConflictApiTests` | **4/4** |
+| Backend (D) | regressão do módulo calendar (9 suítes) | **78 verdes** |
+
+**PRs:** DS [#187](https://github.com/Rede-ENois/enois-design-system/pull/187), front
+[#786](https://github.com/Rede-ENois/enois-frontend/pull/786), backend
+[#607](https://github.com/Rede-ENois/enois-backend/pull/607), docs (este).
+
+**FALHA REAL DA RODADA (perda de unidade por merge automático):** o bot mergeou o #786 às
+05:47Z, **antes** do push da unidade E (cliente de conflito). O merge carregou só o commit
+`6d731488` (lembretes); `calendarApi.conflicts` não está na `qa`. Conferido com
+`git show enois/qa:src/lib/api/calendar.ts`. Correção: cherry-pick do commit `9bc6c0fe` sobre a
+`qa` atual, testes e tsc de novo (**14/14**, EXIT=0), PR de seguimento
+[#792](https://github.com/Rede-ENois/enois-frontend/pull/792). É o custo concreto do B8: o merge
+automático publicou um PR declarado "aguardando revisão" **no meio da rodada**, e a unidade que
+chegou depois ficou de fora.
+
+**BLOQUEIOS/NOTAS:**
+
+- **B8 agravado**: durante a própria rodada, o bot `kof-agent-worker` mergeou #778, #786 e #607 —
+  no #786 com `REVIEW_REQUIRED` ainda marcado e a única aprovação sendo a do próprio bot. Os PRs
+  foram escritos para revisão humana; nenhum merge foi feito por mim. Segue decisão da mantenedora.
+- Ferramenta local: um `V260__calendar_entries_source_unique.sql` **antigo** em `target/classes`
+  (da execução 11) sombreava o V260 real da `qa` e derrubava o contexto Flyway dos testes — limpar
+  o `target` resolveu. Armadilha de `/tmp` registrada para as próximas sessões.
+- Decisão **D23** registrada na arquitetura (conflito é leitura da mesma agenda, não um segundo
+  motor).
+
+**PRÓXIMA RODADA (§10, proposta de execução 18):** disponibilidade semanal no nível da agenda
+(migração nova), aviso de conflito no formulário do DS, e — se o #187 mergear — release do DS e
+seletor de lembrete na tela de detalhe.

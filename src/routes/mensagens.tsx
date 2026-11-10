@@ -7,7 +7,14 @@ import { useAppShellStore } from "@/stores/app-shell.store";
 import { texts } from "@/texts";
 import type { InboxTab } from "@/types/routes/messages/inbox-tab";
 import { ConversationListSkeletons, UserAvatar } from "@rede-enois/design-system/domain";
-import { Button, ConfirmDialog, Input, useToast } from "@rede-enois/design-system/ui";
+import {
+  Button,
+  ConfirmDialog,
+  Input,
+  Pill,
+  PillRow,
+  useToast,
+} from "@rede-enois/design-system/ui";
 import { Search } from "lucide-react";
 
 import { authApi, messagesApi, networkApi } from "@/lib/api";
@@ -313,22 +320,23 @@ function Mensagens() {
             )}
           </div>
 
-          {/* `flex-wrap`: com cinco abas o rótulo maior ("Arquivadas") estoura a coluna no celular. */}
-          <div className="flex flex-wrap gap-1 border-b border-border px-3 pb-2 pt-2">
-            {inboxTabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setInboxTab(tab)}
-                className={`rounded-full px-3 py-1 text-xs font-normal transition ${
-                  inboxTab === tab
-                    ? "bg-primary-soft text-primary"
-                    : "text-text-subtle hover:bg-surface-2"
-                }`}
-              >
-                {texts.messages.tabs[tab]}
-              </button>
-            ))}
+          {/* Uma faixa só, rolando para o lado: em `flex-wrap` as cinco abas da caixa
+              profissional ocupavam duas linhas no celular ("Arquivadas" sozinha embaixo) e
+              empurravam a primeira conversa para fora da tela. É o mesmo gesto dos filtros
+              do feed e de /vagas, e nada fica escondido: a faixa rola até a última aba. */}
+          <div className="border-b border-border px-3 pb-2 pt-2">
+            <PillRow label={texts.messages.title} className="pb-0.5">
+              {inboxTabs.map((tab) => (
+                <Pill
+                  key={tab}
+                  size="sm"
+                  active={inboxTab === tab}
+                  onClick={() => setInboxTab(tab)}
+                >
+                  <>{texts.messages.tabs[tab]}</>
+                </Pill>
+              ))}
+            </PillRow>
           </div>
 
           {selecting && (
