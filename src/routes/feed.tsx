@@ -73,6 +73,7 @@ import { authApi, corporateApi, eventsApi, feedApi, networkApi, profileApi } fro
 import { takeComposerFiles } from "@/lib/composer-handoff";
 import { dataHora, ingressoDeEvento, valorDeDataLocal } from "@/lib/date/format";
 import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scroll-restoration";
+import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
@@ -1212,6 +1213,14 @@ function Home() {
                     {texts.feed.composer.scheduleHint}
                   </p>
                 </div>
+              )}
+
+              {/* Com mídia e sem texto o Publicar fica desabilitado: diz o que falta. Fica na linha
+                de baixo, como o erro, para não apertar os botões no celular. */}
+              {!publishError && captionRequired({ postType, mediaCount: media.length, draft }) && (
+                <p role="status" className="mt-2 text-right text-xs font-normal text-text-subtle">
+                  {texts.feed.composer.captionRequired}
+                </p>
               )}
 
               {publishError && (
