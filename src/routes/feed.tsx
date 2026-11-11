@@ -38,6 +38,12 @@ import {
 import { InfiniteScroll } from "@rede-enois/design-system/patterns";
 import {
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   EmptyState,
   EventTicket,
   Input,
@@ -97,6 +103,7 @@ import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
+import { VideoLimitError } from "@/lib/use-media-upload";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
 
@@ -389,6 +396,8 @@ function Home() {
   );
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [conductLessonOpen, setConductLessonOpen] = useState(false);
+  // Vídeo acima dos limites (#656): popup com a regra antes de o upload sair.
+  const [videoLimitReason, setVideoLimitReason] = useState<"size" | "duration" | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState<string | null>(null);
   const [pageHtml, setPageHtml] = useState("");
@@ -613,6 +622,9 @@ function Home() {
             ),
           )
           .catch((error: unknown) => {
+            if (error instanceof VideoLimitError) {
+              setVideoLimitReason(error.reason);
+            }
             const isProhibited = isProhibitedContent(error);
             if (isProhibited) {
               setConductLessonOpen(true);
@@ -1601,6 +1613,29 @@ function Home() {
       )}
 
       <ConductLessonDialog open={conductLessonOpen} onOpenChange={setConductLessonOpen} />
+
+      <Dialog
+        open={videoLimitReason !== null}
+        onOpenChange={(open) => !open && setVideoLimitReason(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{texts.feed.composer.videoLimitTitle}</DialogTitle>
+
+            <DialogDescription>
+              {videoLimitReason === "duration"
+                ? texts.feed.composer.videoLimitDuration(3)
+                : texts.feed.composer.videoLimitSize(10, 3)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button onClick={() => setVideoLimitReason(null)}>
+              {texts.feed.composer.videoLimitClose}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppContainer>
   );
 }
