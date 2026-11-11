@@ -2500,7 +2500,8 @@ rota que o front precisava para obedecer a esse destino.
 ### PRs
 
 - DS — **#219** (`CalendarPendingInvitations` + ligação na superfície), para `qa`, aguardando
-  revisão humana. CI enfileirado no momento do fechamento.
+  revisão humana; CI verde (o run inicial ficou preso em fila por mais de uma hora e foi
+  reexecutado com um commit vazio; o gate passou em 2m30s).
 - Backend — **#665** (lembrete abre `/agenda/{id}`), para `qa`, aguardando revisão humana; CI verde.
 - Front — **#843** (rota `agenda` na tabela de navegação), para `qa`, aguardando revisão humana; CI
   verde.
