@@ -1679,3 +1679,70 @@ privada, D7) ou fase 4 (fonte de eventos de grupo).
 **PRÓXIMA RODADA (§10, proposta de execução 22):** import na tela com o contrato do #629 já
 estável; fase 4 adiante (próxima fonte social com data/hora legível); fase 9 (assinatura privada,
 D7) sobre o serviço `.ics` que está na `qa`.
+
+---
+
+## EXECUÇÃO 22 (bloco) — 2026-11-10T22:00–23:20-03:00
+
+**Fase 9 entregue: assinatura privada `.ics` (D7).** Três unidades, todas verificáveis.
+
+### Unidades
+
+- **A — domínio, migração e persistência.** `CalendarSubscription` com token de 32 bytes em
+  base64url, hash SHA-256 obrigatório, comparação em tempo constante e revogação idempotente.
+  V269 cria `calendar_subscriptions` com `token_hash` único, `scope` nulo-ou-enum e `revoked_at`.
+  Porta `CalendarSubscriptionRepository` + adaptador JPA.
+- **B — rotas.** Gestão com sessão (`GET`, `POST`, `POST /regenerate`, `DELETE`) e leitura sem
+  sessão em `/calendar/subscribe/{token}.ics`, com `ETag` do corpo e `Cache-Control` de 5 min.
+  `CalendarSubscriptionRateLimitFilter` limita por hash do token.
+- **C — cliente no front.** `calendarApi.subscription/createSubscription/regenerateSubscription/
+  revokeSubscription/subscriptionUrl` e o tipo `CalendarSubscriptionView`.
+
+### Arquivos
+
+- Backend: `calendar/domain/CalendarSubscription.java`,
+  `calendar/application/CalendarSubscriptionService.java`,
+  `calendar/application/port/out/CalendarSubscriptionRepository.java`,
+  `calendar/adapters/out/persistence/{CalendarSubscriptionJpaEntity,CalendarSubscriptionPersistenceAdapter,SpringDataCalendarSubscriptionJpaRepository}.java`,
+  `calendar/adapters/in/web/{CalendarSubscriptionController,CalendarSubscriptionSettingsController}.java`,
+  `shared/security/CalendarSubscriptionRateLimitFilter.java`,
+  `db/migration/V269__calendar_subscriptions.sql`.
+- Backend testes: `CalendarSubscriptionTests` (6), `CalendarSubscriptionApiTests` (9).
+- Front: `src/lib/api/calendar.ts` (+4 métodos), `src/lib/api/calendar.test.ts` (+4),
+  `src/types/application/calendar/calendar-subscription-view.ts`.
+
+### Testes (rodados de verdade nesta árvore)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (A) | `CalendarSubscriptionTests` | **6/6** |
+| Backend (B) | `CalendarSubscriptionApiTests` | **9/9** |
+| Backend (A+B) | `Calendar*Tests` + filtros de segurança | **153/153**, BUILD SUCCESS |
+| Front (C) | `src/lib/api/calendar.test.ts` | **22/22** |
+| Front (C) | `tsc --noEmit` / `eslint` / `vite build` | EXIT=0 / 0 erros / EXIT=0 |
+
+### Armadilhas e notas
+
+- **A janela da assinatura estourava o teto do export.** 30 dias atrás + 365 à frente = 395 dias, e
+  o `validateWindow` do `CalendarIcsService` recusa acima de 366. Cinco testes de contrato deram
+  400 `INVALID_WINDOW` na primeira rodada. O fim passou a ser `from + 365 dias`.
+- **`scope` nulo é a consolidada.** A primeira versão da migração tinha um valor `ALL` que não
+  existe no enum; o contrato real da leitura é `null` para as duas agendas, e a migração passou a
+  aceitar nulo.
+- **O `routeTree.gen.ts` do front foi regenerado pelo build** com um diff grande e sem relação com
+  o bloco. Revertido antes do commit; o PR toca só três arquivos.
+- **O worktree novo do front não tinha `node_modules`.** Reaproveitei o do worktree do bloco 21 por
+  symlink; `vitest`, `tsc`, `eslint` e `vite build` rodaram normalmente.
+- **PRs do bloco 21 mergeados pelo bot:** #632, #814 e o complemento #815 foram mergeados por
+  `kof-agent-worker` (B8) antes da revisão humana. O lint do DS #203 foi corrigido nesta rodada; o
+  CI do front #813 falha por dependência de release do slot `reminder`, registrada no PR.
+
+### PRs
+
+- Backend (A+B) — **#637**, aberto para `qa`, aguardando revisão humana.
+- Front (C) — **#816**, aberto para `qa`, aguardando revisão humana; depende do #637.
+- Docs (este PR) — leva o estado para 22 e registra a D7 implementada.
+
+**PRÓXIMA RODADA (§10, proposta de execução 23):** import na tela com o contrato do #629 estável;
+tela da assinatura (card no DS consumindo o cliente do #816); fase 4 adiante com a chamada/vídeo
+como próxima fonte social, depois de conferir se há data/hora legível no módulo `calls`.

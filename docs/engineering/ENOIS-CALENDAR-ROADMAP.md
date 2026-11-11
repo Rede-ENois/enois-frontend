@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=4 (agenda social) iniciada: a presença confirmada em evento de grupo cria/reagenda/remove a entrada na agenda (origem EVENT), e a porta de origem passou a encerrar lembrete pendente ao reagendar/cancelar. Fase 3 concluída: o detalhe (#777) foi mergeado e o seletor de lembrete está ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 (iCalendar) segue com export+import no #629 e o botão de download no #809, ambos aguardando revisão humana. Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky (passa isolada na base e na branch).
-EXECUCAO=21
-ULTIMA_ATUALIZACAO=2026-11-10T22:10:00-03:00
+FASE_ATUAL=9 (assinatura privada .ics) entregue no backend: link /calendar/subscribe/{token}.ics sem sessão, token guardado só como hash, regenerar/revogar cortando o link antigo, ETag e limite por token (backend #637, aguardando revisão humana). Fase 4 (agenda social) segue em andamento com a presença em evento (D27). Fase 3 concluída: seletor de lembrete ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 concluída (export+import #629, botão #809). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
+EXECUCAO=22
+ULTIMA_ATUALIZACAO=2026-11-10T23:20:00-03:00
 ```
 
 ---
@@ -116,7 +116,7 @@ ou de disponibilidade.
 | Disponibilidade / conflitos   | **tela e aviso prontos** (#804)     | conflito (#607) + janela semanal (V267, #613)                   | **superfície + repasse de `conflicts`** (#197); aviso no formulário (#195) | **Completo na `qa`** — #804 mergeado e 0.31.0 publicado (tag `v0.31.0`, #197 incluso) |
 | Lembretes                     | não existe (o DS não tem seletor)   | `calendar_reminders` (V264), worker de 30 s e rotas por entrada | não existe                                            | **Backend pronto** (#604); falta o seletor no DS e a tela    |
 | ICS export/import             | **botão de download na `/agenda`** (#809) | **export + import** (#629, fase 8)                         | — (o botão é o `Button` do DS)                        | **Parcial** — export e import entregues; falta assinatura (fase 9) |
-| Assinatura privada `.ics`     | não existe                          | não existe                                                      | não existe                                            | **A construir**                                              |
+| Assinatura privada `.ics`     | cliente de API pronto (#816)        | **rotas prontas** (#637): gestão com sessão + leitura sem sessão | —                                                     | **Backend pronto** — V269, ETag, limite por token; falta a tela         |
 | Google/Microsoft/Apple        | não existe                          | OAuth existe no `identity` como base                            | —                                                     | **A construir**                                              |
 
 ### Dívida encontrada que bloqueia a agenda
@@ -160,7 +160,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 6    | Disponibilidade e conflitos                                              | 1            | **concluída** — backend (#607, #613), DS #197 (mergeado `bdf7370`), front #804 **mergeado na `qa`**; release **0.31.0 publicado** pela mantenedora (tag `v0.31.0`) |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
 | 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa` |
-| 9    | Assinatura privada e cache                                               | 8            | pendente                                                                                                                                       |
+| 9    | Assinatura privada e cache                                               | 8            | **concluída no backend** — V269, token só como hash, rota sem sessão com ETag, regenerar/revogar e limite por token (backend #637, aguardando revisão humana); cliente no front (#816) |
 | 10   | Provedores externos (Google/Microsoft/Apple)                             | 8, 9         | pendente                                                                                                                                       |
 | 11   | Revisão geral: regressão, segurança, a11y, performance                   | todas        | pendente                                                                                                                                       |
 
@@ -222,6 +222,17 @@ delimitado; dependências declaradas no corpo.
 ---
 
 ## 8. Testes executados
+
+Execução 22 (backend `feat/enois-calendar-assinatura-ics` sobre a `qa` `ef47dc96`; front
+`feat/enois-calendar-assinatura-cliente` sobre a `qa` `7664b239`):
+
+| Onde  | Comando                                                                                          | Resultado |
+| ----- | ------------------------------------------------------------------------------------------------ | --------- |
+| Backend | `-Dtest=CalendarSubscriptionTests`                                                             | **6/6** |
+| Backend | `-Dtest=CalendarSubscriptionApiTests`                                                          | **9/9** |
+| Backend | `-Dtest='Calendar*Tests,LinkPreviewRateLimit*,PublicReadRateLimit*,GlobalApiRateLimit*,AbuseGuard*,MissingSessionHeaderTests,ContractControllerTests'` | **153/153**, BUILD SUCCESS |
+| Front | `npx vitest run src/lib/api/calendar.test.ts`                                                    | **22/22** (4 novos) |
+| Front | `npx tsc --noEmit` / `npx eslint` nos arquivos tocados / `npx vite build`                        | EXIT=0 / 0 erros / EXIT=0 |
 
 Execução 19 (DS `feat/calendar-availability-surface` @ `1a7ec87` sobre `main` `fabb777`; front
 `feat/enois-calendar-availability-screen` @ `5c979ba0` sobre `qa` `1ed7284d`):
@@ -423,12 +434,35 @@ execução 21.*
    (`>>>>>>> origin/qa`) no fim, perdendo as execuções 14–20. Este PR restaura o log a partir do
    commit do bloco 20 e acrescenta a execução 21.
 
-**Execução 22 (próximo bloco) — proposta.** (1) **Import na tela**: o #629 mergeou, então o
+**Execução 22 (bloco) — fase 9 entregue: assinatura privada `.ics`.**
+*Executada em 2026-11-10 (~22:00–23:20). Três unidades: (A) domínio, migração e persistência da
+assinatura; (B) rotas de gestão com sessão e leitura sem sessão com ETag; (C) cliente de API no
+front. Detalhe no log, execução 22.*
+
+1. **O token é a credencial, e o banco não a guarda** — **entregue**: V269 com `token_hash` único,
+   `scope` congelado (nulo = consolidada, o mesmo contrato da leitura) e `revoked_at`. O token nasce
+   com 32 bytes de `SecureRandom` em base64url; a comparação é em tempo constante.
+2. **Regenerar gira a mesma linha** — **entregue**: trocar o token não cria assinatura nova, então
+   não existe janela com dois links vivos. Revogar marca a data e é idempotente. Criar duas vezes
+   devolve a existente **sem** token novo: não há como mostrá-lo de novo, e um segundo link só
+   multiplicaria credenciais vivas.
+3. **Leitura sem sessão** — **entregue**: `GET /calendar/subscribe/{token}.ics` responde
+   `text/calendar` com `ETag` do corpo (304 quando o arquivo não mudou) e `Cache-Control` de 5 min.
+   Token desconhecido e token revogado respondem o **mesmo** 404 — distinguir confirmaria que
+   aquele link já existiu. Teto por hash do token em `CalendarSubscriptionRateLimitFilter`.
+4. **A janela da assinatura é derivada** — 30 dias atrás + 365 à frente estourava o teto de um ano
+   do export (`INVALID_WINDOW`, 5 testes vermelhos de primeira). O fim passou a ser `from + 365`.
+5. **PRs abertos do bloco 21:** o #632 e o #814 foram **mergeados pelo bot** (`kof-agent-worker`,
+   B8) antes da revisão humana. O complemento de regressão virou o #815 (também mergeado pelo bot).
+   O lint do DS #203 foi corrigido nesta rodada; o CI do front #813 falha por dependência de
+   release do slot `reminder`, registrada no próprio PR.
+
+**Execução 23 (próximo bloco) — proposta.** (1) **Import na tela**: o #629 mergeou, então o
 contrato está estável; subir o `.ics` na `/agenda` com o conflito avisado antes de aplicar (D23).
-(2) **Fase 4 adiante**: compromissos pessoais já existem (rota de agenda); a próxima fonte social
-natural é a chamada/vídeo — verificar se há módulo com data/hora legível antes de prometer.
-(3) **Fase 9 (assinatura privada `.ics`)**: o serviço `.ics` do #629 está na `qa`, então D7 já
-pode ser implementada sem duplicar. (4) Reconferir os PRs abertos antes de começar (§9).
+(2) **Tela da assinatura**: o cliente está no #816 e o backend no #637; falta o card no DS para
+mostrar o link, copiar e regenerar/revogar. (3) **Fase 4 adiante**: a chamada/vídeo é a próxima
+fonte social natural — verificar se há módulo com data/hora legível antes de prometer.
+(4) Reconferir os PRs abertos antes de começar (§9).
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -467,6 +501,7 @@ e evitou construir sobre premissa errada.
 | 19  | 2026-11-10 ~14:30 | 6    | **Bloco de 3 unidades.** (A) `CalendarAvailability`/`CalendarAvailabilitySurface` no DS com as regras do backend (12+14 testes); (B) `conflicts` repassado pela `CalendarAgendaSurface` (2 testes, 1655 na suíte inteira); (C) tela `/agenda/disponibilidade` e aviso de conflito ligado na `/agenda` no front (7/7, build verde). DS #197 aberto; front #804 em draft até o release. O bot mergeou #187/#195 e abriu o release #196 (B8). Armadilhas: cache do Nitro e `--force-with-lease` com refspec longa |
 | 20  | 2026-11-10 ~17:30 | 8    | **Bloco de 3 unidades — fase 8.** (A) export `.ics` no backend (UID estável, VTIMEZONE real, folding 75 octets; 11 testes); (B) import multipart idempotente por ICS+UID (7 testes de contrato) — backend PR #629; (C) `exportUrl` + botão "Baixar .ics" na `/agenda` com a janela da tela (18+3 testes, tsc/build verdes) — front PR #809. Fase 6 confirmada fechada: #804 mergeado e 0.31.0 publicado. D26 registrada |
 | 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). Regressão completa do backend: 2335 testes, 1 falha de feed (passa isolada na base e na branch — flake). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
+| 22  | 2026-11-10 ~23:20 | 9    | **Bloco de 3 unidades.** (A) assinatura privada `.ics` no domínio e no banco: V269 com hash único, `scope` congelado e `revoked_at`, token de 32 bytes em base64url, comparação em tempo constante; (B) gestão com sessão e leitura sem sessão com `ETag` e limite por hash do token; 6 de domínio + 9 de contrato, 153 na regressão do módulo e dos filtros; (C) cliente de API no front (22/22, tsc/eslint/build verdes). PRs #637 (backend) e #816 (front); #632/#814/#815 mergeados pelo bot (B8) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
