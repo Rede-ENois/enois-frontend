@@ -1963,3 +1963,108 @@ componentes do #209; sem isso o #828 não compila no CI. Em paralelo: (1) item (
 (fase 4 adiante — conferir se o módulo de chamadas/vídeo tem data/hora legível antes de prometer);
 (2) reconferir os PRs abertos e o estado do bot (§9/B8); (3) com o #637 mergeado, fumaça do
 `/calendar/subscribe/{token}.ics` contra ambiente.
+
+## EXECUÇÃO 25 (bloco) — 2026-11-11T07:00–08:45-03:00 — Fase 5 iniciada (entrevistas)
+
+**Bloco de 4 unidades: agendamento de entrevista no backend (agenda dos dois lados), diálogo e
+linha de ações no DS, tela de candidaturas no front, e docs.** Primeiro recorte da fase 5, que
+reusa a porta de origem do calendário (D19) e o `CalendarKind.INTERVIEW` que já existia no
+contrato.
+
+### Estado reconferido antes de começar
+
+- Nenhuma implementação de entrevista existia nos 4 repositórios (grep por `interview` no
+  backend, DS e front só achava `CalendarKind.INTERVIEW` e o story do calendário). Nenhum PR
+  aberto do escopo (`gh pr list` nos três). O roadmap dizia fase 5 "pendente" e o estado real
+  confirmava — desta vez o roadmap e a realidade bateram.
+- Última migração aplicada na `qa`: V273 — a nova é **V274**.
+- PRs de blocos anteriores seguiam abertos sem revisão humana: front #828, #816 e o trio da
+  execução 21; DS #214 não existia; backend #655 não existia.
+
+### Unidades
+
+**(A) Backend: agendamento com entrada na agenda dos dois lados (PR #655, branch
+`feat/enois-calendar-entrevista`, a partir da `qa` `81c1ac02`).**
+`JobInterview` (SCHEDULED/CANCELLED) no domínio: reagendar sem operação quando a janela é
+idêntica, recusa de janela no passado (422 `INTERVIEW_IN_PAST`), teto de 8h e observações com
+teto de 1000. `V274__job_interviews.sql` com índice único `(application_id, status)` — uma
+entrevista valendo por candidatura; cancelar não apaga, marca. O `JobInterviewService` grava a
+entrada pela `CalendarSourceService` **nos dois lados** (candidato e empregador) com a mesma
+origem `(JOB_INTERVIEW, interviewId)` — reagendar move as duas, cancelar cancela as duas, o
+cancelado nunca reabre (D29). API: `POST/PATCH/DELETE/GET` em
+`/jobs/{jobId}/applications/{applicationId}/interview`; a lista de candidaturas do empregador
+traz `interview` via `scheduledByApplication` (uma consulta só, sem N+1). Notificação
+`JOB_INTERVIEW` nos catálogos + DM na conversa da vaga + e-mail com a hora no fuso da entrevista.
+
+**(B) DS: `CalendarInterviewDialog` (PR #214, branch `feat/calendar-interview-dialog`, a partir
+de `origin/qa` `2b48895`).** Diálogo único de marcar e reagendar: abre na próxima hora cheia (na
+própria zona — às 23h30 a próxima é 00h do dia seguinte) ou na janela atual; dia com
+`DateTextInput`, horários com `TimeTextInput` no relógio de parede da zona; teto de 8h igual ao
+do backend; os problemas do rascunho (dia inválido, hora inválida, fim antes do começo, longo
+demais) ficam **visíveis antes de salvar** — o botão só desabilita enquanto salva, para o leitor
+saber o que corrigir. 7 testes + stories.
+
+**(C) DS: `JobInterviewActions` (mesmo PR #214).** A linha da entrevista na candidatura do
+empregador: sem entrevista oferece "Marcar entrevista"; com entrevista mostra o compromisso **no
+fuso em que foi marcada** (formatador `Intl.DateTimeFormat` em cache por fuso), mais reagendar e
+cancelar. Sem requisição própria: `onSchedule`/`onReschedule`/`onCancel` são callbacks (mesmo
+split do D28.1). Erro do servidor em `role="status"`. 4 testes.
+
+**(D) Front: tela de candidaturas (PR #830, branch `feat/enois-calendar-entrevista-front`, a
+partir de `enois/qa` `03dd6f7f`).** `jobsApi.scheduleInterview/rescheduleInterview/
+cancelInterview/interviews` e os tipos `JobInterview`/`JobInterviewStatus`/`ScheduleInterviewInput`
+(um por arquivo — `local/type-boundaries` pegou os dois primeiros juntos). A rota renderiza
+`JobInterviewActions` e o `CalendarInterviewDialog` do DS + `ConfirmDialog` para o cancelamento:
+**zero markup cru novo** (`local/no-front-markup` da rota continua nas mesmas 74 supressões de
+legado — a primeira versão tinha 76 porque o separador tinha ficado na rota; o DS ganhou a prop
+`separated` e as duas violações sumiram). `dataHoraEm` no helper único de datas: a hora mostrada é
+a do **fuso da entrevista**, e não a do runtime. Mutações invalidam `["job-applications", jobId]`.
+Não se oferece entrevista para candidatura `NOT_SELECTED`.
+
+### Validação executada
+
+| Onde | Suíte / gate | Resultado |
+|---|---|---|
+| Backend (#655) | `JobInterviewTests` (domínio) | **6/6** |
+| Backend (#655) | `JobInterviewFlowTests` (contrato) | **5/5** — agenda dos dois lados + e-mail + terceiro proibido (403) + reagendamento move as duas entradas + cancelamento publica dos dois lados + passado recusado (422) + reagendar duas vezes reutiliza a entrevista |
+| Backend (#655) | regressão (domínio + contrato + `JobApplicationTests` + `CalendarSourceServiceTests`) | **18/18** |
+| DS (#214) | testes novos (diálogo 7 + ações 4) | **11/11** |
+| DS (#214) | `npm test` (suíte inteira) | **1725/1726**; a 1 falha (`avatar/frames/halloween`, timeout de 5 s sob carga) **passa isolada (9/9)** — pré-existente de carga, não deste PR |
+| DS (#214) | `npm run lint` / `npx tsc --noEmit` | 0 erros |
+| DS (#214) | `npm run build` / `test:dist` / `build-storybook` | todos verdes |
+| Front (#830) | `npx vitest run` (API 4 + rota 3 novos) | **12/12** |
+| Front (#830) | `npx tsc --noEmit` | EXIT=0, contra **tarball sintético** (dist do branch do DS sobre o 0.32.0 publicado — B9/D28.4) |
+| Front (#830) | `npx eslint` nos tocados | 0 erros; `no-front-markup` da rota em 74 |
+| Front (#830) | `npx vite build` | EXIT=0; `routeTree.gen.ts` intacto (regenerado pelo build, sem diff) |
+
+### Armadilhas e notas
+
+- **Asserção de e-mail é sensível a caixa:** o assunto do notificador é "Sua entrevista foi
+  marcada" (minúscula), e o teste procurava "Entrevista"; `containsIgnoringCase` resolveu sem
+  afrouxar o que importa (que o candidato foi avisado).
+- **O `sed` de renomear tipo pegou variáveis locais junto:** renomear `Draft` →
+  `CalendarInterviewDraft` com `replace` global virou `setCalendarInterviewDraft`/`shownCalendarInterviewProblem`
+  no componente do DS; os nomes locais foram restaurados na sequência.
+- **O front valida contra pacote que não existe ainda:** tarball sintético = `dist` do branch do
+  DS (`0.29.9` local, conteúdo da `qa` + componentes novos) copiado por cima do `0.32.0`
+  publicado dentro do `node_modules` do worktree (D28.4). O CI do #830 vai ficar vermelho com
+  `MISSING_EXPORT` até o release do DS — mesmo comportamento já documentado do #828.
+- **Relatório do surefire pode ser da rodada anterior:** ler o `.txt` com `ls --time-style` antes
+  de interpretar falha; a segunda rodada do `JobInterviewFlowTests` demorou ~6 min e o relatório
+  antigo fez parecer falha que já tinha sido corrigida.
+
+### PRs
+
+- Backend — **#655**, para `qa`, aguardando revisão humana.
+- DS — **#214**, para `qa` (a partir de `origin/qa` `2b48895`), aguardando revisão humana.
+  Não publica pacote: o release sai do `main` (D28.4/B9).
+- Front — **#830**, para `qa`, aguardando revisão humana; **CI vermelho esperado**
+  (`MISSING_EXPORT` dos componentes do DS) até o release — B9, não regressão.
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 26):** (1) release do DS a partir do `main`
+trazendo #209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20; o cronjob pode
+preparar o branch de release, mas não empurra tag nem publica); (2) fase 5 continua: entrevista
+na tela do candidato (`/vagas/$jobId` e minhas candidaturas) consumindo o mesmo `GET interview`;
+(3) fase 4 adiante: conferir se o módulo de chamadas/vídeo tem data/hora legível antes de
+prometer compromisso de chamada.

@@ -778,3 +778,27 @@ O bloco 24 levou import e assinatura para o DS e para a tela, e fechou três dec
    front que depende dele fica com CI vermelho (`MISSING_EXPORT`) até um release a partir do
    `main` — e esse release é passo humano (D20). O vermelho é o B9 se manifestando, não regressão
    do código; declarar isso no PR evita que alguém "conserte" apagando o import.
+
+
+## D29 — A entrevista é um compromisso só, escrito nos dois lados (execução 25)
+
+A entrevista de candidatura não tem agenda própria: ela **é** uma entrada da agenda central,
+escrita pela mesma porta de origem que a mentoria e o evento (D19). Três escolhas fecham a
+fronteira:
+
+1. **Um compromisso só, dois donos.** O `JobInterviewService` faz dois upserts com a mesma
+   origem `(JOB_INTERVIEW, interviewId)` e donos diferentes (candidato e empregador), escopo
+   PROFESSIONAL e tipo INTERVIEW. Como a origem é única, reagendar **move** as duas entradas e
+   cancelar **cancela** as duas — sem duplicação nem desvio entre as agendas; e como o
+   cancelamento pela porta de origem nunca reabre (D19/D26), entrevistador e candidato nunca
+   veem estados diferentes do mesmo fato.
+2. **O banco garante "uma valendo" por candidatura.** `V274` traz índice único
+   `(application_id, status)` com `status` em `(SCHEDULED, CANCELLED)`: agendar de novo
+   **reagenda** a entrevista existente em vez de criar outra, e o histórico de canceladas fica
+   no banco sem competir com a que está valendo. O reagendamento idêntico não é operação: a
+   janela igual não mexe em `updatedAt` nem dispara notificação.
+3. **A tela desenha com o fuso da entrevista, não o do runtime.** O compromisso carrega o
+   `timeZoneId` de quem marcou, e é nele que o DS e o front formatam a hora (`Intl.DateTimeFormat`
+   com zona explícita, formatador em cache). A linha da candidatura e a entrada da agenda mostram
+   o mesmo relógio para os dois lados; o helper único de datas do front ganhou `dataHoraEm` em
+   vez de abrir exceção à regra do formato-único.
