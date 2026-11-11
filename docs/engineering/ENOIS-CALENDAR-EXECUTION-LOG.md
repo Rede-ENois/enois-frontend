@@ -1784,3 +1784,67 @@ D7) sobre o serviço `.ics` que está na `qa`.
 **PRÓXIMA RODADA (§10, proposta de execução 23):** import na tela com o contrato do #629 estável;
 tela da assinatura (card no DS consumindo o cliente do #816); fase 4 adiante com a chamada/vídeo
 como próxima fonte social, depois de conferir se há data/hora legível no módulo `calls`.
+
+---
+
+## EXECUÇÃO 23 (bloco) — 2026-11-11T02:00–05:40-03:00
+
+**Rodada de desbloqueio: o #637 estava vermelho por causa da `qa`, não do calendário.** Nenhuma
+unidade nova de produto; o trabalho foi provar a causa de cada falha e deixar o PR do bloco 22
+verde e rebaseado.
+
+### Unidades
+
+- **A — fechar o #650 como duplicado.** O PR que eu tinha aberto para o corte de tamanho no import
+  de vagas foi resolvido pelo **#646** (mergeado às 05:00), que fez o mesmo `fit(...)` e ainda
+  desligou `arbeitnow`/`adzuna`/`github-community` no perfil de teste. Conferido em `enois/qa`:
+  as constantes `*_MAX` e o `fit` estão lá, e `application.properties:82` já tem
+  `rede.jobs.import.arbeitnow.enabled=false`. Comentado e fechado sem merge.
+- **B — rebase do #637 sobre a `qa` corrigida.** A `qa` andou de novo (#646) e o PR ficou
+  `CONFLICTING`. Rebase limpo sobre `a32204e5`; V272 continua livre
+  (`git ls-tree enois/qa` termina em V271). Testes rodados na árvore rebaseada.
+- **C — tag `v0.32.0` do DS.** O #204 mergeou na `main` mas a tag nunca foi criada, então o pacote
+  publicado continuava `0.31.0` e o front #813 seguia sem o slot `reminder`. Tag anotada em
+  `2a2dee0` e empurrada; o workflow "CI and Publish" disparou no ref da tag.
+
+### Testes (rodados de verdade nesta árvore)
+
+| Onde | Suíte | Resultado |
+|---|---|---|
+| Backend (#637 rebaseado) | `CalendarSubscriptionTests` | **6/6** |
+| Backend (#637 rebaseado) | `CalendarSubscriptionApiTests` | **9/9** |
+| Backend (#637 rebaseado) | `RedeApplicationTests` (schema x entidades) | **3/3** |
+| Backend (#650, antes de fechar) | `ExternalJobImportServiceTests` + `ExternalJobsListingTests` | **4/4** e **6/6** |
+
+### Armadilhas e notas
+
+- **A falha restante do #650 não era o corte, era a suíte batendo na rede.** O `ArbeitnowJobSource`
+  é `@Component` próprio (fora do `OpenJobApisConfig`) com `enabled` default **true**, e o
+  `application.properties` de teste nunca o desligava — só JobRadar, `external-refresh-enabled` e
+  `open-apis`. Todo `importService.refresh()` dos testes chamava a API pública e gravava ~900 vagas
+  reais alemãs na base H2 **compartilhada** entre classes. Antes do corte o `varchar(40)` estourava
+  e abortava o chunk, então quase nada era gravado; com o corte a importação passa e a listagem de
+  `limit=20` volta cheia de vagas reais, empurrando a fixture de `ExternalJobsListingTests` para
+  fora da página. Prova: a classe sozinha dá 6/6; com a correção, as duas classes juntas dão 4/4 e
+  6/6. O #646 chegou à mesma conclusão e já está na `qa`.
+- **Antes de abrir PR de correção, conferir se alguém já corrigiu.** O #646 foi aberto e mergeado
+  enquanto eu ainda rodava a suíte; o meu #650 virou trabalho redundante. A regra de "não abrir PR
+  duplicado" vale também para correções de CI: `gh pr list --state all --search` no escopo antes de
+  começar.
+- **Merge do DS não é release, de novo.** O #204 mergeou e a tag não existia; sem a tag o pacote
+  publicado não muda. A tag é passo separado e obrigatório depois do merge.
+- **O check "Schema x migrations" é o que pega `char` vs `varchar`.** Ele boota contra MariaDB 11.4
+  com `ddl-auto=validate`; o `CalendarSubscriptionApiTests` roda em H2 e não pega. No #637 rebaseado
+  ele passou, junto com "Migrações sem versão duplicada".
+
+### PRs
+
+- Backend (bloco 22) — **#637**, rebaseado sobre a `qa` com o #646, `MERGEABLE`, aguardando revisão
+  humana. Checks verdes: migrações, schema, CodeQL, Snyk.
+- Backend (jobs) — **#650**, fechado como duplicado do #646.
+- DS — **#204** mergeado; tag **`v0.32.0`** criada nesta rodada.
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 24):** com o DS `0.32.0` publicado, o front #813 pode
+subir a dependência e fechar o slot `reminder`; depois, import na tela com o contrato do #629 e a
+tela da assinatura consumindo o cliente do #816.
