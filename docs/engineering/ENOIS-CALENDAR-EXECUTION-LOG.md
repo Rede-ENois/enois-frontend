@@ -2292,3 +2292,98 @@ de origem.
 #209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20); (2) fase 5 continua: reuniões e
 workshops (a mentoria já está na agenda; falta o que ainda não tem compromisso com hora); (3)
 reconferir PRs e o bot (§9/B8) antes de começar.
+
+---
+
+## EXECUÇÃO 28 (bloco) — 2026-11-11T15:30–16:30-03:00 — Fase 3: a edição que o formulário mostrava e o servidor descartava
+
+**Bloco de 3 unidades.** O caminho crítico (release do DS) continua humano e sem PR de release
+aberto; a rodada avançou o que não dependia dele, na integridade da edição da agenda.
+
+### Estado reconferido antes de começar
+
+- `git fetch` nos três repositórios; `gh pr list --state all` e `gh pr view` em cada PR do escopo.
+  Nenhum PR aberto para "edição com escopo/tipo/dia inteiro" nem para "atalho da disponibilidade" —
+  sem duplicata.
+- O roadmap listava #838 como aberto; `gh pr view 838` mostrou **mergeado** pelo bot
+  `kof-agent-worker` em `64d4130b`. Corrigido na §7.
+- Última migração na `qa`: **V274** (entrevista, mergeada via #655). Esta rodada **não cria
+  migração**: as colunas `scope`, `kind` e `all_day` existem desde a V262.
+- PRs de blocos anteriores seguem abertos sem revisão humana: #655, #661, #663 (backend), #828,
+  #830, #836 (front), #209 e #214 (DS, mergeados na `qa` mas fora de qualquer pacote publicado —
+  B9).
+
+### Unidades
+
+**(A) Backend: `PATCH` aceita `scope`, `kind` e `allDay` (PR #664, branch
+`fix/enois-calendar-edicao-escopo-tipo-dia-inteiro`, a partir da `qa` `5efb0470`).**
+
+- **Bug provado por teste:** o diálogo de edição do DS mostra agenda, tipo e dia inteiro, e o
+  rascunho devolve os três. O `CalendarEntryPatchRequest` só tinha título, descrição e horário, e
+  `CalendarCommandService.update` só tratava esses. Trocar a agenda, o tipo ou marcar o dia inteiro
+  e salvar era descartado em silêncio.
+- **Correção:** `CalendarEntry.reclassify(scope, kind, allDay, now)` troca os três sem tocar no
+  intervalo nem na origem; reclassificar para o mesmo valor não mexe em `updatedAt`. O record do
+  `PATCH` ganha os três campos, com `allDay` como `Boolean` (ausente = "não mexi"; um primitivo
+  chegaria como `false` e desmarcaria o dia inteiro a cada edição de título). A guarda de origem
+  (D31) e a de entrada cancelada continuam valendo.
+- **Prova:** `edicaoParcialTrocaEscopoTipoEDiaInteiro` cria uma entrada PROFESSIONAL/MEETING, faz
+  PATCH `{scope: SOCIAL, kind: PERSONAL, allDay: true}` e espera 200 com os três; depois PATCH só de
+  título e espera os três inalterados; depois `scope: PESSOAL` e espera 400 `INVALID_SCOPE`. O teste
+  **falha no código antigo** com `expected:<SOCIAL> but was:<PROFESSIONAL>`.
+
+**(B) Front: a edição manda os três (PR #840, branch `feat/enois-calendar-edicao-e-disponibilidade`,
+a partir da `enois/qa` `871f4385`).**
+
+- `UpdateCalendarEntryInput` ganha `scope`, `kind` e `allDay`; a rota `/agenda/$entryId` manda os
+  três no `PATCH`. A conversão rascunho → corpo virou a função pura `updateInputOf`, coberta por
+  teste (`a edição manda escopo, tipo e dia inteiro junto com o resto`).
+
+**(C) Front: atalho para a disponibilidade (mesmo PR #840).**
+
+- A tela `/agenda/disponibilidade` existe e funciona desde a execução 19, mas nenhum lugar do app
+  levava até ela: só chegava quem digitasse a URL. O cabeçalho da `/agenda` ganha o botão
+  "Disponibilidade", um link de verdade (`<Link to="/agenda/disponibilidade">`) ao lado do export
+  `.ics`.
+
+### Validação executada
+
+| Onde    | Comando                                                                          | Resultado                                            |
+| ------- | -------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Backend | `-Dtest=CalendarEntryWriteApiTests`                                              | **11/11**                                            |
+| Backend | `-Dtest=CalendarEntryTests`                                                      | **10/10**                                            |
+| Backend | `-Dtest=CalendarReminderServiceTests`                                            | **12/12**                                            |
+| Backend | `./mvnw -DskipTests compile`                                                     | EXIT=0                                               |
+| Front   | `npx tsc --noEmit`                                                               | EXIT=0                                               |
+| Front   | `npx eslint` nos tocados                                                         | 0 erros (4 warnings pré-existentes de react-refresh) |
+| Front   | `npx vitest run src/routes/agenda.$entryId.test.tsx src/routes/agenda.test.tsx`  | **15/15**                                            |
+| Front   | `npx vite build`                                                                 | EXIT=0                                               |
+
+### Armadilhas e notas
+
+- **O contrato do formulário e o do servidor tinham divergido sem teste:** o DS devolvia oito
+  campos e o servidor lia cinco. Nenhum teste prendia a diferença, então o descarte era mudo. A
+  correção prende os dois lados: teste de contrato no backend e teste da função de conversão no
+  front.
+- **`allDay` como `Boolean`:** o mesmo raciocínio de campo nulo em D11. Um primitivo `boolean`
+  chegaria como `false` quando o campo não viesse, e toda edição de título desmarcaria o dia
+  inteiro.
+- **`node_modules` do worktree do front:** `npm ci` do zero e o tarball **0.32.0 publicado**
+  extraído em `node_modules/@rede-enois/design-system` (o token do `gh` não tem `read:packages`,
+  então `npm ci` falha com E401). O typecheck rodou contra o pacote publicado, não contra um build
+  local.
+- **`git checkout -- .` reverteu as mudanças de produção** quando eu só queria provar que o teste
+  falhava no código antigo. O teste foi salvo antes; as mudanças foram reaplicadas e os testes
+  rodaram de novo. Lição: para provar o vermelho, guarde o teste e reverta só o arquivo de
+  produção, nunca a árvore inteira.
+
+### PRs
+
+- Backend — **#664** (`PATCH` aceita `scope`/`kind`/`allDay`), para `qa`, aguardando revisão humana.
+- Front — **#840** (edição manda os três + atalho da disponibilidade), para `qa`, aguardando
+  revisão humana; depende do #664 para o servidor aceitar os três campos.
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 29):** (1) release do DS a partir do `main` trazendo
+#209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20); (2) fase 5 continua: reuniões e
+workshops; (3) reconferir PRs e o bot (§9/B8) antes de começar.

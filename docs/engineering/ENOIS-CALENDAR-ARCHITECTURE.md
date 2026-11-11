@@ -883,3 +883,38 @@ dinheiro preso nem compromisso órfão. O mentorado vê a sessão como cancelada
 **Rejeitado.** Desativar o perfil em vez de apagá-lo: o produto pede remoção, e um perfil "inativo"
 que continua no catálogo é outra funcionalidade. Rejeitado também apagar as sessões em cascata:
 destruiria o histórico e o registro do dinheiro.
+
+---
+
+## D33 — A edição da agenda reclassifica o que é dela e não toca no que é do módulo dono (execução 28)
+
+O formulário de edição do DS mostra três campos de classificação — agenda (`SOCIAL`/`PROFESSIONAL`),
+tipo e dia inteiro — e devolve os três no rascunho. O `PATCH /calendar/entries/{id}` só aceitava
+título, descrição e horário. Trocar a agenda, o tipo ou marcar o dia inteiro e salvar era
+descartado em silêncio: a tela fechava como se tivesse salvo, e a pessoa saía achando que tinha
+mudado. O contrato do formulário e o do servidor tinham divergido sem que nenhum teste prendesse a
+diferença.
+
+**Decisão.** A edição parcial reclassifica a entrada, e só isso.
+
+1. **`scope`, `kind` e `allDay` são editáveis pela rota da agenda.** São classificação, não fato:
+   não mexem no intervalo nem na origem. `CalendarEntry.reclassify` troca os três e não toca em
+   `startsAt`/`endsAt`/`source`; reclassificar para o mesmo valor não mexe em `updatedAt`.
+2. **`allDay` é `Boolean`, não `boolean`.** Ausente precisa significar "não mexi". Um primitivo
+   chegaria como `false` e desmarcaria o dia inteiro a cada edição de título — o mesmo raciocínio
+   de campo nulo em D11.
+3. **A guarda de origem continua valendo.** `reclassify` chama `requireActive` e a escrita segue
+   recusando entrada com origem (D31) e entrada cancelada. Reclassificar não é uma porta lateral
+   para mudar o fato de outro módulo.
+4. **O front manda o que o formulário mostra.** `updateInputOf` converte o rascunho no corpo do
+   `PATCH` com os oito campos, e o teste da rota prende que os três de classificação vão junto.
+   Mandar só título e horário era a causa do descarte silencioso.
+
+**Consequência.** O contrato do formulário e o do servidor voltam a coincidir, e a diferença fica
+presa por teste dos dois lados. Um campo novo no formulário que o servidor não conheça passa a ser
+uma divergência visível, não um descarte mudo.
+
+**Rejeitado.** Fazer o formulário esconder os três campos: eles são parte do produto (a pessoa
+escolhe a agenda e o tipo do compromisso) e esconder não corrige o contrato. Rejeitado também
+tratar `allDay` como primitivo com valor padrão `false`: desmarcaria o dia inteiro em toda edição
+que não falasse dele.

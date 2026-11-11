@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=5 (agenda profissional: entrevistas) — backend #655 (agenda dos dois lados, V274, entrevista na lista do candidato) e front #830 (tela de candidaturas + entrevista em "minhas candidaturas") abertos aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main`. Fase 4: chamadas/vídeo inspecionadas — não têm horário agendado (são sessões ao vivo), então não há entrada na agenda a prometer; o horário da denúncia de chamada passou a aparecer na moderação. Regressão do front: 1329 testes, 2 falhas de notificações comprovadamente flaky (falham na base limpa).
-EXECUCAO=26
-ULTIMA_ATUALIZACAO=2026-11-11T11:00:00-03:00
+FASE_ATUAL=5 (agenda profissional: entrevistas) — backend #655 (agenda dos dois lados, V274, entrevista na lista do candidato) e front #830 (tela de candidaturas + entrevista em "minhas candidaturas") abertos aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main`. Fase 3: a edição da agenda passou a reclassificar agenda/tipo/dia inteiro (#664 backend, #840 front) — antes o formulário mostrava os três e o servidor descartava em silêncio; a tela `/agenda/disponibilidade` ganhou atalho no cabeçalho da `/agenda`. Fase 4: chamadas/vídeo inspecionadas — não têm horário agendado (são sessões ao vivo), então não há entrada na agenda a prometer; o horário da denúncia de chamada passou a aparecer na moderação.
+EXECUCAO=28
+ULTIMA_ATUALIZACAO=2026-11-11T16:30:00-03:00
 ```
 
 ---
@@ -224,7 +224,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#661](https://github.com/Rede-ENois/enois-backend/pull/661)         | enois-backend       | Fase 5: apagar perfil de mentor com agenda publicada (cancela sessões agendadas, apaga horários/disponibilidade, V275 remove a FK de `mentor_sessions`)                                     | aberto, aguardando revisão humana                                                                                                                               |
 | [#663](https://github.com/Rede-ENois/enois-backend/pull/663)         | enois-backend       | Fase 5: entrada com origem é somente leitura pela rota da agenda (409 `CALENDAR_ENTRY_SOURCE_OWNED`)                                                                                        | aberto, aguardando revisão humana                                                                                                                               |
 | [#836](https://github.com/Rede-ENois/enois-frontend/pull/836)        | enois-frontend      | Fase 5: a tela não oferece editar/cancelar para entrada com origem (`isSourceOwned`)                                                                                                        | aberto, aguardando revisão humana                                                                                                                               |
-| [#838](https://github.com/Rede-ENois/enois-frontend/pull/838)        | enois-frontend      | Teste: tira a corrida do teste de recarga de avisos (flake pré-existente)                                                                                                                   | aberto, aguardando revisão humana                                                                                                                               |
+| [#838](https://github.com/Rede-ENois/enois-frontend/pull/838)        | enois-frontend      | Teste: tira a corrida do teste de recarga de avisos (flake pré-existente)                                                                                                                   | **mergeado** na `qa` em `64d4130b` (2026-11-11) pelo bot `kof-agent-worker` — ver B8                                                                           |
+| [#664](https://github.com/Rede-ENois/enois-backend/pull/664)         | enois-backend       | Fase 3: `PATCH /calendar/entries/{id}` aceita `scope`, `kind` e `allDay` (reclassificação sem tocar no intervalo nem na origem)                                                             | aberto, aguardando revisão humana                                                                                                                               |
+| [#840](https://github.com/Rede-ENois/enois-frontend/pull/840)        | enois-frontend      | Fase 3: a edição manda agenda, tipo e dia inteiro no `PATCH` + atalho para `/agenda/disponibilidade` no cabeçalho                                                                           | aberto, aguardando revisão humana; depende do #664 para o servidor aceitar os três campos                                                                       |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -232,6 +234,20 @@ delimitado; dependências declaradas no corpo.
 ---
 
 ## 8. Testes executados
+
+Execução 28 (backend `fix/enois-calendar-edicao-escopo-tipo-dia-inteiro` sobre a `qa` `5efb0470`;
+front `feat/enois-calendar-edicao-e-disponibilidade` sobre `enois/qa` `871f4385`):
+
+| Onde    | Comando                                                                       | Resultado                                                                     |
+| ------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Backend | `-Dtest=CalendarEntryWriteApiTests`                                           | **11/11** (inclui o teste de prova da reclassificação)                        |
+| Backend | `-Dtest=CalendarEntryTests`                                                   | **10/10**                                                                     |
+| Backend | `-Dtest=CalendarReminderServiceTests`                                         | **12/12**                                                                     |
+| Backend | `./mvnw -DskipTests compile`                                                  | EXIT=0                                                                        |
+| Front   | `npx tsc --noEmit`                                                            | EXIT=0                                                                        |
+| Front   | `npx eslint` nos tocados                                                      | 0 erros (4 warnings pré-existentes de react-refresh)                          |
+| Front   | `npx vitest run src/routes/agenda.$entryId.test.tsx src/routes/agenda.test.tsx` | **15/15**                                                                     |
+| Front   | `npx vite build`                                                              | EXIT=0                                                                        |
 
 Execução 25 (backend `feat/enois-calendar-entrevista` sobre a `qa` `81c1ac02`; DS
 `feat/calendar-interview-dialog` sobre `origin/qa` `2b48895`; front
@@ -527,12 +543,23 @@ esconde as ações sem handler, sem mudança de contrato. (D) **Teste de avisos 
 teste de recarga afirmava uma chamada exata e o intervalo de 20 ms disparava durante o flush; agora
 mede o crescimento, estável em 8 execuções.
 
-**Execução 28 (próximo bloco) — proposta.** (1) **Caminho crítico continua o release do DS:** #209
-e #214 estão na `qa`, mas o pacote sai do `main` (B9) — sem um release que traga os componentes,
-#828 e #830 não compilam no CI. Depois, lockfile real e revisão humana dos dois. (2) **Fase 5
-adiante:** reuniões e workshops (a mentoria já está na agenda; falta o que ainda não tem
-compromisso com hora). (3) **Reconferir PRs e o bot** (§9/B8) antes de começar, como sempre. (4) Se
-o #637 mergear, fumaça do `/calendar/subscribe/{token}.ics` contra ambiente.
+**Execução 28 (bloco) — a edição que o formulário mostrava e o servidor descartava.**
+_Executada em 2026-11-11 (~15:30–16:30). Três unidades: (A) `PATCH /calendar/entries/{id}` aceita
+`scope`, `kind` e `allDay` (#664); (B) a edição do front manda os três (#840); (C) atalho para
+`/agenda/disponibilidade` no cabeçalho da `/agenda` (#840). Detalhe no log, execução 28._
+
+1. **Caminho crítico continua o release do DS:** #209 e #214 estão na `qa`, mas o pacote sai do
+   `main` (B9) — sem um release que traga os componentes, #828 e #830 não compilam no CI. Depois,
+   lockfile real e revisão humana dos dois.
+2. **Fase 5 adiante:** reuniões e workshops (a mentoria já está na agenda; falta o que ainda não tem
+   compromisso com hora).
+3. **Reconferir PRs e o bot** (§9/B8) antes de começar, como sempre.
+4. Se o #637 mergear, fumaça do `/calendar/subscribe/{token}.ics` contra ambiente.
+
+**Execução 29 (próximo bloco) — proposta.** (1) **Release do DS** (passo humano, D20): é o único
+item que destrava #828 e #830 de uma vez. (2) **Fase 5:** reuniões e workshops — inventariar o que
+já tem hora marcada e o que falta. (3) **Reconferir PRs e o bot** (§9/B8). (4) Se o #637 mergear,
+fumaça do `/calendar/subscribe/{token}.ics` contra ambiente.
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -577,6 +604,7 @@ e evitou construir sobre premissa errada.
 | 25  | 2026-11-11 ~08:45 | 5    | **Bloco de 4 unidades — fase 5 iniciada.** (A) agendamento de entrevista no backend com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, V274, 6+5 testes, 18 na regressão) — PR #655; (B) `CalendarInterviewDialog` e (C) `JobInterviewActions` no DS (11 testes, 1725/1726 na suíte, storybook verde) — PR #214; (D) tela de candidaturas no front (12/12, tsc/eslint/build verdes contra tarball sintético) — PR #830. D29 registrada (entrevista escreve nos dois lados pela porta de origem)                                                                                                                               |
 | 26  | 2026-11-11 ~11:00 | 5/4  | **Bloco de 4 unidades.** (A) CI do #655 destravado: o flake de `ReputationRefreshQueryCountTests` era a fronteira de página de 500 contas na base H2 compartilhada (34 = 2×17, 51 = 3×17); a asserção normaliza por página; (B) `GET /jobs/applications/mine` devolve `interview` (consulta por lote, 8/8 em `JobApplicationFlowTests`); (C) `/vagas/minhas` mostra a entrevista no fuso em que foi marcada (3 testes, suíte 1327/1327); (D) fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo) e o `reportedAt` da denúncia de chamada passou a aparecer na moderação (2 testes). PRs #655 e #830 atualizados; docs neste PR           |
 | 27  | 2026-11-11 ~15:00 | 5    | **Bloco de 4 unidades.** (A) `DELETE /mentors/{mentorId}` respondia 409 com qualquer horário publicado (FKs de slots/sessões/disponibilidade); agora cancela sessões agendadas (escrow devolvido, agenda cancelada), apaga horários/disponibilidade e a V275 remove a FK de `mentor_sessions` (2 testes de prova, 30/30 na regressão) — #661; (B) entrada com origem é somente leitura pela rota da agenda (409 `CALENDAR_ENTRY_SOURCE_OWNED`, 10/10 e 142/142 na regressão) — #663; (C) a tela não oferece editar/cancelar para entrada com origem (11/11) — #836; (D) teste de recarga de avisos estável (4/4 em 8 execuções) — #838. D31 registrada |
+| 28  | 2026-11-11 ~16:30 | 3    | **Bloco de 3 unidades.** (A) `PATCH /calendar/entries/{id}` aceita `scope`, `kind` e `allDay`: o diálogo mostrava os três e o servidor descartava em silêncio; `reclassify` no domínio, `Boolean allDay` para "ausente = não mexi", 11/11 em `CalendarEntryWriteApiTests` (teste de prova falha no código antigo) — #664; (B) a edição do front manda os três (`updateInputOf`, 15/15 nas rotas) — #840; (C) atalho "Disponibilidade" no cabeçalho da `/agenda` para a tela que existia e não tinha link — #840. D33 registrada |
 
 ---
 
