@@ -159,73 +159,72 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const canNativeShare = () => typeof navigator !== "undefined" && "share" in navigator;
 
   return (
-        <PostActionsView
-          emojis={REACTION_EMOJIS}
-          reactionStatus={post.currentUserReaction ?? null}
-          onReact={toggleReaction}
-          // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
-          reactionPending={card?.reactionPending ?? false}
-          motionAllowed={motionAllowed}
-          reactionCount={reactionCount}
-          commentsCount={postCounters.comments}
-          repostsCount={postCounters.reposts ?? 0}
-          savesCount={postCounters.saves}
-          saved={saved}
-          canRepost={canRepost}
-          reposted={post.currentUserReposted ?? false}
-          onShowReactions={() => setShowReactions(post.id, true)}
-          onComments={onComments}
-          onRepost={() => {
-            if (!requireAuth()) return;
-            setRepostOpen(true);
-          }}
-          onShare={() => void handleCopyLink()}
-          shareMenu={
-            <>
-              <Button variant="ghost" size="sm" onClick={() => void handleSendViaChat()}>
-                <MessageCircle /> Enviar via chat
-              </Button>
+    <PostActionsView
+      emojis={REACTION_EMOJIS}
+      reactionStatus={post.currentUserReaction ?? null}
+      onReact={toggleReaction}
+      // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
+      reactionPending={card?.reactionPending ?? false}
+      motionAllowed={motionAllowed}
+      reactionCount={reactionCount}
+      commentsCount={postCounters.comments}
+      repostsCount={postCounters.reposts ?? 0}
+      savesCount={postCounters.saves}
+      saved={saved}
+      canRepost={canRepost}
+      reposted={post.currentUserReposted ?? false}
+      onShowReactions={() => setShowReactions(post.id, true)}
+      onComments={onComments}
+      onRepost={() => {
+        if (!requireAuth()) return;
+        setRepostOpen(true);
+      }}
+      onShare={() => void handleCopyLink()}
+      shareMenu={
+        <>
+          <Button variant="ghost" size="sm" onClick={() => void handleSendViaChat()}>
+            <MessageCircle /> Enviar via chat
+          </Button>
 
-              <Button variant="ghost" size="sm" onClick={() => void handleCopyLink()}>
-                <Copy /> Copiar link
-              </Button>
+          <Button variant="ghost" size="sm" onClick={() => void handleCopyLink()}>
+            <Copy /> Copiar link
+          </Button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void (canNativeShare() ? handleNativeShare() : handleCopyLink())}
-              >
-                <ExternalLink /> Compartilhar via...
-              </Button>
-            </>
-          }
-          onReport={() => setShowReport(post.id, true)}
-          onSave={handleSave}
-          dialogs={
-            <>
-              {repostMounted && (
-                <RepostDialog
-                  postId={post.id}
-                  reposted={post.currentUserReposted ?? false}
-                  open={repostOpen}
-                  onOpenChange={setRepostOpen}
-                />
-              )}
-              {reactionsMounted && <ReactionsDialog postId={post.id} />}
-              {sealsMounted && <SealsDialog postId={post.id} />}
-              {reportMounted && (
-                <ReportDialog
-                  targetId={post.id}
-                  targetType="POST"
-                  open={showReport}
-                  onOpenChange={(next) => setShowReport(post.id, next)}
-                />
-              )}
-
-            </>
-          }
-        >
-          {children}
-        </PostActionsView>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void (canNativeShare() ? handleNativeShare() : handleCopyLink())}
+          >
+            <ExternalLink /> Compartilhar via...
+          </Button>
+        </>
+      }
+      onReport={() => setShowReport(post.id, true)}
+      onSave={handleSave}
+      dialogs={
+        <>
+          {repostMounted && (
+            <RepostDialog
+              postId={post.id}
+              reposted={post.currentUserReposted ?? false}
+              open={repostOpen}
+              onOpenChange={setRepostOpen}
+            />
+          )}
+          {reactionsMounted && <ReactionsDialog postId={post.id} />}
+          {sealsMounted && <SealsDialog postId={post.id} />}
+          {reportMounted && (
+            <ReportDialog
+              targetId={post.id}
+              targetType="POST"
+              open={showReport}
+              onOpenChange={(next) => setShowReport(post.id, next)}
+            />
+          )}
+        </>
+      }
+    >
+      {children}
+    </PostActionsView>
   );
 }
