@@ -1805,7 +1805,11 @@ verde e rebaseado.
   (`git ls-tree enois/qa` termina em V271). Testes rodados na árvore rebaseada.
 - **C — tag `v0.32.0` do DS.** O #204 mergeou na `main` mas a tag nunca foi criada, então o pacote
   publicado continuava `0.31.0` e o front #813 seguia sem o slot `reminder`. Tag anotada em
-  `2a2dee0` e empurrada; o workflow "CI and Publish" disparou no ref da tag.
+  `2a2dee0` e empurrada; o workflow "CI and Publish" publicou
+  `+ @rede-enois/design-system@0.32.0` no GitHub Packages.
+- **D — front #813 destravado.** Com o pacote de pé, a dependência subiu para `0.32.0` no
+  `package.json` e no `package-lock.json` (commit `c8c769cc`). `tsc --noEmit` **EXIT=0**, e o check
+  `verificar` do CI passou — era exatamente o `Property 'reminder' does not exist` do slot novo.
 
 ### Testes (rodados de verdade nesta árvore)
 
@@ -1815,6 +1819,8 @@ verde e rebaseado.
 | Backend (#637 rebaseado) | `CalendarSubscriptionApiTests` | **9/9** |
 | Backend (#637 rebaseado) | `RedeApplicationTests` (schema x entidades) | **3/3** |
 | Backend (#650, antes de fechar) | `ExternalJobImportServiceTests` + `ExternalJobsListingTests` | **4/4** e **6/6** |
+| Front (#813 com DS 0.32.0) | `tsc --noEmit` | **EXIT=0**, 0 erros |
+| Front (#813 com DS 0.32.0) | `vitest` completo | 1285/1292; as 7 falhas são `e2e/key-manager.test.ts`, que passa **6/6** isolado |
 
 ### Armadilhas e notas
 
@@ -1836,15 +1842,23 @@ verde e rebaseado.
 - **O check "Schema x migrations" é o que pega `char` vs `varchar`.** Ele boota contra MariaDB 11.4
   com `ddl-auto=validate`; o `CalendarSubscriptionApiTests` roda em H2 e não pega. No #637 rebaseado
   ele passou, junto com "Migrações sem versão duplicada".
+- **O token do ambiente não tem `read:packages`.** Instalar o DS do GitHub Packages localmente
+  falha com E403. Verificação local possível porque o `npm pack` do commit da tag reproduz o
+  shasum publicado (`2736870…`) — o lockfile aponta para o tarball real com a integridade conferida,
+  e o `dist/` local serviu de link para o `tsc`. O CI fez a verificação final com `npm ci` real.
+- **Suíte do front tem contaminação entre arquivos.** `e2e/key-manager.test.ts` dá 7 falhas na
+  execução completa e passa 6/6 isolado. Não é do DS (o arquivo não o importa); registrado para não
+  atrapalhar a leitura de CI de PRs futuros.
 
 ### PRs
 
-- Backend (bloco 22) — **#637**, rebaseado sobre a `qa` com o #646, `MERGEABLE`, aguardando revisão
-  humana. Checks verdes: migrações, schema, CodeQL, Snyk.
+- Backend (bloco 22) — **#637**, rebaseado sobre a `qa` com o #646, **totalmente verde** (migrações,
+  schema, build, testes, CodeQL, Snyk), aguardando revisão humana.
 - Backend (jobs) — **#650**, fechado como duplicado do #646.
-- DS — **#204** mergeado; tag **`v0.32.0`** criada nesta rodada.
+- DS — **#204** mergeado; tag **`v0.32.0`** criada e pacote publicado nesta rodada.
+- Front — **#813** destravado pelo DS `0.32.0`; `tsc` 0 erros e CI verde.
 - Docs — este PR.
 
-**PRÓXIMA RODADA (§10, proposta de execução 24):** com o DS `0.32.0` publicado, o front #813 pode
-subir a dependência e fechar o slot `reminder`; depois, import na tela com o contrato do #629 e a
-tela da assinatura consumindo o cliente do #816.
+**PRÓXIMA RODADA (§10, proposta de execução 24):** import na tela com o contrato do #629 e a tela da
+assinatura consumindo o cliente do #816 — as duas dependências (backend #637 e front #813) agora
+estão apenas aguardando revisão humana, então a próxima unidade pode ser construída sobre `qa`.
