@@ -2344,6 +2344,14 @@ export const texts = {
       backToReview: "Voltar para análise",
       statusUpdated: "Estado atualizado.",
       statusError: "Não foi possível atualizar o estado. Tente novamente.",
+      interview: {
+        cancelTitle: "Cancelar entrevista",
+        cancelAction: "Cancelar entrevista",
+        cancelConfirm:
+          "Cancelar esta entrevista? Os dois lados deixam de ver o compromisso na agenda.",
+        error: "Não foi possível salvar a entrevista. Tente novamente.",
+        cancelError: "Não foi possível cancelar a entrevista. Tente novamente.",
+      },
     },
     createAction: "Publicar vaga",
     createError: "Não foi possível publicar a vaga. Tente novamente.",

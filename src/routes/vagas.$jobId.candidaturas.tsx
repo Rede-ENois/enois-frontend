@@ -5,8 +5,13 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { JobApplication } from "@/types/application/job/job-application";
-import { UserAvatar } from "@rede-enois/design-system/domain";
-import { Button } from "@rede-enois/design-system/ui";
+import type { ScheduleInterviewInput } from "@/types/application/job/schedule-interview-input";
+import {
+  CalendarInterviewDialog,
+  JobInterviewActions,
+  UserAvatar,
+} from "@rede-enois/design-system/domain";
+import { Button, ConfirmDialog } from "@rede-enois/design-system/ui";
 import { ArrowLeft, BadgeCheck, Loader2, MessageCircle, ShieldAlert } from "lucide-react";
 
 import { jobsApi } from "@/lib/api";
@@ -14,6 +19,10 @@ import { actionsFor, statusTone } from "@/lib/job-application-status";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
+
+function browserZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Sao_Paulo";
+}
 
 export const Route = createFileRoute("/vagas/$jobId/candidaturas")({
   beforeLoad: requireAuth,
@@ -47,6 +56,38 @@ function JobApplications() {
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ id: string; ok: boolean } | null>(null);
+
+  // Entrevista: o dialogo e o mesmo para marcar e reagendar; o que muda e a candidatura aberta.
+  const [interviewFor, setInterviewFor] = useState<JobApplication | null>(null);
+  const [cancelFor, setCancelFor] = useState<JobApplication | null>(null);
+  const [interviewError, setInterviewError] = useState<string | null>(null);
+  const timeZoneId = browserZone();
+
+  const saveInterview = useMutation({
+    mutationFn: (vars: { application: JobApplication; values: ScheduleInterviewInput }) => {
+      const existing = vars.application.interview;
+      return existing
+        ? jobsApi.rescheduleInterview(jobId, vars.application.id, existing.id, vars.values)
+        : jobsApi.scheduleInterview(jobId, vars.application.id, vars.values);
+    },
+    onMutate: () => setInterviewError(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
+      setInterviewFor(null);
+    },
+    onError: () => setInterviewError(texts.jobs.applications.interview.error),
+  });
+
+  const cancelInterview = useMutation({
+    mutationFn: (application: JobApplication) =>
+      jobsApi.cancelInterview(jobId, application.id, application.interview?.id ?? ""),
+    onMutate: () => setInterviewError(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
+      setCancelFor(null);
+    },
+    onError: () => setInterviewError(texts.jobs.applications.interview.cancelError),
+  });
 
   const changeStatus = useMutation({
     mutationFn: (vars: { applicationId: string; status: JobApplication["status"] }) =>
@@ -228,6 +269,17 @@ function JobApplications() {
                 )}
               </div>
 
+              {application.status !== "NOT_SELECTED" && (
+                <JobInterviewActions
+                  interview={application.interview ?? null}
+                  separated
+                  onSchedule={() => setInterviewFor(application)}
+                  onReschedule={() => setInterviewFor(application)}
+                  onCancel={() => setCancelFor(application)}
+                  error={interviewError}
+                />
+              )}
+
               {application.message && (
                 <div className="rounded-xl bg-muted/50 px-3 py-2">
                   <p className="text-xs font-medium text-muted-foreground">
@@ -261,6 +313,38 @@ function JobApplications() {
           ))}
         </ul>
       </div>
+
+      <CalendarInterviewDialog
+        open={interviewFor !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setInterviewFor(null);
+            setInterviewError(null);
+          }
+        }}
+        interview={interviewFor?.interview ?? null}
+        timeZoneId={timeZoneId}
+        candidateName={interviewFor?.candidate?.name ?? null}
+        savePending={saveInterview.isPending}
+        saveError={interviewError}
+        onSave={(values) => {
+          if (interviewFor) saveInterview.mutate({ application: interviewFor, values });
+        }}
+      />
+      <ConfirmDialog
+        open={cancelFor !== null}
+        onOpenChange={(open) => {
+          if (!open) setCancelFor(null);
+        }}
+        title={texts.jobs.applications.interview.cancelTitle}
+        description={texts.jobs.applications.interview.cancelConfirm}
+        confirmLabel={texts.jobs.applications.interview.cancelAction}
+        destructive
+        pending={cancelInterview.isPending}
+        onConfirm={() => {
+          if (cancelFor) cancelInterview.mutate(cancelFor);
+        }}
+      />
     </AppContainer>
   );
 }
