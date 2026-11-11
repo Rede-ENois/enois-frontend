@@ -2183,7 +2183,16 @@ export const texts = {
       locations: ["Remoto", "Híbrido", "Presencial"],
       /** O backend guarda o código (JUNIOR, INTERN...); a tela mostra o nome em português. */
       levels: { JUNIOR: "Júnior", MID: "Pleno", SENIOR: "Sênior", LEAD: "Liderança" },
-      types: { CLT: "CLT", PJ: "PJ", FREELANCE: "Freelance", INTERN: "Estágio" },
+      types: {
+        CLT: "CLT",
+        PJ: "PJ",
+        FREELANCE: "Freelance",
+        INTERN: "Estágio",
+        FULL_TIME: "Tempo integral",
+        PART_TIME: "Meio período",
+        CONTRACT: "Contrato",
+        INTERNSHIP: "Estágio",
+      },
     },
     /** Quantas habilidades o card da lista mostra antes do "+N". */
     moreSkills: (count: number) => `+${count}`,
@@ -2204,6 +2213,11 @@ export const texts = {
     back: "Voltar para vagas",
     notFound: "Vaga não encontrada.",
     about: "Sobre a vaga",
+    /** Vaga externa cuja fonte não publica descrição: a tela diz isso em vez de inventar texto. */
+    noDescription:
+      "A fonte não publica a descrição desta vaga. Abra a vaga na origem para ver os detalhes.",
+    /** Vaga da casa publicada sem descrição. */
+    noDescriptionInternal: "Quem publicou esta vaga não escreveu uma descrição.",
     skills: "Habilidades",
     noSkills: "Sem habilidades informadas.",
     save: "Salvar",
