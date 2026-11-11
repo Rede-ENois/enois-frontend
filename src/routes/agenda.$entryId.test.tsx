@@ -14,7 +14,7 @@ vi.mock("@tanstack/react-router", () => ({
   redirect: () => undefined,
 }));
 
-const { Route, detailOf } = await import("./agenda.$entryId");
+const { Route, detailOf, reminderChanges } = await import("./agenda.$entryId");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 
 const apiDetail = {
@@ -92,5 +92,24 @@ describe("rota /agenda/$entryId", () => {
 
     expect(view.owner).toBe(true);
     expect(view.participants).toEqual([{ id: "p1", username: "ana", state: "INVITED" }]);
+  });
+
+  it("escolher um lembrete apaga os outros e grava o novo", () => {
+    expect(reminderChanges([{ minutesBefore: 15 }], 60)).toEqual([{ clear: 15 }, { set: 60 }]);
+  });
+
+  it("escolher o mesmo lembrete que já existe não mexe em nada", () => {
+    expect(reminderChanges([{ minutesBefore: 15 }], 15)).toEqual([]);
+  });
+
+  it('"não avisar" apaga todos os lembretes', () => {
+    expect(reminderChanges([{ minutesBefore: 15 }, { minutesBefore: 1440 }], null)).toEqual([
+      { clear: 15 },
+      { clear: 1440 },
+    ]);
+  });
+
+  it("sem lembrete nenhum, escolher um só grava", () => {
+    expect(reminderChanges([], 30)).toEqual([{ set: 30 }]);
   });
 });
