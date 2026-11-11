@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=9 (assinatura privada .ics) entregue no backend (#637 mergeado) e no DS (#209 mergeado na qa, ainda sem release). A tela está no front #828, aberta e com CI vermelho esperado (MISSING_EXPORT) até o release do DS. O import do backend passou a honrar STATUS:CANCELLED (#654 mergeado). Fase 4 (agenda social) segue em andamento com a presença em evento (D27). Fase 3 concluída: seletor de lembrete ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 concluída (export+import #629, botão #809). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
-EXECUCAO=24
-ULTIMA_ATUALIZACAO=2026-11-11T06:30:00-03:00
+FASE_ATUAL=5 (agenda profissional: entrevistas) iniciada — backend #655 (agenda dos dois lados, V274), DS #214 (diálogo + linha de ações) e front #830 (tela de candidaturas), todos abertos aguardando revisão humana; #830 com CI vermelho esperado (MISSING_EXPORT) até o release do DS. Bloco anterior (fases 8/9): backend #654 e DS #209 mergeados pelo bot (B8); tela do import e da assinatura no front #828, aberta e travada no mesmo release. Fase 4 segue em andamento com a presença em evento (D27). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
+EXECUCAO=25
+ULTIMA_ATUALIZACAO=2026-11-11T08:45:00-03:00
 ```
 
 ---
@@ -156,7 +156,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída** — #164/#165/#166 **mergeados**; falta só o release 0.30.0 (enois-design-system#172) |
 | 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **concluída** — `/agenda` (#769) e detalhe `/agenda/$entryId` (#777) mergeados; lembretes, conflito e disponibilidade no cliente; seletor de lembrete no DS (#187, 0.31.0) e **ligado na tela** (execução 21) |
 | 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | **em andamento** — eventos de grupo: presença confirmada cria/reagenda/remove a entrada (origem `EVENT`, D27); faltam chamadas e compromissos pessoais |
-| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | pendente                                                                                                                                       |
+| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | **em andamento** — entrevistas: backend #655 (agenda dos dois lados, origem `JOB_INTERVIEW`, D29), DS #214 (`CalendarInterviewDialog` + `JobInterviewActions`) e front #830 (tela de candidaturas); faltam mentorias, reuniões e workshops, e a entrevista na tela do candidato |
 | 6    | Disponibilidade e conflitos                                              | 1            | **concluída** — backend (#607, #613), DS #197 (mergeado `bdf7370`), front #804 **mergeado na `qa`**; release **0.31.0 publicado** pela mantenedora (tag `v0.31.0`) |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
 | 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa` |
@@ -218,6 +218,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#654](https://github.com/Rede-ENois/enois-backend/pull/654)       | enois-backend       | Fase 8: import honra `STATUS:CANCELLED` (cancela pela origem, nunca cria; `cancelled` no resultado)          | **mergeado** na `qa` em `81c1ac02` (2026-11-11) pelo bot `kof-agent-worker` — ver B8 |
 | [#209](https://github.com/Rede-ENois/enois-design-system/pull/209) | enois-design-system | Fase 8/9: `CalendarImportDialog` + `CalendarSubscriptionCard` (controlados, sem requisição própria)          | **mergeado** na `qa` em `b767e606` (2026-11-11) pelo bot `kof-agent-worker` — ver B8; **não está em nenhum pacote publicado** (release sai do `main`, D28.4/B9) |
 | [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)      | enois-frontend      | Fase 8/9: import `.ics` na `/agenda` + rota `/agenda/assinatura` (criar, copiar, regenerar, revogar)         | aberto, aguardando revisão humana; **CI vermelho esperado**: `MISSING_EXPORT` de `CalendarImportDialog`/`CalendarSubscriptionCard` até o release do DS (B9) |
+| [#655](https://github.com/Rede-ENois/enois-backend/pull/655)       | enois-backend       | Fase 5: agendamento de entrevista (`V274`) com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, D29) + notificação e e-mail | aberto, aguardando revisão humana |
+| [#214](https://github.com/Rede-ENois/enois-design-system/pull/214) | enois-design-system | Fase 5: `CalendarInterviewDialog` + `JobInterviewActions` (controlados, sem requisição própria)               | aberto, aguardando revisão humana; não publica pacote (release sai do `main`, D28.4/B9) |
+| [#830](https://github.com/Rede-ENois/enois-frontend/pull/830)      | enois-frontend      | Fase 5: marcar/reagendar/cancelar entrevista na tela de candidaturas, com os componentes do DS #214          | aberto, aguardando revisão humana; **CI vermelho esperado** (`MISSING_EXPORT`) até o release do DS (B9) |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -225,6 +228,21 @@ delimitado; dependências declaradas no corpo.
 ---
 
 ## 8. Testes executados
+
+Execução 25 (backend `feat/enois-calendar-entrevista` sobre a `qa` `81c1ac02`; DS
+`feat/calendar-interview-dialog` sobre `origin/qa` `2b48895`; front
+`feat/enois-calendar-entrevista-front` sobre `enois/qa` `03dd6f7f`):
+
+| Onde  | Comando                                                                                          | Resultado |
+| ----- | ------------------------------------------------------------------------------------------------ | --------- |
+| Backend | `-Dtest=JobInterviewTests`                                                                     | **6/6** |
+| Backend | `-Dtest=JobInterviewFlowTests`                                                                 | **5/5** |
+| Backend | regressão (`JobInterviewTests`+`JobInterviewFlowTests`+`JobApplicationTests`+`CalendarSourceServiceTests`) | **18/18** |
+| DS | `npx vitest run` (diálogo + ações)                                                                  | **11/11** |
+| DS | `npm test` (suíte inteira)                                                                          | **1725/1726**; 1 falha de carga (`halloween`, timeout 5 s) que passa isolada 9/9 |
+| DS | `npm run lint` / `npx tsc --noEmit` / `npm run build` / `npm run test:dist` / `npm run build-storybook` | todos verdes |
+| Front | `npx vitest run` (API + rota)                                                                    | **12/12** |
+| Front | `npx tsc --noEmit` / `npx eslint` nos tocados / `npx vite build`                                 | EXIT=0 / 0 erros / EXIT=0 (tarball sintético do DS, B9/D28.4) |
 
 Execução 24 (backend `feat/enois-calendar-import-cancelado` sobre a `qa`; DS
 `feat/calendar-import-subscription` sobre `origin/qa` e3e1436; front
@@ -528,6 +546,7 @@ e evitou construir sobre premissa errada.
 | 22  | 2026-11-10 ~23:20 | 9    | **Bloco de 3 unidades.** (A) assinatura privada `.ics` no domínio e no banco: V272 com hash único, `scope` congelado e `revoked_at`, token de 32 bytes em base64url, comparação em tempo constante; (B) gestão com sessão e leitura sem sessão com `ETag` e limite por hash do token; 6 de domínio + 9 de contrato, 153 na regressão do módulo e dos filtros; (C) cliente de API no front (22/22, tsc/eslint/build verdes). PRs #637 (backend) e #816 (front); #632/#814/#815 mergeados pelo bot (B8) |
 | 23  | 2026-11-11 ~05:40 | 9    | **Rodada de destravamento (outra linha de trabalho).** #650 fechado como duplicado do #646; #637 rebaseado sobre a `qa`; tag `v0.32.0` do DS criada. Registrada no log antes deste bloco |
 | 24  | 2026-11-11 ~06:30 | 8/9  | **Bloco de 4 unidades.** (A) import do backend honra `STATUS:CANCELLED` (cancela pela origem, `cancelled` no resultado; 15+8 testes) — #654 **mergeado pelo bot** (B8); (B) `CalendarSubscriptionCard` e (C) `CalendarImportDialog` no DS, controlados e sem requisição própria (19 testes, 1678 na suíte) — #209 **mergeado pelo bot** (B8), sem release; (D) import `.ics` na `/agenda` e rota `/agenda/assinatura` no front (7/7 rotas, tsc/eslint/build verdes, 1308/1314 com 6 falhas pré-existentes) — #828 aberto, CI vermelho esperado até o release. D28 registrada (split controlado, token só na resposta, linhagens qa/main do DS) |
+| 25  | 2026-11-11 ~08:45 | 5    | **Bloco de 4 unidades — fase 5 iniciada.** (A) agendamento de entrevista no backend com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, V274, 6+5 testes, 18 na regressão) — PR #655; (B) `CalendarInterviewDialog` e (C) `JobInterviewActions` no DS (11 testes, 1725/1726 na suíte, storybook verde) — PR #214; (D) tela de candidaturas no front (12/12, tsc/eslint/build verdes contra tarball sintético) — PR #830. D29 registrada (entrevista escreve nos dois lados pela porta de origem) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
