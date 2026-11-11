@@ -104,14 +104,30 @@ recorrência quebra no cliente.
 
 ---
 
-## D7 — Assinatura privada com token, somente leitura (proposta, Fase 9)
+## D7 — Assinatura privada com token, somente leitura (implementada na execução 22)
 
-`/api/v1/calendar/subscribe/{token}.ics` responde sem sessão, mas o token é o segredo: gerado com
+`/calendar/subscribe/{token}.ics` responde sem sessão, mas o token é o segredo: gerado com
 `SecureRandom`, guardado como hash, revogável e regenerável. Resposta `Cache-Control` curto com
-`ETag` derivado da versão da agenda, para o cliente não baixar a agenda inteira a cada ciclo.
+`ETag` derivado do corpo, para o cliente não baixar a agenda inteira a cada ciclo.
 Rate limit por token para não virar alvo de força bruta nem de DoS.
 
 **Não** usar o `id` do usuário na URL, nunca. O token é a única credencial do link.
+
+**O que a implementação fixou (execução 22).**
+
+1. **O banco guarda só o hash SHA-256**, com índice único. O token em claro existe uma única vez, na
+   resposta que o cria ou regenera; depois disso nem quem lê a tabela reconstrói o link.
+2. **Uma assinatura ativa por pessoa.** Criar quando já existe devolve a existente **sem** token
+   novo: não há como mostrá-lo de novo, e emitir um segundo link só multiplicaria credenciais vivas.
+3. **Regenerar gira a mesma linha**, não cria outra. Assim não existe janela com dois links vivos, e
+   o link antigo morre na mesma transação.
+4. **O `scope` fica congelado no token** (nulo = agenda consolidada, o mesmo contrato da leitura).
+   Trocar o recorte é regenerar o link, não um parâmetro que quem assinou escolhe.
+5. **Token desconhecido e token revogado respondem o mesmo 404.** Distinguir confirmaria que aquele
+   link já existiu — a mesma lógica da D10 para entrada alheia.
+6. **A janela é derivada do começo** (30 dias atrás, 365 no total). Somar os dois prazos soltos
+   estourava o teto de um ano do export e a rota respondia `INVALID_WINDOW`.
+7. **O limite é por hash do token**, nunca pelo token em claro, como o resto de `shared.security`.
 
 ---
 
