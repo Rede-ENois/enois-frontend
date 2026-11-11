@@ -676,6 +676,7 @@ export const texts = {
     capture: "Captura da chamada no momento da denúncia",
     captureMissing: "Esta denúncia de chamada veio sem captura de tela.",
     participants: "Na sala quando a denúncia foi feita",
+    reportedAt: (when: string) => `Denúncia feita em ${when}`,
   },
   onboarding: {
     seoTitle: "Boas-vindas · Énóis",
