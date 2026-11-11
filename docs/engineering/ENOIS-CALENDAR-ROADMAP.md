@@ -13,7 +13,7 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=9 (assinatura privada .ics) entregue no backend (#637) e agora também no DS e na tela: CalendarSubscriptionCard + CalendarImportDialog (DS #209) e rota /agenda/assinatura com import .ics na /agenda (front #828), todos aguardando revisão humana. O import do backend passou a honrar STATUS:CANCELLED (#654). Fase 4 (agenda social) segue em andamento com a presença em evento (D27). Fase 3 concluída: seletor de lembrete ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 concluída (export+import #629, botão #809). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
+FASE_ATUAL=9 (assinatura privada .ics) entregue no backend (#637 mergeado) e no DS (#209 mergeado na qa, ainda sem release). A tela está no front #828, aberta e com CI vermelho esperado (MISSING_EXPORT) até o release do DS. O import do backend passou a honrar STATUS:CANCELLED (#654 mergeado). Fase 4 (agenda social) segue em andamento com a presença em evento (D27). Fase 3 concluída: seletor de lembrete ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 concluída (export+import #629, botão #809). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
 EXECUCAO=24
 ULTIMA_ATUALIZACAO=2026-11-11T06:30:00-03:00
 ```
@@ -215,9 +215,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | (backend, exec. 21)                                                | enois-backend       | Fase 4: presença em evento cria/reagenda/remove a entrada na agenda + porta de origem encerra lembrete      | aberto, aguardando revisão humana |
 | (DS, exec. 21)                                                     | enois-design-system | Fase 3: slot `reminder` no `CalendarEntryDetail`                                                            | aberto, aguardando revisão humana |
 | (front, exec. 21)                                                  | enois-frontend      | Fase 3: seletor de lembrete ligado em `/agenda/$entryId`                                                    | aberto, aguardando revisão humana; depende do slot no DS |
-| [#654](https://github.com/Rede-ENois/enois-backend/pull/654)       | enois-backend       | Fase 8: import honra `STATUS:CANCELLED` (cancela pela origem, nunca cria; `cancelled` no resultado)          | aberto, aguardando revisão humana |
-| [#209](https://github.com/Rede-ENois/enois-design-system/pull/209) | enois-design-system | Fase 8/9: `CalendarImportDialog` + `CalendarSubscriptionCard` (controlados, sem requisição própria)          | aberto, aguardando revisão humana; a partir da `qa` (D28.4) |
-| [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)      | enois-frontend      | Fase 8/9: import `.ics` na `/agenda` + rota `/agenda/assinatura` (criar, copiar, regenerar, revogar)         | aberto, aguardando revisão humana; depende do release do DS #209 |
+| [#654](https://github.com/Rede-ENois/enois-backend/pull/654)       | enois-backend       | Fase 8: import honra `STATUS:CANCELLED` (cancela pela origem, nunca cria; `cancelled` no resultado)          | **mergeado** na `qa` em `81c1ac02` (2026-11-11) pelo bot `kof-agent-worker` — ver B8 |
+| [#209](https://github.com/Rede-ENois/enois-design-system/pull/209) | enois-design-system | Fase 8/9: `CalendarImportDialog` + `CalendarSubscriptionCard` (controlados, sem requisição própria)          | **mergeado** na `qa` em `b767e606` (2026-11-11) pelo bot `kof-agent-worker` — ver B8; **não está em nenhum pacote publicado** (release sai do `main`, D28.4/B9) |
+| [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)      | enois-frontend      | Fase 8/9: import `.ics` na `/agenda` + rota `/agenda/assinatura` (criar, copiar, regenerar, revogar)         | aberto, aguardando revisão humana; **CI vermelho esperado**: `MISSING_EXPORT` de `CalendarImportDialog`/`CalendarSubscriptionCard` até o release do DS (B9) |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -481,9 +481,9 @@ assinatura foram entregues: DS #209 (diálogo e card) e front #828 (rota `/agend
 botão **Importar .ics** na `/agenda`), com o backend #654 corrigindo o import de cancelamento. O
 item (3) fase 4 adiante e o (4) reconferência de PRs seguem para a próxima rodada.
 
-**Execução 25 (próximo bloco) — proposta.** (1) **Caminho crítico é revisão humana:** #654, #209,
-#828 e os anteriores (#637, #813, #816) precisam de merge; sem merge do DS não há release nem
-lockfile real no front. (2) **Fase 4 adiante:** conferir se o módulo de chamadas/vídeo tem data e
+**Execução 25 (próximo bloco) — proposta.** (1) **Caminho crítico é o release do DS:** #209 já
+está na `qa`, mas o pacote sai do `main` (B9) — sem um release que traga os componentes, o #828
+não compila no CI. Depois, lockfile real e revisão humana do #828. (2) **Fase 4 adiante:** conferir se o módulo de chamadas/vídeo tem data e
 hora legíveis antes de prometer a entrada na agenda — a presença em evento (D27) foi o primeiro
 caso; a chamada é o próximo. (3) **Reconferir PRs e o bot** (§9/B8) antes de começar, como sempre.
 (4) Se o #637 mergear, fumaça do `/calendar/subscribe/{token}.ics` contra ambiente.
@@ -527,7 +527,7 @@ e evitou construir sobre premissa errada.
 | 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). Regressão completa do backend: 2335 testes, 1 falha de feed (passa isolada na base e na branch — flake). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
 | 22  | 2026-11-10 ~23:20 | 9    | **Bloco de 3 unidades.** (A) assinatura privada `.ics` no domínio e no banco: V272 com hash único, `scope` congelado e `revoked_at`, token de 32 bytes em base64url, comparação em tempo constante; (B) gestão com sessão e leitura sem sessão com `ETag` e limite por hash do token; 6 de domínio + 9 de contrato, 153 na regressão do módulo e dos filtros; (C) cliente de API no front (22/22, tsc/eslint/build verdes). PRs #637 (backend) e #816 (front); #632/#814/#815 mergeados pelo bot (B8) |
 | 23  | 2026-11-11 ~05:40 | 9    | **Rodada de destravamento (outra linha de trabalho).** #650 fechado como duplicado do #646; #637 rebaseado sobre a `qa`; tag `v0.32.0` do DS criada. Registrada no log antes deste bloco |
-| 24  | 2026-11-11 ~06:30 | 8/9  | **Bloco de 4 unidades.** (A) import do backend honra `STATUS:CANCELLED` (cancela pela origem, `cancelled` no resultado; 15+8 testes) — #654; (B) `CalendarSubscriptionCard` e (C) `CalendarImportDialog` no DS, controlados e sem requisição própria (19 testes, 1678 na suíte) — #209; (D) import `.ics` na `/agenda` e rota `/agenda/assinatura` no front (7/7 rotas, tsc/eslint/build verdes, 1308/1314 com 6 falhas pré-existentes) — #828. D28 registrada (split controlado, token só na resposta, linhagens qa/main do DS) |
+| 24  | 2026-11-11 ~06:30 | 8/9  | **Bloco de 4 unidades.** (A) import do backend honra `STATUS:CANCELLED` (cancela pela origem, `cancelled` no resultado; 15+8 testes) — #654 **mergeado pelo bot** (B8); (B) `CalendarSubscriptionCard` e (C) `CalendarImportDialog` no DS, controlados e sem requisição própria (19 testes, 1678 na suíte) — #209 **mergeado pelo bot** (B8), sem release; (D) import `.ics` na `/agenda` e rota `/agenda/assinatura` no front (7/7 rotas, tsc/eslint/build verdes, 1308/1314 com 6 falhas pré-existentes) — #828 aberto, CI vermelho esperado até o release. D28 registrada (split controlado, token só na resposta, linhagens qa/main do DS) |
 ---
 
 ## 12. Critérios de encerramento do cronjob

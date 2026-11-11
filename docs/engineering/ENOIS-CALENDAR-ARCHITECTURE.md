@@ -774,4 +774,7 @@ O bloco 24 levou import e assinatura para o DS e para a tela, e fechou três dec
    AGENTS.md: PR de componente sai da `qa` e mira a `qa`; para validar o front (que consome o
    pacote da linhagem `main`), monta-se uma árvore de validação separada (`main` + os arquivos
    novos) só para gerar o tarball — nunca rebasear uma na outra nem "resolver" a divergência por
-   conta própria.
+   conta própria. **Consequência operacional:** mergear o componente na `qa` não o publica. O
+   front que depende dele fica com CI vermelho (`MISSING_EXPORT`) até um release a partir do
+   `main` — e esse release é passo humano (D20). O vermelho é o B9 se manifestando, não regressão
+   do código; declarar isso no PR evita que alguém "conserte" apagando o import.

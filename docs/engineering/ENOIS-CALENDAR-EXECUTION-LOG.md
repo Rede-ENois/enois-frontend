@@ -1940,16 +1940,26 @@ aditivo).
 
 ### PRs
 
-- Backend — **#654**, para `qa`, `MERGEABLE`, aguardando revisão humana.
-- DS — **#209**, para `qa` (a partir de `origin/qa` e3e1436), aguardando revisão humana. **Entra
-  no pacote só depois de merge na `qa` e release a partir do `main`** — as linhagens não se
-  cruzam, e o front #828 valida contra o tarball sintético até lá (registrado no corpo do PR).
-- Front — **#828**, para `qa`, `MERGEABLE`, aguardando revisão humana; dependente do release do DS
-  #209 (B6/B7 como sempre).
+- Backend — **#654**, para `qa`. **Mergeado pelo bot `kof-agent-worker`** em `81c1ac02`
+  (2026-11-11T07:21Z) sem revisão humana — B8 de novo.
+- DS — **#209**, para `qa` (a partir de `origin/qa` e3e1436). **Mergeado pelo bot** em `b767e606`
+  (2026-11-11T07:57Z) — B8 de novo. **Não está em nenhum pacote publicado:** o release sai do
+  `main` e as linhagens não se cruzam (D28.4/B9). Até o release, o front #828 valida contra o
+  tarball sintético.
+- Front — **#828**, para `qa`, `MERGEABLE`, aguardando revisão humana. **CI vermelho esperado:**
+  `MISSING_EXPORT` de `CalendarImportDialog`/`CalendarSubscriptionCard` no build Docker, porque o
+  `npm ci` instala o pacote publicado (0.32.0, linhagem `main`) que ainda não tem os componentes.
+  Não é regressão do código — é o B9. O build local passa porque usa o tarball sintético.
 - Docs — este PR.
 
-**PRÓXIMA RODADA (§10, proposta de execução 25):** revisão humana em #654/#209/#828 é o caminho
-crítico — sem merge não há release nem lockfile real. Em paralelo: (1) item (3) da proposta 23
+**Correção de estado no fim da rodada:** os merges do bot aconteceram enquanto este log era
+escrito; §7, §Estado e a linha 24 do histórico foram corrigidos no mesmo PR para não deixar o
+roadmap mentindo. O CI do #828 foi conferido (`gh pr checks 828`) e a causa raiz lida no log do
+run 42993813501 — não é suposição.
+
+**PRÓXIMA RODADA (§10, proposta de execução 25):** o caminho crítico mudou — #654 e #209 já
+estão mergeados (pelo bot), então o que falta é **release do DS a partir do `main`** trazendo os
+componentes do #209; sem isso o #828 não compila no CI. Em paralelo: (1) item (3) da proposta 23
 (fase 4 adiante — conferir se o módulo de chamadas/vídeo tem data/hora legível antes de prometer);
-(2) reconferir os PRs abertos e o estado do bot (§9/B8); (3) se o #637 mergeou, subir o
-`/calendar/subscribe` para testes de fumaça contra ambiente.
+(2) reconferir os PRs abertos e o estado do bot (§9/B8); (3) com o #637 mergeado, fumaça do
+`/calendar/subscribe/{token}.ics` contra ambiente.
