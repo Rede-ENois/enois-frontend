@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=5 (agenda profissional) — backend #655 mergeado (agenda dos dois lados, V274, entrevista na lista do candidato); front #830 (tela de candidaturas + entrevista em "minhas candidaturas") aberto aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main` — o PR de release #218 chegou com marcador de conflito commitado e foi reescrito limpo, com o check verde; falta a publicação humana (D20). Fase 3 concluída: a edição da agenda reclassifica agenda/tipo/dia inteiro (#664/#840) e a disponibilidade tem atalho no cabeçalho. Fase 3/1: os convites pendentes ganharam superfície no DS (`CalendarPendingInvitations`, #219) ligada à `CalendarAgendaSurface` — antes o cliente e a rota existiam e nenhuma tela desenhava a lista. Fase 3: o lembrete de compromisso passou a abrir o compromisso (`/agenda/{id}`, #665) e o front ganhou a rota `agenda` na tabela de navegação (#843) — antes o clique não levava a lugar nenhum. Fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo), então não geram entrada na agenda; presença em evento grava na agenda (#632). Fase 9: backend e cliente prontos (#637/#816); tela em revisão (#828).
-EXECUCAO=30
-ULTIMA_ATUALIZACAO=2026-11-11T22:10:00-03:00
+FASE_ATUAL=5 (agenda profissional) — backend #655 mergeado (agenda dos dois lados, V274, entrevista na lista do candidato); front #830 (tela de candidaturas + entrevista em "minhas candidaturas") aberto aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main` — o PR de release #218 chegou com marcador de conflito commitado e foi reescrito limpo, com o check verde; falta a publicação humana (D20). Fase 3 concluída: a edição da agenda reclassifica agenda/tipo/dia inteiro (#664/#840) e a disponibilidade tem atalho no cabeçalho. Fase 3/1: os convites pendentes ganharam superfície no DS (`CalendarPendingInvitations`, #219) ligada à `CalendarAgendaSurface` — antes o cliente e a rota existiam e nenhuma tela desenhava a lista. Fase 3: o lembrete de compromisso passou a abrir o compromisso (`/agenda/{id}`, #665) e o front ganhou a rota `agenda` na tabela de navegação (#843) — antes o clique não levava a lugar nenhum. Fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo), então não geram entrada na agenda; presença em evento grava na agenda (#632). Fase 9: backend e cliente prontos (#637/#816); tela em revisão (#828). Execução 31: a notificação de empresa passou a abrir a página da empresa (#846) e a superfície de lembrete passou a recusar o que não pode atender — alheio é 404, remoção sem antecedência é 400 e o aviso diz o tempo que falta (#667, D35).
+EXECUCAO=31
+ULTIMA_ATUALIZACAO=2026-11-11T23:30:00-03:00
 ```
 
 ---
@@ -156,7 +156,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída** — #164/#165/#166 **mergeados**; falta só o release 0.30.0 (enois-design-system#172)                                                                                                                                                                                                                                             |
 | 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **concluída** — `/agenda` (#769) e detalhe `/agenda/$entryId` (#777) mergeados; lembretes, conflito e disponibilidade no cliente; seletor de lembrete no DS (#187, 0.31.0) e **ligado na tela** (#813); edição reclassifica agenda/tipo/dia inteiro (#664/#840) e a disponibilidade tem atalho no cabeçalho (execução 28); lembrete abre o compromisso (#665) e a tabela de navegação do front conhece `agenda` (#843, execução 29) |
 | 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | **em andamento** — eventos de grupo: presença confirmada cria/reagenda/remove a entrada (origem `EVENT`, D27); chamadas/vídeo **inspecionadas na execução 26**: são sessões ao vivo, sem horário agendado, então não geram entrada na agenda (o `reportedAt` da denúncia passou a aparecer na moderação); faltam compromissos pessoais        |
-| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | **em andamento** — entrevistas: backend #655 **mergeado** (agenda dos dois lados, origem `JOB_INTERVIEW`, D29, e entrevista em `/jobs/applications/mine`), DS #214 mergeado na `qa` (fora do pacote, B9) e front #830 aberto (tela de candidaturas + entrevista em "minhas candidaturas", CI vermelho esperado até o release); mentorias: entrada na agenda (D19) e perfil apagável (#661); faltam reuniões e workshops |
+| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | **em andamento** — entrevistas: backend #655 **mergeado** (agenda dos dois lados, origem `JOB_INTERVIEW`, D29, e entrevista em `/jobs/applications/mine`), DS #214 mergeado na `qa` (fora do pacote, B9) e front #830 aberto (tela de candidaturas + entrevista em "minhas candidaturas", CI vermelho esperado até o release); mentorias: entrada na agenda (D19) e perfil apagável (#661); **reuniões e workshops bloqueados por semântica de produto** — `MEETING`/`WORKSHOP` existem só como valor de enum e opção do formulário do DS, sem módulo produtor; implementar exige decisão dos mantenedores |
 | 6    | Disponibilidade e conflitos                                              | 1            | **concluída** — backend (#607, #613), DS #197 (mergeado `bdf7370`), front #804 **mergeado na `qa`**; release **0.31.0 publicado** pela mantenedora (tag `v0.31.0`)                                                                                                                                                                            |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                                                                                                                                                                                                                      |
 | 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa`                                                                                                                                                                                                                              |
@@ -230,6 +230,8 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#219](https://github.com/Rede-ENois/enois-design-system/pull/219)   | enois-design-system | Fase 3/1: `CalendarPendingInvitations` (convites pendentes acima da agenda) + ligação na `CalendarAgendaSurface` e restauração de `conflicts` na props da `qa`                              | aberto, aguardando revisão humana; CI verde; **não está em nenhum pacote publicado** (release sai do `main`, D28.4/B9)                                          |
 | [#665](https://github.com/Rede-ENois/enois-backend/pull/665)         | enois-backend       | Fase 3: o lembrete de compromisso abre o compromisso (`/agenda/{id}`, CTA "Ver compromisso") em vez da agenda vazia                                                                         | aberto, aguardando revisão humana; CI verde                                                                                                                     |
 | [#843](https://github.com/Rede-ENois/enois-frontend/pull/843)        | enois-frontend      | Fase 3: a tabela de navegação das notificações conhece `agenda`, `agenda/$entryId` e `agenda/disponibilidade`                                                                               | aberto, aguardando revisão humana; CI verde                                                                                                                     |
+| [#846](https://github.com/Rede-ENois/enois-frontend/pull/846)        | enois-frontend      | Fase 3: a tabela de navegação conhece `empresa` — a notificação de nova oportunidade e de micro-projeto (`/empresa/{slug}`, `/api/empresa/{slug}`) abre a página da empresa                    | aberto, aguardando revisão humana                                                                                                                               |
+| [#667](https://github.com/Rede-ENois/enois-backend/pull/667)         | enois-backend       | Fase 3: lembrete de compromisso alheio é 404 (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (D35)                      | aberto, aguardando revisão humana                                                                                                                               |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -237,6 +239,19 @@ delimitado; dependências declaradas no corpo.
 ---
 
 ## 8. Testes executados
+
+Execução 31 (front `fix/enois-calendar-empresa-na-navegacao` sobre `enois/qa` `05ba944a`; backend
+`fix/enois-calendar-lembrete-contrato` sobre `enois/qa` `98ebda36`):
+
+| Onde    | Comando                                                                        | Resultado                                                                 |
+| ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Backend | `-Dtest=CalendarReminderServiceTests`                                          | **13/13** (1 novo; falha no código antigo)                                |
+| Backend | `-Dtest=CalendarRemindersApiTests`                                             | **7/7** (2 novos; falham no código antigo)                                |
+| Backend | `-Dtest='com.socialcoisa.rede.calendar.**'`                                    | **146/146**, 0 falhas/erros/skips                                         |
+| Backend | `./mvnw -q -DskipTests compile`                                                | EXIT=0                                                                    |
+| Front   | `npx vitest run src/utils/navigation.test.ts`                                  | **14/14** (1 novo; falha no código antigo)                                |
+| Front   | `npx vitest run` (suíte inteira)                                               | **1344/1344**                                                             |
+| Front   | `npx tsc --noEmit` / `npx eslint .` / `npx vite build`                         | EXIT=0 / 0 erros (13 avisos pré-existentes) / EXIT=0                      |
 
 Execução 28 (backend `fix/enois-calendar-edicao-escopo-tipo-dia-inteiro` sobre a `qa` `5efb0470`;
 front `feat/enois-calendar-edicao-e-disponibilidade` sobre `enois/qa` `871f4385`):
@@ -578,9 +593,20 @@ inventário §4 dizia "não existe" para a `/agenda`, convites, lembretes e assi
 existem. Corrigido com `gh pr view` PR por PR e inspeção do código na `qa`. Detalhe no log,
 execução 30._
 
-**Execução 31 (próximo bloco) — proposta.** (1) **Release do DS** (passo humano, D20) — o #218 já
-está com o check verde; (2) **Fase 5:** reuniões e workshops; (3) ligar `pendingInvitations` na
-`/agenda` do front; (4) reconferir PRs e o bot (§9/B8).
+**Execução 31 — duas lacunas de contrato.**
+_Executada em 2026-11-11 (~23:30). Duas unidades de código: (A) a tabela de navegação do front
+conhece `empresa`, então a notificação de nova oportunidade e de micro-projeto abre a página da
+empresa em vez de não fazer nada (#846, 14/14, teste de prova falha no código antigo); (B) a
+superfície de lembrete do backend recusa o que não pode atender — alheio é 404 como no detalhe
+(D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que
+falta de verdade (#667, 3 testes de prova, 146/146 no pacote do calendário). D35 registrada.
+Detalhe no log, execução 31._
+
+**Execução 32 (próximo bloco) — proposta.** (1) **Release do DS** (passo humano, D20) — o #218 já
+está com o check verde; (2) ligar `pendingInvitations` na `/agenda` do front depois do release;
+(3) reconferir PRs e o bot (§9/B8). **Reuniões e workshops saem da fila:** `MEETING`/`WORKSHOP`
+existem só como valor de enum e opção do formulário do DS, sem módulo produtor — implementar exige
+semântica de produto que só os mantenedores definem.
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -628,6 +654,7 @@ e evitou construir sobre premissa errada.
 | 28  | 2026-11-11 ~16:30 | 3    | **Bloco de 3 unidades.** (A) `PATCH /calendar/entries/{id}` aceita `scope`, `kind` e `allDay`: o diálogo mostrava os três e o servidor descartava em silêncio; `reclassify` no domínio, `Boolean allDay` para "ausente = não mexi", 11/11 em `CalendarEntryWriteApiTests` (teste de prova falha no código antigo) — #664; (B) a edição do front manda os três (`updateInputOf`, 15/15 nas rotas) — #840; (C) atalho "Disponibilidade" no cabeçalho da `/agenda` para a tela que existia e não tinha link — #840. D33 registrada |
 | 29  | 2026-11-11 ~18:40 | 3    | **Bloco de 3 unidades.** (A) `CalendarPendingInvitations` no DS: o cliente e a rota `GET /calendar/invitations` existiam e nenhuma tela desenhava a lista; componente com dia/hora no fuso, três respostas e espera, ligado à `CalendarAgendaSurface` (7+1 testes, 1734 na suíte) — #219; (B) o lembrete de compromisso abria `/agenda?period=day` (agenda vazia) e o front não tinha rota `agenda`; agora abre `/agenda/{id}` com CTA "Ver compromisso" (13/13, teste de prova falha no código antigo) — #665; (C) a tabela de navegação do front ganha `agenda`, `agenda/$entryId` e `agenda/disponibilidade` (14/14, 1344 na suíte) — #843. **B9:** o release #218 chegou com marcador de conflito commitado e foi reescrito limpo na rodada, com o check verde; falta a publicação humana. D34 registrada |
 | 30  | 2026-11-11 ~20:00 | —    | **Reconferência do estado real.** O roadmap dizia "aberto" para #655, #661, #663, #664, #769, #813, #836, #840, #632, #203 e #637 — todos mergeados; o inventário §4 dizia "não existe" para `/agenda`, convites, lembretes e assinatura, que já existem. Corrigido com `gh pr view` PR por PR e inspeção do código na `qa`. Nenhum código novo; só documentação. |
+| 31  | 2026-11-11 ~23:30 | 3    | **Bloco de 2 unidades.** (A) a tabela de navegação do front conhece `empresa`: a notificação de nova oportunidade (`/empresa/{slug}`) e de micro-projeto (`/api/empresa/{slug}`) abria nada; agora abre `/empresa/$slug` (14/14, teste de prova falha no código antigo) — #846; (B) a superfície de lembrete do backend recusa o que não pode atender: alheio é 404 como no detalhe (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (3 testes de prova, 13/13 + 7/7, 146/146 no pacote) — #667. D35 registrada |
 
 ---
 

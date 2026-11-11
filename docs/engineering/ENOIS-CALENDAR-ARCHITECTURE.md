@@ -955,3 +955,38 @@ componente ainda não está em pacote publicado.
 exatamente o caso que motiva a lista (convite fora do período visível) e faria a tela depender de
 navegar até o mês certo. Rejeitado também manter o lembrete apontando para a agenda: a agenda não
 diz qual compromisso é, e o aviso já sabe.
+
+---
+
+## D35 — A superfície de lembrete recusa o que não pode atender, e o aviso diz o tempo que falta (execução 31)
+
+Três defeitos da mesma família na superfície de lembrete, todos no backend: o servidor respondia
+"tudo certo" a pedidos que não podia atender. A leitura e a remoção de lembrete de um compromisso
+alheio devolviam 200 vazio, enquanto o detalhe da entrada já devolvia 404 (D10) — o 200 confirmava
+que aquele compromisso existe na agenda de outra pessoa. O `DELETE` sem `minutesBefore` devolvia 200
+sem apagar nada, e a tela acreditava ter removido o lembrete. E o texto do aviso falava da
+antecedência escolhida, não do tempo que falta: um lembrete de 1 dia criado em cima da hora
+anunciava "em 1 dia" um compromisso que começava em 10 minutos.
+
+**Decisão.**
+
+1. **Ler, criar e remover lembrete exigem envolvimento, e o alheio é 404.** `requireInvolved` aceita
+   dono ou participante e, fora disso, lança o mesmo `CALENDAR_ENTRY_NOT_FOUND` do detalhe. Um 403
+   confirmaria a existência do compromisso na agenda de outra pessoa; o 404 não distingue "não
+   existe" de "não é seu".
+2. **Antecedência fora da lista é 400, não no-op.** `CalendarReminder.requireAllowedMinutes` é
+   público e a remoção o chama antes de procurar a linha. Apagar "7 minutos antes" não tira lembrete
+   nenhum: é pedido inválido, e a tela precisa saber disso em vez de achar que apagou. O controller
+   recusa `minutesBefore` ausente com o mesmo 400 `INVALID_REMINDER`.
+3. **O aviso fala do tempo que falta, não da antecedência escolhida.** `textUntil(startsAt, now)`
+   devolve "já começou", "começa em N min", "começa em N hora(s)" ou "começa em N dia(s)". O worker
+   pode atrasar, e o aviso não pode mentir sobre quando o compromisso começa.
+
+**Consequência.** A superfície de lembrete passa a ter o mesmo contrato de autorização do detalhe da
+entrada, e o texto da notificação é derivado do relógio no momento da entrega. A remoção idempotente
+continua idempotente para uma antecedência válida (tirar duas vezes não é erro); o que deixa de ser
+silencioso é o pedido malformado.
+
+**Rejeitado.** Suprimir a notificação quando o compromisso já começou: o aviso ainda é útil ("já
+começou" é informação verdadeira) e o worker atrasado não deve engolir o lembrete. Rejeitado também
+manter o texto pela antecedência escolhida: é o número que a pessoa pediu, não o que o relógio diz.

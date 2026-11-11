@@ -2568,3 +2568,92 @@ workshops; (3) ligar `pendingInvitations` na `/agenda`; (4) reconferir PRs e o b
 
 ---
 
+
+## EXECUÇÃO 31 — 2026-11-11T23:30-03:00 — Duas lacunas de contrato: a empresa na navegação e o lembrete alheio
+
+**Bloco de 2 unidades de código, em dois repositórios.** As duas nasceram da mesma pergunta: o
+backend manda um `href`/um estado que o front não sabe desenhar, ou responde 200 a um pedido que
+deveria recusar. Nenhuma das duas dependia do release do DS (B9), então a rodada avançou sem
+esperar a publicação humana.
+
+### Unidade A — a notificação de empresa abre a página da empresa (front, #846)
+
+**O que estava errado.** `CompanyService` manda `"/empresa/" + company.slug()` na notificação de
+nova oportunidade, e `MicroProjectService` manda `"/api/empresa/" + slug` em quatro pontos. A rota
+`src/routes/empresa.$slug.tsx` existe, mas `src/utils/navigation.ts` não tinha entrada `empresa`:
+`navigateToHref` não casava nenhuma rota e o clique na notificação não levava a lugar nenhum. É a
+mesma família da D34 — a tabela de navegação é o contrato do `href`, e um `href` sem entrada é um
+clique morto.
+
+**O que muda.** Entrada `{ source: "empresa", to: "/empresa/$slug", params: ["slug"] }` na tabela.
+O `navigateToHref` já tira o prefixo `/api/`, então a mesma entrada serve aos dois formatos.
+
+**Prova.** Teste novo em `navigation.test.ts` cobre `/empresa/estudio-x` e `/api/empresa/estudio-x`.
+Com o `navigation.ts` antigo: 1 falha / 13 passes. Com a correção: 14/14. `npx tsc --noEmit` limpo;
+`npx eslint .` 0 erros (13 avisos `react-hooks/exhaustive-deps` pré-existentes); `npx vitest run`
+1344/1344; `npx vite build` verde.
+
+### Unidade B — o lembrete alheio some, a remoção sem antecedência é 400 e o aviso diz o tempo certo (backend, #667)
+
+**O que estava errado.** Três defeitos no contrato da superfície de lembrete, todos provados no
+código:
+
+1. **Leitura e remoção de lembrete de compromisso alheio respondiam 200 vazio.** O detalhe da
+   entrada já responde 404 para um estranho (D10), mas `ofReader` e `clearForReader` não checavam
+   participação: um 200 confirmava que aquele compromisso existe na agenda de outra pessoa.
+2. **`DELETE /calendar/entries/{id}/reminders` sem `minutesBefore` respondia 200** e não apagava
+   nada. A tela acreditava ter removido o lembrete. Antecedência fora da lista (`7`) tinha o mesmo
+   destino silencioso.
+3. **O texto do aviso mentia sobre o horário.** O lembrete de 1 dia criado em cima da hora vence na
+   hora, e o compromisso começa em 10 minutos; a notificação dizia "em 1 dia". O worker pode
+   atrasar, e o aviso não pode mentir sobre quando o compromisso começa.
+
+**O que muda.**
+
+- `requireInvolved(userId, entryId)` em `CalendarReminderService`: dono ou participante, senão o
+  mesmo 404 `CALENDAR_ENTRY_NOT_FOUND` do detalhe. Usado por `setForReader`, `clearForReader` e
+  `ofReader`.
+- `CalendarReminder.requireAllowedMinutes` passa a ser público e `clearForReader` o chama antes de
+  procurar a linha: antecedência fora da lista é pedido inválido, não "não havia nada para tirar".
+- O controller recusa `minutesBefore` ausente com 400 `INVALID_REMINDER` e traduz o
+  `IllegalArgumentException` do domínio no mesmo 400.
+- `notify` recebe o `now` do worker e usa `textUntil(startsAt, now)`: "já começou", "começa em N
+  min", "começa em N hora(s)", "começa em N dia(s)".
+
+**Prova.** Três testes novos, cada um vermelho no código antigo (revertendo só os arquivos de
+produção, nunca a árvore):
+
+- `readingAndClearingAStrangersRemindersIs404LikeANonexistentEntry` — `expected 404 but was 200` na
+  leitura e na remoção.
+- `clearingWithoutALeadIs400InsteadOfASilentNoOp` — `expected 400 but was 200`, com e sem `7`.
+- `theNotificationSaysTheTimeThatIsActuallyLeft` — o corpo dizia "1 dia" e não continha "min".
+
+Com a correção: `CalendarReminderServiceTests` 13/13, `CalendarRemindersApiTests` 7/7, o pacote
+`com.socialcoisa.rede.calendar.**` 146/146 sem falha, erro ou skip. `./mvnw -q -DskipTests compile`
+verde. Sem migração.
+
+### Armadilhas e notas
+
+- **A superfície de lembrete tinha três buracos, não um.** A leitura do código mostrou que a
+  ausência de checagem de participação, o `DELETE` sem parâmetro e o texto do aviso eram o mesmo
+  tipo de defeito: o servidor respondendo "tudo certo" a um pedido que não podia atender. Corrigir
+  só o 404 deixaria os outros dois.
+- **O texto do aviso é contrato, não cosmético.** Um lembrete que diz "em 1 dia" de um compromisso
+  que começa em 10 minutos é pior que nenhum lembrete: a pessoa se organiza pelo número errado.
+- **A entrada `empresa` não colide com nada.** A tabela ordena por `source.length` decrescente e
+  `empresa` não é prefixo de outra rota; o teste cobre os dois formatos de `href`.
+
+### PRs
+
+- Front — #846 (`fix/enois-calendar-empresa-na-navegacao` → `qa`), commit `7fda9187`.
+- Backend — #667 (`fix/enois-calendar-lembrete-contrato` → `qa`), commit `00449a36`.
+- Docs — este PR (#842).
+
+**PRÓXIMA RODADA (§10, proposta de execução 32):** (1) release do DS a partir do `main` trazendo
+#209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20); (2) ligar `pendingInvitations` na
+`/agenda` depois do release; (3) reconferir PRs e o bot (§9/B8) antes de começar. **Reuniões e
+workshops saem da fila de execução:** `MEETING`/`WORKSHOP` existem só como valor de enum e opção do
+formulário do DS, sem módulo produtor — implementar exige semântica de produto que só os
+mantenedores definem (parada de escopo, não tarefa de agente).
+
+---
