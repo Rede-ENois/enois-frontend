@@ -2068,3 +2068,105 @@ preparar o branch de release, mas não empurra tag nem publica); (2) fase 5 cont
 na tela do candidato (`/vagas/$jobId` e minhas candidaturas) consumindo o mesmo `GET interview`;
 (3) fase 4 adiante: conferir se o módulo de chamadas/vídeo tem data/hora legível antes de
 prometer compromisso de chamada.
+
+---
+
+## EXECUÇÃO 26 (bloco) — 2026-11-11T09:00–11:00-03:00 — CI do #655 destravado, entrevista do candidato e fase 4
+
+**Bloco de 4 unidades.** O caminho crítico (release do DS) continua humano e sem PR de release
+aberto; a rodada avançou o que não dependia dele.
+
+### Unidade A — CI do #655 destravado (flake de ranking)
+
+- **Sintoma:** `ReputationRefreshQueryCountTests.theRankingPassCostDoesNotGrowWithTheNumberOfAccounts`
+  falhava no CI com `expected: 34 but was: 51` (+17 SELECTs), e o bot deixou `CHANGES_REQUESTED`
+  no #655 suspeitando do código de entrevista.
+- **Primeira hipótese (errada):** o worker é `@Scheduled` e a suíte, mais longa, cruzaria o delay
+  de 1h e dispararia a passada concorrente. Subir o delay **não** resolveu — o CI continuou
+  vermelho com a mesma contagem. A hipótese foi descartada com evidência, não mantida.
+- **Causa raiz real:** o worker pagina de 500 em 500 e a base H2 é compartilhada entre as classes
+  da suíte. O teste media a passada inteira e exigia contagem idêntica; quando o total de contas
+  cruza um múltiplo de 500 entre duas medições, a passada faz **uma página a mais** e a contagem
+  sobe exatamente 17 (1 varredura de ids + 16 consultas de métrica). Os números do CI confirmam:
+  34 = 2×17 e 51 = 3×17. O custo por conta nunca mudou — o PR só deixou a suíte longa o suficiente
+  para o total de contas cruzar a fronteira.
+- **Correção:** a asserção normaliza pelo número de páginas percorridas
+  (`selects / ceil(contas/500)`), que é o invariante que a leitura em lote promete. O delay do
+  `@Scheduled` em teste também subiu para além de qualquer duração de suíte, mas como higiene.
+- **Prova:** teste descartável com 600 contas (2 páginas) mediu **17,0 SELECTs por página**; a
+  medição antiga daria 34 e depois 51, os mesmos números do CI. O teste corrigido passa isolado.
+- **Arquivos:** `ReputationRefreshQueryCountTests.java` e `src/test/resources/application.properties`.
+
+### Unidade B — entrevista na lista do candidato (backend)
+
+- `GET /jobs/applications/mine` passou a devolver o campo `interview` (mesma `InterviewView` da
+  lista do empregador), preenchido com a entrevista que está valendo.
+- A leitura é **uma consulta por lote** (`findScheduledByApplications`), não uma por candidatura.
+- **Teste:** `JobApplicationFlowTests.candidateSeesTheScheduledInterviewInTheirOwnList` — sem
+  entrevista o campo vem nulo; depois de marcada, o candidato vê estado, instante UTC, fuso e
+  observações; quem não se candidatou a nada não recebe entrevista de ninguém. 8/8 na classe.
+- **Arquivos:** `JobInterviewRepository`, `JobInterviewPersistenceAdapter`,
+  `SpringDataJobInterviewJpaRepository`, `JobInterviewService`, `JobContractController`,
+  `JobApplicationFlowTests`.
+
+### Unidade C — entrevista na lista do candidato (front)
+
+- `/vagas/minhas` mostra a entrevista que está valendo, no fuso em que foi marcada (a mesma hora
+  da agenda), usando o `Badge` do design system — sem markup novo na app (baseline de lint não
+  cresceu).
+- **Testes:** `src/routes/vagas.minhas.test.tsx` (3) — mostra 14:00 para 17:00 UTC em São Paulo;
+  não mostra quando não há entrevista; não mostra entrevista cancelada.
+- **Arquivos:** `src/routes/vagas.minhas.tsx`, `src/types/application/job/my-application.ts`,
+  `src/texts.ts`, `src/routes/vagas.minhas.test.tsx`.
+
+### Unidade D — fase 4: chamadas/vídeo inspecionadas
+
+- **Achado:** o módulo de chamadas não tem horário agendado — `CallSession` carrega
+  `createdAt`/`answeredAt`/`endedAt`/`expiresAt`, mas nenhum instante futuro de compromisso. São
+  sessões ao vivo, então **não há entrada na agenda a prometer** para uma chamada; a fase 4 segue
+  pendente apenas em compromissos pessoais.
+- **Lacuna concreta corrigida:** a tela de moderação recebia `call.reportedAt` e não exibia — a
+  captura ficava sem âncora temporal. Agora o horário aparece junto da captura, formatado pelo
+  utilitário único de data da app.
+- **Testes:** `src/routes/-moderacao.report-call.test.tsx` (2) — mostra "Denúncia feita em" com
+  data; não inventa horário quando o servidor não manda `reportedAt`.
+- **Arquivos:** `src/routes/moderacao.$reportId.tsx`, `src/texts.ts`,
+  `src/routes/-moderacao.report-call.test.tsx`.
+
+### Testes executados
+
+| Repositório | Comando | Resultado |
+| ----------- | ------- | --------- |
+| Backend | `./mvnw -o test -Dtest=ReputationRefreshQueryCountTests` | 1/1 verde (após a correção da asserção) |
+| Backend | teste descartável com 600 contas | 17,0 SELECTs/página (prova da fronteira de página) |
+| Backend | `./mvnw -o test -Dtest=JobApplicationFlowTests` | 8/8 verde |
+| Front | `npx tsc --noEmit` | verde |
+| Front | `npx eslint .` | 0 erros, 11 warnings pré-existentes |
+| Front | `node scripts/check-lint-suppressions.mjs enois/qa` | baseline não cresceu |
+| Front | `npx vitest run` | 1327/1329; 2 falhas em `use-notifications-list` comprovadamente flaky (falham na base limpa, contagem varia entre rodadas) |
+| Front | `npx vite build` | verde |
+
+### Armadilhas
+
+- **`git stash pop` falhou e o stash foi descartado:** o `routeTree.gen.ts` regenerado pelo build
+  conflitou com o stash e as edições da unidade C se perderam; foram refeitas. Em worktree, evitar
+  `stash` com arquivo gerado no meio.
+- **`<p>` novo na rota de moderação estourou o baseline de lint:** a rota tem 56 supressões
+  congeladas; a linha virou `Badge` do DS, que não conta como markup.
+- **`--prune-suppressions` não reduz o baseline sozinho:** ele só remove entradas obsoletas; a
+  contagem por arquivo continua a mesma até o arquivo encolher.
+- **Hipótese de flake precisa de prova, não de plausibilidade:** a primeira explicação do CI do
+  #655 (scheduler concorrente) era plausível e errada; o CI voltou vermelho com o "fix". A
+  aritmética dos números (34 = 2×17, 51 = 3×17) apontava para a fronteira de página desde o
+  começo.
+
+### PRs
+
+- Backend — **#655** (mesmo PR da frente de entrevista), atualizado com as unidades A e B.
+- Front — **#830** (mesmo PR da frente de entrevista), atualizado com as unidades C e D.
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 27):** (1) release do DS a partir do `main` trazendo
+#209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20; o cronjob pode preparar o branch
+de release, mas não empurra tag nem publica); (2) fase 5 continua: mentorias, reuniões e workshops;
+(3) reconferir PRs e o bot (§9/B8) antes de começar.

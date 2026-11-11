@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=5 (agenda profissional: entrevistas) iniciada — backend #655 (agenda dos dois lados, V274), DS #214 (diálogo + linha de ações) e front #830 (tela de candidaturas), todos abertos aguardando revisão humana; #830 com CI vermelho esperado (MISSING_EXPORT) até o release do DS. Bloco anterior (fases 8/9): backend #654 e DS #209 mergeados pelo bot (B8); tela do import e da assinatura no front #828, aberta e travada no mesmo release. Fase 4 segue em andamento com a presença em evento (D27). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
-EXECUCAO=25
-ULTIMA_ATUALIZACAO=2026-11-11T08:45:00-03:00
+FASE_ATUAL=5 (agenda profissional: entrevistas) — backend #655 (agenda dos dois lados, V274, entrevista na lista do candidato) e front #830 (tela de candidaturas + entrevista em "minhas candidaturas") abertos aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main`. Fase 4: chamadas/vídeo inspecionadas — não têm horário agendado (são sessões ao vivo), então não há entrada na agenda a prometer; o horário da denúncia de chamada passou a aparecer na moderação. Regressão do front: 1329 testes, 2 falhas de notificações comprovadamente flaky (falham na base limpa).
+EXECUCAO=26
+ULTIMA_ATUALIZACAO=2026-11-11T11:00:00-03:00
 ```
 
 ---
@@ -155,8 +155,8 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 1    | Fundação: entidades, migrations, serviço, endpoints, autorização, testes | 0            | **concluída** (V257 modelo, leitura, escrita idempotente, convites/participantes com V258, detalhe com o lugar do leitor e convites pendentes) |
 | 2    | Design System: calendário mês/semana/dia/lista, alternância, estados     | 1 (contrato) | **concluída** — #164/#165/#166 **mergeados**; falta só o release 0.30.0 (enois-design-system#172) |
 | 3    | Frontend das agendas: navegação, 3 visões, criação, edição, detalhes     | 1, 2         | **concluída** — `/agenda` (#769) e detalhe `/agenda/$entryId` (#777) mergeados; lembretes, conflito e disponibilidade no cliente; seletor de lembrete no DS (#187, 0.31.0) e **ligado na tela** (execução 21) |
-| 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | **em andamento** — eventos de grupo: presença confirmada cria/reagenda/remove a entrada (origem `EVENT`, D27); faltam chamadas e compromissos pessoais |
-| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | **em andamento** — entrevistas: backend #655 (agenda dos dois lados, origem `JOB_INTERVIEW`, D29), DS #214 (`CalendarInterviewDialog` + `JobInterviewActions`) e front #830 (tela de candidaturas); faltam mentorias, reuniões e workshops, e a entrevista na tela do candidato |
+| 4    | Agenda social: chamadas, eventos de grupo/comunidade, pessoais           | 3            | **em andamento** — eventos de grupo: presença confirmada cria/reagenda/remove a entrada (origem `EVENT`, D27); chamadas/vídeo **inspecionadas na execução 26**: são sessões ao vivo, sem horário agendado, então não geram entrada na agenda (o `reportedAt` da denúncia passou a aparecer na moderação); faltam compromissos pessoais |
+| 5    | Agenda profissional: entrevistas, mentorias, reuniões, workshops         | 3            | **em andamento** — entrevistas: backend #655 (agenda dos dois lados, origem `JOB_INTERVIEW`, D29, e entrevista em `/jobs/applications/mine`), DS #214 (`CalendarInterviewDialog` + `JobInterviewActions`, mergeado na `qa`) e front #830 (tela de candidaturas + entrevista em "minhas candidaturas"); faltam mentorias, reuniões e workshops |
 | 6    | Disponibilidade e conflitos                                              | 1            | **concluída** — backend (#607, #613), DS #197 (mergeado `bdf7370`), front #804 **mergeado na `qa`**; release **0.31.0 publicado** pela mantenedora (tag `v0.31.0`) |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
 | 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa` |
@@ -218,9 +218,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#654](https://github.com/Rede-ENois/enois-backend/pull/654)       | enois-backend       | Fase 8: import honra `STATUS:CANCELLED` (cancela pela origem, nunca cria; `cancelled` no resultado)          | **mergeado** na `qa` em `81c1ac02` (2026-11-11) pelo bot `kof-agent-worker` — ver B8 |
 | [#209](https://github.com/Rede-ENois/enois-design-system/pull/209) | enois-design-system | Fase 8/9: `CalendarImportDialog` + `CalendarSubscriptionCard` (controlados, sem requisição própria)          | **mergeado** na `qa` em `b767e606` (2026-11-11) pelo bot `kof-agent-worker` — ver B8; **não está em nenhum pacote publicado** (release sai do `main`, D28.4/B9) |
 | [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)      | enois-frontend      | Fase 8/9: import `.ics` na `/agenda` + rota `/agenda/assinatura` (criar, copiar, regenerar, revogar)         | aberto, aguardando revisão humana; **CI vermelho esperado**: `MISSING_EXPORT` de `CalendarImportDialog`/`CalendarSubscriptionCard` até o release do DS (B9) |
-| [#655](https://github.com/Rede-ENois/enois-backend/pull/655)       | enois-backend       | Fase 5: agendamento de entrevista (`V274`) com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, D29) + notificação e e-mail | aberto, aguardando revisão humana |
-| [#214](https://github.com/Rede-ENois/enois-design-system/pull/214) | enois-design-system | Fase 5: `CalendarInterviewDialog` + `JobInterviewActions` (controlados, sem requisição própria)               | aberto, aguardando revisão humana; não publica pacote (release sai do `main`, D28.4/B9) |
-| [#830](https://github.com/Rede-ENois/enois-frontend/pull/830)      | enois-frontend      | Fase 5: marcar/reagendar/cancelar entrevista na tela de candidaturas, com os componentes do DS #214          | aberto, aguardando revisão humana; **CI vermelho esperado** (`MISSING_EXPORT`) até o release do DS (B9) |
+| [#655](https://github.com/Rede-ENois/enois-backend/pull/655)       | enois-backend       | Fase 5: agendamento de entrevista (`V274`) com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, D29) + notificação, e-mail e entrevista em `/jobs/applications/mine` | aberto, aguardando revisão humana; CI destravado na execução 26 (flake de ranking) |
+| [#214](https://github.com/Rede-ENois/enois-design-system/pull/214) | enois-design-system | Fase 5: `CalendarInterviewDialog` + `JobInterviewActions` (controlados, sem requisição própria)               | **mergeado** na `qa` em `dfd54db` (2026-11-11); **não está em nenhum pacote publicado** (release sai do `main`, D28.4/B9) |
+| [#830](https://github.com/Rede-ENois/enois-frontend/pull/830)      | enois-frontend      | Fase 5: marcar/reagendar/cancelar entrevista na tela de candidaturas e entrevista em "minhas candidaturas", com os componentes do DS #214 | aberto, aguardando revisão humana; **CI vermelho esperado** (`MISSING_EXPORT`) até o release do DS (B9) |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -499,12 +499,23 @@ assinatura foram entregues: DS #209 (diálogo e card) e front #828 (rota `/agend
 botão **Importar .ics** na `/agenda`), com o backend #654 corrigindo o import de cancelamento. O
 item (3) fase 4 adiante e o (4) reconferência de PRs seguem para a próxima rodada.
 
-**Execução 25 (próximo bloco) — proposta.** (1) **Caminho crítico é o release do DS:** #209 já
-está na `qa`, mas o pacote sai do `main` (B9) — sem um release que traga os componentes, o #828
-não compila no CI. Depois, lockfile real e revisão humana do #828. (2) **Fase 4 adiante:** conferir se o módulo de chamadas/vídeo tem data e
-hora legíveis antes de prometer a entrada na agenda — a presença em evento (D27) foi o primeiro
-caso; a chamada é o próximo. (3) **Reconferir PRs e o bot** (§9/B8) antes de começar, como sempre.
-(4) Se o #637 mergear, fumaça do `/calendar/subscribe/{token}.ics` contra ambiente.
+**Execução 26 (bloco) — executada em 2026-11-11 (~09:00–11:00). Quatro unidades.**
+(A) **CI do #655 destravado:** a falha de `ReputationRefreshQueryCountTests` (34 → 51 SELECTs) não
+era do código de entrevista — o worker pagina de 500 em 500 e a base H2 compartilhada cruzou uma
+fronteira de página entre as medições (34 = 2×17, 51 = 3×17); a asserção passou a normalizar pelo
+número de páginas. A primeira hipótese (scheduler concorrente) foi descartada com evidência. (B) **Entrevista na lista do
+candidato (backend):** `GET /jobs/applications/mine` passou a devolver `interview`, numa consulta
+por lote (`findScheduledByApplications`). (C) **Entrevista na lista do candidato (front):**
+`/vagas/minhas` mostra o horário no fuso em que foi marcada, com o `Badge` do DS. (D) **Fase 4 —
+chamadas/vídeo:** inspecionadas; não têm horário agendado (são sessões ao vivo), então não há
+entrada na agenda a prometer; o `reportedAt` que a moderação já recebia passou a ser exibido.
+
+**Execução 27 (próximo bloco) — proposta.** (1) **Caminho crítico continua o release do DS:** #209
+e #214 estão na `qa`, mas o pacote sai do `main` (B9) — sem um release que traga os componentes,
+#828 e #830 não compilam no CI. Depois, lockfile real e revisão humana dos dois. (2) **Fase 5
+adiante:** mentorias, reuniões e workshops na agenda profissional. (3) **Reconferir PRs e o bot**
+(§9/B8) antes de começar, como sempre. (4) Se o #637 mergear, fumaça do
+`/calendar/subscribe/{token}.ics` contra ambiente.
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -547,6 +558,7 @@ e evitou construir sobre premissa errada.
 | 23  | 2026-11-11 ~05:40 | 9    | **Rodada de destravamento (outra linha de trabalho).** #650 fechado como duplicado do #646; #637 rebaseado sobre a `qa`; tag `v0.32.0` do DS criada. Registrada no log antes deste bloco |
 | 24  | 2026-11-11 ~06:30 | 8/9  | **Bloco de 4 unidades.** (A) import do backend honra `STATUS:CANCELLED` (cancela pela origem, `cancelled` no resultado; 15+8 testes) — #654 **mergeado pelo bot** (B8); (B) `CalendarSubscriptionCard` e (C) `CalendarImportDialog` no DS, controlados e sem requisição própria (19 testes, 1678 na suíte) — #209 **mergeado pelo bot** (B8), sem release; (D) import `.ics` na `/agenda` e rota `/agenda/assinatura` no front (7/7 rotas, tsc/eslint/build verdes, 1308/1314 com 6 falhas pré-existentes) — #828 aberto, CI vermelho esperado até o release. D28 registrada (split controlado, token só na resposta, linhagens qa/main do DS) |
 | 25  | 2026-11-11 ~08:45 | 5    | **Bloco de 4 unidades — fase 5 iniciada.** (A) agendamento de entrevista no backend com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, V274, 6+5 testes, 18 na regressão) — PR #655; (B) `CalendarInterviewDialog` e (C) `JobInterviewActions` no DS (11 testes, 1725/1726 na suíte, storybook verde) — PR #214; (D) tela de candidaturas no front (12/12, tsc/eslint/build verdes contra tarball sintético) — PR #830. D29 registrada (entrevista escreve nos dois lados pela porta de origem) |
+| 26  | 2026-11-11 ~11:00 | 5/4  | **Bloco de 4 unidades.** (A) CI do #655 destravado: o flake de `ReputationRefreshQueryCountTests` era a fronteira de página de 500 contas na base H2 compartilhada (34 = 2×17, 51 = 3×17); a asserção normaliza por página; (B) `GET /jobs/applications/mine` devolve `interview` (consulta por lote, 8/8 em `JobApplicationFlowTests`); (C) `/vagas/minhas` mostra a entrevista no fuso em que foi marcada (3 testes, suíte 1327/1327); (D) fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo) e o `reportedAt` da denúncia de chamada passou a aparecer na moderação (2 testes). PRs #655 e #830 atualizados; docs neste PR |
 ---
 
 ## 12. Critérios de encerramento do cronjob
