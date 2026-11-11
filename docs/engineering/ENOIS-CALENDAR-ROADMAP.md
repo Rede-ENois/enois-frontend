@@ -116,7 +116,7 @@ ou de disponibilidade.
 | Disponibilidade / conflitos   | **tela e aviso prontos** (#804)     | conflito (#607) + janela semanal (V267, #613)                   | **superfície + repasse de `conflicts`** (#197); aviso no formulário (#195) | **Completo na `qa`** — #804 mergeado e 0.31.0 publicado (tag `v0.31.0`, #197 incluso) |
 | Lembretes                     | não existe (o DS não tem seletor)   | `calendar_reminders` (V264), worker de 30 s e rotas por entrada | não existe                                            | **Backend pronto** (#604); falta o seletor no DS e a tela    |
 | ICS export/import             | **botão de download na `/agenda`** (#809) | **export + import** (#629, fase 8)                         | — (o botão é o `Button` do DS)                        | **Parcial** — export e import entregues; falta assinatura (fase 9) |
-| Assinatura privada `.ics`     | cliente de API pronto (#816)        | **rotas prontas** (#637): gestão com sessão + leitura sem sessão | —                                                     | **Backend pronto** — V270, ETag, limite por token; falta a tela         |
+| Assinatura privada `.ics`     | cliente de API pronto (#816)        | **rotas prontas** (#637): gestão com sessão + leitura sem sessão | —                                                     | **Backend pronto** — V271, ETag, limite por token; falta a tela         |
 | Google/Microsoft/Apple        | não existe                          | OAuth existe no `identity` como base                            | —                                                     | **A construir**                                              |
 
 ### Dívida encontrada que bloqueia a agenda
@@ -160,7 +160,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 6    | Disponibilidade e conflitos                                              | 1            | **concluída** — backend (#607, #613), DS #197 (mergeado `bdf7370`), front #804 **mergeado na `qa`**; release **0.31.0 publicado** pela mantenedora (tag `v0.31.0`) |
 | 7    | Épapo e Tamo Junto vinculados a compromisso                              | 1, 4         | pendente                                                                                                                                       |
 | 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa` |
-| 9    | Assinatura privada e cache                                               | 8            | **concluída no backend** — V270, token só como hash, rota sem sessão com ETag, regenerar/revogar e limite por token (backend #637, aguardando revisão humana); cliente no front (#816) |
+| 9    | Assinatura privada e cache                                               | 8            | **concluída no backend** — V271, token só como hash, rota sem sessão com ETag, regenerar/revogar e limite por token (backend #637, aguardando revisão humana); cliente no front (#816) |
 | 10   | Provedores externos (Google/Microsoft/Apple)                             | 8, 9         | pendente                                                                                                                                       |
 | 11   | Revisão geral: regressão, segurança, a11y, performance                   | todas        | pendente                                                                                                                                       |
 
@@ -439,7 +439,7 @@ execução 21.*
 assinatura; (B) rotas de gestão com sessão e leitura sem sessão com ETag; (C) cliente de API no
 front. Detalhe no log, execução 22.*
 
-1. **O token é a credencial, e o banco não a guarda** — **entregue**: V270 com `token_hash` único,
+1. **O token é a credencial, e o banco não a guarda** — **entregue**: V271 com `token_hash` único,
    `scope` congelado (nulo = consolidada, o mesmo contrato da leitura) e `revoked_at`. O token nasce
    com 32 bytes de `SecureRandom` em base64url; a comparação é em tempo constante.
 2. **Regenerar gira a mesma linha** — **entregue**: trocar o token não cria assinatura nova, então
@@ -501,7 +501,7 @@ e evitou construir sobre premissa errada.
 | 19  | 2026-11-10 ~14:30 | 6    | **Bloco de 3 unidades.** (A) `CalendarAvailability`/`CalendarAvailabilitySurface` no DS com as regras do backend (12+14 testes); (B) `conflicts` repassado pela `CalendarAgendaSurface` (2 testes, 1655 na suíte inteira); (C) tela `/agenda/disponibilidade` e aviso de conflito ligado na `/agenda` no front (7/7, build verde). DS #197 aberto; front #804 em draft até o release. O bot mergeou #187/#195 e abriu o release #196 (B8). Armadilhas: cache do Nitro e `--force-with-lease` com refspec longa |
 | 20  | 2026-11-10 ~17:30 | 8    | **Bloco de 3 unidades — fase 8.** (A) export `.ics` no backend (UID estável, VTIMEZONE real, folding 75 octets; 11 testes); (B) import multipart idempotente por ICS+UID (7 testes de contrato) — backend PR #629; (C) `exportUrl` + botão "Baixar .ics" na `/agenda` com a janela da tela (18+3 testes, tsc/build verdes) — front PR #809. Fase 6 confirmada fechada: #804 mergeado e 0.31.0 publicado. D26 registrada |
 | 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). Regressão completa do backend: 2335 testes, 1 falha de feed (passa isolada na base e na branch — flake). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
-| 22  | 2026-11-10 ~23:20 | 9    | **Bloco de 3 unidades.** (A) assinatura privada `.ics` no domínio e no banco: V270 com hash único, `scope` congelado e `revoked_at`, token de 32 bytes em base64url, comparação em tempo constante; (B) gestão com sessão e leitura sem sessão com `ETag` e limite por hash do token; 6 de domínio + 9 de contrato, 153 na regressão do módulo e dos filtros; (C) cliente de API no front (22/22, tsc/eslint/build verdes). PRs #637 (backend) e #816 (front); #632/#814/#815 mergeados pelo bot (B8) |
+| 22  | 2026-11-10 ~23:20 | 9    | **Bloco de 3 unidades.** (A) assinatura privada `.ics` no domínio e no banco: V271 com hash único, `scope` congelado e `revoked_at`, token de 32 bytes em base64url, comparação em tempo constante; (B) gestão com sessão e leitura sem sessão com `ETag` e limite por hash do token; 6 de domínio + 9 de contrato, 153 na regressão do módulo e dos filtros; (C) cliente de API no front (22/22, tsc/eslint/build verdes). PRs #637 (backend) e #816 (front); #632/#814/#815 mergeados pelo bot (B8) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
