@@ -14,7 +14,8 @@ vi.mock("@tanstack/react-router", () => ({
   redirect: () => undefined,
 }));
 
-const { Route, detailOf, isSourceOwned, reminderChanges } = await import("./agenda.$entryId");
+const { Route, detailOf, isSourceOwned, reminderChanges, updateInputOf } =
+  await import("./agenda.$entryId");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 
 const apiDetail = {
@@ -120,5 +121,25 @@ describe("rota /agenda/$entryId", () => {
   it("compromisso de outro módulo é somente leitura na agenda", () => {
     const sourced = { ...apiDetail.entry, sourceType: "MENTORING", sourceId: "s1" };
     expect(isSourceOwned(sourced)).toBe(true);
+  });
+
+  it("a edição manda escopo, tipo e dia inteiro junto com o resto", () => {
+    const input = updateInputOf({
+      scope: "SOCIAL",
+      kind: "PERSONAL",
+      title: "Revisão",
+      description: null,
+      startsAt: "2026-11-10T13:00:00Z",
+      endsAt: "2026-11-10T14:00:00Z",
+      timeZoneId: "America/Sao_Paulo",
+      allDay: true,
+    });
+
+    // O formulário mostra os três; omiti-los fazia o servidor descartar a mudança em silêncio.
+    expect(input.scope).toBe("SOCIAL");
+    expect(input.kind).toBe("PERSONAL");
+    expect(input.allDay).toBe(true);
+    expect(input.title).toBe("Revisão");
+    expect(input.startsAt).toBe("2026-11-10T13:00:00Z");
   });
 });

@@ -6,9 +6,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import type { CalendarAgendaDetailView } from "@/types/application/calendar/calendar-agenda-detail-view";
 import type { CalendarParticipation } from "@/types/application/calendar/calendar-participation";
+import type { UpdateCalendarEntryInput } from "@/types/application/calendar/update-calendar-entry-input";
 import type {
   CalendarEntryDetailData,
   CalendarEntryDetailParticipant,
+  CalendarEntryFormValues,
   CalendarReminderMinutes,
 } from "@rede-enois/design-system/domain";
 import {
@@ -66,13 +68,7 @@ function EntryDetailPage() {
   };
 
   const update = useMutation({
-    mutationFn: (input: {
-      title: string;
-      description: string | null;
-      startsAt: string;
-      endsAt: string;
-      timeZoneId: string;
-    }) => calendarApi.update(entryId, input),
+    mutationFn: (input: UpdateCalendarEntryInput) => calendarApi.update(entryId, input),
     onSuccess: () => {
       setSaveError(null);
       setEditing(false);
@@ -215,13 +211,7 @@ function EntryDetailPage() {
         saveError={saveError}
         onSave={(values) => {
           setSaveError(null);
-          update.mutate({
-            title: values.title,
-            description: values.description,
-            startsAt: values.startsAt,
-            endsAt: values.endsAt,
-            timeZoneId: values.timeZoneId,
-          });
+          update.mutate(updateInputOf(values));
         }}
       />
     </AppContainer>
@@ -257,6 +247,24 @@ export function reminderChanges(
  */
 export function isSourceOwned(entry: { sourceType: string | null }): boolean {
   return entry.sourceType !== null;
+}
+
+/**
+ * O que o formulário devolve vira o corpo do `PATCH`. Os três campos de classificação vão junto
+ * porque o formulário os mostra: mandar só título e horário fazia a pessoa trocar "Social" por
+ * "Profissional" e salvar sem que nada mudasse.
+ */
+export function updateInputOf(values: CalendarEntryFormValues): UpdateCalendarEntryInput {
+  return {
+    scope: values.scope,
+    kind: values.kind,
+    title: values.title,
+    description: values.description,
+    startsAt: values.startsAt,
+    endsAt: values.endsAt,
+    timeZoneId: values.timeZoneId,
+    allDay: values.allDay,
+  };
 }
 
 /**
