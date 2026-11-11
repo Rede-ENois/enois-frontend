@@ -1690,7 +1690,7 @@ D7) sobre o serviço `.ics` que está na `qa`.
 
 - **A — domínio, migração e persistência.** `CalendarSubscription` com token de 32 bytes em
   base64url, hash SHA-256 obrigatório, comparação em tempo constante e revogação idempotente.
-  V271 cria `calendar_subscriptions` com `token_hash` único, `scope` nulo-ou-enum e `revoked_at`.
+  V272 cria `calendar_subscriptions` com `token_hash` único, `scope` nulo-ou-enum e `revoked_at`.
   Porta `CalendarSubscriptionRepository` + adaptador JPA.
 - **B — rotas.** Gestão com sessão (`GET`, `POST`, `POST /regenerate`, `DELETE`) e leitura sem
   sessão em `/calendar/subscribe/{token}.ics`, com `ETag` do corpo e `Cache-Control` de 5 min.
@@ -1706,7 +1706,7 @@ D7) sobre o serviço `.ics` que está na `qa`.
   `calendar/adapters/out/persistence/{CalendarSubscriptionJpaEntity,CalendarSubscriptionPersistenceAdapter,SpringDataCalendarSubscriptionJpaRepository}.java`,
   `calendar/adapters/in/web/{CalendarSubscriptionController,CalendarSubscriptionSettingsController}.java`,
   `shared/security/CalendarSubscriptionRateLimitFilter.java`,
-  `db/migration/V271__calendar_subscriptions.sql`.
+  `db/migration/V272__calendar_subscriptions.sql`.
 - Backend testes: `CalendarSubscriptionTests` (6), `CalendarSubscriptionApiTests` (9).
 - Front: `src/lib/api/calendar.ts` (+4 métodos), `src/lib/api/calendar.test.ts` (+4),
   `src/types/application/calendar/calendar-subscription-view.ts`.
@@ -1725,16 +1725,16 @@ D7) sobre o serviço `.ics` que está na `qa`.
 
 - **A migração nasceu como V269 e colidiu com o `qa`.** O `qa` já tinha duas V269
   (`external_job_normalized`, `reputation_batch_indexes`), e o CI do #637 falhou no check de versão
-  repetida, no boot com Flyway e nos testes. Renumerada para **V271**; o build local não-clean
+  repetida, no boot com Flyway e nos testes. Renumerada para **V272**; o build local não-clean
   continuava rodando a cópia velha de `target/classes` e repetia o erro, então a validação exige
-  `clean test`. O CI parte de checkout limpo e passa a ver só o V271.
+  `clean test`. O CI parte de checkout limpo e passa a ver só o V272.
 - **A `qa` estava vermelha por causa de outra pessoa, e isso contamina todo PR.** O #634 mergeou e
   deployou `V269__external_job_normalized`; oito segundos depois o #635 mergeou
   `V269__reputation_batch_indexes`, que nunca deployou porque o check de versão repetida reprovou.
   Como o check do PR roda sobre o merge commit, qualquer PR para `qa` herda as duas V269. A
   correção é um PR próprio (`fix/migracao-v269-duplicada`) renomeando a que **não** foi aplicada
   para V270 — a que já está no banco de QA não pode mudar de número. A migração da assinatura
-  passou a V271 para não colidir com essa correção.
+  passou a V272 para não colidir com essa correção.
 - **A janela da assinatura estourava o teto do export.** 30 dias atrás + 365 à frente = 395 dias, e
   o `validateWindow` do `CalendarIcsService` recusa acima de 366. Cinco testes de contrato deram
   400 `INVALID_WINDOW` na primeira rodada. O fim passou a ser `from + 365 dias`.
@@ -1748,12 +1748,32 @@ D7) sobre o serviço `.ics` que está na `qa`.
 - **PRs do bloco 21 mergeados pelo bot:** #632, #814 e o complemento #815 foram mergeados por
   `kof-agent-worker` (B8) antes da revisão humana. O lint do DS #203 foi corrigido nesta rodada; o
   CI do front #813 falha por dependência de release do slot `reminder`, registrada no PR.
+- **Merge do DS não é release.** O #203 mergeou na `main` em 11-11 01:41, mas a última tag era
+  `v0.31.0` (10-11 14:53) — ou seja, o slot `reminder` estava no código e fora do pacote. O front
+  #813 falhava no `tsc` por isso, não por bug próprio. Aberta a release **#204**
+  (`0.32.0`, bump minor por ser slot aditivo e opcional): `tsc` EXIT=0, **1659/1659** testes,
+  `eslint` 0 erros. Depois do merge dela ainda falta criar a tag `v0.32.0`.
+- **O bot mergeou o docs #817 antes das correções.** O #817 entrou às 02:22, e os commits de
+  V270/V272 ficaram fora da `qa`. Recuperados num PR de acompanhamento (#818), do mesmo jeito que
+  aconteceu com o #814→#815 no bloco 21. Conferir o estado do PR **antes** de empurrar correção
+  nele passou a ser obrigatório nesta rotina.
+- **A `qa` andou de novo durante o bloco.** O #643 mergeou `V271__external_job_applications`
+  enquanto o #637 estava aberto, e a assinatura, que já era V271, virou **V272**. O branch foi
+  rebaseado sobre a `qa` atual e os três commits de renumeração viraram um só. Lição: enquanto o
+  PR está aberto, o número da migração é alvo móvel — reconferir `git ls-tree enois/qa` antes de
+  cada push, não só no começo do bloco.
+- **Havia um segundo PR para a mesma duplicata.** O #640 (`perf/qa-unica-v269-fix`) fazia o mesmo
+  rename do #641, aberto depois. Comentado no PR apontando que a `qa` já está corrigida; não
+  mergeei nem fechei nada, conforme a regra de não mexer em PR alheio.
 
 ### PRs
 
-- Backend (A+B) — **#637**, aberto para `qa`, aguardando revisão humana.
-- Front (C) — **#816**, aberto para `qa`, aguardando revisão humana; depende do #637.
-- Docs (este PR) — leva o estado para 22 e registra a D7 implementada.
+- Backend (A+B) — **#637**, aberto para `qa`, aguardando revisão humana; migração em V272, rebaseado
+  sobre a `qa` que já tem o #641.
+- Front (C) — **#816**, mergeado pelo bot (B8).
+- Docs — **#817** e **#818** mergeados pelo bot; este PR leva o V272 e as notas finais.
+- Correção da `qa` — **#641**, mergeado.
+- Release do DS — **#204**, aberto, verde; desbloqueia o front #813.
 
 **PRÓXIMA RODADA (§10, proposta de execução 23):** import na tela com o contrato do #629 estável;
 tela da assinatura (card no DS consumindo o cliente do #816); fase 4 adiante com a chamada/vídeo
