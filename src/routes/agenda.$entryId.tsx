@@ -154,6 +154,10 @@ function EntryDetailPage() {
   }
 
   const view = detailOf(detail.data);
+  // Compromisso criado por outro módulo (mentoria, evento, entrevista) é somente leitura aqui: quem
+  // muda o fato é o módulo dono, e editar pela agenda deixaria os dois contando histórias
+  // diferentes. O servidor recusa a escrita; a tela nem oferece o botão.
+  const sourceOwned = isSourceOwned(detail.data.entry);
   // O servidor devolve o que ainda vai tocar; a tela mostra a escolha única, então a primeira
   // antecedência é a que está ligada. Sem lembrete, o seletor abre em "não avisar".
   const chosenReminder = (reminders.data?.[0]?.minutesBefore ??
@@ -176,11 +180,15 @@ function EntryDetailPage() {
         participants={view.participants}
         backLabel={texts.agenda.title}
         onBack={() => void navigate({ to: "/agenda" })}
-        onEdit={() => {
-          setSaveError(null);
-          setEditing(true);
-        }}
-        onCancel={() => cancel.mutate()}
+        onEdit={
+          sourceOwned
+            ? undefined
+            : () => {
+                setSaveError(null);
+                setEditing(true);
+              }
+        }
+        onCancel={sourceOwned ? undefined : () => cancel.mutate()}
         onRespond={(answer) => respond.mutate(answer)}
         onRemoveParticipant={(participantId) => removeParticipant.mutate(participantId)}
         onInvite={async (username) => {
@@ -240,6 +248,15 @@ export function reminderChanges(
     changes.push({ set: chosen });
   }
   return changes;
+}
+
+/**
+ * O compromisso veio de outro módulo? A origem é o que decide se a agenda pode editá-lo: entrada
+ * com `sourceType` pertence ao módulo que a criou (mentoria, evento, entrevista) e só ele muda o
+ * fato. A tela usa isto para não oferecer editar/cancelar; o servidor recusa de qualquer forma.
+ */
+export function isSourceOwned(entry: { sourceType: string | null }): boolean {
+  return entry.sourceType !== null;
 }
 
 /**
