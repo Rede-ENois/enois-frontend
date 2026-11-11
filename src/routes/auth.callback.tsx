@@ -61,7 +61,7 @@ function OAuthCallback() {
   return (
     <div className="grid min-h-screen place-items-center px-6">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
-        <img src="/brand/mark-primary.svg" alt="Énóis" className="h-11 w-11" />
+        <img src="/brand/mark-primary.svg" alt="Énóis" width="44" height="44" />
 
         {error ? (
           <>
