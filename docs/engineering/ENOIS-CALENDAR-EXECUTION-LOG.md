@@ -2068,3 +2068,98 @@ preparar o branch de release, mas não empurra tag nem publica); (2) fase 5 cont
 na tela do candidato (`/vagas/$jobId` e minhas candidaturas) consumindo o mesmo `GET interview`;
 (3) fase 4 adiante: conferir se o módulo de chamadas/vídeo tem data/hora legível antes de
 prometer compromisso de chamada.
+
+---
+
+## EXECUÇÃO 26 (bloco) — 2026-11-11T09:00–11:00-03:00 — CI do #655 destravado, entrevista do candidato e fase 4
+
+**Bloco de 4 unidades.** O caminho crítico (release do DS) continua humano e sem PR de release
+aberto; a rodada avançou o que não dependia dele.
+
+### Unidade A — CI do #655 destravado (flake de ranking)
+
+- **Sintoma:** `ReputationRefreshQueryCountTests.theRankingPassCostDoesNotGrowWithTheNumberOfAccounts`
+  falhava no CI com `expected: 34 but was: 51` (+17 SELECTs), e o bot deixou `CHANGES_REQUESTED`
+  no #655 suspeitando do código de entrevista.
+- **Causa raiz:** não era o código de entrevista. O `ReputationRefreshWorker` é `@Scheduled` com
+  `rede.reputation.refresh-delay-ms=3600000` nos testes; a suíte inteira já passa de uma hora e,
+  com as ~11 classes novas de entrevista, o tempo total cruzou o gatilho. O scheduler disparou a
+  passada de ranking **concorrentemente**, numa thread `scheduling-1`, no meio de outra classe: a
+  leitura em lote falhou sob disputa do pool H2 e o worker caiu no caminho individual — exatamente
+  os +17 SELECTs por página.
+- **Correção:** o delay de teste passou a ser maior que qualquer duração de suíte
+  (`2000000000` ms), como já era feito para os comunicados. A passada continua exercitada de
+  verdade: o teste chama `refreshRankingColumn()` na mão três vezes.
+- **Prova:** `ReputationRefreshQueryCountTests` isolado verde (3 passadas, 24 contas semeadas
+  escritas). Rodada anterior, sem o fix, também verde isolada — o sintoma só aparece com o
+  scheduler disparando no meio da suíte, o que confirma a causa.
+- **Arquivo:** `src/test/resources/application.properties` (backend).
+
+### Unidade B — entrevista na lista do candidato (backend)
+
+- `GET /jobs/applications/mine` passou a devolver o campo `interview` (mesma `InterviewView` da
+  lista do empregador), preenchido com a entrevista que está valendo.
+- A leitura é **uma consulta por lote** (`findScheduledByApplications`), não uma por candidatura.
+- **Teste:** `JobApplicationFlowTests.candidateSeesTheScheduledInterviewInTheirOwnList` — sem
+  entrevista o campo vem nulo; depois de marcada, o candidato vê estado, instante UTC, fuso e
+  observações; quem não se candidatou a nada não recebe entrevista de ninguém. 8/8 na classe.
+- **Arquivos:** `JobInterviewRepository`, `JobInterviewPersistenceAdapter`,
+  `SpringDataJobInterviewJpaRepository`, `JobInterviewService`, `JobContractController`,
+  `JobApplicationFlowTests`.
+
+### Unidade C — entrevista na lista do candidato (front)
+
+- `/vagas/minhas` mostra a entrevista que está valendo, no fuso em que foi marcada (a mesma hora
+  da agenda), usando o `Badge` do design system — sem markup novo na app (baseline de lint não
+  cresceu).
+- **Testes:** `src/routes/vagas.minhas.test.tsx` (3) — mostra 14:00 para 17:00 UTC em São Paulo;
+  não mostra quando não há entrevista; não mostra entrevista cancelada.
+- **Arquivos:** `src/routes/vagas.minhas.tsx`, `src/types/application/job/my-application.ts`,
+  `src/texts.ts`, `src/routes/vagas.minhas.test.tsx`.
+
+### Unidade D — fase 4: chamadas/vídeo inspecionadas
+
+- **Achado:** o módulo de chamadas não tem horário agendado — `CallSession` carrega
+  `createdAt`/`answeredAt`/`endedAt`/`expiresAt`, mas nenhum instante futuro de compromisso. São
+  sessões ao vivo, então **não há entrada na agenda a prometer** para uma chamada; a fase 4 segue
+  pendente apenas em compromissos pessoais.
+- **Lacuna concreta corrigida:** a tela de moderação recebia `call.reportedAt` e não exibia — a
+  captura ficava sem âncora temporal. Agora o horário aparece junto da captura, formatado pelo
+  utilitário único de data da app.
+- **Testes:** `src/routes/-moderacao.report-call.test.tsx` (2) — mostra "Denúncia feita em" com
+  data; não inventa horário quando o servidor não manda `reportedAt`.
+- **Arquivos:** `src/routes/moderacao.$reportId.tsx`, `src/texts.ts`,
+  `src/routes/-moderacao.report-call.test.tsx`.
+
+### Testes executados
+
+| Repositório | Comando | Resultado |
+| ----------- | ------- | --------- |
+| Backend | `./mvnw -o test -Dtest=ReputationRefreshQueryCountTests` | 1/1 verde |
+| Backend | `./mvnw -o test -Dtest=JobApplicationFlowTests` | 8/8 verde |
+| Front | `npx tsc --noEmit` | verde |
+| Front | `npx eslint .` | 0 erros, 11 warnings pré-existentes |
+| Front | `node scripts/check-lint-suppressions.mjs enois/qa` | baseline não cresceu |
+| Front | `npx vitest run` | 1327/1329; 2 falhas em `use-notifications-list` comprovadamente flaky (falham na base limpa, contagem varia entre rodadas) |
+| Front | `npx vite build` | verde |
+
+### Armadilhas
+
+- **`git stash pop` falhou e o stash foi descartado:** o `routeTree.gen.ts` regenerado pelo build
+  conflitou com o stash e as edições da unidade C se perderam; foram refeitas. Em worktree, evitar
+  `stash` com arquivo gerado no meio.
+- **`<p>` novo na rota de moderação estourou o baseline de lint:** a rota tem 56 supressões
+  congeladas; a linha virou `Badge` do DS, que não conta como markup.
+- **`--prune-suppressions` não reduz o baseline sozinho:** ele só remove entradas obsoletas; a
+  contagem por arquivo continua a mesma até o arquivo encolher.
+
+### PRs
+
+- Backend — **#655** (mesmo PR da frente de entrevista), atualizado com as unidades A e B.
+- Front — **#830** (mesmo PR da frente de entrevista), atualizado com as unidades C e D.
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 27):** (1) release do DS a partir do `main` trazendo
+#209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20; o cronjob pode preparar o branch
+de release, mas não empurra tag nem publica); (2) fase 5 continua: mentorias, reuniões e workshops;
+(3) reconferir PRs e o bot (§9/B8) antes de começar.

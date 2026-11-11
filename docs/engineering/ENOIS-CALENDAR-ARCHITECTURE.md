@@ -802,3 +802,24 @@ fronteira:
    com zona explícita, formatador em cache). A linha da candidatura e a entrada da agenda mostram
    o mesmo relógio para os dois lados; o helper único de datas do front ganhou `dataHoraEm` em
    vez de abrir exceção à regra do formato-único.
+
+---
+
+## D30 — Chamada não é compromisso; o que a agenda promete é o que tem hora marcada (execução 26)
+
+A fase 4 pedia "conferir se o módulo de chamadas/vídeo tem data e hora legíveis antes de prometer
+a entrada na agenda". A inspeção fechou a questão pelo lado do modelo, não da tela:
+
+1. **Chamada é sessão ao vivo, não compromisso.** `CallSession` carrega `createdAt`, `answeredAt`,
+   `endedAt`, `expiresAt` e `lastActivityAt` — todos instantes do passado ou de expiração, nenhum
+   horário futuro combinado. Não existe "chamada marcada para amanhã" no domínio, então não há
+   entrada de agenda a criar: prometer isso exigiria inventar um agendamento que o produto não
+   tem. A agenda continua sendo a fonte de compromissos; a chamada é o canal que acontece agora.
+2. **O que a chamada tem de temporal é a denúncia.** A denúncia de chamada carrega `reportedAt`,
+   e é ele que ancora a captura de tela como prova. A tela de moderação recebia o campo e não o
+   exibia; agora mostra o horário junto da captura, pelo utilitário único de data do front. É a
+   mesma regra de D29: o instante vem do servidor e a tela não o reinterpreta.
+3. **Consequência para a fase 4.** O que falta nela são **compromissos pessoais** (entrada criada
+   pela própria pessoa), não chamadas. A presença em evento (D27) e a chamada ficam de fora da
+   agenda por motivos diferentes: a primeira porque o evento já é o compromisso; a segunda porque
+   não há compromisso.
