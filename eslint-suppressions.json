@@ -452,7 +452,7 @@
   },
   "src/routes/auth.callback.tsx": {
     "local/no-front-markup": {
-      "count": 14
+      "count": 11
     }
   },
   "src/routes/auth.reset.tsx": {
