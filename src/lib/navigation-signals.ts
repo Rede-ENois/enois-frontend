@@ -7,6 +7,7 @@ import type { SignalData } from "@rede-enois/design-system/ui";
 
 import { messagesApi, notificationsApi } from "@/lib/api";
 import { useInterfaceContext } from "@/lib/interface-context";
+import { useInboxPollInterval } from "@/lib/message-stream";
 import { networkQueries } from "@/lib/query-options/network";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useDisabledModules } from "@/lib/use-personalization";
@@ -70,13 +71,16 @@ export function useNavigationCounts(): NavigationCounts {
   const context = useInterfaceContext();
   const disabledModules = useDisabledModules();
 
+  // Com o stream conectado, o aviso chega por evento e a sincronia já busca o resumo; o polling
+  // de dois em dois minutos era uma consulta a mais por aba aberta, para a mesma informação.
+  const summaryPollMs = useInboxPollInterval(120_000, false);
   const { data: summary } = useQuery({
     // Under ["notifications"]: reading one (or all) invalidates the summary with the list.
     queryKey: ["notifications", "summary", context],
     queryFn: () => notificationsApi.unreadSummary(context),
     enabled: authenticated,
     staleTime: 30_000,
-    refetchInterval: 120_000,
+    refetchInterval: summaryPollMs,
   });
   const { data: messages } = useQuery({
     queryKey: ["conversations", "unread-count", context],

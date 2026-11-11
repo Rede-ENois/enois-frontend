@@ -10,6 +10,7 @@ import { blogsApi } from "@/lib/api/blogs";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { blogReadingMinutes } from "@/lib/blog-reading-time";
 import { formatarData } from "@/lib/date/format";
+import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { buildShareTags } from "@/lib/open-graph";
 import { plainPreview } from "@/lib/rich-text/preview";
 import { useAuth } from "@/lib/use-auth";
@@ -83,7 +84,7 @@ function BlogPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blog", username] });
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      void refreshFeedFirstPage(queryClient);
       toast(blog.subscribed ? texts.blog.unsubscribe : texts.blog.subscribed);
     },
   });

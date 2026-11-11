@@ -23,6 +23,11 @@ import { ConfirmDialog, useToast } from "@rede-enois/design-system/ui";
 import { communitiesApi, feedApi } from "@/lib/api";
 import { sealsApi } from "@/lib/api/seals";
 import { saveFeedScroll } from "@/lib/feed-scroll-restoration";
+import {
+  refreshFeedFirstPage,
+  removePostFromFeedCache,
+  updatePostInQueryCache,
+} from "@/lib/feed/post-query-cache";
 import { savedPostsQueryOptions } from "@/lib/feed/saved-posts";
 import { useAuth } from "@/lib/use-auth";
 
@@ -142,11 +147,12 @@ function PostCardContainer({
         ...(editType === "PAGE" ? { pageHtml: pageDraft } : {}),
         ...(editType === "ARTICLE" ? { articleBody: bodyDraft } : {}),
       }),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       setEditOpen(false);
       toast(texts.posts.owner.edited);
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      queryClient.invalidateQueries({ queryKey: ["post", post.id] });
+      // O post editado já voltou na resposta: entra no cache no lugar do antigo, sem refazer o
+      // feed inteiro (que recarregaria todas as páginas carregadas para trocar um cartão).
+      updatePostInQueryCache(queryClient, post.id, () => updated);
       queryClient.invalidateQueries({ queryKey: savedPostsQueryOptions().queryKey });
     },
     onError: () => toast(texts.posts.owner.error, "error"),
@@ -162,15 +168,14 @@ function PostCardContainer({
         onClick: () => {
           feedApi
             .restore(post.id)
-            .then(() => {
-              queryClient.invalidateQueries({ queryKey: ["feed"] });
-              queryClient.invalidateQueries({ queryKey: ["post", post.id] });
+            .then((restored) => {
+              updatePostInQueryCache(queryClient, post.id, () => restored);
               toast(texts.posts.owner.edited);
             })
             .catch(() => toast(texts.posts.owner.error, "error"));
         },
       });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      removePostFromFeedCache(queryClient, post.id);
       queryClient.invalidateQueries({ queryKey: savedPostsQueryOptions().queryKey });
       // Na pagina do post unico, o conteudo some: volta para o feed em vez de ficar num "nao encontrado".
       if (typeof window !== "undefined" && window.location.pathname.startsWith("/post/")) {
@@ -203,7 +208,9 @@ function PostCardContainer({
   const followCommunity = useMutation({
     mutationFn: (communityId: string) => communitiesApi.join(communityId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      // Entrar na comunidade muda o que o feed mostra (o botão some, o post passa a ser de membro):
+      // a primeira página de cada feed na tela é conferida, o resto do histórico fica.
+      void refreshFeedFirstPage(queryClient);
       queryClient.invalidateQueries({ queryKey: ["post"] });
       queryClient.invalidateQueries({ queryKey: savedPostsQueryOptions().queryKey });
       queryClient.invalidateQueries({ queryKey: ["community"] });

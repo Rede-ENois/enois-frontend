@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   keepPreviousData,
@@ -10,6 +10,7 @@ import {
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { Message } from "@/types/application/message/message";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
 import type { SendMessageInput } from "@/types/routes/messages/send-message-input";
 import {
@@ -87,9 +88,23 @@ export function ConversationThread({
   const peerLastReadAt = conversation.otherLastReadAt
     ? new Date(conversation.otherLastReadAt).getTime()
     : null;
-  const rawMessages = (messagesData?.pages.flatMap((page) => page.items) ?? []).sort(
-    (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
-  );
+  // `useMemo` e não uma expressão no corpo: `useDecryptedMessages` recebe esta lista como
+  // dependência do efeito, e um array novo a cada render fazia o efeito rodar de novo, decifrar
+  // tudo outra vez e chamar `setState` — que renderiza de novo. O ciclo não parava: a thread
+  // ficava a ~6 mil renders por segundo e decifrava cada mensagem E2E em cada volta.
+  const rawMessages = useMemo(() => {
+    const seen = new Set<string>();
+    const items: Message[] = [];
+    for (const page of messagesData?.pages ?? []) {
+      for (const message of page.items) {
+        // Refetch de página pode repetir um item que já veio na vizinha (cursor por segundo).
+        if (seen.has(message.id)) continue;
+        seen.add(message.id);
+        items.push(message);
+      }
+    }
+    return items.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  }, [messagesData]);
   const { messages, decrypting } = useDecryptedMessages(rawMessages, currentUserId);
 
   const latestIncoming = [...rawMessages].reverse().find((m) => m.from !== currentUserId);
