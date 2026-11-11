@@ -2274,6 +2274,11 @@ de origem.
 - **Flake de crypto é ambiental:** `crypto.test.ts` e `key-manager.test.ts` geram pares RSA e
   estouram o timeout de 5 s sob a carga da suíte inteira; isolados passam 20/20. Registrado, não
   "consertado" com timeout maior — o teste não é o problema.
+- **`Validar build (PR)` vermelho nos dois PRs de backend é ambiental:** o passo `Build sem push`
+  falha no `docker build`, na camada `apt-get install ffmpeg libheif1`, com `Could not resolve
+'archive.ubuntu.com'` (DNS do runner). O mesmo passo falha na `qa` limpa (run 43055561264), com o
+  mesmo erro; `🧪 Testes (PR)` passa nos dois PRs. Não é regressão desta rodada — anotado nos PRs
+  #661 e #663 com a evidência.
 
 ### PRs
 
