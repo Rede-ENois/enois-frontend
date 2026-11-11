@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { Button } from "@rede-enois/design-system/ui";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
 import { finishOAuthLogin, oauthCallbackUrl } from "@/lib/oauth-callback";
@@ -61,12 +61,7 @@ function OAuthCallback() {
   return (
     <div className="grid min-h-screen place-items-center px-6">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
-        <div
-          className="grid h-11 w-11 place-items-center rounded-xl text-primary-foreground"
-          style={{ background: "var(--gradient-primary)" }}
-        >
-          <Sparkles className="h-5 w-5" />
-        </div>
+        <img src="/brand/mark-primary.svg" alt="Énóis" className="h-11 w-11" />
 
         {error ? (
           <>
