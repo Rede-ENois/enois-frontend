@@ -2387,3 +2387,124 @@ a partir da `enois/qa` `871f4385`).**
 **PRÓXIMA RODADA (§10, proposta de execução 29):** (1) release do DS a partir do `main` trazendo
 #209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20); (2) fase 5 continua: reuniões e
 workshops; (3) reconferir PRs e o bot (§9/B8) antes de começar.
+
+## EXECUÇÃO 29 (bloco) — 2026-11-11T17:00–18:40-03:00 — Fase 3/5: o convite que não aparecia e o lembrete que não abria nada
+
+**Bloco de 3 unidades.** O caminho crítico (release do DS) continua humano e agora **quebrado por
+marcador de conflito commitado** (ver B9); a rodada avançou o que não dependia dele: a superfície dos
+convites pendentes no DS, o destino do lembrete no backend e a rota que o front precisava para
+obedecer a esse destino.
+
+### Estado reconferido antes de começar
+
+- `git fetch` nos três repositórios; `gh pr list --state all` e `gh pr view` em cada PR do escopo.
+  Nenhum PR aberto para "convites pendentes na agenda" nem para "lembrete abre o compromisso" — sem
+  duplicata.
+- O roadmap listava #664 e #840 como abertos; `gh pr view` mostrou **#664 mergeado** em `98ebda36`
+  (o `qa` do backend já tem a reclassificação) e **#840 mergeado** em `a637db8f`. Corrigido na §7.
+- Última migração na `qa`: **V275**. Esta rodada **não cria migração**.
+- **B9 piorou:** o PR de release do DS **#218** (`chore/release-0.33.0`, branch de pessoa) tem
+  **marcadores de conflito commitados** em `src/domain/calendar/calendar.stories.tsx` (5),
+  `src/domain/calendar/index.ts` (1), `src/domain/post/comments/post-comments.tsx` (1) e
+  `src/messages/defaults/calendar.ts` (1). `npx tsc --noEmit` falha com TS1185 e o check "Lint,
+  typecheck, test and build" sai com código 2. É branch de humano: **não foi corrigida nem
+  force-pushada** por este agente. Enquanto ela não for consertada, #828 e #830 continuam com
+  `MISSING_EXPORT`.
+- PRs de blocos anteriores seguem abertos sem revisão humana: #655, #661, #663 (backend), #828,
+  #830, #836 (front), #209 e #214 (DS, mergeados na `qa` mas fora de qualquer pacote publicado —
+  B9).
+
+### Unidades
+
+**(A) DS: `CalendarPendingInvitations` acima da agenda (PR #219, branch
+`feat/calendar-convites-pendentes`, a partir da `qa` `033cda0`).**
+
+- **Lacuna provada:** `calendarApi.pendingInvitations()` e `calendarQueries.pendingInvitations`
+  existiam no front desde a fase 1, e o backend serve `GET /calendar/invitations`
+  (`CalendarInvitationsController`) com as entradas em que o leitor ainda é `INVITED`. Nenhuma
+  superfície do DS desenhava essa lista, então o convite só aparecia se a pessoa abrisse o período
+  em que ele cai — um convite para o mês que vem era invisível.
+- **Componente:** `CalendarPendingInvitations` devolve `null` com lista vazia; com convites, desenha
+  uma `<section aria-label>` com título, erro opcional (`role="alert"`) e uma linha por convite:
+  ícone pelo tipo, título (link quando há `itemHref`), selo "Convite", dia e hora no fuso da agenda
+  e os três botões de resposta (Aceitar/Talvez/Recusar) com `disabled` e `role="status"`
+  "Enviando..." enquanto a resposta viaja. O dia é formatado por `Intl.DateTimeFormat("pt-BR")`
+  cacheado por fuso.
+- **Ligação na superfície:** `CalendarAgendaSurface` ganhou `pendingInvitations` e desenha o
+  componente **antes** da agenda, reusando `onRespond`/`respondingId`/`respondError` — é a mesma
+  mutação da resposta rápida do dia. A lista vem do servidor, não da janela na tela: o convite do
+  mês que vem é exatamente o que a agenda não mostraria.
+- **Prova:** 7 testes do componente (vazio não desenha; dia/hora no fuso — 13:00Z vira 10:00 em São
+  Paulo; resposta leva o id e a escolha; espera enquanto envia; recusa aparece sem esconder a lista;
+  título vira link; dia inteiro mostra "Dia inteiro") e 1 teste da superfície (desenha acima e
+  responde pelo mesmo callback). Gate completo do DS verde: **181 arquivos / 1734 testes**.
+
+**(B) Backend: o lembrete abre o compromisso que ele avisa (PR #665, branch
+`fix/enois-calendar-lembrete-abre-o-compromisso`, a partir da `enois/qa` `98ebda36`).**
+
+- **Bug provado por teste:** `CalendarReminderService.notify` criava a notificação com
+  `href = "/agenda?period=day"` e CTA "Ver agenda". O front não tinha rota `agenda` na tabela de
+  navegação (unidade C), então o clique não levava a lugar nenhum; mesmo com a rota, levaria à
+  agenda vazia, não ao compromisso que o aviso anuncia.
+- **Correção:** o `href` passa a ser `"/agenda/" + entry.id()` e o CTA "Ver compromisso". Quem toca
+  no lembrete quer ver quem convidou, onde é e o que responder.
+- **Prova:** `theReminderNotificationOpensTheEntryItIsAbout` cria a entrada, agenda o lembrete de 5
+  minutos, entrega e lê a notificação `CALENDAR_REMINDER` do repositório. **Falha no código antigo**
+  com `expected: "/agenda/cal_..." but was: "/agenda?period=day"`. Suíte do serviço: **13/13**.
+  CI do PR verde, incluindo `🧪 Testes (PR)`.
+
+**(C) Front: a tabela de navegação conhece a agenda (PR #843, branch
+`feat/enois-calendar-convites-pendentes`, a partir da `enois/qa` `05ba944a`).**
+
+- **Bug provado por teste:** `src/utils/navigation.ts` traduz o `href` da notificação em rota do
+  router. Não havia entrada `agenda`, então `/agenda/cal_1` e `/agenda` caíam no fallback e o
+  clique não navegava. A rota `/agenda/$entryId` existe desde o #777.
+- **Correção:** três entradas, na ordem certa: `agenda/disponibilidade` (filha de `/agenda`, precisa
+  vir antes senão "disponibilidade" viraria id), `agenda` → `/agenda/$entryId` com `params:
+  ["entryId"]`, e `agenda` → `/agenda` para o `href` sem id.
+- **Prova:** teste novo afirma os três destinos. **Falha no código antigo** com
+  `expected "vi.fn()" to have been called with arguments: [ { to: '/agenda/$entryId', …(1) } ]`.
+  Suíte: **231 arquivos / 1344 testes**; `tsc`, `eslint` e `vite build` verdes. CI do PR verde.
+
+### Validação executada
+
+| Onde    | Comando                                                       | Resultado |
+| ------- | ------------------------------------------------------------- | --------- |
+| DS      | `npm run lint`                                                | EXIT=0    |
+| DS      | `npx tsc --noEmit`                                            | EXIT=0    |
+| DS      | `npm test`                                                    | **1734/1734** (181 arquivos) |
+| DS      | `npm run build`                                               | EXIT=0    |
+| Backend | `-Dtest=CalendarReminderServiceTests`                         | **13/13** |
+| Backend | `./mvnw -DskipTests compile`                                  | EXIT=0    |
+| Front   | `npx tsc --noEmit`                                            | EXIT=0    |
+| Front   | `npx eslint` nos tocados                                      | 0 erros   |
+| Front   | `npx vitest run`                                              | **1344/1344** (231 arquivos) |
+| Front   | `npx vite build`                                              | EXIT=0    |
+
+### Armadilhas e notas
+
+- **O release do DS não está só pendente: está quebrado.** O #218 tem marcador de conflito
+  commitado, e é por isso que o check de release falha. Nenhum agente deve "consertar" a branch de
+  outra pessoa; o caminho é reportar e esperar o humano. Registrado em B9.
+- **Prova do vermelho, de novo:** guardar o arquivo de produção novo em `/tmp`, reverter **só** ele
+  (`git checkout -- <arquivo>`), rodar o teste e ver a falha, restaurar. Reverter a árvore inteira
+  (`git stash`/`git checkout -- .`) leva o teste junto e o verde não prova nada — a lição da
+  execução 28.
+- **Ordem das rotas importa:** `agenda/disponibilidade` antes de `agenda` com parâmetro. Sem isso,
+  `/agenda/disponibilidade` casaria como `entryId = "disponibilidade"`.
+- **`CalendarAgendaSurfaceProps` na `qa` não tinha `conflicts`** (estava só no `main`); foi
+  restaurado no mesmo PR #219, porque a superfície já repassava o campo.
+
+### PRs
+
+- DS — **#219** (`CalendarPendingInvitations` + ligação na superfície), para `qa`, aguardando
+  revisão humana. CI enfileirado no momento do fechamento.
+- Backend — **#665** (lembrete abre `/agenda/{id}`), para `qa`, aguardando revisão humana; CI verde.
+- Front — **#843** (rota `agenda` na tabela de navegação), para `qa`, aguardando revisão humana; CI
+  verde.
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 30):** (1) **release do DS** — o #218 precisa ser
+consertado por humano (marcador de conflito) antes de qualquer release que destrave #828/#830;
+(2) fase 5 continua: reuniões e workshops; (3) ligar `pendingInvitations` na `/agenda` do front
+depois do release do DS; (4) reconferir PRs e o bot (§9/B8) antes de começar.
