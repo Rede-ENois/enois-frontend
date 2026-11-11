@@ -1265,6 +1265,13 @@ export const texts = {
       imageProhibitedTitle: "Imagem ocultada",
       imageProhibitedMessage:
         "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      /** Limites de vídeo (issue #656): a checagem local avisa antes de o upload sair. */
+      videoLimitTitle: "Vídeo grande demais",
+      videoLimitSize: (mb: number, minutes: number) =>
+        `A rede aceita vídeos de até ${mb}MB e ${minutes} minutos. Encurte o vídeo ou reduza a qualidade e tente de novo.`,
+      videoLimitDuration: (minutes: number) =>
+        `A rede aceita até ${minutes} minutos de vídeo apenas. Encurte o vídeo e tente de novo.`,
+      videoLimitClose: "Entendi",
       publishError: "Não foi possível publicar. Tente de novo.",
       publishErrorTitle: "Não foi possível publicar:",
       page: "Página",
