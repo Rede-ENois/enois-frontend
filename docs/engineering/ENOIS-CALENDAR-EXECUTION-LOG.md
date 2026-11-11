@@ -1848,3 +1848,118 @@ verde e rebaseado.
 **PRÓXIMA RODADA (§10, proposta de execução 24):** com o DS `0.32.0` publicado, o front #813 pode
 subir a dependência e fechar o slot `reminder`; depois, import na tela com o contrato do #629 e a
 tela da assinatura consumindo o cliente do #816.
+
+## EXECUÇÃO 24 (bloco) — 2026-11-11T05:45–06:30-03:00
+
+**Bloco de 4 unidades: import de `.ics` na tela, tela da assinatura, o card e o diálogo no DS, e a
+correção de `STATUS:CANCELLED` no import do backend.** Itens (1) e (2) da proposta de execução 23
+entregues; a proposta é fechada, a execução 24 é a próxima (este registro).
+
+### Estado reconferido antes de começar
+
+- O log já tinha uma "EXECUÇÃO 23" escrita por outra linha de trabalho (fechou o #650 como
+  duplicado, rebaseou o #637, criou a tag `v0.32.0`), mas o §Estado do roadmap ainda dizia
+  `EXECUCAO=22`. Segui a numeração da própria nota "PRÓXIMA RODADA (§10, proposta de execução 24)"
+  do log: este bloco é o 24, e o §Estado foi reconciliado.
+- PRs abertos conferidos: backend #637 (assinatura, aguardando revisão), front #816 (cliente da
+  assinatura) e #813 (seletor de lembrete no DS 0.32) seguiam abertos; nenhum PR do escopo
+  "import na tela" ou "tela da assinatura" existia — o bloco não duplica ninguém.
+- **Descoberta estrutural no DS:** `origin/qa` (e3e1436) e `origin/main` (2a2dee0) **não têm
+  ancestral comum** — `main` guarda os releases publicados (0.31.0/0.32.0, com os componentes de
+  calendário que a `qa` não tem), a `qa` está 529 commits à frente no resto. Consequência: o PR
+  de componente sai da `qa` e mira a `qa` (AGENTS.md), mas a validação do front precisa de uma
+  árvore sintética `main` + arquivos novos para gerar o tarball — o front consome o pacote da
+  linhagem `main`. Registrada como D28.4.
+
+### Unidades
+
+**(A) Backend: import honra `STATUS:CANCELLED` (PR #654, branch `feat/enois-calendar-import-cancelado`).**
+O parser do `CalendarIcsService` tratava todo `VEVENT` como upsert; um arquivo que publicou o
+cancelamento de um compromisso (D26: cancelamento é publicado, não apagado) criava o evento em vez
+de cancelá-lo. Agora: `VEVENT` com `STATUS:CANCELLED` chama `source.cancel` pela origem `ICS`+`UID`;
+se a entrada existia, `cancelled++`, senão `skipped++` — nunca cria. O `ImportResult` ganhou o
+campo `cancelled`. Testes: 15 no serviço (4 novos), **8/8** no contrato (`CalendarIcsApiTests`,
+1 novo), `./mvnw clean test` na suíte do calendário com exit 0.
+
+**(B) DS: `CalendarSubscriptionCard` (PR #209, branch `feat/calendar-import-subscription`).**
+Card controlado com pílulas de escopo, bloco de "link novo" com copiar, bloco de link ativo com
+regenerar/revogar em `ConfirmDialog` (revogar em `text-destructive`), data formatada com
+`Intl.DateTimeFormat("pt-BR")`. 10 testes. Copiar/regenerar/revogar são callbacks — o card não
+conhece a API (D28.1).
+
+**(C) DS: `CalendarImportDialog` (mesmo PR #209).** Diálogo controlado: valida extensão `.ics` e
+teto de 512 KB antes de reportar `onFileChange`; `onImport: () => Promise<CalendarImportResultData |
+null>` — `null` mantém o diálogo aberto com o arquivo; resultado mostrado como contagem
+(`created+moved+cancelled` = "aplicados", 0 = vazio); erro em `<p role="alert">` sem perder o
+arquivo. 9 testes. Tipos novos um por arquivo em `src/types/`; microcópia em pt-BR via
+`CalendarMessages` com defaults (sem travessão — o teste de mensagens do DS rejeita `–`/`—`, pegou
+o "gere outro: o atual deixa de valer" na primeira rodada).
+
+**(D) Front: tela `/agenda/assinatura` + import na `/agenda` (PR #828, branch
+`feat/enois-calendar-telas-import-assinatura`, a partir de `enois/qa` b07ad07c).**
+`calendarApi.importIcs({file, scope})` com `FormData` (o `request` não seta `Content-Type`; o
+navegador põe o boundary; `Idempotency-Key` vem do `api.post`); tipos `CalendarImportResultView` e
+`CalendarImportInput` um por arquivo (`local/type-boundaries` pegou os dois juntos na primeira
+rodada). Rota nova com `beforeLoad: requireAuth`, head próprio, `useQuery` de leitura e três
+mutações (criar/regenerar/revogar); o token só existe na resposta da criação/regeneração, então o
+link fresco fica no estado da rota (D28.3); copiar via `navigator.clipboard` com toast. Na
+`/agenda`, botão **Importar .ics** ao lado do export, diálogo do DS ligado com `useMutation`
+invalidando `["agenda"]`. `routeTree.gen.ts` regenerado **pelo build real** (+21 linhas, só
+aditivo).
+
+### Validação executada
+
+| Onde | Suíte / gate | Resultado |
+|---|---|---|
+| Backend (#654) | `CalendarIcsApiTests` | **8/8** |
+| Backend (#654) | `CalendarIcsServiceTests` | **15/15** (4 novos) |
+| DS (#209) | testes novos (dialog 9 + card 10) | **19/19** |
+| DS (#209) | suíte inteira `npm test` | **1678/1678** |
+| DS (#209) | `npm run lint`, `tsc --noEmit`, `build`, `test:dist`, `build-storybook` | **todos verdes** |
+| Front (#828) | testes de rota (7 arquivos de rota) | **7/7** |
+| Front (#828) | `tsc --noEmit`, `eslint` (arquivos tocados), `vite build` | **todos verdes, exit 0** |
+| Front (#828) | `vitest run` completo | **1308/1314**; as 6 falhas (`use-notifications-list` ×2, `e2e/crypto` ×2, `e2e/key-manager`) foram **provadas pré-existentes**: stash de tudo e as mesmas 3 suítes na `qa` limpa (b07ad07c) falham 8 |
+
+### Armadilhas e notas
+
+- **DS sem ancestral comum qa↔main** (D28.4): rebase do meu branch de `main` para `qa` não é
+  possível; resolvido com `checkout -B feat/... origin/qa` + `stash pop` e resolução de 4 arquivos
+  mantendo só as minhas adições (a `qa` não tem o tipo `availability` do `main` — mantê-lo quebrava
+  o `tsc`).
+- **Tarball de validação é da linhagem `main`:** o primeiro tarball (da `qa`) fez o front falhar
+  com `IdentityReleaseSection is not exported`. Árvore `/tmp/wt-dsval` = `main` + meus arquivos,
+  empacotada como `0.32.0` local.
+- **Cache do Nitro de novo:** chunk SSR velho em `node_modules/.nitro` referenciava export antigo
+  ("not exported" fantasma); apagar o diretório (e ele precisa ser diretório real, não symlink,
+  quando o `node_modules` é fazenda de symlinks).
+- **`routeTree.gen.ts` nunca à mão:** regenerado à mão com `router-generator` 1.167.15 (lock tem
+  1.167.46) quebrou a inferência do `validateSearch` — `TS7006` em arquivos que eu não toquei.
+  Reconstruído o `node_modules` com as versões exatas do lock e deixado o `vite build` regerar.
+- **Regra de microcópia do DS é testada:** `/[–—]/` falha o `default-messages.test.ts`; escrever
+  com dois-pontos, não travessão.
+
+### PRs
+
+- Backend — **#654**, para `qa`. **Mergeado pelo bot `kof-agent-worker`** em `81c1ac02`
+  (2026-11-11T07:21Z) sem revisão humana — B8 de novo.
+- DS — **#209**, para `qa` (a partir de `origin/qa` e3e1436). **Mergeado pelo bot** em `b767e606`
+  (2026-11-11T07:57Z) — B8 de novo. **Não está em nenhum pacote publicado:** o release sai do
+  `main` e as linhagens não se cruzam (D28.4/B9). Até o release, o front #828 valida contra o
+  tarball sintético.
+- Front — **#828**, para `qa`, `MERGEABLE`, aguardando revisão humana. **CI vermelho esperado:**
+  `MISSING_EXPORT` de `CalendarImportDialog`/`CalendarSubscriptionCard` no build Docker, porque o
+  `npm ci` instala o pacote publicado (0.32.0, linhagem `main`) que ainda não tem os componentes.
+  Não é regressão do código — é o B9. O build local passa porque usa o tarball sintético.
+- Docs — este PR.
+
+**Correção de estado no fim da rodada:** os merges do bot aconteceram enquanto este log era
+escrito; §7, §Estado e a linha 24 do histórico foram corrigidos no mesmo PR para não deixar o
+roadmap mentindo. O CI do #828 foi conferido (`gh pr checks 828`) e a causa raiz lida no log do
+run 42993813501 — não é suposição.
+
+**PRÓXIMA RODADA (§10, proposta de execução 25):** o caminho crítico mudou — #654 e #209 já
+estão mergeados (pelo bot), então o que falta é **release do DS a partir do `main`** trazendo os
+componentes do #209; sem isso o #828 não compila no CI. Em paralelo: (1) item (3) da proposta 23
+(fase 4 adiante — conferir se o módulo de chamadas/vídeo tem data/hora legível antes de prometer);
+(2) reconferir os PRs abertos e o estado do bot (§9/B8); (3) com o #637 mergeado, fumaça do
+`/calendar/subscribe/{token}.ics` contra ambiente.

@@ -749,3 +749,32 @@ compromisso. O que a execução 21 decidiu:
    caminho direto (`CalendarCommandService`) já encerrava o pendente, mas o caminho de origem
    não. Agora `upsert` (quando move) e `cancel` chamam `clearPendingForEntry`, e o comportamento
    é o mesmo venha o compromisso da agenda, da mentoria, do import ou do evento.
+
+## D28 — O desenho pede; a aplicação faz; o token só é visto uma vez (execução 24)
+
+O bloco 24 levou import e assinatura para o DS e para a tela, e fechou três decisões de fronteira:
+
+1. **Componente controlado não faz requisição — relata a intenção.** `CalendarImportDialog`
+   recebe `onImport: () => Promise<CalendarImportResultData | null>`; o app executa o upload e
+   devolve o resultado. Devolver `null` (erro ou falha) mantém o diálogo aberto com o arquivo
+   ainda escolhido — o app decide o que acontece, o DS só desenha e valida o formato/tamanho
+   antes de chamar. O mesmo split vale para `CalendarSubscriptionCard`: copiar, regenerar e
+   revogar são callbacks do app; o card não conhece `calendarApi`.
+2. **O resultado do import é contagem, não lista.** `{received, created, moved, cancelled,
+   skipped}` — o backend já responde isso e a tela não precisa dos compromissos para dizer
+   "entendi 40, criei 12, cancelei 3". `cancelled` entra na conta de "aplicados" porque o
+   cancelamento vindo do arquivo é mudança real na agenda (D10/D26), não rejeição.
+3. **O token da assinatura vive no estado do app, não no card.** O servidor nunca devolve o
+   token de novo (só o hash fica no banco); depois de criar/regenerar, a única cópia é a da
+   resposta daquela requisição. Guardar o link montado no estado da rota é o que permite ao card
+   alternar entre "link novo, copie agora" e "link ativo" sem o card precisar saber disso.
+4. **O DS tem duas linhagens e o PR de componente mira a `qa`.** `origin/qa` e `origin/main` do
+   design system **não têm ancestral comum** (`git merge-base` falha): `main` carrega os
+   releases publicados (0.31/0.32), `qa` acumula 529 commits de feature. Regra mantida do
+   AGENTS.md: PR de componente sai da `qa` e mira a `qa`; para validar o front (que consome o
+   pacote da linhagem `main`), monta-se uma árvore de validação separada (`main` + os arquivos
+   novos) só para gerar o tarball — nunca rebasear uma na outra nem "resolver" a divergência por
+   conta própria. **Consequência operacional:** mergear o componente na `qa` não o publica. O
+   front que depende dele fica com CI vermelho (`MISSING_EXPORT`) até um release a partir do
+   `main` — e esse release é passo humano (D20). O vermelho é o B9 se manifestando, não regressão
+   do código; declarar isso no PR evita que alguém "conserte" apagando o import.
