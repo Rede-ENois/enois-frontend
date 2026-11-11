@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=4 (agenda social) iniciada: a presença confirmada em evento de grupo cria/reagenda/remove a entrada na agenda (origem EVENT), e a porta de origem passou a encerrar lembrete pendente ao reagendar/cancelar. Fase 8 (iCalendar) segue com export+import no #629 e o botão de download no #809, ambos aguardando revisão humana. Fase 3 segue esperando revisão humana do #777 (detalhe) para depois ligar o seletor de lembrete.
+FASE_ATUAL=4 (agenda social) iniciada: a presença confirmada em evento de grupo cria/reagenda/remove a entrada na agenda (origem EVENT), e a porta de origem passou a encerrar lembrete pendente ao reagendar/cancelar. Fase 3 concluída: o detalhe (#777) foi mergeado e o seletor de lembrete está ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 (iCalendar) segue com export+import no #629 e o botão de download no #809, ambos aguardando revisão humana. Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky (passa isolada na base e na branch).
 EXECUCAO=21
-ULTIMA_ATUALIZACAO=2026-11-10T19:30:00-03:00
+ULTIMA_ATUALIZACAO=2026-11-10T22:10:00-03:00
 ```
 
 ---
@@ -414,7 +414,11 @@ execução 21.*
    rodada, mas o front teria de reimplementar o parser `.ics`; fica para a próxima, com o
    contrato já estável. A fase 9 (assinatura privada) depende do mesmo serviço `.ics` — adiada
    sem duplicar trabalho.
-5. **Defasagem corrigida:** a `qa` dizia `EXECUCAO=20` e o **log de execuções estava corrompido**
+5. **Regressão completa do backend** — **2335 testes, 1 falha, 1 pulado**. A falha é
+   `FeedPaginationTests.trendingKeepsItsWindowAndExcludesPostsOutsideItsExistingScope` (feed,
+   fora do escopo). Rodada isolada passa **5/5** na base `enois/qa` sem alterações e **5/5** nesta
+   branch, com ~290 s por execução: é flake de tempo sob carga paralela. Registrado no PR #632.
+6. **Defasagem corrigida:** a `qa` dizia `EXECUCAO=20` e o **log de execuções estava corrompido**
    — um merge posterior o sobrescreveu com a versão da execução 13, com marcador de conflito
    (`>>>>>>> origin/qa`) no fim, perdendo as execuções 14–20. Este PR restaura o log a partir do
    commit do bloco 20 e acrescenta a execução 21.
@@ -462,7 +466,7 @@ e evitou construir sobre premissa errada.
 | 18  | 2026-11-10 ~09:30 | 6    | Disponibilidade semanal da agenda no backend (V267, `GET`/`PUT /calendar/availability`, 9+7 testes, 99 de regressão) e o cliente no front (#801, 17/17); aviso de conflito no formulário do DS (#195, 18/18, 1577 na suíte inteira). A V265 que eu tinha escrito colidiu com `user_presence` e virou V267. #792/#791 mergeados pelo bot (B8) |
 | 19  | 2026-11-10 ~14:30 | 6    | **Bloco de 3 unidades.** (A) `CalendarAvailability`/`CalendarAvailabilitySurface` no DS com as regras do backend (12+14 testes); (B) `conflicts` repassado pela `CalendarAgendaSurface` (2 testes, 1655 na suíte inteira); (C) tela `/agenda/disponibilidade` e aviso de conflito ligado na `/agenda` no front (7/7, build verde). DS #197 aberto; front #804 em draft até o release. O bot mergeou #187/#195 e abriu o release #196 (B8). Armadilhas: cache do Nitro e `--force-with-lease` com refspec longa |
 | 20  | 2026-11-10 ~17:30 | 8    | **Bloco de 3 unidades — fase 8.** (A) export `.ics` no backend (UID estável, VTIMEZONE real, folding 75 octets; 11 testes); (B) import multipart idempotente por ICS+UID (7 testes de contrato) — backend PR #629; (C) `exportUrl` + botão "Baixar .ics" na `/agenda` com a janela da tela (18+3 testes, tsc/build verdes) — front PR #809. Fase 6 confirmada fechada: #804 mergeado e 0.31.0 publicado. D26 registrada |
-| 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
+| 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). Regressão completa do backend: 2335 testes, 1 falha de feed (passa isolada na base e na branch — flake). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
