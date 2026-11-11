@@ -89,6 +89,9 @@ describe("lista de avisos compartilhada", () => {
     // Antes: o sino usava ["notifications", ctx] com limit=20 e a página
     // ["notifications","page",ctx] com limit=30 — duas chaves, duas chamadas na mesma carga, e a
     // página nunca aproveitava o cache do sino. Agora as duas montagens resolvem a MESMA consulta.
+    // O stream fica aberto para a recarga periódica não entrar na contagem: o que este teste prende
+    // é a deduplicação das duas montagens, não o polling (que tem teste próprio).
+    mocks.live.mockReturnValue(true);
     await render();
 
     expect(mocks.list).toHaveBeenCalledTimes(1);
@@ -125,7 +128,9 @@ describe("lista de avisos compartilhada", () => {
   it("recarrega sozinha quando o stream está fora", async () => {
     // Antes não havia recarga nenhuma: sem stream, o aviso só aparecia ao carregar a página de novo.
     await render();
-    expect(mocks.list).toHaveBeenCalledTimes(1);
+    // A contagem inicial não é o que importa (o intervalo curto pode já ter disparado durante a
+    // montagem); o que este teste prende é que a recarga acontece sozinha depois.
+    const afterRender = mocks.list.mock.calls.length;
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
@@ -133,7 +138,7 @@ describe("lista de avisos compartilhada", () => {
     await flush();
 
     // O que importa é que a recarga aconteceu sozinha, sem ninguém pedir.
-    expect(mocks.list.mock.calls.length).toBeGreaterThan(1);
+    expect(mocks.list.mock.calls.length).toBeGreaterThan(afterRender);
   });
 
   it("não consulta enquanto o stream entrega os avisos", async () => {
