@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=9 (assinatura privada .ics) entregue no backend: link /calendar/subscribe/{token}.ics sem sessão, token guardado só como hash, regenerar/revogar cortando o link antigo, ETag e limite por token (backend #637, aguardando revisão humana). Fase 4 (agenda social) segue em andamento com a presença em evento (D27). Fase 3 concluída: seletor de lembrete ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 concluída (export+import #629, botão #809). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
-EXECUCAO=22
-ULTIMA_ATUALIZACAO=2026-11-10T23:20:00-03:00
+FASE_ATUAL=9 (assinatura privada .ics) entregue no backend (#637) e agora também no DS e na tela: CalendarSubscriptionCard + CalendarImportDialog (DS #209) e rota /agenda/assinatura com import .ics na /agenda (front #828), todos aguardando revisão humana. O import do backend passou a honrar STATUS:CANCELLED (#654). Fase 4 (agenda social) segue em andamento com a presença em evento (D27). Fase 3 concluída: seletor de lembrete ligado em /agenda/$entryId (DS #203 + front #813, aguardando revisão humana). Fase 8 concluída (export+import #629, botão #809). Regressão completa do backend: 2335 testes, 1 falha de feed comprovadamente flaky.
+EXECUCAO=24
+ULTIMA_ATUALIZACAO=2026-11-11T06:30:00-03:00
 ```
 
 ---
@@ -215,6 +215,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | (backend, exec. 21)                                                | enois-backend       | Fase 4: presença em evento cria/reagenda/remove a entrada na agenda + porta de origem encerra lembrete      | aberto, aguardando revisão humana |
 | (DS, exec. 21)                                                     | enois-design-system | Fase 3: slot `reminder` no `CalendarEntryDetail`                                                            | aberto, aguardando revisão humana |
 | (front, exec. 21)                                                  | enois-frontend      | Fase 3: seletor de lembrete ligado em `/agenda/$entryId`                                                    | aberto, aguardando revisão humana; depende do slot no DS |
+| [#654](https://github.com/Rede-ENois/enois-backend/pull/654)       | enois-backend       | Fase 8: import honra `STATUS:CANCELLED` (cancela pela origem, nunca cria; `cancelled` no resultado)          | aberto, aguardando revisão humana |
+| [#209](https://github.com/Rede-ENois/enois-design-system/pull/209) | enois-design-system | Fase 8/9: `CalendarImportDialog` + `CalendarSubscriptionCard` (controlados, sem requisição própria)          | aberto, aguardando revisão humana; a partir da `qa` (D28.4) |
+| [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)      | enois-frontend      | Fase 8/9: import `.ics` na `/agenda` + rota `/agenda/assinatura` (criar, copiar, regenerar, revogar)         | aberto, aguardando revisão humana; depende do release do DS #209 |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -222,6 +225,21 @@ delimitado; dependências declaradas no corpo.
 ---
 
 ## 8. Testes executados
+
+Execução 24 (backend `feat/enois-calendar-import-cancelado` sobre a `qa`; DS
+`feat/calendar-import-subscription` sobre `origin/qa` e3e1436; front
+`feat/enois-calendar-telas-import-assinatura` sobre `enois/qa` b07ad07c):
+
+| Onde  | Comando                                                                                          | Resultado |
+| ----- | ------------------------------------------------------------------------------------------------ | --------- |
+| Backend | `-Dtest=CalendarIcsApiTests`                                                                   | **8/8** (1 novo) |
+| Backend | `-Dtest=CalendarIcsServiceTests`                                                               | **15/15** (4 novos) |
+| DS | `npx vitest run` (dialog + card)                                                                 | **19/19** |
+| DS | `npm test` (suíte inteira)                                                                       | **1678/1678** |
+| DS | `npm run lint` / `npx tsc --noEmit` / `npm run build` / `npm run test:dist` / `npm run build-storybook` | todos verdes |
+| Front | `npx vitest run` (rotas)                                                                        | **7/7** |
+| Front | `npx tsc --noEmit` / `npx eslint` nos tocados / `npx vite build`                                 | EXIT=0 / 0 erros / EXIT=0 |
+| Front | `npx vitest run` (suíte inteira)                                                                 | **1308/1314**; 6 falhas provadas pré-existentes na `qa` limpa (8 lá) |
 
 Execução 22 (backend `feat/enois-calendar-assinatura-ics` sobre a `qa` `ef47dc96`; front
 `feat/enois-calendar-assinatura-cliente` sobre a `qa` `7664b239`):
@@ -336,6 +354,7 @@ O gate de cada execução fica registrado no log de execução.
 | B6  | Nenhuma versão **publicada** do DS tem o módulo de calendário                        | a tela `/agenda` não pode importar `CalendarAgenda`  | **fechado** (de novo): `v0.31.0` publicada pela mantenedora com o #197; o #804 mergeou na `qa` com o lockfile real. **Armadilhas**: trocar o tarball exige `rm -rf node_modules/.nitro`; lockfile regenerado pelo workflow descartável apagando a entrada antiga do pacote antes do `npm install --package-lock-only` |
 | B7  | Sem token `read:packages` nesta máquina                                              | não dá para `npm ci`/`npm install` do front nem regerar o lockfile | **mitigado**: workflow descartável com `GITHUB_TOKEN` regerou os lockfiles do #769 (0.30.0) e do #777 (0.30.1). Processo: `.github/workflows/relock-ds.tmp.yml`, removido depois de cada uso |
 | B8  | O bot `kof-agent-worker` mergea PRs sem aprovação humana — **execução 19**: mergeou #187 e #195 no DS e **abriu o PR de release #196** sozinho | contraria a regra absoluta do projeto: nenhum merge automático | reportado à mantenedora (execuções 14, 17 e 19); a publicação do release continua humana (D20: tag `v*`) e o bot não a dispara. Mitigação: PRs seguem declarando "não mergear" e a rodada não abriu PR duplicado do release |
+| B9  | `origin/qa` e `origin/main` do DS **não têm ancestral comum** (`git merge-base` falha) | PR de componente sai da `qa`, mas o pacote publicado vem do `main`; o front não vê o componente até o release | PR de componente mira a `qa` (AGENTS.md); validação do front usa árvore sintética `main` + arquivos novos para o tarball (D28.4). Não rebasear uma na outra |
 
 ---
 
@@ -457,12 +476,17 @@ front. Detalhe no log, execução 22.*
    O lint do DS #203 foi corrigido nesta rodada; o CI do front #813 falha por dependência de
    release do slot `reminder`, registrada no próprio PR.
 
-**Execução 23 (próximo bloco) — proposta.** (1) **Import na tela**: o #629 mergeou, então o
-contrato está estável; subir o `.ics` na `/agenda` com o conflito avisado antes de aplicar (D23).
-(2) **Tela da assinatura**: o cliente está no #816 e o backend no #637; falta o card no DS para
-mostrar o link, copiar e regenerar/revogar. (3) **Fase 4 adiante**: a chamada/vídeo é a próxima
-fonte social natural — verificar se há módulo com data/hora legível antes de prometer.
-(4) Reconferir os PRs abertos antes de começar (§9).
+**Execução 23 (proposta) — executada no bloco 24.** Os itens (1) import na tela e (2) tela da
+assinatura foram entregues: DS #209 (diálogo e card) e front #828 (rota `/agenda/assinatura` e
+botão **Importar .ics** na `/agenda`), com o backend #654 corrigindo o import de cancelamento. O
+item (3) fase 4 adiante e o (4) reconferência de PRs seguem para a próxima rodada.
+
+**Execução 25 (próximo bloco) — proposta.** (1) **Caminho crítico é revisão humana:** #654, #209,
+#828 e os anteriores (#637, #813, #816) precisam de merge; sem merge do DS não há release nem
+lockfile real no front. (2) **Fase 4 adiante:** conferir se o módulo de chamadas/vídeo tem data e
+hora legíveis antes de prometer a entrada na agenda — a presença em evento (D27) foi o primeiro
+caso; a chamada é o próximo. (3) **Reconferir PRs e o bot** (§9/B8) antes de começar, como sempre.
+(4) Se o #637 mergear, fumaça do `/calendar/subscribe/{token}.ics` contra ambiente.
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -502,6 +526,8 @@ e evitou construir sobre premissa errada.
 | 20  | 2026-11-10 ~17:30 | 8    | **Bloco de 3 unidades — fase 8.** (A) export `.ics` no backend (UID estável, VTIMEZONE real, folding 75 octets; 11 testes); (B) import multipart idempotente por ICS+UID (7 testes de contrato) — backend PR #629; (C) `exportUrl` + botão "Baixar .ics" na `/agenda` com a janela da tela (18+3 testes, tsc/build verdes) — front PR #809. Fase 6 confirmada fechada: #804 mergeado e 0.31.0 publicado. D26 registrada |
 | 21  | 2026-11-10 ~20:30 | 4/3  | **Bloco de 3 unidades.** (A) presença em evento de grupo cria/reagenda/remove a entrada na agenda (origem `EVENT`, D27; 5 testes); (B) a porta de origem encerra lembrete pendente ao reagendar/cancelar (2 testes, 19 na regressão do módulo); (C) seletor de lembrete ligado em `/agenda/$entryId` com slot novo no DS (3+4 testes, 1659 na suíte do DS). Regressão completa do backend: 2335 testes, 1 falha de feed (passa isolada na base e na branch — flake). #629/#809/#810/#777 mergeados; log da `qa` restaurado (estava corrompido desde a execução 13) |
 | 22  | 2026-11-10 ~23:20 | 9    | **Bloco de 3 unidades.** (A) assinatura privada `.ics` no domínio e no banco: V272 com hash único, `scope` congelado e `revoked_at`, token de 32 bytes em base64url, comparação em tempo constante; (B) gestão com sessão e leitura sem sessão com `ETag` e limite por hash do token; 6 de domínio + 9 de contrato, 153 na regressão do módulo e dos filtros; (C) cliente de API no front (22/22, tsc/eslint/build verdes). PRs #637 (backend) e #816 (front); #632/#814/#815 mergeados pelo bot (B8) |
+| 23  | 2026-11-11 ~05:40 | 9    | **Rodada de destravamento (outra linha de trabalho).** #650 fechado como duplicado do #646; #637 rebaseado sobre a `qa`; tag `v0.32.0` do DS criada. Registrada no log antes deste bloco |
+| 24  | 2026-11-11 ~06:30 | 8/9  | **Bloco de 4 unidades.** (A) import do backend honra `STATUS:CANCELLED` (cancela pela origem, `cancelled` no resultado; 15+8 testes) — #654; (B) `CalendarSubscriptionCard` e (C) `CalendarImportDialog` no DS, controlados e sem requisição própria (19 testes, 1678 na suíte) — #209; (D) import `.ics` na `/agenda` e rota `/agenda/assinatura` no front (7/7 rotas, tsc/eslint/build verdes, 1308/1314 com 6 falhas pré-existentes) — #828. D28 registrada (split controlado, token só na resposta, linhagens qa/main do DS) |
 ---
 
 ## 12. Critérios de encerramento do cronjob
