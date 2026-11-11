@@ -918,3 +918,40 @@ uma divergência visível, não um descarte mudo.
 escolhe a agenda e o tipo do compromisso) e esconder não corrige o contrato. Rejeitado também
 tratar `allDay` como primitivo com valor padrão `false`: desmarcaria o dia inteiro em toda edição
 que não falasse dele.
+
+---
+
+## D34 — O convite pendente é uma lista do servidor, e o aviso abre o que ele avisa (execução 29)
+
+Duas lacunas da mesma família: o dado existia e a pessoa não chegava nele. O convite pendente tinha
+cliente de API e rota (`GET /calendar/invitations`) desde a fase 1, mas nenhuma superfície o
+desenhava — só aparecia se a pessoa abrisse o período em que ele cai, e um convite para o mês que
+vem era invisível. O lembrete de compromisso criava a notificação apontando para
+`/agenda?period=day`, e o front não tinha rota `agenda` na tabela de navegação: o clique não levava
+a lugar nenhum; mesmo com a rota, levaria à agenda vazia, não ao compromisso anunciado.
+
+**Decisão.**
+
+1. **A lista de convites pendentes vem do servidor, não da janela na tela.** `CalendarPendingInvitations`
+   recebe `invitations` já resolvidas por `GET /calendar/invitations` e as desenha **acima** da
+   agenda. A janela visível é o recorte errado para essa pergunta: o convite que importa é
+   justamente o que a agenda não mostraria.
+2. **A resposta reusa a mutação da resposta rápida.** `CalendarAgendaSurface` repassa
+   `onRespond`/`respondingId`/`respondError` ao componente; não há segundo caminho de escrita. O
+   componente é controlado e não busca dados — a app é quem chama a API, como manda a camada
+   `domain` do DS.
+3. **O aviso abre o compromisso, não a agenda.** O `href` do lembrete é `/agenda/{entryId}` e o CTA
+   é "Ver compromisso". Quem toca no lembrete quer ver quem convidou, onde é e o que responder.
+4. **A tabela de navegação do front é o contrato do `href`.** Toda notificação que aponta para uma
+   rota precisa de entrada em `src/utils/navigation.ts`; sem ela o clique cai no fallback e não
+   navega. A ordem importa: `agenda/disponibilidade` vem antes de `agenda` com parâmetro, senão
+   "disponibilidade" viraria `entryId`.
+
+**Consequência.** O convite pendente passa a ter superfície própria e testada, e o lembrete leva ao
+compromisso. A ligação na `/agenda` do front fica para depois do release do DS (B9), porque o
+componente ainda não está em pacote publicado.
+
+**Rejeitado.** Derivar os convites pendentes da janela já carregada pela agenda: esconderia
+exatamente o caso que motiva a lista (convite fora do período visível) e faria a tela depender de
+navegar até o mês certo. Rejeitado também manter o lembrete apontando para a agenda: a agenda não
+diz qual compromisso é, e o aviso já sabe.
