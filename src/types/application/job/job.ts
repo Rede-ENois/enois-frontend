@@ -1,5 +1,6 @@
 import type { JobApplicationField } from "./job-application-field";
 import type { JobAuthor } from "./job-author";
+import type { JobExternalDetails } from "./job-external-details";
 
 export type Job = {
   id: string;
@@ -59,4 +60,9 @@ export type Job = {
   sourceUrl?: string | null;
   /** Nome da plataforma de origem (ex.: JobRadar). */
   sourcePlatform?: string | null;
+  /**
+   * Metadados estruturados das vagas externas (nulo nas internas): publicação, última
+   * verificação, modelo de trabalho, localidade, faixa numérica e ciclo de vida.
+   */
+  externalDetails?: JobExternalDetails | null;
 };

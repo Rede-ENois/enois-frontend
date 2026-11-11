@@ -177,6 +177,9 @@ export function JobsListPage({
             ...filters,
             platform: plataforma || undefined,
             source: "EXTERNAL",
+            // O cursor vale nas duas abas: sem ele aqui, a de externas nunca passava da primeira
+            // página (o backend só devolve `nextCursor` na ordenação por data, e o padrão é essa).
+            cursor,
             limit: 10,
           })
         : jobsApi.list({ ...filters, source: "INTERNAL", cursor, limit: 10 }),
