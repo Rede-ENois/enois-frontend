@@ -1720,9 +1720,15 @@ D7) sobre o serviço `.ics` que está na `qa`.
 | Backend (A+B) | `Calendar*Tests` + filtros de segurança | **153/153**, BUILD SUCCESS |
 | Front (C) | `src/lib/api/calendar.test.ts` | **22/22** |
 | Front (C) | `tsc --noEmit` / `eslint` / `vite build` | EXIT=0 / 0 erros / EXIT=0 |
+| Backend (A+B) | `RedeApplicationTests` (schema x entidades) | **3/3** após o conserto do `token_hash` |
 
 ### Armadilhas e notas
 
+- **`char(64)` não passa no `ddl-auto=validate`.** A migração criava `token_hash char(64)` e o
+  Hibernate recusava o boot com "found character, expecting varchar(64)" — o `RedeApplicationTests`
+  pegou. As outras tabelas de token do projeto usam `varchar(64)` (V85, V134, V137); a assinatura
+  seguiu a convenção. O `CalendarSubscriptionApiTests` não pegava porque roda com H2 e o teste de
+  schema é o que compara entidade e migração.
 - **A migração nasceu como V269 e colidiu com o `qa`.** O `qa` já tinha duas V269
   (`external_job_normalized`, `reputation_batch_indexes`), e o CI do #637 falhou no check de versão
   repetida, no boot com Flyway e nos testes. Renumerada para **V272**; o build local não-clean
