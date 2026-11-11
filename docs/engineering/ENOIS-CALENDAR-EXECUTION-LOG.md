@@ -1690,7 +1690,7 @@ D7) sobre o serviço `.ics` que está na `qa`.
 
 - **A — domínio, migração e persistência.** `CalendarSubscription` com token de 32 bytes em
   base64url, hash SHA-256 obrigatório, comparação em tempo constante e revogação idempotente.
-  V270 cria `calendar_subscriptions` com `token_hash` único, `scope` nulo-ou-enum e `revoked_at`.
+  V271 cria `calendar_subscriptions` com `token_hash` único, `scope` nulo-ou-enum e `revoked_at`.
   Porta `CalendarSubscriptionRepository` + adaptador JPA.
 - **B — rotas.** Gestão com sessão (`GET`, `POST`, `POST /regenerate`, `DELETE`) e leitura sem
   sessão em `/calendar/subscribe/{token}.ics`, com `ETag` do corpo e `Cache-Control` de 5 min.
@@ -1706,7 +1706,7 @@ D7) sobre o serviço `.ics` que está na `qa`.
   `calendar/adapters/out/persistence/{CalendarSubscriptionJpaEntity,CalendarSubscriptionPersistenceAdapter,SpringDataCalendarSubscriptionJpaRepository}.java`,
   `calendar/adapters/in/web/{CalendarSubscriptionController,CalendarSubscriptionSettingsController}.java`,
   `shared/security/CalendarSubscriptionRateLimitFilter.java`,
-  `db/migration/V270__calendar_subscriptions.sql`.
+  `db/migration/V271__calendar_subscriptions.sql`.
 - Backend testes: `CalendarSubscriptionTests` (6), `CalendarSubscriptionApiTests` (9).
 - Front: `src/lib/api/calendar.ts` (+4 métodos), `src/lib/api/calendar.test.ts` (+4),
   `src/types/application/calendar/calendar-subscription-view.ts`.
@@ -1725,9 +1725,16 @@ D7) sobre o serviço `.ics` que está na `qa`.
 
 - **A migração nasceu como V269 e colidiu com o `qa`.** O `qa` já tinha duas V269
   (`external_job_normalized`, `reputation_batch_indexes`), e o CI do #637 falhou no check de versão
-  repetida, no boot com Flyway e nos testes. Renumerada para **V270**; o build local não-clean
+  repetida, no boot com Flyway e nos testes. Renumerada para **V271**; o build local não-clean
   continuava rodando a cópia velha de `target/classes` e repetia o erro, então a validação exige
-  `clean test`. O CI parte de checkout limpo e passa a ver só o V270.
+  `clean test`. O CI parte de checkout limpo e passa a ver só o V271.
+- **A `qa` estava vermelha por causa de outra pessoa, e isso contamina todo PR.** O #634 mergeou e
+  deployou `V269__external_job_normalized`; oito segundos depois o #635 mergeou
+  `V269__reputation_batch_indexes`, que nunca deployou porque o check de versão repetida reprovou.
+  Como o check do PR roda sobre o merge commit, qualquer PR para `qa` herda as duas V269. A
+  correção é um PR próprio (`fix/migracao-v269-duplicada`) renomeando a que **não** foi aplicada
+  para V270 — a que já está no banco de QA não pode mudar de número. A migração da assinatura
+  passou a V271 para não colidir com essa correção.
 - **A janela da assinatura estourava o teto do export.** 30 dias atrás + 365 à frente = 395 dias, e
   o `validateWindow` do `CalendarIcsService` recusa acima de 366. Cinco testes de contrato deram
   400 `INVALID_WINDOW` na primeira rodada. O fim passou a ser `from + 365 dias`.
