@@ -2390,10 +2390,9 @@ workshops; (3) reconferir PRs e o bot (§9/B8) antes de começar.
 
 ## EXECUÇÃO 29 (bloco) — 2026-11-11T17:00–18:40-03:00 — Fase 3/5: o convite que não aparecia e o lembrete que não abria nada
 
-**Bloco de 3 unidades.** O caminho crítico (release do DS) continua humano e agora **quebrado por
-marcador de conflito commitado** (ver B9); a rodada avançou o que não dependia dele: a superfície dos
-convites pendentes no DS, o destino do lembrete no backend e a rota que o front precisava para
-obedecer a esse destino.
+**Bloco de 3 unidades.** O caminho crítico (release do DS) continua humano; a rodada avançou o que
+não dependia dele: a superfície dos convites pendentes no DS, o destino do lembrete no backend e a
+rota que o front precisava para obedecer a esse destino.
 
 ### Estado reconferido antes de começar
 
@@ -2403,13 +2402,15 @@ obedecer a esse destino.
 - O roadmap listava #664 e #840 como abertos; `gh pr view` mostrou **#664 mergeado** em `98ebda36`
   (o `qa` do backend já tem a reclassificação) e **#840 mergeado** em `a637db8f`. Corrigido na §7.
 - Última migração na `qa`: **V275**. Esta rodada **não cria migração**.
-- **B9 piorou:** o PR de release do DS **#218** (`chore/release-0.33.0`, branch de pessoa) tem
-  **marcadores de conflito commitados** em `src/domain/calendar/calendar.stories.tsx` (5),
-  `src/domain/calendar/index.ts` (1), `src/domain/post/comments/post-comments.tsx` (1) e
-  `src/messages/defaults/calendar.ts` (1). `npx tsc --noEmit` falha com TS1185 e o check "Lint,
-  typecheck, test and build" sai com código 2. É branch de humano: **não foi corrigida nem
-  force-pushada** por este agente. Enquanto ela não for consertada, #828 e #830 continuam com
-  `MISSING_EXPORT`.
+- **B9 — o release do DS estava quebrado e foi consertado durante a rodada:** o PR de release
+  **#218** (`chore/release-0.33.0`, branch de pessoa) tinha **marcadores de conflito commitados** em
+  `src/domain/calendar/calendar.stories.tsx` (5), `src/domain/calendar/index.ts` (1),
+  `src/domain/post/comments/post-comments.tsx` (1) e `src/messages/defaults/calendar.ts` (1);
+  `npx tsc --noEmit` falhava com TS1185 e o check "Lint, typecheck, test and build" saía com código
+  2. É branch de humano: **não foi corrigida nem force-pushada** por este agente. No fim da rodada a
+  branch foi reescrita limpa (`e3c7a07`, sem marcador) e o check passou em 3m23s; o release segue
+  aguardando a publicação humana (D20). #828 e #830 continuam com `MISSING_EXPORT` até o pacote
+  sair.
 - PRs de blocos anteriores seguem abertos sem revisão humana: #655, #661, #663 (backend), #828,
   #830, #836 (front), #209 e #214 (DS, mergeados na `qa` mas fora de qualquer pacote publicado —
   B9).
@@ -2483,9 +2484,10 @@ obedecer a esse destino.
 
 ### Armadilhas e notas
 
-- **O release do DS não está só pendente: está quebrado.** O #218 tem marcador de conflito
-  commitado, e é por isso que o check de release falha. Nenhum agente deve "consertar" a branch de
-  outra pessoa; o caminho é reportar e esperar o humano. Registrado em B9.
+- **O release do DS estava quebrado e foi consertado no meio da rodada.** O #218 tinha marcador de
+  conflito commitado, e era por isso que o check de release falhava. Nenhum agente deve "consertar"
+  a branch de outra pessoa; o caminho é reportar e esperar o humano — e foi o que aconteceu: a
+  branch foi reescrita limpa e o check passou. Registrado em B9.
 - **Prova do vermelho, de novo:** guardar o arquivo de produção novo em `/tmp`, reverter **só** ele
   (`git checkout -- <arquivo>`), rodar o teste e ver a falha, restaurar. Reverter a árvore inteira
   (`git stash`/`git checkout -- .`) leva o teste junto e o verde não prova nada — a lição da
@@ -2504,7 +2506,7 @@ obedecer a esse destino.
   verde.
 - Docs — este PR.
 
-**PRÓXIMA RODADA (§10, proposta de execução 30):** (1) **release do DS** — o #218 precisa ser
-consertado por humano (marcador de conflito) antes de qualquer release que destrave #828/#830;
+**PRÓXIMA RODADA (§10, proposta de execução 30):** (1) **release do DS** — o #218 já está com o
+check verde e aguarda a publicação humana (D20); quando o pacote sair, #828 e #830 destravam;
 (2) fase 5 continua: reuniões e workshops; (3) ligar `pendingInvitations` na `/agenda` do front
 depois do release do DS; (4) reconferir PRs e o bot (§9/B8) antes de começar.
