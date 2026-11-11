@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { CalendarAgendaItemView } from "@/types/application/calendar/calendar-agenda-item-view";
@@ -28,7 +28,7 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { CalendarDays, Download } from "lucide-react";
+import { CalendarClock, CalendarDays, Download } from "lucide-react";
 
 import { calendarApi } from "@/lib/api";
 import { downloadCalendarExport } from "@/lib/calendar-export";
@@ -233,16 +233,25 @@ function AgendaPage() {
         description={texts.agenda.subtitle}
         icon={CalendarDays}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void exportCalendar()}
-            disabled={exporting}
-            title={texts.agenda.exportIcsHint}
-          >
-            <Download aria-hidden="true" />
-            {texts.agenda.exportIcs}
-          </Button>
+          <>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/agenda/disponibilidade">
+                <CalendarClock aria-hidden="true" />
+                {texts.agenda.availabilityLink}
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void exportCalendar()}
+              disabled={exporting}
+              title={texts.agenda.exportIcsHint}
+            >
+              <Download aria-hidden="true" />
+              {texts.agenda.exportIcs}
+            </Button>
+          </>
         }
       >
         <Tabs

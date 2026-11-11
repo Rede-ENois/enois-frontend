@@ -197,6 +197,7 @@ export const texts = {
     exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
     exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
     exportIcsDone: "Arquivo da agenda baixado.",
+    availabilityLink: "Disponibilidade",
     availability: {
       seoTitle: "Disponibilidade · Énóis",
       title: "Sua disponibilidade",
