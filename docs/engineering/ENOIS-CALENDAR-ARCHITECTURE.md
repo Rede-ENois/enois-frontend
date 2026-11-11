@@ -761,7 +761,7 @@ O bloco 24 levou import e assinatura para o DS e para a tela, e fechou três dec
    antes de chamar. O mesmo split vale para `CalendarSubscriptionCard`: copiar, regenerar e
    revogar são callbacks do app; o card não conhece `calendarApi`.
 2. **O resultado do import é contagem, não lista.** `{received, created, moved, cancelled,
-   skipped}` — o backend já responde isso e a tela não precisa dos compromissos para dizer
+skipped}` — o backend já responde isso e a tela não precisa dos compromissos para dizer
    "entendi 40, criei 12, cancelei 3". `cancelled` entra na conta de "aplicados" porque o
    cancelamento vindo do arquivo é mudança real na agenda (D10/D26), não rejeição.
 3. **O token da assinatura vive no estado do app, não no card.** O servidor nunca devolve o
@@ -778,7 +778,6 @@ O bloco 24 levou import e assinatura para o DS e para a tela, e fechou três dec
    front que depende dele fica com CI vermelho (`MISSING_EXPORT`) até um release a partir do
    `main` — e esse release é passo humano (D20). O vermelho é o B9 se manifestando, não regressão
    do código; declarar isso no PR evita que alguém "conserte" apagando o import.
-
 
 ## D29 — A entrevista é um compromisso só, escrito nos dois lados (execução 25)
 
@@ -823,3 +822,64 @@ a entrada na agenda". A inspeção fechou a questão pelo lado do modelo, não d
    pela própria pessoa), não chamadas. A presença em evento (D27) e a chamada ficam de fora da
    agenda por motivos diferentes: a primeira porque o evento já é o compromisso; a segunda porque
    não há compromisso.
+
+---
+
+## D31 — A entrada com origem é somente leitura na agenda; o módulo dono é quem muda o fato (execução 27)
+
+A D19 deu à entrada com origem um dono, uma chave e um ciclo de vida próprios, mas deixou uma
+porta aberta: a rota de escrita da agenda (`PATCH`/`DELETE /calendar/entries/{id}`) não olhava a
+origem. Qualquer pessoa podia editar ou cancelar pela agenda um compromisso que veio de outro
+módulo, e os dois lados passavam a contar histórias diferentes — a sessão de mentoria continuava
+marcada com outro horário, o evento seguia com o participante.
+
+**Decisão.** A escrita direta da agenda recusa entrada com origem preenchida.
+
+1. **O servidor é quem garante.** `CalendarCommandService.update` e `cancel` verificam
+   `entry.source().present()` e respondem **409 `CALENDAR_ENTRY_SOURCE_OWNED`**. A regra não depende
+   da tela: mesmo que um cliente chame a rota direto, a entrada não muda.
+2. **Quem muda o fato é o módulo dono.** Reagendar ou cancelar uma sessão de mentoria passa pelo
+   `MentorService`, que chama `CalendarSourceService.upsert`/`cancel` (D19). O mesmo vale para
+   evento (D27) e entrevista (D29). A agenda é projeção; o fato mora no módulo.
+3. **A tela não oferece o que o servidor recusa.** O front decide por `isSourceOwned(entry)`
+   (presença de `sourceType`) e não passa `onEdit`/`onCancel` ao `CalendarEntryDetail`. O
+   componente do DS já esconde as ações quando o handler não vem, então a regra não exigiu mudança
+   de contrato no DS — a mesma escolha de D28.1 (o desenho pede, a aplicação faz).
+4. **Entrada avulsa continua editável.** Sem origem, a agenda é dona do compromisso e a escrita
+   direta segue valendo. A distinção é exatamente a origem, não o tipo nem o escopo.
+
+**Consequência.** Todo módulo que grava na agenda pela porta de origem ganha, de graça, a garantia
+de que a agenda não vai divergir dele. Um novo tipo de compromisso com origem entra já protegido.
+
+**Rejeitado.** Esconder o botão só na tela, sem a guarda no servidor: um cliente direto (ou uma
+tela futura que esqueça a regra) voltaria a desincronizar o módulo dono. Rejeitado também deixar a
+edição passar e "ressincronizar depois": não há como saber qual dos dois lados é a verdade.
+
+---
+
+## D32 — Apagar o perfil de mentor apaga o que é dele e cancela o que ainda vai acontecer (execução 27)
+
+O `DELETE /mentors/{mentorId}` respondia **409** sempre que o mentor tinha qualquer horário
+publicado: as FKs `fk_mentor_slots_mentor`, `fk_mentor_sessions_mentor` e
+`fk_mentor_availabilities_mentor` bloqueavam a remoção da linha em `mentors`. O endpoint ficava
+inutilizável assim que o mentor publicava a agenda. Evento e comunidade já apagavam as linhas
+filhas antes da pai; a mentoria era o caso isolado.
+
+**Decisão.** Apagar o perfil resolve o que depende dele, na ordem certa, dentro da mesma transação.
+
+1. **Sessão agendada é cancelada, não apagada.** O perfil chama o mesmo caminho do cancelamento
+   normal: o escrow volta integral para quem pagou e o compromisso é cancelado na agenda de quem
+   marcou, pela porta de origem (D19). Apagar a sessão deixaria dinheiro retido e um compromisso
+   fantasma.
+2. **Sessão concluída é histórico.** Ela não é apagada; por isso a FK de `mentor_sessions` sai na
+   **V275** (mesmo padrão deliberado da V132). A liquidação já trata o mentor ausente devolvendo o
+   escrow, e as listas mostram a sessão sem o perfil.
+3. **Horários e disponibilidade são do perfil e somem com ele.** São dados de publicação, não
+   histórico; apagá-los é o que libera a remoção da linha pai.
+
+**Consequência.** O mentor pode sair a qualquer momento, inclusive com agenda cheia, sem deixar
+dinheiro preso nem compromisso órfão. O mentorado vê a sessão como cancelada, com o valor de volta.
+
+**Rejeitado.** Desativar o perfil em vez de apagá-lo: o produto pede remoção, e um perfil "inativo"
+que continua no catálogo é outra funcionalidade. Rejeitado também apagar as sessões em cascata:
+destruiria o histórico e o registro do dinheiro.
