@@ -1748,12 +1748,24 @@ D7) sobre o serviço `.ics` que está na `qa`.
 - **PRs do bloco 21 mergeados pelo bot:** #632, #814 e o complemento #815 foram mergeados por
   `kof-agent-worker` (B8) antes da revisão humana. O lint do DS #203 foi corrigido nesta rodada; o
   CI do front #813 falha por dependência de release do slot `reminder`, registrada no PR.
+- **Merge do DS não é release.** O #203 mergeou na `main` em 11-11 01:41, mas a última tag era
+  `v0.31.0` (10-11 14:53) — ou seja, o slot `reminder` estava no código e fora do pacote. O front
+  #813 falhava no `tsc` por isso, não por bug próprio. Aberta a release **#204**
+  (`0.32.0`, bump minor por ser slot aditivo e opcional): `tsc` EXIT=0, **1659/1659** testes,
+  `eslint` 0 erros. Depois do merge dela ainda falta criar a tag `v0.32.0`.
+- **O bot mergeou o docs #817 antes das correções.** O #817 entrou às 02:22, e os commits de
+  V270/V271 ficaram fora da `qa`. Recuperados num PR de acompanhamento (#818), do mesmo jeito que
+  aconteceu com o #814→#815 no bloco 21. Conferir o estado do PR **antes** de empurrar correção
+  nele passou a ser obrigatório nesta rotina.
 
 ### PRs
 
-- Backend (A+B) — **#637**, aberto para `qa`, aguardando revisão humana.
-- Front (C) — **#816**, aberto para `qa`, aguardando revisão humana; depende do #637.
-- Docs (este PR) — leva o estado para 22 e registra a D7 implementada.
+- Backend (A+B) — **#637**, aberto para `qa`, aguardando revisão humana; migração em V271 e
+  dependente do #641 (CI vermelho até lá).
+- Front (C) — **#816**, mergeado pelo bot (B8).
+- Docs — **#817** mergeado pelo bot; correções em **#818**, aberto.
+- Correção da `qa` — **#641**, aberto, 4/4 jobs verdes.
+- Release do DS — **#204**, aberto, verde; desbloqueia o front #813.
 
 **PRÓXIMA RODADA (§10, proposta de execução 23):** import na tela com o contrato do #629 estável;
 tela da assinatura (card no DS consumindo o cliente do #816); fase 4 adiante com a chamada/vídeo
