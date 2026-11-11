@@ -2241,6 +2241,7 @@ export const texts = {
     myApplications: "Minhas candidaturas",
     myJobsEmpty: "Você ainda não publicou vagas.",
     myApplicationsEmpty: "Você ainda não se candidatou a nenhuma vaga.",
+    interviewScheduledFor: (when: string) => `Entrevista marcada: ${when}`,
     empty: "Nenhuma vaga encontrada com os filtros selecionados.",
     createJob: "Criar vaga",
     createJobTitle: "Publicar vaga",
