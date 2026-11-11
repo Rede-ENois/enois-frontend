@@ -2387,3 +2387,55 @@ a partir da `enois/qa` `871f4385`).**
 **PRÓXIMA RODADA (§10, proposta de execução 29):** (1) release do DS a partir do `main` trazendo
 #209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20); (2) fase 5 continua: reuniões e
 workshops; (3) reconferir PRs e o bot (§9/B8) antes de começar.
+
+---
+
+## EXECUÇÃO 29 — 2026-11-11T20:00-03:00 — Reconferência do estado real (só documentação)
+
+**Uma unidade de correção.** Nenhum código novo. O roadmap tinha divergido do repositório em
+vários pontos, e a regra do projeto é corrigir a divergência na mesma rodada em que ela é
+encontrada.
+
+### O que estava errado
+
+- **§7 dizia "aberto" para 11 PRs que já estavam mergeados:** #655, #661, #663, #664, #769, #813,
+  #836, #840, #632, #203 e #637. Conferido com `gh pr view <n> --json state,mergedAt` em cada um.
+- **§4 (inventário) dizia "não existe" para coisas que existem:** a `/agenda` com as três abas
+  (#769), convites/participantes na tela de detalhe (#777), o seletor de lembrete (#813) e a
+  assinatura privada no backend e no cliente (#637/#816). Conferido no código da `qa`
+  (`src/routes/agenda.tsx`, `src/routes/agenda.$entryId.tsx`, `git grep` no backend).
+- **§6 (fases) dizia "aguardando revisão humana" para o #637 e o #816**, ambos mergeados; e a fase
+  5 não registrava que o #655 e o #661 já entraram.
+- **§10 (próxima tarefa) propunha "se o #637 mergear, fumaça"** — ele já mergeou.
+
+### O que muda
+
+- §7: as 11 linhas passam a "mergeado" com o commit/data.
+- §4: as linhas de agenda social/profissional/consolidada, convites, lembretes e assinatura passam
+  a "Existe"/"Completo na `qa`", com o PR que entregou.
+- §6: fases 3, 5 e 9 atualizadas.
+- §10: execução 29 registrada; proposta da 30 com o release do DS como caminho crítico.
+- §11: linha 29.
+- Estado: `EXECUCAO=28` → `29` (a execução 28 continua sendo a última com código).
+
+### Validação executada
+
+Nenhum teste de código: a mudança é só em `docs/engineering/`. A verificação foi a leitura do
+estado real (`gh pr view` PR por PR, `git ls-tree`/`git grep` na `qa`), que é o que a documentação
+descreve.
+
+### Armadilhas e notas
+
+- **O roadmap envelhece mais rápido que a rodada:** o bot `kof-agent-worker` mergeou #655, #661,
+  #663, #664, #836 e #840 entre a execução 28 e esta reconferência. Documento que descreve
+  comportamento que o código não tem é bug de documentação — por isso a correção é imediata.
+- **"Aberto" no roadmap não é fonte de verdade:** a única fonte é `gh pr view`. A lição da execução
+  15 se repetiu; a reconferência PR por PR é o que evita construir sobre premissa errada.
+
+### PRs
+
+- Docs — este PR.
+
+**PRÓXIMA RODADA (§10, proposta de execução 30):** (1) release do DS a partir do `main` trazendo
+#209 + #214 — destrava #828 e #830 de uma vez (passo humano, D20); (2) fase 5: reuniões e
+workshops; (3) fase 4: compromissos pessoais; (4) reconferir PRs e o bot (§9/B8).
