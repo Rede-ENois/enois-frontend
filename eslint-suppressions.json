@@ -450,6 +450,11 @@
       "count": 2
     }
   },
+  "src/routes/auth.callback.tsx": {
+    "local/no-front-markup": {
+      "count": 14
+    }
+  },
   "src/routes/auth.reset.tsx": {
     "local/no-front-markup": {
       "count": 58
