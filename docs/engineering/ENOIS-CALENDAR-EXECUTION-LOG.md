@@ -1633,7 +1633,7 @@ privada, D7) ou fase 4 (fonte de eventos de grupo).
 | Backend (A) | `EventCalendarSyncTests` | **5/5** |
 | Backend (B) | `CalendarReminderServiceTests` | **12/12** |
 | Backend (B) | `CalendarSourceServiceTests` | **7/7** |
-| Backend (A+B) | regressão completa `./mvnw -o test` | **ver abaixo** |
+| Backend (A+B) | regressão completa `./mvnw -o test` | **2335 testes, 1 falha, 1 pulado** — a falha é flake de feed, ver abaixo |
 | DS (C) | `calendar-entry-detail.test.tsx` | **15/15** |
 | DS (C) | suíte inteira `npx vitest run` | **1659/1659** (175 arquivos) |
 | DS (C) | `npx tsc --noEmit` / `npm run lint` / `npm run build` | EXIT=0 / 0 erros / EXIT=0 |
@@ -1652,7 +1652,13 @@ privada, D7) ou fase 4 (fonte de eventos de grupo).
   novo do `CalendarSourceService`.
 - **Regressão completa:** o primeiro `./mvnw -o test` morreu antes de rodar qualquer teste (log
   parado no cabeçalho do Surefire, sem processo Java). Relançado com `setsid nohup`; a suíte
-  inteira leva ~15 min porque cada teste de integração sobe o contexto e roda as migrações.
+  inteira leva ~2 h porque cada teste de integração sobe o contexto e roda as migrações.
+  Resultado: **2335 testes, 1 falha, 1 pulado**. A falha é
+  `FeedPaginationTests.trendingKeepsItsWindowAndExcludesPostsOutsideItsExistingScope`
+  ("Pagination did not finish within the fixture's page count", 5,086 s) — feed, fora do escopo.
+  Rodada isolada (`-Dtest=FeedPaginationTests`) passa **5/5** tanto na base `enois/qa` sem
+  alterações (22fc7128) quanto nesta branch (b01b57ad), com ~290 s por execução: é flake de tempo
+  sob carga paralela, não regressão deste bloco. Registrado no comentário do PR #632.
 - **O log de execuções na `qa` estava corrompido:** um merge posterior sobrescreveu o arquivo com
   a versão da execução 13 e deixou um marcador `>>>>>>> origin/qa` no fim, perdendo as execuções
   14–20. Restaurado a partir do commit do bloco 20 (`59cf5e44`) neste PR.
