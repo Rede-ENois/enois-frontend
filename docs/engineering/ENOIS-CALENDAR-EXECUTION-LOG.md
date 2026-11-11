@@ -2081,19 +2081,21 @@ aberto; a rodada avançou o que não dependia dele.
 - **Sintoma:** `ReputationRefreshQueryCountTests.theRankingPassCostDoesNotGrowWithTheNumberOfAccounts`
   falhava no CI com `expected: 34 but was: 51` (+17 SELECTs), e o bot deixou `CHANGES_REQUESTED`
   no #655 suspeitando do código de entrevista.
-- **Causa raiz:** não era o código de entrevista. O `ReputationRefreshWorker` é `@Scheduled` com
-  `rede.reputation.refresh-delay-ms=3600000` nos testes; a suíte inteira já passa de uma hora e,
-  com as ~11 classes novas de entrevista, o tempo total cruzou o gatilho. O scheduler disparou a
-  passada de ranking **concorrentemente**, numa thread `scheduling-1`, no meio de outra classe: a
-  leitura em lote falhou sob disputa do pool H2 e o worker caiu no caminho individual — exatamente
-  os +17 SELECTs por página.
-- **Correção:** o delay de teste passou a ser maior que qualquer duração de suíte
-  (`2000000000` ms), como já era feito para os comunicados. A passada continua exercitada de
-  verdade: o teste chama `refreshRankingColumn()` na mão três vezes.
-- **Prova:** `ReputationRefreshQueryCountTests` isolado verde (3 passadas, 24 contas semeadas
-  escritas). Rodada anterior, sem o fix, também verde isolada — o sintoma só aparece com o
-  scheduler disparando no meio da suíte, o que confirma a causa.
-- **Arquivo:** `src/test/resources/application.properties` (backend).
+- **Primeira hipótese (errada):** o worker é `@Scheduled` e a suíte, mais longa, cruzaria o delay
+  de 1h e dispararia a passada concorrente. Subir o delay **não** resolveu — o CI continuou
+  vermelho com a mesma contagem. A hipótese foi descartada com evidência, não mantida.
+- **Causa raiz real:** o worker pagina de 500 em 500 e a base H2 é compartilhada entre as classes
+  da suíte. O teste media a passada inteira e exigia contagem idêntica; quando o total de contas
+  cruza um múltiplo de 500 entre duas medições, a passada faz **uma página a mais** e a contagem
+  sobe exatamente 17 (1 varredura de ids + 16 consultas de métrica). Os números do CI confirmam:
+  34 = 2×17 e 51 = 3×17. O custo por conta nunca mudou — o PR só deixou a suíte longa o suficiente
+  para o total de contas cruzar a fronteira.
+- **Correção:** a asserção normaliza pelo número de páginas percorridas
+  (`selects / ceil(contas/500)`), que é o invariante que a leitura em lote promete. O delay do
+  `@Scheduled` em teste também subiu para além de qualquer duração de suíte, mas como higiene.
+- **Prova:** teste descartável com 600 contas (2 páginas) mediu **17,0 SELECTs por página**; a
+  medição antiga daria 34 e depois 51, os mesmos números do CI. O teste corrigido passa isolado.
+- **Arquivos:** `ReputationRefreshQueryCountTests.java` e `src/test/resources/application.properties`.
 
 ### Unidade B — entrevista na lista do candidato (backend)
 
@@ -2135,7 +2137,8 @@ aberto; a rodada avançou o que não dependia dele.
 
 | Repositório | Comando | Resultado |
 | ----------- | ------- | --------- |
-| Backend | `./mvnw -o test -Dtest=ReputationRefreshQueryCountTests` | 1/1 verde |
+| Backend | `./mvnw -o test -Dtest=ReputationRefreshQueryCountTests` | 1/1 verde (após a correção da asserção) |
+| Backend | teste descartável com 600 contas | 17,0 SELECTs/página (prova da fronteira de página) |
 | Backend | `./mvnw -o test -Dtest=JobApplicationFlowTests` | 8/8 verde |
 | Front | `npx tsc --noEmit` | verde |
 | Front | `npx eslint .` | 0 erros, 11 warnings pré-existentes |
@@ -2152,6 +2155,10 @@ aberto; a rodada avançou o que não dependia dele.
   congeladas; a linha virou `Badge` do DS, que não conta como markup.
 - **`--prune-suppressions` não reduz o baseline sozinho:** ele só remove entradas obsoletas; a
   contagem por arquivo continua a mesma até o arquivo encolher.
+- **Hipótese de flake precisa de prova, não de plausibilidade:** a primeira explicação do CI do
+  #655 (scheduler concorrente) era plausível e errada; o CI voltou vermelho com o "fix". A
+  aritmética dos números (34 = 2×17, 51 = 3×17) apontava para a fronteira de página desde o
+  começo.
 
 ### PRs
 

@@ -501,9 +501,9 @@ item (3) fase 4 adiante e o (4) reconferência de PRs seguem para a próxima rod
 
 **Execução 26 (bloco) — executada em 2026-11-11 (~09:00–11:00). Quatro unidades.**
 (A) **CI do #655 destravado:** a falha de `ReputationRefreshQueryCountTests` (34 → 51 SELECTs) não
-era do código de entrevista — o worker de ranking é `@Scheduled` com delay de 1h nos testes e a
-suíte, agora mais longa, cruzava o gatilho e disparava a passada concorrente no meio de outra
-classe; o delay de teste passou a ser maior que qualquer suíte. (B) **Entrevista na lista do
+era do código de entrevista — o worker pagina de 500 em 500 e a base H2 compartilhada cruzou uma
+fronteira de página entre as medições (34 = 2×17, 51 = 3×17); a asserção passou a normalizar pelo
+número de páginas. A primeira hipótese (scheduler concorrente) foi descartada com evidência. (B) **Entrevista na lista do
 candidato (backend):** `GET /jobs/applications/mine` passou a devolver `interview`, numa consulta
 por lote (`findScheduledByApplications`). (C) **Entrevista na lista do candidato (front):**
 `/vagas/minhas` mostra o horário no fuso em que foi marcada, com o `Badge` do DS. (D) **Fase 4 —
@@ -558,7 +558,7 @@ e evitou construir sobre premissa errada.
 | 23  | 2026-11-11 ~05:40 | 9    | **Rodada de destravamento (outra linha de trabalho).** #650 fechado como duplicado do #646; #637 rebaseado sobre a `qa`; tag `v0.32.0` do DS criada. Registrada no log antes deste bloco |
 | 24  | 2026-11-11 ~06:30 | 8/9  | **Bloco de 4 unidades.** (A) import do backend honra `STATUS:CANCELLED` (cancela pela origem, `cancelled` no resultado; 15+8 testes) — #654 **mergeado pelo bot** (B8); (B) `CalendarSubscriptionCard` e (C) `CalendarImportDialog` no DS, controlados e sem requisição própria (19 testes, 1678 na suíte) — #209 **mergeado pelo bot** (B8), sem release; (D) import `.ics` na `/agenda` e rota `/agenda/assinatura` no front (7/7 rotas, tsc/eslint/build verdes, 1308/1314 com 6 falhas pré-existentes) — #828 aberto, CI vermelho esperado até o release. D28 registrada (split controlado, token só na resposta, linhagens qa/main do DS) |
 | 25  | 2026-11-11 ~08:45 | 5    | **Bloco de 4 unidades — fase 5 iniciada.** (A) agendamento de entrevista no backend com entrada na agenda do candidato E do empregador (origem `JOB_INTERVIEW`, V274, 6+5 testes, 18 na regressão) — PR #655; (B) `CalendarInterviewDialog` e (C) `JobInterviewActions` no DS (11 testes, 1725/1726 na suíte, storybook verde) — PR #214; (D) tela de candidaturas no front (12/12, tsc/eslint/build verdes contra tarball sintético) — PR #830. D29 registrada (entrevista escreve nos dois lados pela porta de origem) |
-| 26  | 2026-11-11 ~11:00 | 5/4  | **Bloco de 4 unidades.** (A) CI do #655 destravado: o flake de `ReputationRefreshQueryCountTests` era o `@Scheduled` de ranking disparando no meio da suíte (delay de teste agora maior que qualquer suíte); (B) `GET /jobs/applications/mine` devolve `interview` (consulta por lote, 8/8 em `JobApplicationFlowTests`); (C) `/vagas/minhas` mostra a entrevista no fuso em que foi marcada (3 testes, suíte 1327/1327); (D) fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo) e o `reportedAt` da denúncia de chamada passou a aparecer na moderação (2 testes). PRs #655 e #830 atualizados; docs neste PR |
+| 26  | 2026-11-11 ~11:00 | 5/4  | **Bloco de 4 unidades.** (A) CI do #655 destravado: o flake de `ReputationRefreshQueryCountTests` era a fronteira de página de 500 contas na base H2 compartilhada (34 = 2×17, 51 = 3×17); a asserção normaliza por página; (B) `GET /jobs/applications/mine` devolve `interview` (consulta por lote, 8/8 em `JobApplicationFlowTests`); (C) `/vagas/minhas` mostra a entrevista no fuso em que foi marcada (3 testes, suíte 1327/1327); (D) fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo) e o `reportedAt` da denúncia de chamada passou a aparecer na moderação (2 testes). PRs #655 e #830 atualizados; docs neste PR |
 ---
 
 ## 12. Critérios de encerramento do cronjob
