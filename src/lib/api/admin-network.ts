@@ -1,0 +1,39 @@
+import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkNode } from "@/types/application/network/network-node";
+import type { NetworkNodeStatus } from "@/types/application/network/network-node-status";
+
+import { api } from "../api-client";
+
+/**
+ * Administração da rede cooperativa. Tudo aqui é exclusivo do admin (o backend trava a rota).
+ *
+ * <p>A API key de um nó é gerada por aqui: uma chave por nó, exibida uma única vez e guardada só
+ * como hash no servidor. Gerar de novo revoga a anterior, e revogar o nó revoga a chave dele.</p>
+ */
+export const adminNetworkApi = {
+  nodes: () => api.get<NetworkNode[]>("/admin/network/nodes"),
+
+  node: (nodeId: string) =>
+    api.get<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}`),
+
+  /** Token de provisionamento de uso único: cria o nó, não o opera. */
+  provisionToken: (data: { displayName: string; ownerUserId: string; profiles: string[] }) =>
+    api.post<{ token: string; expiresAt: string }>("/admin/network/nodes/provision-token", data),
+
+  /** Gera a API key do nó. A resposta é a única vez em que a chave aparece em claro. */
+  issueKey: (nodeId: string) =>
+    api.post<IssuedNodeKey>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/keys`),
+
+  /** Revoga a chave vigente do nó, sem mexer no estado do nó. */
+  revokeKey: (nodeId: string, keyId: string) =>
+    api.post<NetworkNode>(
+      `/admin/network/nodes/${encodeURIComponent(nodeId)}/keys/${encodeURIComponent(keyId)}/revoke`,
+    ),
+
+  approve: (nodeId: string) =>
+    api.post<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/approve`),
+
+  /** Suspende, põe em quarentena ou revoga. REVOKED é terminal. */
+  changeStatus: (nodeId: string, status: NetworkNodeStatus) =>
+    api.post<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/status`, { status }),
+};

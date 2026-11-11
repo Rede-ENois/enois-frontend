@@ -20,4 +20,5 @@ export type ModeratorTabId =
   | "notes"
   | "notices"
   | "releaseNotes"
-  | "identityRelease";
+  | "identityRelease"
+  | "network";

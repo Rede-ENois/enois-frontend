@@ -3005,6 +3005,14 @@ export const texts = {
       notices: "Avisos",
       releaseNotes: "Novidades",
       identityRelease: "Verificação de identidade",
+      network: "Rede Énóis",
+    },
+    network: {
+      keyIssued: "Chave de API gerada. Copie antes de fechar.",
+      keyRevoked: "Chave de API revogada.",
+      approved: "Nó aprovado.",
+      statusChanged: "Estado do nó atualizado.",
+      actionError: "Não foi possível concluir a ação.",
     },
     identityRelease: {
       saved: "Regras da rodada salvas.",

@@ -110,6 +110,11 @@ export const PANEL_TABS: PanelTab[] = [
     label: texts.moderator.tabs.identityRelease,
     adminOnly: true,
   },
+  {
+    id: "network",
+    label: texts.moderator.tabs.network,
+    adminOnly: true,
+  },
 ];
 
 /** Em que grupo cada aba vive. */
@@ -139,6 +144,7 @@ export const TAB_GROUP_OF: Record<ModeratorTabId, ModeratorGroupId> = {
   contributors: "admin",
   githubContributions: "admin",
   identityRelease: "admin",
+  network: "admin",
 };
 
 /**
