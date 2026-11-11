@@ -14,7 +14,7 @@ vi.mock("@tanstack/react-router", () => ({
   redirect: () => undefined,
 }));
 
-const { Route, detailOf, reminderChanges } = await import("./agenda.$entryId");
+const { Route, detailOf, isSourceOwned, reminderChanges } = await import("./agenda.$entryId");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 
 const apiDetail = {
@@ -111,5 +111,14 @@ describe("rota /agenda/$entryId", () => {
 
   it("sem lembrete nenhum, escolher um só grava", () => {
     expect(reminderChanges([], 30)).toEqual([{ set: 30 }]);
+  });
+
+  it("compromisso avulso pode ser editado pela agenda", () => {
+    expect(isSourceOwned(apiDetail.entry)).toBe(false);
+  });
+
+  it("compromisso de outro módulo é somente leitura na agenda", () => {
+    const sourced = { ...apiDetail.entry, sourceType: "MENTORING", sourceId: "s1" };
+    expect(isSourceOwned(sourced)).toBe(true);
   });
 });
