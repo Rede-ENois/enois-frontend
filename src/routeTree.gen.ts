@@ -57,6 +57,7 @@ import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
+import { Route as AgendaAssinaturaRouteImport } from './routes/agenda_.assinatura'
 import { Route as AgendaDisponibilidadeRouteImport } from './routes/agenda_.disponibilidade'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
@@ -328,6 +329,11 @@ const AgendaEntryIdRoute = AgendaEntryIdRouteImport.update({
   path: '/$entryId',
   getParentRoute: () => AgendaRoute,
 } as any)
+const AgendaAssinaturaRoute = AgendaAssinaturaRouteImport.update({
+  id: '/agenda_/assinatura',
+  path: '/agenda/assinatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgendaDisponibilidadeRoute = AgendaDisponibilidadeRouteImport.update({
   id: '/agenda_/disponibilidade',
   path: '/agenda/disponibilidade',
@@ -531,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda/assinatura': typeof AgendaAssinaturaRoute
   '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
@@ -611,6 +618,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda/assinatura': typeof AgendaAssinaturaRoute
   '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
@@ -692,6 +700,7 @@ export interface FileRoutesById {
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
+  '/agenda_/assinatura': typeof AgendaAssinaturaRoute
   '/agenda_/disponibilidade': typeof AgendaDisponibilidadeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
@@ -774,6 +783,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
+    | '/agenda/assinatura'
     | '/agenda/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
@@ -854,6 +864,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
+    | '/agenda/assinatura'
     | '/agenda/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
@@ -934,6 +945,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
+    | '/agenda_/assinatura'
     | '/agenda_/disponibilidade'
     | '/auth/callback'
     | '/auth/reset'
@@ -1014,6 +1026,7 @@ export interface RootRouteChildren {
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
+  AgendaAssinaturaRoute: typeof AgendaAssinaturaRoute
   AgendaDisponibilidadeRoute: typeof AgendaDisponibilidadeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthResetRoute: typeof AuthResetRoute
@@ -1372,6 +1385,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/agenda/$entryId'
       preLoaderRoute: typeof AgendaEntryIdRouteImport
       parentRoute: typeof AgendaRoute
+    }
+    '/agenda_/assinatura': {
+      id: '/agenda_/assinatura'
+      path: '/agenda/assinatura'
+      fullPath: '/agenda/assinatura'
+      preLoaderRoute: typeof AgendaAssinaturaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/agenda_/disponibilidade': {
       id: '/agenda_/disponibilidade'
@@ -1754,6 +1774,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
+  AgendaAssinaturaRoute: AgendaAssinaturaRoute,
   AgendaDisponibilidadeRoute: AgendaDisponibilidadeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthResetRoute: AuthResetRoute,

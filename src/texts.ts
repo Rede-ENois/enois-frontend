@@ -210,6 +210,22 @@ export const texts = {
       errorLoadHint:
         "Sem ler a semana salva, salvar apagaria o que você já tinha. Tente carregar de novo.",
     },
+    importIcs: "Importar .ics",
+    importIcsHint: "Traz os compromissos de outra agenda para esta.",
+    importIcsError: "Não foi possível importar o arquivo. Tente de novo.",
+    importIcsDone: "Arquivo importado.",
+    subscription: {
+      seoTitle: "Assinatura da agenda · Énóis",
+      title: "Assinatura da agenda",
+      subtitle:
+        "Um endereço privado que o Google Calendar, o Apple Calendar ou qualquer leitor de `.ics` acompanha sozinho.",
+      errorLoad: "Não foi possível carregar a assinatura. Tente de novo.",
+      errorCreate: "Não foi possível criar o link. Tente de novo.",
+      errorRegenerate: "Não foi possível gerar outro link. Tente de novo.",
+      errorRevoke: "Não foi possível revogar o link. Tente de novo.",
+      copied: "Link copiado.",
+      copyError: "Não foi possível copiar. Selecione o endereço e copie à mão.",
+    },
   },
 
   groups: {

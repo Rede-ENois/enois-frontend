@@ -14,6 +14,7 @@ import type {
 } from "@rede-enois/design-system/domain";
 import {
   CalendarAgendaSurface,
+  CalendarImportDialog,
   instantOf,
   periodOfToday,
   periodWindow,
@@ -28,7 +29,7 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { CalendarClock, CalendarDays, Download } from "lucide-react";
+import { CalendarClock, CalendarDays, Download, Upload } from "lucide-react";
 
 import { calendarApi } from "@/lib/api";
 import { downloadCalendarExport } from "@/lib/calendar-export";
@@ -122,6 +123,10 @@ function AgendaPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importScope, setImportScope] = useState<CalendarScope | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // `periodWindow` devolve dias; a API pede instantes. O `to` já é o dia seguinte (janela meio aberta).
   const window = useMemo(() => {
@@ -219,6 +224,27 @@ function AgendaPage() {
     }
   };
 
+  // O import é escrita: o `api.post` já manda o `Idempotency-Key`, e o servidor não duplica por
+  // UID. A agenda é recarregada porque o arquivo pode ter criado, movido e cancelado de uma vez.
+  const importIcs = useMutation({
+    mutationFn: () => {
+      if (!importFile) throw new Error("no file");
+      return calendarApi.importIcs({ file: importFile, scope: importScope });
+    },
+    onSuccess: () => {
+      setImportError(null);
+      void queryClient.invalidateQueries({ queryKey: ["agenda"] });
+    },
+    onError: () => setImportError(texts.agenda.importIcsError),
+  });
+
+  const openImport = () => {
+    setImportFile(null);
+    setImportScope(scope ?? null);
+    setImportError(null);
+    setImportOpen(true);
+  };
+
   const eyebrow =
     scope === "SOCIAL"
       ? texts.agenda.scopeSocial
@@ -239,6 +265,16 @@ function AgendaPage() {
                 <CalendarClock aria-hidden="true" />
                 {texts.agenda.availabilityLink}
               </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openImport}
+              title={texts.agenda.importIcsHint}
+            >
+              <Upload aria-hidden="true" />
+              {texts.agenda.importIcs}
             </Button>
 
             <Button
@@ -307,6 +343,25 @@ function AgendaPage() {
           eyebrow={eyebrow}
         />
       )}
+
+      <CalendarImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        scope={importScope}
+        onScopeChange={setImportScope}
+        file={importFile}
+        onFileChange={setImportFile}
+        onImport={async () => {
+          try {
+            return await importIcs.mutateAsync();
+          } catch {
+            // O erro já foi para `importError`; `null` mantém o diálogo aberto com o arquivo
+            // escolhido, em vez de mostrar um resultado que não aconteceu.
+            return null;
+          }
+        }}
+        error={importError}
+      />
     </AppContainer>
   );
 }
