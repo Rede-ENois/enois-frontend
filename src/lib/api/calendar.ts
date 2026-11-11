@@ -6,6 +6,8 @@ import type { CalendarEntryView } from "@/types/application/calendar/calendar-en
 import type { CalendarParticipantView } from "@/types/application/calendar/calendar-participant-view";
 import type { CalendarParticipation } from "@/types/application/calendar/calendar-participation";
 import type { CalendarReminderView } from "@/types/application/calendar/calendar-reminder-view";
+import type { CalendarScope } from "@/types/application/calendar/calendar-scope";
+import type { CalendarSubscriptionView } from "@/types/application/calendar/calendar-subscription-view";
 import type { CalendarWindowQuery } from "@/types/application/calendar/calendar-window-query";
 import type { CalendarAvailabilityWindowInput } from "@/types/application/calendar/create-calendar-availability-window-input";
 import type { CreateCalendarEntryInput } from "@/types/application/calendar/create-calendar-entry-input";
@@ -118,4 +120,33 @@ export const calendarApi = {
    */
   exportUrl: ({ from, to, scope }: CalendarWindowQuery) =>
     apiUrl(`/calendar/entries/export.ics${buildQuery({ from, to, scope: scope ?? undefined })}`),
+
+  /**
+   * A assinatura privada `.ics` de quem está lendo, ou `null` quando ainda não existe (o servidor
+   * responde 204). O token não volta aqui: só na resposta que o criou.
+   */
+  subscription: async () =>
+    (await api.get<CalendarSubscriptionView | undefined>("/calendar/subscription")) ?? null,
+
+  /**
+   * Cria a assinatura, ou devolve a existente. Só a criação traz `token`; quem já tinha uma recebe
+   * `token: null` e o link antigo continua valendo.
+   */
+  createSubscription: (scope: CalendarScope | null) =>
+    api.post<CalendarSubscriptionView>(
+      `/calendar/subscription${buildQuery({ scope: scope ?? undefined })}`,
+    ),
+
+  /** Troca o token: o link anterior deixa de valer no mesmo instante. */
+  regenerateSubscription: () =>
+    api.post<CalendarSubscriptionView>("/calendar/subscription/regenerate"),
+
+  /** Revoga a assinatura ativa; a próxima leitura pelo link responde 404. */
+  revokeSubscription: () => api.delete<void>("/calendar/subscription"),
+
+  /**
+   * O endereço que a pessoa cola no calendário externo. Não passa pelo cliente `api`: quem busca é
+   * o leitor externo, sem sessão, e o token no caminho é a credencial inteira.
+   */
+  subscriptionUrl: (token: string) => apiUrl(`/calendar/subscribe/${token}.ics`),
 };
