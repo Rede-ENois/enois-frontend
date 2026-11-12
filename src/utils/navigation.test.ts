@@ -21,6 +21,19 @@ describe("navigateToHref", () => {
     expect(resolve("/api/penalidades")).toHaveBeenCalledWith({ to: "/penalidades" });
   });
 
+  it("abre a empresa na notificação de nova oportunidade, com ou sem o prefixo /api", () => {
+    // CompanyService manda "/empresa/{slug}" e MicroProjectService manda "/api/empresa/{slug}".
+    // A página /empresa/$slug existe; sem a entrada na tabela o clique não fazia nada.
+    expect(resolve("/empresa/estudio-x")).toHaveBeenCalledWith({
+      to: "/empresa/$slug",
+      params: { slug: "estudio-x" },
+    });
+    expect(resolve("/api/empresa/estudio-x")).toHaveBeenCalledWith({
+      to: "/empresa/$slug",
+      params: { slug: "estudio-x" },
+    });
+  });
+
   it("leva ao jogo específico na notificação de novo jogo", () => {
     expect(resolve("/games/kof/kawaii-survivor")).toHaveBeenCalledWith({
       to: "/games/$username/$gameSlug",
