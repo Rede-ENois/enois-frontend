@@ -17,4 +17,12 @@ export type NetworkNode = {
   keyPrefix: string | null;
   /** A chave vigente já autenticou alguma requisição do nó. */
   keyUsed: boolean;
+  /** Saúde medida, que não é `status`: um nó ACTIVE pode estar fora do balanceamento. */
+  degraded: boolean;
+  /** Latência do último heartbeat, em ms; `null` quando o nó nunca reportou. */
+  latencyMs: number | null;
+  /** Falhas consecutivas na linha da tarefa; 0 é saudável. */
+  failureStreak: number;
+  /** Motivo da quarentena vigente; `null` fora dela. */
+  quarantineReason: string | null;
 };

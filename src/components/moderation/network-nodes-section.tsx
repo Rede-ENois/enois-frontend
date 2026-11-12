@@ -27,6 +27,11 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     lastSeenAtLabel: node.lastSeenAt ? dataHora(node.lastSeenAt) : null,
     keyPrefix: node.keyPrefix,
     keyUsed: node.keyUsed,
+    operable: node.operable,
+    degraded: node.degraded,
+    latencyMs: node.latencyMs,
+    failureStreak: node.failureStreak,
+    quarantineReason: node.quarantineReason,
   };
 }
 
