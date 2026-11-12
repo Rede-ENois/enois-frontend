@@ -2643,10 +2643,31 @@ verde. Sem migração.
 - **A entrada `empresa` não colide com nada.** A tabela ordena por `source.length` decrescente e
   `empresa` não é prefixo de outra rota; o teste cobre os dois formatos de `href`.
 
+### Unidade C — o teste do custo do ranking parou de oscilar (backend, #668)
+
+**O que estava errado.** O CI do #667 ficou vermelho em `ReputationRefreshQueryCountTests`
+(`expected: 17.5 but was: 17.0`), um teste que a mudança do lembrete não toca. A normalização
+dividia os SELECTs da passada pelo número de páginas de dados, mas o worker pagina com
+`limit/offset` e só para quando uma página volta com menos de 500 ids: quando o total de contas é
+múltiplo de 500, ele faz uma varredura a mais só para descobrir que acabou. Essa sondagem entrava
+no numerador e não no denominador, então a razão dependia de o total de contas cair ou não num
+múltiplo de 500. A base H2 é compartilhada entre as classes da suíte e o total varia entre
+medições — o teste oscilava sem nada ter mudado.
+
+**O que muda.** O numerador conta só as consultas de métrica; o denominador é o número de páginas
+de dados. Uma asserção nova exige pelo menos uma varredura por página de dados, para a paginação
+não sumir em silêncio. O invariante medido continua o mesmo: 16 consultas de métrica por página,
+independentemente do número de contas.
+
+**Prova.** O teste falhava no CI com a normalização antiga e passa com a nova; rodado isolado nesta
+branch e na `qa` limpa, 1/1 nas duas. `./mvnw -q -DskipTests compile` EXIT=0. Só o teste mudou.
+
 ### PRs
 
 - Front — #846 (`fix/enois-calendar-empresa-na-navegacao` → `qa`), commit `7fda9187`.
 - Backend — #667 (`fix/enois-calendar-lembrete-contrato` → `qa`), commit `00449a36`.
+- Backend — #668 (`fix/reputation-custo-por-pagina` → `qa`), commit `9f0e99f6` (flake pré-existente
+  encontrado no CI do #667, corrigido pela regra do escoteiro).
 - Docs — este PR (#842).
 
 **PRÓXIMA RODADA (§10, proposta de execução 32):** (1) release do DS a partir do `main` trazendo

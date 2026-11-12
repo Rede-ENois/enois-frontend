@@ -232,6 +232,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#843](https://github.com/Rede-ENois/enois-frontend/pull/843)        | enois-frontend      | Fase 3: a tabela de navegação das notificações conhece `agenda`, `agenda/$entryId` e `agenda/disponibilidade`                                                                               | aberto, aguardando revisão humana; CI verde                                                                                                                     |
 | [#846](https://github.com/Rede-ENois/enois-frontend/pull/846)        | enois-frontend      | Fase 3: a tabela de navegação conhece `empresa` — a notificação de nova oportunidade e de micro-projeto (`/empresa/{slug}`, `/api/empresa/{slug}`) abre a página da empresa                    | aberto, aguardando revisão humana                                                                                                                               |
 | [#667](https://github.com/Rede-ENois/enois-backend/pull/667)         | enois-backend       | Fase 3: lembrete de compromisso alheio é 404 (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (D35)                      | aberto, aguardando revisão humana                                                                                                                               |
+| [#668](https://github.com/Rede-ENois/enois-backend/pull/668)         | enois-backend       | Teste: o custo do ranking é medido por página de dados, não pela sondagem final de paginação (flake pré-existente da base H2 compartilhada)                                                  | aberto, aguardando revisão humana                                                                                                                               |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -252,6 +253,7 @@ Execução 31 (front `fix/enois-calendar-empresa-na-navegacao` sobre `enois/qa` 
 | Front   | `npx vitest run src/utils/navigation.test.ts`                                  | **14/14** (1 novo; falha no código antigo)                                |
 | Front   | `npx vitest run` (suíte inteira)                                               | **1344/1344**                                                             |
 | Front   | `npx tsc --noEmit` / `npx eslint .` / `npx vite build`                         | EXIT=0 / 0 erros (13 avisos pré-existentes) / EXIT=0                      |
+| Backend | `-Dtest=ReputationRefreshQueryCountTests` (isolado, branch e `qa` limpa)       | **1/1** nas duas; falhava no CI com a normalização antiga                  |
 
 Execução 28 (backend `fix/enois-calendar-edicao-escopo-tipo-dia-inteiro` sobre a `qa` `5efb0470`;
 front `feat/enois-calendar-edicao-e-disponibilidade` sobre `enois/qa` `871f4385`):
@@ -593,14 +595,16 @@ inventário §4 dizia "não existe" para a `/agenda`, convites, lembretes e assi
 existem. Corrigido com `gh pr view` PR por PR e inspeção do código na `qa`. Detalhe no log,
 execução 30._
 
-**Execução 31 — duas lacunas de contrato.**
-_Executada em 2026-11-11 (~23:30). Duas unidades de código: (A) a tabela de navegação do front
+**Execução 31 — duas lacunas de contrato e um flake.**
+_Executada em 2026-11-11 (~23:30). Três unidades de código: (A) a tabela de navegação do front
 conhece `empresa`, então a notificação de nova oportunidade e de micro-projeto abre a página da
 empresa em vez de não fazer nada (#846, 14/14, teste de prova falha no código antigo); (B) a
 superfície de lembrete do backend recusa o que não pode atender — alheio é 404 como no detalhe
 (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que
-falta de verdade (#667, 3 testes de prova, 146/146 no pacote do calendário). D35 registrada.
-Detalhe no log, execução 31._
+falta de verdade (#667, 3 testes de prova, 146/146 no pacote do calendário); (C) o teste do custo
+do ranking parou de oscilar — a normalização contava a sondagem vazia de fim de paginação, então a
+razão dependia de o total de contas ser múltiplo de 500 (#668, flake pré-existente encontrado no CI
+do #667, 1/1 isolado e na base limpa). D35 registrada. Detalhe no log, execução 31._
 
 **Execução 32 (próximo bloco) — proposta.** (1) **Release do DS** (passo humano, D20) — o #218 já
 está com o check verde; (2) ligar `pendingInvitations` na `/agenda` do front depois do release;
@@ -654,7 +658,7 @@ e evitou construir sobre premissa errada.
 | 28  | 2026-11-11 ~16:30 | 3    | **Bloco de 3 unidades.** (A) `PATCH /calendar/entries/{id}` aceita `scope`, `kind` e `allDay`: o diálogo mostrava os três e o servidor descartava em silêncio; `reclassify` no domínio, `Boolean allDay` para "ausente = não mexi", 11/11 em `CalendarEntryWriteApiTests` (teste de prova falha no código antigo) — #664; (B) a edição do front manda os três (`updateInputOf`, 15/15 nas rotas) — #840; (C) atalho "Disponibilidade" no cabeçalho da `/agenda` para a tela que existia e não tinha link — #840. D33 registrada |
 | 29  | 2026-11-11 ~18:40 | 3    | **Bloco de 3 unidades.** (A) `CalendarPendingInvitations` no DS: o cliente e a rota `GET /calendar/invitations` existiam e nenhuma tela desenhava a lista; componente com dia/hora no fuso, três respostas e espera, ligado à `CalendarAgendaSurface` (7+1 testes, 1734 na suíte) — #219; (B) o lembrete de compromisso abria `/agenda?period=day` (agenda vazia) e o front não tinha rota `agenda`; agora abre `/agenda/{id}` com CTA "Ver compromisso" (13/13, teste de prova falha no código antigo) — #665; (C) a tabela de navegação do front ganha `agenda`, `agenda/$entryId` e `agenda/disponibilidade` (14/14, 1344 na suíte) — #843. **B9:** o release #218 chegou com marcador de conflito commitado e foi reescrito limpo na rodada, com o check verde; falta a publicação humana. D34 registrada |
 | 30  | 2026-11-11 ~20:00 | —    | **Reconferência do estado real.** O roadmap dizia "aberto" para #655, #661, #663, #664, #769, #813, #836, #840, #632, #203 e #637 — todos mergeados; o inventário §4 dizia "não existe" para `/agenda`, convites, lembretes e assinatura, que já existem. Corrigido com `gh pr view` PR por PR e inspeção do código na `qa`. Nenhum código novo; só documentação. |
-| 31  | 2026-11-11 ~23:30 | 3    | **Bloco de 2 unidades.** (A) a tabela de navegação do front conhece `empresa`: a notificação de nova oportunidade (`/empresa/{slug}`) e de micro-projeto (`/api/empresa/{slug}`) abria nada; agora abre `/empresa/$slug` (14/14, teste de prova falha no código antigo) — #846; (B) a superfície de lembrete do backend recusa o que não pode atender: alheio é 404 como no detalhe (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (3 testes de prova, 13/13 + 7/7, 146/146 no pacote) — #667. D35 registrada |
+| 31  | 2026-11-11 ~23:30 | 3    | **Bloco de 3 unidades.** (A) a tabela de navegação do front conhece `empresa`: a notificação de nova oportunidade (`/empresa/{slug}`) e de micro-projeto (`/api/empresa/{slug}`) abria nada; agora abre `/empresa/$slug` (14/14, teste de prova falha no código antigo) — #846; (B) a superfície de lembrete do backend recusa o que não pode atender: alheio é 404 como no detalhe (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (3 testes de prova, 13/13 + 7/7, 146/146 no pacote) — #667; (C) o teste do custo do ranking parou de oscilar: a normalização contava a sondagem vazia de fim de paginação, então a razão dependia de o total de contas ser múltiplo de 500 (flake pré-existente encontrado no CI do #667, 1/1 isolado e na base limpa) — #668. D35 registrada |
 
 ---
 
