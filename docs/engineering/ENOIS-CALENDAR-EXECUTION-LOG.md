@@ -2740,10 +2740,24 @@ antigo e verdes com o novo: ida-e-volta do caminho `C:\pasta\novo` e o par `\\` 
 
 ### PRs
 
-- Backend — #669 (`fix/calendar-assinatura-limite-por-origem` → `qa`), commit `fcf90411`.
-- Backend — #670 (`fix/calendar-assinatura-recorte-explicito` → `qa`), commit `0f22b6b0`.
-- Backend — #671 (`fix/calendar-ics-descricao-com-barra` → `qa`), commit `b7f63775`.
+- Backend — #669 (`fix/calendar-assinatura-limite-por-origem` → `qa`), commit `fcf90411`; **mergeado**
+  na `qa` em `4882fc79`.
+- Backend — #670 (`fix/calendar-assinatura-recorte-explicito` → `qa`), commit `fe43f184`; **mergeado**
+  na `qa` em `cdc7834f`, após rebase sobre o #668.
+- Backend — #671 (`fix/calendar-ics-descricao-com-barra` → `qa`), commit `b7f63775`; **mergeado**
+  na `qa` em `83b8d8bd`.
 - Docs — este PR (#842, estendido para a execução 32).
+
+### CI vermelho por falso negativo, e o que resolveu
+
+O #669 e o #671 saíram verdes de primeira. O #670 ficou vermelho duas vezes no
+`ReputationRefreshQueryCountTests`, `expected: 17.5 but was: 17.0` — o mesmo flake da base H2
+compartilhada que a execução 31 diagnosticou e que o #668 corrige: quando o total de contas cai num
+múltiplo de 500, o worker faz uma sondagem vazia a mais para descobrir que acabou, e a normalização
+antiga não contava essa varredura no denominador. O #670 saiu da `qa` **antes** do #668 mergear; o
+rebase sobre a `qa` já com o #668 (`447e87e8`) trouxe a normalização nova e o CI voltou verde no
+mesmo commit. Não era regressão da unidade — era ordem de merge. Nenhum PR foi mergeado por mim; os
+quatro foram mergeados por revisão do repositório.
 
 **PRÓXIMA RODADA (§10, proposta de execução 33):** (1) release do DS (passo humano, D20) e
 `pendingInvitations` na `/agenda`; (2) reconferir PRs e o bot (§9/B8); (3) fase 11 adiante — o
