@@ -122,6 +122,7 @@ function AgendaPage() {
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [respondError, setRespondError] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -143,6 +144,10 @@ function AgendaPage() {
   // pode cair na outra agenda. É leitura de referência: o formulário recorta a lista contra o que
   // está nos campos, e nada aqui bloqueia o salvar. Falha silenciosa: sem lista, sem aviso.
   const conflicts = useQuery(calendarQueries.conflicts(window));
+
+  // Convites sem resposta (a lista é do servidor, não da janela: o de next mês não apareceria).
+  // Falha silenciosa: a agenda continua desenhando sem a faixa de convites.
+  const invitations = useQuery(calendarQueries.pendingInvitations());
 
   const save = useMutation({
     mutationFn: (values: CalendarEntryFormValues) =>
@@ -171,11 +176,17 @@ function AgendaPage() {
       entryId: string;
       answer: "ACCEPTED" | "DECLINED" | "TENTATIVE";
     }) => calendarApi.respond(entryId, answer),
-    onMutate: ({ entryId }) => setRespondingId(entryId),
+    onMutate: ({ entryId }) => {
+      setRespondingId(entryId);
+      setRespondError(false);
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
     },
-    onError: () => toast(texts.agenda.errorRespond, "error"),
+    onError: () => {
+      setRespondError(true);
+      toast(texts.agenda.errorRespond, "error");
+    },
     onSettled: () => setRespondingId(null),
   });
 
@@ -335,8 +346,21 @@ function AgendaPage() {
               return false;
             }
           }}
+          pendingInvitations={(invitations.data ?? []).map(
+            ({ id, scope, kind, title, startsAt, endsAt, allDay, timeZoneId }) => ({
+              id,
+              scope,
+              kind,
+              title,
+              startsAt,
+              endsAt,
+              allDay,
+              timeZoneId,
+            }),
+          )}
           onRespond={(entryId, answer) => respond.mutate({ entryId, answer })}
           respondingId={respondingId}
+          respondError={respondError}
           loading={agenda.isFetching}
           error={agenda.isError}
           onRetry={() => void agenda.refetch()}
