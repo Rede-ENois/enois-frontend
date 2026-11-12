@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 
 /**
@@ -14,7 +15,7 @@ vi.mock("@tanstack/react-router", () => ({
   redirect: () => undefined,
 }));
 
-const { Route, detailOf, isSourceOwned, reminderChanges, updateInputOf } =
+const { Route, detailMissing, detailOf, isSourceOwned, reminderChanges, updateInputOf } =
   await import("./agenda.$entryId");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 
@@ -112,6 +113,21 @@ describe("rota /agenda/$entryId", () => {
 
   it("sem lembrete nenhum, escolher um só grava", () => {
     expect(reminderChanges([], 30)).toEqual([{ set: 30 }]);
+  });
+
+  it("só o 404 conta como compromisso inexistente", () => {
+    // A API responde 404 quando o compromisso foi cancelado ou não é daquela pessoa.
+    expect(detailMissing(new ApiError(404, "CALENDAR_ENTRY_NOT_FOUND", "não encontrado"))).toBe(
+      true,
+    );
+  });
+
+  it("falha de rede ou servidor fora do ar não viram 'não encontrado'", () => {
+    // Antes, qualquer erro da consulta caía na tela de "não encontrado"; dizer isso manda a
+    // pessoa procurar um problema que não é dela.
+    expect(detailMissing(new ApiError(500, "INTERNAL_ERROR", "estourou"))).toBe(false);
+    expect(detailMissing(new TypeError("Failed to fetch"))).toBe(false);
+    expect(detailMissing(undefined)).toBe(false);
   });
 
   it("compromisso avulso pode ser editado pela agenda", () => {

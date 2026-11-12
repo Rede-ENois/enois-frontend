@@ -193,16 +193,22 @@ export const texts = {
     errorReminder: "Não foi possível salvar o lembrete. Tente de novo.",
     detailNotFound: "Compromisso não encontrado",
     detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
+    errorLoad: "Não foi possível abrir o compromisso. Tente de novo.",
+    errorLoadHint: "O compromisso não sumiu: a resposta do servidor não chegou.",
     exportIcs: "Baixar .ics",
     exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
     exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
     exportIcsDone: "Arquivo da agenda baixado.",
     availabilityLink: "Disponibilidade",
+    retry: "Tentar de novo",
     availability: {
       seoTitle: "Disponibilidade · Énóis",
       title: "Sua disponibilidade",
       subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
       errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
+      errorLoad: "Não foi possível carregar sua disponibilidade.",
+      errorLoadHint:
+        "Sem ler a semana salva, salvar apagaria o que você já tinha. Tente carregar de novo.",
     },
   },
 

@@ -20,9 +20,9 @@ import {
   wallClockOf,
 } from "@rede-enois/design-system/domain";
 import { Button, EmptyState, LoadingState, useToast } from "@rede-enois/design-system/ui";
-import { CalendarX } from "lucide-react";
+import { CalendarX, TriangleAlert } from "lucide-react";
 
-import { calendarApi } from "@/lib/api";
+import { ApiError, calendarApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -128,19 +128,26 @@ function EntryDetailPage() {
   if (detail.isPending) {
     return (
       <AppContainer>
-        <LoadingState />
+        <LoadingState label={texts.common.loading} />
       </AppContainer>
     );
   }
 
   if (detail.isError) {
+    const missing = detailMissing(detail.error);
     return (
       <AppContainer>
         <EmptyState
-          icon={CalendarX}
-          title={texts.agenda.detailNotFound}
-          description={texts.agenda.detailNotFoundHint}
+          icon={missing ? CalendarX : TriangleAlert}
+          title={missing ? texts.agenda.detailNotFound : texts.agenda.errorLoad}
+          description={missing ? texts.agenda.detailNotFoundHint : texts.agenda.errorLoadHint}
         >
+          {!missing && (
+            <Button variant="outline" size="sm" onClick={() => void detail.refetch()}>
+              {texts.agenda.retry}
+            </Button>
+          )}
+
           <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/agenda" })}>
             {texts.agenda.title}
           </Button>
@@ -238,6 +245,15 @@ export function reminderChanges(
     changes.push({ set: chosen });
   }
   return changes;
+}
+
+/**
+ * O 404 é o único "não existe": a API responde isso quando o compromisso foi cancelado ou o id
+ * não é daquela pessoa. Falha de rede e servidor fora do ar também caem em `isError`, e dizer
+ * "não encontrado" ali manda a pessoa procurar um problema que não é dela.
+ */
+export function detailMissing(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
 }
 
 /**
