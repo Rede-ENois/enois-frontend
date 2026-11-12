@@ -3017,3 +3017,53 @@ dos demais caminhos de leitura do calendário (conflitos, export, assinatura) po
 consulta que cresce com o histórico.
 
 ---
+
+## EXECUÇÃO 36
+
+### 2026-11-12T15:40-03:00 — Fase 11: o release do DS destrava o front — #828 e #830 com o pacote real e a faixa de convites ligada na `/agenda`
+
+**TAREFA:** consumir o release do design-system que a execução 35 esperava: subir #828 e #830
+para o pacote publicado, corrigir a quebra de integração que ele trouxe e ligar a lista de
+convites pendentes na agenda.
+
+**REPOSITÓRIOS:** `enois-frontend` (PRs [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)
+e [#830](https://github.com/Rede-ENois/enois-frontend/pull/830)); docs neste PR.
+
+**Unidade 1 — release 0.33.0 confirmado e #830 com o pacote real.** O PR de release #220 do DS foi
+mergeado e a tag `v0.33.0` publicada (2026-11-12T07:02Z), com `CalendarImportDialog`,
+`CalendarSubscriptionCard`, `CalendarInterviewDialog`, `JobInterviewActions` e
+`CalendarPendingInvitations` — o bloqueio B9/D20 caiu. O bump no #830 saiu junto de um lockfile
+regerado por workflow descritável (`GITHUB_TOKEN` com `packages: read`, padrão histórico do repo,
+removido em seguida); o `resolved` do lockfile confere com o shasum do tarball publicado.
+
+**Unidade 2 — `MentionTextarea` acompanha o DS 0.33 (`6b2c53e5` no #830).** O campo do DS deixou de
+ser `<textarea>` e virou contentEditable com handle imperativo (`insertAtCaret`/`focus`); o wrapper
+do app continuava procurando o `<textarea>` no DOM, e 10 testes quebraram — inclusive na `qa`
+limpa, o que provou quebra de integração e não flake. O wrapper passa a usar o handle, o atalho
+"Publicar" do feed foca `[role="textbox"]`, e os testes migram para seleção por Range no campo
+contentEditable (o `selectionchange` é despachado à mão no jsdom).
+
+**Unidade 3 — #828 rebaseado (`97b9a798`).** Rebase sobre a `qa` (`48c58f47`) resolveu conflito na
+`/agenda` (o cabeçalho ganhou o atalho de disponibilidade no meio; os dois ficaram). Bump 0.33.0 +
+lockfile (idêntico ao do #830, conferido estruturalmente) e cherry-pick do fix de mention.
+
+**Unidade 4 — convites pendentes na `/agenda` (`e85e077f` no #828).** O endpoint e a query
+existiam; a tela não lia. A rota busca `GET /calendar/invitations` e entrega à
+`CalendarAgendaSurface`, que desenha a faixa acima do calendário com o mesmo `onRespond` do dia;
+o erro de resposta, antes só toast, também aparece na faixa; responder invalida a lista (a chave é
+raiz de `["agenda"]`).
+
+**Prova.** #830: tsc EXIT=0, eslint 0 erros (2 warnings pré-existentes no `feed.tsx`), 387/387 nos
+componentes, build EXIT=0; CI "verificar" e "Validar build" passando. #828: tsc EXIT=0, 1282/1282
+(routes+components+lib, incluindo o 11/11 de mention após o cherry-pick), build EXIT=0; CI verde.
+Em ambos, `routeTree.gen.ts` regenerado pelo build foi revertido.
+
+**BLOQUEIOS:** revisão humana de #828/#830 (fora de escopo por regra). #673 e #681 (backend) seguem
+aguardando revisão.
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 37):** (1) acompanhar revisão dos PRs abertos e resolver
+pedidos; (2) varredura dos demais caminhos de leitura (conflitos, export, assinatura) por consulta
+que cresce com o histórico (fase 11); (3) a11y além dos estados de erro.
+
+---
+
