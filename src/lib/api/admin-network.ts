@@ -1,4 +1,5 @@
 import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
 import type { NetworkNodeStatus } from "@/types/application/network/network-node-status";
@@ -40,4 +41,22 @@ export const adminNetworkApi = {
   /** Suspende, põe em quarentena ou revoga. REVOKED é terminal. */
   changeStatus: (nodeId: string, status: NetworkNodeStatus) =>
     api.post<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/status`, { status }),
+
+  /** Redefine o que o participante cede (campo ausente = mantém o vigente). */
+  capacity: (
+    nodeId: string,
+    data: { cpuCores?: number; memoryMb?: number; diskMb?: number; bandwidthMbps?: number },
+  ) => api.post<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/capacity`, data),
+
+  /** Redefine os perfis autorizados (lista vazia = nó sem tarefa). */
+  profiles: (nodeId: string, profiles: string[]) =>
+    api.post<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/profiles`, {
+      profiles,
+    }),
+
+  /** O histórico administrativo do nó — a trilha de auditoria lida de volta, mais nova primeiro. */
+  history: (nodeId: string, limit = 50) =>
+    api.get<NetworkAuditRecord[]>(
+      `/admin/network/nodes/${encodeURIComponent(nodeId)}/history?limit=${limit}`,
+    ),
 };

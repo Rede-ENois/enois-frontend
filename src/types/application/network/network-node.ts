@@ -25,4 +25,9 @@ export type NetworkNode = {
   failureStreak: number;
   /** Motivo da quarentena vigente; `null` fora dela. */
   quarantineReason: string | null;
+  /** O que o participante cede — o valor vigente que a tela de capacidade edita. */
+  declaredCpuCores: number;
+  declaredMemoryMb: number;
+  declaredDiskMb: number;
+  declaredBandwidthMbps: number;
 };

@@ -4,9 +4,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
-import type { NetworkDashboardData, NetworkNodeData } from "@rede-enois/design-system/domain";
+import type {
+  NetworkDashboardData,
+  NetworkNodeData,
+  NetworkNodeDetailData,
+  NetworkNodeHistoryEntry,
+} from "@rede-enois/design-system/domain";
 import { NetworkNodesSection as NetworkNodesSectionView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
@@ -16,7 +22,17 @@ import { dataHora } from "@/lib/date/format";
 const QUERY_KEY = ["admin", "network", "nodes"];
 const DASHBOARD_KEY = ["admin", "network", "dashboard"];
 
-/** O nó do backend na forma que a visão do design system espera (data já formatada). */
+/** Os perfis que um nó pode receber — o mesmo conjunto que o backend valida. */
+const PROFILES = [
+  "NODE_EDGE",
+  "NODE_WORKER",
+  "NODE_MEDIA",
+  "NODE_READ_REPLICA",
+  "NODE_API",
+  "NODE_LOCAL",
+  "NODE_EMERGENCY",
+];
+
 /** A fotografia da rede na forma que a faixa do design system espera. */
 function dashboardView(dashboard: NetworkDashboard): NetworkDashboardData {
   return {
@@ -67,6 +83,7 @@ export function NetworkNodesSection() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [issuedKey, setIssuedKey] = useState<(IssuedNodeKey & { nodeId: string }) | null>(null);
+  const [openNodeId, setOpenNodeId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
     queryKey: QUERY_KEY,
@@ -83,6 +100,11 @@ export function NetworkNodesSection() {
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: DASHBOARD_KEY });
+    if (openNodeId) {
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "network", "history", openNodeId],
+      });
+    }
   };
 
   const onError = (error: unknown) =>
@@ -138,9 +160,77 @@ export function NetworkNodesSection() {
     onError,
   });
 
+  const capacity = useMutation({
+    mutationFn: ({
+      nodeId,
+      body,
+    }: {
+      nodeId: string;
+      body: { cpuCores?: number; memoryMb?: number; diskMb?: number; bandwidthMbps?: number };
+    }) => adminNetworkApi.capacity(nodeId, body),
+    onSuccess: () => {
+      toast(texts.moderator.network.capacitySaved, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const profiles = useMutation({
+    mutationFn: ({ nodeId, profiles }: { nodeId: string; profiles: string[] }) =>
+      adminNetworkApi.profiles(nodeId, profiles),
+    onSuccess: () => {
+      toast(texts.moderator.network.profilesSaved, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const openNode = data?.find((item) => item.id === openNodeId);
+
+  const { data: history } = useQuery({
+    queryKey: ["admin", "network", "history", openNodeId],
+    queryFn: () => adminNetworkApi.history(openNodeId!),
+    enabled: openNodeId !== null,
+    retry: false,
+  });
+
+  const detail: NetworkNodeDetailData | null = openNode
+    ? {
+        node: nodeView(openNode),
+        declaredCpuCores: openNode.declaredCpuCores,
+        declaredMemoryMb: openNode.declaredMemoryMb,
+        declaredDiskMb: openNode.declaredDiskMb,
+        declaredBandwidthMbps: openNode.declaredBandwidthMbps,
+        availableProfiles: PROFILES,
+      }
+    : null;
+
+  const historyView = (records: NetworkAuditRecord[] | undefined): NetworkNodeHistoryEntry[] =>
+    (records ?? []).map((record) => ({
+      id: record.id,
+      actorId: record.actorId,
+      action: record.action,
+      metadata: record.metadata,
+      dateLabel: dataHora(record.createdAt),
+    }));
+
   return (
     <NetworkNodesSectionView
       dashboard={dashboard ? dashboardView(dashboard) : null}
+      detail={{
+        detail,
+        history: historyView(history),
+        historyLoading: openNodeId !== null && history === undefined,
+        onSaveCapacity: (body) => {
+          if (openNodeId) capacity.mutate({ nodeId: openNodeId, body });
+        },
+        capacityPending: capacity.isPending,
+        onSaveProfiles: (next) => {
+          if (openNodeId) profiles.mutate({ nodeId: openNodeId, profiles: next });
+        },
+        profilesPending: profiles.isPending,
+        onOpenNode: setOpenNodeId,
+      }}
       nodes={(data ?? []).map(nodeView)}
       loading={isLoading}
       error={isError}
