@@ -91,6 +91,18 @@ describe("navigateToHref", () => {
     expect(resolve("/eventos?")).toHaveBeenCalledWith({ to: "/eventos" });
   });
 
+  it("abre o compromisso do lembrete e mantém a agenda para o href sem id", () => {
+    expect(resolve("/agenda/cal_1")).toHaveBeenCalledWith({
+      to: "/agenda/$entryId",
+      params: { entryId: "cal_1" },
+    });
+    expect(resolve("/agenda")).toHaveBeenCalledWith({ to: "/agenda" });
+    // A disponibilidade é filha de /agenda: sem a entrada própria, "disponibilidade" viraria id.
+    expect(resolve("/agenda/disponibilidade")).toHaveBeenCalledWith({
+      to: "/agenda/disponibilidade",
+    });
+  });
+
   it("abre a chamada da notificacao (e do push), com ou sem o prefixo /api", () => {
     expect(resolve("/call/call_1")).toHaveBeenCalledWith({
       to: "/call/$callId",
