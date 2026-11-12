@@ -3017,3 +3017,60 @@ dos demais caminhos de leitura do calendário (conflitos, export, assinatura) po
 consulta que cresce com o histórico.
 
 ---
+
+## EXECUÇÃO 36
+
+### 2026-11-12T18:40-03:00 — Fase 11: os convites pendentes chegam à tela da agenda
+
+**TAREFA:** a proposta aberta pela execução 35: release do DS e `pendingInvitations` na `/agenda`
+do front.
+
+**REPOSITÓRIOS:** `enois-frontend` (PR #852, branch `feat/agenda-convites-pendentes` sobre
+`enois/qa` `38cbf12d`). Docs neste PR.
+
+**Desbloqueio que veio de fora.** O gate humano (D20/B9) caiu: o design system 0.33.0 foi
+publicado no GitHub Packages e a `qa` do front já aponta o lock para ele (commits
+`87b8da72`/`bdd5f08e`/`141ddd59`). O `npm ci` da rodada resolveu o pacote direto do registro
+(sem o tarball manual da sessão anterior, que virou obsoleto).
+
+**O que faltava.** O cliente (`calendarApi.pendingInvitations`) e a query
+(`calendarQueries.pendingInvitations`) existiam desde a fase 3 e nenhuma tela os lia: um convite
+para fora do período na tela (o mês que vem) era invisível em todo o app, mesmo com o backend
+(`/calendar/invitations`, enxuto desde o #681) e o desenho (`CalendarPendingInvitations` do DS
+0.33) prontos. A rota `/agenda` passa a consumir a lista e a entregá-la à `CalendarAgendaSurface`,
+que a desenha acima do calendário com a resposta rápida (aceitar/talvez/recusar), o mesmo
+`onRespond` da visão de dia. Responder invalida a chave `agenda` e o convite sai da lista. Falha
+de leitura da lista não esconde a agenda. Resposta que falha deixa o aviso no lugar do convite
+(`respondError`), além do toast que já existia.
+
+**Duplicidade retificada.** A mesma unidade nasceu duas vezes nesta rodada (branch própria
+`fix/enois-calendar-a11y-foco` da sessão e `feat/agenda-convites-pendentes` do PR #852, que a
+mantenedora já tinha aberto a partir do #828). Para não abrir PR duplicado, o trabalho foi
+empurrado na branch do #852 e a branch duplicada foi apagada; o corpo e um comentário de
+retificação registram a diferença (a versão final acrescenta o teste da rota e a base atualizada
+na `qa`, que inclui o conserto do campo de menção do DS 0.33).
+
+**Prova.** `src/routes/agenda.test.tsx` ampliado (7/7): convite visível mesmo fora do período na
+tela, sem bloco vazio quando não há convite, falha da lista de convites não esconde a agenda,
+responder aceita e recarrega a lista. Suite completa: `npm run lint` 0 erros (14 warnings
+pré-existentes, fora dos arquivos tocados), `npm run typecheck` passa, `npx vitest run`
+1373/1374, `npm run build` passa. A única falha é o timeout de `src/lib/e2e/crypto.test.ts >
+fails to decrypt private key with wrong password` sob suite completa; isolada passa 14/14
+(executado duas vezes), flaky de ambiente, não tocado por este PR. Nota de execução anterior
+retificada: as 10 falhas de `mention-textarea` vistas no início da rodada eram do ponto antigo de
+base; a `qa` já as tinha consertadas (`6b2c53e5`) e o rebase as resolveu.
+
+**PR:** front [#852](https://github.com/Rede-ENois/enois-frontend/pull/852) — aguardando revisão
+humana. Backend: nada novo (o endpoint já está na `qa`). DS: nada novo (0.33.0 já publicado).
+Não verificado em navegador: a tela não foi conferida a 390px e 1280px nesta rodada (sem
+navegador disponível); o componente desenhado é do DS publicado e a rota só acrescenta a lista.
+
+**BLOQUEIOS:** nenhum novo. A11y além dos estados de erro segue sem `vitest-axe` nas
+dependências (contraste e foco cobertos pelo DS e por inspeção).
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 37):** (1) fase 11 no que resta: varredura dos demais
+caminhos de leitura do calendário (conflitos, export, assinatura) por padrão de consulta que
+cresce com o histórico; (2) o flaky do `crypto.test.ts` sob suite completa (timeout de 5s) é
+candidato a conserto na regra do escoteiro; (3) a11y além dos estados de erro segue em aberto.
+
+---
