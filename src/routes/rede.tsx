@@ -22,6 +22,7 @@ import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
 import { MyNetworkNodesSection } from "@/components/network/my-network-nodes-section";
+import { NetworkJoinSection } from "@/components/network/network-join-section";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Suggestion cards on the page: two rows on desktop. */
@@ -38,6 +39,7 @@ function Rede() {
   // Per suggestion card: the invitation on its way, sent, or failed.
   const [invites, setInvites] = useState<Record<string, "sending" | "sent" | "failed">>({});
   const [removing, setRemoving] = useState<NetworkUser | null>(null);
+  const [joinOpen, setJoinOpen] = useState(false);
   // The outcome of each answered invitation, by the other person's id. The row keeps it after the
   // refetch drops the request, so the list never jumps under the cursor.
   const [outcomes, setOutcomes] = useState<Record<string, NetworkRequestOutcome>>({});
@@ -191,7 +193,8 @@ function Rede() {
           )}
         </section>
 
-        <MyNetworkNodesSection />
+        <MyNetworkNodesSection onJoin={() => setJoinOpen(true)} />
+        <NetworkJoinSection open={joinOpen} onOpenChange={setJoinOpen} />
 
         <section aria-labelledby="network-connections-title">
           <h2 id="network-connections-title" className="mb-3 text-lg font-semibold">

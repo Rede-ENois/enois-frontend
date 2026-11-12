@@ -38,8 +38,9 @@ function nodeView(node: MyNetworkNode): MyNetworkNodeData {
 /**
  * Os servidores do participante na página /rede: o que cedeu, o que a rede observou, a
  * contribuição medida e a desconexão voluntária (reversível, mas cai as chaves na hora).
+ * `onJoin` abre o diálogo de ingresso, que a página dona da rota controla.
  */
-export function MyNetworkNodesSection() {
+export function MyNetworkNodesSection({ onJoin }: { onJoin?: () => void }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -71,6 +72,7 @@ export function MyNetworkNodesSection() {
       refreshPending={isRefetching}
       onDisconnect={(nodeId) => disconnect.mutate(nodeId)}
       disconnectPending={disconnect.isPending}
+      onJoin={onJoin}
     />
   );
 }
