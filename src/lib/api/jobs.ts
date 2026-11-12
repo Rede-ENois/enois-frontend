@@ -8,8 +8,10 @@ import type { ExternalApplicationResult } from "@/types/application/job/external
 import type { Job } from "@/types/application/job/job";
 import type { JobApplication } from "@/types/application/job/job-application";
 import type { JobApplicationInput } from "@/types/application/job/job-application-input";
+import type { JobInterview } from "@/types/application/job/job-interview";
 import type { ListJobsParams } from "@/types/application/job/list-jobs-params";
 import type { MyApplication } from "@/types/application/job/my-application";
+import type { ScheduleInterviewInput } from "@/types/application/job/schedule-interview-input";
 
 import { api, buildQuery } from "../api-client";
 
@@ -85,6 +87,35 @@ export const jobsApi = {
     feedback?: string,
   ) =>
     api.patch<JobApplication>(`/jobs/${jobId}/applications/${applicationId}`, { status, feedback }),
+
+  /**
+   * Marca a entrevista da candidatura (ou reagenda a que já está valendo). Só quem publicou a vaga.
+   * A entrevista vira compromisso na agenda dos dois lados.
+   */
+  scheduleInterview: (jobId: string, applicationId: string, data: ScheduleInterviewInput) =>
+    api.post<JobInterview>(`/jobs/${jobId}/applications/${applicationId}/interview`, data),
+
+  /** Reagenda uma entrevista existente; a origem não muda, então as duas entradas da agenda movem. */
+  rescheduleInterview: (
+    jobId: string,
+    applicationId: string,
+    interviewId: string,
+    data: ScheduleInterviewInput,
+  ) =>
+    api.patch<JobInterview>(
+      `/jobs/${jobId}/applications/${applicationId}/interview/${interviewId}`,
+      data,
+    ),
+
+  /** Desmarca a entrevista e cancela os dois compromissos da agenda. */
+  cancelInterview: (jobId: string, applicationId: string, interviewId: string) =>
+    api.delete<JobInterview>(
+      `/jobs/${jobId}/applications/${applicationId}/interview/${interviewId}`,
+    ),
+
+  /** Entrevistas da candidatura: o empregador e o candidato veem; mais ninguém. */
+  interviews: (jobId: string, applicationId: string) =>
+    api.get<JobInterview[]>(`/jobs/${jobId}/applications/${applicationId}/interview`),
 
   /** Minhas candidaturas, com estado e retorno do empregador (GET /jobs/applications/mine). */
   myApplications: () => api.get<MyApplication[]>("/jobs/applications/mine"),

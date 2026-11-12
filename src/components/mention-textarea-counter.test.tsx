@@ -33,6 +33,8 @@ describe("MentionTextarea", () => {
     );
 
     expect(html.split(counterMarkup)).toHaveLength(2);
-    expect(html).toMatch(/maxLength="1200"/i);
+    // O campo do DS 0.33 é contentEditable: o limite vai no `data-max-length`, não num
+    // atributo `maxLength` de textarea.
+    expect(html).toMatch(/data-max-length="1200"/i);
   });
 });

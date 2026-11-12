@@ -676,6 +676,7 @@ export const texts = {
     capture: "Captura da chamada no momento da denúncia",
     captureMissing: "Esta denúncia de chamada veio sem captura de tela.",
     participants: "Na sala quando a denúncia foi feita",
+    reportedAt: (when: string) => `Denúncia feita em ${when}`,
   },
   onboarding: {
     seoTitle: "Boas-vindas · Énóis",
@@ -2241,6 +2242,7 @@ export const texts = {
     myApplications: "Minhas candidaturas",
     myJobsEmpty: "Você ainda não publicou vagas.",
     myApplicationsEmpty: "Você ainda não se candidatou a nenhuma vaga.",
+    interviewScheduledFor: (when: string) => `Entrevista marcada: ${when}`,
     empty: "Nenhuma vaga encontrada com os filtros selecionados.",
     createJob: "Criar vaga",
     createJobTitle: "Publicar vaga",
@@ -2344,6 +2346,14 @@ export const texts = {
       backToReview: "Voltar para análise",
       statusUpdated: "Estado atualizado.",
       statusError: "Não foi possível atualizar o estado. Tente novamente.",
+      interview: {
+        cancelTitle: "Cancelar entrevista",
+        cancelAction: "Cancelar entrevista",
+        cancelConfirm:
+          "Cancelar esta entrevista? Os dois lados deixam de ver o compromisso na agenda.",
+        error: "Não foi possível salvar a entrevista. Tente novamente.",
+        cancelError: "Não foi possível cancelar a entrevista. Tente novamente.",
+      },
     },
     createAction: "Publicar vaga",
     createError: "Não foi possível publicar a vaga. Tente novamente.",
