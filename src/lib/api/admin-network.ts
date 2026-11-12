@@ -1,4 +1,5 @@
 import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
 import type { NetworkNodeStatus } from "@/types/application/network/network-node-status";
 
@@ -12,6 +13,9 @@ import { api } from "../api-client";
  */
 export const adminNetworkApi = {
   nodes: () => api.get<NetworkNode[]>("/admin/network/nodes"),
+
+  /** A fotografia da rede: contagens, capacidade somada e versões em campo. */
+  dashboard: () => api.get<NetworkDashboard>("/admin/network/nodes/dashboard"),
 
   node: (nodeId: string) =>
     api.get<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}`),

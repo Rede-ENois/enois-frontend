@@ -4,8 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
-import type { NetworkNodeData } from "@rede-enois/design-system/domain";
+import type { NetworkDashboardData, NetworkNodeData } from "@rede-enois/design-system/domain";
 import { NetworkNodesSection as NetworkNodesSectionView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
@@ -13,8 +14,29 @@ import { ApiError, adminNetworkApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 
 const QUERY_KEY = ["admin", "network", "nodes"];
+const DASHBOARD_KEY = ["admin", "network", "dashboard"];
 
 /** O nó do backend na forma que a visão do design system espera (data já formatada). */
+/** A fotografia da rede na forma que a faixa do design system espera. */
+function dashboardView(dashboard: NetworkDashboard): NetworkDashboardData {
+  return {
+    total: dashboard.total,
+    active: dashboard.active,
+    unavailable: dashboard.unavailable,
+    quarantined: dashboard.quarantined,
+    alive: dashboard.alive,
+    degraded: dashboard.degraded,
+    declaredCpuCores: dashboard.declaredCpuCores,
+    declaredMemoryMb: dashboard.declaredMemoryMb,
+    freeSlots: dashboard.freeSlots,
+    avgCpuPercent: dashboard.avgCpuPercent,
+    cpuSamples: dashboard.cpuSamples,
+    avgMemoryMb: dashboard.avgMemoryMb,
+    memorySamples: dashboard.memorySamples,
+    runtimeVersions: dashboard.runtimeVersions,
+  };
+}
+
 function nodeView(node: NetworkNode): NetworkNodeData {
   return {
     id: node.id,
@@ -52,7 +74,16 @@ export function NetworkNodesSection() {
     retry: false,
   });
 
-  const refresh = () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  const { data: dashboard } = useQuery({
+    queryKey: DASHBOARD_KEY,
+    queryFn: () => adminNetworkApi.dashboard(),
+    retry: false,
+  });
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: DASHBOARD_KEY });
+  };
 
   const onError = (error: unknown) =>
     toast(error instanceof ApiError ? error.message : texts.moderator.network.actionError, "error");
@@ -109,6 +140,7 @@ export function NetworkNodesSection() {
 
   return (
     <NetworkNodesSectionView
+      dashboard={dashboard ? dashboardView(dashboard) : null}
       nodes={(data ?? []).map(nodeView)}
       loading={isLoading}
       error={isError}
