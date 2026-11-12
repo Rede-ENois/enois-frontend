@@ -3013,6 +3013,7 @@ export const texts = {
       approved: "Nó aprovado.",
       statusChanged: "Estado do nó atualizado.",
       capacitySaved: "Capacidade do nó atualizada.",
+      disconnected: "Servidor desconectado da rede.",
       profilesSaved: "Perfis do nó atualizados.",
       actionError: "Não foi possível concluir a ação.",
     },

@@ -21,6 +21,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 
 import { AppContainer } from "@/components/app-container";
+import { MyNetworkNodesSection } from "@/components/network/my-network-nodes-section";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
 /** Suggestion cards on the page: two rows on desktop. */
@@ -189,6 +190,8 @@ function Rede() {
             </div>
           )}
         </section>
+
+        <MyNetworkNodesSection />
 
         <section aria-labelledby="network-connections-title">
           <h2 id="network-connections-title" className="mb-3 text-lg font-semibold">
