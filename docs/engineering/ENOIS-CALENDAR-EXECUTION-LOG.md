@@ -2961,3 +2961,59 @@ medido em produção (não há ambiente de medida nesta rodada).
 `CalendarInvitationsController` sob volume e a leitura de disponibilidade.
 
 ---
+
+## EXECUÇÃO 35
+
+### 2026-11-12T10:45-03:00 — Fase 11: a fila de convites pendentes sai do join no banco e o teto de lote do lembrete ganha teste
+
+**TAREFA:** continuação da revisão de leitura sob volume proposta pela execução 34:
+`CalendarInvitationsController` sob volume e a leitura de disponibilidade.
+
+**REPOSITÓRIOS:** `enois-backend` (`fix/calendar-convites-revisao` sobre `enois/qa` `06b45e58`).
+Docs neste PR (a proposta anterior de levar documentação no PR do front não se aplicou: a rodada
+não tocou o front).
+
+**O que a revisão encontrou.** Disponibilidade já está limitada (`CalendarAvailabilityService.MAX_WINDOWS`
+= 50, com índice único no banco), não é o ponto. O ponto é `CalendarInvitationService.pendingInvitations`
+(`application/CalendarInvitationService.java:76` na base): carregava primeiro a lista de convites
+pendentes da pessoa (`findPendingByUser`, sem limite) e devolvia os ids na busca por conjunto
+(`findAllByIds`, `in :ids` sem teto). O endpoint `/calendar/invitations` pagava esse caminho, a
+mesma classe de problema do join de convidados da execução 34.
+
+**A correção.** `findPendingInvitations`: join entre `calendar_entries` e
+`calendar_entry_participants` no JPQL, que já filtra resposta dada (`INVITED`) e entrada cancelada
+(`ACTIVE`) e ordena pela idade do convite, numa consulta só. Com o fim dos dois caminhos por
+lista de ids, os métodos de apoio sem chamador saem das portas: `findPendingByUser`,
+`findEntryIdsByUser`, `findAllByIds` de entradas e `findInWindowByIds`. `CalendarEntryPersistenceAdapter`
+deixa de depender do repositório de participantes.
+
+**Lembrete.** O `deliverDue` já aplicava o lote na consulta da porta (`findDue(now, MAX_ATTEMPTS, BATCH)`
+com `PageRequest.of(0, limit)` no adaptador), então não há defeito de produção aqui. O que faltava
+era a tranca: `CalendarReminderServiceTests#oneCycleDeliversAtMostTheBatchCeiling` cria 25 vencidos
+e exige que um ciclo entregue no máximo `BATCH` (20). A constante fica pública para o teste
+referenciar. Primeira versão do teste estava errada (antecedência de 5 minutos num compromisso a
+10 minutos não vence; retificado para antecedência de 1 dia, como no teste irmão já verde).
+
+**Prova.** Vermelho antes: contra a porta sem o novo método, o novo teste de persistência não
+compila (a prova de comportamento é a de API, que já cobria pendências; aqui a prova é que a
+consulta nova existe e o caminho antigo saiu). Verde depois: `CalendarEntryPersistenceTests`
+7/7 (inclui `pendingInvitationsComeFromTheParticipantJoin`: ordem por idade do convite, respondido
+e cancelado de fora, convite de outra pessoa não vaza, organizador sem fila própria),
+`CalendarReminderServiceTests` 15/15, `CalendarInvitationApiTests` 11/11,
+`CalendarDetailAndPendingInvitationsApiTests` 6/6. Suite completa do repositório: 2506 testes,
+0 falhas, 0 erros, 1 skip pré-existente.
+
+**PR:** backend [#681](https://github.com/Rede-ENois/enois-backend/pull/681) — aguardando revisão
+humana. Depende do #673 no que toca o join de convidados, mas traz o mesmo join na base, então
+pode ser revisado e mergeado em qualquer ordem. Docs neste PR.
+
+**BLOQUEIOS:** D20 e B9 inalterados (release do DS segue passo humano). Desempenho do join não
+medido em produção (não há ambiente de medida nesta rodada).
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 36):** (1) release do DS (passo humano, D20) e
+`pendingInvitations` na `/agenda` do front, agora com o endpoint já enxuto; (2) a11y além dos
+estados de erro (`vitest-axe` segue fora das dependências); (3) fase 11 no que resta: varredura
+dos demais caminhos de leitura do calendário (conflitos, export, assinatura) por padrão de
+consulta que cresce com o histórico.
+
+---
