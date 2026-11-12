@@ -134,10 +134,19 @@ describe("Seletor de figurinhas do campo de escrita", () => {
     });
 
     // O cursor fica onde a pessoa digitou: o campo guarda a seleção mesmo depois do clique que
-    // abre o seletor (o jsdom começa na posição 0, então a posição é colocada aqui).
-    const campo = host.querySelector("textarea");
+    // abre o seletor (o jsdom começa na posição 0, então a posição é colocada aqui). O campo do
+    // DS 0.33 é contentEditable: a seleção vai pela Selection API, não por setSelectionRange.
+    const campo = host.querySelector<HTMLElement>('[role="textbox"]');
     expect(campo).toBeTruthy();
-    act(() => campo?.setSelectionRange(2, 2));
+    act(() => {
+      const texto = campo!.firstChild!;
+      const range = document.createRange();
+      range.setStart(texto, 2);
+      range.setEnd(texto, 2);
+      const selection = document.getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+    });
 
     await act(async () => botao(texts.emotes.button)?.click());
     await esperarFigurinha();

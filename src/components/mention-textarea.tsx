@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import {
+  type MentionTextareaHandle,
   type MentionTextareaProps,
   MentionTextarea as MentionTextareaView,
 } from "@rede-enois/design-system/domain";
@@ -19,6 +20,8 @@ import { EmotePickerDialog } from "@/components/emotes/emote-picker-dialog";
  *
  * Também é daqui o seletor de figurinhas globais (BTTV/FFZ): o botão fica acima do campo e
  * insere o CÓDIGO na posição do cursor, como qualquer palavra — o texto continua texto no banco.
+ * A inserção e o foco passam pelo `MentionTextareaHandle`: o campo do DS 0.33 não é um
+ * `<textarea>`, e o `insertAtCaret` é quem guarda a seleção enquanto o diálogo está aberto.
  */
 export function MentionTextarea({
   emoteInline = false,
@@ -29,7 +32,7 @@ export function MentionTextarea({
 }) {
   const [mentionQuery, setMentionQuery] = useState("");
   const [emoteOpen, setEmoteOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const fieldRef = useRef<MentionTextareaHandle>(null);
 
   const { data: results = [] } = useQuery({
     queryKey: ["users", "search", mentionQuery],
@@ -39,39 +42,11 @@ export function MentionTextarea({
 
   const insertEmote = (emoteCode: string) => {
     // `:KEKW:` is the only format that becomes a sticker in new text (issue #556).
-    const code = `:${emoteCode}:`;
-    const value = props.value;
-    const textarea = containerRef.current?.querySelector("textarea");
-    if (!textarea) return;
-    // O seletor é um diálogo: o campo perde o foco, mas a seleção continua guardada no textarea.
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const before = value.slice(0, start);
-    const after = value.slice(end);
-    // Space around the code keeps the raw text readable for whoever edits it later.
-    const prefix = before && !/\s$/.test(before) ? " " : "";
-    const suffix = after && !/^\s/.test(after) ? " " : "";
-    const next = `${before}${prefix}${code}${suffix}${after}`;
-    if (props.maxLength !== undefined && next.length > props.maxLength) return;
-
-    const caret = before.length + prefix.length + code.length + suffix.length;
-    // A figurinha passa pela mesma reconciliação de menções de uma edição digitada.
-    textarea.value = next;
-    textarea.setSelectionRange(caret, caret);
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-
-    // Sem `focus()`: o diálogo continua aberto para escolher mais de uma figurinha.
-    requestAnimationFrame(() => {
-      const node = containerRef.current?.querySelector("textarea");
-      node?.setSelectionRange(caret, caret);
-    });
+    fieldRef.current?.insertAtCaret(`:${emoteCode}:`);
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={emoteInline ? "flex min-w-0 flex-1 items-end gap-1" : "min-w-0 flex-1"}
-    >
+    <div className={emoteInline ? "flex min-w-0 flex-1 items-end gap-1" : "min-w-0 flex-1"}>
       {props.toolbar && !emoteInline && (
         <div className="mb-1 flex items-center justify-end">
           <Button
@@ -89,6 +64,7 @@ export function MentionTextarea({
       )}
 
       <MentionTextareaView
+        ref={fieldRef}
         {...props}
         mentionResults={results}
         onMentionQueryChange={setMentionQuery}
@@ -111,8 +87,7 @@ export function MentionTextarea({
         onOpenChange={(open) => {
           setEmoteOpen(open);
           // Ao fechar, o cursor volta para o campo: quem escolheu a figurinha continua escrevendo.
-          if (!open)
-            requestAnimationFrame(() => containerRef.current?.querySelector("textarea")?.focus());
+          if (!open) fieldRef.current?.focus();
         }}
         onSelect={insertEmote}
       />
