@@ -2904,11 +2904,15 @@ build`, `npm pack`) trocado no `node_modules` do worktree — com ele, `tsc` lim
 
 ### PRs
 
-- Backend — `fix/enois-calendar-fase11-leitura` → `qa` (**#672**): teto de janela compartilhado,
-  import em fluxo com teto de bytes, `VEVENT` aninhado recusado e `VTIMEZONE` recortado pela janela.
-- Front — `fix/enois-calendar-a11y` → `qa` (**#849**): falha de leitura com estado próprio nas duas
-  telas de agenda, 404 separado de erro de rede e carregamento com rótulo.
-- Docs — este PR.
+- Backend — `fix/enois-calendar-fase11-leitura` → `qa` (**#672**, **mergeado** em `e379ff35`):
+  teto de janela compartilhado, import em fluxo com teto de bytes, `VEVENT` aninhado recusado e
+  `VTIMEZONE` recortado pela janela. A revisão apontou que o `EventCalendarSyncTests` lia a agenda
+  com dez anos de horizonte — acima do teto novo —; corrigido em `ce4cf380`, com a janela do mês do
+  evento, antes do merge.
+- Front — `fix/enois-calendar-a11y` → `qa` (**#849**, **mergeado** em `eae5e6fb`): falha de leitura
+  com estado próprio nas duas telas de agenda, 404 separado de erro de rede e carregamento com
+  rótulo.
+- Docs — este PR (**#850**).
 
 **PRÓXIMA RODADA (§10, proposta de execução 34):** (1) release do DS (passo humano, D20) e
 `pendingInvitations` na `/agenda`; (2) a revisão de a11y do front **além dos estados de erro** —
