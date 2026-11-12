@@ -3,6 +3,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 
 import { apiUrl } from "./api-client";
+import { refreshConversation, refreshNotifications, resyncInbox } from "./inbox-sync";
 import { liteInterval } from "./lite-mode";
 
 /**
@@ -63,9 +64,9 @@ export function handleConversationChanged(queryClient: QueryClient, data: string
     return;
   }
   if (typeof conversationId !== "string") return;
-  void queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-  // Prefix: inbox, archived, unread counters and the dock all live under "conversations".
-  void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  // Só a primeira página de cada lista na tela, e só a thread se ela estiver aberta: invalidar o
+  // prefixo refazia todas as páginas carregadas de todas as consultas de uma vez.
+  void refreshConversation(queryClient, conversationId);
 }
 
 /**
@@ -81,8 +82,7 @@ export function handleNotificationCreated(queryClient: QueryClient, data: string
     return;
   }
   if (typeof payload.notificationId !== "string") return;
-  // Prefixo: lista, resumo do menu e contadores vivem todos sob "notifications".
-  void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  void refreshNotifications(queryClient);
 }
 
 /**
@@ -121,9 +121,8 @@ export function useMessageStream(onCall?: (callId: string, state: string) => voi
       source = new EventSource(apiUrl("/conversations/stream"), { withCredentials: true });
       source.onopen = () => {
         setLive(true);
-        // Whatever changed while disconnected was missed: catch up once.
-        void queryClient.invalidateQueries({ queryKey: ["conversations"] });
-        void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        // Whatever changed while disconnected was missed: catch up once, first page only.
+        void resyncInbox(queryClient);
       };
       source.addEventListener("conversation", (event) =>
         handleConversationChanged(queryClient, (event as MessageEvent<string>).data),

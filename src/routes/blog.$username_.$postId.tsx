@@ -13,6 +13,7 @@ import { blogsApi } from "@/lib/api/blogs";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { blogReadingMinutes } from "@/lib/blog-reading-time";
 import { formatarData } from "@/lib/date/format";
+import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { buildShareTags } from "@/lib/open-graph";
 
 import { AppContainer } from "@/components/app-container";
@@ -127,7 +128,7 @@ function BlogPostPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blog"] });
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      void refreshFeedFirstPage(queryClient);
       toast(texts.blog.editor.deleted);
       navigate({ to: "/blog/$username", params: { username: blog.slug } });
     },

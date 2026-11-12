@@ -9,10 +9,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { feedRefreshOptions } from "./post-query-cache";
 
 /**
- * A regressão da issue #559 não é só a invalidação explícita: o app tem
- * `refetchOnWindowFocus: true` e a aba UNSEEN tem `staleTime` curto, então voltar o foco na janela
- * refazia a busca e o post que a pessoa acabou de reagir saía da tela. Aqui a consulta é montada
- * com as opções reais de `useFeed` e o foco é disparado de verdade.
+ * A regressão da issue #559: voltar o foco na janela não pode refazer NENHUMA aba do feed — a
+ * revalidação de foco refazia a consulta inteira (todas as páginas carregadas) e, na aba "Ainda
+ * não vi", tirava da tela o post que a pessoa acabou de ver. Quem mantém o feed em dia hoje é a
+ * varredura de `feed-live.ts`, uma página por vez. Aqui a consulta é montada com as opções reais
+ * de `useFeed` e o foco é disparado de verdade.
  */
 function Probe({ tab, queryFn }: { tab: string; queryFn: () => Promise<unknown> }) {
   useQuery({
@@ -45,7 +46,7 @@ describe("renovação automática do feed", () => {
     vi.unstubAllGlobals();
   });
 
-  it("voltar o foco na janela não refaz a aba 'Ainda não vi'", async () => {
+  it("voltar o foco na janela não refaz nenhuma aba do feed", async () => {
     const unseen = vi.fn().mockResolvedValue({ pages: [], pageParams: [] });
     const all = vi.fn().mockResolvedValue({ pages: [], pageParams: [] });
 
@@ -67,8 +68,8 @@ describe("renovação automática do feed", () => {
     });
     await act(async () => new Promise((resolve) => setTimeout(resolve, 50)));
 
-    // A "Tudo" é o controle: ela refaz a busca no foco, então o foco chegou de fato.
-    expect(all).toHaveBeenCalledTimes(2);
+    // Nem a "Tudo" refaz: cada volta de foco eram todas as páginas carregadas de novo.
+    expect(all).toHaveBeenCalledTimes(1);
     expect(unseen).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 
+import type { Notification } from "@/types/application/notification/notification";
 import type { InterfaceContext } from "@rede-enois/design-system/domain";
 
 import { notificationsApi } from "@/lib/api";
@@ -12,10 +13,10 @@ import { useLiteMode } from "@/lib/use-lite-mode";
  * reuses the cache instead of asking the server for a second copy. The key sits under
  * ["notifications"], so reading a row and the summary behind the menu signals invalidate together.
  */
-export const PAGE_SIZE = 30;
+export const PAGE_SIZE = 10;
 
-/** How many rows the bell previews — its previous limit, sliced from the page it already has. */
-export const PREVIEW_SIZE = 20;
+/** How many rows the bell previews — sliced from the page it already has, no extra request. */
+export const PREVIEW_SIZE = 10;
 
 /**
  * Recarga de segurança enquanto o stream estiver fora. Com ele aberto o valor é `false`: o aviso
@@ -43,10 +44,22 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
     placeholderData: keepPreviousData,
   });
 
+  // Uma notificação agrupada muda de `createdAt` no servidor e pode reaparecer na página seguinte
+  // já carregada: sem dedupe por id, a mesma linha aparecia duas vezes na lista.
+  const seen = new Set<string>();
+  const items: Notification[] = [];
+  for (const page of list.data?.pages ?? []) {
+    for (const notification of page.items) {
+      if (seen.has(notification.id)) continue;
+      seen.add(notification.id);
+      items.push(notification);
+    }
+  }
+
   return {
     ...list,
-    /** Every page fetched so far, flattened: what the full page lists. */
-    items: list.data?.pages.flatMap((page) => page.items) ?? [],
+    /** Every page fetched so far, flattened and deduplicated: what the full page lists. */
+    items,
     /** Only the latest rows: what the bell previews, even after the page loaded further. */
     latest: list.data?.pages[0]?.items.slice(0, PREVIEW_SIZE) ?? [],
   };

@@ -95,9 +95,38 @@ describe("lista de avisos compartilhada", () => {
     await render();
 
     expect(mocks.list).toHaveBeenCalledTimes(1);
-    expect(mocks.list).toHaveBeenCalledWith(null, 30, "SOCIAL");
+    // Dez por página: a lista carrega aos poucos, como o feed e as mensagens.
+    expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL");
     expect(page.items).toHaveLength(1);
     expect(page.items[0].id).toBe("n1");
+  });
+
+  it("não repete a mesma notificação quando ela aparece em duas páginas", async () => {
+    // O servidor reescreve `createdAt` ao agrupar avisos: a mesma linha pode voltar na página
+    // seguinte já carregada. Sem dedupe por id, ela aparecia duas vezes na lista.
+    mocks.live.mockReturnValue(true);
+    mocks.list.mockResolvedValueOnce({
+      items: [
+        { id: "n1", read: false, kind: "support_ticket_closed", createdAt: "2026-11-01T10:00:00Z" },
+      ],
+      nextCursor: "c1",
+    });
+    await render();
+    expect(page.items).toHaveLength(1);
+
+    mocks.list.mockResolvedValueOnce({
+      items: [
+        { id: "n1", read: false, kind: "support_ticket_closed", createdAt: "2026-11-01T10:00:00Z" },
+        { id: "n0", read: true, kind: "support_ticket_closed", createdAt: "2026-10-31T10:00:00Z" },
+      ],
+      nextCursor: null,
+    });
+    await act(async () => {
+      await page.fetchNextPage();
+    });
+    await flush();
+
+    expect(page.items.map((item) => item.id)).toEqual(["n1", "n0"]);
   });
 
   it("ao voltar para a aba, a lista anterior fica na tela durante a revalidação", async () => {

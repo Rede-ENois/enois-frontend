@@ -86,8 +86,9 @@ import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
+import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
-import { feedRefreshOptions } from "@/lib/feed/post-query-cache";
+import { feedRefreshOptions, refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { useFeedPullToRefresh } from "@/lib/feed/pull-to-refresh";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
@@ -95,14 +96,12 @@ import {
   professionalProfileState,
   useInterfaceContext,
 } from "@/lib/interface-context";
-import { litePageSize } from "@/lib/lite-mode";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
-import { useLiteMode } from "@/lib/use-lite-mode";
 import { VideoLimitError } from "@/lib/use-media-upload";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
@@ -194,7 +193,12 @@ export const Route = createFileRoute("/feed")({
   component: Home,
 });
 
-const FEED_PAGE_SIZE = 20;
+/**
+ * Posts por página em cada feed. Dez é o teto: a lista carrega aos poucos, como as mensagens, e
+ * cada página é uma consulta pesada no servidor (enriquecimento em lote de autor, mídia, enquetes
+ * e contadores). O backend recusa mais que isso de qualquer forma.
+ */
+const FEED_PAGE_SIZE = 10;
 
 /**
  * A última categoria usada fica guardada: quem publica sempre no mesmo assunto não precisa
@@ -231,21 +235,18 @@ const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
 
 function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
-  const lite = useLiteMode();
-  const pageSize = litePageSize(FEED_PAGE_SIZE, lite);
   return useInfiniteQuery({
     queryKey: ["feed", tab, typeFilter ?? "", resolved ?? ""],
     queryFn: ({ pageParam }): Promise<FeedPage> =>
       tab === "CORPORATE"
-        ? feedApi.corporate(pageParam ?? null, pageSize)
-        : feedApi.list(pageParam ?? null, pageSize, tab, typeFilter || undefined, resolved),
+        ? feedApi.corporate(pageParam ?? null, FEED_PAGE_SIZE)
+        : feedApi.list(pageParam ?? null, FEED_PAGE_SIZE, tab, typeFilter || undefined, resolved),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
-    // "Ainda não vi" não se renova sozinha: o servidor tira o post da lista assim que ele tem
-    // reação ou comentário meu, e a pessoa perderia o que está lendo no meio da leitura. A lista
-    // se atualiza quando ela volta para a aba (issue #559).
+    // O feed não se renova sozinho: quem mantém a lista em dia é a varredura de `feed-live.ts`,
+    // uma página por vez, sem trocar o que está na tela (ver `feedRefreshOptions`).
     ...feedRefreshOptions(tab),
   });
 }
@@ -347,6 +348,13 @@ function Home() {
   );
   // Enquanto a aba guardada não é lida, a tela mostra o carregando em vez de um feed vazio.
   const feedLoading = feedQueryLoading || !tabReady;
+  // Renovação de fundo: confere uma página por vez do que já está carregado e junta por id, sem
+  // refazer a consulta (que traria todas as páginas e reescreveria o topo embaixo de quem lê).
+  useFeedLiveRefresh({
+    queryClient,
+    queryKey: ["feed", tab, tab === "ALL" ? typeFilter : "", questionsFeed ? questionStatus : ""],
+    enabled: authenticated && tabReady,
+  });
   const { data: profile } = useProfile();
   const { data: suggestions } = useSuggestions();
   const { data: eventsData } = useEvents();
@@ -441,7 +449,9 @@ function Home() {
   const createPost = useMutation({
     mutationFn: (data: CreatePostInput) => feedApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      // O post novo entra no topo: confere a primeira página de cada feed na tela, sem refazer as
+      // páginas que a pessoa já carregou.
+      void refreshFeedFirstPage(queryClient);
     },
   });
 
