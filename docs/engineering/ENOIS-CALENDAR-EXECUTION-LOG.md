@@ -3043,23 +3043,33 @@ limpa, o que provou quebra de integração e não flake. O wrapper passa a usar 
 "Publicar" do feed foca `[role="textbox"]`, e os testes migram para seleção por Range no campo
 contentEditable (o `selectionchange` é despachado à mão no jsdom).
 
-**Unidade 3 — #828 rebaseado (`97b9a798`).** Rebase sobre a `qa` (`48c58f47`) resolveu conflito na
-`/agenda` (o cabeçalho ganhou o atalho de disponibilidade no meio; os dois ficaram). Bump 0.33.0 +
-lockfile (idêntico ao do #830, conferido estruturalmente) e cherry-pick do fix de mention.
+**Unidade 3 — #828 rebaseado (`97b9a798`) e mergeado (`38cbf12d`).** Rebase sobre a `qa`
+(`48c58f47`) resolveu conflito na `/agenda` (o cabeçalho ganhou o atalho de disponibilidade no
+meio; os dois ficaram). Bump 0.33.0 + lockfile (idêntico ao do #830, conferido estruturalmente) e
+cherry-pick do fix de mention. O bot mergeou o PR às 18:50Z, depois de #830 (`ec31ddfd`, 18:19Z).
 
-**Unidade 4 — convites pendentes na `/agenda` (`e85e077f` no #828).** O endpoint e a query
+**Unidade 4 — convites pendentes na `/agenda` (`fedc6c1b`, PR #852).** O endpoint e a query
 existiam; a tela não lia. A rota busca `GET /calendar/invitations` e entrega à
 `CalendarAgendaSurface`, que desenha a faixa acima do calendário com o mesmo `onRespond` do dia;
 o erro de resposta, antes só toast, também aparece na faixa; responder invalida a lista (a chave é
 raiz de `["agenda"]`).
 
-**Prova.** #830: tsc EXIT=0, eslint 0 erros (2 warnings pré-existentes no `feed.tsx`), 387/387 nos
-componentes, build EXIT=0; CI "verificar" e "Validar build" passando. #828: tsc EXIT=0, 1282/1282
-(routes+components+lib, incluindo o 11/11 de mention após o cherry-pick), build EXIT=0; CI verde.
-Em ambos, `routeTree.gen.ts` regenerado pelo build foi revertido.
+**O commit ficou de fora do merge e saiu em PR próprio.** O push do commit de convites (`e85e077f`,
+18:54Z) aconteceu depois de o bot mergear o #828 (18:50Z, head `97b9a798`); o GitHub não atualizou
+o head do PR — que já estava fechado — e nenhum workflow rodou para o commit. Sintoma: `check-suite`
+"queued" do `kof-agent-worker` sem runs, e o head do PR parado em `97b9a798` depois de dois pushes.
+O commit foi rechapeado sobre a `qa` nova (`fedc6c1b`) e aberto em PR próprio (#852), que iniciou o
+pipeline normalmente — o problema era o PR encerrado, não o workflow. **Lição:** depois de push,
+conferir `gh api repos/.../pulls/N --jq .head.sha`; "queued" sem run em PR fechado é sintoma de
+commit órfão, não de fila do Actions.
 
-**BLOQUEIOS:** revisão humana de #828/#830 (fora de escopo por regra). #673 e #681 (backend) seguem
-aguardando revisão.
+**Prova.** #830: tsc EXIT=0, eslint 0 erros (2 warnings pré-existentes no `feed.tsx`), 387/387 nos
+componentes, build EXIT=0; CI "verificar" e "Validar build" passando; mergeado com CI verde. #828:
+tsc EXIT=0, 1282/1282 (routes+components+lib, incluindo o 11/11 de mention após o cherry-pick),
+build EXIT=0; CI verde; mergeado. #852: tsc EXIT=0, 1294/1294 (220 arquivos), build EXIT=0, eslint
+sem erro no arquivo. Em todos, `routeTree.gen.ts` regenerado pelo build foi revertido.
+
+**BLOQUEIOS:** revisão humana de #852. #673 e #681 (backend) seguem aguardando revisão.
 
 **PRÓXIMA EXECUÇÃO (proposta de execução 37):** (1) acompanhar revisão dos PRs abertos e resolver
 pedidos; (2) varredura dos demais caminhos de leitura (conflitos, export, assinatura) por consulta
