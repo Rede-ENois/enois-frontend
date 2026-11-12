@@ -1029,3 +1029,55 @@ entra por `.ics` sai igual.
 **Rejeitado.** Limitar só por token com TTL de balde: continua permitindo varredura a custo de uma
 chave por requisição e transforma o limite em amplificador de memória. Rejeitado também devolver 409
 para a repetição do mesmo recorte: repetir o pedido é idempotente e é o que a tela faz ao reabrir.
+
+## D37 — O teto de janela é da leitura, não da assinatura; o import mede antes de carregar (execução 33)
+
+1. **Uma regra de janela para toda leitura por intervalo.** `CalendarWindows.validate` é o único
+   lugar que decide o que é uma janela válida: `from`/`to` presentes, `to > from`, no máximo 366
+   dias (`WINDOW_TOO_LONG`, 400). `CalendarQueryService` (lista, conflitos, detalhe da agenda) e
+   `CalendarIcsService.export` chamam a mesma regra, e o controller só converte texto em instante.
+   Antes, o export tinha teto e a lista autenticada não: o mesmo cliente podia pedir a agenda desde
+   1970 pela rota que não paga a validação, o que carrega a agenda inteira com o join dos convidados.
+   A assinatura `.ics` sem sessão já entrega 30 dias atrás e 365 à frente, então continua dentro.
+2. **O import `.ics` mede o arquivo enquanto lê, não depois.** O teto de 512 KB
+   (`rede.calendar.ics-max-import-bytes`) é aplicado sobre um `InputStream` lido em blocos; o
+   arquivo nunca é materializado inteiro. O `Idempotency-Key` hasheia o fluxo pelo mesmo caminho,
+   então repetir o upload idêntico é replay e trocar um byte é `IDEMPOTENCY_PAYLOAD_CONFLICT`, sem
+   guardar o corpo do arquivo em memória para calcular o hash.
+3. **Dois `VEVENT` abertos ao mesmo tempo são sintaxe quebrada, não dois eventos.**
+   `BEGIN:VEVENT` dentro de outro `VEVENT` antes do `END:VEVENT` externo responde
+   `400 INVALID_ICS`. Recomeçar o evento engoliria o de fora e contaria o de dentro, e a contagem
+   devolvida ao cliente passaria a mentir sobre o que o arquivo tinha.
+4. **`VTIMEZONE` é da janela e do fuso que ela usa.** O bloco abre com a observância em vigor na
+   borda da janela (`TZOFFSETFROM` = `TZOFFSETTO` = deslocamento corrente) e percorre apenas as
+   transições entre `from - 1 dia` e `to + 1 dia`, com teto de 400 blocos. Percorrer o tzdata desde
+   1970 para exportar um mês inflava o arquivo, e não abrir com a observância vigente fazia um
+   arquivo de janeiro carregar o deslocamento de verão do ano anterior.
+
+**Consequência.** Toda leitura de agenda custa o que a janela pedida custa, o import recusa cedo um
+arquivo grande em vez de copiá-lo primeiro, e o `.ics` exportado tem o tamanho do intervalo que ele
+cobre.
+
+**Rejeitado.** Derivar o teto da janela pelo tamanho da agenda (contar antes de buscar) — a contagem
+é uma segunda consulta para responder 400, e a janela é o que o cliente controla. Rejeitado também
+tratar `VEVENT` aninhado como dois eventos: a estrutura não existe no RFC 5545 e aceitá-la esconde
+arquivo gerado por código quebrado.
+
+## D38 — Falha de leitura não é dado vazio nem "não existe" (execução 33)
+
+1. **A tela de disponibilidade não edita o que não leu.** Carregando, falha e semana carregada são
+   três estados distintos. Na falha, a `CalendarAvailabilitySurface` não é montada — a superfície
+   grava por substituição, então oferecer o formulário com `windows=[]` transformava "a consulta
+   falhou" em "a pessoa apagou a semana". A falha mostra mensagem própria e "Tentar de novo".
+2. **404 é o único "não encontrado".** No detalhe do compromisso, só `ApiError` com status 404
+   significa que ele não existe (cancelado ou de outra pessoa). 5xx, 401 e falha de rede são erro de
+   leitura: mensagem própria, recarga oferecida e nada de "não encontrado".
+3. **Carregamento tem rótulo.** `LoadingState` vai sempre com `label`; o `role="status"` sem texto
+   anuncia uma região vazia e deixa quem usa leitor de tela sem saber que a página está carregando.
+
+**Consequência.** Qualquer tela do calendário que consulte antes de editar trata "não consegui ler"
+como estado próprio, nunca como valor padrão — o padrão de uma escrita por substituição é apagar.
+
+**Rejeitado.** Abrir a superfície em modo somente leitura na falha: no celular é a mesma tela com o
+botão apagando a semana depois que a consulta volta, e o estado sem saída ("Tentar de novo") é o que
+faz a tela ser útil de novo.
