@@ -2678,3 +2678,76 @@ formulário do DS, sem módulo produtor — implementar exige semântica de prod
 mantenedores definem (parada de escopo, não tarefa de agente).
 
 ---
+
+## EXECUÇÃO 32
+
+Bloco de três unidades, todas na fase 11 (revisão de segurança e de contratos) sobre a superfície da
+**assinatura privada `.ics`**, a única rota do calendário sem sessão e o caminho mais sensível do
+módulo. O release do DS (D20) e o `pendingInvitations` (B9) seguem bloqueados por passo humano; em
+vez de repetir essa análise, a rodada avançou três defeitos reais que não dependem de ninguém.
+
+### A — a assinatura `.ics` tem teto por origem, não só por token (backend #669)
+
+**O defeito.** O `CalendarSubscriptionRateLimitFilter` limitava por token, e cada token inventado
+ganhava um balde novo. Variar o caminho numa varredura nunca batia em teto nenhum: o limite
+existia exatamente para o caso em que não atuava. A limpeza do mapa também descartava baldes
+**vazios** — e um balde nunca fica vazio dentro da janela, então o mapa só crescia.
+
+**A correção.** Dois tetos com papéis distintos: por token (60/min, o de sempre) e por origem
+(600/min, `rede.rate.calendar-subscription-origin-per-minute`). A origem é checada primeiro, para
+nem criar balde por token. O teto da origem é folgado de propósito: um leitor de calendário
+legítimo busca de poucos endereços em nome de muita gente, e o filtro existe para cortar varredura,
+não para regular quem assinou. A limpeza passou a descartar chaves vencidas.
+
+**Prova.** `CalendarSubscriptionRateLimitFilterTests` (3 testes): a varredura para em 429 — com a
+lógica antiga respondia 200, provado restaurando o filtro anterior com a assinatura nova; um link
+tem teto próprio; outras rotas e métodos não contam. `PublicReadGuardTests` 3/3 sem regressão.
+
+### B — recorte divergente numa assinatura ativa é 409, não silêncio (backend #670)
+
+**O defeito.** `POST /calendar/subscription?scope=...` com assinatura ativa devolvia a existente,
+ignorando o recorte pedido. A pessoa recebia `200` e concluía que tinha acabado de assinar a agenda
+profissional, mas o token seguia congelado na social (D7): o recorte não muda no lugar.
+
+**A correção.** Recorte **diferente** do ativo → `409 CALENDAR_SUBSCRIPTION_SCOPE_CONFLICT`, dizendo
+que é preciso regenerar o link. Recorte igual ou ausente → devolve a existente sem token, como
+antes. No 409 a assinatura e o token antigos ficam intactos.
+
+**Prova.** Dois testes novos em `CalendarSubscriptionApiTests`: o divergente responde 409 e o link
+antigo continua servindo; o repetido continua 200 sem token. 11/11 na classe.
+
+### C — o import `.ics` preserva barra invertida no texto (backend #671)
+
+**O defeito.** O `unescape` desfazia o escape em cadeia de `String.replace`. Em `\\n` (barra
+escapada seguida de "n"), o primeiro `replace` casava a segunda barra com o "n" e produzia barra
+mais quebra de linha. Título e descrição com caminho de arquivo chegavam corrompidos, e reimportar
+o export da própria agenda mudava o texto.
+
+**A correção.** Uma passada só, respeitando cada par barra+caractere: `\n`/`\N` viram quebra de
+linha, `\,`/`\;`/`\\` viram o literal, escape desconhecido permanece.
+
+**Prova.** Dois testes novos em `CalendarIcsServiceTests`, ambos **vermelhos** com o `unescape`
+antigo e verdes com o novo: ida-e-volta do caminho `C:\pasta\novo` e o par `\\` seguido de letra.
+17/17 na classe; `CalendarIcsApiTests` 8/8 sem regressão no contrato HTTP.
+
+### Armadilhas
+
+- **`-Dtest` do surefire separa classes por vírgula, não por `+`.** A primeira execução combinada
+  saiu `BUILD FAILURE` sem rodar teste nenhum; isolada, cada classe passou.
+- **O teto por token era decorativo justamente porque a chave vinha do caminho.** Qualquer limite
+  cuja chave o atacante escolhe precisa de um segundo teto numa dimensão que ele não escolhe — aqui,
+  a origem.
+
+### PRs
+
+- Backend — #669 (`fix/calendar-assinatura-limite-por-origem` → `qa`), commit `fcf90411`.
+- Backend — #670 (`fix/calendar-assinatura-recorte-explicito` → `qa`), commit `0f22b6b0`.
+- Backend — #671 (`fix/calendar-ics-descricao-com-barra` → `qa`), commit `b7f63775`.
+- Docs — este PR (#842, estendido para a execução 32).
+
+**PRÓXIMA RODADA (§10, proposta de execução 33):** (1) release do DS (passo humano, D20) e
+`pendingInvitations` na `/agenda`; (2) reconferir PRs e o bot (§9/B8); (3) fase 11 adiante — o
+módulo de calendário ainda não foi revisto por inteiro (`CalendarIcsController`, leitura sob volume,
+limites do import).
+
+---

@@ -13,9 +13,9 @@
 ```
 PROJECT_STATUS=IN_PROGRESS
 CRONJOB_STATUS=ACTIVE
-FASE_ATUAL=5 (agenda profissional) — backend #655 mergeado (agenda dos dois lados, V274, entrevista na lista do candidato); front #830 (tela de candidaturas + entrevista em "minhas candidaturas") aberto aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main` — o PR de release #218 chegou com marcador de conflito commitado e foi reescrito limpo, com o check verde; falta a publicação humana (D20). Fase 3 concluída: a edição da agenda reclassifica agenda/tipo/dia inteiro (#664/#840) e a disponibilidade tem atalho no cabeçalho. Fase 3/1: os convites pendentes ganharam superfície no DS (`CalendarPendingInvitations`, #219) ligada à `CalendarAgendaSurface` — antes o cliente e a rota existiam e nenhuma tela desenhava a lista. Fase 3: o lembrete de compromisso passou a abrir o compromisso (`/agenda/{id}`, #665) e o front ganhou a rota `agenda` na tabela de navegação (#843) — antes o clique não levava a lugar nenhum. Fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo), então não geram entrada na agenda; presença em evento grava na agenda (#632). Fase 9: backend e cliente prontos (#637/#816); tela em revisão (#828). Execução 31: a notificação de empresa passou a abrir a página da empresa (#846) e a superfície de lembrete passou a recusar o que não pode atender — alheio é 404, remoção sem antecedência é 400 e o aviso diz o tempo que falta (#667, D35).
-EXECUCAO=31
-ULTIMA_ATUALIZACAO=2026-11-11T23:30:00-03:00
+FASE_ATUAL=5 (agenda profissional) — backend #655 mergeado (agenda dos dois lados, V274, entrevista na lista do candidato); front #830 (tela de candidaturas + entrevista em "minhas candidaturas") aberto aguardando revisão humana; DS #214 mergeado na `qa` sem release (B9). #830 e #828 seguem com CI vermelho esperado (MISSING_EXPORT) até o release do DS a partir do `main` — o PR de release #218 chegou com marcador de conflito commitado e foi reescrito limpo, com o check verde; falta a publicação humana (D20). Fase 3 concluída: a edição da agenda reclassifica agenda/tipo/dia inteiro (#664/#840) e a disponibilidade tem atalho no cabeçalho. Fase 3/1: os convites pendentes ganharam superfície no DS (`CalendarPendingInvitations`, #219) ligada à `CalendarAgendaSurface` — antes o cliente e a rota existiam e nenhuma tela desenhava a lista. Fase 3: o lembrete de compromisso passou a abrir o compromisso (`/agenda/{id}`, #665) e o front ganhou a rota `agenda` na tabela de navegação (#843) — antes o clique não levava a lugar nenhum. Fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo), então não geram entrada na agenda; presença em evento grava na agenda (#632). Fase 9: backend e cliente prontos (#637/#816); tela em revisão (#828). Execução 31: a notificação de empresa passou a abrir a página da empresa (#846) e a superfície de lembrete passou a recusar o que não pode atender — alheio é 404, remoção sem antecedência é 400 e o aviso diz o tempo que falta (#667, D35). Execução 32 (fase 11): a assinatura `.ics` ganhou teto por origem (#669), recorte divergente numa assinatura ativa passou a ser 409 em vez de silêncio (#670) e o import preserva barra invertida no texto (#671, D36).
+EXECUCAO=32
+ULTIMA_ATUALIZACAO=2026-11-12T01:30:00-03:00
 ```
 
 ---
@@ -162,7 +162,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | 8    | iCalendar export/import                                                  | 1            | **concluída** — export+import no backend (#629) e botão de download na `/agenda` (#809), ambos mergeados na `qa`                                                                                                                                                                                                                              |
 | 9    | Assinatura privada e cache                                               | 8            | **concluída no backend** — V272, token só como hash, rota sem sessão com ETag, regenerar/revogar e limite por token (backend #637 **mergeado**); cliente no front (#816 **mergeado**); tela em revisão (#828, B9)                                                                                                                              |
 | 10   | Provedores externos (Google/Microsoft/Apple)                             | 8, 9         | pendente                                                                                                                                                                                                                                                                                                                                      |
-| 11   | Revisão geral: regressão, segurança, a11y, performance                   | todas        | pendente                                                                                                                                                                                                                                                                                                                                      |
+| 11   | Revisão geral: regressão, segurança, a11y, performance                   | todas        | **em andamento** — execução 32 revisou a superfície sem sessão da assinatura `.ics`: teto por origem (#669), recorte divergente é 409 (#670) e import preserva barra invertida (#671, D36); falta o restante do módulo (`CalendarIcsController`, leitura sob volume, limites do import) e a a11y do front |
 
 ---
 
@@ -233,6 +233,9 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#846](https://github.com/Rede-ENois/enois-frontend/pull/846)        | enois-frontend      | Fase 3: a tabela de navegação conhece `empresa` — a notificação de nova oportunidade e de micro-projeto (`/empresa/{slug}`, `/api/empresa/{slug}`) abre a página da empresa                    | aberto, aguardando revisão humana                                                                                                                               |
 | [#667](https://github.com/Rede-ENois/enois-backend/pull/667)         | enois-backend       | Fase 3: lembrete de compromisso alheio é 404 (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (D35)                      | aberto, aguardando revisão humana; CI verde; **empilhado sobre o #668** (mergear o #668 primeiro)                                                               |
 | [#668](https://github.com/Rede-ENois/enois-backend/pull/668)         | enois-backend       | Teste: o custo do ranking é medido por página de dados, não pela sondagem final de paginação (flake pré-existente da base H2 compartilhada)                                                  | aberto, aguardando revisão humana; CI verde                                                                                                                     |
+| [#669](https://github.com/Rede-ENois/enois-backend/pull/669)         | enois-backend       | Fase 11: a assinatura `.ics` tem teto por origem (600/min) antes do teto por token (60/min), e a limpeza passou a descartar chaves vencidas                                              | aberto, aguardando revisão humana; 3 testes novos                                                                                                               |
+| [#670](https://github.com/Rede-ENois/enois-backend/pull/670)         | enois-backend       | Fase 11: `POST /calendar/subscription` com recorte diferente de uma assinatura ativa responde 409 `CALENDAR_SUBSCRIPTION_SCOPE_CONFLICT`, em vez de devolver 200 com o recorte antigo                | aberto, aguardando revisão humana; 2 testes novos                                                                                                               |
+| [#671](https://github.com/Rede-ENois/enois-backend/pull/671)         | enois-backend       | Fase 11: o import `.ics` desfaz o escape do RFC 5545 numa passada, preservando barra invertida no título e na descrição                                                                       | aberto, aguardando revisão humana; 2 testes novos                                                                                                               |
 
 Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -240,6 +243,19 @@ delimitado; dependências declaradas no corpo.
 ---
 
 ## 8. Testes executados
+
+Execução 32 (backend `fix/calendar-assinatura-limite-por-origem`,
+`fix/calendar-assinatura-recorte-explicito` e `fix/calendar-ics-descricao-com-barra`, todas sobre
+`enois/qa` `98ebda36`):
+
+| Onde    | Comando                                                              | Resultado                                                                          |
+| ------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Backend | `-Dtest=CalendarSubscriptionRateLimitFilterTests`                     | **3/3**; com o filtro antigo: 1 falha, `expected: 429 but was: 200`                 |
+| Backend | `-Dtest=PublicReadGuardTests`                                         | **3/3** (sem regressão)                                                            |
+| Backend | `-Dtest=CalendarSubscriptionApiTests`                                 | **11/11** (2 novos)                                                                |
+| Backend | `-Dtest=CalendarIcsServiceTests`                                      | **17/17** (2 novos); com o `unescape` antigo: 2 falhas                            |
+| Backend | `-Dtest=CalendarIcsApiTests`                                          | **8/8** (sem regressão no contrato HTTP)                                           |
+| Backend | `./mvnw -q -DskipTests compile`                                       | EXIT=0 nas três branches                                                           |
 
 Execução 31 (front `fix/enois-calendar-empresa-na-navegacao` sobre `enois/qa` `05ba944a`; backend
 `fix/enois-calendar-lembrete-contrato` sobre `enois/qa` `98ebda36`):
@@ -606,11 +622,19 @@ do ranking parou de oscilar — a normalização contava a sondagem vazia de fim
 razão dependia de o total de contas ser múltiplo de 500 (#668, flake pré-existente encontrado no CI
 do #667, 1/1 isolado e na base limpa). D35 registrada. Detalhe no log, execução 31._
 
-**Execução 32 (próximo bloco) — proposta.** (1) **Release do DS** (passo humano, D20) — o #218 já
-está com o check verde; (2) ligar `pendingInvitations` na `/agenda` do front depois do release;
-(3) reconferir PRs e o bot (§9/B8). **Reuniões e workshops saem da fila:** `MEETING`/`WORKSHOP`
-existem só como valor de enum e opção do formulário do DS, sem módulo produtor — implementar exige
-semântica de produto que só os mantenedores definem.
+**Execução 32 (bloco) — a superfície sem sessão da assinatura.**
+_Executada em 2026-11-12 (~01:30). Três unidades, todas na fase 11: (A) a assinatura `.ics` ganhou
+teto por origem (#669); (B) recorte divergente numa assinatura ativa passou a ser 409 (#670);
+(C) o import `.ics` preserva barra invertida no texto (#671). D36 registrada. Detalhe no log,
+execução 32._
+
+1. **Caminho crítico continua o release do DS:** o #218 está com o check verde e falta a publicação
+   humana (D20) — depois, ligar `pendingInvitations` na `/agenda`.
+2. **Fase 11 adiante:** o resto do módulo ainda não foi revisto (`CalendarIcsController`, leitura sob
+   volume, limites do import) e a a11y do front do calendário.
+3. **Reuniões e workshops seguem fora da fila:** `MEETING`/`WORKSHOP` não têm módulo produtor;
+   implementar exige semântica de produto dos mantenedores.
+4. **Reconferir PRs e o bot** (§9/B8) antes de começar.
 
 **O que destravou B6 (2026-11-10, do PR #774).** A tag foi criada como `0.30.0`, **sem o `v`**, e o
 workflow do DS só publica em `refs/tags/v*` — nenhum run disparou. Recriada como `v0.30.0` no mesmo
@@ -659,6 +683,7 @@ e evitou construir sobre premissa errada.
 | 29  | 2026-11-11 ~18:40 | 3    | **Bloco de 3 unidades.** (A) `CalendarPendingInvitations` no DS: o cliente e a rota `GET /calendar/invitations` existiam e nenhuma tela desenhava a lista; componente com dia/hora no fuso, três respostas e espera, ligado à `CalendarAgendaSurface` (7+1 testes, 1734 na suíte) — #219; (B) o lembrete de compromisso abria `/agenda?period=day` (agenda vazia) e o front não tinha rota `agenda`; agora abre `/agenda/{id}` com CTA "Ver compromisso" (13/13, teste de prova falha no código antigo) — #665; (C) a tabela de navegação do front ganha `agenda`, `agenda/$entryId` e `agenda/disponibilidade` (14/14, 1344 na suíte) — #843. **B9:** o release #218 chegou com marcador de conflito commitado e foi reescrito limpo na rodada, com o check verde; falta a publicação humana. D34 registrada |
 | 30  | 2026-11-11 ~20:00 | —    | **Reconferência do estado real.** O roadmap dizia "aberto" para #655, #661, #663, #664, #769, #813, #836, #840, #632, #203 e #637 — todos mergeados; o inventário §4 dizia "não existe" para `/agenda`, convites, lembretes e assinatura, que já existem. Corrigido com `gh pr view` PR por PR e inspeção do código na `qa`. Nenhum código novo; só documentação. |
 | 31  | 2026-11-11 ~23:30 | 3    | **Bloco de 3 unidades.** (A) a tabela de navegação do front conhece `empresa`: a notificação de nova oportunidade (`/empresa/{slug}`) e de micro-projeto (`/api/empresa/{slug}`) abria nada; agora abre `/empresa/$slug` (14/14, teste de prova falha no código antigo) — #846; (B) a superfície de lembrete do backend recusa o que não pode atender: alheio é 404 como no detalhe (D10), remoção sem antecedência ou fora da lista é 400 `INVALID_REMINDER`, e o aviso diz o tempo que falta de verdade (3 testes de prova, 13/13 + 7/7, 146/146 no pacote) — #667; (C) o teste do custo do ranking parou de oscilar: a normalização contava a sondagem vazia de fim de paginação, então a razão dependia de o total de contas ser múltiplo de 500 (flake pré-existente encontrado no CI do #667, 1/1 isolado e na base limpa) — #668. D35 registrada |
+| 32  | 2026-11-12 ~01:30 | 11   | **Bloco de 3 unidades — revisão da superfície sem sessão.** (A) o limite da assinatura `.ics` era chaveado pelo token do caminho, então variar o caminho dava balde novo e a varredura nunca batia no teto; agora há teto por origem (600/min, `rede.rate.calendar-subscription-origin-per-minute`) checado antes do teto por token (60/min), e a limpeza descarta chaves vencidas em vez de baldes vazios que nunca esvaziam (3/3, prova vermelha no filtro antigo) — #669; (B) `POST /calendar/subscription?scope=...` com assinatura ativa ignorava o recorte pedido e devolvia 200, deixando a pessoa achar que assinara a agenda profissional com o token congelado na social; recorte divergente agora é 409 `CALENDAR_SUBSCRIPTION_SCOPE_CONFLICT` e o repetido segue idempotente (11/11) — #670; (C) o `unescape` em cadeia lia `\\n` como barra mais quebra de linha e corrompia caminho de arquivo no import; agora é uma passada só do RFC 5545 (17/17, dois testes vermelhos no código antigo) — #671. D36 registrada |
 
 ---
 

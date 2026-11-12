@@ -990,3 +990,42 @@ silencioso é o pedido malformado.
 **Rejeitado.** Suprimir a notificação quando o compromisso já começou: o aviso ainda é útil ("já
 começou" é informação verdadeira) e o worker atrasado não deve engolir o lembrete. Rejeitado também
 manter o texto pela antecedência escolhida: é o número que a pessoa pediu, não o que o relógio diz.
+
+---
+
+## D36 — A rota sem sessão da assinatura tem dois tetos, e o import não reescreve o texto (execução 32)
+
+Três defeitos na fronteira não autenticada do calendário. O `GET /calendar/subscribe/{token}.ics` é
+a única rota do módulo que responde sem sessão, então é a que mais precisa de limite que funcione.
+
+**Decisão.**
+
+1. **Dois tetos, com papéis distintos.** O filtro limita a **origem** (600 leituras/min,
+   `rede.rate.calendar-subscription-origin-per-minute`) antes de limitar o **token** (60/min). Um
+   teto chaveado só pelo token é decorativo: o token vem do caminho, então quem varia o caminho
+   recebe um balde novo a cada requisição e nunca alcança teto nenhum. A chave da origem não é
+   escolhida pelo atacante, e é ela que põe um teto real na varredura. O valor por origem é folgado
+   de propósito: leitores de calendário legítimos buscam de poucos endereços em nome de muita gente,
+   e o filtro existe para cortar varredura, não para regular quem assinou.
+2. **A limpeza descarta chaves vencidas, não baldes vazios.** Dentro da janela um balde nunca fica
+   vazio, então remover vazios não libera nada e o mapa só cresce. A varredura roda quando o mapa
+   passa do teto de chaves e remove as chaves cujas marcas já venceram.
+3. **O recorte congelado recusa o divergente com 409.** `POST /calendar/subscription` com assinatura
+   ativa e recorte **diferente** do congelado responde `409 CALENDAR_SUBSCRIPTION_SCOPE_CONFLICT`,
+   dizendo que é preciso regenerar. Antes devolvia 200 com a assinatura existente, e a pessoa
+   concluía que acabara de assinar a agenda profissional quando o token continuava na social: o
+   recorte não muda no lugar, e um 200 afirmava o contrário. Recorte igual ou ausente continua
+   idempotente, sem token na resposta.
+4. **O `unescape` do RFC 5545 é uma passada só.** Desfazer o escape em cadeia de `String.replace`
+   erra `\\n`: o primeiro `replace` casa a segunda barra com o "n" e produz barra mais quebra de
+   linha, corrompendo qualquer caminho de arquivo no título ou na descrição, inclusive numa
+   reimportação do export da própria agenda. Uma passada consome cada par barra+caractere e deixa
+   escape desconhecido como está.
+
+**Consequência.** A única superfície sem sessão do calendário passa a ter um limite que atua no caso
+que motiva o limite, o pedido de assinatura passa a responder o que de fato aconteceu, e o texto que
+entra por `.ics` sai igual.
+
+**Rejeitado.** Limitar só por token com TTL de balde: continua permitindo varredura a custo de uma
+chave por requisição e transforma o limite em amplificador de memória. Rejeitado também devolver 409
+para a repetição do mesmo recorte: repetir o pedido é idempotente e é o que a tela faz ao reabrir.
