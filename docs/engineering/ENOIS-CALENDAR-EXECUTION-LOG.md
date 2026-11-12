@@ -2759,6 +2759,17 @@ rebase sobre a `qa` já com o #668 (`447e87e8`) trouxe a normalização nova e o
 mesmo commit. Não era regressão da unidade — era ordem de merge. Nenhum PR foi mergeado por mim; os
 quatro foram mergeados por revisão do repositório.
 
+### O #667 voltou a conflitar, e o que o rebase preservou
+
+O #667 estava empilhado sobre o #668. Com o #668 na `qa`, o rebase conflitou em dois pontos, ambos
+entre o #665 (que já tinha mergeado) e a unidade B da execução 31: o `notify` do lembrete e o import
+do `Notification` no teste. As duas provas existiam separadas e as duas continuam valendo no código
+resolvido — o aviso abre `/agenda/{id}` com "Ver compromisso" (#665) **e** o texto diz o tempo que
+falta de verdade (#667). Ficou a versão com `textUntil` e o link de `/agenda/{id}`; o
+`textOfMinutes` saiu junto com a versão antiga do aviso. Prova depois do rebase:
+`CalendarReminderServiceTests` **14/14**, `CalendarRemindersApiTests` **7/7**, compilação EXIT=0.
+
+
 **PRÓXIMA RODADA (§10, proposta de execução 33):** (1) release do DS (passo humano, D20) e
 `pendingInvitations` na `/agenda`; (2) reconferir PRs e o bot (§9/B8); (3) fase 11 adiante — o
 módulo de calendário ainda não foi revisto por inteiro (`CalendarIcsController`, leitura sob volume,
