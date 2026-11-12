@@ -249,4 +249,48 @@ describe("calendarApi", () => {
       }),
     ).toContain("scope=SOCIAL");
   });
+
+  it("trata o 204 da assinatura como 'ainda não existe', não como erro", async () => {
+    vi.mocked(api.get).mockResolvedValue(undefined);
+
+    expect(await calendarApi.subscription()).toBeNull();
+    expect(api.get).toHaveBeenCalledWith("/calendar/subscription");
+  });
+
+  it("cria a assinatura com o scope escolhido e sem scope quando é a consolidada", async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      scope: "SOCIAL",
+      createdAt: "2026-11-10T12:00:00Z",
+      revokedAt: null,
+      token: "abc",
+    });
+
+    await calendarApi.createSubscription("SOCIAL");
+    expect(api.post).toHaveBeenCalledWith("/calendar/subscription?scope=SOCIAL");
+
+    await calendarApi.createSubscription(null);
+    expect(api.post).toHaveBeenLastCalledWith("/calendar/subscription");
+  });
+
+  it("regenera e revoga pela rota de gestão", async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      scope: null,
+      createdAt: "2026-11-10T12:00:00Z",
+      revokedAt: null,
+      token: "novo",
+    });
+    vi.mocked(api.delete).mockResolvedValue(undefined);
+
+    await calendarApi.regenerateSubscription();
+    expect(api.post).toHaveBeenCalledWith("/calendar/subscription/regenerate");
+
+    await calendarApi.revokeSubscription();
+    expect(api.delete).toHaveBeenCalledWith("/calendar/subscription");
+  });
+
+  it("monta o endereço que a pessoa cola no calendário externo", () => {
+    expect(calendarApi.subscriptionUrl("token-abc")).toBe(
+      "http://api.test/calendar/subscribe/token-abc.ics",
+    );
+  });
 });

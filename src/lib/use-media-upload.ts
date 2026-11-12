@@ -7,6 +7,8 @@ import type { UploadState } from "@/types/media-upload/upload-state";
 
 import { ApiError, randomUUID } from "@/lib/api-client";
 import { mediaApi } from "@/lib/api/media";
+import { compressImage } from "@/lib/compress-image";
+import { checkVideoLimit, isVideoFile } from "@/lib/video-limit";
 
 /**
  * Teto por arquivo: 500MB, o mesmo do servico (MediaService.MAX_MEDIA_BYTES). A checagem
@@ -60,49 +62,86 @@ function genFileName(file: File): string {
   return `media/${key}/${sanitizeName(file.name)}`;
 }
 
+/**
+ * Imagem grande é reencodada no cliente antes de sair daqui (#546): o servidor valida o
+ * tamanho declarado contra a assinatura do PUT (MEDIA_SIZE_MISMATCH), então o arquivo que
+ * entra no requestUpload é obrigatoriamente o mesmo que sobe — compressão antes dos dois.
+ *
+ * Vídeo passa pela pré-checagem de limite (#656): o aviso chega antes de o upload sair — o
+ * servidor continua sendo quem recusa de verdade. A recusa local lança o erro com o texto do
+ * app; a tela mostra o popup.
+ */
+async function prepare(file: File): Promise<File> {
+  if (isVideoFile(file)) {
+    const limit = await checkVideoLimit(file);
+    if (!limit.ok) {
+      throw new VideoLimitError(limit.reason === "size" ? "size" : "duration");
+    }
+    return file;
+  }
+  const compressed = await compressImage(file);
+  return compressed.size < file.size ? compressed : file;
+}
+
+/** Recusa local de vídeo: a mensagem é o texto do app, não o erro técnico do servidor. */
+export class VideoLimitError extends Error {
+  constructor(public reason: "size" | "duration") {
+    super(
+      reason === "size"
+        ? texts.errors.knownCodes.MEDIA_TOO_LARGE
+        : texts.feed.composer.videoLimitDuration(3),
+    );
+    this.name = "VideoLimitError";
+  }
+}
+
 export function useMediaUpload() {
   const [state, setState] = useState<UploadState>({ status: "idle", progress: 0 });
 
-  const upload = useCallback(async (file: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
-    if (file.size > MAX_MEDIA_BYTES) {
-      const error = new Error(
-        `O arquivo tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
-          MAX_MEDIA_BYTES / (1024 * 1024)
-        }MB.`,
-      );
-      setState({ status: "error", progress: 0, error: error.message });
-      throw error;
-    }
-
-    setState({ status: "uploading", progress: 0 });
-
-    try {
-      const fileName = genFileName(file);
-      const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
-        fileName,
-        mimeType: file.type,
-        size: file.size,
-        purpose,
-      });
-
-      // O servidor diz para onde subir: com S3 é uma URL assinada (PUT direto); sem isso, o fluxo
-      // multipart do ImageKit de sempre. O front não adivinha pelo formato da URL.
-      if (provider !== "S3") {
-        throw new Error(
-          "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
+  const upload = useCallback(
+    async (rawFile: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
+      const file = await prepare(rawFile);
+      if (!isVideoFile(file) && file.size > MAX_MEDIA_BYTES) {
+        const error = new Error(
+          `O arquivo tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
+            MAX_MEDIA_BYTES / (1024 * 1024)
+          }MB.`,
         );
+        setState({ status: "error", progress: 0, error: error.message });
+        throw error;
       }
-      await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
 
-      setState({ status: "done", progress: 100 });
-      return { mediaId: id, cdnUrl };
-    } catch (caught) {
-      const err = uploadError(caught);
-      const msg = err instanceof Error ? err.message : "Upload falhou";
-      setState({ status: "error", progress: 0, error: msg });
-      throw err;
-    }
-  }, []);
+      setState({ status: "uploading", progress: 0 });
+
+      try {
+        const fileName = genFileName(file);
+        const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
+          fileName,
+          mimeType: file.type,
+          size: file.size,
+          purpose,
+        });
+
+        // O servidor diz para onde subir: com S3 é uma URL assinada (PUT direto); sem isso, o fluxo
+        // multipart do ImageKit de sempre. O front não adivinha pelo formato da URL.
+        if (provider !== "S3") {
+          throw new Error(
+            "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
+          );
+        }
+        await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
+
+        setState({ status: "done", progress: 100 });
+        return { mediaId: id, cdnUrl };
+      } catch (caught) {
+        const err = uploadError(caught);
+        const msg = err instanceof Error ? err.message : "Upload falhou";
+        setState({ status: "error", progress: 0, error: msg });
+        throw err;
+      }
+    },
+    [],
+  );
 
   const uploadAll = useCallback(async (files: UploadInput[]): Promise<UploadResult[]> => {
     if (files.length === 0) return [];
@@ -110,8 +149,9 @@ export function useMediaUpload() {
 
     const results: UploadResult[] = [];
     for (let i = 0; i < files.length; i++) {
-      const { file, purpose = "POST_IMAGE" } = files[i];
-      if (file.size > MAX_MEDIA_BYTES) {
+      const { file: rawInput, purpose = "POST_IMAGE" } = files[i];
+      const file = await prepare(rawInput);
+      if (!isVideoFile(file) && file.size > MAX_MEDIA_BYTES) {
         const error = new Error(
           `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
             MAX_MEDIA_BYTES / (1024 * 1024)

@@ -57,6 +57,7 @@ import {
 import { ApiError, communitiesApi, feedApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
+import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
 import { buildShareTags } from "@/lib/open-graph";
@@ -242,7 +243,7 @@ function CommunityDetail() {
     mutationFn: (input: CreatePostInput) => feedApi.create(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community", community.id, "feed"] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      void refreshFeedFirstPage(queryClient);
       setDraft("");
       setMedia([]);
       setMediaSpoiler(false);

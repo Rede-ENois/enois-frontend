@@ -8,9 +8,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useNotificationsList } from "./use-notifications-list";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn() }));
+const mocks = vi.hoisted(() => ({ list: vi.fn(), live: vi.fn() }));
+
+/** Intervalo curto de verdade: o teste espera a recarga acontecer, sem relógio falso. */
+const POLL_MS = 20;
 
 vi.mock("@/lib/api", () => ({ notificationsApi: { list: mocks.list } }));
+
+// O intervalo vem do stream: com o stream aberto ele é `false` (o aviso chega por evento), sem
+// ele é a recarga de segurança. Aqui o stream é controlado pelo teste.
+vi.mock("@/lib/message-stream", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/message-stream")>()),
+  useInboxPollInterval: () => (mocks.live() ? false : POLL_MS),
+}));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -45,6 +55,7 @@ describe("lista de avisos compartilhada", () => {
 
   beforeEach(() => {
     mocks.list.mockReset().mockResolvedValue(PAGE);
+    mocks.live.mockReset().mockReturnValue(false);
     host = document.createElement("div");
     document.body.appendChild(host);
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -78,12 +89,44 @@ describe("lista de avisos compartilhada", () => {
     // Antes: o sino usava ["notifications", ctx] com limit=20 e a página
     // ["notifications","page",ctx] com limit=30 — duas chaves, duas chamadas na mesma carga, e a
     // página nunca aproveitava o cache do sino. Agora as duas montagens resolvem a MESMA consulta.
+    // O stream fica aberto para a recarga periódica não entrar na contagem: o que este teste prende
+    // é a deduplicação das duas montagens, não o polling (que tem teste próprio).
+    mocks.live.mockReturnValue(true);
     await render();
 
     expect(mocks.list).toHaveBeenCalledTimes(1);
-    expect(mocks.list).toHaveBeenCalledWith(null, 30, "SOCIAL");
+    // Dez por página: a lista carrega aos poucos, como o feed e as mensagens.
+    expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL");
     expect(page.items).toHaveLength(1);
     expect(page.items[0].id).toBe("n1");
+  });
+
+  it("não repete a mesma notificação quando ela aparece em duas páginas", async () => {
+    // O servidor reescreve `createdAt` ao agrupar avisos: a mesma linha pode voltar na página
+    // seguinte já carregada. Sem dedupe por id, ela aparecia duas vezes na lista.
+    mocks.live.mockReturnValue(true);
+    mocks.list.mockResolvedValueOnce({
+      items: [
+        { id: "n1", read: false, kind: "support_ticket_closed", createdAt: "2026-11-01T10:00:00Z" },
+      ],
+      nextCursor: "c1",
+    });
+    await render();
+    expect(page.items).toHaveLength(1);
+
+    mocks.list.mockResolvedValueOnce({
+      items: [
+        { id: "n1", read: false, kind: "support_ticket_closed", createdAt: "2026-11-01T10:00:00Z" },
+        { id: "n0", read: true, kind: "support_ticket_closed", createdAt: "2026-10-31T10:00:00Z" },
+      ],
+      nextCursor: null,
+    });
+    await act(async () => {
+      await page.fetchNextPage();
+    });
+    await flush();
+
+    expect(page.items.map((item) => item.id)).toEqual(["n1", "n0"]);
   });
 
   it("ao voltar para a aba, a lista anterior fica na tela durante a revalidação", async () => {
@@ -109,5 +152,34 @@ describe("lista de avisos compartilhada", () => {
     await act(async () => release(PAGE));
     await flush();
     expect(page.items).toHaveLength(1);
+  });
+
+  it("recarrega sozinha quando o stream está fora", async () => {
+    // Antes não havia recarga nenhuma: sem stream, o aviso só aparecia ao carregar a página de novo.
+    await render();
+    // A contagem inicial não é o que importa (o intervalo curto pode já ter disparado durante a
+    // montagem); o que este teste prende é que a recarga acontece sozinha depois.
+    const afterRender = mocks.list.mock.calls.length;
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
+    });
+    await flush();
+
+    // O que importa é que a recarga aconteceu sozinha, sem ninguém pedir.
+    expect(mocks.list.mock.calls.length).toBeGreaterThan(afterRender);
+  });
+
+  it("não consulta enquanto o stream entrega os avisos", async () => {
+    mocks.live.mockReturnValue(true);
+    await render();
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
+    });
+    await flush();
+
+    expect(mocks.list).toHaveBeenCalledTimes(1);
   });
 });

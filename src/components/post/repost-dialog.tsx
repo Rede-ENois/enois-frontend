@@ -5,7 +5,7 @@ import { RepostDialog as RepostDialogView } from "@rede-enois/design-system/doma
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, reactionsApi } from "@/lib/api";
-import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
+import { refreshFeedFirstPage, updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 
 /**
  * Republicar em duas portas: direto (cópia com o crédito) ou COM opinião — o comentário vira o
@@ -36,7 +36,9 @@ export function RepostDialog({
         currentUserReposted: true,
         counters: { ...current.counters, reposts: current.counters.reposts + 1 },
       }));
-      void queryClient.invalidateQueries({ queryKey: ["feed"] });
+      // A republicação entra no topo do feed: confere a primeira página de cada feed na tela, sem
+      // refazer as páginas que a pessoa já carregou.
+      void refreshFeedFirstPage(queryClient);
       onOpenChange(false);
     },
     onError: (error) => {
@@ -58,7 +60,9 @@ export function RepostDialog({
         currentUserReposted: false,
         counters: { ...current.counters, reposts: Math.max(0, current.counters.reposts - 1) },
       }));
-      void queryClient.invalidateQueries({ queryKey: ["feed"] });
+      // Desfazer tira a republicação do topo: mesma conferência da primeira página, sem refazer
+      // as páginas já carregadas.
+      void refreshFeedFirstPage(queryClient);
       onOpenChange(false);
     },
     onError: () => {

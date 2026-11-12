@@ -3,6 +3,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 
 import { apiUrl } from "./api-client";
+import { refreshConversation, refreshNotifications, resyncInbox } from "./inbox-sync";
 import { liteInterval } from "./lite-mode";
 
 /**
@@ -63,9 +64,25 @@ export function handleConversationChanged(queryClient: QueryClient, data: string
     return;
   }
   if (typeof conversationId !== "string") return;
-  void queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
-  // Prefix: inbox, archived, unread counters and the dock all live under "conversations".
-  void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  // Só a primeira página de cada lista na tela, e só a thread se ela estiver aberta: invalidar o
+  // prefixo refazia todas as páginas carregadas de todas as consultas de uma vez.
+  void refreshConversation(queryClient, conversationId);
+}
+
+/**
+ * "Chegou aviso para você" (`event: notification`): o sino e a lista recarregam na hora. Antes o
+ * stream só falava de conversa e chamada, então um aviso criado com a aba aberta só aparecia no
+ * próximo carregamento da página. O corpo traz só id e tipo; o texto vem do endpoint de avisos.
+ */
+export function handleNotificationCreated(queryClient: QueryClient, data: string) {
+  let payload: { notificationId?: unknown; kind?: unknown };
+  try {
+    payload = JSON.parse(data) as { notificationId?: unknown; kind?: unknown };
+  } catch {
+    return;
+  }
+  if (typeof payload.notificationId !== "string") return;
+  void refreshNotifications(queryClient);
 }
 
 /**
@@ -104,11 +121,14 @@ export function useMessageStream(onCall?: (callId: string, state: string) => voi
       source = new EventSource(apiUrl("/conversations/stream"), { withCredentials: true });
       source.onopen = () => {
         setLive(true);
-        // Whatever changed while disconnected was missed: catch up once.
-        void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        // Whatever changed while disconnected was missed: catch up once, first page only.
+        void resyncInbox(queryClient);
       };
       source.addEventListener("conversation", (event) =>
         handleConversationChanged(queryClient, (event as MessageEvent<string>).data),
+      );
+      source.addEventListener("notification", (event) =>
+        handleNotificationCreated(queryClient, (event as MessageEvent<string>).data),
       );
       source.addEventListener("call", (event) =>
         handleCallChanged(queryClient, (event as MessageEvent<string>).data, (id, state) => {

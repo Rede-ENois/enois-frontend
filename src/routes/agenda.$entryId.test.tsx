@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
 
 /**
@@ -14,7 +15,8 @@ vi.mock("@tanstack/react-router", () => ({
   redirect: () => undefined,
 }));
 
-const { Route, detailOf } = await import("./agenda.$entryId");
+const { Route, detailMissing, detailOf, isSourceOwned, reminderChanges, updateInputOf } =
+  await import("./agenda.$entryId");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 
 const apiDetail = {
@@ -92,5 +94,68 @@ describe("rota /agenda/$entryId", () => {
 
     expect(view.owner).toBe(true);
     expect(view.participants).toEqual([{ id: "p1", username: "ana", state: "INVITED" }]);
+  });
+
+  it("escolher um lembrete apaga os outros e grava o novo", () => {
+    expect(reminderChanges([{ minutesBefore: 15 }], 60)).toEqual([{ clear: 15 }, { set: 60 }]);
+  });
+
+  it("escolher o mesmo lembrete que já existe não mexe em nada", () => {
+    expect(reminderChanges([{ minutesBefore: 15 }], 15)).toEqual([]);
+  });
+
+  it('"não avisar" apaga todos os lembretes', () => {
+    expect(reminderChanges([{ minutesBefore: 15 }, { minutesBefore: 1440 }], null)).toEqual([
+      { clear: 15 },
+      { clear: 1440 },
+    ]);
+  });
+
+  it("sem lembrete nenhum, escolher um só grava", () => {
+    expect(reminderChanges([], 30)).toEqual([{ set: 30 }]);
+  });
+
+  it("só o 404 conta como compromisso inexistente", () => {
+    // A API responde 404 quando o compromisso foi cancelado ou não é daquela pessoa.
+    expect(detailMissing(new ApiError(404, "CALENDAR_ENTRY_NOT_FOUND", "não encontrado"))).toBe(
+      true,
+    );
+  });
+
+  it("falha de rede ou servidor fora do ar não viram 'não encontrado'", () => {
+    // Antes, qualquer erro da consulta caía na tela de "não encontrado"; dizer isso manda a
+    // pessoa procurar um problema que não é dela.
+    expect(detailMissing(new ApiError(500, "INTERNAL_ERROR", "estourou"))).toBe(false);
+    expect(detailMissing(new TypeError("Failed to fetch"))).toBe(false);
+    expect(detailMissing(undefined)).toBe(false);
+  });
+
+  it("compromisso avulso pode ser editado pela agenda", () => {
+    expect(isSourceOwned(apiDetail.entry)).toBe(false);
+  });
+
+  it("compromisso de outro módulo é somente leitura na agenda", () => {
+    const sourced = { ...apiDetail.entry, sourceType: "MENTORING", sourceId: "s1" };
+    expect(isSourceOwned(sourced)).toBe(true);
+  });
+
+  it("a edição manda escopo, tipo e dia inteiro junto com o resto", () => {
+    const input = updateInputOf({
+      scope: "SOCIAL",
+      kind: "PERSONAL",
+      title: "Revisão",
+      description: null,
+      startsAt: "2026-11-10T13:00:00Z",
+      endsAt: "2026-11-10T14:00:00Z",
+      timeZoneId: "America/Sao_Paulo",
+      allDay: true,
+    });
+
+    // O formulário mostra os três; omiti-los fazia o servidor descartar a mudança em silêncio.
+    expect(input.scope).toBe("SOCIAL");
+    expect(input.kind).toBe("PERSONAL");
+    expect(input.allDay).toBe(true);
+    expect(input.title).toBe("Revisão");
+    expect(input.startsAt).toBe("2026-11-10T13:00:00Z");
   });
 });

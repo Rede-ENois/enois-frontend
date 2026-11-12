@@ -7,18 +7,8 @@ import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
 import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
-import {
-  Button,
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  useToast,
-} from "@rede-enois/design-system/ui";
-import { Copy, ExternalLink, MessageCircle, X } from "lucide-react";
+import { Button, useToast } from "@rede-enois/design-system/ui";
+import { Copy, ExternalLink, MessageCircle } from "lucide-react";
 
 import { REACTION_EMOJIS, reactionsApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
@@ -120,8 +110,6 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const [repostOpen, setRepostOpen] = useState(false);
   const repostMounted = useMountedOnce(repostOpen);
 
-  const [shareOpen, setShareOpen] = useState(false);
-  const [shareAsMobile, setShareAsMobile] = useState(false);
   const navigate = useNavigate();
 
   const trackShare = async () => {
@@ -138,14 +126,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
 
   const resolvePostUrl = () => shareUrl ?? `${window.location.origin}/post/${post.id}`;
 
-  const handleShareOpen = () => {
-    if (!requireAuth()) return;
-    setShareAsMobile(window.matchMedia("(max-width: 767px)").matches);
-    setShareOpen(true);
-  };
-
   const handleCopyLink = async () => {
-    setShareOpen(false);
     await trackShare();
     try {
       await navigator.clipboard.writeText(resolvePostUrl());
@@ -156,17 +137,15 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   };
 
   const handleNativeShare = async () => {
-    setShareOpen(false);
     await trackShare();
     try {
       await navigator.share({ url: resolvePostUrl() });
     } catch {
-      // usuario cancelou o dialog nativo
+      // usuario cancelou
     }
   };
 
   const handleSendViaChat = async () => {
-    setShareOpen(false);
     void trackShare();
     try {
       await navigator.clipboard.writeText(resolvePostUrl());
@@ -177,98 +156,75 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     }
   };
 
-  // Disponibilidade de APIs checada no handler, nao no render (evita mismatch de hidratacao SSR).
   const canNativeShare = () => typeof navigator !== "undefined" && "share" in navigator;
 
-  const shareOptions = (
-    <>
-      <Button variant="ghost" size="sm" onClick={() => void handleSendViaChat()}>
-        <MessageCircle /> Enviar via chat
-      </Button>
-
-      <Button variant="ghost" size="sm" onClick={() => void handleCopyLink()}>
-        <Copy /> Copiar link
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => void (canNativeShare() ? handleNativeShare() : handleCopyLink())}
-      >
-        <ExternalLink /> Compartilhar via...
-      </Button>
-
-      <Button variant="ghost" size="sm" onClick={() => setShareOpen(false)}>
-        <X /> Cancelar
-      </Button>
-    </>
-  );
-
   return (
-    <Popover open={shareOpen && !shareAsMobile} onOpenChange={setShareOpen}>
-      <PopoverAnchor asChild>
-        <PostActionsView
-          emojis={REACTION_EMOJIS}
-          reactionStatus={post.currentUserReaction ?? null}
-          onReact={toggleReaction}
-          // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
-          reactionPending={card?.reactionPending ?? false}
-          motionAllowed={motionAllowed}
-          reactionCount={reactionCount}
-          commentsCount={postCounters.comments}
-          repostsCount={postCounters.reposts ?? 0}
-          savesCount={postCounters.saves}
-          saved={saved}
-          canRepost={canRepost}
-          reposted={post.currentUserReposted ?? false}
-          onShowReactions={() => setShowReactions(post.id, true)}
-          onComments={onComments}
-          onRepost={() => {
-            if (!requireAuth()) return;
-            setRepostOpen(true);
-          }}
-          onShare={handleShareOpen}
-          onReport={() => setShowReport(post.id, true)}
-          onSave={handleSave}
-          dialogs={
-            <>
-              {repostMounted && (
-                <RepostDialog
-                  postId={post.id}
-                  reposted={post.currentUserReposted ?? false}
-                  open={repostOpen}
-                  onOpenChange={setRepostOpen}
-                />
-              )}
-              {reactionsMounted && <ReactionsDialog postId={post.id} />}
-              {sealsMounted && <SealsDialog postId={post.id} />}
-              {reportMounted && (
-                <ReportDialog
-                  targetId={post.id}
-                  targetType="POST"
-                  open={showReport}
-                  onOpenChange={(next) => setShowReport(post.id, next)}
-                />
-              )}
+    <PostActionsView
+      emojis={REACTION_EMOJIS}
+      reactionStatus={post.currentUserReaction ?? null}
+      onReact={toggleReaction}
+      // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
+      reactionPending={card?.reactionPending ?? false}
+      motionAllowed={motionAllowed}
+      reactionCount={reactionCount}
+      commentsCount={postCounters.comments}
+      repostsCount={postCounters.reposts ?? 0}
+      savesCount={postCounters.saves}
+      saved={saved}
+      canRepost={canRepost}
+      reposted={post.currentUserReposted ?? false}
+      onShowReactions={() => setShowReactions(post.id, true)}
+      onComments={onComments}
+      onRepost={() => {
+        if (!requireAuth()) return;
+        setRepostOpen(true);
+      }}
+      onShare={() => void handleCopyLink()}
+      shareMenu={
+        <>
+          <Button variant="ghost" size="sm" onClick={() => void handleSendViaChat()}>
+            <MessageCircle /> Enviar via chat
+          </Button>
 
-              <PopoverContent align="start" side="top">
-                {shareOptions}
-              </PopoverContent>
+          <Button variant="ghost" size="sm" onClick={() => void handleCopyLink()}>
+            <Copy /> Copiar link
+          </Button>
 
-              <Sheet open={shareOpen && shareAsMobile} onOpenChange={setShareOpen}>
-                <SheetContent side="bottom">
-                  <SheetHeader>
-                    <SheetTitle>Compartilhar</SheetTitle>
-                  </SheetHeader>
-                  {shareOptions}
-                </SheetContent>
-              </Sheet>
-            </>
-          }
-        >
-          {children}
-        </PostActionsView>
-      </PopoverAnchor>
-    </Popover>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void (canNativeShare() ? handleNativeShare() : handleCopyLink())}
+          >
+            <ExternalLink /> Compartilhar via...
+          </Button>
+        </>
+      }
+      onReport={() => setShowReport(post.id, true)}
+      onSave={handleSave}
+      dialogs={
+        <>
+          {repostMounted && (
+            <RepostDialog
+              postId={post.id}
+              reposted={post.currentUserReposted ?? false}
+              open={repostOpen}
+              onOpenChange={setRepostOpen}
+            />
+          )}
+          {reactionsMounted && <ReactionsDialog postId={post.id} />}
+          {sealsMounted && <SealsDialog postId={post.id} />}
+          {reportMounted && (
+            <ReportDialog
+              targetId={post.id}
+              targetType="POST"
+              open={showReport}
+              onOpenChange={(next) => setShowReport(post.id, next)}
+            />
+          )}
+        </>
+      }
+    >
+      {children}
+    </PostActionsView>
   );
 }

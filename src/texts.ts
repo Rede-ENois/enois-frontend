@@ -190,17 +190,25 @@ export const texts = {
     /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
     errorInvite: "Não foi possível convidar. Tente de novo.",
     errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
+    errorReminder: "Não foi possível salvar o lembrete. Tente de novo.",
     detailNotFound: "Compromisso não encontrado",
     detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
+    errorLoad: "Não foi possível abrir o compromisso. Tente de novo.",
+    errorLoadHint: "O compromisso não sumiu: a resposta do servidor não chegou.",
     exportIcs: "Baixar .ics",
     exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
     exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
     exportIcsDone: "Arquivo da agenda baixado.",
+    availabilityLink: "Disponibilidade",
+    retry: "Tentar de novo",
     availability: {
       seoTitle: "Disponibilidade · Énóis",
       title: "Sua disponibilidade",
       subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
       errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
+      errorLoad: "Não foi possível carregar sua disponibilidade.",
+      errorLoadHint:
+        "Sem ler a semana salva, salvar apagaria o que você já tinha. Tente carregar de novo.",
     },
   },
 
@@ -1264,6 +1272,13 @@ export const texts = {
       imageProhibitedTitle: "Imagem ocultada",
       imageProhibitedMessage:
         "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      /** Limites de vídeo (issue #656): a checagem local avisa antes de o upload sair. */
+      videoLimitTitle: "Vídeo grande demais",
+      videoLimitSize: (mb: number, minutes: number) =>
+        `A rede aceita vídeos de até ${mb}MB e ${minutes} minutos. Encurte o vídeo ou reduza a qualidade e tente de novo.`,
+      videoLimitDuration: (minutes: number) =>
+        `A rede aceita até ${minutes} minutos de vídeo apenas. Encurte o vídeo e tente de novo.`,
+      videoLimitClose: "Entendi",
       publishError: "Não foi possível publicar. Tente de novo.",
       publishErrorTitle: "Não foi possível publicar:",
       page: "Página",
@@ -2175,7 +2190,16 @@ export const texts = {
       locations: ["Remoto", "Híbrido", "Presencial"],
       /** O backend guarda o código (JUNIOR, INTERN...); a tela mostra o nome em português. */
       levels: { JUNIOR: "Júnior", MID: "Pleno", SENIOR: "Sênior", LEAD: "Liderança" },
-      types: { CLT: "CLT", PJ: "PJ", FREELANCE: "Freelance", INTERN: "Estágio" },
+      types: {
+        CLT: "CLT",
+        PJ: "PJ",
+        FREELANCE: "Freelance",
+        INTERN: "Estágio",
+        FULL_TIME: "Tempo integral",
+        PART_TIME: "Meio período",
+        CONTRACT: "Contrato",
+        INTERNSHIP: "Estágio",
+      },
     },
     /** Quantas habilidades o card da lista mostra antes do "+N". */
     moreSkills: (count: number) => `+${count}`,
@@ -2196,6 +2220,11 @@ export const texts = {
     back: "Voltar para vagas",
     notFound: "Vaga não encontrada.",
     about: "Sobre a vaga",
+    /** Vaga externa cuja fonte não publica descrição: a tela diz isso em vez de inventar texto. */
+    noDescription:
+      "A fonte não publica a descrição desta vaga. Abra a vaga na origem para ver os detalhes.",
+    /** Vaga da casa publicada sem descrição. */
+    noDescriptionInternal: "Quem publicou esta vaga não escreveu uma descrição.",
     skills: "Habilidades",
     noSkills: "Sem habilidades informadas.",
     save: "Salvar",

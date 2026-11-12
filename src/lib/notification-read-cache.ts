@@ -7,6 +7,7 @@ import type { Notification } from "@/types/application/notification/notification
 import type { UnreadSummary } from "@/types/application/notification/unread-summary";
 
 import { notificationsApi } from "@/lib/api";
+import { refreshNotifications } from "@/lib/inbox-sync";
 
 function markPage(page: PageResponse<Notification>, isTarget: (n: Notification) => boolean) {
   return {
@@ -53,7 +54,9 @@ export function useMarkPushRead() {
       void notificationsApi
         .markAsRead(id)
         .catch(() => undefined)
-        .finally(() => void queryClient.invalidateQueries({ queryKey: ["notifications"] }));
+        // Só a primeira página de cada lista na tela: invalidar o prefixo refazia todas as páginas
+        // carregadas para marcar uma linha como lida.
+        .finally(() => void refreshNotifications(queryClient));
     },
     [queryClient],
   );

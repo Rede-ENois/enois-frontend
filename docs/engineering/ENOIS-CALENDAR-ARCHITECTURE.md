@@ -104,14 +104,30 @@ recorrência quebra no cliente.
 
 ---
 
-## D7 — Assinatura privada com token, somente leitura (proposta, Fase 9)
+## D7 — Assinatura privada com token, somente leitura (implementada na execução 22)
 
-`/api/v1/calendar/subscribe/{token}.ics` responde sem sessão, mas o token é o segredo: gerado com
+`/calendar/subscribe/{token}.ics` responde sem sessão, mas o token é o segredo: gerado com
 `SecureRandom`, guardado como hash, revogável e regenerável. Resposta `Cache-Control` curto com
-`ETag` derivado da versão da agenda, para o cliente não baixar a agenda inteira a cada ciclo.
+`ETag` derivado do corpo, para o cliente não baixar a agenda inteira a cada ciclo.
 Rate limit por token para não virar alvo de força bruta nem de DoS.
 
 **Não** usar o `id` do usuário na URL, nunca. O token é a única credencial do link.
+
+**O que a implementação fixou (execução 22).**
+
+1. **O banco guarda só o hash SHA-256**, com índice único. O token em claro existe uma única vez, na
+   resposta que o cria ou regenera; depois disso nem quem lê a tabela reconstrói o link.
+2. **Uma assinatura ativa por pessoa.** Criar quando já existe devolve a existente **sem** token
+   novo: não há como mostrá-lo de novo, e emitir um segundo link só multiplicaria credenciais vivas.
+3. **Regenerar gira a mesma linha**, não cria outra. Assim não existe janela com dois links vivos, e
+   o link antigo morre na mesma transação.
+4. **O `scope` fica congelado no token** (nulo = agenda consolidada, o mesmo contrato da leitura).
+   Trocar o recorte é regenerar o link, não um parâmetro que quem assinou escolhe.
+5. **Token desconhecido e token revogado respondem o mesmo 404.** Distinguir confirmaria que aquele
+   link já existiu — a mesma lógica da D10 para entrada alheia.
+6. **A janela é derivada do começo** (30 dias atrás, 365 no total). Somar os dois prazos soltos
+   estourava o teto de um ano do export e a rota respondia `INVALID_WINDOW`.
+7. **O limite é por hash do token**, nunca pelo token em claro, como o resto de `shared.security`.
 
 ---
 
@@ -703,3 +719,313 @@ que a execução 20 fechou de decisão:
    do período + escopo da aba), não "tudo". Arquivo gigante e desalinhado do que se vê é pior que
    baixar de novo. A assinatura privada da fase 9 (D7) é que serve ao caso "agenda inteira,
    sempre atualizada" no leitor externo.
+
+## D27 — A presença no evento é o fato; a entrada da agenda é consequência (execução 21)
+
+A fase 4 começa pela fonte que já existe: o evento de grupo. O evento guarda data e hora como
+texto livre (B2), mas `Event.startsAt()`/`expiresAt()` já leem esse texto no fuso da rede
+(`America/Sao_Paulo`), então a agenda não precisa esperar a coluna tipada para desenhar o
+compromisso. O que a execução 21 decidiu:
+
+1. **A direção é evento → agenda, nunca o contrário.** `EventService` chama
+   `CalendarSourceService` com origem `EVENT`+`eventId`; o calendário não conhece o módulo de
+   eventos. É a D19 aplicada: quem é dono do fato grava a entrada, e o calendário só guarda.
+2. **A presença confirmada é o gatilho, não a existência do evento.** O evento não vira
+   compromisso de todo mundo: `attend` grava a entrada do participante, `cancelAttendance` a
+   remove. Quem organiza e não confirmou presença não ganha entrada — a agenda é de quem vai.
+3. **Sair do evento apaga a entrada; cancelar o evento também.** `delete` e `sanitizeExpired`
+   removem a entrada de todos os participantes. Apagar é o oposto de cancelar (D10/D26): o fato
+   deixou de existir, então não há cancelamento a publicar no `.ics` — a linha some. Por isso a
+   porta ganhou `deleteBySource`, separada de `cancel`.
+4. **O evento não tem hora de fim; a entrada ocupa uma hora.** `expiresAt()` devolve o começo
+   quando não há fim, e a constraint exige `ends_at > starts_at`. Duração zero não existe na
+   agenda, e "dia inteiro" mentiria sobre um encontro com hora marcada. Uma hora é o padrão
+   explícito (`DEFAULT_EVENT_DURATION`), não um palpite escondido.
+5. **Editar o evento move a entrada de todos os participantes.** `update` reescreve a entrada de
+   cada um pela mesma origem (D3): o horário novo substitui o antigo, sem duplicar. E, como na
+   edição direta, o lembrete pendente do horário antigo é encerrado — aviso no horário errado é
+   pior que aviso nenhum (D21).
+6. **A porta de origem limpa lembrete ao reagendar e ao cancelar.** Era um buraco real: o
+   caminho direto (`CalendarCommandService`) já encerrava o pendente, mas o caminho de origem
+   não. Agora `upsert` (quando move) e `cancel` chamam `clearPendingForEntry`, e o comportamento
+   é o mesmo venha o compromisso da agenda, da mentoria, do import ou do evento.
+
+## D28 — O desenho pede; a aplicação faz; o token só é visto uma vez (execução 24)
+
+O bloco 24 levou import e assinatura para o DS e para a tela, e fechou três decisões de fronteira:
+
+1. **Componente controlado não faz requisição — relata a intenção.** `CalendarImportDialog`
+   recebe `onImport: () => Promise<CalendarImportResultData | null>`; o app executa o upload e
+   devolve o resultado. Devolver `null` (erro ou falha) mantém o diálogo aberto com o arquivo
+   ainda escolhido — o app decide o que acontece, o DS só desenha e valida o formato/tamanho
+   antes de chamar. O mesmo split vale para `CalendarSubscriptionCard`: copiar, regenerar e
+   revogar são callbacks do app; o card não conhece `calendarApi`.
+2. **O resultado do import é contagem, não lista.** `{received, created, moved, cancelled,
+skipped}` — o backend já responde isso e a tela não precisa dos compromissos para dizer
+   "entendi 40, criei 12, cancelei 3". `cancelled` entra na conta de "aplicados" porque o
+   cancelamento vindo do arquivo é mudança real na agenda (D10/D26), não rejeição.
+3. **O token da assinatura vive no estado do app, não no card.** O servidor nunca devolve o
+   token de novo (só o hash fica no banco); depois de criar/regenerar, a única cópia é a da
+   resposta daquela requisição. Guardar o link montado no estado da rota é o que permite ao card
+   alternar entre "link novo, copie agora" e "link ativo" sem o card precisar saber disso.
+4. **O DS tem duas linhagens e o PR de componente mira a `qa`.** `origin/qa` e `origin/main` do
+   design system **não têm ancestral comum** (`git merge-base` falha): `main` carrega os
+   releases publicados (0.31/0.32), `qa` acumula 529 commits de feature. Regra mantida do
+   AGENTS.md: PR de componente sai da `qa` e mira a `qa`; para validar o front (que consome o
+   pacote da linhagem `main`), monta-se uma árvore de validação separada (`main` + os arquivos
+   novos) só para gerar o tarball — nunca rebasear uma na outra nem "resolver" a divergência por
+   conta própria. **Consequência operacional:** mergear o componente na `qa` não o publica. O
+   front que depende dele fica com CI vermelho (`MISSING_EXPORT`) até um release a partir do
+   `main` — e esse release é passo humano (D20). O vermelho é o B9 se manifestando, não regressão
+   do código; declarar isso no PR evita que alguém "conserte" apagando o import.
+
+## D29 — A entrevista é um compromisso só, escrito nos dois lados (execução 25)
+
+A entrevista de candidatura não tem agenda própria: ela **é** uma entrada da agenda central,
+escrita pela mesma porta de origem que a mentoria e o evento (D19). Três escolhas fecham a
+fronteira:
+
+1. **Um compromisso só, dois donos.** O `JobInterviewService` faz dois upserts com a mesma
+   origem `(JOB_INTERVIEW, interviewId)` e donos diferentes (candidato e empregador), escopo
+   PROFESSIONAL e tipo INTERVIEW. Como a origem é única, reagendar **move** as duas entradas e
+   cancelar **cancela** as duas — sem duplicação nem desvio entre as agendas; e como o
+   cancelamento pela porta de origem nunca reabre (D19/D26), entrevistador e candidato nunca
+   veem estados diferentes do mesmo fato.
+2. **O banco garante "uma valendo" por candidatura.** `V274` traz índice único
+   `(application_id, status)` com `status` em `(SCHEDULED, CANCELLED)`: agendar de novo
+   **reagenda** a entrevista existente em vez de criar outra, e o histórico de canceladas fica
+   no banco sem competir com a que está valendo. O reagendamento idêntico não é operação: a
+   janela igual não mexe em `updatedAt` nem dispara notificação.
+3. **A tela desenha com o fuso da entrevista, não o do runtime.** O compromisso carrega o
+   `timeZoneId` de quem marcou, e é nele que o DS e o front formatam a hora (`Intl.DateTimeFormat`
+   com zona explícita, formatador em cache). A linha da candidatura e a entrada da agenda mostram
+   o mesmo relógio para os dois lados; o helper único de datas do front ganhou `dataHoraEm` em
+   vez de abrir exceção à regra do formato-único.
+
+---
+
+## D30 — Chamada não é compromisso; o que a agenda promete é o que tem hora marcada (execução 26)
+
+A fase 4 pedia "conferir se o módulo de chamadas/vídeo tem data e hora legíveis antes de prometer
+a entrada na agenda". A inspeção fechou a questão pelo lado do modelo, não da tela:
+
+1. **Chamada é sessão ao vivo, não compromisso.** `CallSession` carrega `createdAt`, `answeredAt`,
+   `endedAt`, `expiresAt` e `lastActivityAt` — todos instantes do passado ou de expiração, nenhum
+   horário futuro combinado. Não existe "chamada marcada para amanhã" no domínio, então não há
+   entrada de agenda a criar: prometer isso exigiria inventar um agendamento que o produto não
+   tem. A agenda continua sendo a fonte de compromissos; a chamada é o canal que acontece agora.
+2. **O que a chamada tem de temporal é a denúncia.** A denúncia de chamada carrega `reportedAt`,
+   e é ele que ancora a captura de tela como prova. A tela de moderação recebia o campo e não o
+   exibia; agora mostra o horário junto da captura, pelo utilitário único de data do front. É a
+   mesma regra de D29: o instante vem do servidor e a tela não o reinterpreta.
+3. **Consequência para a fase 4.** O que falta nela são **compromissos pessoais** (entrada criada
+   pela própria pessoa), não chamadas. A presença em evento (D27) e a chamada ficam de fora da
+   agenda por motivos diferentes: a primeira porque o evento já é o compromisso; a segunda porque
+   não há compromisso.
+
+---
+
+## D31 — A entrada com origem é somente leitura na agenda; o módulo dono é quem muda o fato (execução 27)
+
+A D19 deu à entrada com origem um dono, uma chave e um ciclo de vida próprios, mas deixou uma
+porta aberta: a rota de escrita da agenda (`PATCH`/`DELETE /calendar/entries/{id}`) não olhava a
+origem. Qualquer pessoa podia editar ou cancelar pela agenda um compromisso que veio de outro
+módulo, e os dois lados passavam a contar histórias diferentes — a sessão de mentoria continuava
+marcada com outro horário, o evento seguia com o participante.
+
+**Decisão.** A escrita direta da agenda recusa entrada com origem preenchida.
+
+1. **O servidor é quem garante.** `CalendarCommandService.update` e `cancel` verificam
+   `entry.source().present()` e respondem **409 `CALENDAR_ENTRY_SOURCE_OWNED`**. A regra não depende
+   da tela: mesmo que um cliente chame a rota direto, a entrada não muda.
+2. **Quem muda o fato é o módulo dono.** Reagendar ou cancelar uma sessão de mentoria passa pelo
+   `MentorService`, que chama `CalendarSourceService.upsert`/`cancel` (D19). O mesmo vale para
+   evento (D27) e entrevista (D29). A agenda é projeção; o fato mora no módulo.
+3. **A tela não oferece o que o servidor recusa.** O front decide por `isSourceOwned(entry)`
+   (presença de `sourceType`) e não passa `onEdit`/`onCancel` ao `CalendarEntryDetail`. O
+   componente do DS já esconde as ações quando o handler não vem, então a regra não exigiu mudança
+   de contrato no DS — a mesma escolha de D28.1 (o desenho pede, a aplicação faz).
+4. **Entrada avulsa continua editável.** Sem origem, a agenda é dona do compromisso e a escrita
+   direta segue valendo. A distinção é exatamente a origem, não o tipo nem o escopo.
+
+**Consequência.** Todo módulo que grava na agenda pela porta de origem ganha, de graça, a garantia
+de que a agenda não vai divergir dele. Um novo tipo de compromisso com origem entra já protegido.
+
+**Rejeitado.** Esconder o botão só na tela, sem a guarda no servidor: um cliente direto (ou uma
+tela futura que esqueça a regra) voltaria a desincronizar o módulo dono. Rejeitado também deixar a
+edição passar e "ressincronizar depois": não há como saber qual dos dois lados é a verdade.
+
+---
+
+## D32 — Apagar o perfil de mentor apaga o que é dele e cancela o que ainda vai acontecer (execução 27)
+
+O `DELETE /mentors/{mentorId}` respondia **409** sempre que o mentor tinha qualquer horário
+publicado: as FKs `fk_mentor_slots_mentor`, `fk_mentor_sessions_mentor` e
+`fk_mentor_availabilities_mentor` bloqueavam a remoção da linha em `mentors`. O endpoint ficava
+inutilizável assim que o mentor publicava a agenda. Evento e comunidade já apagavam as linhas
+filhas antes da pai; a mentoria era o caso isolado.
+
+**Decisão.** Apagar o perfil resolve o que depende dele, na ordem certa, dentro da mesma transação.
+
+1. **Sessão agendada é cancelada, não apagada.** O perfil chama o mesmo caminho do cancelamento
+   normal: o escrow volta integral para quem pagou e o compromisso é cancelado na agenda de quem
+   marcou, pela porta de origem (D19). Apagar a sessão deixaria dinheiro retido e um compromisso
+   fantasma.
+2. **Sessão concluída é histórico.** Ela não é apagada; por isso a FK de `mentor_sessions` sai na
+   **V275** (mesmo padrão deliberado da V132). A liquidação já trata o mentor ausente devolvendo o
+   escrow, e as listas mostram a sessão sem o perfil.
+3. **Horários e disponibilidade são do perfil e somem com ele.** São dados de publicação, não
+   histórico; apagá-los é o que libera a remoção da linha pai.
+
+**Consequência.** O mentor pode sair a qualquer momento, inclusive com agenda cheia, sem deixar
+dinheiro preso nem compromisso órfão. O mentorado vê a sessão como cancelada, com o valor de volta.
+
+**Rejeitado.** Desativar o perfil em vez de apagá-lo: o produto pede remoção, e um perfil "inativo"
+que continua no catálogo é outra funcionalidade. Rejeitado também apagar as sessões em cascata:
+destruiria o histórico e o registro do dinheiro.
+
+---
+
+## D33 — A edição da agenda reclassifica o que é dela e não toca no que é do módulo dono (execução 28)
+
+O formulário de edição do DS mostra três campos de classificação — agenda (`SOCIAL`/`PROFESSIONAL`),
+tipo e dia inteiro — e devolve os três no rascunho. O `PATCH /calendar/entries/{id}` só aceitava
+título, descrição e horário. Trocar a agenda, o tipo ou marcar o dia inteiro e salvar era
+descartado em silêncio: a tela fechava como se tivesse salvo, e a pessoa saía achando que tinha
+mudado. O contrato do formulário e o do servidor tinham divergido sem que nenhum teste prendesse a
+diferença.
+
+**Decisão.** A edição parcial reclassifica a entrada, e só isso.
+
+1. **`scope`, `kind` e `allDay` são editáveis pela rota da agenda.** São classificação, não fato:
+   não mexem no intervalo nem na origem. `CalendarEntry.reclassify` troca os três e não toca em
+   `startsAt`/`endsAt`/`source`; reclassificar para o mesmo valor não mexe em `updatedAt`.
+2. **`allDay` é `Boolean`, não `boolean`.** Ausente precisa significar "não mexi". Um primitivo
+   chegaria como `false` e desmarcaria o dia inteiro a cada edição de título — o mesmo raciocínio
+   de campo nulo em D11.
+3. **A guarda de origem continua valendo.** `reclassify` chama `requireActive` e a escrita segue
+   recusando entrada com origem (D31) e entrada cancelada. Reclassificar não é uma porta lateral
+   para mudar o fato de outro módulo.
+4. **O front manda o que o formulário mostra.** `updateInputOf` converte o rascunho no corpo do
+   `PATCH` com os oito campos, e o teste da rota prende que os três de classificação vão junto.
+   Mandar só título e horário era a causa do descarte silencioso.
+
+**Consequência.** O contrato do formulário e o do servidor voltam a coincidir, e a diferença fica
+presa por teste dos dois lados. Um campo novo no formulário que o servidor não conheça passa a ser
+uma divergência visível, não um descarte mudo.
+
+**Rejeitado.** Fazer o formulário esconder os três campos: eles são parte do produto (a pessoa
+escolhe a agenda e o tipo do compromisso) e esconder não corrige o contrato. Rejeitado também
+tratar `allDay` como primitivo com valor padrão `false`: desmarcaria o dia inteiro em toda edição
+que não falasse dele.
+
+---
+
+## D34 — O convite pendente é uma lista do servidor, e o aviso abre o que ele avisa (execução 29)
+
+Duas lacunas da mesma família: o dado existia e a pessoa não chegava nele. O convite pendente tinha
+cliente de API e rota (`GET /calendar/invitations`) desde a fase 1, mas nenhuma superfície o
+desenhava — só aparecia se a pessoa abrisse o período em que ele cai, e um convite para o mês que
+vem era invisível. O lembrete de compromisso criava a notificação apontando para
+`/agenda?period=day`, e o front não tinha rota `agenda` na tabela de navegação: o clique não levava
+a lugar nenhum; mesmo com a rota, levaria à agenda vazia, não ao compromisso anunciado.
+
+**Decisão.**
+
+1. **A lista de convites pendentes vem do servidor, não da janela na tela.** `CalendarPendingInvitations`
+   recebe `invitations` já resolvidas por `GET /calendar/invitations` e as desenha **acima** da
+   agenda. A janela visível é o recorte errado para essa pergunta: o convite que importa é
+   justamente o que a agenda não mostraria.
+2. **A resposta reusa a mutação da resposta rápida.** `CalendarAgendaSurface` repassa
+   `onRespond`/`respondingId`/`respondError` ao componente; não há segundo caminho de escrita. O
+   componente é controlado e não busca dados — a app é quem chama a API, como manda a camada
+   `domain` do DS.
+3. **O aviso abre o compromisso, não a agenda.** O `href` do lembrete é `/agenda/{entryId}` e o CTA
+   é "Ver compromisso". Quem toca no lembrete quer ver quem convidou, onde é e o que responder.
+4. **A tabela de navegação do front é o contrato do `href`.** Toda notificação que aponta para uma
+   rota precisa de entrada em `src/utils/navigation.ts`; sem ela o clique cai no fallback e não
+   navega. A ordem importa: `agenda/disponibilidade` vem antes de `agenda` com parâmetro, senão
+   "disponibilidade" viraria `entryId`.
+
+**Consequência.** O convite pendente passa a ter superfície própria e testada, e o lembrete leva ao
+compromisso. A ligação na `/agenda` do front fica para depois do release do DS (B9), porque o
+componente ainda não está em pacote publicado.
+
+**Rejeitado.** Derivar os convites pendentes da janela já carregada pela agenda: esconderia
+exatamente o caso que motiva a lista (convite fora do período visível) e faria a tela depender de
+navegar até o mês certo. Rejeitado também manter o lembrete apontando para a agenda: a agenda não
+diz qual compromisso é, e o aviso já sabe.
+
+---
+
+## D35 — A superfície de lembrete recusa o que não pode atender, e o aviso diz o tempo que falta (execução 31)
+
+Três defeitos da mesma família na superfície de lembrete, todos no backend: o servidor respondia
+"tudo certo" a pedidos que não podia atender. A leitura e a remoção de lembrete de um compromisso
+alheio devolviam 200 vazio, enquanto o detalhe da entrada já devolvia 404 (D10) — o 200 confirmava
+que aquele compromisso existe na agenda de outra pessoa. O `DELETE` sem `minutesBefore` devolvia 200
+sem apagar nada, e a tela acreditava ter removido o lembrete. E o texto do aviso falava da
+antecedência escolhida, não do tempo que falta: um lembrete de 1 dia criado em cima da hora
+anunciava "em 1 dia" um compromisso que começava em 10 minutos.
+
+**Decisão.**
+
+1. **Ler, criar e remover lembrete exigem envolvimento, e o alheio é 404.** `requireInvolved` aceita
+   dono ou participante e, fora disso, lança o mesmo `CALENDAR_ENTRY_NOT_FOUND` do detalhe. Um 403
+   confirmaria a existência do compromisso na agenda de outra pessoa; o 404 não distingue "não
+   existe" de "não é seu".
+2. **Antecedência fora da lista é 400, não no-op.** `CalendarReminder.requireAllowedMinutes` é
+   público e a remoção o chama antes de procurar a linha. Apagar "7 minutos antes" não tira lembrete
+   nenhum: é pedido inválido, e a tela precisa saber disso em vez de achar que apagou. O controller
+   recusa `minutesBefore` ausente com o mesmo 400 `INVALID_REMINDER`.
+3. **O aviso fala do tempo que falta, não da antecedência escolhida.** `textUntil(startsAt, now)`
+   devolve "já começou", "começa em N min", "começa em N hora(s)" ou "começa em N dia(s)". O worker
+   pode atrasar, e o aviso não pode mentir sobre quando o compromisso começa.
+
+**Consequência.** A superfície de lembrete passa a ter o mesmo contrato de autorização do detalhe da
+entrada, e o texto da notificação é derivado do relógio no momento da entrega. A remoção idempotente
+continua idempotente para uma antecedência válida (tirar duas vezes não é erro); o que deixa de ser
+silencioso é o pedido malformado.
+
+**Rejeitado.** Suprimir a notificação quando o compromisso já começou: o aviso ainda é útil ("já
+começou" é informação verdadeira) e o worker atrasado não deve engolir o lembrete. Rejeitado também
+manter o texto pela antecedência escolhida: é o número que a pessoa pediu, não o que o relógio diz.
+
+---
+
+## D36 — A rota sem sessão da assinatura tem dois tetos, e o import não reescreve o texto (execução 32)
+
+Três defeitos na fronteira não autenticada do calendário. O `GET /calendar/subscribe/{token}.ics` é
+a única rota do módulo que responde sem sessão, então é a que mais precisa de limite que funcione.
+
+**Decisão.**
+
+1. **Dois tetos, com papéis distintos.** O filtro limita a **origem** (600 leituras/min,
+   `rede.rate.calendar-subscription-origin-per-minute`) antes de limitar o **token** (60/min). Um
+   teto chaveado só pelo token é decorativo: o token vem do caminho, então quem varia o caminho
+   recebe um balde novo a cada requisição e nunca alcança teto nenhum. A chave da origem não é
+   escolhida pelo atacante, e é ela que põe um teto real na varredura. O valor por origem é folgado
+   de propósito: leitores de calendário legítimos buscam de poucos endereços em nome de muita gente,
+   e o filtro existe para cortar varredura, não para regular quem assinou.
+2. **A limpeza descarta chaves vencidas, não baldes vazios.** Dentro da janela um balde nunca fica
+   vazio, então remover vazios não libera nada e o mapa só cresce. A varredura roda quando o mapa
+   passa do teto de chaves e remove as chaves cujas marcas já venceram.
+3. **O recorte congelado recusa o divergente com 409.** `POST /calendar/subscription` com assinatura
+   ativa e recorte **diferente** do congelado responde `409 CALENDAR_SUBSCRIPTION_SCOPE_CONFLICT`,
+   dizendo que é preciso regenerar. Antes devolvia 200 com a assinatura existente, e a pessoa
+   concluía que acabara de assinar a agenda profissional quando o token continuava na social: o
+   recorte não muda no lugar, e um 200 afirmava o contrário. Recorte igual ou ausente continua
+   idempotente, sem token na resposta.
+4. **O `unescape` do RFC 5545 é uma passada só.** Desfazer o escape em cadeia de `String.replace`
+   erra `\\n`: o primeiro `replace` casa a segunda barra com o "n" e produz barra mais quebra de
+   linha, corrompendo qualquer caminho de arquivo no título ou na descrição, inclusive numa
+   reimportação do export da própria agenda. Uma passada consome cada par barra+caractere e deixa
+   escape desconhecido como está.
+
+**Consequência.** A única superfície sem sessão do calendário passa a ter um limite que atua no caso
+que motiva o limite, o pedido de assinatura passa a responder o que de fato aconteceu, e o texto que
+entra por `.ics` sai igual.
+
+**Rejeitado.** Limitar só por token com TTL de balde: continua permitindo varredura a custo de uma
+chave por requisição e transforma o limite em amplificador de memória. Rejeitado também devolver 409
+para a repetição do mesmo recorte: repetir o pedido é idempotente e é o que a tela faz ao reabrir.

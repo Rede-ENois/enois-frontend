@@ -3,6 +3,8 @@ import type { StatusResponse } from "@/types/application/api/status-response";
 import type { CreateExternalJobInput } from "@/types/application/job/create-external-job-input";
 import type { CreateJobInput } from "@/types/application/job/create-job-input";
 import type { DeleteJobResult } from "@/types/application/job/delete-job-result";
+import type { ExternalApplicationDraft } from "@/types/application/job/external-application-draft";
+import type { ExternalApplicationResult } from "@/types/application/job/external-application-result";
 import type { Job } from "@/types/application/job/job";
 import type { JobApplication } from "@/types/application/job/job-application";
 import type { JobApplicationInput } from "@/types/application/job/job-application-input";
@@ -41,6 +43,32 @@ export const jobsApi = {
 
   /** Exclui uma vaga externa cadastrada por mim. */
   removeExternal: (id: string) => api.delete<void>(`/jobs/external/${id}`),
+
+  /**
+   * A prévia da candidatura a uma vaga externa: destinatário, assunto, corpo e se há currículo
+   * para anexar. Nada é enviado — é o que a pessoa revisa antes de confirmar.
+   */
+  externalApplicationDraft: (externalJobId: string) =>
+    api.get<ExternalApplicationDraft>(`/jobs/external/${externalJobId}/application`),
+
+  /**
+   * Envia a candidatura pelo Énóis, com o currículo anexado de verdade.
+   *
+   * `confirmed` é obrigatório no corpo: o servidor recusa sem ele. O retorno diz se o anexo foi
+   * junto — quando o download do currículo falha, o e-mail sai sem ele e `resumeAttached` vem
+   * `false`.
+   */
+  applyExternal: (externalJobId: string, confirmed: boolean, message?: string) =>
+    api.post<ExternalApplicationResult>(`/jobs/external/${externalJobId}/application`, {
+      confirmed,
+      message: message?.trim() || undefined,
+    }),
+
+  /** Histórico das candidaturas externas enviadas pelo Énóis. */
+  myExternalApplications: (limit = 50) =>
+    api.get<ExternalApplicationResult[]>(
+      `/jobs/external/applications/mine${buildQuery({ limit })}`,
+    ),
 
   /** Encerra o processo seletivo: para de aceitar candidatura e preserva as recebidas. */
   close: (jobId: string) => api.post<Job>(`/jobs/${jobId}/close`),
