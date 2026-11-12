@@ -918,3 +918,114 @@ uma divergência visível, não um descarte mudo.
 escolhe a agenda e o tipo do compromisso) e esconder não corrige o contrato. Rejeitado também
 tratar `allDay` como primitivo com valor padrão `false`: desmarcaria o dia inteiro em toda edição
 que não falasse dele.
+
+---
+
+## D34 — O convite pendente é uma lista do servidor, e o aviso abre o que ele avisa (execução 29)
+
+Duas lacunas da mesma família: o dado existia e a pessoa não chegava nele. O convite pendente tinha
+cliente de API e rota (`GET /calendar/invitations`) desde a fase 1, mas nenhuma superfície o
+desenhava — só aparecia se a pessoa abrisse o período em que ele cai, e um convite para o mês que
+vem era invisível. O lembrete de compromisso criava a notificação apontando para
+`/agenda?period=day`, e o front não tinha rota `agenda` na tabela de navegação: o clique não levava
+a lugar nenhum; mesmo com a rota, levaria à agenda vazia, não ao compromisso anunciado.
+
+**Decisão.**
+
+1. **A lista de convites pendentes vem do servidor, não da janela na tela.** `CalendarPendingInvitations`
+   recebe `invitations` já resolvidas por `GET /calendar/invitations` e as desenha **acima** da
+   agenda. A janela visível é o recorte errado para essa pergunta: o convite que importa é
+   justamente o que a agenda não mostraria.
+2. **A resposta reusa a mutação da resposta rápida.** `CalendarAgendaSurface` repassa
+   `onRespond`/`respondingId`/`respondError` ao componente; não há segundo caminho de escrita. O
+   componente é controlado e não busca dados — a app é quem chama a API, como manda a camada
+   `domain` do DS.
+3. **O aviso abre o compromisso, não a agenda.** O `href` do lembrete é `/agenda/{entryId}` e o CTA
+   é "Ver compromisso". Quem toca no lembrete quer ver quem convidou, onde é e o que responder.
+4. **A tabela de navegação do front é o contrato do `href`.** Toda notificação que aponta para uma
+   rota precisa de entrada em `src/utils/navigation.ts`; sem ela o clique cai no fallback e não
+   navega. A ordem importa: `agenda/disponibilidade` vem antes de `agenda` com parâmetro, senão
+   "disponibilidade" viraria `entryId`.
+
+**Consequência.** O convite pendente passa a ter superfície própria e testada, e o lembrete leva ao
+compromisso. A ligação na `/agenda` do front fica para depois do release do DS (B9), porque o
+componente ainda não está em pacote publicado.
+
+**Rejeitado.** Derivar os convites pendentes da janela já carregada pela agenda: esconderia
+exatamente o caso que motiva a lista (convite fora do período visível) e faria a tela depender de
+navegar até o mês certo. Rejeitado também manter o lembrete apontando para a agenda: a agenda não
+diz qual compromisso é, e o aviso já sabe.
+
+---
+
+## D35 — A superfície de lembrete recusa o que não pode atender, e o aviso diz o tempo que falta (execução 31)
+
+Três defeitos da mesma família na superfície de lembrete, todos no backend: o servidor respondia
+"tudo certo" a pedidos que não podia atender. A leitura e a remoção de lembrete de um compromisso
+alheio devolviam 200 vazio, enquanto o detalhe da entrada já devolvia 404 (D10) — o 200 confirmava
+que aquele compromisso existe na agenda de outra pessoa. O `DELETE` sem `minutesBefore` devolvia 200
+sem apagar nada, e a tela acreditava ter removido o lembrete. E o texto do aviso falava da
+antecedência escolhida, não do tempo que falta: um lembrete de 1 dia criado em cima da hora
+anunciava "em 1 dia" um compromisso que começava em 10 minutos.
+
+**Decisão.**
+
+1. **Ler, criar e remover lembrete exigem envolvimento, e o alheio é 404.** `requireInvolved` aceita
+   dono ou participante e, fora disso, lança o mesmo `CALENDAR_ENTRY_NOT_FOUND` do detalhe. Um 403
+   confirmaria a existência do compromisso na agenda de outra pessoa; o 404 não distingue "não
+   existe" de "não é seu".
+2. **Antecedência fora da lista é 400, não no-op.** `CalendarReminder.requireAllowedMinutes` é
+   público e a remoção o chama antes de procurar a linha. Apagar "7 minutos antes" não tira lembrete
+   nenhum: é pedido inválido, e a tela precisa saber disso em vez de achar que apagou. O controller
+   recusa `minutesBefore` ausente com o mesmo 400 `INVALID_REMINDER`.
+3. **O aviso fala do tempo que falta, não da antecedência escolhida.** `textUntil(startsAt, now)`
+   devolve "já começou", "começa em N min", "começa em N hora(s)" ou "começa em N dia(s)". O worker
+   pode atrasar, e o aviso não pode mentir sobre quando o compromisso começa.
+
+**Consequência.** A superfície de lembrete passa a ter o mesmo contrato de autorização do detalhe da
+entrada, e o texto da notificação é derivado do relógio no momento da entrega. A remoção idempotente
+continua idempotente para uma antecedência válida (tirar duas vezes não é erro); o que deixa de ser
+silencioso é o pedido malformado.
+
+**Rejeitado.** Suprimir a notificação quando o compromisso já começou: o aviso ainda é útil ("já
+começou" é informação verdadeira) e o worker atrasado não deve engolir o lembrete. Rejeitado também
+manter o texto pela antecedência escolhida: é o número que a pessoa pediu, não o que o relógio diz.
+
+---
+
+## D36 — A rota sem sessão da assinatura tem dois tetos, e o import não reescreve o texto (execução 32)
+
+Três defeitos na fronteira não autenticada do calendário. O `GET /calendar/subscribe/{token}.ics` é
+a única rota do módulo que responde sem sessão, então é a que mais precisa de limite que funcione.
+
+**Decisão.**
+
+1. **Dois tetos, com papéis distintos.** O filtro limita a **origem** (600 leituras/min,
+   `rede.rate.calendar-subscription-origin-per-minute`) antes de limitar o **token** (60/min). Um
+   teto chaveado só pelo token é decorativo: o token vem do caminho, então quem varia o caminho
+   recebe um balde novo a cada requisição e nunca alcança teto nenhum. A chave da origem não é
+   escolhida pelo atacante, e é ela que põe um teto real na varredura. O valor por origem é folgado
+   de propósito: leitores de calendário legítimos buscam de poucos endereços em nome de muita gente,
+   e o filtro existe para cortar varredura, não para regular quem assinou.
+2. **A limpeza descarta chaves vencidas, não baldes vazios.** Dentro da janela um balde nunca fica
+   vazio, então remover vazios não libera nada e o mapa só cresce. A varredura roda quando o mapa
+   passa do teto de chaves e remove as chaves cujas marcas já venceram.
+3. **O recorte congelado recusa o divergente com 409.** `POST /calendar/subscription` com assinatura
+   ativa e recorte **diferente** do congelado responde `409 CALENDAR_SUBSCRIPTION_SCOPE_CONFLICT`,
+   dizendo que é preciso regenerar. Antes devolvia 200 com a assinatura existente, e a pessoa
+   concluía que acabara de assinar a agenda profissional quando o token continuava na social: o
+   recorte não muda no lugar, e um 200 afirmava o contrário. Recorte igual ou ausente continua
+   idempotente, sem token na resposta.
+4. **O `unescape` do RFC 5545 é uma passada só.** Desfazer o escape em cadeia de `String.replace`
+   erra `\\n`: o primeiro `replace` casa a segunda barra com o "n" e produz barra mais quebra de
+   linha, corrompendo qualquer caminho de arquivo no título ou na descrição, inclusive numa
+   reimportação do export da própria agenda. Uma passada consome cada par barra+caractere e deixa
+   escape desconhecido como está.
+
+**Consequência.** A única superfície sem sessão do calendário passa a ter um limite que atua no caso
+que motiva o limite, o pedido de assinatura passa a responder o que de fato aconteceu, e o texto que
+entra por `.ics` sai igual.
+
+**Rejeitado.** Limitar só por token com TTL de balde: continua permitindo varredura a custo de uma
+chave por requisição e transforma o limite em amplificador de memória. Rejeitado também devolver 409
+para a repetição do mesmo recorte: repetir o pedido é idempotente e é o que a tela faz ao reabrir.
