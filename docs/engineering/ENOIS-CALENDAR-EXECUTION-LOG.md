@@ -3141,3 +3141,71 @@ nenhum fluxo de produto (o valor é o mesmo teto de lote que o resto do módulo 
 
 ---
 
+
+## EXECUÇÃO 38
+
+### 2026-11-13T22:00-03:00 — Fase 11: a11y além dos estados de erro (contraste medido, foco e teclado)
+
+**TAREFA:** a proposta da execução 37: (1) a11y além dos estados de erro — contraste e foco nos dois
+modos, com decisão explícita sobre `vitest-axe`; (2) revisão dos PRs abertos.
+
+**REPOSITÓRIOS:** `enois-design-system` (PR
+[#221](https://github.com/Rede-ENois/enois-design-system/pull/221)); `enois-frontend` (PR
+[#856](https://github.com/Rede-ENois/enois-frontend/pull/856)). Docs neste PR, empilhado sobre o
+branch do #855 (execução 37), ainda sem revisão — sem ele os docs da 37 não estão na `qa`.
+
+**Método antes de código: medir.** Os pares de contraste foram calculados com a mesma matemática de
+`src/lib/theme/color.ts` (WCAG, composição alfa para os tintes), nos dois temas e nas superfícies
+reais onde cada par aparece. Quatro defeitos acima do limite:
+
+| par | antes | depois (novo valor) |
+| --- | --- | --- |
+| `text-destructive` sobre o próprio tinte `bg-destructive/10` (claro) | 3,80:1 | 5,03:1 |
+| `bg-destructive` + `text-destructive-foreground` — toast de erro (escuro) | 3,20:1 | 7,45:1 |
+| `--text-date` sobre `surface-2` (dock mobile) | 4,29:1 | 4,98:1 |
+| anéis de seleção `ring-primary/40` (visão semana) | 1,86:1 | 3,85:1 |
+
+**Unidade 1 — contraste AA nos dois temas (DS, `07961ff`).** `--destructive` passa a
+`oklch(0.48 0.2 25)` no claro e `oklch(0.74 0.14 25)` no escuro, com `--destructive-foreground`
+escuro no escuro — o mesmo token serve ao preenchimento e ao texto de erro, e o teste trava os dois
+papéis. `--text-date` vai a `#6a5f75`/`#9c90a7` (18 usos conferidos um a um nas superfícies). Nasce
+`--border-strong`: `border-border-strong` era usada pelo seletor de lembrete e **não existia** no CSS
+(a borda do item ativo não pintava); `text-danger`, também sem token, vira `text-destructive`. Anéis
+de seleção de `/40`–`/50` para `/80` (WCAG 1.4.11, 3:1 de UI não-textual). O foco do dia de hoje na
+grade mensal inverte para `--primary-foreground` — sobre o preenchimento do primário, o anel do tema
+era o mesmo primário (1:1).
+
+**Unidade 2 — setas no seletor de visão (DS, `e86bfaf`).** O comentário do componente prometia
+"arrow keys move between them" e a radiogroup não ouvia tecla nenhuma. Setas verticais e horizontais
+(e Home/End) mudam a visão **e** levam o foco junto, com wrap nas pontas; o grupo tem um único tab
+stop (`tabIndex` no checked) — Tab sai dele em vez de passar por quatro botões. Teste novo cobre
+foco acompanhando, wrap, Home/End e teclas alheias não chamando `onChange`.
+
+**Unidade 3 — anúncio do resultado do import (DS, `0c909c6`).** O botão "Importar" desmonta quando
+o resultado aparece e o foco caía no `body`: as contagens nunca eram anunciadas. O bloco de
+resultado é `role="status"`, `tabIndex={-1}`, recebe foco ao montar; teste verifica os dois.
+
+**Unidade 4 — confirmação da resposta (front, `7e955a92`, PR #856).** Responder convite mexia na
+agenda sem dizer nada: o erro tinha toast, o sucesso não. Agora emite. Sai junto o
+`texts.agenda.importIcsDone`, definido e nunca usado — a confirmação do import é o próprio resultado
+no diálogo, anunciado pela unidade 3.
+
+**Prova.** DS: `npm run lint` sem erro (6 warnings pré-existentes de `exhaustive-deps`, arquivos fora
+do escopo), `npx tsc --noEmit` limpo, `npm test` **191 arquivos e 1823 testes, 0 falhas**,
+`npm run build` ok e `--border-strong` presente no CSS compilado. Front: `npx tsc --noEmit` limpo,
+`npx eslint` limpo nos arquivos, `npx vitest run` 1370 testes com **duas falhas pré-existentes
+provadas na base limpa com `git stash`** (`edit-profile-dialog` "data nova de 16 anos" — fixture com
+data que envelhece; `key-manager` timeout de 5s só na suíte completa, passa sozinho em 2,2s),
+`npx vite build` ok com `routeTree.gen.ts` revertido.
+
+**BLOQUEIOS:** nenhum novo. Revisão humana pendente: #852 (front), #855 (docs 37, base deste PR),
+#856, DS #221, backend #673.
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 39):** (1) acompanhar a revisão de #221/#856/#852/#855 e
+resolver pedidos; (2) conferir se o release do DS sai do #221 e rebasar o front se sair; (3) o que
+resta do roadmap são fases que exigem decisão dos mantenedores (`MEETING`/`WORKSHOP` sem módulo
+produtor; vínculo Épapo/Tamo Junto sem semântica de produto; OAuth externo) — se nenhuma decisão
+chegar, a rodada seguinte é reconferência de estado e varredura de regressão nos módulos de
+calendário.
+
+---

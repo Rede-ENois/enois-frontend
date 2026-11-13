@@ -1085,3 +1085,28 @@ como estado próprio, nunca como valor padrão — o padrão de uma escrita por 
 **Rejeitado.** Abrir a superfície em modo somente leitura na falha: no celular é a mesma tela com o
 botão apagando a semana depois que a consulta volta, e o estado sem saída ("Tentar de novo") é o que
 faz a tela ser útil de novo.
+
+## D39 — O contraste é medido pelo teste que lê o tema, não por olho (execução 38)
+
+1. **Um token, dois papéis, com prova.** O vermelho de erro serve ao preenchimento sólido (toast,
+   botão destrutivo, com o foreground por cima) e ao texto de erro sobre o próprio tinte
+   (`bg-destructive/10`, como as telas de agenda pintam). No claro, 0.6 de `oklch` dava 3,80:1 sobre
+   o tinte; no escuro, o foreground claro dava 3,20:1 sobre o preenchimento. Os valores novos
+   (0.48/0.2 no claro; 0.74/0.14 com foreground 0.2/0.03 no escuro) passam AA nos dois papéis e nos
+   dois temas — e `src/calendar-contrast.test.ts` lê o `styles.css`, compõe o tinte e trava cada
+   par, reusando a matemática de `src/lib/theme/color.ts`. Introduzir `vitest-axe` só para isso
+   adicionaria `axe-core` sem cobrir nada que o teste não tranca.
+2. **Classe sem token é defeito silencioso.** `border-border-strong` e `text-danger` eram usadas por
+   componentes de calendário e **não existiam** no tema: a borda do item ativo do lembrete e a cor
+   do erro do seletor simplesmente não pintavam, sem quebrar build nem teste. Token novo
+   (`--border-strong`, 3:1 contra cartão e `surface-2`) nasce no mesmo commit que o conserto.
+3. **Foco sobre preenchimento próprio inverte o anel.** O dia de hoje na grade é pintado com o
+   primário; o anel do tema (`--ring`) é o mesmo primário — o foco ficava invisível (1:1). O anel
+   usa `--primary-foreground`, a cor que já garantia contraste com aquele preenchimento como texto.
+4. **Resultado que substitui o botão herda o foco e o anúncio.** No diálogo de import, o botão
+   "Importar" desmonta quando o resultado aparece; sem mover o foco, ele caía no `body` e as contagens
+   nunca eram anunciadas. O bloco de resultado é `role="status"` com `tabIndex={-1}` e recebe o foco
+   ao montar — o gesto termina onde a informação apareceu.
+
+**Consequência.** Qualquer token novo de cor entra com par de contraste no teste de tema, e qualquer
+substituição de tela dentro de um diálogo move o foco para o que substituiu o elemento que o tinha.
