@@ -3256,3 +3256,53 @@ conferência da `/agenda` com os tokens novos; (2) acompanhar as revisões de #8
 nos módulos de calendário.
 
 ---
+
+## EXECUÇÃO 40 — fase 5: o seletor de horário de mentoria e a mensagem que o banner engolia (2026-11-13, ~02:00)
+
+A leitura de estado mostrou #223 mergeado pelo bot (2026-11-13T04:34Z), o release 0.34.0 ainda em
+revisão (#222), #852 `MERGEABLE`, backend sem PR de calendário aberto. O pacote publicado segue
+0.33.0 — o consumo do picker no front não é possível ainda. O bloco foi montado em torno da lacuna
+que o inventário nomeia na fase 5 (mentorias: "falta o picker de slot no DS") e de um defeito
+encontrado ao investigar por que os blocos de erro da `/mentoria` não usavam o banner do DS.
+
+**Unidade 1 — `CalendarSlotPicker` (DS, `2adb23a`, PR #224).** `src/domain/calendar/calendar-slot-picker.tsx`
+com `types/domain/calendar/calendar-slot.ts` e `-props.ts`, mensagem nova `calendar.slotPicker`
+(título + `slot(day, time)`) no tipo e no default. Radiogroup: um tab stop, `aria-checked`, setas
+(Right/Down avança, Left/Up volta, com wrap) movendo escolha e foco, clique repetido desfaz,
+`aria-busy` + `disabled` na reserva, erro `role="alert"` dentro do grupo. Rótulo do horário formatado
+com `Intl.DateTimeFormat` no fuso de quem lê. 6 testes.
+
+**Unidade 2 — `ErrorBanner` mostra a mensagem em string (front, `2519757f`, PR #859).** Defeito
+encontrado ao ir usar o banner nos blocos crus: `describe()` só tratava `ApiError` e `Error`; o
+estado de erro de formulário é `useState<string | null>`, então toda mensagem de texto virava "Erro
+inesperado. Tente novamente.". O caso da string entra antes do genérico (string vazia continua no
+genérico). Teste de prova `src/components/error-banner.test.tsx`: o caso da string **falha no código
+antigo** e passa no novo. Com o conserto, os três blocos da `/mentoria` que já mostravam a mensagem
+(`createError`, erro de reserva, erro de publicar horário) passaram a usar o `ErrorBanner`.
+
+**Unidade 3 — supressões de markup encolhem (front, `c7a6349f`, mesmo PR).** `npx eslint .`
+apontava supressões que não ocorrem mais; o prune levou a `/mentoria` de **247 para 241** violações
+de `local/no-front-markup` e zerou o aviso "suppressions left that do not occur anymore". Os 14
+warnings restantes são os mesmos da base (conferido com `git stash`).
+
+**Prova.** DS: 6/6 no teste do picker, suíte completa `npm test` **193 arquivos / 1835 testes, 0
+falhas**, `npm run build` ok com `dist/domain/calendar/calendar-slot-picker.js` presente, `eslint` e
+`tsc --noEmit` limpos. Front: `tsc --noEmit` limpo **com o DS 0.33.0** (o `node_modules` da cópia
+principal tem 0.30.1, o que gera erros falsos — usado o do worktree com 0.33.0), `eslint` limpo,
+suíte completa `npx vitest run` **237 arquivos / 1373 testes, 0 falhas**, `vite build` ok com
+`routeTree.gen.ts` revertido.
+
+**Divergências corrigidas nos docs:** a `qa` listava #830/#828 como abertos (mergeados pelo bot), a
+fase 4 chamava "compromissos pessoais" de lacuna (o `PERSONAL` é o tipo padrão; a agenda é
+`SOCIAL`/`PROFESSIONAL` e o tipo é ortogonal) e a fase 11 dizia faltar a a11y além dos estados de
+erro (entregue nas execuções 38–40).
+
+**BLOQUEIOS:** nenhum novo. Revisão humana: DS #222 e #224, front #852 e #859, docs
+#851/#855/#857/#858, backend #673. Tag `v0.34.0` é ação de mantenedora.
+
+**PRÓXIMA EXECUÇÃO (proposta de 41):** (1) quando o 0.34.0 publicar, bump de lockfile no front e
+consumo do `CalendarSlotPicker` na `/mentoria` (fechando a lacuna da fase 5), mais o picker de slot
+no perfil do mentor; (2) acompanhar as revisões; (3) fases 7 e 10 seguem na decisão de produto e de
+credencial externa — sem elas, varredura de regressão nos módulos de calendário.
+
+---

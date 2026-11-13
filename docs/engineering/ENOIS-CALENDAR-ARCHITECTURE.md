@@ -1128,3 +1128,24 @@ substituição de tela dentro de um diálogo move o foco para o que substituiu o
 **Consequência.** Todo par de cor em elemento só-de-ícone é medido por 1.4.11 (3:1); o teste de tema
 traz as duas réguas, e a pendência anotada numa execução é re-medida com o critério do papel antes
 de virar mudança de token.
+
+## D41 — O seletor de horário é um grupo de rádio, e o banner mostra o que o servidor disse (execução 40)
+
+1. **Escolher um horário é escolher um entre N, e o papel diz isso.** O agendamento de mentoria
+   desenhava os horários como uma pilha de botões: nenhum estava marcado para o leitor de tela, e o
+   teclado precisava de um Tab por opção. `CalendarSlotPicker` é um `radiogroup` — um tab stop, setas
+   movendo escolha e foco juntos, `aria-checked` anunciando o escolhido, `aria-busy` enquanto a
+   reserva voa e o erro da reserva desenhado dentro do grupo, onde a ação aconteceu. Clique repetido
+   no escolhido desfaz (`onChange(null)`), para o gesto ser reversível sem caçar um "limpar".
+2. **Mensagem de erro em texto é o erro.** O estado de erro de um formulário é `useState<string>`;
+   `describe()` do `ErrorBanner` tratava `ApiError` e `Error` e mandava todo o resto para "Erro
+   inesperado". O banner existia e ainda assim escondia o que o servidor devolveu — um defeito
+   silencioso, porque a tela "funcionava". String não vazia entra como mensagem; vazio e valor
+   desconhecido continuam no genérico, que é o certo para `undefined` e objeto sem mensagem.
+3. **Ação não é detalhe: por isso o banner não ganha botão.** Os dois blocos que oferecem "Tentar de
+   novo" continuam fora do banner nesta rodada. Enfiá-los no `ErrorBanner` seria acrescentar slot de
+   ação ao contrato do DS; o conserto do defeito não é o lugar para essa mudança de contrato.
+
+**Consequência.** Seleção entre opções finitas nasce como radiogroup no DS, nunca como lista de
+botões; e todo ponto que mostra erro passa pelo mesmo banner, que nunca substitui a mensagem real
+por uma genérica.
