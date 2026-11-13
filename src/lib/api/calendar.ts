@@ -3,6 +3,8 @@ import type { CalendarAgendaItemView } from "@/types/application/calendar/calend
 import type { CalendarAvailabilityWindowView } from "@/types/application/calendar/calendar-availability-window-view";
 import type { CalendarConflictQuery } from "@/types/application/calendar/calendar-conflict-query";
 import type { CalendarEntryView } from "@/types/application/calendar/calendar-entry-view";
+import type { CalendarImportInput } from "@/types/application/calendar/calendar-import-input";
+import type { CalendarImportResultView } from "@/types/application/calendar/calendar-import-result-view";
 import type { CalendarParticipantView } from "@/types/application/calendar/calendar-participant-view";
 import type { CalendarParticipation } from "@/types/application/calendar/calendar-participation";
 import type { CalendarReminderView } from "@/types/application/calendar/calendar-reminder-view";
@@ -149,4 +151,18 @@ export const calendarApi = {
    * o leitor externo, sem sessão, e o token no caminho é a credencial inteira.
    */
   subscriptionUrl: (token: string) => apiUrl(`/calendar/subscribe/${token}.ics`),
+
+  /**
+   * Importa um `.ics` como multipart (fase 8, D23). É escrita, então o `Idempotency-Key` automático
+   * do `api.post` protege contra o clique duplo duplicar a agenda; reimportar o mesmo arquivo é
+   * idempotente no servidor por UID. O `scope` vai na query, como a criação.
+   */
+  importIcs: ({ file, scope }: CalendarImportInput) => {
+    const body = new FormData();
+    body.append("file", file);
+    return api.post<CalendarImportResultView>(
+      `/calendar/entries/import${buildQuery({ scope: scope ?? undefined })}`,
+      body,
+    );
+  },
 };

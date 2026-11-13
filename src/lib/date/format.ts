@@ -94,6 +94,24 @@ export function dataHora(valor: string | number | Date | null | undefined): stri
   return formatarData(valor, { dateStyle: "short", timeStyle: "short" });
 }
 
+/**
+ * "18/10/2026, 01:30" no fuso informado.
+ *
+ * Existe para o compromisso que carrega o próprio fuso (a entrevista marcada pelo empregador): a
+ * hora mostrada tem de ser a mesma que está na agenda, e não a do fuso do app. O fuso vem do
+ * servidor, então não há divergência entre servidor e navegador.
+ */
+export function dataHoraEm(valor: string | number | Date | null | undefined, fuso: string): string {
+  if (valor === null || valor === undefined || valor === "") return "";
+  const data = paraData(valor);
+  if (!data) return "";
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: fuso,
+  }).format(data);
+}
+
 /** "01:30:00" (24 horas) */
 export function hora(valor: string | number | Date | null | undefined): string {
   return formatarData(valor, {

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   decryptMessage,
@@ -17,6 +17,12 @@ import {
   importPublicKey,
   importSymmetricKey,
 } from "./crypto";
+
+// Derivar a chave da senha custa as 600 mil iterações do PBKDF2 de produção, em cada um dos dois
+// testes que cifram a chave privada. A suíte roda com dezenas de workers e, sem CPU sobrando, essa
+// espera legítima passa dos 5s padrão e vira teste vermelho. O limite só cobre a espera: a
+// asserção do teste não muda.
+vi.setConfig({ testTimeout: 30_000 });
 
 describe("e2e crypto", () => {
   // --- Keypair ---

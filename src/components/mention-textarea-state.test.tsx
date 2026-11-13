@@ -73,14 +73,17 @@ afterEach(async () => {
 const settle = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
 
 async function selectMention() {
-  const textarea = host.querySelector("textarea")!;
+  const campo = host.querySelector<HTMLElement>('[role="textbox"]')!;
   await act(async () => {
-    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(
-      textarea,
-      "@an",
-    );
-    textarea.setSelectionRange(3, 3);
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    campo.textContent = "@an";
+    const texto = campo.firstChild!;
+    const range = document.createRange();
+    range.setStart(texto, 3);
+    range.setEnd(texto, 3);
+    const selection = document.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    campo.dispatchEvent(new Event("input", { bubbles: true }));
   });
   await settle();
   const option = [...host.querySelectorAll("button")].find((button) =>
@@ -92,7 +95,7 @@ async function selectMention() {
   );
   await settle();
   expect(changed).toHaveBeenLastCalledWith("@ana-test ", ["user-a"]);
-  return textarea;
+  return campo;
 }
 
 async function chooseEmote() {
@@ -117,17 +120,25 @@ describe("emote insertion through the real mention editor", () => {
   });
 
   it("removes the recipient when an emote replaces the selected mention", async () => {
-    const textarea = await selectMention();
-    textarea.setSelectionRange(0, "@ana-test".length);
+    const campo = await selectMention();
+    // A seleção cobre o texto da menção ("@ana-test"), como quem seleciona o nome antes de
+    // escolher a figurinha: a substituição leva o destinatário embora.
+    const texto = campo.firstChild!;
+    const range = document.createRange();
+    range.setStart(texto, 0);
+    range.setEnd(texto, "@ana-test".length);
+    const selection = document.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    // O campo do DS lembra a seleção por `selectionchange`; no jsdom o evento não sai sozinho.
+    document.dispatchEvent(new Event("selectionchange"));
     await chooseEmote();
     expect(changed).toHaveBeenLastCalledWith(":KEKW: ", []);
   });
 
   it("keeps a confirmed mention when the emote is inserted after it", async () => {
-    const textarea = await selectMention();
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    await selectMention();
     await chooseEmote();
     expect(changed).toHaveBeenLastCalledWith("@ana-test :KEKW:", ["user-a"]);
-    expect(textarea.selectionStart).toBe("@ana-test :KEKW:".length);
   });
 });

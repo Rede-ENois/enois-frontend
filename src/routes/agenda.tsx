@@ -10,10 +10,12 @@ import type {
   CalendarAgendaItemData,
   CalendarEntryData,
   CalendarEntryFormValues,
+  CalendarPendingInvitationData,
   CalendarView,
 } from "@rede-enois/design-system/domain";
 import {
   CalendarAgendaSurface,
+  CalendarImportDialog,
   instantOf,
   periodOfToday,
   periodWindow,
@@ -28,7 +30,7 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { CalendarClock, CalendarDays, Download } from "lucide-react";
+import { CalendarClock, CalendarDays, Download, Upload } from "lucide-react";
 
 import { calendarApi } from "@/lib/api";
 import { downloadCalendarExport } from "@/lib/calendar-export";
@@ -121,7 +123,12 @@ function AgendaPage() {
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [respondError, setRespondError] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importScope, setImportScope] = useState<CalendarScope | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // `periodWindow` devolve dias; a API pede instantes. O `to` já é o dia seguinte (janela meio aberta).
   const window = useMemo(() => {
@@ -138,6 +145,11 @@ function AgendaPage() {
   // pode cair na outra agenda. É leitura de referência: o formulário recorta a lista contra o que
   // está nos campos, e nada aqui bloqueia o salvar. Falha silenciosa: sem lista, sem aviso.
   const conflicts = useQuery(calendarQueries.conflicts(window));
+
+  // Convite para fora do período na tela só aparece aqui: sem esta lista, quem tem convite para o
+  // mês que vem precisa abrir o mês certo para saber dele. Falha de leitura não esconde a agenda —
+  // o bloco não nasce quando não há resposta, então vazio e falha desenham igual.
+  const invitations = useQuery(calendarQueries.pendingInvitations());
 
   const save = useMutation({
     mutationFn: (values: CalendarEntryFormValues) =>
@@ -168,9 +180,17 @@ function AgendaPage() {
     }) => calendarApi.respond(entryId, answer),
     onMutate: ({ entryId }) => setRespondingId(entryId),
     onSuccess: () => {
+      setRespondError(false);
+      // A resposta muda a agenda mas sem confirmar visualmente parece que nada aconteceu.
+      toast(texts.agenda.respondDone, "success");
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
     },
-    onError: () => toast(texts.agenda.errorRespond, "error"),
+    onError: () => {
+      // O toast some sozinho; o `respondError` deixa o aviso no lugar do convite, onde a resposta
+      // falhou, até a pessoa tentar de novo.
+      setRespondError(true);
+      toast(texts.agenda.errorRespond, "error");
+    },
     onSettled: () => setRespondingId(null),
   });
 
@@ -193,6 +213,23 @@ function AgendaPage() {
         participation: item.participation,
       })),
     [conflicts.data],
+  );
+
+  // O convite pendente carrega só o que a resposta precisa; a descrição e a origem ficam para o
+  // detalhe, que o link abre.
+  const pendingItems: CalendarPendingInvitationData[] = useMemo(
+    () =>
+      (invitations.data ?? []).map((entry) => ({
+        id: entry.id,
+        scope: entry.scope,
+        kind: entry.kind,
+        title: entry.title,
+        startsAt: entry.startsAt,
+        endsAt: entry.endsAt,
+        allDay: entry.allDay,
+        timeZoneId: entry.timeZoneId,
+      })),
+    [invitations.data],
   );
 
   const go = (next: { view: CalendarView; period: string; scope?: CalendarScope }) => {
@@ -219,6 +256,27 @@ function AgendaPage() {
     }
   };
 
+  // O import é escrita: o `api.post` já manda o `Idempotency-Key`, e o servidor não duplica por
+  // UID. A agenda é recarregada porque o arquivo pode ter criado, movido e cancelado de uma vez.
+  const importIcs = useMutation({
+    mutationFn: () => {
+      if (!importFile) throw new Error("no file");
+      return calendarApi.importIcs({ file: importFile, scope: importScope });
+    },
+    onSuccess: () => {
+      setImportError(null);
+      void queryClient.invalidateQueries({ queryKey: ["agenda"] });
+    },
+    onError: () => setImportError(texts.agenda.importIcsError),
+  });
+
+  const openImport = () => {
+    setImportFile(null);
+    setImportScope(scope ?? null);
+    setImportError(null);
+    setImportOpen(true);
+  };
+
   const eyebrow =
     scope === "SOCIAL"
       ? texts.agenda.scopeSocial
@@ -239,6 +297,16 @@ function AgendaPage() {
                 <CalendarClock aria-hidden="true" />
                 {texts.agenda.availabilityLink}
               </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openImport}
+              title={texts.agenda.importIcsHint}
+            >
+              <Upload aria-hidden="true" />
+              {texts.agenda.importIcs}
             </Button>
 
             <Button
@@ -287,6 +355,7 @@ function AgendaPage() {
           today={today}
           newEntryScope={scope}
           conflicts={conflictItems}
+          pendingInvitations={pendingItems}
           savePending={save.isPending}
           saveError={saveError}
           onSave={async (values) => {
@@ -301,12 +370,32 @@ function AgendaPage() {
           }}
           onRespond={(entryId, answer) => respond.mutate({ entryId, answer })}
           respondingId={respondingId}
+          respondError={respondError}
           loading={agenda.isFetching}
           error={agenda.isError}
           onRetry={() => void agenda.refetch()}
           eyebrow={eyebrow}
         />
       )}
+
+      <CalendarImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        scope={importScope}
+        onScopeChange={setImportScope}
+        file={importFile}
+        onFileChange={setImportFile}
+        onImport={async () => {
+          try {
+            return await importIcs.mutateAsync();
+          } catch {
+            // O erro já foi para `importError`; `null` mantém o diálogo aberto com o arquivo
+            // escolhido, em vez de mostrar um resultado que não aconteceu.
+            return null;
+          }
+        }}
+        error={importError}
+      />
     </AppContainer>
   );
 }

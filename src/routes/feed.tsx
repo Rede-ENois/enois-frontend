@@ -392,7 +392,7 @@ function Home() {
   }, [compor, navigate]);
   // Opening puts the cursor in the field, so one tap on the launcher (or on "Publicar") is enough.
   useEffect(() => {
-    if (composerOpen) composerRef.current?.querySelector("textarea")?.focus();
+    if (composerOpen) composerRef.current?.querySelector<HTMLElement>(`[role="textbox"]`)?.focus();
   }, [composerOpen]);
   // Assunto do post avulso (obrigatório: sem ele o post fica fora dos filtros e de "O que quero
   // ver"/"não gosto"). Em comunidade o post herda o assunto DELA — lá o compositor é outro.

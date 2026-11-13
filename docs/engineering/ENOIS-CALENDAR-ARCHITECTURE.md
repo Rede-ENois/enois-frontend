@@ -265,7 +265,11 @@ ler e reescrever o compromisso inteiro.
 
 **Limite conhecido.** Convidar 50 pessoas numa transação grava 50 linhas uma a uma. Para o tamanho
 de uma agenda social isso está certo; se aparecer compromisso de comunidade com centenas de
-convidados, o caminho é o lote, como o chat fez em `#535`.
+convidados, o caminho é o lote, como o chat fez em `#535`. **Teto (execução 37):** 100 convidados
+por compromisso (`CalendarInvitationService.MAX_PARTICIPANTS`, `400 INVITE_LIMIT_REACHED`), contado
+no banco por `countByEntry` — a lista do detalhe e cada convite são lidos inteiros, então o teto
+protege exatamente o que cresce com o número de convidados. O worker de lembrete também deixou de
+carregar a lista inteira: decide sobre a linha da pessoa (`findByEntryAndUser`).
 
 ---
 
@@ -1029,3 +1033,174 @@ entra por `.ics` sai igual.
 **Rejeitado.** Limitar só por token com TTL de balde: continua permitindo varredura a custo de uma
 chave por requisição e transforma o limite em amplificador de memória. Rejeitado também devolver 409
 para a repetição do mesmo recorte: repetir o pedido é idempotente e é o que a tela faz ao reabrir.
+
+## D37 — O teto de janela é da leitura, não da assinatura; o import mede antes de carregar (execução 33)
+
+1. **Uma regra de janela para toda leitura por intervalo.** `CalendarWindows.validate` é o único
+   lugar que decide o que é uma janela válida: `from`/`to` presentes, `to > from`, no máximo 366
+   dias (`WINDOW_TOO_LONG`, 400). `CalendarQueryService` (lista, conflitos, detalhe da agenda) e
+   `CalendarIcsService.export` chamam a mesma regra, e o controller só converte texto em instante.
+   Antes, o export tinha teto e a lista autenticada não: o mesmo cliente podia pedir a agenda desde
+   1970 pela rota que não paga a validação, o que carrega a agenda inteira com o join dos convidados.
+   A assinatura `.ics` sem sessão já entrega 30 dias atrás e 365 à frente, então continua dentro.
+2. **O import `.ics` mede o arquivo enquanto lê, não depois.** O teto de 512 KB
+   (`rede.calendar.ics-max-import-bytes`) é aplicado sobre um `InputStream` lido em blocos; o
+   arquivo nunca é materializado inteiro. O `Idempotency-Key` hasheia o fluxo pelo mesmo caminho,
+   então repetir o upload idêntico é replay e trocar um byte é `IDEMPOTENCY_PAYLOAD_CONFLICT`, sem
+   guardar o corpo do arquivo em memória para calcular o hash.
+3. **Dois `VEVENT` abertos ao mesmo tempo são sintaxe quebrada, não dois eventos.**
+   `BEGIN:VEVENT` dentro de outro `VEVENT` antes do `END:VEVENT` externo responde
+   `400 INVALID_ICS`. Recomeçar o evento engoliria o de fora e contaria o de dentro, e a contagem
+   devolvida ao cliente passaria a mentir sobre o que o arquivo tinha.
+4. **`VTIMEZONE` é da janela e do fuso que ela usa.** O bloco abre com a observância em vigor na
+   borda da janela (`TZOFFSETFROM` = `TZOFFSETTO` = deslocamento corrente) e percorre apenas as
+   transições entre `from - 1 dia` e `to + 1 dia`, com teto de 400 blocos. Percorrer o tzdata desde
+   1970 para exportar um mês inflava o arquivo, e não abrir com a observância vigente fazia um
+   arquivo de janeiro carregar o deslocamento de verão do ano anterior.
+
+**Consequência.** Toda leitura de agenda custa o que a janela pedida custa, o import recusa cedo um
+arquivo grande em vez de copiá-lo primeiro, e o `.ics` exportado tem o tamanho do intervalo que ele
+cobre.
+
+**Rejeitado.** Derivar o teto da janela pelo tamanho da agenda (contar antes de buscar) — a contagem
+é uma segunda consulta para responder 400, e a janela é o que o cliente controla. Rejeitado também
+tratar `VEVENT` aninhado como dois eventos: a estrutura não existe no RFC 5545 e aceitá-la esconde
+arquivo gerado por código quebrado.
+
+## D38 — Falha de leitura não é dado vazio nem "não existe" (execução 33)
+
+1. **A tela de disponibilidade não edita o que não leu.** Carregando, falha e semana carregada são
+   três estados distintos. Na falha, a `CalendarAvailabilitySurface` não é montada — a superfície
+   grava por substituição, então oferecer o formulário com `windows=[]` transformava "a consulta
+   falhou" em "a pessoa apagou a semana". A falha mostra mensagem própria e "Tentar de novo".
+2. **404 é o único "não encontrado".** No detalhe do compromisso, só `ApiError` com status 404
+   significa que ele não existe (cancelado ou de outra pessoa). 5xx, 401 e falha de rede são erro de
+   leitura: mensagem própria, recarga oferecida e nada de "não encontrado".
+3. **Carregamento tem rótulo.** `LoadingState` vai sempre com `label`; o `role="status"` sem texto
+   anuncia uma região vazia e deixa quem usa leitor de tela sem saber que a página está carregando.
+
+**Consequência.** Qualquer tela do calendário que consulte antes de editar trata "não consegui ler"
+como estado próprio, nunca como valor padrão — o padrão de uma escrita por substituição é apagar.
+
+**Rejeitado.** Abrir a superfície em modo somente leitura na falha: no celular é a mesma tela com o
+botão apagando a semana depois que a consulta volta, e o estado sem saída ("Tentar de novo") é o que
+faz a tela ser útil de novo.
+
+## D39 — O contraste é medido pelo teste que lê o tema, não por olho (execução 38)
+
+1. **Um token, dois papéis, com prova.** O vermelho de erro serve ao preenchimento sólido (toast,
+   botão destrutivo, com o foreground por cima) e ao texto de erro sobre o próprio tinte
+   (`bg-destructive/10`, como as telas de agenda pintam). No claro, 0.6 de `oklch` dava 3,80:1 sobre
+   o tinte; no escuro, o foreground claro dava 3,20:1 sobre o preenchimento. Os valores novos
+   (0.48/0.2 no claro; 0.74/0.14 com foreground 0.2/0.03 no escuro) passam AA nos dois papéis e nos
+   dois temas — e `src/calendar-contrast.test.ts` lê o `styles.css`, compõe o tinte e trava cada
+   par, reusando a matemática de `src/lib/theme/color.ts`. Introduzir `vitest-axe` só para isso
+   adicionaria `axe-core` sem cobrir nada que o teste não tranca.
+2. **Classe sem token é defeito silencioso.** `border-border-strong` e `text-danger` eram usadas por
+   componentes de calendário e **não existiam** no tema: a borda do item ativo do lembrete e a cor
+   do erro do seletor simplesmente não pintavam, sem quebrar build nem teste. Token novo
+   (`--border-strong`, 3:1 contra cartão e `surface-2`) nasce no mesmo commit que o conserto.
+3. **Foco sobre preenchimento próprio inverte o anel.** O dia de hoje na grade é pintado com o
+   primário; o anel do tema (`--ring`) é o mesmo primário — o foco ficava invisível (1:1). O anel
+   usa `--primary-foreground`, a cor que já garantia contraste com aquele preenchimento como texto.
+4. **Resultado que substitui o botão herda o foco e o anúncio.** No diálogo de import, o botão
+   "Importar" desmonta quando o resultado aparece; sem mover o foco, ele caía no `body` e as contagens
+   nunca eram anunciadas. O bloco de resultado é `role="status"` com `tabIndex={-1}` e recebe o foco
+   ao montar — o gesto termina onde a informação apareceu.
+
+**Consequência.** Qualquer token novo de cor entra com par de contraste no teste de tema, e qualquer
+substituição de tela dentro de um diálogo move o foco para o que substituiu o elemento que o tinha.
+
+## D40 — Ícone de controle tem régua própria: 3:1, não a de texto (execução 39)
+
+1. **O critério vem do papel do pixel, não da cor.** A execução 38 mediu `text-destructive/70` com
+   a régua de texto (4,5:1) e anotou pendência. Os dois usos são ícone de **botão** — chevron do
+   banner de erro e lixeira do comentário: o ícone é o rótulo do controle, e a WCAG 1.4.11 pede 3:1
+   para controle não-textual. Medido o par composto sobre cada superfície e sobre o próprio tinte
+   de hover (o pior fundo), o mínimo é 3,37:1: passava desde o conserto anterior, e mexer no token
+   teria sido mudança de pacote sem defeito.
+2. **A régua errada também engana no outro sentido.** Se o par for julgado por 4,5:1, alguém pode
+   "consertar" o ícone escurecendo o token e mudar o vermelho de todos os textos de erro do app
+   junto — a régua de texto aplicada a ícone induz correção que ninguém pediu. O teste
+   (`src/control-contrast.test.ts`) fixa 3:1 para os dois lados: reprovando o que passa pela régua
+   de texto e trancando o valor contra afrouxamento silencioso.
+
+**Consequência.** Todo par de cor em elemento só-de-ícone é medido por 1.4.11 (3:1); o teste de tema
+traz as duas réguas, e a pendência anotada numa execução é re-medida com o critério do papel antes
+de virar mudança de token.
+
+## D41 — O seletor de horário é um grupo de rádio, e o banner mostra o que o servidor disse (execução 40)
+
+1. **Escolher um horário é escolher um entre N, e o papel diz isso.** O agendamento de mentoria
+   desenhava os horários como uma pilha de botões: nenhum estava marcado para o leitor de tela, e o
+   teclado precisava de um Tab por opção. `CalendarSlotPicker` é um `radiogroup` — um tab stop, setas
+   movendo escolha e foco juntos, `aria-checked` anunciando o escolhido, `aria-busy` enquanto a
+   reserva voa e o erro da reserva desenhado dentro do grupo, onde a ação aconteceu. Clique repetido
+   no escolhido desfaz (`onChange(null)`), para o gesto ser reversível sem caçar um "limpar".
+2. **Mensagem de erro em texto é o erro.** O estado de erro de um formulário é `useState<string>`;
+   `describe()` do `ErrorBanner` tratava `ApiError` e `Error` e mandava todo o resto para "Erro
+   inesperado". O banner existia e ainda assim escondia o que o servidor devolveu — um defeito
+   silencioso, porque a tela "funcionava". String não vazia entra como mensagem; vazio e valor
+   desconhecido continuam no genérico, que é o certo para `undefined` e objeto sem mensagem.
+3. **Ação não é detalhe: por isso o banner não ganha botão.** Os dois blocos que oferecem "Tentar de
+   novo" continuam fora do banner nesta rodada. Enfiá-los no `ErrorBanner` seria acrescentar slot de
+   ação ao contrato do DS; o conserto do defeito não é o lugar para essa mudança de contrato.
+
+**Consequência.** Seleção entre opções finitas nasce como radiogroup no DS, nunca como lista de
+botões; e todo ponto que mostra erro passa pelo mesmo banner, que nunca substitui a mensagem real
+por uma genérica.
+
+## D42 — A resposta do convite é dado do cruzamento, não uma segunda consulta (execução 41)
+
+1. **Agenda e resposta são a mesma linha do banco.** A leitura da agenda de quem foi convidado
+   começou a sair de um join na execução 34, mas só com a entrada: a resposta do convite vinha
+   depois, numa segunda consulta que recebia a lista de ids num `in` de tamanho variável. O custo
+   não era só a ida extra ao banco, era a lista crescer com o histórico da pessoa. A porta
+   `CalendarInvitationRepository` passou a devolver `(entrada, resposta)` do mesmo cruzamento, e
+   agenda, conflito e export `.ics` consomem essa única leitura.
+2. **O cruzamento não filtra estado, porque cada chamador filtra o seu.** Um `e.state = 'ACTIVE'`
+   no JPQL pareceria limpeza e quebraria duas regras ao mesmo tempo: o compromisso cancelado
+   precisa sair no `.ics` com `STATUS:CANCELLED` e o mesmo `UID` (D6), e o convite pendente precisa
+   aparecer na agenda com o selo de convidado (D13). Filtro de visão é decisão da tela; filtro de
+   persistência esconde a linha que o chamador precisa.
+3. **Projeção de interface exige tipo público.** O retorno do join é uma interface cujos getters
+   devolvem a entidade JPA; o Spring Data materializa isso por proxy em runtime. Com a entidade
+   `package-private`, a leitura estoura `IllegalAccessError` em execução e passa na compilação:
+   por isso `CalendarEntryJpaEntity` (e `toDomain`) são público, como contrato de projeção.
+
+**Consequência.** Leitura de agenda é uma consulta, independentemente do número de convites
+acumulados. Quando uma porta cruza duas tabelas, o filtro de estado fica no chamador que conhece a
+regra, e o tipo exposto na projeção é público por contrato.
+
+## D43 — A recorrência é materializada em linhas irmãs, não expandida na leitura (execução 42)
+
+1. **Cada ocorrência é um compromisso de verdade.** A série existe como linhas de
+   `calendar_entries` que compartilham `series_id`, e não como uma regra aplicada na hora de ler.
+   Agenda, conflito, lembretes e export `.ics` já são consultas por janela sobre a tabela; uma regra
+   escondida no tempo de leitura faria todos divergirem do que está gravado. Com linhas materializadas,
+   cada ocorrência ocupa conflito, leva lembrete, é reagendada e cancelada sozinha.
+2. **O horizonte é uma janela, não uma contagem.** A extensão cria ocorrências até `now + 90 dias`.
+   Contar "as próximas N" faria cada execução do worker recomeçar a contagem na ponta atual e crescer a
+   série sem limite. A ponta atrasada avança até depois de agora sem criar o passado (`firstAhead`), e
+   o teto de 200 ocorrências por ciclo é a guarda contra cadência absurda.
+3. **Uma ponta por série, e cancelar não a move.** A marca `tail` aponta a ocorrência mais à frente; só
+   ela alimenta o worker. Cancelar uma ocorrência é decisão sobre *aquela* data, não o fim da série, e
+   por isso não limpa a marca — só `stop` encerra a série e limpa todas. O banco impõe a tríade
+   `(series_id, recurrence, tail)` por `check`: entrada avulsa não tem cadência.
+4. **Idempotência pelo banco e adoção antes do insert.** O índice único `(series_id, starts_at)` é a
+   garantia final contra o duplo clique, o retry e duas instâncias estendendo a mesma série. O código
+   adota a irmã existente antes de inserir, em vez de deixar a exceção do índice estourar dentro da
+   mesma transação — o estouro envenena o commit e derruba a rodada inteira.
+5. **Import traduz só o que consegue representar.** Do `RRULE` do iCalendar entra o subconjunto que
+   tem cadência equivalente (`WEEKLY` 1/2, `MONTHLY` 1) com `COUNT`/`UNTIL`; diária e `BYDAY` ficam de
+   fora e a ocorrência importada continua única. Materializar só o passo base criaria ocorrências que
+   o arquivo não tem; descartar em silêncio criaria uma agenda incompleta sem aviso. O meio-termo é o
+   erro explícito de escopo.
+6. **O worker tem chave na suíte.** `rede.calendar.recurrence.enabled` (padrão `true`) desliga a
+   extensão automática nos testes, pelo mesmo motivo que o worker de eventos: a base H2 é compartilhada
+   entre classes, e uma consulta em outra thread aparece na contagem de `SELECT`s de um teste alheio.
+
+**Consequência.** A série é dado consultável, não uma interpretação: qualquer leitura existente
+funciona sem conhecer recorrência, e um `.ics` exportado continua sendo um `VEVENT` por ocorrência
+com `UID` próprio. O custo é armazenamento proporcional ao horizonte, contido pelos 90 dias e pelo
+teto por ciclo.

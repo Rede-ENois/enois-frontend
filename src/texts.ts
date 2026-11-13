@@ -187,6 +187,7 @@ export const texts = {
     scopeLabel: "Agenda mostrada",
     errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
     errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    respondDone: "Resposta registrada.",
     /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
     errorInvite: "Não foi possível convidar. Tente de novo.",
     errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
@@ -209,6 +210,21 @@ export const texts = {
       errorLoad: "Não foi possível carregar sua disponibilidade.",
       errorLoadHint:
         "Sem ler a semana salva, salvar apagaria o que você já tinha. Tente carregar de novo.",
+    },
+    importIcs: "Importar .ics",
+    importIcsHint: "Traz os compromissos de outra agenda para esta.",
+    importIcsError: "Não foi possível importar o arquivo. Tente de novo.",
+    subscription: {
+      seoTitle: "Assinatura da agenda · Énóis",
+      title: "Assinatura da agenda",
+      subtitle:
+        "Um endereço privado que o Google Calendar, o Apple Calendar ou qualquer leitor de `.ics` acompanha sozinho.",
+      errorLoad: "Não foi possível carregar a assinatura. Tente de novo.",
+      errorCreate: "Não foi possível criar o link. Tente de novo.",
+      errorRegenerate: "Não foi possível gerar outro link. Tente de novo.",
+      errorRevoke: "Não foi possível revogar o link. Tente de novo.",
+      copied: "Link copiado.",
+      copyError: "Não foi possível copiar. Selecione o endereço e copie à mão.",
     },
   },
 
@@ -676,6 +692,7 @@ export const texts = {
     capture: "Captura da chamada no momento da denúncia",
     captureMissing: "Esta denúncia de chamada veio sem captura de tela.",
     participants: "Na sala quando a denúncia foi feita",
+    reportedAt: (when: string) => `Denúncia feita em ${when}`,
   },
   onboarding: {
     seoTitle: "Boas-vindas · Énóis",
@@ -2241,6 +2258,7 @@ export const texts = {
     myApplications: "Minhas candidaturas",
     myJobsEmpty: "Você ainda não publicou vagas.",
     myApplicationsEmpty: "Você ainda não se candidatou a nenhuma vaga.",
+    interviewScheduledFor: (when: string) => `Entrevista marcada: ${when}`,
     empty: "Nenhuma vaga encontrada com os filtros selecionados.",
     createJob: "Criar vaga",
     createJobTitle: "Publicar vaga",
@@ -2344,6 +2362,14 @@ export const texts = {
       backToReview: "Voltar para análise",
       statusUpdated: "Estado atualizado.",
       statusError: "Não foi possível atualizar o estado. Tente novamente.",
+      interview: {
+        cancelTitle: "Cancelar entrevista",
+        cancelAction: "Cancelar entrevista",
+        cancelConfirm:
+          "Cancelar esta entrevista? Os dois lados deixam de ver o compromisso na agenda.",
+        error: "Não foi possível salvar a entrevista. Tente novamente.",
+        cancelError: "Não foi possível cancelar a entrevista. Tente novamente.",
+      },
     },
     createAction: "Publicar vaga",
     createError: "Não foi possível publicar a vaga. Tente novamente.",

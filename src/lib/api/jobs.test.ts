@@ -4,7 +4,7 @@ import { api } from "../api-client";
 import { jobsApi } from "./jobs";
 
 vi.mock("../api-client", () => ({
-  api: { get: vi.fn(), post: vi.fn() },
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
   buildQuery: (params: Record<string, unknown>) => {
     const search = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
@@ -75,5 +75,41 @@ describe("jobsApi.applyExternal", () => {
       confirmed: true,
       message: undefined,
     });
+  });
+});
+
+describe("jobsApi entrevista", () => {
+  const values = {
+    startsAt: "2027-03-10T17:00:00Z",
+    endsAt: "2027-03-10T18:00:00Z",
+    timeZoneId: "America/Sao_Paulo",
+    notes: "Levar portfólio",
+  };
+
+  it("marca a entrevista na candidatura", async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({});
+    await jobsApi.scheduleInterview("job_1", "app_1", values);
+    expect(api.post).toHaveBeenCalledWith("/jobs/job_1/applications/app_1/interview", values);
+  });
+
+  it("reagenda pelo id da entrevista", async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce({});
+    await jobsApi.rescheduleInterview("job_1", "app_1", "int_1", values);
+    expect(api.patch).toHaveBeenCalledWith(
+      "/jobs/job_1/applications/app_1/interview/int_1",
+      values,
+    );
+  });
+
+  it("cancela pelo id da entrevista", async () => {
+    vi.mocked(api.delete).mockResolvedValueOnce({});
+    await jobsApi.cancelInterview("job_1", "app_1", "int_1");
+    expect(api.delete).toHaveBeenCalledWith("/jobs/job_1/applications/app_1/interview/int_1");
+  });
+
+  it("lê as entrevistas da candidatura", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce([]);
+    await jobsApi.interviews("job_1", "app_1");
+    expect(api.get).toHaveBeenCalledWith("/jobs/job_1/applications/app_1/interview");
   });
 });
