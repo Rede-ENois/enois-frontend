@@ -19,6 +19,9 @@ function describe(err: unknown): ErrorDescription {
       details: import.meta.env.DEV ? [err.stack ?? err.name] : [],
     };
   }
+  // A mensagem já pronta (o estado de erro de um formulário é `useState<string | null>`) é o erro:
+  // cair no genérico esconderia o que o servidor disse.
+  if (typeof err === "string" && err.trim()) return { message: err, details: [] };
   return { message: texts.errors.unexpected, details: [] };
 }
 
