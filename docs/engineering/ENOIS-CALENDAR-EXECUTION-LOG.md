@@ -3306,3 +3306,66 @@ no perfil do mentor; (2) acompanhar as revisões; (3) fases 7 e 10 seguem na dec
 credencial externa — sem elas, varredura de regressão nos módulos de calendário.
 
 ---
+
+## EXECUÇÃO 41 — fase 11: a resposta do convite no mesmo join da agenda (2026-11-13, ~06:00)
+
+**TAREFA:** continuação da varredura de leituras que crescem com o histórico (execuções 32/34/35/37).
+A 34 tirou o `in` da lista de compromissos convidados e a 37 achou os demais caminhos com teto, mas
+a resposta do convite ainda voltava ao banco num segundo `in`. (Unidade já **mergeada** na `qa`
+durante a rodada: backend #688 em `f892d852`, 2026-11-13T07:01Z.)
+
+**REPOSITÓRIOS:** `enois-backend` (`fix/calendar-conflitos-consulta` sobre `enois/qa` `f0a4f800`).
+Docs neste PR (empilhado sobre a cadeia 37→38→39→40, ainda sem revisão).
+
+**O defeito.** `CalendarQueryService.agenda` chamava `findInvitedInWindow` (o join da execução 34,
+sem resposta) e em seguida `participants.findByUserAndEntryIds(ids)` para mapear id → estado. Cada
+leitura de agenda (e cada conflito, que reaproveita a mesma agenda, e o export `.ics`, que usava o
+mesmo par) seguia pagando duas consultas e um `in` sem teto com o histórico crescendo.
+
+**A correção.**
+
+- Nova porta `CalendarInvitationRepository.findInvited(userId, scope, from, to)`: o join entre
+  `calendar_entry_participants` e `calendar_entries` devolve entrada e resposta juntos, numa
+  consulta, com janela meia-aberta e recorte de agenda.
+- `CalendarQueryService.agenda` e `CalendarIcsService.export` consomem a porta;
+  `findByUserAndEntryIds` e `findInWindowByParticipant` saem por falta de chamador.
+- Sem filtro de estado no cruzamento: a agenda mostra o convite pendente com o selo (D13) e o
+  export publica o compromisso cancelado com `STATUS:CANCELLED` no mesmo `UID` (D6). Um filtro
+  `ACTIVE` no JPQL esconderia o cancelado do `.ics` e o evento nunca sairia do calendário externo.
+- `CalendarEntryJpaEntity` fica pública com `toDomain()` público: a projeção do join é lida por
+  proxy do Spring Data, e a classe package-private quebra em `IllegalAccessError` em runtime (pega
+  em teste, não em compilação).
+
+**Prova.** `./mvnw -o test -Dtest=...` nas classes tocadas: **61 testes, 0 falhas, 0 erros**. Novos:
+`CalendarEntryPersistenceTests#invitedEntriesComeFromTheParticipantJoinWithTheirAnswer` (aceito,
+pendente e cancelado na mesma leitura, com a resposta certa em cada um),
+`CalendarIcsServiceTests#invitedEntriesExportTooAndTheirCancellationKeepsTheSameUid` (o `.ics` do
+convidado publica o cancelamento com o UID estável) e
+`CalendarEntryReadApiTests#convidadoVeoCompromissoNaPropriaListaComARespostaDele` (contrato HTTP:
+`owner=false`, `participation=ACCEPTED`, estado `CANCELLED` visível). Suíte completa sobre a `qa`
+com o diff: **2515 testes, 0 falhas, 0 erros, 1 ignorado** (`KofAgentLiveChannelTests`, por
+configuração). A primeira rodada da suíte falhou porque duas execuções do Maven compartilharam o
+mesmo `target/`; a prova válida é a rodada isolada. Retificação de processo: durante a rodada eu
+abri um bloco de docs rotulado "EXECUÇÃO 37" para esta unidade, mas as execuções 37 a 40 já tinham
+dono na cadeia de docs; o registro correto é este bloco 41.
+
+**ARQUIVOS.** Backend (13, +226/−81): `CalendarInvitationRepository` (novo),
+`CalendarQueryService`, `CalendarIcsService`, `CalendarParticipantPersistenceAdapter`,
+`SpringDataCalendarParticipantJpaRepository`, `SpringDataCalendarEntryJpaRepository`,
+`CalendarEntryPersistenceAdapter`, `CalendarEntryRepository`, `CalendarParticipantRepository`,
+`CalendarEntryJpaEntity`, mais os três testes. Docs: `ENOIS-CALENDAR-EXECUTION-LOG.md`,
+`ENOIS-CALENDAR-ROADMAP.md` (estado, fase 11, tabela de PRs, testes, histórico, seção 10) e
+`ENOIS-CALENDAR-ARCHITECTURE.md` (D42).
+
+**PR:** backend [#688](https://github.com/Rede-ENois/enois-backend/pull/688) — **mergeado** na `qa`
+em `f892d852` (2026-11-13T07:01Z). Docs neste PR.
+
+**BLOQUEIOS:** nenhum novo. Desempenho do join em produção segue sem medida (não há ambiente de
+medida nesta rodada); a consulta elimina um acesso por leitura em relação ao código anterior.
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 42):** (1) acompanhar as revisões da cadeia de docs
+(#855/#857/#858/#860 e este) e de #852; (2) fases 7 e 10 continuam dependendo de decisão de produto
+e de credencial externa — sem elas, varredura de regressão nos módulos de calendário sobre a `qa`
+já com o #688.
+
+---

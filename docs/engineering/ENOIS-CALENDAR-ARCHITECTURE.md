@@ -1149,3 +1149,25 @@ de virar mudança de token.
 **Consequência.** Seleção entre opções finitas nasce como radiogroup no DS, nunca como lista de
 botões; e todo ponto que mostra erro passa pelo mesmo banner, que nunca substitui a mensagem real
 por uma genérica.
+
+## D42 — A resposta do convite é dado do cruzamento, não uma segunda consulta (execução 41)
+
+1. **Agenda e resposta são a mesma linha do banco.** A leitura da agenda de quem foi convidado
+   começou a sair de um join na execução 34, mas só com a entrada: a resposta do convite vinha
+   depois, numa segunda consulta que recebia a lista de ids num `in` de tamanho variável. O custo
+   não era só a ida extra ao banco, era a lista crescer com o histórico da pessoa. A porta
+   `CalendarInvitationRepository` passou a devolver `(entrada, resposta)` do mesmo cruzamento, e
+   agenda, conflito e export `.ics` consomem essa única leitura.
+2. **O cruzamento não filtra estado, porque cada chamador filtra o seu.** Um `e.state = 'ACTIVE'`
+   no JPQL pareceria limpeza e quebraria duas regras ao mesmo tempo: o compromisso cancelado
+   precisa sair no `.ics` com `STATUS:CANCELLED` e o mesmo `UID` (D6), e o convite pendente precisa
+   aparecer na agenda com o selo de convidado (D13). Filtro de visão é decisão da tela; filtro de
+   persistência esconde a linha que o chamador precisa.
+3. **Projeção de interface exige tipo público.** O retorno do join é uma interface cujos getters
+   devolvem a entidade JPA; o Spring Data materializa isso por proxy em runtime. Com a entidade
+   `package-private`, a leitura estoura `IllegalAccessError` em execução e passa na compilação:
+   por isso `CalendarEntryJpaEntity` (e `toDomain`) são público, como contrato de projeção.
+
+**Consequência.** Leitura de agenda é uma consulta, independentemente do número de convites
+acumulados. Quando uma porta cruza duas tabelas, o filtro de estado fica no chamador que conhece a
+regra, e o tipo exposto na projeção é público por contrato.
