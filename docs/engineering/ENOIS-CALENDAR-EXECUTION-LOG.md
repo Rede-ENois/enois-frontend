@@ -3442,8 +3442,8 @@ com `do/while`, único por `(series_id, data)`) foi seguido em vez de criar um s
   série importada falham — série inexistente e ocorrência única; com ela, passam.
 - Suíte de calendário após o rebase sobre o #688: **54 testes, 0 falhas**. O `#688` mexeu em
   `CalendarIcsService` e nos testes do `.ics`; o rebase preservou os dois lados.
-- Suíte completa do backend: **2544 testes, 0 falhas, 0 erros, 1 ignorado** (`KofAgentLiveChannelTests`,
-  por configuração).
+- Suíte completa do backend (árvore final `a3a6da97` + #691): **2545 testes, 0 falhas, 0 erros,
+  1 ignorado** (`KofAgentLiveChannelTests`, por configuração).
 - Corrigido no caminho (regra do escoteiro): `CalendarIcsService` chegou a 563 linhas (≥600 bloqueia
   merge), então o parser de `RRULE` saiu para `CalendarRule` e o arquivo voltou a 518; os testes de
   recorrência do `.ics` saíram para classe própria (o arquivo de testes passava de 600).
@@ -3455,15 +3455,24 @@ com `do/while`, único por `(series_id, data)`) foi seguido em vez de criar um s
   via `src/test/resources/application.properties`, com o comentário explicando por quê. Os testes de
   recorrência chamam `extend()` direto, e o comportamento agendado continua coberto por eles.
   Rodada seguinte: as sete classes (calendário + o teste de contagem) deram **56 testes, 0 falhas**.
+- **A suíte completa acusou uma falha intermitente pré-existente em `OutboxMaxAttemptsTests`**, sem
+  relação com a recorrência: o `@Scheduled` da outbox não tinha `initialDelay`, então o primeiro tick
+  rodava no boot do contexto e reivindicava o evento envenenado que o teste dirige à mão — o `claim`
+  o prendia por 60 s e o teste via `PENDING` onde esperava `FAILED`. Corrigido na causa com a
+  propriedade `rede.outbox.worker-initial-delay-ms` (padrão `0`, produção inalterada) e os três testes
+  que dirigem o worker o afastam, como o worker de retenção já fazia (#691). As três classes de outbox
+  juntas deram **11 testes, 0 falhas**.
 
 **ARQUIVOS.** Backend: `V277__calendar_series.sql`, `CalendarRecurrence`, `CalendarRecurrenceService`,
 `CalendarRule`, `CalendarEntry`, `CalendarEntryJpaRepository`, `CalendarEntryRepository`, a entidade e o
 adaptador de persistência, `CalendarEntryController`, `CalendarIcsService`, `application.properties` de
-teste, mais as seis classes de teste. Docs: `ENOIS-CALENDAR-EXECUTION-LOG.md` (este bloco),
+teste, mais as seis classes de teste; no fecho do bloco, `OutboxWorker` e as três classes de teste da
+outbox (tick de boot, #691). Docs: `ENOIS-CALENDAR-EXECUTION-LOG.md` (este bloco),
 `ENOIS-CALENDAR-ROADMAP.md` (inventário, tabela de PRs, testes, histórico, seção 10) e
 `ENOIS-CALENDAR-ARCHITECTURE.md` (D43).
 
-**PR:** backend `feat/agenda-recorrencia` (aberto para revisão humana na `qa`).
+**PR:** backend #690 **mergeado** em `a3a6da97` (squash, 2026-11-13). A correção do worker da outbox
+saiu em #691, também para a `qa`.
 
 **BLOQUEIOS:** nenhum novo. Não há tela de recorrência no front ainda — esta rodada entregou o
 contrato e a persistência; a superfície de escolha de cadência no `CalendarEntryFormDialog` depende do
