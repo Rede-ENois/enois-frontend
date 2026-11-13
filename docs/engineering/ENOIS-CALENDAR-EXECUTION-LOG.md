@@ -3369,3 +3369,109 @@ e de credencial externa — sem elas, varredura de regressão nos módulos de ca
 já com o #688.
 
 ---
+
+## EXECUÇÃO 42 — motor central: a recorrência de compromissos sai do papel (2026-11-13, ~08:00)
+
+**TAREFA:** fechar a lacuna que o inventário chamava de "falta recorrência" no motor central de
+compromissos (linha 109 do roadmap). Até esta rodada `calendar_entries` não tinha noção de
+repetição: cada compromisso era uma linha só, e um `.ics` com `RRULE` importava a primeira ocorrência
+e descartava a regra em silêncio. O roadmap já mandava reaproveitar a recorrência em vez de inventar
+outra (linha 95, `events.EventRecurrence` como precedente).
+
+**REPOSITÓRIOS:** `enois-backend` (`feat/agenda-recorrencia` sobre `enois/qa` `f892d852`). Docs neste
+PR (empilhado sobre a cadeia de docs até o #861).
+
+**Escolha de desenho (D43).** A série é **materializada**: cada ocorrência é uma linha irmã de
+`calendar_entries` que compartilha `series_id` e cadência. A alternativa — expandir a regra na leitura
+— faria a agenda, o conflito, o export e o lembrete divergirem, porque todos já são consultas por
+janela sobre a tabela. Com linhas de verdade, cada ocorrência ocupa conflito, aceita lembrete, é
+reagendada e cancelada sozinha, e o `.ics` continua exportando um `VEVENT` por ocorrência com `UID`
+próprio. O precedente do repositório (`events.EventRecurrence`/`EventRecurrenceService`, catch-up
+com `do/while`, único por `(series_id, data)`) foi seguido em vez de criar um segundo modelo.
+
+**A correção.**
+
+- Migração `V277__calendar_series.sql`: três colunas em `calendar_entries` (`series_id`, `recurrence`
+  com `WEEKLY|BIWEEKLY|MONTHLY`, `tail`) e o índice único `(series_id, starts_at)` que é a
+  idempotência. `tail` marca a ponta da série — uma por série — porque é dela que a extensão parte;
+  cancelar uma ocorrência **não** limpa a marca (cancelar "esta" não encerra a série), só `stop`
+  limpa todas. O `check` no banco amarra a tríade: entrada avulsa não pode ter cadência, entrada em
+  série não pode estar sem cadência.
+- `CalendarRecurrence`: cadência de domínio com passo de relógio de parede em `ZonedDateTime`
+  (atravessa o horário de verão sem deslocar a hora), mensal com **dia-âncora** da primeira
+  ocorrência, para o compromisso do dia 31 cair no último dia dos meses curtos e voltar ao 31.
+- `CalendarRecurrenceService`: `start`, `stop`, `extend` e `materializeImported`. O horizonte é uma
+  **janela de 90 dias**, não uma contagem de ocorrências — contar faria o worker crescer a série sem
+  limite a cada execução. A ponta atrasada pega carona (`firstAhead`) sem criar o passado, e
+  `MAX_OCCURRENCES_PER_RUN` (200) é a guarda contra cadência rápida demais. A criação adota a irmã que
+  já existe (`findBySeriesAndStart`) em vez de depender da exceção do índice único dentro da mesma
+  transação — que envenenava o commit, como o precedente dos eventos já sabia.
+- Worker `@Scheduled` (5 min) estende todas as pontas; falha de uma não derruba as outras. Tem a
+  flag `rede.calendar.recurrence.enabled` (padrão `true`), desligada na suíte.
+- Rotas `POST /calendar/entries/{id}/series` (`WEEKLY|BIWEEKLY|MONTHLY`) e
+  `DELETE /calendar/entries/{id}/series`, ambas idempotentes, com `seriesId`/`recurrence` na resposta.
+  Entrada cuja origem pertence a outro módulo não vira série por aqui (409); ela **pode** encerrar a
+  sua série (encerrar é decisão local e não mexe no fato da origem).
+- Import `.ics`: o parser passou a capturar `RRULE` e `EXDATE` (linhas de `EXDATE` repetidas são
+  mescladas), e `CalendarRule` traduz só o subconjunto que o app representa — `FREQ=WEEKLY` com
+  `INTERVAL=1|2`, `FREQ=MONTHLY` com `INTERVAL=1`, mais `COUNT` e `UNTIL`; `BYDAY`/`BYMONTHDAY`/`BYMONTH`
+  e qualquer outro intervalo recusam a regra inteira. Regra fora do subconjunto **não vira série**: a
+  ocorrência original fica única. Antes, a regra era descartada em silêncio e o arquivo virava uma
+  agenda incompleta sem aviso.
+
+**Prova.**
+
+- Domínio `CalendarRecurrenceTests`: **7 testes** — relógio de parede na virada de horário de verão de
+  Lisboa (2026-03-24T19h → 2026-03-31T19h), quinzenal +14d, mensal 31→28→31 com âncora, mensal sem
+  âncora, dia 28 com âncora 31 voltando ao 31, `NONE` lança, cadência desconhecida recusada.
+- Serviço `CalendarRecurrenceServiceTests` (Spring + H2): **7 testes** — a fundadora ganha a série e
+  a janela inteira com uma única ponta; estender de novo cria zero; ponta 21 dias atrás faz catch-up
+  sem recriar o passado; `stop` cancela o futuro, preserva o passado e devolve a entrada a avulsa;
+  entrada com origem recusa fundar série; `DAILY` e `NONE` recusados com código próprio; entrada de
+  outro dono é 404.
+- Persistência `CalendarSeriesPersistenceTests`: **3 testes** — ida e volta das colunas, entrada
+  avulsa com colunas vazias, busca por série/por instante/pela ponta.
+- HTTP `CalendarSeriesApiTests`: **7 testes** — 200 com `seriesId`+`recurrence`, repetição com a mesma
+  `Idempotency-Key` devolve corpo idêntico, `DAILY` 400, origem 409, outro dono 404, `DELETE` devolve a
+  entrada sem série e sem ponta, sem sessão 401.
+- Import `.ics` `CalendarIcsRecurrenceTests`: **6 testes** — arquivo semanal materializa a série
+  (irmãs a 7 dias, uma ponta, dentro de 90 dias); `EXDATE` deixa o buraco (pula 15/12, mantém 8 e 22);
+  `FREQ=DAILY` e `FREQ=WEEKLY;BYDAY=TU,TH` ficam únicos; `COUNT=3` conta a fundadora e para em 3;
+  reimportar não duplica; `stop` numa série importada cancela o futuro e mantém o passado.
+- **Q0 provado:** com a chamada `importRule(...)` removida (comportamento antigo), os quatro testes de
+  série importada falham — série inexistente e ocorrência única; com ela, passam.
+- Suíte de calendário após o rebase sobre o #688: **54 testes, 0 falhas**. O `#688` mexeu em
+  `CalendarIcsService` e nos testes do `.ics`; o rebase preservou os dois lados.
+- Suíte completa do backend: **2544 testes, 0 falhas, 0 erros, 1 ignorado** (`KofAgentLiveChannelTests`,
+  por configuração).
+- Corrigido no caminho (regra do escoteiro): `CalendarIcsService` chegou a 563 linhas (≥600 bloqueia
+  merge), então o parser de `RRULE` saiu para `CalendarRule` e o arquivo voltou a 518; os testes de
+  recorrência do `.ics` saíram para classe própria (o arquivo de testes passava de 600).
+- **A primeira rodada da suíte rebasada falhou em `MentoringSessionListQueryCountTests`** — e a culpa
+  era desta rodada: o worker de extensão novo consultava `findSeriesTails()` em outra thread e
+  aparecia na contagem de `SELECT`s do `StatementInspector` de um teste alheio (a base H2 é
+  compartilhada). Causa-raiz corrigida com o padrão que o repositório já usa para o worker de
+  eventos: flag `rede.calendar.recurrence.enabled` (padrão `true` em produção), desligada na suíte
+  via `src/test/resources/application.properties`, com o comentário explicando por quê. Os testes de
+  recorrência chamam `extend()` direto, e o comportamento agendado continua coberto por eles.
+  Rodada seguinte: as sete classes (calendário + o teste de contagem) deram **56 testes, 0 falhas**.
+
+**ARQUIVOS.** Backend: `V277__calendar_series.sql`, `CalendarRecurrence`, `CalendarRecurrenceService`,
+`CalendarRule`, `CalendarEntry`, `CalendarEntryJpaRepository`, `CalendarEntryRepository`, a entidade e o
+adaptador de persistência, `CalendarEntryController`, `CalendarIcsService`, `application.properties` de
+teste, mais as seis classes de teste. Docs: `ENOIS-CALENDAR-EXECUTION-LOG.md` (este bloco),
+`ENOIS-CALENDAR-ROADMAP.md` (inventário, tabela de PRs, testes, histórico, seção 10) e
+`ENOIS-CALENDAR-ARCHITECTURE.md` (D43).
+
+**PR:** backend `feat/agenda-recorrencia` (aberto para revisão humana na `qa`).
+
+**BLOQUEIOS:** nenhum novo. Não há tela de recorrência no front ainda — esta rodada entregou o
+contrato e a persistência; a superfície de escolha de cadência no `CalendarEntryFormDialog` depende do
+DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decisão externa (semântica
+Épapo/Tamo Junto e credencial OAuth).
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 43):** (1) superfície de recorrência no DS e ligação na
+`/agenda`, no mesmo fluxo de release; (2) acompanhar as revisões da cadeia de docs e de #852/#222/#224;
+(3) fases 7 e 10 seguem na decisão externa.
+
+---

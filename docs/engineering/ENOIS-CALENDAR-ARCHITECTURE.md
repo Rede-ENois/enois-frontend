@@ -1171,3 +1171,36 @@ por uma genérica.
 **Consequência.** Leitura de agenda é uma consulta, independentemente do número de convites
 acumulados. Quando uma porta cruza duas tabelas, o filtro de estado fica no chamador que conhece a
 regra, e o tipo exposto na projeção é público por contrato.
+
+## D43 — A recorrência é materializada em linhas irmãs, não expandida na leitura (execução 42)
+
+1. **Cada ocorrência é um compromisso de verdade.** A série existe como linhas de
+   `calendar_entries` que compartilham `series_id`, e não como uma regra aplicada na hora de ler.
+   Agenda, conflito, lembretes e export `.ics` já são consultas por janela sobre a tabela; uma regra
+   escondida no tempo de leitura faria todos divergirem do que está gravado. Com linhas materializadas,
+   cada ocorrência ocupa conflito, leva lembrete, é reagendada e cancelada sozinha.
+2. **O horizonte é uma janela, não uma contagem.** A extensão cria ocorrências até `now + 90 dias`.
+   Contar "as próximas N" faria cada execução do worker recomeçar a contagem na ponta atual e crescer a
+   série sem limite. A ponta atrasada avança até depois de agora sem criar o passado (`firstAhead`), e
+   o teto de 200 ocorrências por ciclo é a guarda contra cadência absurda.
+3. **Uma ponta por série, e cancelar não a move.** A marca `tail` aponta a ocorrência mais à frente; só
+   ela alimenta o worker. Cancelar uma ocorrência é decisão sobre *aquela* data, não o fim da série, e
+   por isso não limpa a marca — só `stop` encerra a série e limpa todas. O banco impõe a tríade
+   `(series_id, recurrence, tail)` por `check`: entrada avulsa não tem cadência.
+4. **Idempotência pelo banco e adoção antes do insert.** O índice único `(series_id, starts_at)` é a
+   garantia final contra o duplo clique, o retry e duas instâncias estendendo a mesma série. O código
+   adota a irmã existente antes de inserir, em vez de deixar a exceção do índice estourar dentro da
+   mesma transação — o estouro envenena o commit e derruba a rodada inteira.
+5. **Import traduz só o que consegue representar.** Do `RRULE` do iCalendar entra o subconjunto que
+   tem cadência equivalente (`WEEKLY` 1/2, `MONTHLY` 1) com `COUNT`/`UNTIL`; diária e `BYDAY` ficam de
+   fora e a ocorrência importada continua única. Materializar só o passo base criaria ocorrências que
+   o arquivo não tem; descartar em silêncio criaria uma agenda incompleta sem aviso. O meio-termo é o
+   erro explícito de escopo.
+6. **O worker tem chave na suíte.** `rede.calendar.recurrence.enabled` (padrão `true`) desliga a
+   extensão automática nos testes, pelo mesmo motivo que o worker de eventos: a base H2 é compartilhada
+   entre classes, e uma consulta em outra thread aparece na contagem de `SELECT`s de um teste alheio.
+
+**Consequência.** A série é dado consultável, não uma interpretação: qualquer leitura existente
+funciona sem conhecer recorrência, e um `.ics` exportado continua sendo um `VEVENT` por ocorrência
+com `UID` próprio. O custo é armazenamento proporcional ao horizonte, contido pelos 90 dias e pelo
+teto por ciclo.
