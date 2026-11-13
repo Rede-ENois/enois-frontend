@@ -1110,3 +1110,21 @@ faz a tela ser útil de novo.
 
 **Consequência.** Qualquer token novo de cor entra com par de contraste no teste de tema, e qualquer
 substituição de tela dentro de um diálogo move o foco para o que substituiu o elemento que o tinha.
+
+## D40 — Ícone de controle tem régua própria: 3:1, não a de texto (execução 39)
+
+1. **O critério vem do papel do pixel, não da cor.** A execução 38 mediu `text-destructive/70` com
+   a régua de texto (4,5:1) e anotou pendência. Os dois usos são ícone de **botão** — chevron do
+   banner de erro e lixeira do comentário: o ícone é o rótulo do controle, e a WCAG 1.4.11 pede 3:1
+   para controle não-textual. Medido o par composto sobre cada superfície e sobre o próprio tinte
+   de hover (o pior fundo), o mínimo é 3,37:1: passava desde o conserto anterior, e mexer no token
+   teria sido mudança de pacote sem defeito.
+2. **A régua errada também engana no outro sentido.** Se o par for julgado por 4,5:1, alguém pode
+   "consertar" o ícone escurecendo o token e mudar o vermelho de todos os textos de erro do app
+   junto — a régua de texto aplicada a ícone induz correção que ninguém pediu. O teste
+   (`src/control-contrast.test.ts`) fixa 3:1 para os dois lados: reprovando o que passa pela régua
+   de texto e trancando o valor contra afrouxamento silencioso.
+
+**Consequência.** Todo par de cor em elemento só-de-ícone é medido por 1.4.11 (3:1); o teste de tema
+traz as duas réguas, e a pendência anotada numa execução é re-medida com o critério do papel antes
+de virar mudança de token.

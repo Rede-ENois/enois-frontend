@@ -3209,3 +3209,50 @@ chegar, a rodada seguinte é reconferência de estado e varredura de regressão 
 calendário.
 
 ---
+
+## EXECUÇÃO 39 — destravar a entrega (2026-11-13, ~01:00)
+
+O estado real após o merge do bot dos PRs da execução 38 deixou três pontas soltas: o conserto de
+contraste estava na `qa` do DS mas fora do pacote publicado (0.33.0 na `main`, sem tag `v0.34.0`);
+o #852 do front estava `CONFLICTING` havia uma rodada; e a nota da execução 38 sobre
+`text-destructive/70` usava a régua errada. Bloco de 3 unidades.
+
+**Unidade 1 — release 0.34.0 (DS, `e51e5b7`, PR #222).** Branch `release/0.34.0` a partir da `qa`
+(`d47bf70`), bump `npm version 0.34.0` + lockfile (3 linhas), PR `qa`→`main` no formato do release
+anterior (#220). A publicação segue humana: a tag `v0.34.0` é quem dispara o workflow de pacote
+(D20). PR aberto aguardando revisão.
+
+**Unidade 2 — #852 rebasado (front, `42a3513e`).** O único conflito era o `onSuccess` do `respond`:
+a execução 38 acrescentou o toast de sucesso na `qa` e o commit do #852 tinha `setRespondError(false)`;
+os dois lados foram preservados. Prova: `npx tsc --noEmit` limpo, `npx eslint` limpo nos dois
+arquivos, `npx vitest run src/routes/agenda.test.tsx` **7/7**. Force-push com lease
+(`808eac4a` → `42a3513e`); PR de volta a `MERGEABLE`, aguardando revisão humana.
+
+**Unidade 3 — a régua certa para o ícone (DS, `6e09143`, PR #223).** A nota da execução 38 media
+`text-destructive/70` com 4,5:1 (texto). Os dois usos são ícone de botão (chevron do `error-banner`,
+lixeira do `comment-item`): WCAG 1.4.11 pede 3:1. Medição composta sobre as cinco superfícies e
+sobre o próprio tinte de hover: mínimo **3,37:1** (escuro, `surface-2`) — passa, não havia defeito,
+e mexer no token seria mudança de pacote sem motivo. O `control-contrast.test.ts` novo tranca a
+régua: 6 testes (destructive a 70% sobre cada superfície e sobre o hover, `text-subtle` da agenda).
+Prova Q0: com `--destructive` clarificado temporariamente para `oklch(0.72 0.09 25)`, dois testes
+falham; com o valor real, passam.
+
+**Prova da rodada.** DS: `npx vitest run src/control-contrast.test.ts` 6/6; suíte completa `npm test`
+**192 arquivos / 1829 testes, 0 falhas**; `npx tsc --noEmit` e `npx eslint` limpos. Front:
+`tsc`/`eslint` limpos nos arquivos da unidade 2 e teste da rota 7/7 (suíte completa não reexecutada —
+a mudança é rebase com resolução de um conflito já coberto pelo teste da rota).
+
+**Descobertas de estado:** DS #221 e front #856 foram mergeados pelo bot (2026-11-13T02:03Z /
+02:12Z). O pacote publicado continua 0.33.0 — sem o PR #222, as telas do app não recebem os tokens
+novos. Docs abertos: #851 (execução 35), #855 (37) e #857 (38, base deste PR), com sobreposição
+esperada por empilhamento.
+
+**BLOQUEIOS:** nenhum novo. Revisão humana pendente: DS #222 e #223, front #852, docs
+#851/#855/#857, backend #673. Tag `v0.34.0` é ação de mantenedora.
+
+**PRÓXIMA EXECUÇÃO (proposta de 40):** (1) quando o 0.34.0 publicar, bump de lockfile no front e
+conferência da `/agenda` com os tokens novos; (2) acompanhar as revisões de #852/#223/#222;
+(3) fases 5/7 seguem exigindo decisão de produto dos mantenedores — sem ela, varredura de regressão
+nos módulos de calendário.
+
+---
