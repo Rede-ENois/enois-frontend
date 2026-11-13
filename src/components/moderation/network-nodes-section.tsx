@@ -4,11 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkApiRequest } from "@/types/application/network/network-api-request";
 import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
 import type {
   NetworkDashboardData,
+  NetworkNodeApiRequest,
   NetworkNodeData,
   NetworkNodeDetailData,
   NetworkNodeHistoryEntry,
@@ -21,6 +23,7 @@ import { dataHora } from "@/lib/date/format";
 
 const QUERY_KEY = ["admin", "network", "nodes"];
 const DASHBOARD_KEY = ["admin", "network", "dashboard"];
+const ROUTES_KEY = ["admin", "network", "api-routes"];
 
 /** Os perfis que um nó pode receber — o mesmo conjunto que o backend valida. */
 const PROFILES = [
@@ -185,6 +188,37 @@ export function NetworkNodesSection() {
     onError,
   });
 
+  /** As rotas da rede: a mesma lista assinada que o nó recebe, para o admin escolher pelo nome. */
+  const { data: routes } = useQuery({
+    queryKey: ROUTES_KEY,
+    queryFn: () => adminNetworkApi.apiRoutes(),
+    enabled: openNodeId !== null,
+    retry: false,
+  });
+
+  /** As requisições em aberto do nó aberto. A lista é pequena e o painel recarrega com o nó. */
+  const { data: apiRequests, isLoading: apiRequestsLoading } = useQuery({
+    queryKey: ["admin", "network", "api-requests", openNodeId],
+    queryFn: () => adminNetworkApi.openApiRequests(openNodeId!),
+    enabled: openNodeId !== null,
+    retry: false,
+  });
+
+  const apiRequest = useMutation({
+    mutationFn: ({ nodeId, route }: { nodeId: string; route: string }) =>
+      adminNetworkApi.apiRequest(nodeId, route),
+    onSuccess: () => {
+      toast(texts.moderator.network.apiRequested, "success");
+      if (openNodeId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["admin", "network", "api-requests", openNodeId],
+        });
+      }
+      refresh();
+    },
+    onError,
+  });
+
   const openNode = data?.find((item) => item.id === openNodeId);
 
   const { data: history } = useQuery({
@@ -204,6 +238,16 @@ export function NetworkNodesSection() {
         availableProfiles: PROFILES,
       }
     : null;
+
+  /** O que o painel mostra sem inventar: sem nome de rota legível, a linha diz de onde veio. */
+  const apiRequestView = (requests: NetworkApiRequest[] | undefined): NetworkNodeApiRequest[] =>
+    (requests ?? []).map((request) => ({
+      taskId: request.taskId,
+      route: request.route ?? texts.moderator.network.apiRequestUnknownRoute,
+      status: request.status,
+      attempt: request.attempt,
+      deadlineLabel: dataHora(request.deadline),
+    }));
 
   const historyView = (records: NetworkAuditRecord[] | undefined): NetworkNodeHistoryEntry[] =>
     (records ?? []).map((record) => ({
@@ -229,6 +273,13 @@ export function NetworkNodesSection() {
           if (openNodeId) profiles.mutate({ nodeId: openNodeId, profiles: next });
         },
         profilesPending: profiles.isPending,
+        routes: routes ?? [],
+        onRequestRoute: (route) => {
+          if (openNodeId) apiRequest.mutate({ nodeId: openNodeId, route });
+        },
+        routePending: apiRequest.isPending,
+        apiRequests: apiRequestView(apiRequests),
+        apiRequestsLoading: openNodeId !== null && apiRequestsLoading,
         onOpenNode: setOpenNodeId,
       }}
       nodes={(data ?? []).map(nodeView)}

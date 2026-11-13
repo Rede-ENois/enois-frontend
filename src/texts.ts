@@ -3015,6 +3015,9 @@ export const texts = {
       capacitySaved: "Capacidade do nó atualizada.",
       disconnected: "Servidor desconectado da rede.",
       joinRequested: "Pedido de ingresso registrado. Copie o token antes de fechar.",
+      apiRequested: "Requisição enfileirada para o nó.",
+      /** Rota ilegível no payload da tarefa: a linha diz o que sabe, sem inventar destino. */
+      apiRequestUnknownRoute: "(rota não informada)",
       profilesSaved: "Perfis do nó atualizados.",
       actionError: "Não foi possível concluir a ação.",
     },

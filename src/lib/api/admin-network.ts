@@ -1,4 +1,5 @@
 import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkApiRequest } from "@/types/application/network/network-api-request";
 import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
@@ -53,6 +54,22 @@ export const adminNetworkApi = {
     api.post<NetworkNode>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/profiles`, {
       profiles,
     }),
+
+  /**
+   * As rotas que a rede oferece — a mesma lista assinada que o nó recebe. O admin escolhe pelo
+   * nome: o destino (URL) vive só na config assinada, e nunca sai daqui.
+   */
+  apiRoutes: () => api.get<string[]>("/admin/network/api-routes"),
+
+  /** Pede a rota (pelo nome) neste nó. O pedido leva alvo: é este nó que executa. */
+  apiRequest: (nodeId: string, route: string) =>
+    api.post<NetworkApiRequest>(
+      `/admin/network/nodes/${encodeURIComponent(nodeId)}/api-request?route=${encodeURIComponent(route)}`,
+    ),
+
+  /** As requisições em aberto do nó — o que está na fila ou executando. */
+  openApiRequests: (nodeId: string) =>
+    api.get<NetworkApiRequest[]>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/api-request`),
 
   /** O histórico administrativo do nó — a trilha de auditoria lida de volta, mais nova primeiro. */
   history: (nodeId: string, limit = 50) =>
