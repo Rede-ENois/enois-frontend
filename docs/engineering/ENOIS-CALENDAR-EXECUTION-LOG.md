@@ -2961,3 +2961,119 @@ medido em produção (não há ambiente de medida nesta rodada).
 `CalendarInvitationsController` sob volume e a leitura de disponibilidade.
 
 ---
+
+## EXECUÇÃO 35
+
+### 2026-11-12T10:45-03:00 — Fase 11: a fila de convites pendentes sai do join no banco e o teto de lote do lembrete ganha teste
+
+**TAREFA:** continuação da revisão de leitura sob volume proposta pela execução 34:
+`CalendarInvitationsController` sob volume e a leitura de disponibilidade.
+
+**REPOSITÓRIOS:** `enois-backend` (`fix/calendar-convites-revisao` sobre `enois/qa` `06b45e58`).
+Docs neste PR (a proposta anterior de levar documentação no PR do front não se aplicou: a rodada
+não tocou o front).
+
+**O que a revisão encontrou.** Disponibilidade já está limitada (`CalendarAvailabilityService.MAX_WINDOWS`
+= 50, com índice único no banco), não é o ponto. O ponto é `CalendarInvitationService.pendingInvitations`
+(`application/CalendarInvitationService.java:76` na base): carregava primeiro a lista de convites
+pendentes da pessoa (`findPendingByUser`, sem limite) e devolvia os ids na busca por conjunto
+(`findAllByIds`, `in :ids` sem teto). O endpoint `/calendar/invitations` pagava esse caminho, a
+mesma classe de problema do join de convidados da execução 34.
+
+**A correção.** `findPendingInvitations`: join entre `calendar_entries` e
+`calendar_entry_participants` no JPQL, que já filtra resposta dada (`INVITED`) e entrada cancelada
+(`ACTIVE`) e ordena pela idade do convite, numa consulta só. Com o fim dos dois caminhos por
+lista de ids, os métodos de apoio sem chamador saem das portas: `findPendingByUser`,
+`findEntryIdsByUser`, `findAllByIds` de entradas e `findInWindowByIds`. `CalendarEntryPersistenceAdapter`
+deixa de depender do repositório de participantes.
+
+**Lembrete.** O `deliverDue` já aplicava o lote na consulta da porta (`findDue(now, MAX_ATTEMPTS, BATCH)`
+com `PageRequest.of(0, limit)` no adaptador), então não há defeito de produção aqui. O que faltava
+era a tranca: `CalendarReminderServiceTests#oneCycleDeliversAtMostTheBatchCeiling` cria 25 vencidos
+e exige que um ciclo entregue no máximo `BATCH` (20). A constante fica pública para o teste
+referenciar. Primeira versão do teste estava errada (antecedência de 5 minutos num compromisso a
+10 minutos não vence; retificado para antecedência de 1 dia, como no teste irmão já verde).
+
+**Prova.** Vermelho antes: contra a porta sem o novo método, o novo teste de persistência não
+compila (a prova de comportamento é a de API, que já cobria pendências; aqui a prova é que a
+consulta nova existe e o caminho antigo saiu). Verde depois: `CalendarEntryPersistenceTests`
+7/7 (inclui `pendingInvitationsComeFromTheParticipantJoin`: ordem por idade do convite, respondido
+e cancelado de fora, convite de outra pessoa não vaza, organizador sem fila própria),
+`CalendarReminderServiceTests` 15/15, `CalendarInvitationApiTests` 11/11,
+`CalendarDetailAndPendingInvitationsApiTests` 6/6. Suite completa do repositório: 2506 testes,
+0 falhas, 0 erros, 1 skip pré-existente.
+
+**PR:** backend [#681](https://github.com/Rede-ENois/enois-backend/pull/681) — mergeado em `e5559061`
+(2026-11-13, squash). Depende do #673 no que toca o join de convidados, mas traz o mesmo join na base, então
+pode ser revisado e mergeado em qualquer ordem. Docs neste PR.
+
+**BLOQUEIOS:** D20 e B9 inalterados (release do DS segue passo humano). Desempenho do join não
+medido em produção (não há ambiente de medida nesta rodada).
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 36):** (1) release do DS (passo humano, D20) e
+`pendingInvitations` na `/agenda` do front, agora com o endpoint já enxuto; (2) a11y além dos
+estados de erro (`vitest-axe` segue fora das dependências); (3) fase 11 no que resta: varredura
+dos demais caminhos de leitura do calendário (conflitos, export, assinatura) por padrão de
+consulta que cresce com o histórico.
+
+---
+
+## EXECUÇÃO 36
+
+### 2026-11-12T15:40-03:00 — Fase 11: o release do DS destrava o front — #828 e #830 com o pacote real e a faixa de convites ligada na `/agenda`
+
+**TAREFA:** consumir o release do design-system que a execução 35 esperava: subir #828 e #830
+para o pacote publicado, corrigir a quebra de integração que ele trouxe e ligar a lista de
+convites pendentes na agenda.
+
+**REPOSITÓRIOS:** `enois-frontend` (PRs [#828](https://github.com/Rede-ENois/enois-frontend/pull/828)
+e [#830](https://github.com/Rede-ENois/enois-frontend/pull/830)); docs neste PR.
+
+**Unidade 1 — release 0.33.0 confirmado e #830 com o pacote real.** O PR de release #220 do DS foi
+mergeado e a tag `v0.33.0` publicada (2026-11-12T07:02Z), com `CalendarImportDialog`,
+`CalendarSubscriptionCard`, `CalendarInterviewDialog`, `JobInterviewActions` e
+`CalendarPendingInvitations` — o bloqueio B9/D20 caiu. O bump no #830 saiu junto de um lockfile
+regerado por workflow descritável (`GITHUB_TOKEN` com `packages: read`, padrão histórico do repo,
+removido em seguida); o `resolved` do lockfile confere com o shasum do tarball publicado.
+
+**Unidade 2 — `MentionTextarea` acompanha o DS 0.33 (`6b2c53e5` no #830).** O campo do DS deixou de
+ser `<textarea>` e virou contentEditable com handle imperativo (`insertAtCaret`/`focus`); o wrapper
+do app continuava procurando o `<textarea>` no DOM, e 10 testes quebraram — inclusive na `qa`
+limpa, o que provou quebra de integração e não flake. O wrapper passa a usar o handle, o atalho
+"Publicar" do feed foca `[role="textbox"]`, e os testes migram para seleção por Range no campo
+contentEditable (o `selectionchange` é despachado à mão no jsdom).
+
+**Unidade 3 — #828 rebaseado (`97b9a798`) e mergeado (`38cbf12d`).** Rebase sobre a `qa`
+(`48c58f47`) resolveu conflito na `/agenda` (o cabeçalho ganhou o atalho de disponibilidade no
+meio; os dois ficaram). Bump 0.33.0 + lockfile (idêntico ao do #830, conferido estruturalmente) e
+cherry-pick do fix de mention. O bot mergeou o PR às 18:50Z, depois de #830 (`ec31ddfd`, 18:19Z).
+
+**Unidade 4 — convites pendentes na `/agenda` (`fedc6c1b`, PR #852).** O endpoint e a query
+existiam; a tela não lia. A rota busca `GET /calendar/invitations` e entrega à
+`CalendarAgendaSurface`, que desenha a faixa acima do calendário com o mesmo `onRespond` do dia;
+o erro de resposta, antes só toast, também aparece na faixa; responder invalida a lista (a chave é
+raiz de `["agenda"]`).
+
+**O commit ficou de fora do merge e saiu em PR próprio.** O push do commit de convites (`e85e077f`,
+18:54Z) aconteceu depois de o bot mergear o #828 (18:50Z, head `97b9a798`); o GitHub não atualizou
+o head do PR — que já estava fechado — e nenhum workflow rodou para o commit. Sintoma: `check-suite`
+"queued" do `kof-agent-worker` sem runs, e o head do PR parado em `97b9a798` depois de dois pushes.
+O commit foi rechapeado sobre a `qa` nova (`fedc6c1b`) e aberto em PR próprio (#852), que iniciou o
+pipeline normalmente — o problema era o PR encerrado, não o workflow. **Lição:** depois de push,
+conferir `gh api repos/.../pulls/N --jq .head.sha`; "queued" sem run em PR fechado é sintoma de
+commit órfão, não de fila do Actions.
+
+**Prova.** #830: tsc EXIT=0, eslint 0 erros (2 warnings pré-existentes no `feed.tsx`), 387/387 nos
+componentes, build EXIT=0; CI "verificar" e "Validar build" passando; mergeado com CI verde. #828:
+tsc EXIT=0, 1282/1282 (routes+components+lib, incluindo o 11/11 de mention após o cherry-pick),
+build EXIT=0; CI verde; mergeado. #852: tsc EXIT=0, 1294/1294 (220 arquivos), build EXIT=0, eslint
+sem erro no arquivo. Em todos, `routeTree.gen.ts` regenerado pelo build foi revertido.
+
+**BLOQUEIOS:** nenhum — #852 mergeado em `3f24504b`, #673 em `f0a4f800`, #681 em `e5559061` (2026-11-13).
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 37):** (1) acompanhar revisão dos PRs abertos e resolver
+pedidos; (2) varredura dos demais caminhos de leitura (conflitos, export, assinatura) por consulta
+que cresce com o histórico (fase 11); (3) a11y além dos estados de erro.
+
+---
+
