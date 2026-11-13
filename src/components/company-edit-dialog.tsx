@@ -105,7 +105,7 @@ function TeamSection({ companyId }: { companyId: string }) {
 
   const resultados = useQuery({
     queryKey: ["empresa-membro-busca", busca],
-    queryFn: () => searchApi.search(busca, ["users"], 5),
+    queryFn: ({ signal }) => searchApi.search(busca, ["users"], 5, signal),
     enabled: busca.trim().length >= 2 && !escolhido,
   });
 

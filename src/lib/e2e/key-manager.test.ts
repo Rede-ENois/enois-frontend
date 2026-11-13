@@ -63,6 +63,10 @@ vi.mock("@/lib/api/e2e", () => ({
   },
 }));
 
+// RSA-2048 + PBKDF2 600k por chave e custo real (~2s isolado); com a suite inteira em paralelo
+// a disputa por CPU estoura o teto padrao de 5s e o teste cai por tempo, nao por defeito.
+const CRYPTO_TIMEOUT_MS = 30000;
+
 describe("key-manager", () => {
   beforeEach(() => {
     store.clear();
@@ -70,118 +74,142 @@ describe("key-manager", () => {
     myKeypair.mockClear();
   });
 
-  it("generateAndUpload stores keys locally and uploads to server", async () => {
-    const { generateAndUpload, getLocalPrivateKey, getLocalPublicKey, hasLocalKeys } =
-      await import("./key-manager");
+  it(
+    "generateAndUpload stores keys locally and uploads to server",
+    async () => {
+      const { generateAndUpload, getLocalPrivateKey, getLocalPublicKey, hasLocalKeys } =
+        await import("./key-manager");
 
-    await generateAndUpload("senha123");
+      await generateAndUpload("senha123");
 
-    expect(uploadKeypair).toHaveBeenCalledOnce();
-    const [publicKey, encryptedPrivateKey, algorithm] = uploadKeypair.mock.calls[0];
-    expect(publicKey).toBeTruthy();
-    expect(encryptedPrivateKey).toBeTruthy();
-    expect(algorithm).toBe("RSA-OAEP");
+      expect(uploadKeypair).toHaveBeenCalledOnce();
+      const [publicKey, encryptedPrivateKey, algorithm] = uploadKeypair.mock.calls[0];
+      expect(publicKey).toBeTruthy();
+      expect(encryptedPrivateKey).toBeTruthy();
+      expect(algorithm).toBe("RSA-OAEP");
 
-    expect(await hasLocalKeys()).toBe(true);
-    expect(await getLocalPrivateKey()).toBeTruthy();
-    expect(await getLocalPublicKey()).toBeTruthy();
-  });
+      expect(await hasLocalKeys()).toBe(true);
+      expect(await getLocalPrivateKey()).toBeTruthy();
+      expect(await getLocalPublicKey()).toBeTruthy();
+    },
+    CRYPTO_TIMEOUT_MS,
+  );
 
-  it("restoreFromBackup downloads and decrypts the keypair", async () => {
-    const { restoreFromBackup, getLocalPrivateKey, getLocalPublicKey } =
-      await import("./key-manager");
+  it(
+    "restoreFromBackup downloads and decrypts the keypair",
+    async () => {
+      const { restoreFromBackup, getLocalPrivateKey, getLocalPublicKey } =
+        await import("./key-manager");
 
-    // Prepare a real keypair on the "server"
-    const keypair = await generateKeypair();
-    const pubBase64 = await exportPublicKey(keypair.publicKey);
-    const privBase64 = await exportPrivateKey(keypair.privateKey);
-    const encrypted = await encryptPrivateKey(privBase64, "minha-senha");
+      // Prepare a real keypair on the "server"
+      const keypair = await generateKeypair();
+      const pubBase64 = await exportPublicKey(keypair.publicKey);
+      const privBase64 = await exportPrivateKey(keypair.privateKey);
+      const encrypted = await encryptPrivateKey(privBase64, "minha-senha");
 
-    myKeypair.mockResolvedValue({
-      publicKey: pubBase64,
-      encryptedPrivateKey: encrypted,
-      algorithm: "RSA-OAEP",
-    });
+      myKeypair.mockResolvedValue({
+        publicKey: pubBase64,
+        encryptedPrivateKey: encrypted,
+        algorithm: "RSA-OAEP",
+      });
 
-    await restoreFromBackup("minha-senha");
+      await restoreFromBackup("minha-senha");
 
-    expect(await getLocalPrivateKey()).toBe(privBase64);
-    expect(await getLocalPublicKey()).toBe(pubBase64);
-  });
+      expect(await getLocalPrivateKey()).toBe(privBase64);
+      expect(await getLocalPublicKey()).toBe(pubBase64);
+    },
+    CRYPTO_TIMEOUT_MS,
+  );
 
-  it("restoreFromBackup fails with wrong password", async () => {
-    const { restoreFromBackup } = await import("./key-manager");
+  it(
+    "restoreFromBackup fails with wrong password",
+    async () => {
+      const { restoreFromBackup } = await import("./key-manager");
 
-    const keypair = await generateKeypair();
-    const pubBase64 = await exportPublicKey(keypair.publicKey);
-    const privBase64 = await exportPrivateKey(keypair.privateKey);
-    const encrypted = await encryptPrivateKey(privBase64, "senha-certa");
+      const keypair = await generateKeypair();
+      const pubBase64 = await exportPublicKey(keypair.publicKey);
+      const privBase64 = await exportPrivateKey(keypair.privateKey);
+      const encrypted = await encryptPrivateKey(privBase64, "senha-certa");
 
-    myKeypair.mockResolvedValue({
-      publicKey: pubBase64,
-      encryptedPrivateKey: encrypted,
-      algorithm: "RSA-OAEP",
-    });
+      myKeypair.mockResolvedValue({
+        publicKey: pubBase64,
+        encryptedPrivateKey: encrypted,
+        algorithm: "RSA-OAEP",
+      });
 
-    await expect(restoreFromBackup("senha-errada")).rejects.toThrow();
-  });
+      await expect(restoreFromBackup("senha-errada")).rejects.toThrow();
+    },
+    CRYPTO_TIMEOUT_MS,
+  );
 
-  it("clearLocalKeys removes all keys from IndexedDB", async () => {
-    const { generateAndUpload, clearLocalKeys, hasLocalKeys } = await import("./key-manager");
+  it(
+    "clearLocalKeys removes all keys from IndexedDB",
+    async () => {
+      const { generateAndUpload, clearLocalKeys, hasLocalKeys } = await import("./key-manager");
 
-    await generateAndUpload("senha123");
-    expect(await hasLocalKeys()).toBe(true);
+      await generateAndUpload("senha123");
+      expect(await hasLocalKeys()).toBe(true);
 
-    await clearLocalKeys();
-    expect(await hasLocalKeys()).toBe(false);
-  });
+      await clearLocalKeys();
+      expect(await hasLocalKeys()).toBe(false);
+    },
+    CRYPTO_TIMEOUT_MS,
+  );
 
-  it("syncKeysOnLogin restores when local key differs from server", async () => {
-    const { syncKeysOnLogin, getLocalPublicKey } = await import("./key-manager");
+  it(
+    "syncKeysOnLogin restores when local key differs from server",
+    async () => {
+      const { syncKeysOnLogin, getLocalPublicKey } = await import("./key-manager");
 
-    // Generate a keypair and put a DIFFERENT key locally
-    const keypair = await generateKeypair();
-    const pubBase64 = await exportPublicKey(keypair.publicKey);
-    const privBase64 = await exportPrivateKey(keypair.privateKey);
-    const encrypted = await encryptPrivateKey(privBase64, "senha");
+      // Generate a keypair and put a DIFFERENT key locally
+      const keypair = await generateKeypair();
+      const pubBase64 = await exportPublicKey(keypair.publicKey);
+      const privBase64 = await exportPrivateKey(keypair.privateKey);
+      const encrypted = await encryptPrivateKey(privBase64, "senha");
 
-    store.set("my-public-key", "chave-local-diferente");
-    store.set("my-private-key", "privada-local");
+      store.set("my-public-key", "chave-local-diferente");
+      store.set("my-private-key", "privada-local");
 
-    myKeypair.mockResolvedValue({
-      publicKey: pubBase64,
-      encryptedPrivateKey: encrypted,
-      algorithm: "RSA-OAEP",
-    });
+      myKeypair.mockResolvedValue({
+        publicKey: pubBase64,
+        encryptedPrivateKey: encrypted,
+        algorithm: "RSA-OAEP",
+      });
 
-    await syncKeysOnLogin("senha");
+      await syncKeysOnLogin("senha");
 
-    // After sync, local public key should match server
-    expect(await getLocalPublicKey()).toBe(pubBase64);
-  });
+      // After sync, local public key should match server
+      expect(await getLocalPublicKey()).toBe(pubBase64);
+    },
+    CRYPTO_TIMEOUT_MS,
+  );
 
-  it("syncKeysOnLogin skips when local key matches server", async () => {
-    const { syncKeysOnLogin } = await import("./key-manager");
+  it(
+    "syncKeysOnLogin skips when local key matches server",
+    async () => {
+      const { syncKeysOnLogin } = await import("./key-manager");
 
-    const keypair = await generateKeypair();
-    const pubBase64 = await exportPublicKey(keypair.publicKey);
-    const privBase64 = await exportPrivateKey(keypair.privateKey);
-    const encrypted = await encryptPrivateKey(privBase64, "senha");
+      const keypair = await generateKeypair();
+      const pubBase64 = await exportPublicKey(keypair.publicKey);
+      const privBase64 = await exportPrivateKey(keypair.privateKey);
+      const encrypted = await encryptPrivateKey(privBase64, "senha");
 
-    // Put the SAME key locally
-    store.set("my-public-key", pubBase64);
-    store.set("my-private-key", privBase64);
+      // Put the SAME key locally
+      store.set("my-public-key", pubBase64);
+      store.set("my-private-key", privBase64);
 
-    myKeypair.mockResolvedValue({
-      publicKey: pubBase64,
-      encryptedPrivateKey: encrypted,
-      algorithm: "RSA-OAEP",
-    });
+      myKeypair.mockResolvedValue({
+        publicKey: pubBase64,
+        encryptedPrivateKey: encrypted,
+        algorithm: "RSA-OAEP",
+      });
 
-    await syncKeysOnLogin("senha");
+      await syncKeysOnLogin("senha");
 
-    // myKeypair called but restoreFromBackup should NOT have been called
-    // (no decrypt needed since keys match)
-    expect(myKeypair).toHaveBeenCalledOnce();
-  });
+      // myKeypair called but restoreFromBackup should NOT have been called
+      // (no decrypt needed since keys match)
+      expect(myKeypair).toHaveBeenCalledOnce();
+    },
+    CRYPTO_TIMEOUT_MS,
+  );
 });

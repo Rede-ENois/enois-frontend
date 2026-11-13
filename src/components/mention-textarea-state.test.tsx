@@ -70,7 +70,32 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-const settle = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+// Acima do debounce da busca de menção (250 ms): a lista só aparece depois da pausa da digitação.
+// O debounce resolve dentro desta janela e a resposta da busca chega depois; o `act` vazio
+// seguinte deixa o React confirmar (commit) o resultado resolvido, como faria no navegador.
+async function flush() {
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 300)));
+  await act(async () => {});
+  await act(async () => {});
+}
+
+// Espera uma condição da tela como no navegador: alterna o relógio com o React e reavalia.
+async function waitFor<T>(check: () => T | undefined, tries = 20): Promise<T> {
+  for (let i = 0; i < tries; i += 1) {
+    const found = check();
+    if (found !== undefined) return found;
+    await flush();
+  }
+  throw new Error("waitFor: condição não apareceu");
+}
+
+const settle = flush;
+
+function mentionOption() {
+  return [...host.querySelectorAll("button")].find((button) =>
+    button.textContent?.includes("Ana Example"),
+  );
+}
 
 async function selectMention() {
   const campo = host.querySelector<HTMLElement>('[role="textbox"]')!;
@@ -86,12 +111,9 @@ async function selectMention() {
     campo.dispatchEvent(new Event("input", { bubbles: true }));
   });
   await settle();
-  const option = [...host.querySelectorAll("button")].find((button) =>
-    button.textContent?.includes("Ana Example"),
-  );
-  expect(option).toBeDefined();
+  const option = await waitFor(mentionOption);
   await act(async () =>
-    option!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })),
+    option.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })),
   );
   await settle();
   expect(changed).toHaveBeenLastCalledWith("@ana-test ", ["user-a"]);

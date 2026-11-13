@@ -12,6 +12,7 @@ import { Button } from "@rede-enois/design-system/ui";
 import { Smile } from "lucide-react";
 
 import { usersApi } from "@/lib/api";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 import { EmotePickerDialog } from "@/components/emotes/emote-picker-dialog";
 
@@ -33,11 +34,13 @@ export function MentionTextarea({
   const [mentionQuery, setMentionQuery] = useState("");
   const [emoteOpen, setEmoteOpen] = useState(false);
   const fieldRef = useRef<MentionTextareaHandle>(null);
+  // A menção é digitada letra a letra dentro do texto; a busca espera a pausa para sair.
+  const debouncedMentionQuery = useDebouncedValue(mentionQuery, 250);
 
   const { data: results = [] } = useQuery({
-    queryKey: ["users", "search", mentionQuery],
-    queryFn: () => usersApi.search(mentionQuery),
-    enabled: mentionQuery.length >= 2,
+    queryKey: ["users", "search", debouncedMentionQuery],
+    queryFn: ({ signal }) => usersApi.search(debouncedMentionQuery, signal),
+    enabled: debouncedMentionQuery.length >= 2,
   });
 
   const insertEmote = (emoteCode: string) => {
