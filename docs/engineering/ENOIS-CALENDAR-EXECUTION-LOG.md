@@ -3003,8 +3003,8 @@ e cancelado de fora, convite de outra pessoa não vaza, organizador sem fila pr�
 `CalendarDetailAndPendingInvitationsApiTests` 6/6. Suite completa do repositório: 2506 testes,
 0 falhas, 0 erros, 1 skip pré-existente.
 
-**PR:** backend [#681](https://github.com/Rede-ENois/enois-backend/pull/681) — aguardando revisão
-humana. Depende do #673 no que toca o join de convidados, mas traz o mesmo join na base, então
+**PR:** backend [#681](https://github.com/Rede-ENois/enois-backend/pull/681) — mergeado em `e5559061`
+(2026-11-13, squash). Depende do #673 no que toca o join de convidados, mas traz o mesmo join na base, então
 pode ser revisado e mergeado em qualquer ordem. Docs neste PR.
 
 **BLOQUEIOS:** D20 e B9 inalterados (release do DS segue passo humano). Desempenho do join não
@@ -3069,75 +3069,11 @@ tsc EXIT=0, 1282/1282 (routes+components+lib, incluindo o 11/11 de mention após
 build EXIT=0; CI verde; mergeado. #852: tsc EXIT=0, 1294/1294 (220 arquivos), build EXIT=0, eslint
 sem erro no arquivo. Em todos, `routeTree.gen.ts` regenerado pelo build foi revertido.
 
-**BLOQUEIOS:** nada — #852 mergeado em `3f24504b` (2026-11-13). #673 e #681 (backend) seguem aguardando revisão.
+**BLOQUEIOS:** nenhum — #852 mergeado em `3f24504b`, #673 em `f0a4f800`, #681 em `e5559061` (2026-11-13).
 
 **PRÓXIMA EXECUÇÃO (proposta de execução 37):** (1) acompanhar revisão dos PRs abertos e resolver
 pedidos; (2) varredura dos demais caminhos de leitura (conflitos, export, assinatura) por consulta
 que cresce com o histórico (fase 11); (3) a11y além dos estados de erro.
-
----
-
-## EXECUÇÃO 37
-
-### 2026-11-12T20:10-03:00 — Fase 11: o teto do compromisso, a leitura por pessoa e o teste que flacava
-
-**TAREFA:** a proposta da execução 36: (1) a varredura dos demais caminhos de leitura sob volume;
-(2) o flaky do `crypto.test.ts` sob suíte completa.
-
-**REPOSITÓRIOS:** `enois-backend` (PR [#687](https://github.com/Rede-ENois/enois-backend/pull/687),
-mergeado em `949f2cdc`); `enois-frontend` (PR [#854](https://github.com/Rede-ENois/enois-frontend/pull/854)).
-Docs neste PR.
-
-**A varredura proposta não achou o que procurar.** Conflitos, export e assinatura foram lidos antes de
-mexer: todos já passam por `CalendarWindows.validate` (teto de 366 dias, `400 WINDOW_TOO_LONG`) ou
-pelo recorte fixo da assinatura (30 dias para trás, 365 para frente), então não têm o padrão de
-consulta que cresce com o histórico. O que restava era outro vetor, mais simples: o **número de
-convidados por compromisso**, que nunca teve teto.
-
-**Unidade 1 — teto de 100 convidados (`d01c14a5`).** A lista de participantes do detalhe é lida
-inteira e cada convite é uma linha; sem teto, um compromisso com milhares de convites faz o detalhe
-e a resposta responderem proporcionalmente. `CalendarInvitationService.MAX_PARTICIPANTS = 100` e
-`countByEntry` no repositório: a checagem conta na base em vez de carregar a lista só para medir.
-A prova vermelha é de API: 100 convites gravados direto (criar 100 perfis pela API custaria a
-rodada), o 101º responde `400 INVITE_LIMIT_REACHED`; retirar um convite abre vaga de novo — o teto
-recusa o que passaria dele, não o que já está dentro.
-
-**Unidade 2 — o lembrete lê a linha da pessoa (`3c7f9246`).** `shouldNotify` era dono-ou-lista:
-carregava todos os participantes do compromisso a cada lembrete vencido para decidir sobre uma
-pessoa só. Agora usa `findByEntryAndUser`, a mesma leitura pontual do resto do serviço. O teste
-`CalendarReminderQueryTests` (2/2) falha no código antigo: `verify(participants, never()).findByEntry(anyString())`
-e `verify(participants).findByEntryAndUser("cap_entry","guest")`; o segundo teste garante que o
-convite ainda precisa estar aceito ou talvez para notificar.
-
-**Unidade 3 — o teste que flacava (`3a294736`, PR #854).** O `fails to decrypt private key with
-wrong password` falhava só na suíte completa, e a asserção sempre esteve certa: `encryptPrivateKey`
-e `decryptPrivateKey` derivam a chave com as **600 mil iterações do PBKDF2 de produção**, uma vez
-em cada um dos dois testes. A suíte roda com dezenas de workers; sem CPU sobrando, a espera legítima
-passa dos 5 s padrão do Vitest. Reproduzido de forma determinística nesta máquina com 20 processos
-de carga nos 16 núcleos: os dois testes morrem em ~5 s (5216 ms e 5020 ms). Com espaço,
-precisam de 10–16 s, então o limite do arquivo subiu para 30 s com `vi.setConfig({ testTimeout: 30_000 })`,
-o mesmo padrão do teste do seletor de emotes. **Nenhuma asserção mudou** e nenhum parâmetro
-criptográfico mudou: o teste continua vermelho se a decifra com a senha errada passar.
-
-**Prova.** Backend: `CalendarInvitationApiTests` 12/12 (o teste novo é o do teto), `CalendarReminderQueryTests`
-2/2, `CalendarReminderServiceTests` 15/15, `CalendarEntryPersistenceTests` 7/7 e o módulo do
-calendário inteiro **167/167 em 18 classes**, 0 falhas — tudo rodado sobre a `qa` já com o #687
-mergeado. Front: `npx tsc --noEmit`
-limpo, `npx eslint` no arquivo limpo, `npx vitest run` **236 arquivos e 1370 testes, 0 falhas**,
-`npx vite build` ok (`routeTree.gen.ts` regenerado pelo build foi revertido). O arquivo do crypto
-também rodou verde com os 16 núcleos saturados (14/14), sob a mesma carga que o derrubava.
-
-**PRs:** backend [#687](https://github.com/Rede-ENois/enois-backend/pull/687) — **mergeado** na `qa`
-em `949f2cdc` (2026-11-12T23:01Z). Front [#854](https://github.com/Rede-ENois/enois-frontend/pull/854)
-— **mergeado** pelo bot em `ba39e9d3` (2026-11-12T23:17Z). Docs neste PR.
-
-**BLOQUEIOS:** nenhum novo. A a11y além dos estados de erro segue o único item aberto da fase 11 (sem
-`vitest-axe` nas dependências); `#673` segue aberto aguardando revisão humana desde a execução 34.
-
-**PRÓXIMA EXECUÇÃO (proposta de execução 38):** (1) a11y além dos estados de erro — contraste e
-foco, com decisão explícita sobre introduzir `vitest-axe` ou cobrir por inspeção; (2) acompanhar
-revisão de #852/#854 e resolver pedidos; (3) reconferir se o teto de 100 convidados não atrapalha
-nenhum fluxo de produto (o valor é o mesmo teto de lote que o resto do módulo usa).
 
 ---
 

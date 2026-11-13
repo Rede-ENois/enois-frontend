@@ -44,6 +44,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
+import { ErrorBanner } from "@/components/error-banner";
 import { MentorAgendaDialog } from "@/components/mentoring/mentor-agenda-dialog";
 import { MentorBanner } from "@/components/mentoring/mentor-banner";
 import { MentorRoomDialog } from "@/components/mentoring/mentor-room-dialog";
@@ -211,11 +212,7 @@ function Mentoria() {
                     mentorId={myMentor?.id}
                   />
 
-                  {createError && (
-                    <p className="mt-3 rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                      {createError}
-                    </p>
-                  )}
+                  {createError && <ErrorBanner error={createError} showDetails={false} />}
                 </DialogContent>
               </Dialog>
             </div>
@@ -850,11 +847,7 @@ function BookSessionDialog({
               </div>
             )}
 
-            {error && (
-              <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
+            {error && <ErrorBanner error={error} showDetails={false} />}
 
             {slots.length > 0 && (
               <Button
@@ -1042,11 +1035,7 @@ function AddSlotDialog({
 
             {saved && <p className="text-sm text-growth">{texts.mentoring.slotSuccess}</p>}
 
-            {error && (
-              <p className="rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
+            {error && <ErrorBanner error={error} showDetails={false} />}
 
             <Button
               className="w-full rounded-full"
