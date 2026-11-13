@@ -173,6 +173,8 @@ function AgendaPage() {
     }) => calendarApi.respond(entryId, answer),
     onMutate: ({ entryId }) => setRespondingId(entryId),
     onSuccess: () => {
+      // A resposta muda a agenda mas sem confirmar visualmente parece que nada aconteceu.
+      toast(texts.agenda.respondDone, "success");
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
     },
     onError: () => toast(texts.agenda.errorRespond, "error"),

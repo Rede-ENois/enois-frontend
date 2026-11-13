@@ -187,6 +187,7 @@ export const texts = {
     scopeLabel: "Agenda mostrada",
     errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
     errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    respondDone: "Resposta registrada.",
     /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
     errorInvite: "Não foi possível convidar. Tente de novo.",
     errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
@@ -213,7 +214,6 @@ export const texts = {
     importIcs: "Importar .ics",
     importIcsHint: "Traz os compromissos de outra agenda para esta.",
     importIcsError: "Não foi possível importar o arquivo. Tente de novo.",
-    importIcsDone: "Arquivo importado.",
     subscription: {
       seoTitle: "Assinatura da agenda · Énóis",
       title: "Assinatura da agenda",
