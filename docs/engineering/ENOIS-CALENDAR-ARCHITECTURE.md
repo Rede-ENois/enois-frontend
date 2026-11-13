@@ -265,7 +265,11 @@ ler e reescrever o compromisso inteiro.
 
 **Limite conhecido.** Convidar 50 pessoas numa transação grava 50 linhas uma a uma. Para o tamanho
 de uma agenda social isso está certo; se aparecer compromisso de comunidade com centenas de
-convidados, o caminho é o lote, como o chat fez em `#535`.
+convidados, o caminho é o lote, como o chat fez em `#535`. **Teto (execução 37):** 100 convidados
+por compromisso (`CalendarInvitationService.MAX_PARTICIPANTS`, `400 INVITE_LIMIT_REACHED`), contado
+no banco por `countByEntry` — a lista do detalhe e cada convite são lidos inteiros, então o teto
+protege exatamente o que cresce com o número de convidados. O worker de lembrete também deixou de
+carregar a lista inteira: decide sobre a linha da pessoa (`findByEntryAndUser`).
 
 ---
 
