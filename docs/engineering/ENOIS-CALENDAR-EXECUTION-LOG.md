@@ -3003,8 +3003,8 @@ e cancelado de fora, convite de outra pessoa não vaza, organizador sem fila pr�
 `CalendarDetailAndPendingInvitationsApiTests` 6/6. Suite completa do repositório: 2506 testes,
 0 falhas, 0 erros, 1 skip pré-existente.
 
-**PR:** backend [#681](https://github.com/Rede-ENois/enois-backend/pull/681) — aguardando revisão
-humana. Depende do #673 no que toca o join de convidados, mas traz o mesmo join na base, então
+**PR:** backend [#681](https://github.com/Rede-ENois/enois-backend/pull/681) — mergeado em `e5559061`
+(2026-11-13, squash). Depende do #673 no que toca o join de convidados, mas traz o mesmo join na base, então
 pode ser revisado e mergeado em qualquer ordem. Docs neste PR.
 
 **BLOQUEIOS:** D20 e B9 inalterados (release do DS segue passo humano). Desempenho do join não
@@ -3069,7 +3069,7 @@ tsc EXIT=0, 1282/1282 (routes+components+lib, incluindo o 11/11 de mention após
 build EXIT=0; CI verde; mergeado. #852: tsc EXIT=0, 1294/1294 (220 arquivos), build EXIT=0, eslint
 sem erro no arquivo. Em todos, `routeTree.gen.ts` regenerado pelo build foi revertido.
 
-**BLOQUEIOS:** revisão humana de #852. #673 e #681 (backend) seguem aguardando revisão.
+**BLOQUEIOS:** nenhum — #852 mergeado em `3f24504b`, #673 em `f0a4f800`, #681 em `e5559061` (2026-11-13).
 
 **PRÓXIMA EXECUÇÃO (proposta de execução 37):** (1) acompanhar revisão dos PRs abertos e resolver
 pedidos; (2) varredura dos demais caminhos de leitura (conflitos, export, assinatura) por consulta
