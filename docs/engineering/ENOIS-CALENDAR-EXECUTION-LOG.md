@@ -3256,3 +3256,222 @@ conferência da `/agenda` com os tokens novos; (2) acompanhar as revisões de #8
 nos módulos de calendário.
 
 ---
+
+## EXECUÇÃO 40 — fase 5: o seletor de horário de mentoria e a mensagem que o banner engolia (2026-11-13, ~02:00)
+
+A leitura de estado mostrou #223 mergeado pelo bot (2026-11-13T04:34Z), o release 0.34.0 ainda em
+revisão (#222), #852 `MERGEABLE`, backend sem PR de calendário aberto. O pacote publicado segue
+0.33.0 — o consumo do picker no front não é possível ainda. O bloco foi montado em torno da lacuna
+que o inventário nomeia na fase 5 (mentorias: "falta o picker de slot no DS") e de um defeito
+encontrado ao investigar por que os blocos de erro da `/mentoria` não usavam o banner do DS.
+
+**Unidade 1 — `CalendarSlotPicker` (DS, `2adb23a`, PR #224).** `src/domain/calendar/calendar-slot-picker.tsx`
+com `types/domain/calendar/calendar-slot.ts` e `-props.ts`, mensagem nova `calendar.slotPicker`
+(título + `slot(day, time)`) no tipo e no default. Radiogroup: um tab stop, `aria-checked`, setas
+(Right/Down avança, Left/Up volta, com wrap) movendo escolha e foco, clique repetido desfaz,
+`aria-busy` + `disabled` na reserva, erro `role="alert"` dentro do grupo. Rótulo do horário formatado
+com `Intl.DateTimeFormat` no fuso de quem lê. 6 testes.
+
+**Unidade 2 — `ErrorBanner` mostra a mensagem em string (front, `2519757f`, PR #859).** Defeito
+encontrado ao ir usar o banner nos blocos crus: `describe()` só tratava `ApiError` e `Error`; o
+estado de erro de formulário é `useState<string | null>`, então toda mensagem de texto virava "Erro
+inesperado. Tente novamente.". O caso da string entra antes do genérico (string vazia continua no
+genérico). Teste de prova `src/components/error-banner.test.tsx`: o caso da string **falha no código
+antigo** e passa no novo. Com o conserto, os três blocos da `/mentoria` que já mostravam a mensagem
+(`createError`, erro de reserva, erro de publicar horário) passaram a usar o `ErrorBanner`.
+
+**Unidade 3 — supressões de markup encolhem (front, `c7a6349f`, mesmo PR).** `npx eslint .`
+apontava supressões que não ocorrem mais; o prune levou a `/mentoria` de **247 para 241** violações
+de `local/no-front-markup` e zerou o aviso "suppressions left that do not occur anymore". Os 14
+warnings restantes são os mesmos da base (conferido com `git stash`).
+
+**Prova.** DS: 6/6 no teste do picker, suíte completa `npm test` **193 arquivos / 1835 testes, 0
+falhas**, `npm run build` ok com `dist/domain/calendar/calendar-slot-picker.js` presente, `eslint` e
+`tsc --noEmit` limpos. Front: `tsc --noEmit` limpo **com o DS 0.33.0** (o `node_modules` da cópia
+principal tem 0.30.1, o que gera erros falsos — usado o do worktree com 0.33.0), `eslint` limpo,
+suíte completa `npx vitest run` **237 arquivos / 1373 testes, 0 falhas**, `vite build` ok com
+`routeTree.gen.ts` revertido.
+
+**Divergências corrigidas nos docs:** a `qa` listava #830/#828 como abertos (mergeados pelo bot), a
+fase 4 chamava "compromissos pessoais" de lacuna (o `PERSONAL` é o tipo padrão; a agenda é
+`SOCIAL`/`PROFESSIONAL` e o tipo é ortogonal) e a fase 11 dizia faltar a a11y além dos estados de
+erro (entregue nas execuções 38–40).
+
+**BLOQUEIOS:** nenhum novo. Revisão humana: DS #222 e #224, front #852 e #859, docs
+#851/#855/#857/#858, backend #673. Tag `v0.34.0` é ação de mantenedora.
+
+**PRÓXIMA EXECUÇÃO (proposta de 41):** (1) quando o 0.34.0 publicar, bump de lockfile no front e
+consumo do `CalendarSlotPicker` na `/mentoria` (fechando a lacuna da fase 5), mais o picker de slot
+no perfil do mentor; (2) acompanhar as revisões; (3) fases 7 e 10 seguem na decisão de produto e de
+credencial externa — sem elas, varredura de regressão nos módulos de calendário.
+
+---
+
+## EXECUÇÃO 41 — fase 11: a resposta do convite no mesmo join da agenda (2026-11-13, ~06:00)
+
+**TAREFA:** continuação da varredura de leituras que crescem com o histórico (execuções 32/34/35/37).
+A 34 tirou o `in` da lista de compromissos convidados e a 37 achou os demais caminhos com teto, mas
+a resposta do convite ainda voltava ao banco num segundo `in`. (Unidade já **mergeada** na `qa`
+durante a rodada: backend #688 em `f892d852`, 2026-11-13T07:01Z.)
+
+**REPOSITÓRIOS:** `enois-backend` (`fix/calendar-conflitos-consulta` sobre `enois/qa` `f0a4f800`).
+Docs neste PR (empilhado sobre a cadeia 37→38→39→40, ainda sem revisão).
+
+**O defeito.** `CalendarQueryService.agenda` chamava `findInvitedInWindow` (o join da execução 34,
+sem resposta) e em seguida `participants.findByUserAndEntryIds(ids)` para mapear id → estado. Cada
+leitura de agenda (e cada conflito, que reaproveita a mesma agenda, e o export `.ics`, que usava o
+mesmo par) seguia pagando duas consultas e um `in` sem teto com o histórico crescendo.
+
+**A correção.**
+
+- Nova porta `CalendarInvitationRepository.findInvited(userId, scope, from, to)`: o join entre
+  `calendar_entry_participants` e `calendar_entries` devolve entrada e resposta juntos, numa
+  consulta, com janela meia-aberta e recorte de agenda.
+- `CalendarQueryService.agenda` e `CalendarIcsService.export` consomem a porta;
+  `findByUserAndEntryIds` e `findInWindowByParticipant` saem por falta de chamador.
+- Sem filtro de estado no cruzamento: a agenda mostra o convite pendente com o selo (D13) e o
+  export publica o compromisso cancelado com `STATUS:CANCELLED` no mesmo `UID` (D6). Um filtro
+  `ACTIVE` no JPQL esconderia o cancelado do `.ics` e o evento nunca sairia do calendário externo.
+- `CalendarEntryJpaEntity` fica pública com `toDomain()` público: a projeção do join é lida por
+  proxy do Spring Data, e a classe package-private quebra em `IllegalAccessError` em runtime (pega
+  em teste, não em compilação).
+
+**Prova.** `./mvnw -o test -Dtest=...` nas classes tocadas: **61 testes, 0 falhas, 0 erros**. Novos:
+`CalendarEntryPersistenceTests#invitedEntriesComeFromTheParticipantJoinWithTheirAnswer` (aceito,
+pendente e cancelado na mesma leitura, com a resposta certa em cada um),
+`CalendarIcsServiceTests#invitedEntriesExportTooAndTheirCancellationKeepsTheSameUid` (o `.ics` do
+convidado publica o cancelamento com o UID estável) e
+`CalendarEntryReadApiTests#convidadoVeoCompromissoNaPropriaListaComARespostaDele` (contrato HTTP:
+`owner=false`, `participation=ACCEPTED`, estado `CANCELLED` visível). Suíte completa sobre a `qa`
+com o diff: **2515 testes, 0 falhas, 0 erros, 1 ignorado** (`KofAgentLiveChannelTests`, por
+configuração). A primeira rodada da suíte falhou porque duas execuções do Maven compartilharam o
+mesmo `target/`; a prova válida é a rodada isolada. Retificação de processo: durante a rodada eu
+abri um bloco de docs rotulado "EXECUÇÃO 37" para esta unidade, mas as execuções 37 a 40 já tinham
+dono na cadeia de docs; o registro correto é este bloco 41.
+
+**ARQUIVOS.** Backend (13, +226/−81): `CalendarInvitationRepository` (novo),
+`CalendarQueryService`, `CalendarIcsService`, `CalendarParticipantPersistenceAdapter`,
+`SpringDataCalendarParticipantJpaRepository`, `SpringDataCalendarEntryJpaRepository`,
+`CalendarEntryPersistenceAdapter`, `CalendarEntryRepository`, `CalendarParticipantRepository`,
+`CalendarEntryJpaEntity`, mais os três testes. Docs: `ENOIS-CALENDAR-EXECUTION-LOG.md`,
+`ENOIS-CALENDAR-ROADMAP.md` (estado, fase 11, tabela de PRs, testes, histórico, seção 10) e
+`ENOIS-CALENDAR-ARCHITECTURE.md` (D42).
+
+**PR:** backend [#688](https://github.com/Rede-ENois/enois-backend/pull/688) — **mergeado** na `qa`
+em `f892d852` (2026-11-13T07:01Z). Docs neste PR.
+
+**BLOQUEIOS:** nenhum novo. Desempenho do join em produção segue sem medida (não há ambiente de
+medida nesta rodada); a consulta elimina um acesso por leitura em relação ao código anterior.
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 42):** (1) acompanhar as revisões da cadeia de docs
+(#855/#857/#858/#860 e este) e de #852; (2) fases 7 e 10 continuam dependendo de decisão de produto
+e de credencial externa — sem elas, varredura de regressão nos módulos de calendário sobre a `qa`
+já com o #688.
+
+---
+
+## EXECUÇÃO 42 — motor central: a recorrência de compromissos sai do papel (2026-11-13, ~08:00)
+
+**TAREFA:** fechar a lacuna que o inventário chamava de "falta recorrência" no motor central de
+compromissos (linha 109 do roadmap). Até esta rodada `calendar_entries` não tinha noção de
+repetição: cada compromisso era uma linha só, e um `.ics` com `RRULE` importava a primeira ocorrência
+e descartava a regra em silêncio. O roadmap já mandava reaproveitar a recorrência em vez de inventar
+outra (linha 95, `events.EventRecurrence` como precedente).
+
+**REPOSITÓRIOS:** `enois-backend` (`feat/agenda-recorrencia` sobre `enois/qa` `f892d852`). Docs neste
+PR (empilhado sobre a cadeia de docs até o #861).
+
+**Escolha de desenho (D43).** A série é **materializada**: cada ocorrência é uma linha irmã de
+`calendar_entries` que compartilha `series_id` e cadência. A alternativa — expandir a regra na leitura
+— faria a agenda, o conflito, o export e o lembrete divergirem, porque todos já são consultas por
+janela sobre a tabela. Com linhas de verdade, cada ocorrência ocupa conflito, aceita lembrete, é
+reagendada e cancelada sozinha, e o `.ics` continua exportando um `VEVENT` por ocorrência com `UID`
+próprio. O precedente do repositório (`events.EventRecurrence`/`EventRecurrenceService`, catch-up
+com `do/while`, único por `(series_id, data)`) foi seguido em vez de criar um segundo modelo.
+
+**A correção.**
+
+- Migração `V277__calendar_series.sql`: três colunas em `calendar_entries` (`series_id`, `recurrence`
+  com `WEEKLY|BIWEEKLY|MONTHLY`, `tail`) e o índice único `(series_id, starts_at)` que é a
+  idempotência. `tail` marca a ponta da série — uma por série — porque é dela que a extensão parte;
+  cancelar uma ocorrência **não** limpa a marca (cancelar "esta" não encerra a série), só `stop`
+  limpa todas. O `check` no banco amarra a tríade: entrada avulsa não pode ter cadência, entrada em
+  série não pode estar sem cadência.
+- `CalendarRecurrence`: cadência de domínio com passo de relógio de parede em `ZonedDateTime`
+  (atravessa o horário de verão sem deslocar a hora), mensal com **dia-âncora** da primeira
+  ocorrência, para o compromisso do dia 31 cair no último dia dos meses curtos e voltar ao 31.
+- `CalendarRecurrenceService`: `start`, `stop`, `extend` e `materializeImported`. O horizonte é uma
+  **janela de 90 dias**, não uma contagem de ocorrências — contar faria o worker crescer a série sem
+  limite a cada execução. A ponta atrasada pega carona (`firstAhead`) sem criar o passado, e
+  `MAX_OCCURRENCES_PER_RUN` (200) é a guarda contra cadência rápida demais. A criação adota a irmã que
+  já existe (`findBySeriesAndStart`) em vez de depender da exceção do índice único dentro da mesma
+  transação — que envenenava o commit, como o precedente dos eventos já sabia.
+- Worker `@Scheduled` (5 min) estende todas as pontas; falha de uma não derruba as outras. Tem a
+  flag `rede.calendar.recurrence.enabled` (padrão `true`), desligada na suíte.
+- Rotas `POST /calendar/entries/{id}/series` (`WEEKLY|BIWEEKLY|MONTHLY`) e
+  `DELETE /calendar/entries/{id}/series`, ambas idempotentes, com `seriesId`/`recurrence` na resposta.
+  Entrada cuja origem pertence a outro módulo não vira série por aqui (409); ela **pode** encerrar a
+  sua série (encerrar é decisão local e não mexe no fato da origem).
+- Import `.ics`: o parser passou a capturar `RRULE` e `EXDATE` (linhas de `EXDATE` repetidas são
+  mescladas), e `CalendarRule` traduz só o subconjunto que o app representa — `FREQ=WEEKLY` com
+  `INTERVAL=1|2`, `FREQ=MONTHLY` com `INTERVAL=1`, mais `COUNT` e `UNTIL`; `BYDAY`/`BYMONTHDAY`/`BYMONTH`
+  e qualquer outro intervalo recusam a regra inteira. Regra fora do subconjunto **não vira série**: a
+  ocorrência original fica única. Antes, a regra era descartada em silêncio e o arquivo virava uma
+  agenda incompleta sem aviso.
+
+**Prova.**
+
+- Domínio `CalendarRecurrenceTests`: **7 testes** — relógio de parede na virada de horário de verão de
+  Lisboa (2026-03-24T19h → 2026-03-31T19h), quinzenal +14d, mensal 31→28→31 com âncora, mensal sem
+  âncora, dia 28 com âncora 31 voltando ao 31, `NONE` lança, cadência desconhecida recusada.
+- Serviço `CalendarRecurrenceServiceTests` (Spring + H2): **7 testes** — a fundadora ganha a série e
+  a janela inteira com uma única ponta; estender de novo cria zero; ponta 21 dias atrás faz catch-up
+  sem recriar o passado; `stop` cancela o futuro, preserva o passado e devolve a entrada a avulsa;
+  entrada com origem recusa fundar série; `DAILY` e `NONE` recusados com código próprio; entrada de
+  outro dono é 404.
+- Persistência `CalendarSeriesPersistenceTests`: **3 testes** — ida e volta das colunas, entrada
+  avulsa com colunas vazias, busca por série/por instante/pela ponta.
+- HTTP `CalendarSeriesApiTests`: **7 testes** — 200 com `seriesId`+`recurrence`, repetição com a mesma
+  `Idempotency-Key` devolve corpo idêntico, `DAILY` 400, origem 409, outro dono 404, `DELETE` devolve a
+  entrada sem série e sem ponta, sem sessão 401.
+- Import `.ics` `CalendarIcsRecurrenceTests`: **6 testes** — arquivo semanal materializa a série
+  (irmãs a 7 dias, uma ponta, dentro de 90 dias); `EXDATE` deixa o buraco (pula 15/12, mantém 8 e 22);
+  `FREQ=DAILY` e `FREQ=WEEKLY;BYDAY=TU,TH` ficam únicos; `COUNT=3` conta a fundadora e para em 3;
+  reimportar não duplica; `stop` numa série importada cancela o futuro e mantém o passado.
+- **Q0 provado:** com a chamada `importRule(...)` removida (comportamento antigo), os quatro testes de
+  série importada falham — série inexistente e ocorrência única; com ela, passam.
+- Suíte de calendário após o rebase sobre o #688: **54 testes, 0 falhas**. O `#688` mexeu em
+  `CalendarIcsService` e nos testes do `.ics`; o rebase preservou os dois lados.
+- Suíte completa do backend: **2544 testes, 0 falhas, 0 erros, 1 ignorado** (`KofAgentLiveChannelTests`,
+  por configuração).
+- Corrigido no caminho (regra do escoteiro): `CalendarIcsService` chegou a 563 linhas (≥600 bloqueia
+  merge), então o parser de `RRULE` saiu para `CalendarRule` e o arquivo voltou a 518; os testes de
+  recorrência do `.ics` saíram para classe própria (o arquivo de testes passava de 600).
+- **A primeira rodada da suíte rebasada falhou em `MentoringSessionListQueryCountTests`** — e a culpa
+  era desta rodada: o worker de extensão novo consultava `findSeriesTails()` em outra thread e
+  aparecia na contagem de `SELECT`s do `StatementInspector` de um teste alheio (a base H2 é
+  compartilhada). Causa-raiz corrigida com o padrão que o repositório já usa para o worker de
+  eventos: flag `rede.calendar.recurrence.enabled` (padrão `true` em produção), desligada na suíte
+  via `src/test/resources/application.properties`, com o comentário explicando por quê. Os testes de
+  recorrência chamam `extend()` direto, e o comportamento agendado continua coberto por eles.
+  Rodada seguinte: as sete classes (calendário + o teste de contagem) deram **56 testes, 0 falhas**.
+
+**ARQUIVOS.** Backend: `V277__calendar_series.sql`, `CalendarRecurrence`, `CalendarRecurrenceService`,
+`CalendarRule`, `CalendarEntry`, `CalendarEntryJpaRepository`, `CalendarEntryRepository`, a entidade e o
+adaptador de persistência, `CalendarEntryController`, `CalendarIcsService`, `application.properties` de
+teste, mais as seis classes de teste. Docs: `ENOIS-CALENDAR-EXECUTION-LOG.md` (este bloco),
+`ENOIS-CALENDAR-ROADMAP.md` (inventário, tabela de PRs, testes, histórico, seção 10) e
+`ENOIS-CALENDAR-ARCHITECTURE.md` (D43).
+
+**PR:** backend `feat/agenda-recorrencia` (aberto para revisão humana na `qa`).
+
+**BLOQUEIOS:** nenhum novo. Não há tela de recorrência no front ainda — esta rodada entregou o
+contrato e a persistência; a superfície de escolha de cadência no `CalendarEntryFormDialog` depende do
+DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decisão externa (semântica
+Épapo/Tamo Junto e credencial OAuth).
+
+**PRÓXIMA EXECUÇÃO (proposta de execução 43):** (1) superfície de recorrência no DS e ligação na
+`/agenda`, no mesmo fluxo de release; (2) acompanhar as revisões da cadeia de docs e de #852/#222/#224;
+(3) fases 7 e 10 seguem na decisão externa.
+
+---

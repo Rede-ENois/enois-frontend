@@ -1128,3 +1128,79 @@ substituição de tela dentro de um diálogo move o foco para o que substituiu o
 **Consequência.** Todo par de cor em elemento só-de-ícone é medido por 1.4.11 (3:1); o teste de tema
 traz as duas réguas, e a pendência anotada numa execução é re-medida com o critério do papel antes
 de virar mudança de token.
+
+## D41 — O seletor de horário é um grupo de rádio, e o banner mostra o que o servidor disse (execução 40)
+
+1. **Escolher um horário é escolher um entre N, e o papel diz isso.** O agendamento de mentoria
+   desenhava os horários como uma pilha de botões: nenhum estava marcado para o leitor de tela, e o
+   teclado precisava de um Tab por opção. `CalendarSlotPicker` é um `radiogroup` — um tab stop, setas
+   movendo escolha e foco juntos, `aria-checked` anunciando o escolhido, `aria-busy` enquanto a
+   reserva voa e o erro da reserva desenhado dentro do grupo, onde a ação aconteceu. Clique repetido
+   no escolhido desfaz (`onChange(null)`), para o gesto ser reversível sem caçar um "limpar".
+2. **Mensagem de erro em texto é o erro.** O estado de erro de um formulário é `useState<string>`;
+   `describe()` do `ErrorBanner` tratava `ApiError` e `Error` e mandava todo o resto para "Erro
+   inesperado". O banner existia e ainda assim escondia o que o servidor devolveu — um defeito
+   silencioso, porque a tela "funcionava". String não vazia entra como mensagem; vazio e valor
+   desconhecido continuam no genérico, que é o certo para `undefined` e objeto sem mensagem.
+3. **Ação não é detalhe: por isso o banner não ganha botão.** Os dois blocos que oferecem "Tentar de
+   novo" continuam fora do banner nesta rodada. Enfiá-los no `ErrorBanner` seria acrescentar slot de
+   ação ao contrato do DS; o conserto do defeito não é o lugar para essa mudança de contrato.
+
+**Consequência.** Seleção entre opções finitas nasce como radiogroup no DS, nunca como lista de
+botões; e todo ponto que mostra erro passa pelo mesmo banner, que nunca substitui a mensagem real
+por uma genérica.
+
+## D42 — A resposta do convite é dado do cruzamento, não uma segunda consulta (execução 41)
+
+1. **Agenda e resposta são a mesma linha do banco.** A leitura da agenda de quem foi convidado
+   começou a sair de um join na execução 34, mas só com a entrada: a resposta do convite vinha
+   depois, numa segunda consulta que recebia a lista de ids num `in` de tamanho variável. O custo
+   não era só a ida extra ao banco, era a lista crescer com o histórico da pessoa. A porta
+   `CalendarInvitationRepository` passou a devolver `(entrada, resposta)` do mesmo cruzamento, e
+   agenda, conflito e export `.ics` consomem essa única leitura.
+2. **O cruzamento não filtra estado, porque cada chamador filtra o seu.** Um `e.state = 'ACTIVE'`
+   no JPQL pareceria limpeza e quebraria duas regras ao mesmo tempo: o compromisso cancelado
+   precisa sair no `.ics` com `STATUS:CANCELLED` e o mesmo `UID` (D6), e o convite pendente precisa
+   aparecer na agenda com o selo de convidado (D13). Filtro de visão é decisão da tela; filtro de
+   persistência esconde a linha que o chamador precisa.
+3. **Projeção de interface exige tipo público.** O retorno do join é uma interface cujos getters
+   devolvem a entidade JPA; o Spring Data materializa isso por proxy em runtime. Com a entidade
+   `package-private`, a leitura estoura `IllegalAccessError` em execução e passa na compilação:
+   por isso `CalendarEntryJpaEntity` (e `toDomain`) são público, como contrato de projeção.
+
+**Consequência.** Leitura de agenda é uma consulta, independentemente do número de convites
+acumulados. Quando uma porta cruza duas tabelas, o filtro de estado fica no chamador que conhece a
+regra, e o tipo exposto na projeção é público por contrato.
+
+## D43 — A recorrência é materializada em linhas irmãs, não expandida na leitura (execução 42)
+
+1. **Cada ocorrência é um compromisso de verdade.** A série existe como linhas de
+   `calendar_entries` que compartilham `series_id`, e não como uma regra aplicada na hora de ler.
+   Agenda, conflito, lembretes e export `.ics` já são consultas por janela sobre a tabela; uma regra
+   escondida no tempo de leitura faria todos divergirem do que está gravado. Com linhas materializadas,
+   cada ocorrência ocupa conflito, leva lembrete, é reagendada e cancelada sozinha.
+2. **O horizonte é uma janela, não uma contagem.** A extensão cria ocorrências até `now + 90 dias`.
+   Contar "as próximas N" faria cada execução do worker recomeçar a contagem na ponta atual e crescer a
+   série sem limite. A ponta atrasada avança até depois de agora sem criar o passado (`firstAhead`), e
+   o teto de 200 ocorrências por ciclo é a guarda contra cadência absurda.
+3. **Uma ponta por série, e cancelar não a move.** A marca `tail` aponta a ocorrência mais à frente; só
+   ela alimenta o worker. Cancelar uma ocorrência é decisão sobre *aquela* data, não o fim da série, e
+   por isso não limpa a marca — só `stop` encerra a série e limpa todas. O banco impõe a tríade
+   `(series_id, recurrence, tail)` por `check`: entrada avulsa não tem cadência.
+4. **Idempotência pelo banco e adoção antes do insert.** O índice único `(series_id, starts_at)` é a
+   garantia final contra o duplo clique, o retry e duas instâncias estendendo a mesma série. O código
+   adota a irmã existente antes de inserir, em vez de deixar a exceção do índice estourar dentro da
+   mesma transação — o estouro envenena o commit e derruba a rodada inteira.
+5. **Import traduz só o que consegue representar.** Do `RRULE` do iCalendar entra o subconjunto que
+   tem cadência equivalente (`WEEKLY` 1/2, `MONTHLY` 1) com `COUNT`/`UNTIL`; diária e `BYDAY` ficam de
+   fora e a ocorrência importada continua única. Materializar só o passo base criaria ocorrências que
+   o arquivo não tem; descartar em silêncio criaria uma agenda incompleta sem aviso. O meio-termo é o
+   erro explícito de escopo.
+6. **O worker tem chave na suíte.** `rede.calendar.recurrence.enabled` (padrão `true`) desliga a
+   extensão automática nos testes, pelo mesmo motivo que o worker de eventos: a base H2 é compartilhada
+   entre classes, e uma consulta em outra thread aparece na contagem de `SELECT`s de um teste alheio.
+
+**Consequência.** A série é dado consultável, não uma interpretação: qualquer leitura existente
+funciona sem conhecer recorrência, e um `.ics` exportado continua sendo um `VEVENT` por ocorrência
+com `UID` próprio. O custo é armazenamento proporcional ao horizonte, contido pelos 90 dias e pelo
+teto por ciclo.
