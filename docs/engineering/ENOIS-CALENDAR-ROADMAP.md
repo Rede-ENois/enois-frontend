@@ -246,7 +246,7 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#221](https://github.com/Rede-ENois/enois-design-system/pull/221)   | enois-design-system | Fase 11 (a11y): contraste AA nos dois temas (`--destructive`, `--text-date`, novo `--border-strong`), anéis de seleção, setas no seletor de visão e `role="status"` no resultado do import | aberto, aguardando revisão humana |
 | [#856](https://github.com/Rede-ENois/enois-frontend/pull/856)        | enois-frontend      | Fase 11 (a11y): a resposta ao convite na `/agenda` confirma por toast; sai o `importIcsDone` que nunca era usado | aberto, aguardando revisão humana |
 
-Regra: **sem merge automático**. Todo PR fica aguardando revisão humana. Um PR por escopo
+Regra: **merge na `qa`** com aprovação do App + CI verde no head (bypass administrativo da proteção); `main`, releases e tags ficam com humano. Um PR por escopo
 delimitado; dependências declaradas no corpo.
 
 ---
