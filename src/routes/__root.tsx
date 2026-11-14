@@ -38,7 +38,7 @@ import { WEB_FONT_STYLESHEET } from "@/lib/web-fonts";
 import { AgeGate } from "@/components/age-gate";
 import { AppContainer } from "@/components/app-container";
 import { CallsProvider } from "@/components/calls/calls-provider";
-import { ChatDock } from "@/components/chat-dock/chat-dock";
+import { ChatDockMount } from "@/components/chat-dock/chat-dock-mount";
 import { DesignSystemProvider } from "@/components/design-system-provider";
 import { HealthyUsageGuard } from "@/components/healthy-usage/healthy-usage-guard";
 import { InstallPwaBanner } from "@/components/install-pwa-banner";
@@ -297,7 +297,7 @@ function RootInsideProvider() {
           </RouteErrorBoundary>
         </ModuleDisabledGate>
 
-        <ChatDock />
+        <ChatDockMount />
         <MessageStream />
         <InstallPwaBanner />
         <LiteModeEffects />

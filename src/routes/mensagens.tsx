@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -13,6 +13,7 @@ import {
   Input,
   Pill,
   PillRow,
+  PullIndicator,
   useToast,
 } from "@rede-enois/design-system/ui";
 import { Search } from "lucide-react";
@@ -24,6 +25,7 @@ import { isE2eReady } from "@/lib/e2e/key-manager";
 import { useInterfaceContext, writeStoredContext } from "@/lib/interface-context";
 import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
+import { usePullToRefresh } from "@/lib/pull-to-refresh";
 import { requireAuth } from "@/lib/require-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { cn } from "@/lib/utils";
@@ -102,6 +104,8 @@ function Mensagens() {
     hasNextPage: hasMoreConversations,
     isFetchingNextPage: isLoadingMoreConversations,
     isLoading: isLoadingConversations,
+    isFetching: isFetchingConversations,
+    refetch: refetchConversations,
   } = useInfiniteQuery({
     queryKey: ["conversations", inboxTab === "archived" ? "archived" : "inbox", context],
     queryFn: ({ pageParam }) =>
@@ -154,6 +158,17 @@ function Mensagens() {
     }
   }, [linkedConversation, context]);
 
+  // Puxar para renovar no topo da lista de conversas, em toque. A lista rola dentro do <ul>
+  // (nao na janela), entao o gate de topo e o scrollTop DELE e o gesto tem de comecar nele.
+  // A renovacao e SO desta lista (refetch da caixa atual); nada de invalidar o resto do app.
+  const listRef = useRef<HTMLUListElement>(null);
+  const refreshInbox = useCallback(() => void refetchConversations(), [refetchConversations]);
+  const pullToRefresh = usePullToRefresh(
+    refreshInbox,
+    isFetchingConversations && !isLoadingMoreConversations,
+    listRef,
+  );
+
   const { data: searchResults } = useQuery({
     queryKey: ["network", "users", searchQuery],
     queryFn: () => networkApi.list(searchQuery),
@@ -162,6 +177,9 @@ function Mensagens() {
 
   const filteredUsers = (searchResults?.items ?? []).filter((u) => u.id !== currentUserId);
 
+  // Trava sincrona de "abrir conversa": `isPending` chega ao botao so no proximo render, e um
+  // segundo toque no mesmo tick criaria outra conversa com a mesma pessoa.
+  const creatingRef = useRef(false);
   const createConversation = useMutation({
     mutationFn: (participantId: string) =>
       messagesApi.createConversation({ kind: "DIRECT", participantIds: [participantId] }),
@@ -235,7 +253,7 @@ function Mensagens() {
         )}
       >
         <div
-          className={`flex min-h-0 flex-col border-r border-border ${activeConversation ? "hidden md:flex" : "flex"}`}
+          className={`relative flex min-h-0 flex-col border-r border-border ${activeConversation ? "hidden md:flex" : "flex"}`}
         >
           <div className="border-b border-border p-4">
             <div className="flex items-center justify-between mb-3">
@@ -292,7 +310,20 @@ function Mensagens() {
                       filteredUsers.map((u) => (
                         <button
                           key={u.id}
-                          onClick={() => createConversation.mutate(u.id)}
+                          // Dois toques antes da resposta criam DUAS conversas com a mesma
+                          // pessoa: o servidor so deduplica depois. `disabled` sozinho nao segura
+                          // o segundo clique, porque o React ainda nao re-renderizou; a trava e um
+                          // ref, que muda na hora do primeiro toque.
+                          disabled={createConversation.isPending}
+                          onClick={() => {
+                            if (creatingRef.current) return;
+                            creatingRef.current = true;
+                            createConversation.mutate(u.id, {
+                              onSettled: () => {
+                                creatingRef.current = false;
+                              },
+                            });
+                          }}
                           className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-muted"
                         >
                           <UserAvatar src={u.avatar} alt={u.name} className="h-10 w-10" />
@@ -394,7 +425,20 @@ function Mensagens() {
             </div>
           )}
 
-          <ul className="flex-1 overflow-y-auto overscroll-contain">
+          {/* Indicador do gesto de puxar (DS): acompanha o dedo no topo da lista e fica
+              girando enquanto a caixa renova. */}
+          {(pullToRefresh.pulling || (isFetchingConversations && !isLoadingMoreConversations)) && (
+            <PullIndicator
+              pull={
+                isFetchingConversations && !isLoadingMoreConversations
+                  ? pullToRefresh.trigger
+                  : pullToRefresh.pull
+              }
+              trigger={pullToRefresh.trigger}
+            />
+          )}
+
+          <ul ref={listRef} className="flex-1 overflow-y-auto overscroll-contain">
             {isLoadingConversations ? (
               <li>
                 <ConversationListSkeletons />

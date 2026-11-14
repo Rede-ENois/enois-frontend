@@ -420,3 +420,61 @@ describe("chamadas de sessão com prazo", () => {
     expect(values.get("session_active")).toBe("1");
   });
 });
+
+describe("cancelamento da requisição", () => {
+  const fetchMock = vi.fn();
+  let values: Map<string, string>;
+
+  beforeEach(() => {
+    values = new Map([["session_active", "1"]]);
+    vi.stubGlobal("window", { location: { origin: "https://enois.ia.br", href: "/feed" } });
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("passa o sinal do chamador ao fetch", async () => {
+    const controller = new AbortController();
+    fetchMock.mockResolvedValueOnce(Response.json({ body: { ok: true } }));
+
+    await api.get("/search?q=ana", { signal: controller.signal });
+
+    expect(fetchMock.mock.calls[0][1].signal).toBe(controller.signal);
+  });
+
+  it("não dispara o fetch quando o sinal já está abortado", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(api.get("/search?q=ana", { signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("propaga abort como cancelamento, e não como falha de rede", async () => {
+    const controller = new AbortController();
+    fetchMock.mockRejectedValueOnce(new DOMException("aborted", "AbortError"));
+
+    await expect(api.get("/search?q=ana", { signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+  });
+
+  it("escrita cancelada não é repetida", async () => {
+    const controller = new AbortController();
+    fetchMock.mockRejectedValueOnce(new DOMException("aborted", "AbortError"));
+
+    await expect(
+      api.post("/posts", { text: "oi" }, { signal: controller.signal }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    // Uma única tentativa: repetir uma escrita que a pessoa cancelou seria enviar sem querer.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});

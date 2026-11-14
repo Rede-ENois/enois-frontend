@@ -126,6 +126,7 @@ export const texts = {
     seoTitle: "Avisos · Énóis",
     today: "Hoje",
     yesterday: "Ontem",
+    refreshing: "Atualizando avisos…",
   },
 
   /** The phone dock: daily destinations around the publish action. */
