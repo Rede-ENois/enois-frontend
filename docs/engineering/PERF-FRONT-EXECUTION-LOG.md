@@ -566,3 +566,38 @@ mudança de código nesta rodada — diagnóstico puro; nada a testar porque nad
 GATES: não aplicáveis (nenhum arquivo tocado).
 
 PROXIMO PASSO: pendência 4 — compressão de vídeo no cliente antes do upload.
+
+## RODADA 13 — 2026-11-14 — pendência 4 avaliada: compressão de vídeo já entregue
+
+DIAGNOSTICO: a pendência 4 já está implementada no código (commit `7de8389d` "perf(media):
+reduzir video no cliente antes do envio", ancestral desta branch) e o log não tinha registrado a
+prova. Confirmação de ponta a ponta:
+
+- `src/lib/compress-video.ts`: pipeline real sem dependência nova — `<video>` decodifica, `canvas`
+  redimensiona, `MediaRecorder` (WebM/VP8) recodifica, quadro a quadro, escada de pares
+  resolução × bitrate até caber no teto. `supportsVideoCompression` detecta navegador sem suporte.
+- `src/lib/use-media-upload.ts` (`prepare`): duração checada antes (recodificar não encurta),
+  compressão roda primeiro; só quem NÃO couber depois dela é recusado com `VideoLimitError`
+  (texto do app). Navegador sem suporte: arquivo segue como está e o servidor decide.
+- Integração: `prepare` é chamado por `upload` e `uploadAll` — vale para TODOS os consumidores do
+  hook (compositor do feed, comentários, mensagens, etc.). O feed trata `VideoLimitError`
+  (feed.tsx:645) e mostra o motivo (tamanho × duração).
+
+PROVA (executada): `npx vitest run src/lib/compress-video.test.ts
+src/lib/use-media-upload.prepare.test.ts` → **2 arquivos / 15 testes / 0 falhas / exit=0**
+(/tmp/vit13.txt). Os testes cobrem: vídeo que já cabe passa intacto, escada desce até caber,
+recusa quando nem o menor encaixa, duração recusada antes de comprimir, fallback sem suporte,
+`prepare` propagando o erro como `VideoLimitError`.
+
+ESTADO DA PENDENCIA 4: **COMPLETA** (implementada + testes executados nesta rodada).
+
+CRITERIOS: 1 (pull-to-refresh) completa nas rodadas 6-8; 3 completa nas rodadas 11-12; 5 completa
+na rodada 9; 6 completa nas rodadas 10; 4 completa nesta rodada. Resta a pendência 2 (contador do
+sino vs resumo do servidor), BLOQUEADA em mudança do pacote de design-system (DS 0.33.0 calcula o
+contador dentro de `notifications-popover` — fora do alcance deste repo).
+
+GATES: nenhum arquivo tocado — diagnóstico puro.
+
+PROXIMO PASSO: pendência 2 segue bloqueada no DS; nenhuma pendência acionável resta neste repo.
+
+**ESTADO:** pendências 1, 3, 4, 5, 6 completas; 2 bloqueada (depende do design-system).
