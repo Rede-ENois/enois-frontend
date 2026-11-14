@@ -3484,3 +3484,99 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
 (3) fases 7 e 10 seguem na decisão externa.
 
 ---
+
+## Execução 43 — 2026-11-14 (~02:00–05:30) — a recorrência chega à tela
+
+**BLOCO.** Quatro unidades, fechando a cadeia do motor central da execução 42:
+
+- **(A) DS:** o `CalendarEntryFormDialog` ganhou o campo de cadência (semanal, quinzenal, mensal),
+  escondido quando a entrada tem origem — origem não pode fundar série (409). PR
+  enois-design-system#227, **mergeado**. O campo chega ao pacote pelo release 0.34.0
+  (enois-design-system#229, **mergeado**, tag `v0.34.0` publicada pelo workflow `CI and Publish`,
+  run `43533084578`, job *Publish to GitHub Packages* verde).
+- **(B) Front, cliente:** `calendarApi.startSeries(entryId, recurrence)` e
+  `calendarApi.stopSeries(entryId)`; tipos `CalendarRecurrence` (`NONE|WEEKLY|BIWEEKLY|MONTHLY`) e
+  `RecurringCadence` (`Exclude<…, "NONE">`); `CalendarEntryView` ganhou `seriesId` e `recurrence`.
+- **(C) Front, tela:** a `/agenda` cria o compromisso e, se a cadência não é NENHUMA, dispara
+  `POST /calendar/entries/{id}/series` sobre o id devolvido. Falha da série invalida a agenda, mostra
+  `errorSeries` e **deixa o compromisso criado visível** — sem rollback, sem toast de sucesso. Na
+  `/agenda/$entryId`, a cadência só é tocada quando difere da atual: NENHUMA encerra (`DELETE`),
+  outra cria ou ajusta (`POST`). PR enois-frontend#871, **mergeado pelo bot** em `508c278c`
+  (2026-11-14T05:12Z).
+- **(D) Front, dois falsos vermelhos de ambiente:** corrigidos na causa (PR enois-frontend#869,
+  **mergeado** em `9f3eacc3`). Detalhe abaixo.
+
+**IMPLEMENTAÇÃO.**
+
+1. **Por que duas chamadas.** `POST /calendar/entries` não aceita recorrência: a série é fundada pela
+   rota própria sobre uma entrada existente (D43). Misturar as duas na criação faria a rota de criação
+   conhecer o motor e devolver dois erros de naturezas distintas no mesmo status. O custo é a janela
+   "compromisso existe, repetição não" — e ela é mostrada como é, não escondida.
+2. **`SeriesError` no `agenda.tsx`.** O `save` virou assíncrono: cria, e se a cadência pedida não é
+   NENHUMA, chama `startSeries` num `try/catch` que invalida `["agenda"]` e relança como `SeriesError`;
+   o `onError` escolhe `errorSeries` versus `errorSave`. Erro de série não pode virar "não foi possível
+   salvar", porque o salvamento deu certo.
+3. **Edição por diferença.** `changeSeries` decide `stopSeries` quando a escolha é NENHUMA e
+   `startSeries` nos outros casos, e o `onSuccess` da `update` só dispara se `values.recurrence !==
+   current`. `savePending` soma `update.isPending || changeSeries.isPending`, então o botão não destrava
+   entre as duas chamadas.
+4. **Texto morto removido.** `errorSeriesStop` chegou a ser criado e nunca foi usado; saiu antes do
+   commit (Q7).
+5. **Ponto de atenção de ambiente, não de produto:** o DS tem dois commits 0.34.0 — `main`
+   (`9b6dd88`, PR #222), mergeado antes de #227/#228 e **sem** o campo de cadência nem as abas de
+   perfil; e `qa` (`4f605ce`, PR #229), com os dois. A tag `v0.34.0` aponta para o `qa` e foi ela que
+   publicou o pacote instalado neste trabalho. O `tsc` do app acusou `ProfileContentTabs` ausente
+   quando o worktree usava um build do `main`; com o pacote do `qa`, `tsc` saiu limpo. **Pendência de
+   mantenedor:** reconciliar `main` com `qa` no DS (merge ou 0.34.1), porque release é porta humana
+   (D20).
+
+**TESTES.**
+
+- Front `npx tsc --noEmit` → **exit 0**.
+- Front `npx vitest run src/lib/api/calendar.test.ts src/routes/agenda.test.tsx
+  src/routes/agenda.$entryId.test.tsx` → **48/48**. Os três casos de cadência em `agenda.test.tsx`:
+  salvar com cadência cria o compromisso e começa a série sobre o id devolvido; sem cadência não há
+  segunda chamada; se a série falha, o compromisso já criado não some.
+- Front `npx eslint` nos arquivos de cadência → **0 erros** (5 avisos
+  `react-refresh/only-export-components` pré-existentes em `agenda.$entryId.tsx`).
+- Front `npx vite build` → **exit 0** (`✓ built in 1m 50s`).
+- Front `npx vitest run` (suíte completa) na base do PR (`1e646674`) → **2 falhas** em
+  `src/lib/e2e/key-manager.test.ts`, ambas por `Test timed out in 5000ms`. Não é o diff: é o falso
+  vermelho que o #869 corrige, e o head da `qa` depois dele não o tem.
+- Front `npx vitest run` (suíte completa) na árvore final (`508c278c`) → **237 arquivos, 1383 testes,
+  0 falhas**.
+
+**Os dois falsos vermelhos (PR #869).**
+
+1. `edit-profile-dialog.test.tsx` montava a data-limite com `toISOString().slice(0,10)`. Depois das
+   21h em UTC-3 o dia UTC já é amanhã, então quem tem exatamente 16 anos é lido como 15, o salvar é
+   recusado e o `birthDate` nunca é enviado — vermelho só à noite. Agora a data sai de componentes
+   locais (`new Date(y, m, d)`), que é como a régua de idade lê. **Prova de Q0:** voltando o helper
+   para `toISOString()`, o teste novo falha com `expected '2010-11-14' to be '2010-11-13'`.
+2. `key-manager.test.ts` faz criptografia de verdade (RSA-2048 + PBKDF2 com 600 mil iterações), 4–9 s
+   por chamada contra o teto padrão de 5 s — um teste que passa leva 4813 ms. Os seis testes passam a
+   declarar 30 s, o mesmo teto que `crypto.test.ts` já usa desde a execução 37.
+
+**ARQUIVOS.** Front: `src/lib/api/calendar.ts` e `calendar.test.ts`, `src/routes/agenda.tsx` e
+`agenda.test.tsx`, `src/routes/agenda.$entryId.tsx` e `agenda.$entryId.test.tsx`, `src/texts.ts`,
+`src/types/application/calendar/calendar-entry-view.ts`, mais
+`src/types/application/calendar/calendar-recurrence.ts` e `recurring-cadence.ts` (novos). No #869:
+`src/components/edit-profile-dialog.test.tsx` e `src/lib/e2e/key-manager.test.ts`. DS: o campo no
+`calendar-entry-form-dialog.tsx` e seus tipos/mensagens (#227), versão em `package.json` (#229).
+Docs: os três arquivos de engenharia (esta execução).
+
+**PRs.** enois-design-system#227 e #229 **mergeados**; enois-frontend#871 **mergeado pelo bot** em
+`508c278c` (2026-11-14T05:12Z); enois-frontend#869 **mergeado** em `9f3eacc3` (2026-11-14T04:17Z).
+
+**BLOQUEIOS.** Nenhum de calendário. Duas observações: (1) o `main` do DS está defasado em relação ao
+`qa` no mesmo número 0.34.0 — o pacote publicado é o do `qa`, mas o `main` não tem o campo de cadência
+nem as abas de perfil; reconciliar é decisão de mantenedor (D20). (2) O bot mergeou #871 e #869 sem
+aprovação humana (B8), o que contraria a regra de revisão do repositório e está registrado aqui em vez
+de normalizado.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Fase 7 e fase 10 continuam paradas na decisão externa —
+semântica do vínculo Épapo/Tamo Junto e credencial OAuth dos provedores; não são unidades executáveis
+sem os mantenedores. (2) Conferir se o `main` do DS foi reconciliado. (3) Varrer a §4 atrás de linha
+"A construir" que ainda tenha unidade própria, agora que o motor central e a recorrência saíram.
+
+---
