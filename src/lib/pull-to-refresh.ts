@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 
 /**
  * Distância de arrasto que dispara a renovação e a partir da qual o gesto é reconhecido como
@@ -9,15 +9,22 @@ const RECOGNIZE_PX = 12;
 
 /**
  * Puxar para renovar no topo da lista, em toque. O gesto não rola a página: é reconhecido quando o
- * dedo desce com a lista já no topo (`scrollY === 0`), e conta a distância vertical líquida. Ao
- * soltar passando do limite, pede a renovação — e só dela: nada de invalidar outras consultas,
- * porque as outras listas não fazem parte do que a pessoa puxou.
+ * dedo desce com a lista já no topo, e conta a distância vertical líquida. Ao soltar passando do
+ * limite, pede a renovação — e só dela: nada de invalidar outras consultas, porque as outras listas
+ * não fazem parte do que a pessoa puxou.
  *
- * O mesmo gesto serve a qualquer lista do app (feed, avisos): o que muda é o `onRefresh` de quem
- * chama. O estado de "puxando" (distância atual) serve de feedback ao chamador; a própria renovação
- * acontece só uma vez por gesto e não enquanto uma já está em curso.
+ * O mesmo gesto serve a qualquer lista do app (feed, avisos, conversas): o que muda é o `onRefresh`
+ * de quem chama. Quando a lista rola DENTRO de um contêiner (não na janela), passe o `RefObject`
+ * dele: o topo passa a ser o `scrollTop` do contêiner e o gesto só conta se começar dentro dele —
+ * senão, com a página sempre em `scrollY === 0`, qualquer arrasto para baixo "renovaria", mesmo com
+ * a lista já rolada. O estado de "puxando" (distância atual) serve de feedback ao chamador; a
+ * própria renovação acontece só uma vez por gesto e não enquanto uma já está em curso.
  */
-export function usePullToRefresh(onRefresh: () => void, fetching: boolean) {
+export function usePullToRefresh(
+  onRefresh: () => void,
+  fetching: boolean,
+  container?: RefObject<HTMLElement | null>,
+) {
   const [pull, setPull] = useState(0);
   const start = useRef<{ x: number; y: number } | null>(null);
   const triggered = useRef(false);
@@ -25,10 +32,16 @@ export function usePullToRefresh(onRefresh: () => void, fetching: boolean) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const atTop = () => window.scrollY === 0;
+    const atTop = (target: EventTarget | null) => {
+      const node = container?.current;
+      if (!node) return window.scrollY === 0;
+      // O gesto é da lista interna: precisa começar nela e com ela no topo.
+      if (!(target instanceof Node) || !node.contains(target)) return false;
+      return node.scrollTop <= 0;
+    };
 
     const onTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 1 || !atTop()) {
+      if (event.touches.length !== 1 || !atTop(event.target)) {
         start.current = null;
         return;
       }
@@ -43,7 +56,7 @@ export function usePullToRefresh(onRefresh: () => void, fetching: boolean) {
       const dy = event.touches[0].clientY - start.current.y;
       // Horizontal domina: é um swipe, não uma puxada.
       if (Math.abs(dx) > Math.abs(dy)) return;
-      if (dy <= -RECOGNIZE_PX && !atTop()) {
+      if (dy <= -RECOGNIZE_PX && !atTop(event.target)) {
         start.current = null;
         setPull(0);
         return;
@@ -69,7 +82,7 @@ export function usePullToRefresh(onRefresh: () => void, fetching: boolean) {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [onRefresh, fetching]);
+  }, [onRefresh, fetching, container]);
 
   return { pulling: pull > RECOGNIZE_PX, pull, trigger: TRIGGER_PX };
 }

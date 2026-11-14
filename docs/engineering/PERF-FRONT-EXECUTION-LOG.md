@@ -154,3 +154,49 @@ thread principal.
 da thread principal.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 4 — puxar para renovar na lista de conversas
+
+**DATA/HORA:** 2026-11-14 (America/Sao_Paulo)
+
+**FASE:** 4 (mobile) — fechar o pull-to-refresh nas listagens.
+
+**DIAGNÓSTICO:**
+
+- O ganho tem de ser mais que repetir o gesto: a lista de conversas (`src/routes/mensagens.tsx`)
+  rola DENTRO de um `<ul>` (o contêiner tem altura fixa `100dvh`), não na janela. O hook
+  `usePullToRefresh` media o topo só por `window.scrollY === 0` — ali a página fica SEMPRE em 0,
+  então qualquer arrasto para baixo "renovaria", mesmo com a lista já rolada. Ligar o gesto sem
+  correr esse gate entregaria um comportamento errado, não uma melhoria.
+
+**IMPLEMENTAÇÃO:**
+
+- `src/lib/pull-to-refresh.ts`: terceiro parâmetro opcional `container` (`RefObject<HTMLElement>`).
+  Com ele, o topo é o `scrollTop` do contêiner e o gesto só é reconhecido se o toque começar
+  DENTRO dele (alvo que não é `Node`, como a janela, não conta). Sem ele, o comportamento do feed e
+  dos avisos é o mesmo de antes.
+- `src/routes/mensagens.tsx`: `ref` no `<ul>`, `usePullToRefresh` renovando só a caixa atual
+  (`refetchConversations`), `PullIndicator` do design system como feedback e o wrapper virou
+  `relative` para ancorar o indicador. Sem markup novo: reusa a `<ul>` e o `<div>` que já existiam.
+
+**TESTES EXECUTADOS:**
+
+- `src/lib/pull-to-refresh.test.tsx` — 8 casos (6 anteriores intactos + 2 novos: gesto que começa
+  fora do contêiner não renova; contêiner já rolado não renova). **Prova de regressão:** com o gate
+  antigo (`target instanceof Node &&`) o caso novo falha (1 failed | 7 passed); com o gate correto,
+  8/8. Executado nos dois estados.
+- Relacionados: `notificacoes.index.test.tsx` e `use-notifications-list.test.tsx` — 15/15 juntos.
+
+**GATES:**
+
+- `npx eslint` nos arquivos tocados — 0 erros.
+- `npx tsc --noEmit` — exit 0.
+- `npm run lint` — 0 erros (14 avisos, todos anteriores).
+- `npx vitest run` — 241 arquivos, 1404 testes, 0 falhas.
+- `npm run build` — verde (client + SSR + nitro, exit 0).
+
+**PRÓXIMO PASSO:** guardas de clique duplo (criar conversa, ações que hoje aceitam dois envios).
+
+**ESTADO:** em andamento.
