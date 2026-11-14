@@ -209,9 +209,14 @@ describe("Data de nascimento na edição do perfil", () => {
   it("data nova de 16 anos é aceita (conta nasce como menor supervisionado)", async () => {
     await montar();
 
-    const dezesseis = new Date();
-    dezesseis.setFullYear(dezesseis.getFullYear() - 16);
-    const valor = dezesseis.toISOString().slice(0, 10);
+    // A data sai das partes LOCAIS: a régua de idade corta pelo dia do calendário local, então
+    // montar o ISO pelo `toISOString()` (UTC) adianta um dia depois das 21h em Brasília e a data
+    // deixaria de ter 16 anos completos — o teste falhava por fuso, não por regra.
+    const hoje = new Date();
+    const dezesseis = new Date(hoje.getFullYear() - 16, hoje.getMonth(), hoje.getDate());
+    const mes = String(dezesseis.getMonth() + 1).padStart(2, "0");
+    const dia = String(dezesseis.getDate()).padStart(2, "0");
+    const valor = `${dezesseis.getFullYear()}-${mes}-${dia}`;
     await digitar(valor);
     await salvar();
 

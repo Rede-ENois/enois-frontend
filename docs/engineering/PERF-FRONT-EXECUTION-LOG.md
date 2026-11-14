@@ -43,3 +43,65 @@ nem na `main`; nunca force push.
 vídeo no cliente e o pull-to-refresh das listagens.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 2 — compressão e downscale de vídeo no cliente (teto de 10 MB da API)
+
+**DATA/HORA:** 2026-11-13 (America/Sao_Paulo)
+
+**FASE:** 3 (processamento/network) — reduzir bytes enviados e evitar upload recusado no fim.
+
+**DIAGNÓSTICO:**
+
+- A API recusa vídeo acima de 10 MB (`MediaService.MAX_VIDEO_BYTES`) e acima de 3 minutos. Um vídeo
+  de celular de 30 s sai com 40–80 MB: a pessoa filmava, esperava o envio inteiro e levava a recusa
+  só no fim.
+- O app já tinha `checkVideoLimit` (tamanho + duração lidos no cliente), mas ele só RECUSAVA: não
+  existia nenhuma redução antes do envio.
+
+**IMPLEMENTAÇÃO:**
+
+- `src/lib/compress-video.ts` (novo): recodificação sem dependência nova, com o que o navegador já
+  tem (`<video>` decodifica, `canvas` redimensiona, `MediaRecorder` recodifica em WebM VP8/Opus).
+  Escada de 4 degraus de resolução + bitrate (1280→480 px, 2 Mbps→400 kbps); para no primeiro que
+  couber nos 10 MB. Se nem o menor couber, `VideoCompressionError`; se o navegador não souber
+  recodificar, devolve o arquivo original e quem decide é o servidor.
+  `scaledDimensions` mantém a proporção, nunca aumenta e força lados pares (exigência do VP8).
+- `src/types/media-upload/video-compression-step.ts` (novo): tipo do degrau, no lugar que a regra
+  `local/type-boundaries` exige.
+- `src/lib/use-media-upload.ts`: a checagem de TAMANHO saiu da frente da compressão. Antes,
+  `prepare()` lançava `VideoLimitError("size")` para qualquer vídeo acima do teto — e a compressão
+  nunca rodava, porque o caminho só chegava nela quando o arquivo já cabia. Agora a duração continua
+  sendo checada antes (recodificar não encurta minutos) e o tamanho é avaliado DEPOIS da compressão.
+
+**TESTES EXECUTADOS:**
+
+- `src/lib/compress-video.test.ts` — 10 casos (dimensões, suporte, primeiro degrau que cabe, queda
+  pela escada, recusa no fim, progresso).
+- `src/lib/use-media-upload.prepare.test.ts` — 5 casos, ordem da checagem de vídeo.
+  **Prova de regressão:** com o `throw` de tamanho de volta na frente da compressão, o caso
+  "comprime o vídeo grande em vez de recusar direto" falha (1 failed | 4 passed); com a correção,
+  5/5. Executado nos dois estados, não inferido.
+
+**DEFEITO ENCONTRADO NO CAMINHO (regra do escoteiro):**
+
+- `src/components/edit-profile-dialog.test.tsx` falhava de forma determinística no caso "data nova de
+  16 anos é aceita". A data era montada com `toISOString()` (UTC) enquanto a régua de idade corta
+  pelo dia do calendário LOCAL: depois das 21h em Brasília o UTC já virou o dia seguinte, a data
+  recuava um dia e a conta passava a ter 15 anos e 11 meses. O erro era do teste, não da regra; o
+  conserto monta a data pelas partes locais (mesmo formato do helper `anosAtras` de
+  `min-age.test.ts`). Prova: o mesmo caso falhava antes do conserto e passa (7/7) depois, na mesma
+  máquina e no mesmo minuto. Nenhum outro arquivo de teste usa `toISOString` para data de idade.
+
+**GATES:**
+
+- `npm run lint` — 0 erros (14 avisos, todos anteriores a esta rodada).
+- `npx tsc --noEmit` — exit 0.
+- `npx vitest run` (suíte inteira) — **240 arquivos / 1400 testes, todos verdes** depois do conserto
+  do defeito de fuso. (Antes do conserto o mesmo comando dava 1399/1400.)
+
+**PRÓXIMO PASSO:** pull-to-refresh e atualização das notificações; separar a criptografia P2P da
+thread principal.
+
+**ESTADO:** em andamento.
