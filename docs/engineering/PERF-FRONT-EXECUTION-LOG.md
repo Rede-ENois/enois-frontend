@@ -288,3 +288,64 @@ da thread principal.
 **PROXIMO PASSO:** pendencia 2 (contador do sino x resumo do servidor) depende do design system.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 7 — criptografia E2E fora do chunk de entrada
+
+**DATA/HORA:** 2026-11-14 (America/Sao_Paulo)
+
+**FASE:** 6 (bundle) — pendencia 6: corte por rota; fatia pendente era o vazamento do modulo
+E2E no chunk inicial.
+
+**DIAGNOSTICO:**
+
+- O aviso `[INEFFECTIVE_DYNAMIC_IMPORT]` do build mostrava `key-manager.ts` importado de forma
+  estatica e dinamica ao mesmo tempo; o import dinamico nao dividia nada.
+- O caminho estatico completo, provado por varredura do grafo de imports a partir da casca
+  (`__root.tsx`): `__root → chat-dock → key-manager / conversation / e2e-setup-banner → crypto`.
+  TODOS os 11 caminhos estaticos ate `crypto.ts` passam pelo dock de mensagens, montado direto no
+  arquivo de entrada. 203 arquivos alcancaveis, incluindo os 29 exclusivos do dock (~96 KB de
+  fonte: thread, lista, banner, emotes e todo o modulo E2E).
+- Evidencia no build: `index-*.js` (438.031 B) importava `crypto-*.js` sincronamente e continha
+  `enois-e2e` (IndexedDB das chaves), `RSA-OAEP` e `syncKeysOnLogin` — todo visitante baixava a
+  criptografia, inclusive sem conta e sem nunca abrir uma conversa.
+
+**IMPLEMENTACAO:**
+
+- `src/components/chat-dock/chat-dock-mount.tsx` (novo): ponto de montagem barato que a casca
+  importa. Ele so pede o chunk do dock por `lazy(() => import(...))` depois de montar e so para
+  quem tem sessao (mesma condicao que o proprio dock ja usava). Visitante nao baixa nada do dock.
+- `src/routes/__root.tsx`: `<ChatDock />` vira `<ChatDockMount />`. Nenhuma mudanca de
+  comportamento no dock em si.
+- Com o corte, o grafo estatico da casca cai de 203 para 175 arquivos e `crypto.ts`,
+  `key-manager.ts` e `conversation.ts` deixam de ser alcancaveis estaticamente (provado pela
+  mesma varredura).
+
+**TESTES EXECUTADOS:**
+
+- `src/lib/bundle-split.test.ts` (novo, 4 casos): varre o grafo de imports ESTATICOS a partir de
+  `__root.tsx` e fixa que o modulo de criptografia, o gerenciador de chaves e a cifra de mensagens
+  nao sao alcancaveis; que o ponto de montagem esta no caminho estatico mas o dock nao; e que a
+  montagem usa `lazy(() => import(...))` (sem isso a aresta volta a ser estatica e o contrato cai
+  por acidente).
+  **Prova de regressao:** revertendo os dois pontos de `__root.tsx` ao import estatico antigo,
+  3 dos 4 casos falham ("expected true to be false" x2 e "expected false to be true"); com o
+  corte, 4/4. Executado nos dois estados.
+
+**GATES:**
+
+- `npx eslint` nos arquivos tocados — 0 erros; `npm run lint` — 0 erros (14 avisos, anteriores).
+- `npx tsc --noEmit` — exit 0.
+- `npx vitest run` — **243 arquivos, 1411 testes, 0 falhas** (cache proprio, arvore estavel).
+- `npm run build` — verde. O aviso `[INEFFECTIVE_DYNAMIC_IMPORT]` SUMIU da saida. Chunk de
+  entrada: 438.031 → **381.725 B** (-56 KB, -12,8%). Marcadores no chunk de entrada:
+  `enois-e2e`, `RSA-OAEP`, `my-private-key`, `syncKeysOnLogin`, `PBKDF2` — todos de 1 ocorrencia
+  para **0**. O crypto agora vive em chunk proprio (`crypto-*.js` + `key-manager-*.js`), atingido
+  so pelos chunks de `mensagens`, `chat-dock`, `conversation-thread` e `entrar` (a referencia que
+  resta no `index-*.js` e a tabela de preload do Vite, sem import sincrono).
+
+**PROXIMO PASSO:** pendencia 1 fatia restante (pull-to-refresh na busca) ou pendencia 2
+(contador do sino), que depende do design system.
+
+**ESTADO:** em andamento.
