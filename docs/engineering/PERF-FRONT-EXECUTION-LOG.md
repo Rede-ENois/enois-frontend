@@ -438,3 +438,56 @@ dois estados.
 segue bloqueada no design system (contador do sino dentro de `notifications-popover.js` 0.33.0).
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 10 — Contenção de render do feed (pendência 6)
+
+**Data:** 2026-11-14
+
+### Diagnóstico
+
+- O virtualizador do feed foi **revertido por decisão de mantenedor** (`978ed224`: blink no scroll,
+  8 PRs de fix). O render volta a ser `map` direto — esta rodada NÃO reintroduz virtualizador.
+- Sem virtualizador, o único corte de render que a lista tem é `[content-visibility:auto] +
+[contain-intrinsic-size:auto_360px]` no `<article>` do PostCard — e no design system 0.33.0
+  (`dist/domain/post/post-card.js:35-36`) ele é aplicado **somente quando `virtualized` é falso**.
+- O commit de limpeza `01336ccf` adicionou `virtualized` a todos os cards do feed com a intenção
+  declarada (no comentário do commit) de "manter content-visibility:auto" — **o prop faz o
+  inverso**: desliga a contenção. Resultado: TODOS os cards do feed renderizavam sem corte, o
+  oposto do que a limpeza pretendia.
+
+### Implementação
+
+- `src/routes/feed.tsx` — `FeedPostRow` não passa mais `virtualized` ao PostCard.
+- `src/components/post-card.tsx` — o front deixa de repassar o prop ao DS (o card de lista volta a
+  ter a contenção padrão do DS; a página do post usa `fullPost`, que segue com o texto inteiro).
+- `src/types/components/post/post-card-props.ts` — prop `virtualized` removido do tipo.
+
+### Prova (executada, não declarada)
+
+- Teste novo em `src/routes/feed.post-row.test.tsx`: "card do feed NAO recebe virtualized".
+  - Estado antigo (prop repassado): `× … Tests 1 failed` na asserção `toBeUndefined()`.
+  - Estado corrigido: `2 passed`.
+- `npx eslint` nos 4 arquivos tocados: exit=0 (0 erros, 2 avisos pré-existentes de
+  exhaustive-deps, anteriores à mudança).
+- `npx tsc --noEmit`: exit=0.
+- Suíte completa: **243 arquivos / 1.413 testes / 0 falhas / exit=0** (`/tmp/vitest10.txt`).
+- `npm run build`: exit=0 (sem mudança de bundling nesta rodada; build executado para o gate
+  completo; entrada segue 381,72 kB gzip 118,75 kB).
+
+### Pendência 6 — estado
+
+- **Corte de bundle por rota:** já satisfeito pela geração do TanStack (chunks por rota
+  confirmados no build: `feed-*.js`, `mensagens-*.js`, `explorar-*.js`, 300 assets) mais a
+  rodada 7 (crypto fora do chunk de entrada). **COMPLETA.**
+- **Virtualização de listas longas:** substituída por contenção de render (`content-visibility`)
+  restaurada em todos os cards do feed — decisão de mantenedor contra o virtualizador respeitada;
+  a contenção é o mecanismo equivalente suportado pelo DS. **COMPLETA** com o conserto desta
+  rodada.
+
+**PROXIMO PASSO:** pendência 2 (contador do sino vs resumo do servidor) segue BLOQUEADA no design
+system 0.33.0 (`notifications-popover.js` calcula o contador internamente). Pendência 3 (guardas
+de clique duplo) e 4 (compressão de vídeo no cliente) permanecem a avaliar.
+
+**ESTADO:** em andamento.

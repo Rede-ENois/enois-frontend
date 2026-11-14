@@ -301,7 +301,7 @@ export function FeedPostRow({
 }) {
   return (
     <div ref={index === 0 ? firstPostRef : undefined}>
-      <PostCard post={post} feedTab={feedTab} virtualized />
+      <PostCard post={post} feedTab={feedTab} />
     </div>
   );
 }

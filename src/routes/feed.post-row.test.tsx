@@ -124,4 +124,24 @@ describe("FeedPostRow", () => {
 
     expect(mocks.cards.get("post_a")?.comments).not.toBeNull();
   });
+
+  it("card do feed NAO recebe virtualized: a contencao de render (content-visibility) fica ligada", async () => {
+    // No DS, `virtualized` desliga `[content-visibility:auto]` do article — que e o unico
+    // corte de render que a lista tem (o map e direto, sem virtualizador). Passar o prop era
+    // desligar o corte em TODOS os cards do feed (regressao de 01336ccf, com a intencao
+    // inversa da registrada no comentario do commit).
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <FeedPostRow post={makePost("post_a")} index={0} feedTab="ALL" firstPostRef={vi.fn()} />
+          <FeedPostRow post={makePost("post_b")} index={1} feedTab="ALL" firstPostRef={vi.fn()} />
+        </QueryClientProvider>,
+      ),
+    );
+
+    expect(mocks.cards.size).toBe(2);
+    for (const props of mocks.cards.values()) {
+      expect(props.virtualized).toBeUndefined();
+    }
+  });
 });

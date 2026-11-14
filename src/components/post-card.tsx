@@ -52,7 +52,6 @@ function PostCardContainer({
   post,
   feedTab,
   fullPost = false,
-  virtualized = false,
   pinned = false,
   onTogglePin,
   pinPending = false,
@@ -261,7 +260,6 @@ function PostCardContainer({
       }
       anchored={Boolean(feedTab)}
       fullPost={fullPost}
-      virtualized={virtualized}
       pinned={pinned}
       onTogglePin={onTogglePin}
       pinPending={pinPending}
