@@ -45,6 +45,12 @@ const routeDefinitions = [
   { source: "diretrizes", to: "/diretrizes" },
   { source: "carteira", to: "/carteira" },
   { source: "games", to: "/games/$username/$gameSlug", params: ["username", "gameSlug"] },
+  {
+    source: "projetos",
+    to: "/projetos/$username/$projectSlug",
+    params: ["username", "projectSlug"],
+  },
+  { source: "projetos", to: "/projetos" },
   { source: "feed", to: "/feed" },
   { source: "rede", to: "/rede" },
   { source: "mensagens", to: "/mensagens" },

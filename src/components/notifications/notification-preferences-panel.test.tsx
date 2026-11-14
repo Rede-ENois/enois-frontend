@@ -82,6 +82,7 @@ const PREFS = {
   pushGroups: true,
   pushJobs: true,
   pushSystem: true,
+  communityProjects: false,
   updatedAt: null,
 };
 
@@ -135,6 +136,77 @@ describe("preferências de notificação: contêiner", () => {
     // O botão de ligar do design system saiu: o interruptor "Avisos neste aparelho" é o dono.
     expect(view().onEnablePush).toBeUndefined();
     expect(container.textContent).toContain(texts.notificationPreferences.deviceTitle);
+  });
+
+  it("salva a assinatura de projetos com atualização parcial e estado otimista", async () => {
+    expect(view().communityProjects).toBe(false);
+    let resolve!: (value: typeof PREFS) => void;
+    mocks.updatePreferences.mockReturnValue(new Promise((r) => (resolve = r)));
+    act(() => view().onCommunityProjectsChange!(true));
+    await flush();
+
+    expect(mocks.updatePreferences).toHaveBeenCalledWith({ communityProjects: true });
+    expect(view().communityProjects).toBe(true);
+    expect(view().communityProjectsPending).toBe(true);
+    expect(view().values?.pushSocial).toBe(true);
+
+    resolve({ ...PREFS, communityProjects: true });
+    await flush();
+    expect(view().communityProjectsPending).toBe(false);
+    expect(view().saveStatus).toBe("saved");
+  });
+
+  it("reverte a assinatura de projetos se o salvamento falhar", async () => {
+    mocks.updatePreferences.mockRejectedValue(new Error("offline"));
+    act(() => view().onCommunityProjectsChange!(true));
+    await flush();
+    expect(view().communityProjects).toBe(false);
+    expect(view().communityProjectsPending).toBe(false);
+    expect(view().saveStatus).toBe("error");
+  });
+
+  it("recusa uma confirmação sem o campo salvo e restaura a assinatura", async () => {
+    mocks.updatePreferences.mockResolvedValue({ ...PREFS, communityProjects: undefined });
+    act(() => view().onCommunityProjectsChange!(true));
+    await flush();
+    expect(view().communityProjects).toBe(false);
+    expect(view().communityProjectsPending).toBe(false);
+    expect(view().saveStatus).toBe("error");
+  });
+
+  it("preserva o projeto confirmado quando outra chave concorrente falha", async () => {
+    let confirmProject!: (value: typeof PREFS) => void;
+    let rejectSocial!: (reason: Error) => void;
+    mocks.updatePreferences
+      .mockReturnValueOnce(new Promise((resolve) => (confirmProject = resolve)))
+      .mockReturnValueOnce(new Promise((_resolve, reject) => (rejectSocial = reject)));
+    act(() => view().onCommunityProjectsChange!(true));
+    await flush();
+    act(() => view().onChange("pushSocial", false));
+    await flush();
+    expect(view().communityProjectsPending).toBe(true);
+    expect(view().pending?.pushSocial).toBe(true);
+
+    confirmProject({ ...PREFS, communityProjects: true });
+    await flush();
+    expect(view().communityProjects).toBe(true);
+    expect(view().values?.pushSocial).toBe(false);
+    expect(view().pending?.pushSocial).toBe(true);
+
+    rejectSocial(new Error("offline"));
+    await flush();
+    expect(view().communityProjects).toBe(true);
+    expect(view().values?.pushSocial).toBe(true);
+    expect(view().saveStatus).toBe("error");
+  });
+
+  it("não inventa assinatura quando a API ainda não oferece o campo", async () => {
+    act(() => root.unmount());
+    mocks.preferences.mockResolvedValue({ ...PREFS, communityProjects: undefined });
+    ({ root, container } = render());
+    await flush();
+    expect(view().communityProjects).toBeUndefined();
+    expect(mocks.updatePreferences).not.toHaveBeenCalled();
   });
 
   it("muda na hora, trava só a chave salvando e confirma", async () => {

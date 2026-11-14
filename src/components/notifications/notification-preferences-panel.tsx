@@ -3,10 +3,10 @@ import { useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
+import type { NotificationPreferenceKey } from "@/types/application/notification/notification-preference-key";
 import type { NotificationPreferences as Preferences } from "@/types/application/notification/notification-preferences";
 import type { PushState } from "@/types/components/notifications/push-state";
 import {
-  type NotificationPreferenceKey,
   NotificationPreferences,
   type NotificationPreferencesSaveStatus,
 } from "@rede-enois/design-system/domain";
@@ -82,8 +82,14 @@ export function NotificationPreferencesPanel() {
     );
 
   const save = useMutation({
-    mutationFn: ({ key, value }: { key: NotificationPreferenceKey; value: boolean }) =>
-      notificationsApi.updatePreferences({ [key]: value }),
+    mutationFn: async ({ key, value }: { key: NotificationPreferenceKey; value: boolean }) => {
+      const saved = await notificationsApi.updatePreferences({ [key]: value });
+      const confirmed = saved[key];
+      if (typeof confirmed !== "boolean") {
+        throw new Error(`Notification preference response must contain a boolean for ${key}.`);
+      }
+      return confirmed;
+    },
     onMutate: async ({ key, value }) => {
       await queryClient.cancelQueries({ queryKey: PREFERENCES_KEY });
       const previous = queryClient.getQueryData<Preferences>(PREFERENCES_KEY)?.[key];
@@ -91,8 +97,8 @@ export function NotificationPreferencesPanel() {
       setPending((current) => ({ ...current, [key]: true }));
       return { previous };
     },
-    onSuccess: (saved, { key }) => {
-      setKey(key, saved[key]);
+    onSuccess: (confirmed, { key }) => {
+      setKey(key, confirmed);
       setLastResult("saved");
     },
     onError: (_error, { key }, context) => {
@@ -125,6 +131,9 @@ export function NotificationPreferencesPanel() {
         loadError={preferences.isError && !data}
         onRetry={() => void preferences.refetch()}
         onChange={(key, value) => save.mutate({ key, value })}
+        communityProjects={data?.communityProjects}
+        onCommunityProjectsChange={(value) => save.mutate({ key: "communityProjects", value })}
+        communityProjectsPending={pending.communityProjects}
         pending={pending}
         saveStatus={saving ? "saving" : lastResult}
         pushEnabled={push.active}
