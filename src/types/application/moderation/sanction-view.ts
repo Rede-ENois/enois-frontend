@@ -1,4 +1,7 @@
-/** Sancao como o usuario a ve (GET /me/sanctions). */
+import type { SanctionDeadline } from "./sanction-deadline";
+import type { SanctionEvidence } from "./sanction-evidence";
+
+/** Sanção como o titular a vê (GET /me/sanctions). */
 export type SanctionView = {
   id: string;
   userId: string;
@@ -8,4 +11,7 @@ export type SanctionView = {
   status: "ACTIVE" | "REMOVED";
   createdAt: string;
   removedAt: string | null;
+  deadline: SanctionDeadline;
+  evidence: SanctionEvidence;
+  canAppeal: boolean;
 };

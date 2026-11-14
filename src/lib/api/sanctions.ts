@@ -1,11 +1,11 @@
 import type { AdminSanctionView } from "@/types/application/moderation/admin-sanction-view";
 import type { AppealView } from "@/types/application/moderation/appeal-view";
-import type { SanctionView } from "@/types/application/moderation/sanction-view";
 
 import { api } from "../api-client";
+import { parseMySanctions } from "../moderation/sanction-contract";
 
 export const sanctionsApi = {
-  mine: () => api.get<{ sanctions: SanctionView[]; appeals: AppealView[] }>("/me/sanctions"),
+  mine: async () => parseMySanctions(await api.get<unknown>("/me/sanctions")),
   appeal: (message: string) =>
     api.post<{ status: string; id: string }>("/me/sanctions/appeals", { message }),
   pendingAppeals: () => api.get<AppealView[]>("/admin/appeals"),

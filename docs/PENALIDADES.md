@@ -18,6 +18,12 @@ O hook `useSanctionClock` usa a referência temporal recebida do servidor e o te
 
 Referência temporal ausente ou inválida não gera um contador fictício. A integração visual depende do contrato de sanções e das views do design system.
 
+## Contrato de transparência
+
+O cliente de `GET /me/sanctions` valida a resposta em tempo de execução: referência do servidor, listas de sanções/recursos, significado e data do prazo, evidência segura e elegibilidade de recurso. Prazo de recurso e término efetivo são estados diferentes; combinações incoerentes ou datas inválidas produzem erro de consulta, não um contador inventado.
+
+Somente os campos previstos pelo contrato são repassados à apresentação. A integração desse contrato depende da entrega coordenada do backend.
+
 ## Verificação
 
 `src/routes/-penalidades.test.tsx` exercita o container com a consulta real do React Query e respostas sintéticas da API. Os testes cobrem falha inicial, sucesso vazio, recuperação com/sem penalidade, falha persistente, falha de atualização e tentativa concorrente.
