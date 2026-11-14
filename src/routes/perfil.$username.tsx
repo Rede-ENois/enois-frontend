@@ -5,6 +5,7 @@ import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-ro
 
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
+import type { ProfileReplyView } from "@/types/application/feed/profile-reply-view";
 import type { ProfileAppearance } from "@/types/application/profile/profile-appearance";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
 import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-purpose";
@@ -16,11 +17,14 @@ import {
   HumanitySeal,
   PostCardSkeletons,
   ProfileCard,
+  ProfileContentTabs,
   ProfileEditMenu,
+  ProfileReplyCard,
   ProfileThemeScope,
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
+import type { ProfileContentTab } from "@rede-enois/design-system/domain";
 import {
   ImageCropDialog,
   InfiniteScroll,
@@ -202,6 +206,7 @@ function Profile() {
   const [networkDialogKind, setNetworkDialogKind] = useState<"connections" | "followers" | null>(
     null,
   );
+  const [profileTab, setProfileTab] = useState<ProfileContentTab>("ALL");
 
   const { data: liveProfile } = useQuery({
     queryKey: ["profile", loaderUser.username],
@@ -295,6 +300,7 @@ function Profile() {
 
   // Paginado por cursor: a listagem simples devolvia só a primeira pagina, e o post antigo
   // ficava inalcancavel no proprio perfil — quem procurava algo de meses atras nao encontrava.
+  const isRepliesTab = profileTab === "REPLIES";
   const {
     data: feedData,
     hasNextPage: hasMoreUserPosts,
@@ -302,13 +308,30 @@ function Profile() {
     fetchNextPage: fetchMoreUserPosts,
     isLoading: userPostsLoading,
   } = useInfiniteQuery({
-    queryKey: ["feed", "user", user.id],
-    queryFn: ({ pageParam }) => feedApi.listByUserId(user.id, pageParam, USER_POSTS_PAGE_SIZE),
+    queryKey: ["feed", "user", user.id, profileTab],
+    queryFn: ({ pageParam }) =>
+      feedApi.listByUserId(user.id, pageParam, USER_POSTS_PAGE_SIZE, profileTab),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: !isRepliesTab,
+  });
+
+  const {
+    data: repliesData,
+    hasNextPage: hasMoreReplies,
+    isFetchingNextPage: isLoadingMoreReplies,
+    fetchNextPage: fetchMoreReplies,
+    isLoading: repliesLoading,
+  } = useInfiniteQuery({
+    queryKey: ["feed", "user-replies", user.username],
+    queryFn: ({ pageParam }) => feedApi.listReplies(user.username, pageParam, USER_POSTS_PAGE_SIZE),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: isRepliesTab,
   });
 
   const userPosts = feedData?.pages.flatMap((page) => page.items) ?? [];
+  const userReplies = repliesData?.pages.flatMap((page) => page.items) ?? [];
 
   // O card mostrava o tamanho da pagina carregada, entao congelava em 10 para quem tem mais posts
   // que isso. postsCount e o inteiro do backend; o fallback so vale numa leitura sem contagem.
@@ -933,26 +956,40 @@ function Profile() {
               )}
 
               <Section id="atividade" title={texts.profile.sections.recentPosts}>
-                {userPostsLoading && <PostCardSkeletons count={2} />}
+                <ProfileContentTabs
+                  activeTab={profileTab}
+                  onTabChange={setProfileTab}
+                  isOwner={isOwnProfile}
+                />
 
-                {!userPostsLoading && userPosts.length === 0 && (
-                  <p className="text-sm font-normal text-text-subtle">{texts.profile.noPosts}</p>
-                )}
+                {(() => {
+                  const loading = isRepliesTab ? repliesLoading : userPostsLoading;
+                  const items = isRepliesTab ? userReplies : userPosts;
+                  const emptyText = isRepliesTab ? texts.profile.noReplies : texts.profile.noPosts;
 
-                {!userPostsLoading && userPosts.length > 0 && (
-                  <div className="space-y-4">
-                    {userPosts.map((p) => (
-                      <PostCard key={p.id} post={p} />
-                    ))}
+                  if (loading) return <PostCardSkeletons count={2} />;
+                  if (items.length === 0)
+                    return <p className="text-sm font-normal text-text-subtle">{emptyText}</p>;
 
-                    <InfiniteScroll
-                      hasMore={Boolean(hasMoreUserPosts)}
-                      loading={isLoadingMoreUserPosts}
-                      onLoadMore={() => void fetchMoreUserPosts()}
-                      loadingLabel={texts.feed.loadingMore}
-                    />
-                  </div>
-                )}
+                  return (
+                    <div className="space-y-4">
+                      {isRepliesTab
+                        ? userReplies.map((reply) => (
+                            <ProfileReplyItem key={reply.comment.id} reply={reply} />
+                          ))
+                        : userPosts.map((p) => <PostCard key={p.id} post={p} />)}
+
+                      <InfiniteScroll
+                        hasMore={Boolean(isRepliesTab ? hasMoreReplies : hasMoreUserPosts)}
+                        loading={isRepliesTab ? isLoadingMoreReplies : isLoadingMoreUserPosts}
+                        onLoadMore={() =>
+                          void (isRepliesTab ? fetchMoreReplies() : fetchMoreUserPosts())
+                        }
+                        loadingLabel={texts.feed.loadingMore}
+                      />
+                    </div>
+                  );
+                })()}
               </Section>
             </div>
 
@@ -1211,5 +1248,22 @@ function RecommendationItem({ recommendation }: RecommendationItemProps) {
         {texts.profile.recommendationQuote(recommendation.comment)}
       </p>
     </div>
+  );
+}
+
+function ProfileReplyItem({ reply }: { reply: ProfileReplyView }) {
+  const { comment, context } = reply;
+  const navigate = useNavigate();
+
+  return (
+    <ProfileReplyCard
+      authorName={comment.authorName}
+      authorAvatar={comment.authorAvatar}
+      content={comment.content}
+      renderContent={(text) => <RichText content={text} writtenAt={comment.createdAt} />}
+      replyToAuthor={context.postAuthorName ?? context.postAuthorUsername}
+      replyToSnippet={context.postContentSnippet}
+      onClick={() => void navigate({ to: "/post/$postId", params: { postId: context.postId } })}
+    />
   );
 }
