@@ -1,5 +1,6 @@
 import type { CalendarEntryKind } from "./calendar-entry-kind";
 import type { CalendarEntryState } from "./calendar-entry-state";
+import type { CalendarRecurrence } from "./calendar-recurrence";
 import type { CalendarScope } from "./calendar-scope";
 
 /**
@@ -26,4 +27,11 @@ export type CalendarEntryView = {
   createdAt: string;
   updatedAt: string;
   cancelledAt: string | null;
+  /** Série a que a ocorrência pertence; nulo no compromisso único. */
+  seriesId: string | null;
+  /**
+   * Cadência da série. Nulo no compromisso único, e também nos payloads anteriores à recorrência —
+   * que leem como o mesmo "sem repetição".
+   */
+  recurrence: CalendarRecurrence | null;
 };
