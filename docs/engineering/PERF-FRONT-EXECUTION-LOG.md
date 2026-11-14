@@ -200,3 +200,48 @@ da thread principal.
 **PRÓXIMO PASSO:** guardas de clique duplo (criar conversa, ações que hoje aceitam dois envios).
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 5 — guarda contra o toque duplo ao abrir conversa
+
+**DATA/HORA:** 2026-11-14 (America/Sao_Paulo)
+
+**FASE:** 3 (interações) — pendência 3: ações que aceitam dois envios.
+
+**DIAGNÓSTICO:**
+
+- `src/routes/mensagens.tsx`: o botão da pessoa na busca chamava `createConversation.mutate()`
+  sem nenhuma guarda. Dois toques antes da resposta criavam **duas conversas** com a mesma pessoa;
+  o servidor só deduplica depois, e a caixa de entrada ficava com duas linhas iguais.
+- O `disabled={mutation.isPending}` que o resto do app usa (vagas, perfil, candidatura) **não
+  basta** aqui: `isPending` chega ao DOM só no render seguinte, e dois toques no mesmo tick passam
+  os dois. O teste novo mostra isso — com só `disabled`, a mutação é chamada 2 vezes.
+
+**IMPLEMENTAÇÃO:**
+
+- `createRef` síncrono (`creatingRef`) no handler: o primeiro toque marca, o segundo retorna cedo;
+  o `onSettled` solta a trava (sucesso ou erro, para uma falha não travar o botão).
+- `disabled={createConversation.isPending}` mantido como feedback visual/teclado.
+
+**TESTES EXECUTADOS:**
+
+- `src/routes/mensagens.test.tsx` (novo): renderiza a rota com a criação EM CURSO, clica duas
+  vezes na mesma pessoa e exige **uma** chamada a `messagesApi.createConversation`.
+  **Prova de regressão:** sem o ref (só `disabled`), falha com "expected 1, got 2"; com o ref,
+  1/1 verde. Executado nos dois estados.
+
+**GATES:**
+
+- `npx eslint` nos arquivos tocados — 0 erros; `npm run lint` — 0 erros (14 avisos, anteriores).
+- `npx tsc --noEmit` — exit 0.
+- `npx vitest run` — **242 arquivos, 1405 testes, 0 falhas**, rodado com `--cache.dir` proprio.
+  Numa passada anterior a mesma suite marcou 1 falha num teste que **nao existe na arvore**
+  (`carteira.test.tsx` "exibe a ordem de cada resposta"); `node_modules` aqui e um symlink para
+  outro worktree e a arvore e compartilhada com outra sessao. Com cache separado e a arvore
+  estavel, o arquivo passa 10/10 e a suite fecha limpa.
+- `npm run build` — verde (client + SSR + nitro, exit 0).
+
+**PRÓXIMO PASSO:** a mesma trava nas outras ações de um toque que ainda não têm guarda.
+
+**ESTADO:** em andamento.

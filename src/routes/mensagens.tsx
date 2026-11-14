@@ -177,6 +177,9 @@ function Mensagens() {
 
   const filteredUsers = (searchResults?.items ?? []).filter((u) => u.id !== currentUserId);
 
+  // Trava sincrona de "abrir conversa": `isPending` chega ao botao so no proximo render, e um
+  // segundo toque no mesmo tick criaria outra conversa com a mesma pessoa.
+  const creatingRef = useRef(false);
   const createConversation = useMutation({
     mutationFn: (participantId: string) =>
       messagesApi.createConversation({ kind: "DIRECT", participantIds: [participantId] }),
@@ -307,7 +310,20 @@ function Mensagens() {
                       filteredUsers.map((u) => (
                         <button
                           key={u.id}
-                          onClick={() => createConversation.mutate(u.id)}
+                          // Dois toques antes da resposta criam DUAS conversas com a mesma
+                          // pessoa: o servidor so deduplica depois. `disabled` sozinho nao segura
+                          // o segundo clique, porque o React ainda nao re-renderizou; a trava e um
+                          // ref, que muda na hora do primeiro toque.
+                          disabled={createConversation.isPending}
+                          onClick={() => {
+                            if (creatingRef.current) return;
+                            creatingRef.current = true;
+                            createConversation.mutate(u.id, {
+                              onSettled: () => {
+                                creatingRef.current = false;
+                              },
+                            });
+                          }}
                           className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition hover:bg-muted"
                         >
                           <UserAvatar src={u.avatar} alt={u.name} className="h-10 w-10" />
