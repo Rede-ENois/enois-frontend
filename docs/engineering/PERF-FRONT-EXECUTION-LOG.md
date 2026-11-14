@@ -491,3 +491,48 @@ system 0.33.0 (`notifications-popover.js` calcula o contador internamente). Pend
 de clique duplo) e 4 (compressão de vídeo no cliente) permanecem a avaliar.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 11 — Guarda de duplo envio no compositor (pendência 3, fatia 1)
+
+**Data:** 2026-11-14
+
+### Diagnóstico
+
+- O botão de publicar desabilita com `createPost.isPending`, mas o `isPending` só liga quando o
+  `mutateAsync` COMEÇA. Entre o clique/Enter e o `mutateAsync` há `await`s (envio da mídia pela
+  `uploadComposerMedia`; na página, o post sai direto). Nessa janela, um segundo Enter publicava o
+  mesmo conteúdo duas vezes.
+- Os demais fluxos citados na auditoria já têm guarda: os botões de publicar/agendar desabilitam
+  com `isPending` (`feed.tsx`), `cancelScheduled` desabilita com `isPending`; a conexão do feed não
+  renderiza mutation própria no feed (o pedido de conexão vive nos cards do DS com estado
+  próprio). A janela real de duplo envio era o compositor.
+
+### Implementação
+
+- `src/routes/feed.tsx` — `publishingRef` (ref, não estado: o descarte é síncrono, sem esperar
+  render): `publishPost` retorna cedo se já há publicação em andamento; ligado após as validações
+  síncronas, liberado no `finally`. `Home` exportada para o teste.
+
+### Prova (executada, não declarada)
+
+- Teste novo `src/routes/feed.double-submit.test.tsx`: dois envios com a promessa de
+  `feedApi.create` suspensa (janela de reentrada aberta).
+  - Sem a guarda: `create` chamado **2×** → `Tests 1 failed`.
+  - Com a guarda: `create` chamado **1×** → `Tests 1 passed`.
+- `npx eslint` nos 2 arquivos: exit=0 (0 erros; 2 avisos pré-existentes de exhaustive-deps).
+- `npx tsc --noEmit`: exit=0.
+- Suíte completa: **244 arquivos / 1.414 testes / 0 falhas / exit=0** (`/tmp/vitest11.txt`).
+- `npm run build`: não exigido — nenhuma mudança de bundling (a exportação de `Home` não altera
+  o grafo de imports).
+
+### Pendência 3 — estado
+
+- Fatia 1 (compositor do feed): **COMPLETA** nesta rodada.
+- Fatia 2 (demais escritas: criar conversa, salvar candidatura, seguir/conectar nos cards):
+  **ABERTA** — próxima rodada varre os `mutateAsync` sem guarda de reentrada.
+
+**PROXIMO PASSO:** pendência 3, fatia 2 — varredura das escritas restantes.
+
+**ESTADO:** em andamento.

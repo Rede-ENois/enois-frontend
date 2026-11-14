@@ -306,7 +306,8 @@ export function FeedPostRow({
   );
 }
 
-function Home() {
+// Exportada para o teste da guarda de duplo envio; a rota continua montando pelo Route.
+export function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const authenticated = useIsAuthenticated();
@@ -444,6 +445,9 @@ function Home() {
       : POST_TYPES.filter((option) => option.id !== "BUSINESS");
   const currentType = availableTypes.find((option) => option.id === postType) ?? availableTypes[0];
   const fileRef = useRef<HTMLInputElement>(null);
+  // Guarda de reentrada da publicação (ver `publishPost`): um ref, não estado — o segundo envio
+  // precisa ser descartado na hora, sem esperar um novo render.
+  const publishingRef = useRef(false);
   const upload = useMediaUpload();
 
   const createPost = useMutation({
@@ -538,6 +542,10 @@ function Home() {
 
   const publishPost = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Guarda de reentrada: o botão desabilita com `createPost.isPending`, mas ele só liga quando o
+    // `mutateAsync` começa — antes disso há awaits (upload da mídia) em que um segundo Enter
+    // publicaria duas vezes.
+    if (publishingRef.current) return;
     if (!mediaReady) return;
     const content = draft.trim();
     // Pagina e uma coisa OU outra: o HTML e o conteudo e o texto do post nao e exigido. Artigo
@@ -548,7 +556,7 @@ function Home() {
     // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
     const options = normalizePollOptions(pollOptions);
     if (pollMode && options.length < POLL_MIN_OPTIONS) return;
-
+    publishingRef.current = true;
     const formData = new FormData(event.currentTarget);
     setPublishError(null);
     try {
@@ -593,6 +601,8 @@ function Home() {
       setPollOptions(["", ""]);
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
+    } finally {
+      publishingRef.current = false;
     }
   };
 
