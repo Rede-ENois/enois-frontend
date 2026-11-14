@@ -178,6 +178,10 @@ contador mostram até três tipos recebidos pelo post, do mais usado para o meno
 `null` ou ausente preserva os emojis padrão; resumo vazio não mostra o botão de reações, mesmo
 quando o contador antigo ainda é positivo.
 
+Em `PostComments`, o seletor `selectCommentMentions` reutiliza uma lista vazia estável enquanto o
+estado do cartão não existe. A abertura da publicação não recria o snapshot a cada leitura; quando o
+cartão é inicializado, o componente acompanha as menções normalmente e as preserva no envio.
+
 **Componentes internos:**
 
 - `ReactionsSummary()` - Sumário de reações com emojis e contagem
