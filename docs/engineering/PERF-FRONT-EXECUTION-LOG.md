@@ -100,6 +100,8 @@ vídeo no cliente e o pull-to-refresh das listagens.
 - `npx tsc --noEmit` — exit 0.
 - `npx vitest run` (suíte inteira) — **240 arquivos / 1400 testes, todos verdes** depois do conserto
   do defeito de fuso. (Antes do conserto o mesmo comando dava 1399/1400.)
+- `npm run build` — exit 0 (`✓ built`), sem erro de compilação; os avisos de diretiva `"use client"`
+  do `@tanstack/react-query` são anteriores a esta rodada.
 
 **PRÓXIMO PASSO:** pull-to-refresh e atualização das notificações; separar a criptografia P2P da
 thread principal.
