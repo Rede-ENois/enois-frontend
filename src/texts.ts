@@ -1606,6 +1606,8 @@ export const texts = {
     /** O título continua "Ranking"; a linha abaixo dele diz QUEM está ali (chegada, não disputa). */
     newMembersHint: "Quem está chegando agora — os mais recentes primeiro.",
     noPosts: "Ainda não há publicações.",
+    noReplies: "Ainda não há respostas.",
+    replyContext: (authorName: string) => `Em resposta a ${authorName}`,
     availabilityUnknown: "Não informada",
     recommendDescription: "Recomende este perfil para ajudar a comunidade.",
     recommendAction: "Recomendar",
