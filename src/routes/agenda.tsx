@@ -108,6 +108,14 @@ function toEntryData(item: CalendarAgendaItemView): CalendarEntryData {
   };
 }
 
+/** A gravação funcionou e a série não: o compromisso existe, avulso, e a frase diz isso. */
+class SeriesError extends Error {
+  constructor(cause: unknown) {
+    super("série não iniciada", { cause });
+    this.name = "SeriesError";
+  }
+}
+
 function AgendaPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -151,9 +159,15 @@ function AgendaPage() {
   // o bloco não nasce quando não há resposta, então vazio e falha desenham igual.
   const invitations = useQuery(calendarQueries.pendingInvitations());
 
+  /**
+   * A criação é uma chamada só; a série é a segunda, sobre o id que a primeira devolveu. Começar a
+   * série antes não é possível — ela nasce do compromisso fundador. Se a segunda falhar, o
+   * compromisso já existe e fica avulso: a pessoa vê o erro, a agenda se recarrega, e repetir o
+   * salvar com a mesma cadência não duplica nada.
+   */
   const save = useMutation({
-    mutationFn: (values: CalendarEntryFormValues) =>
-      calendarApi.create({
+    mutationFn: async (values: CalendarEntryFormValues) => {
+      const entry = await calendarApi.create({
         scope: values.scope,
         kind: values.kind,
         title: values.title,
@@ -162,12 +176,25 @@ function AgendaPage() {
         endsAt: values.endsAt,
         timeZoneId: values.timeZoneId,
         allDay: values.allDay,
-      }),
-    onSuccess: () => {
+      });
+      if (values.recurrence === "NONE") return entry;
+      try {
+        return await calendarApi.startSeries(entry.id, values.recurrence);
+      } catch (error) {
+        void queryClient.invalidateQueries({ queryKey: ["agenda"] });
+        throw new SeriesError(error);
+      }
+    },
+    onSuccess: (entry) => {
       setSaveError(null);
+      if (entry.seriesId) toast(texts.agenda.seriesStarted, "success");
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
     },
-    onError: () => setSaveError(texts.agenda.errorSave),
+    // A gravação em si falhou quando o erro não diz respeito à série; a frase muda com ele.
+    onError: (error) =>
+      setSaveError(
+        error instanceof SeriesError ? texts.agenda.errorSeries : texts.agenda.errorSave,
+      ),
   });
 
   const respond = useMutation({

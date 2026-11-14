@@ -4,7 +4,7 @@ import { act } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { type Root, createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requireAuth } from "@/lib/require-auth";
 
@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   pendingInvitations: vi.fn(),
   respond: vi.fn(),
   create: vi.fn(),
+  startSeries: vi.fn(),
+  stopSeries: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -39,6 +41,8 @@ vi.mock("@/lib/api", () => ({
     pendingInvitations: mocks.pendingInvitations,
     respond: mocks.respond,
     create: mocks.create,
+    startSeries: mocks.startSeries,
+    stopSeries: mocks.stopSeries,
     exportUrl: () => "http://api.test/calendar/entries/export.ics",
   },
 }));
@@ -75,7 +79,45 @@ const entry = {
   cancelledAt: null,
 };
 
+// O diálogo do DS se posiciona com radix, que pede um ResizeObserver no jsdom.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+const setValue = (
+  element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  value: string,
+) =>
+  act(() => {
+    const proto =
+      element instanceof HTMLSelectElement
+        ? HTMLSelectElement.prototype
+        : element instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, "value")?.set?.call(element, value);
+    element.dispatchEvent(
+      new Event(element instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }),
+    );
+  });
+
+const clickButton = (label: string) => {
+  const button = [...document.body.querySelectorAll("button")].find(
+    (node) => node.textContent === label,
+  );
+  expect(button, `botão "${label}"`).toBeDefined();
+  return act(async () => {
+    button!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+};
+
 describe("rota /agenda", () => {
+  beforeAll(() => {
+    globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+  });
+
   it("pede sessão antes de desenhar qualquer coisa", () => {
     expect(options.beforeLoad).toBe(requireAuth);
   });
@@ -124,6 +166,8 @@ describe("rota /agenda", () => {
       mocks.pendingInvitations.mockReset();
       mocks.respond.mockReset();
       mocks.create.mockReset();
+      mocks.startSeries.mockReset();
+      mocks.stopSeries.mockReset();
       host = document.createElement("div");
       document.body.append(host);
       root = createRoot(host);
@@ -189,6 +233,110 @@ describe("rota /agenda", () => {
 
       expect(mocks.respond).toHaveBeenCalledWith("cal_dez", "ACCEPTED");
       expect(host.textContent).not.toContain("Roda de dezembro");
+    });
+  });
+
+  describe("cadência", () => {
+    let root: Root;
+    let host: HTMLDivElement;
+    let client: QueryClient;
+
+    const settle = () => act(() => new Promise<void>((done) => setTimeout(done, 0)));
+
+    const render = async () => {
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <AgendaPage />
+          </QueryClientProvider>,
+        ),
+      );
+      await settle();
+    };
+
+    beforeEach(() => {
+      vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+      mocks.list.mockReset();
+      mocks.conflicts.mockReset();
+      mocks.pendingInvitations.mockReset();
+      mocks.respond.mockReset();
+      mocks.create.mockReset();
+      mocks.startSeries.mockReset();
+      mocks.stopSeries.mockReset();
+      mocks.list.mockResolvedValue([]);
+      mocks.conflicts.mockResolvedValue([]);
+      mocks.pendingInvitations.mockResolvedValue([]);
+      host = document.createElement("div");
+      document.body.append(host);
+      root = createRoot(host);
+      client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    });
+
+    afterEach(async () => {
+      await act(async () => root.unmount());
+      host.remove();
+      client.clear();
+      vi.unstubAllGlobals();
+    });
+
+    it("salvar com cadência cria o compromisso e começa a série sobre o id devolvido", async () => {
+      mocks.create.mockResolvedValue({ ...entry, id: "cal_novo" });
+      mocks.startSeries.mockResolvedValue({
+        ...entry,
+        id: "cal_novo",
+        seriesId: "ser_1",
+        recurrence: "WEEKLY",
+      });
+      await render();
+
+      await clickButton("Novo compromisso");
+      setValue(document.body.querySelector('[id$="-title"]')!, "Alongamento");
+      setValue(document.body.querySelector('[id$="-day"]') as HTMLInputElement, "10/11/2026");
+      setValue(document.body.querySelector('[id$="-start"]') as HTMLInputElement, "12:00");
+      setValue(document.body.querySelector('[id$="-end"]') as HTMLInputElement, "13:00");
+      setValue(document.body.querySelector('[id$="-recurrence"]') as HTMLSelectElement, "WEEKLY");
+      await clickButton("Salvar");
+      await settle();
+
+      // A cadência não vai na criação: vira a segunda chamada, com o id que a primeira devolveu.
+      expect(mocks.create).toHaveBeenCalledTimes(1);
+      expect(mocks.startSeries).toHaveBeenCalledWith("cal_novo", "WEEKLY");
+    });
+
+    it("sem cadência não há segunda chamada: um compromisso avulso é uma só criação", async () => {
+      mocks.create.mockResolvedValue({ ...entry, id: "cal_novo" });
+      await render();
+
+      await clickButton("Novo compromisso");
+      setValue(document.body.querySelector('[id$="-title"]')!, "Aviso único");
+      setValue(document.body.querySelector('[id$="-day"]') as HTMLInputElement, "10/11/2026");
+      setValue(document.body.querySelector('[id$="-start"]') as HTMLInputElement, "12:00");
+      setValue(document.body.querySelector('[id$="-end"]') as HTMLInputElement, "13:00");
+      await clickButton("Salvar");
+      await settle();
+
+      expect(mocks.create).toHaveBeenCalledTimes(1);
+      expect(mocks.startSeries).not.toHaveBeenCalled();
+    });
+
+    it("se a série falha, o compromisso já criado não some nem vira erro de criação", async () => {
+      mocks.create.mockResolvedValue({ ...entry, id: "cal_novo" });
+      mocks.startSeries.mockRejectedValue(new Error("offline"));
+      await render();
+
+      await clickButton("Novo compromisso");
+      setValue(document.body.querySelector('[id$="-title"]')!, "Alongamento");
+      setValue(document.body.querySelector('[id$="-day"]') as HTMLInputElement, "10/11/2026");
+      setValue(document.body.querySelector('[id$="-start"]') as HTMLInputElement, "12:00");
+      setValue(document.body.querySelector('[id$="-end"]') as HTMLInputElement, "13:00");
+      setValue(document.body.querySelector('[id$="-recurrence"]') as HTMLSelectElement, "MONTHLY");
+      await clickButton("Salvar");
+      await settle();
+
+      expect(mocks.create).toHaveBeenCalledTimes(1);
+      expect(mocks.startSeries).toHaveBeenCalledWith("cal_novo", "MONTHLY");
+      // A frase do erro é a da série, não a da gravação: o compromisso existe, a repetição não.
+      expect(document.body.textContent).toContain("Não foi possível repetir o compromisso");
     });
   });
 });
