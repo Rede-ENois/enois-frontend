@@ -245,3 +245,46 @@ da thread principal.
 **PRÓXIMO PASSO:** a mesma trava nas outras ações de um toque que ainda não têm guarda.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 6 — decifragem E2E sem repetir o historico
+
+**DATA/HORA:** 2026-11-14 (America/Sao_Paulo)
+
+**FASE:** 3 (processamento) — pendencias 5 e 6: o custo de criptografia na thread.
+
+**DIAGNOSTICO:**
+
+- `src/lib/e2e/use-decrypted-messages.ts` decifrava TODA a lista a cada mudanca dela. A thread
+  recebe um array novo sempre que uma pagina chega (mensagem nova, pagina anterior, reacao), e o
+  efeito dispara por identidade do array: cada mensagem que entrava refazia o RSA-OAEP de todo o
+  historico. Com 40 mensagens cifradas, uma linha nova custava 41 decifragens em vez de 1.
+- Ja existia um conserto para o ciclo infinito (o `useMemo` em `conversation-thread.tsx`, que
+  documenta os ~6 mil renders/s). O custo por chegada, nao o ciclo, e o que ficou.
+
+**IMPLEMENTACAO:**
+
+- `src/lib/e2e/use-decrypted-messages.ts`: cache do texto em claro por id de mensagem, guardando o
+  ciphertext junto (mesmo id com conteudo diferente nao reaproveita). So o que ainda nao foi
+  decifrado passa pelo `decryptReceived`.
+- O cache e esvaziado ao trocar de conta (`currentUserId`), para uma conta nao ver texto decifrado
+  pela anterior no mesmo aparelho. Exportado `clearDecryptedMessageCache()` para os testes.
+
+**TESTES EXECUTADOS:**
+
+- `src/lib/e2e/use-decrypted-messages.test.tsx` — 5 casos (3 anteriores intactos + 2 novos:
+  mensagem nova decifra SO ela; id repetido com outro ciphertext e decifrado de novo).
+  **Prova de regressao:** sem a consulta ao cache, "uma mensagem nova nao decifra o historico de
+  novo" falha (1 failed | 4 passed); com o cache, 5/5. Executado nos dois estados.
+
+**GATES:**
+
+- `npx eslint` nos arquivos tocados — 0 erros; `npm run lint` — 0 erros (14 avisos, anteriores).
+- `npx tsc --noEmit` — exit 0.
+- `npx vitest run` — 242 arquivos, 1407 testes, 0 falhas.
+- `npm run build` — verde (client + SSR + nitro, exit 0).
+
+**PROXIMO PASSO:** pendencia 2 (contador do sino x resumo do servidor) depende do design system.
+
+**ESTADO:** em andamento.
