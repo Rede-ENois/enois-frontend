@@ -336,17 +336,43 @@ export function clearSession() {
   if (hadSession) resetSessionScopedData();
 }
 
+/**
+ * O `fetch` recusa um sinal já abortado: quem cancelou pediu para a requisição não sair. Repassar
+ * o sinal em todas as tentativas (inclusive as de retry) garante que cancelar de fato interrompe.
+ */
+function isAborted(signal?: AbortSignal): boolean {
+  return signal?.aborted === true;
+}
+
+/**
+ * Cancelamento não é falha: o TanStack Query trata o `AbortError` como consulta cancelada, sem
+ * retry e sem aviso na tela. Deixá-lo cair no `ApiError` genérico transformaria "troquei de termo
+ * na pesquisa" em erro visível. Esta checagem preserva o erro original do `fetch`.
+ */
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError";
+}
+
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
   opts?: RequestOptions,
 ): Promise<T> {
+  const signal = opts?.signal;
+  if (isAborted(signal)) {
+    throw new DOMException("Requisição cancelada.", "AbortError");
+  }
   dropExpiredSession();
   // Renova proativamente antes de sair com um token que esta vencendo (as rotas de auth cuidam
   // da propria sessao e nao passam por aqui).
   if (!path.startsWith("/auth/")) {
     await refreshIfNeeded();
+    if (isAborted(signal)) {
+      throw new DOMException("Requisição cancelada.", "AbortError");
+    }
   }
 
   // FormData (multipart uploads/imports) goes as-is: the browser sets the boundary header.
@@ -375,6 +401,7 @@ async function request<T>(
       credentials: "include",
       headers,
       body: payload,
+      signal,
     });
     // Limite do proxy/CDN: a recusa vem sem CORS e o navegador a reporta como falha de rede.
     // Em escrita idempotente (todas as nossas), esperar o Retry-After e repetir uma vez é
@@ -383,28 +410,39 @@ async function request<T>(
       const seconds = Number.parseInt(response.headers.get("Retry-After") ?? "", 10);
       if (Number.isFinite(seconds) && seconds > 0 && seconds <= MAX_RETRY_AFTER_SECONDS) {
         await sleep(seconds * 1000);
+        if (isAborted(signal)) {
+          throw new DOMException("Requisição cancelada.", "AbortError");
+        }
         response = await fetch(`${baseUrl()}${path}`, {
           method,
           credentials: "include",
           headers,
           body: payload,
+          signal,
         });
       }
     }
   } catch (firstFailure) {
+    // Cancelado por quem pediu: propaga como abort, sem virar "sem conexão" nem repetir.
+    if (isAbortError(firstFailure)) throw firstFailure;
     // Falha de rede numa escrita idempotente: pode ser o limitador da frente recusando o
     // preflight (o navegador esconde a resposta e reporta "fetch failed"). Espera a janela
     // virar e tenta uma vez; se continuar falhando, o erro sobe.
     if (opts?.idempotent) {
       try {
         await sleep(NETWORK_RETRY_DELAY_MS);
+        if (isAborted(signal)) {
+          throw new DOMException("Requisição cancelada.", "AbortError");
+        }
         response = await fetch(`${baseUrl()}${path}`, {
           method,
           credentials: "include",
           headers,
           body: payload,
+          signal,
         });
-      } catch {
+      } catch (retryFailure) {
+        if (isAbortError(retryFailure)) throw retryFailure;
         throw new ApiError(
           0,
           "NETWORK_ERROR",
@@ -441,14 +479,19 @@ async function request<T>(
     }
 
     if (refreshed === "renewed") {
+      if (isAborted(signal)) {
+        throw new DOMException("Requisição cancelada.", "AbortError");
+      }
       try {
         response = await fetch(`${baseUrl()}${path}`, {
           method,
           credentials: "include",
           headers,
           body: payload,
+          signal,
         });
-      } catch {
+      } catch (retryFailure) {
+        if (isAbortError(retryFailure)) throw retryFailure;
         throw new ApiError(
           0,
           "NETWORK_ERROR",
@@ -559,7 +602,7 @@ async function parseBody<T>(response: Response): Promise<T> {
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>("GET", path),
+  get: <T>(path: string, opts?: RequestOptions) => request<T>("GET", path, undefined, opts),
   post: <T>(path: string, body?: unknown, opts?: RequestOptions) =>
     request<T>("POST", path, body, { idempotent: true, ...opts }),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body, { idempotent: true }),

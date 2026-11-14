@@ -6,6 +6,7 @@ import type { SearchResult } from "@/types/application/search/search-result";
 import { UserPicker as UserPickerView } from "@rede-enois/design-system/domain";
 
 import { searchApi } from "@/lib/api";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 /**
  * Campo de destinatário com busca de usuário (igual ao marcar @): a busca de usuários roda aqui
@@ -22,11 +23,13 @@ export function UserPicker({
   placeholder?: string;
 }) {
   const [query, setQuery] = useState("");
+  // O campo do DS entrega cada tecla; a consulta sai uma vez, com a pausa da digitação.
+  const debouncedQuery = useDebouncedValue(query, 250);
 
   const busca = useQuery({
-    queryKey: ["user-picker", query],
-    queryFn: () => searchApi.search(query, ["users"], 6),
-    enabled: query.trim().length >= 2,
+    queryKey: ["user-picker", debouncedQuery],
+    queryFn: ({ signal }) => searchApi.search(debouncedQuery, ["users"], 6, signal),
+    enabled: debouncedQuery.trim().length >= 2,
   });
 
   const resultados = (busca.data?.items ?? [])

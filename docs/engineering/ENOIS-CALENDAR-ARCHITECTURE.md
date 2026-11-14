@@ -1204,3 +1204,65 @@ regra, e o tipo exposto na projeção é público por contrato.
 funciona sem conhecer recorrência, e um `.ics` exportado continua sendo um `VEVENT` por ocorrência
 com `UID` próprio. O custo é armazenamento proporcional ao horizonte, contido pelos 90 dias e pelo
 teto por ciclo.
+
+---
+
+## D44 — Ligar a cadência é uma segunda chamada, e a falha dela não apaga o compromisso (execução 43)
+
+1. **A criação não aceita recorrência, e isso é decisão, não esquecimento.** `POST /calendar/entries`
+   grava o compromisso; `POST /calendar/entries/{id}/series` funda a série sobre uma entrada que já
+   existe. Juntar as duas exigiria a rota de criação conhecer o motor de recorrência e trataria dois
+   erros de naturezas diferentes no mesmo status. O preço é uma janela em que o compromisso existe
+   sem a repetição — e é essa janela que a tela tem de mostrar honestamente.
+2. **Falha da série não desfaz a criação.** Se a segunda chamada falha, o compromisso real é o que já
+   está gravado: a tela invalida a agenda, mostra o erro de série e deixa o compromisso visível, sem
+   repetição. Toast de sucesso, rollback otimista ou criação escondida seriam todos uma fachada sobre
+   um estado diferente do que o banco tem. O usuário pode editar o compromisso e tentar a cadência de
+   novo — a operação é idempotente por `(series_id, starts_at)` e por `Idempotency-Key` (D43).
+3. **Edição compara com o que já existe.** Encerrar (`DELETE`) só quando a escolha é NENHUMA, criar ou
+   ajustar (`POST`) só quando a escolha difere da atual. Chamar sem diferença deixaria a tela sujeita
+   a recriar uma série que o usuário não tocou, e o `DELETE` de série é destrutivo para o futuro.
+4. **Entrada com origem não oferece a escolha.** Evento, entrevista e sessão de mentoria escrevem a
+   entrada pela porta de origem; fundar série ali criaria ocorrências que a origem não conhece e que
+   a próxima sincronização apagaria. O backend responde 409 e o DS esconde o campo — as duas guardas
+   existem de propósito, uma porque a tela pode estar velha, a outra porque o usuário não deve
+   escolher algo fadado a ser recusado.
+5. **Versão de pacote não identifica árvore.** O DS teve dois commits publicados como 0.34.0 (`main`
+   #222 e `qa` #229) com conteúdo diferente: só o `qa` tem o campo de cadência e as abas de perfil, e
+   a tag `v0.34.0` publicou o `qa`. Consumidor não deve inferir o conteúdo pelo número — o `tsc` no
+   app foi o que revelou a diferença. Enquanto as duas linhas não coincidirem, o número deixa de ser
+   uma referência confiável de contrato.
+
+**Consequência.** A recorrência está de ponta a ponta: motor (D43), campo no DS e ligação na tela. O
+usuário enxerga sempre o estado real — compromisso criado aparece mesmo quando a repetição falhou — e
+a edição só toca a série quando há mudança de cadência. O custo é um caminho de erro a mais para
+testar, coberto pelos três casos de `agenda.test.tsx`.
+
+## D45 — A corrida pela mesma vaga é decidida pelo banco, não pela leitura (execução 45)
+
+1. **Três caminhos tinham o mesmo defeito: ler, decidir, escrever.** A reserva de horário de
+   mentoria, o re-pedido de lembrete resolvido e a emissão de assinatura `.ics` consultavam o
+   estado, decidiam sobre o snapshot e gravavam depois. Entre a leitura e a escrita, outra
+   requisição muda o mundo — e a decisão tomada sobre o passado vira dado inválido (horário
+   reservado duas vezes com duas retenções de faísca; lembrete que nunca mais toca; dois links
+   vivos que o revogar não mata juntos).
+2. **O padrão é o banco como árbitro, com o instrumento que o caso pede.** Reserva: UPDATE
+   condicional (`bookIfFree`) que devolve quantas linhas alcançou — quem alcança zero perdeu a
+   corrida e é recusado antes de reter qualquer valor. Emissão de assinatura: tranca a linha do
+   dono em `users` (`for update`), serializando a checagem "há ativa?" com a criação — sem linha
+   própria para travar, a linha da pessoa é o mutex. Lembrete: operação idempotente por chave
+   única (`rearm` na linha existente), sem corrida possível porque a chave única do banco é o
+   guardião.
+3. **Quem perde a corrida sai sem custo.** A recusa (`409 SLOT_UNAVAILABLE`) acontece ANTES do
+   escrow e antes de criar sessão; a emissão paralela devolve a assinatura já existente, sem
+   token novo. Falhar tarde e compensar depois é o caminho caro e cheio de exceção; falhar cedo é
+   uma linha a mais de código e nenhuma compensação.
+4. **A prova de corrida tem de criar a janela de verdade.** Teste sequencial de "reservar duas
+   vezes" passa no código antigo (a leitura enxerga a primeira reserva) — não prova nada. As
+   provas desta decisão simulam a sobreposição: o teste do slot grava na linha entre a leitura e
+   a escrita; o da assinatura usa barreira de duas pontas para as duas transações lerem antes de
+   qualquer uma gravar.
+
+**Consequência.** Os três caminhos de escrita do motor de agenda que decidem sobre estado
+compartilhado são agora atômicos no banco. O custo é uma consulta de tranca na emissão de
+assinatura (só no caminho de criação, que é raro) e um UPDATE condicional por reserva.
