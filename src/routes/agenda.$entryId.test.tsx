@@ -37,6 +37,8 @@ const apiDetail = {
     createdAt: "2026-11-08T00:00:00Z",
     updatedAt: "2026-11-08T00:00:00Z",
     cancelledAt: null,
+    seriesId: null,
+    recurrence: null,
   },
   owner: false,
   participation: "ACCEPTED" as const,
