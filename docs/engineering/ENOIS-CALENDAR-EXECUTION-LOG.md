@@ -3619,3 +3619,79 @@ sem os mantenedores. (2) Conferir se o `main` do DS foi reconciliado. (3) Varrer
 **PRÓXIMA EXECUÇÃO (proposta).** (1) Fase 7 e fase 10 continuam paradas na decisão externa —
 semântica do vínculo Épapo/Tamo Junto e credencial OAuth dos provedores. (2) Conferir se o `main`
 do DS foi reconciliado. (3) Varrer a §4 atrás de linha "A construir" que ainda tenha unidade própria.
+
+
+## Execução 45 — 2026-11-14 (~06:30–08:30) — corridas do motor de agenda decididas pelo banco
+
+**BLOCO.** Fase 11 (revisão geral), três unidades no mesmo PR de backend. Origem: auditoria da
+fase 11 da execução 45 sobre a `qa` (`d99f2c25`), que apontou sete achados; este bloco leva os
+três de concorrência/correção, um por unidade.
+
+**UNIDADES.**
+
+1. **U1 — reserva dupla de horário de mentoria.** `MentorService.scheduleSession` decidia pela
+   leitura (`slot.available()` → `saveSlot(slot.book())`): duas inscrições correndo juntas liam o
+   mesmo "disponível" e as duas reservavam, cada uma retendo faísca. Agora a decisão é do banco:
+   `SpringDataMentorSlotJpaRepository.bookIfFree` (`UPDATE ... SET available = false WHERE id = ?
+   AND available = true`, `@Modifying`), exposto por `MentorRepository.bookSlotIfFree`. Quem
+   alcança zero linhas recebe `409 SLOT_UNAVAILABLE` antes de qualquer retenção.
+2. **U2 — lembrete pedido de novo não voltava a valer.** `CalendarReminderService.setForReader`
+   devolvia a linha existente mesmo resolvida (`sentAt` preenchido): a tela mostrava lembrete
+   ligado que nunca mais tocaria. Agora `CalendarReminder.rearm(startsAt)` recalcula o `dueAt`
+   para o horário atual do compromisso, zera tentativas e limpa o estado; a linha é a mesma (a
+   chave única pessoa+compromisso+antecedência continua valendo).
+3. **U3 — assinatura `.ics` nascia duplicada na corrida.** `CalendarSubscriptionService.issue` era
+   check-then-insert: duas emissões paralelas liam "não há ativa" e criavam dois links vivos, e o
+   revogar matava só um, deixando credencial ativa que a pessoa não conhece. Agora a emissão
+   trancа a linha do dono em `users` (`CalendarSubscriptionRepository.lockUserForIssue`, padrão
+   `select id from users where id = ? for update` já usado no projeto) antes da checagem: a
+   segunda vê a ativa da primeira e recebe ela, sem token novo.
+
+**ARQUIVOS (backend, branch `fix/agenda-corridas-45`, base `d99f2c25`).**
+
+- U1: `mentoring/application/MentorService.java`, `mentoring/application/port/out/MentorRepository.java`,
+  `mentoring/adapters/out/persistence/{SpringDataMentorSlotJpaRepository,MentorPersistenceAdapter}.java`,
+  `mentoring/adapters/in/web/MentorSlotRaceTests.java` (novo). Commits `64ef6499`.
+- U2: `calendar/domain/CalendarReminder.java` (`rearm`), `calendar/application/CalendarReminderService.java`,
+  `calendar/CalendarReminderServiceTests.java` (+2 testes). Commit `0495de8e`.
+- U3: `calendar/application/{CalendarSubscriptionService,port/out/CalendarSubscriptionRepository}.java`,
+  `calendar/adapters/out/persistence/{SpringDataCalendarSubscriptionJpaRepository,CalendarSubscriptionPersistenceAdapter}.java`,
+  `calendar/CalendarSubscriptionRaceTests.java` (novo). Commits `5333edda` + `f670f3a0`.
+
+**PROVA Q0 (cada teste falha no código antigo e passa no novo).**
+
+- U1: `MentorSlotRaceTests` injeta o concorrente gravando na linha entre a leitura e a escrita
+  (`@MockitoSpyBean` + `jdbc.update`): sem a guarda, `expected:<409> but was:<201>`; com ela,
+  verde, faísca intacta e nenhuma sessão.
+- U2: `askingAgainAfterClearingBringsTheReminderBackToLife` — lembrete entregue, pedido de novo:
+  sem o re-arm, `sentAt` nulo esperado, vinha preenchido; com ele, verde e o segundo ciclo entrega.
+- U3: `CalendarSubscriptionRaceTests` com barreira de duas pontas (as duas transações leem antes
+  de qualquer uma gravar): sem a tranca, `tokensBorn expected: 1 but was: 2`; com ela, verde, um
+  id só e o revogar não deixa credencial viva. **Guarda ambiental do H2:** em `for update` o H2
+  tranca a tabela inteira (MariaDB tranca a linha), então o perdedor pode sair com
+  `CannotAcquireLockException` (SQL 50200) em vez de esperar — o teste aceita as duas saídas
+  porque a regra de negócio é uma só: nunca dois tokens.
+
+**TESTES EXECUTADOS.**
+
+- `./mvnw -DskipTests compile` → **verde**.
+- Suíte de mentoria + calendário (`Mentor*Tests,Mentoring*Tests,CalendarReminder*Tests,CalendarSubscription*Tests`)
+  → **verde** (35+ testes, inclusive os novos), após um falso vermelho por corrida de build
+  (compilação em primeiro plano sobre o `target/` da suíte em fundo — erro meu, corrigido rodando
+  em série; registrada a armadilha).
+- `MentoringSessionListQueryCountTests` isolado: verde na base limpa **e** com os consertos; a
+  falha única no lote (13 vs 12 SELECTs) é flake ambiental da H2 compartilhada, sem regressão.
+- Suíte inteira `./mvnw test`: **BUILD SUCCESS — 2689 testes, 0 falhas, 0 erros, 1 skipped** (1h58, 537 classes), inclusive `MentorSlotRaceTests`, `CalendarSubscriptionRaceTests` e os 17 do `CalendarReminderServiceTests`. A primeira tentativa da suíte foi descartada por corrupção de `target/` (compilação em primeiro plano sobre a suíte em fundo — mesma corrida de build registrada acima); a segunda, re-feita em série, fechou verde.
+
+**PRs.** enois-backend#714 aberto (base `qa`, head `fix/agenda-corridas-45`, 3 commits); PR de
+docs desta rodada.
+
+**BLOQUEIOS.** Fase 7 (Épapo/Tamo Junto sem semântica de produto) e fase 10 (credencial OAuth de
+provedor) seguem externos. DS `main` continua defasado do `qa` no 0.34.0 — pendência de mantenedor.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana da PR #714 (suíte inteira já verde: 2689/0/0). (2) As
+unidades restantes da auditoria (menor prioridade): `IllegalArgumentException` cru escapando do
+`CalendarSourceService.upsert`; reagendamento de ocorrência de série sobre o horário de irmã
+respondendo `409 CONFLICT_DUPLICATE` opaco; transação única no laço do `deliverDue`; `UNTIL`
+flutuante do `.ics` preso a fuso fixo; vazamento de `sourceType`/`sourceId` a participante que
+recusou. (3) Reconferir PRs e o `main` do DS.
