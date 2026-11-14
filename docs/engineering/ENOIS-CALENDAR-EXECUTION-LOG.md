@@ -3580,3 +3580,42 @@ sem os mantenedores. (2) Conferir se o `main` do DS foi reconciliado. (3) Varrer
 "A construir" que ainda tenha unidade própria, agora que o motor central e a recorrência saíram.
 
 ---
+
+## Execução 44 — 2026-11-14 (~05:30–05:45) — a /mentoria consome o CalendarSlotPicker
+
+**BLOCO.** Uma unidade executável desta rodada, fechando a execução 43:
+
+- **(C) Front, tela:** a `/mentoria` passa a consumir o `CalendarSlotPicker` (DS ≥ 0.34.0, #224,
+  mergeado) para a escolha do horário de mentoria. A rota deixa de desenhar botões crus para a
+  escolha; o erro do agendamento vai para o picker (`error={error}`), que o anuncia com
+  `role="alert"` junto da escolha. PR enois-frontend#874.
+
+**IMPLEMENTAÇÃO.**
+
+1. **Quais horários são oferecidos:** só os `available` **e** com `startsAt` não nulo
+   (`bookableSlots`, `src/lib/mentoring/bookable-slots.ts`). O `startsAt` é anulável no contrato do
+   `TimeSlot`; um horário sem data não tem como ser mostrado nem reservado — oferecê-lo colocaria na
+   tela uma opção que quebra no clique. Antes o filtro era só `available`.
+2. **O erro do agendamento vai para o picker** (`error={error}`), que o anuncia com `role="alert"`
+   junto da escolha; o `ErrorBanner` permanece para o caso sem horários (falha de carregamento fora
+   do grupo), como já era na execução 43.
+3. **Supressões da rota encolhem:** `local/no-front-markup` **241 → 234** (a regra manda encolher).
+   O contador da rota foi atualizado de 241 para 234 com o commit `05a27bcc`.
+
+**TESTES.**
+
+- Front `npx tsc --noEmit` → **exit 0**.
+- Front `npm run lint` → **0 erros** (14 avisos `react-hooks/exhaustive-deps` pré-existentes, fora
+  deste diff).
+- Front `npx vitest run` (suíte completa) na árvore final → **237 arquivos, 1388 testes, 0 falhas**
+  (inclui os 5 novos de `bookable-slots.test.ts`).
+- Front `npx vite build` → **exit 0**.
+
+**PRs.** enois-frontend#874 aberto (base `qa`, head `feat/mentoria-slot-picker-44`); DS #224 e #229
+**mergeados**; enois-frontend#871 **mergeado pelo bot** em `508c278c`.
+
+**BLOQUEIOS.** Nenhum de calendário.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Fase 7 e fase 10 continuam paradas na decisão externa —
+semântica do vínculo Épapo/Tamo Junto e credencial OAuth dos provedores. (2) Conferir se o `main`
+do DS foi reconciliado. (3) Varrer a §4 atrás de linha "A construir" que ainda tenha unidade própria.
