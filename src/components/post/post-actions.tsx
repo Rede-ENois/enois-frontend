@@ -167,6 +167,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       reactionPending={card?.reactionPending ?? false}
       motionAllowed={motionAllowed}
       reactionCount={reactionCount}
+      reactionSummary={post.reactionSummary ?? undefined}
       commentsCount={postCounters.comments}
       repostsCount={postCounters.reposts ?? 0}
       savesCount={postCounters.saves}
