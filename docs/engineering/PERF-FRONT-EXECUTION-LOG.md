@@ -107,3 +107,50 @@ vídeo no cliente e o pull-to-refresh das listagens.
 thread principal.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 3 — puxar para renovar na página de avisos
+
+**DATA/HORA:** 2026-11-14 (America/Sao_Paulo)
+
+**FASE:** 4 (mobile) — pull-to-refresh ausente/inconsistente entre as listas.
+
+**DIAGNÓSTICO:**
+
+- O gesto de puxar para renovar existia (`src/lib/feed/pull-to-refresh.ts`), mas com nome e lugar
+  presos ao feed e usado SÓ em `src/routes/feed.tsx`. A página de avisos (`notificacoes.index.tsx`)
+  não tinha nenhuma forma de atualizar a lista sem sair e voltar — a inconsistência do prompt
+  ("pull-to-refresh ausente/inconsistente").
+
+**IMPLEMENTAÇÃO:**
+
+- `src/lib/feed/pull-to-refresh.ts` → `src/lib/pull-to-refresh.ts`, hook `useFeedPullToRefresh` →
+  `usePullToRefresh` (mesmo corpo; só o nome e o comentário deixaram de ser do feed). O `onRefresh`
+  é que define o que cada lista renova.
+- `src/routes/notificacoes.index.tsx`: o gesto agora renova SÓ a lista de avisos (`list.refetch`),
+  com o `PullIndicator` do design system como feedback (mesmo do feed). Sem markup novo: o wrapper
+  `relative` reusa o elemento que já estava no arquivo.
+- `src/texts.ts`: `notificationsPage.refreshing`.
+
+**TESTES EXECUTADOS:**
+
+- `src/routes/notificacoes.index.test.tsx` (novo, 2 casos): gesto no limite dispara nova busca;
+  puxada curta não. **Prova de regressão:** com o gesto desligado (hook removido da página), o caso
+  do gesto falha e o curto passa (1 failed | 1 passed); com o hook ligado, 2/2. Executado nos dois
+  estados.
+- `src/lib/pull-to-refresh.test.tsx` (6 casos, sem mudança de asserção) e
+  `use-notifications-list.test.tsx` (5 casos) seguem verdes.
+
+**GATES:**
+
+- `npm run lint` — 0 erros (14 avisos, todos anteriores).
+- `npx tsc --noEmit` — exit 0.
+- `npx vitest run` — 241 arquivos, 1402 testes, 0 falhas.
+- `npm run build` — verde (client + SSR + nitro, exit 0).
+
+**PRÓXIMO PASSO:** renovação das conversas por gesto em `mensagens.tsx`; separar a criptografia P2P
+
+da thread principal.
+
+**ESTADO:** em andamento.

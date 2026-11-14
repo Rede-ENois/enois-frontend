@@ -4,7 +4,7 @@ import { act } from "react";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useFeedPullToRefresh } from "./pull-to-refresh";
+import { usePullToRefresh } from "./pull-to-refresh";
 
 /** Simula o gesto de puxar: sequência de eventos de toque no window. */
 function pull(distance: number) {
@@ -33,14 +33,14 @@ function swipeHorizontally(distance: number) {
   window.dispatchEvent(new TouchEvent("touchend", { touches: [] as unknown as Touch[] }));
 }
 
-describe("useFeedPullToRefresh", () => {
+describe("usePullToRefresh", () => {
   let root: Root;
   let host: HTMLDivElement;
-  let probe: ReturnType<typeof useFeedPullToRefresh>;
+  let probe: ReturnType<typeof usePullToRefresh>;
   let refresh: () => void = () => {};
 
   function Harness({ fetching }: { fetching: boolean }) {
-    probe = useFeedPullToRefresh(refresh, fetching);
+    probe = usePullToRefresh(refresh, fetching);
     return null;
   }
 

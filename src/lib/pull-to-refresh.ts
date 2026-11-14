@@ -8,15 +8,16 @@ const TRIGGER_PX = 70;
 const RECOGNIZE_PX = 12;
 
 /**
- * Puxar para renovar no topo do feed, em toque. O gesto não rola a página: é reconhecido quando o
+ * Puxar para renovar no topo da lista, em toque. O gesto não rola a página: é reconhecido quando o
  * dedo desce com a lista já no topo (`scrollY === 0`), e conta a distância vertical líquida. Ao
  * soltar passando do limite, pede a renovação — e só dela: nada de invalidar outras consultas,
- * porque a lista do perfil, as notificações e o resto não fazem parte do que a pessoa puxou.
+ * porque as outras listas não fazem parte do que a pessoa puxou.
  *
- * O estado de "puxando" (distância atual) serve de feedback ao chamador; a própria renovação
+ * O mesmo gesto serve a qualquer lista do app (feed, avisos): o que muda é o `onRefresh` de quem
+ * chama. O estado de "puxando" (distância atual) serve de feedback ao chamador; a própria renovação
  * acontece só uma vez por gesto e não enquanto uma já está em curso.
  */
-export function useFeedPullToRefresh(onRefresh: () => void, fetching: boolean) {
+export function usePullToRefresh(onRefresh: () => void, fetching: boolean) {
   const [pull, setPull] = useState(0);
   const start = useRef<{ x: number; y: number } | null>(null);
   const triggered = useRef(false);

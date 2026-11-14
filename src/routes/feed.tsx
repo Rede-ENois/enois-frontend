@@ -89,7 +89,6 @@ import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions, refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
-import { useFeedPullToRefresh } from "@/lib/feed/pull-to-refresh";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -98,6 +97,7 @@ import {
 } from "@/lib/interface-context";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { usePullToRefresh } from "@/lib/pull-to-refresh";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -704,7 +704,7 @@ function Home() {
 
   // Puxar para renovar no topo, em toque: renova SÓ a lista do feed — o gesto é sobre o que está
   // na tela, não sobre o aplicativo. O indicador de renovação é o mesmo da busca automática.
-  const pullToRefresh = useFeedPullToRefresh(
+  const pullToRefresh = usePullToRefresh(
     useCallback(() => void feedRefetch(), [feedRefetch]),
     feedFetching && !isFetchingNextPage,
   );
