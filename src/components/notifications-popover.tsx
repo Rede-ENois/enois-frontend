@@ -3,6 +3,7 @@ import { useState } from "react";
 import { NotificationsPopover as NotificationsPopoverView } from "@rede-enois/design-system/domain";
 
 import { useInterfaceContext } from "@/lib/interface-context";
+import { signalFor, useNavigationCounts } from "@/lib/navigation-signals";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
 import { useNotificationsList } from "./notifications/use-notifications-list";
@@ -21,6 +22,13 @@ export function NotificationsPopover() {
   // cópia ao servidor.
   const { latest } = useNotificationsList(context, authenticated);
 
+  // O total vem do resumo do servidor (mesma fonte do sinal do menu), não das linhas carregadas:
+  // o painel só traz a primeira página, e o sino parava no teto dela enquanto o menu mostrava o
+  // total. Mesma conta do signalFor("/notificacoes"), para os dois nunca divergirem.
+  const counts = useNavigationCounts();
+  const signal = signalFor({ href: "/notificacoes" }, counts);
+  const unreadCount = signal?.kind === "count" ? signal.count : 0;
+
   const panel = useNotificationsPanel(latest, {
     requestsEnabled: open,
     // Fecha o popover: aberto, ele cobria a pagina e dava a impressao de que o clique "sumia com a
@@ -34,6 +42,7 @@ export function NotificationsPopover() {
       open={open}
       onOpenChange={setOpen}
       allHref="/notificacoes"
+      unreadCount={unreadCount}
     />
   );
 }
