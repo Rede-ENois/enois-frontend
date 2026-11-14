@@ -19,6 +19,9 @@ export function clearSanctionAccess() {
   localStorage.removeItem(KEY);
   changed();
 }
+export function isSanctionAccessEvent(event: StorageEvent): boolean {
+  return event.key === KEY;
+}
 function subscribe(notify: () => void) {
   window.addEventListener(EVENT, notify);
   window.addEventListener("storage", notify);

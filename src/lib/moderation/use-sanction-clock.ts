@@ -5,11 +5,12 @@ export function useSanctionClock(
   serverNow: string | undefined,
   deadlines: readonly string[],
   refresh: () => void,
+  observedAt?: number,
 ): number | null {
   const anchor = useMemo(() => {
     const instant = serverNow ? Date.parse(serverNow) : Number.NaN;
-    return Number.isFinite(instant) ? { instant, observed: performance.now() } : null;
-  }, [serverNow]);
+    return Number.isFinite(instant) ? { instant, observed: observedAt ?? performance.now() } : null;
+  }, [serverNow, observedAt]);
   const [tick, setTick] = useState(() => performance.now());
   const refreshed = useRef(new Set<string>());
   const deadlineKey = deadlines.join("|");

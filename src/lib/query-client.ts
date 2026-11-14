@@ -1,5 +1,7 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
 
+import { isSanctionAccessEvent } from "@/stores/sanction-access.store";
+
 import { SESSION_FLAG_KEY, isSessionKeyEvent } from "./session-key";
 
 let browserQueryClient: QueryClient | null = null;
@@ -40,7 +42,12 @@ export function registerBrowserQueryClient(queryClient: QueryClient) {
     if (event.storageArea !== localStorage) return;
     const sessionFlipped =
       event.key === SESSION_FLAG_KEY && (event.oldValue === null) !== (event.newValue === null);
-    if (event.key === null || isSessionKeyEvent(event) || sessionFlipped) {
+    if (
+      event.key === null ||
+      isSessionKeyEvent(event) ||
+      isSanctionAccessEvent(event) ||
+      sessionFlipped
+    ) {
       void queryClient.resetQueries();
     }
   });

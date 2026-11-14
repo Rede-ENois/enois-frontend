@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { SanctionsSnapshot } from "@/types/application/moderation/sanctions-snapshot";
 import { SanctionsView } from "@rede-enois/design-system/domain";
 
 import { sanctionsApi } from "@/lib/api";
@@ -14,20 +15,24 @@ export function SanctionsContainer({ mode }: { mode: "history" | "suspended" }) 
   const submitting = useRef(false);
   const query = useQuery({
     queryKey: ["my-sanctions"],
-    queryFn: () => sanctionsApi.mine(),
+    queryFn: async (): Promise<SanctionsSnapshot> => {
+      const response = await sanctionsApi.mine();
+      return { response, observedAt: performance.now() };
+    },
     enabled: typeof window !== "undefined",
   });
   const { refetch } = query;
   const refresh = useCallback(() => {
     void refetch({ cancelRefetch: false });
   }, [refetch]);
-  const sanctions = query.data?.sanctions ?? [];
+  const decision = query.data?.response;
+  const sanctions = decision?.sanctions ?? [];
   const deadlines = sanctions
     .filter((s) => s.status === "ACTIVE" && s.deadline.at !== null)
     .map((s) => s.deadline.at ?? "");
-  const now = useSanctionClock(query.data?.serverNow, deadlines, refresh);
+  const now = useSanctionClock(decision?.serverNow, deadlines, refresh, query.data?.observedAt);
   const eligible = sanctions.find((s) => s.canAppeal);
-  const pending = query.data?.appeals.some((a) => a.status === "PENDING");
+  const pending = decision?.appeals.some((a) => a.status === "PENDING");
   const appeal = useMutation({
     mutationFn: () => sanctionsApi.appeal(message.trim()),
     onSuccess: async () => {
@@ -51,9 +56,9 @@ export function SanctionsContainer({ mode }: { mode: "history" | "suspended" }) 
   const suspended = sanctions.some((s) => s.type === "SUSPENDED" && s.status === "ACTIVE");
   return (
     <SanctionsView
-      mode={mode === "suspended" && query.data && !suspended ? "history" : mode}
+      mode={mode === "suspended" && decision && !suspended ? "history" : mode}
       sanctions={sanctions}
-      appeals={query.data?.appeals ?? []}
+      appeals={decision?.appeals ?? []}
       now={now ?? 0}
       loading={query.isPending}
       error={query.isError}

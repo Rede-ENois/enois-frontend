@@ -83,6 +83,27 @@ afterEach(async () => {
 });
 
 describe("conta suspensa: integração da view com a decisão", () => {
+  it("mantém a observação original do snapshot e revalida o prazo vencido ao remontar", async () => {
+    const monotonic = vi.spyOn(performance, "now").mockReturnValue(0);
+    client.setDefaultOptions({ queries: { retry: false, staleTime: 30_000 } });
+    const initial = fixture();
+    initial.sanctions[0].deadline.at = "2026-01-01T12:00:10Z";
+    mocks.mine
+      .mockResolvedValueOnce(initial)
+      .mockResolvedValue({ ...initial, serverNow: "2026-01-01T12:00:20Z" });
+    try {
+      await render();
+      await waitText("Motivo sintético da suspensão");
+      expect(mocks.mine).toHaveBeenCalledTimes(1);
+      await act(async () => root.render(null));
+      monotonic.mockReturnValue(20_000);
+      await render();
+      await waitText("Prazo encerrado");
+      expect(mocks.mine).toHaveBeenCalledTimes(2);
+    } finally {
+      monotonic.mockRestore();
+    }
+  });
   it("consulta sem depender do indicador de sessão normal e mostra motivo, evidência e prazo", async () => {
     mocks.mine.mockResolvedValue(fixture());
     await render();

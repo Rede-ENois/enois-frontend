@@ -14,11 +14,13 @@ const serverNow = "2026-01-01T12:00:00Z";
 function Clock({
   timestamp = serverNow,
   deadlines = [],
+  observedAt,
 }: {
   timestamp?: string;
   deadlines?: string[];
+  observedAt?: number;
 }) {
-  const now = useSanctionClock(timestamp, deadlines, refresh);
+  const now = useSanctionClock(timestamp, deadlines, refresh, observedAt);
   return <output>{now}</output>;
 }
 
@@ -39,6 +41,14 @@ afterEach(async () => {
 });
 
 describe("relógio de penalidades sincronizado com o servidor", () => {
+  it("preserva o tempo decorrido ao remontar com a mesma resposta em cache", async () => {
+    await act(async () => root.render(<Clock observedAt={0} />));
+    expect(host.textContent).toBe("1767268800000");
+    await act(async () => root.render(null));
+    await act(async () => vi.advanceTimersByTime(20_000));
+    await act(async () => root.render(<Clock observedAt={0} />));
+    expect(host.textContent).toBe("1767268820000");
+  });
   it("avança pelo tempo decorrido sem depender da hora configurada no computador", async () => {
     await act(async () => root.render(<Clock />));
     expect(host.textContent).toBe("1767268800000");

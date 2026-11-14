@@ -24,6 +24,10 @@ O cliente de `GET /me/sanctions` valida a resposta em tempo de execução: refer
 
 Somente os campos previstos pelo contrato são repassados à apresentação. A integração desse contrato depende da entrega coordenada do backend.
 
+O snapshot da consulta conserva junto dos dados o instante monotônico da observação, apenas no cache local. Remontar a tela com dados ainda frescos não reinicia o prazo nem reassocia um `serverNow` antigo a uma nova observação. Esse metadado não integra o payload HTTP.
+
+A troca do indicador de acesso limitado em outra aba também invalida o cache dependente da sessão. Assim, uma troca entre duas contas limitadas não conserva motivo, evidência ou recurso da conta anterior.
+
 ## Conta suspensa e recurso
 
 A página `/conta-suspensa` usa a mesma consulta autorizada, sem depender do indicador de sessão normal. O backend confirma a identidade e todos os fatores antes de emitir o acesso `SANCTIONS_ONLY`, transportado pelos cookies HttpOnly existentes. Esse acesso não é gravado como uma sessão normal nem dispara sincronização de chaves, chat ou outras áreas privadas.
