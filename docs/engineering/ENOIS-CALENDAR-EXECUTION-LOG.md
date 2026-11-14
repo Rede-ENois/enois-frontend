@@ -3695,3 +3695,53 @@ unidades restantes da auditoria (menor prioridade): `IllegalArgumentException` c
 respondendo `409 CONFLICT_DUPLICATE` opaco; transação única no laço do `deliverDue`; `UNTIL`
 flutuante do `.ics` preso a fuso fixo; vazamento de `sourceType`/`sourceId` a participante que
 recusou. (3) Reconferir PRs e o `main` do DS.
+
+## Execução 46 — 2026-11-14 (~15:00–17:00) — os achados restantes da auditoria viram contrato próprio
+
+**BLOCO.** Fechamento da auditoria da fase 11 sobre a base da execução 45 mergeada (`8953fc3f`), com
+as quatro unidades que ficaram de fora do PR #714.
+
+**UNIDADES.**
+1. **U1 — `CalendarSourceService.upsert`: fuso desconhecido é 400, não 500.** O domínio lança
+   `IllegalArgumentException` de `zoneOf` e escapava cru como erro de servidor. Agora o serviço
+   traduz para `ApiException(400, "INVALID_CALENDAR_ENTRY", ...)` (o mesmo contrato da criação de
+   entrada).
+2. **U2 — reagendamento de ocorrência de série sobre irmã: `409 CALENDAR_SERIES_SLOT_TAKEN` antes do
+   banco.** O `update` consulta `entries.findBySeriesAndStart(seriesId, start)` e recusa com código
+   próprio antes do `save`; antes o índice único `uq_calendar_series_start` estourava e a pessoa lia
+   o `CONFLICT_DUPLICATE` genérico ("Este registro ja existe"), sem saber de qual horário.
+3. **U3 — worker de lembretes: transação por lembrete, marca de falha fora do rollback.** O
+   `deliverDue` tinha `@Transactional` no laço inteiro: uma exceção do meio do lote descartava o
+   envio dos que já saíram e não deixava marca de falha. Agora cada lembrete roda na própria
+   `TransactionTemplate` (construtor recebe `PlatformTransactionManager`) e a falha é gravada com
+   `markFailed` **fora** da transação que voltou — a marca sobrevive ao rollback.
+4. **U4 — convidado (recusado inclusive) não vê a origem.** `CalendarEntryView.from(entry, withSource)`:
+   `sourceType`/`sourceId` só vão para o dono (`AgendaItemView`/`AgendaDetailView` passam
+   `item.owner()`); a origem é bookkeeping entre módulos e o id é interno de outro módulo.
+
+**ARQUIVOS.** `calendar/application/CalendarSourceService.java`; `calendar/application/CalendarCommandService.java`;
+`calendar/application/CalendarReminderService.java`; `calendar/adapters/in/web/CalendarEntryController.java`;
+testes: `CalendarSourceServiceTests` (+1), `CalendarReminderQueryTests` (novo, +1), `CalendarSeriesAndSourceApiTests` (novo, +2).
+
+**PROVA Q0 (falha no código antigo, provada em worktree limpo de `8953fc3f` com só os testes novos):**
+U1 — teste espera `ApiException` 400/INVALID_CALENDAR_ENTRY e o antigo deixa subir
+`IllegalArgumentException` (500). U2 — `expected:<CALENDAR_SERIES_SLOT_TAKEN> but was:<CONFLICT_DUPLICATE>`.
+U4 — `$.entry.sourceType expected:<null> but: was "ICS"`. U3 — o teste nem compila no antigo (o
+construtor com `PlatformTransactionManager` é parte da mudança); no novo, um lembrete quebrado no
+meio do lote não impede o outro (`sent == 1`) e a marca de falha (`attempts == 1`, `lastError`
+preenchido) sobrevive.
+
+**TESTES EXECUTADOS.** Suíte pertinente de 7 classes: **46 testes, 0 falhas, 0 erros**
+(CalendarSourceServiceTests 8, CalendarReminderQueryTests 3, CalendarSeriesAndSourceApiTests 2,
+CalendarReminderServiceTests 17, CalendarSeriesPersistenceTests 3, CalendarRecurrenceServiceTests 7,
+CalendarDetailAndPendingInvitationsApiTests 6). Suíte inteira disparada na árvore final; resultado a
+publicar na PR quando fechar.
+
+**PRs.** enois-backend#717 (as 4 unidades + provas). Docs: esta PR (depende de #717).
+
+**BLOQUEIOS.** Nenhum novo. Fase 7 (semântica Épapo/Tamo Junto) e fase 10 (credencial OAuth de
+provedor) seguem externas. DS `main` continua defasado do `qa` no 0.34.0.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana das PRs #717 (backend) e da docs. (2) `UNTIL`
+flutuante do `.ics` preso a fuso fixo — único achado da auditoria ainda aberto, menor prioridade.
+(3) Reconferir PRs, o `main` do DS e fases externas.
