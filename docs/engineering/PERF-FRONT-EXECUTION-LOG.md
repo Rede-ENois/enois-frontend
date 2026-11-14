@@ -536,3 +536,33 @@ de clique duplo) e 4 (compressão de vídeo no cliente) permanecem a avaliar.
 **PROXIMO PASSO:** pendência 3, fatia 2 — varredura das escritas restantes.
 
 **ESTADO:** em andamento.
+
+## RODADA 12 — 2026-11-14 — pendência 3 concluída (varredura das escritas restantes)
+
+DIAGNOSTICO: varredura de todos os `onClick={() => X.mutate(...)}` fora de teste
+(`src/routes/*.tsx`, `src/components/*.tsx`): 20 candidatos apontados pelo grep. Para cada um,
+conferida a tag de abertura do Button (o grep linha-a-linha não vê o `disabled`, que fica em linhas
+acima). Resultado: TODOS os 20 já têm guarda de pendência na própria tag:
+
+- carteira.tsx: transfer (386), contestar (451) — `isPending ||` validação
+- freelances.tsx: save (555) — `!valid || save.isPending`
+- games.tsx: resubmit (420), boost (431), submit (583) — `isPending ||` validação
+- games.painel.tsx: save (238)
+- grupos.tsx: create (618) — `!name.trim() || create.isPending || uploading`
+- meus-servicos.tsx: remove (184), save (436)
+- mentoria.tsx: removeSlot (973)
+- moderacao.tsx: decide (111,121), decidir (207,217,624,634), banir (420), desbloquear (491)
+- perfil.$username.tsx: recommend (1009)
+
+Somando às fatias anteriores (composer do feed com guarda de reentrada por ref na RODADA 11,
+createConversation com guarda por ref, aplicar em vaga com `pending` no DS, salvar vaga com
+`disabled={toggleSave.isPending}`, cancelar agendamento e botões de publicar/agendar com
+`isPending`), a pendência 3 (guardas de duplo clique) está COMPLETA: cada escrita mapeada tem
+ou guarda por ref na janela de reentrada ou desabilita via `isPending` da própria mutation.
+
+EVIDENCIA: leitura direta das tags de Button nos 20 pontos, arquivo:linha listados acima. Nenhuma
+mudança de código nesta rodada — diagnóstico puro; nada a testar porque nada mudou.
+
+GATES: não aplicáveis (nenhum arquivo tocado).
+
+PROXIMO PASSO: pendência 4 — compressão de vídeo no cliente antes do upload.
