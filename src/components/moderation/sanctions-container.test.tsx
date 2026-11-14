@@ -35,11 +35,11 @@ function fixture(): MySanctionsResponse {
     appeals: [],
   };
 }
-async function render() {
+async function render(mode: "history" | "suspended" = "suspended") {
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
-        <SanctionsContainer mode="suspended" />
+        <SanctionsContainer mode={mode} />
       </QueryClientProvider>,
     ),
   );
@@ -83,6 +83,27 @@ afterEach(async () => {
 });
 
 describe("conta suspensa: integração da view com a decisão", () => {
+  it.each(["history", "suspended"] as const)(
+    "consulta novamente a cada entrada com cache recente e prazo aberto (%s)",
+    async (mode) => {
+      client.setDefaultOptions({ queries: { retry: false, staleTime: 30_000 } });
+      const initial = fixture();
+      const updated = fixture();
+      updated.sanctions[0].reason = "Decisão sintética atualizada durante a navegação";
+      mocks.mine.mockResolvedValueOnce(initial).mockResolvedValue(updated);
+      await render(mode);
+      await waitText("Motivo sintético da suspensão");
+      expect(mocks.mine).toHaveBeenCalledOnce();
+      await act(async () => root.render(null));
+      await render(mode);
+      await vi.waitFor(async () => {
+        await settled();
+        expect(mocks.mine).toHaveBeenCalledTimes(2);
+      });
+      await waitText("Decisão sintética atualizada durante a navegação");
+      expect(host.textContent).not.toContain("Motivo sintético da suspensão");
+    },
+  );
   it("mantém a observação original do snapshot e revalida o prazo vencido ao remontar", async () => {
     const monotonic = vi.spyOn(performance, "now").mockReturnValue(0);
     client.setDefaultOptions({ queries: { retry: false, staleTime: 30_000 } });

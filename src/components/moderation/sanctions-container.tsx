@@ -20,6 +20,7 @@ export function SanctionsContainer({ mode }: { mode: "history" | "suspended" }) 
       return { response, observedAt: performance.now() };
     },
     enabled: typeof window !== "undefined",
+    refetchOnMount: "always",
   });
   const { refetch } = query;
   const refresh = useCallback(() => {

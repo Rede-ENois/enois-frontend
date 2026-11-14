@@ -2,6 +2,13 @@
 
 A rota `/penalidades` consulta as sanções e os recursos da pessoa autenticada.
 
+## Atualização ao entrar
+
+A consulta é executada sempre que o contêiner é montado, tanto em `/penalidades` quanto em
+`/conta-suspensa`, mesmo com dados recentes em cache. Não há botão de atualização manual no
+estado de sucesso. Permanecem a revalidação ao atingir um prazo, ao retomar a aba e após o envio
+de recurso; não há polling adicional. **Tentar novamente** aparece somente após falha na consulta.
+
 ## Falha na consulta
 
 - A ausência de penalidades só é apresentada após uma resposta bem-sucedida.
