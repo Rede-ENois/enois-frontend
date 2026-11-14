@@ -187,6 +187,10 @@ Card de post no feed, com todas as ações sociais.
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
 
+## `PostComments` (`src/components/post/post-comments.tsx`)
+
+O frontend fornece o campo de texto, o rascunho, os anexos e o callback de envio ao `PostComments` do design system. O DS é responsável pelo layout responsivo, pela bandeja de ferramentas e pelo único botão de envio. O slot `composerField` contém apenas o campo, sem botão adicional ou CSS do frontend que reorganize a estrutura interna do DS. A validação compartilhada `canSend` permite texto ou mídia e impede envio enquanto há uma requisição em andamento. Upload, autenticação e chamadas à API continuam no frontend. A apresentação mobile depende da versão do DS que contém esse layout.
+
 ## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
 
 Post do feed de um grupo, com reações, comentários e ações de moderação.

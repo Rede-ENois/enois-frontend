@@ -176,9 +176,11 @@ export function PostComments({
     }
   };
 
+  const canSend = Boolean(draft.trim()) || media.length > 0;
+
   const submit = async (website: string): Promise<boolean> => {
     const content = draft.trim();
-    if (!content || sending) return false;
+    if (!canSend || sending) return false;
     // Comentar e uma acao: sem sessao (link compartilhado aberto por outra pessoa) vai para o login.
     if (!requireAuth()) return false;
 
@@ -325,7 +327,7 @@ export function PostComments({
           }
         />
       )}
-      canSend={Boolean(draft.trim()) || media.length > 0}
+      canSend={canSend}
       sending={sending}
       onSubmit={submit}
       onOpenGifPicker={() => setGifOpen(true)}

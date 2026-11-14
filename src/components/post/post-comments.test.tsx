@@ -12,11 +12,18 @@ import { ApiError } from "@/lib/api-client";
 
 import { PostComments } from "./post-comments";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), field: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  list: vi.fn(),
+  create: vi.fn(),
+  field: vi.fn(),
+  uploadAll: vi.fn(),
+}));
 vi.mock("@/lib/api", () => ({ commentsApi: mocks }));
 vi.mock("@/lib/use-auth", () => ({ useAuth: () => ({ requireAuth: () => true }) }));
 vi.mock("@/lib/use-lite-mode", () => ({ useLiteMode: () => false }));
-vi.mock("@/lib/use-media-upload", () => ({ useMediaUpload: () => ({}) }));
+vi.mock("@/lib/use-media-upload", () => ({
+  useMediaUpload: () => ({ uploadAll: mocks.uploadAll }),
+}));
 vi.mock("@/lib/feed/use-accepted-answer", () => ({
   useAcceptedAnswer: (_post: string, id: string | null) => ({ acceptedId: id }),
 }));
@@ -79,6 +86,80 @@ function order() {
     item.getAttribute("data-comment"),
   );
 }
+
+describe("botão Comentar", () => {
+  it("envia anexo sem texto pelo mesmo fluxo de upload", async () => {
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+    mocks.uploadAll.mockResolvedValue([{ mediaId: "uploaded-image" }]);
+    mocks.create.mockResolvedValue(comment("new", 1));
+    const createUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:preview");
+    const revokeUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    try {
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" />
+          </QueryClientProvider>,
+        ),
+      );
+      await settle();
+      const file = new File(["image"], "image.png", { type: "image/png" });
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+      Object.defineProperty(input, "files", { configurable: true, value: [file] });
+      await act(async () => input.dispatchEvent(new Event("change", { bubbles: true })));
+      const button = container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      expect(button.disabled).toBe(false);
+      await act(async () => button.click());
+      expect(mocks.uploadAll).toHaveBeenCalledWith([{ file }]);
+      expect(mocks.create.mock.calls[0].slice(0, 5)).toEqual([
+        "post",
+        "",
+        null,
+        [],
+        ["uploaded-image"],
+      ]);
+    } finally {
+      createUrl.mockRestore();
+      revokeUrl.mockRestore();
+    }
+  });
+
+  it("habilita com texto, impede envio duplicado e usa o formulário existente", async () => {
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+    let finish!: (value: CommentView) => void;
+    mocks.create.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    const button = () => container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(button().textContent).toBe("Comentar");
+    expect(button().disabled).toBe(true);
+    await act(async () => usePostCardStore.getState().setDraft("post", "   "));
+    expect(button().disabled).toBe(true);
+    await act(async () => usePostCardStore.getState().setDraft("post", "Comentário"));
+    expect(button().disabled).toBe(false);
+    await act(async () => button().click());
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(mocks.create.mock.calls[0].slice(0, 3)).toEqual(["post", "Comentário", null]);
+    expect(button().disabled).toBe(true);
+    expect(button().textContent).toBe("Enviando...");
+    await act(async () => button().click());
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    await act(async () => finish(comment("new", 1)));
+    expect(button().textContent).toBe("Comentar");
+    expect(button().disabled).toBe(true);
+  });
+});
 
 describe("ordem após enviar comentários", () => {
   it.each(["root", "reply", null])(
