@@ -37,6 +37,8 @@ const apiDetail = {
     createdAt: "2026-11-08T00:00:00Z",
     updatedAt: "2026-11-08T00:00:00Z",
     cancelledAt: null,
+    seriesId: null,
+    recurrence: null,
   },
   owner: false,
   participation: "ACCEPTED" as const,
@@ -149,6 +151,7 @@ describe("rota /agenda/$entryId", () => {
       endsAt: "2026-11-10T14:00:00Z",
       timeZoneId: "America/Sao_Paulo",
       allDay: true,
+      recurrence: "NONE",
     });
 
     // O formulário mostra os três; omiti-los fazia o servidor descartar a mudança em silêncio.

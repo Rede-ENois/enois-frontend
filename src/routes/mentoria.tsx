@@ -8,7 +8,7 @@ import type { CreateMentorInput } from "@/types/application/mentor/create-mentor
 import type { MentorRoomMode } from "@/types/application/mentor/mentor-room-mode";
 import type { MentorCardProps } from "@/types/routes/mentoring/mentor-card-props";
 import type { RegisterMentorFormProps } from "@/types/routes/mentoring/register-mentor-form-props";
-import { UserAvatar } from "@rede-enois/design-system/domain";
+import { CalendarSlotPicker, UserAvatar } from "@rede-enois/design-system/domain";
 import { ListRowSkeletons } from "@rede-enois/design-system/patterns";
 import {
   Badge,
@@ -39,6 +39,7 @@ import { ApiError, mentorsApi, walletApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatarData } from "@/lib/date/format";
 import { FAIS_SCALE, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
+import { bookableSlots } from "@/lib/mentoring/bookable-slots";
 import { profileQueries } from "@/lib/query-options/profiles";
 import { requireAuth } from "@/lib/require-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -703,7 +704,9 @@ function BookSessionDialog({
   const balance = wallet?.balance;
   const insufficient = chargesSparks && balance != null && balance < sparksPrice!;
 
-  const slots = (data?.items ?? []).filter((slot) => slot.available);
+  // O seletor do design system exige o instante de início: horário sem data não é oferecido, porque
+  // não haveria o que mostrar nem o que reservar.
+  const bookable = bookableSlots(data?.items ?? []);
 
   const book = useMutation({
     mutationFn: () => mentorsApi.bookSession(mentorId, slotId!, message.trim() || undefined),
@@ -772,7 +775,7 @@ function BookSessionDialog({
               </div>
             )}
 
-            {!isLoading && !isError && slots.length === 0 && (
+            {!isLoading && !isError && bookable.length === 0 && (
               <p className="rounded-xl border border-border-soft px-4 py-6 text-center text-sm text-muted-foreground">
                 {texts.mentoring.noSlots}
               </p>
@@ -807,30 +810,17 @@ function BookSessionDialog({
               <RoomNote mode={roomMode ?? "EPAPO_SESSION"} />
             </div>
 
-            {slots.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{texts.mentoring.pickSlot}</Label>
-
-                <div className="space-y-1.5">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot.id}
-                      type="button"
-                      onClick={() => setSlotId(slot.id)}
-                      className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition ${
-                        slotId === slot.id
-                          ? "border-primary bg-primary-soft text-primary"
-                          : "border-border-soft hover:bg-muted"
-                      }`}
-                    >
-                      {formatSlot(slot.startsAt)}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {bookable.length > 0 && (
+              <CalendarSlotPicker
+                slots={bookable}
+                value={slotId}
+                onChange={setSlotId}
+                disabled={book.isPending}
+                error={error}
+              />
             )}
 
-            {slots.length > 0 && (
+            {bookable.length > 0 && (
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground" htmlFor="mentor-session-message">
                   {texts.mentoring.message}
@@ -847,9 +837,9 @@ function BookSessionDialog({
               </div>
             )}
 
-            {error && <ErrorBanner error={error} showDetails={false} />}
+            {error && bookable.length === 0 && <ErrorBanner error={error} showDetails={false} />}
 
-            {slots.length > 0 && (
+            {bookable.length > 0 && (
               <Button
                 className="w-full rounded-full"
                 disabled={!slotId || book.isPending || insufficient}

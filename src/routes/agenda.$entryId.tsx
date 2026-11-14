@@ -77,6 +77,28 @@ function EntryDetailPage() {
     onError: () => setSaveError(texts.agenda.errorSave),
   });
 
+  /**
+   * A cadência não é campo do `PATCH`: o compromisso é editado primeiro e a série vem depois, numa
+   * segunda chamada. "Não repetir" numa série existente encerra a série (as futuras são canceladas
+   * e o passado fica); as outras cadências iniciam ou trocam a dela.
+   */
+  const changeSeries = useMutation({
+    mutationFn: (recurrence: CalendarEntryFormValues["recurrence"]) =>
+      recurrence === "NONE"
+        ? calendarApi.stopSeries(entryId)
+        : calendarApi.startSeries(entryId, recurrence),
+    onSuccess: (_entry, recurrence) => {
+      setSaveError(null);
+      setEditing(false);
+      toast(
+        recurrence === "NONE" ? texts.agenda.seriesStopped : texts.agenda.seriesStarted,
+        "success",
+      );
+      refresh();
+    },
+    onError: () => setSaveError(texts.agenda.seriesError),
+  });
+
   const cancel = useMutation({
     mutationFn: () => calendarApi.cancel(entryId),
     onSuccess: refresh,
@@ -214,11 +236,17 @@ function EntryDetailPage() {
         }}
         entry={view.formEntry}
         timeZoneId={view.entry.timeZoneId}
-        savePending={update.isPending}
+        savePending={update.isPending || changeSeries.isPending}
         saveError={saveError}
         onSave={(values) => {
           setSaveError(null);
-          update.mutate(updateInputOf(values));
+          const current = detail.data.entry.recurrence ?? "NONE";
+          update.mutate(updateInputOf(values), {
+            onSuccess: () => {
+              if (values.recurrence === current) return;
+              changeSeries.mutate(values.recurrence);
+            },
+          });
         }}
       />
     </AppContainer>

@@ -1204,3 +1204,36 @@ regra, e o tipo exposto na projeção é público por contrato.
 funciona sem conhecer recorrência, e um `.ics` exportado continua sendo um `VEVENT` por ocorrência
 com `UID` próprio. O custo é armazenamento proporcional ao horizonte, contido pelos 90 dias e pelo
 teto por ciclo.
+
+---
+
+## D44 — Ligar a cadência é uma segunda chamada, e a falha dela não apaga o compromisso (execução 43)
+
+1. **A criação não aceita recorrência, e isso é decisão, não esquecimento.** `POST /calendar/entries`
+   grava o compromisso; `POST /calendar/entries/{id}/series` funda a série sobre uma entrada que já
+   existe. Juntar as duas exigiria a rota de criação conhecer o motor de recorrência e trataria dois
+   erros de naturezas diferentes no mesmo status. O preço é uma janela em que o compromisso existe
+   sem a repetição — e é essa janela que a tela tem de mostrar honestamente.
+2. **Falha da série não desfaz a criação.** Se a segunda chamada falha, o compromisso real é o que já
+   está gravado: a tela invalida a agenda, mostra o erro de série e deixa o compromisso visível, sem
+   repetição. Toast de sucesso, rollback otimista ou criação escondida seriam todos uma fachada sobre
+   um estado diferente do que o banco tem. O usuário pode editar o compromisso e tentar a cadência de
+   novo — a operação é idempotente por `(series_id, starts_at)` e por `Idempotency-Key` (D43).
+3. **Edição compara com o que já existe.** Encerrar (`DELETE`) só quando a escolha é NENHUMA, criar ou
+   ajustar (`POST`) só quando a escolha difere da atual. Chamar sem diferença deixaria a tela sujeita
+   a recriar uma série que o usuário não tocou, e o `DELETE` de série é destrutivo para o futuro.
+4. **Entrada com origem não oferece a escolha.** Evento, entrevista e sessão de mentoria escrevem a
+   entrada pela porta de origem; fundar série ali criaria ocorrências que a origem não conhece e que
+   a próxima sincronização apagaria. O backend responde 409 e o DS esconde o campo — as duas guardas
+   existem de propósito, uma porque a tela pode estar velha, a outra porque o usuário não deve
+   escolher algo fadado a ser recusado.
+5. **Versão de pacote não identifica árvore.** O DS teve dois commits publicados como 0.34.0 (`main`
+   #222 e `qa` #229) com conteúdo diferente: só o `qa` tem o campo de cadência e as abas de perfil, e
+   a tag `v0.34.0` publicou o `qa`. Consumidor não deve inferir o conteúdo pelo número — o `tsc` no
+   app foi o que revelou a diferença. Enquanto as duas linhas não coincidirem, o número deixa de ser
+   uma referência confiável de contrato.
+
+**Consequência.** A recorrência está de ponta a ponta: motor (D43), campo no DS e ligação na tela. O
+usuário enxerga sempre o estado real — compromisso criado aparece mesmo quando a repetição falhou — e
+a edição só toca a série quando há mudança de cadência. O custo é um caminho de erro a mais para
+testar, coberto pelos três casos de `agenda.test.tsx`.

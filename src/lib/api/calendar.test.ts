@@ -293,4 +293,24 @@ describe("calendarApi", () => {
       "http://api.test/calendar/subscribe/token-abc.ics",
     );
   });
+
+  it("inicia a série numa segunda chamada, sobre o id que a criação devolveu", async () => {
+    // A criação não aceita cadência: o compromisso nasce avulso e vira fundador da série aqui.
+    vi.mocked(api.post).mockResolvedValue({ ...entry, seriesId: "ser_1", recurrence: "WEEKLY" });
+
+    const started = await calendarApi.startSeries("cal_1", "WEEKLY");
+
+    expect(api.post).toHaveBeenCalledWith("/calendar/entries/cal_1/series", {
+      recurrence: "WEEKLY",
+    });
+    expect(started.seriesId).toBe("ser_1");
+  });
+
+  it("encerra a série pela rota de gestão do próprio compromisso", async () => {
+    vi.mocked(api.delete).mockResolvedValue({ ...entry, seriesId: null, recurrence: null });
+
+    await calendarApi.stopSeries("cal_1");
+
+    expect(api.delete).toHaveBeenCalledWith("/calendar/entries/cal_1/series");
+  });
 });

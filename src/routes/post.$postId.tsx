@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
@@ -111,6 +111,7 @@ function PostDetail() {
   const { postId } = Route.useParams();
   const { feedTab, reacoes } = Route.useSearch();
   const navigate = useNavigate();
+  const router = useRouter();
   const setShowReactions = usePostCardStore((state) => state.setShowReactions);
 
   const {
@@ -143,6 +144,12 @@ function PostDetail() {
         <Link
           to="/feed"
           search={feedTab ? { aba: feedTab } : {}}
+          onClick={(e: React.MouseEvent) => {
+            if (window.history.length > 1) {
+              e.preventDefault();
+              router.history.back();
+            }
+          }}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
