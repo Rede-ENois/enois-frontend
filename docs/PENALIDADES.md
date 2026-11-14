@@ -52,7 +52,7 @@ A apresentação é `SanctionsView`, do design system; o frontend mantém soment
 
 ## Dependência coordenada
 
-A integração usa as novas exportações da entrega DS #231. A prova local utiliza um pacote gerado da branch dessa entrega, que mantém a versão-base `0.34.0`; não se trata do conteúdo já publicado dessa versão. O manifesto e o lockfile não recebem caminho local nem versão futura inventada. A publicação de uma versão ou pré-versão pelo mantenedor e a atualização coordenada do consumidor são requisitos antes de uma instalação limpa ou merge da integração.
+A integração usa as novas exportações da entrega DS #231. A prova local utiliza um pacote gerado da branch dessa entrega, conservando a versão-base do pacote; o número da versão, sozinho, não identifica esse conteúdo ainda não publicado. O manifesto e o lockfile não recebem caminho local nem versão futura inventada. A publicação de uma versão ou pré-versão pelo mantenedor e a atualização coordenada do consumidor são requisitos antes de uma instalação limpa ou merge da integração.
 
 ## Verificação
 
