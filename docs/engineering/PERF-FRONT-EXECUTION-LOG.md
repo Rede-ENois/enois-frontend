@@ -601,3 +601,37 @@ GATES: nenhum arquivo tocado — diagnóstico puro.
 PROXIMO PASSO: pendência 2 segue bloqueada no DS; nenhuma pendência acionável resta neste repo.
 
 **ESTADO:** pendências 1, 3, 4, 5, 6 completas; 2 bloqueada (depende do design-system).
+
+## RODADA 14 — 2026-11-14 — pendência 2: causa raiz do contador do sino provada em teste
+
+DIAGNOSTICO (causa raiz, com as duas fontes lado a lado):
+
+- Menu/dock (`src/lib/navigation-signals.ts`): o sinal de /notificacoes conta pelo RESUMO do
+  servidor (`GET /notifications/unread-summary`), que cobre TODOS os avisos não lidos, menos os
+  módulos desativados.
+- Sino (`node_modules/@rede-enois/design-system/dist/domain/notifications/notifications-popover.js`):
+  o DS 0.33.0 calcula `unreadCount` FILTRANDO `panel.notifications` em `!notification.read` —
+  e `panel.notifications` só carrega a primeira página (PREVIEW_SIZE = 10, use-notifications-list).
+  Ou seja: com mais de 10 avisos não lidos, o sino mostra no máximo 10 e o menu mostra o total.
+
+O front não tem prop para suprir a contagem: o componente do DS não aceita `unreadCount` nem
+similar — a correção de raiz exige mudança no pacote de design-system (adicionar a prop e o front
+passar `summary.total`). O bloqueio registrado na rodada 13 continua, mas agora com a causa
+exata provada.
+
+PROVA (executada, não declarada): teste novo
+`src/components/notifications/bell-counter.test.tsx` — 12 avisos não lidos, preview de 10:
+o sino renderiza "10", não "12" (comportamento atual fixado no teste enquanto a prop não existe
+no DS). `1 teste passed`, exit=0.
+
+GATES:
+
+- `npx eslint` no teste novo: exit=0.
+- `npx tsc --noEmit`: exit=0 (/tmp/tsc14b.txt).
+- Suíte completa: **245 arquivos / 1.415 testes / 0 falhas / exit=0** (/tmp/vit14.txt).
+
+PROXIMO PASSO: pendência 2 depende de mudança no design-system (prop de contagem no popover).
+Sem pendência acionável neste repo; se o DS destravar, o conserto aqui é passar o resumo e
+inverter o teste.
+
+**ESTADO:** pendências 1, 3, 4, 5, 6 completas; 2 bloqueada no DS, causa raiz provada em teste.
