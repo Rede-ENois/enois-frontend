@@ -63,9 +63,9 @@ vi.mock("@/lib/api/e2e", () => ({
   },
 }));
 
-// RSA-2048 + PBKDF2 600k por chave e custo real (~2s isolado); com a suite inteira em paralelo
-// a disputa por CPU estoura o teto padrao de 5s e o teste cai por tempo, nao por defeito.
-const CRYPTO_TIMEOUT_MS = 30000;
+// Estes testes fazem criptografia de verdade (RSA-2048 + PBKDF2 com 600 mil iterações por
+// chamada), que custa segundos e varia com a máquina: o teto de 5s padrao vira vermelho falso.
+const TEMPO_CRIPTO = 30_000;
 
 describe("key-manager", () => {
   beforeEach(() => {
@@ -92,7 +92,7 @@ describe("key-manager", () => {
       expect(await getLocalPrivateKey()).toBeTruthy();
       expect(await getLocalPublicKey()).toBeTruthy();
     },
-    CRYPTO_TIMEOUT_MS,
+    TEMPO_CRIPTO,
   );
 
   it(
@@ -118,7 +118,7 @@ describe("key-manager", () => {
       expect(await getLocalPrivateKey()).toBe(privBase64);
       expect(await getLocalPublicKey()).toBe(pubBase64);
     },
-    CRYPTO_TIMEOUT_MS,
+    TEMPO_CRIPTO,
   );
 
   it(
@@ -139,7 +139,7 @@ describe("key-manager", () => {
 
       await expect(restoreFromBackup("senha-errada")).rejects.toThrow();
     },
-    CRYPTO_TIMEOUT_MS,
+    TEMPO_CRIPTO,
   );
 
   it(
@@ -153,7 +153,7 @@ describe("key-manager", () => {
       await clearLocalKeys();
       expect(await hasLocalKeys()).toBe(false);
     },
-    CRYPTO_TIMEOUT_MS,
+    TEMPO_CRIPTO,
   );
 
   it(
@@ -181,7 +181,7 @@ describe("key-manager", () => {
       // After sync, local public key should match server
       expect(await getLocalPublicKey()).toBe(pubBase64);
     },
-    CRYPTO_TIMEOUT_MS,
+    TEMPO_CRIPTO,
   );
 
   it(
@@ -210,6 +210,6 @@ describe("key-manager", () => {
       // (no decrypt needed since keys match)
       expect(myKeypair).toHaveBeenCalledOnce();
     },
-    CRYPTO_TIMEOUT_MS,
+    TEMPO_CRIPTO,
   );
 });
