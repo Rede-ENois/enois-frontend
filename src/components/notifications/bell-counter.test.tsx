@@ -19,6 +19,12 @@ vi.mock("./use-notifications-list", () => ({ useNotificationsList }));
 const { useNotificationsPanel } = vi.hoisted(() => ({ useNotificationsPanel: vi.fn() }));
 vi.mock("./use-notifications-panel", () => ({ useNotificationsPanel }));
 
+const { useNavigationCounts, signalFor } = vi.hoisted(() => ({
+  useNavigationCounts: vi.fn(),
+  signalFor: vi.fn(),
+}));
+vi.mock("@/lib/navigation-signals", () => ({ useNavigationCounts, signalFor }));
+
 function notification(id: string, read: boolean) {
   return {
     id,
@@ -31,11 +37,10 @@ function notification(id: string, read: boolean) {
 }
 
 /**
- * Pendência 2 (contador do sino vs resumo do servidor). O DS 0.33.0 conta o sininho filtrando
- * `panel.notifications` (que só carrega a primeira página, 10 itens). Com mais avisos não lidos do
- * que o preview, o sino mostra o teto da página e o menu mostra o total do resumo — os dois
- * divergem por construção. Este teste fixa o comportamento atual enquanto o DS não recebe a
- * contagem por prop.
+ * Pendência 2 (contador do sino vs resumo do servidor). O painel só carrega a primeira página
+ * (10 itens), então o sino não pode contar as linhas em mãos: ele usa o total do resumo do
+ * servidor via prop do DS (>= 0.35.0), pela mesma conta do sinal do menu. Com 12 não lidos e
+ * preview de 10, o sino mostra 12.
  */
 const twelveUnread = Array.from({ length: 12 }, (_, i) => notification(`n${i}`, false));
 const preview = twelveUnread.slice(0, 10);
@@ -66,6 +71,12 @@ describe("contador do sino", () => {
   beforeEach(() => {
     useNotificationsList.mockReset().mockReturnValue({ latest: preview });
     useNotificationsPanel.mockReset().mockReturnValue(panelValue());
+    // O total do resumo do servidor: 12 não lidos, menos módulos desativados já descontados na
+    // fonte (useNavigationCounts); o sinal do menu é a mesma conta.
+    useNavigationCounts
+      .mockReset()
+      .mockReturnValue({ summary: { total: 12 }, disabledModules: [] });
+    signalFor.mockReset().mockReturnValue({ kind: "count", count: 12 });
     host = document.createElement("div");
     document.body.appendChild(host);
     client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -78,7 +89,7 @@ describe("contador do sino", () => {
     host.remove();
   });
 
-  it("conta pelo preview carregado (primeira pagina), nao pelo total do servidor", () => {
+  it("mostra o total do servidor (12), nao o teto do preview carregado (10)", () => {
     act(() => {
       root.render(
         <QueryClientProvider client={client}>
@@ -87,7 +98,23 @@ describe("contador do sino", () => {
       );
     });
     const pill = host.querySelector("button[aria-label*='aviso' i], button");
-    expect(pill?.textContent).toContain("10");
+    expect(pill?.textContent).toContain("12");
+    expect(pill?.textContent).not.toContain("10");
+  });
+
+  it("quando o resumo zera, o sino fica sem pílula mesmo com linhas nao lidas na pagina", () => {
+    signalFor.mockReturnValue(null);
+    act(() => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <NotificationsPopover />
+        </QueryClientProvider>,
+      );
+    });
+    const pill = Array.from(host.querySelectorAll("button")).find((button) =>
+      /aviso/i.test(button.getAttribute("aria-label") ?? ""),
+    );
     expect(pill?.textContent).not.toContain("12");
+    expect(pill?.textContent).not.toContain("10");
   });
 });
