@@ -10,6 +10,16 @@ import { hasLocalKeys } from "./key-manager";
 const MIN_DECRYPT_MS = 800;
 
 /**
+ * Teto de espera pela decifragem. Se uma mensagem nao resolve dentro dele, ela aparece como
+ * placeholder e o loading da thread acaba: sem teto, uma decifragem presa (IndexedDB lento,
+ * promessa que rejeita e foi engolida) deixava a conversa no "decifrando..." para sempre.
+ */
+export const DECRYPT_TIMEOUT_MS = 5_000;
+
+/** Texto do placeholder quando a decifragem estoura o teto (nao acusa cifra quebrada). */
+export const TIMEOUT_PLACEHOLDER = "[Mensagem protegida]";
+
+/**
  * Texto em claro por id de mensagem. A thread recebe um array novo a cada pagina que chega (uma
  * mensagem nova, a pagina anterior, uma reacao); sem cache, cada chegada refazia o RSA-OAEP de
  * TODO o historico por causa de uma linha que entrou.
@@ -75,16 +85,28 @@ export function useDecryptedMessages(
       }
 
       // Só o que ainda não foi decifrado passa pelo RSA: o histórico já lido vem do cache.
-      const results = await Promise.all(
-        messages.map(async (msg) => {
-          if (!msg.e2e) return msg;
-          const cached = plaintextCache.get(msg.id);
-          if (cached && cached.cipher === msg.text) return { ...msg, text: cached.text };
-          const plaintext = await decryptReceived(msg, currentUserId);
+      // Cada decifragem disputa com um teto de espera: a que não resolve dentro dele volta como
+      // placeholder e não segura o resto nem o fim do loading.
+      const withTimeout = async (msg: Message): Promise<Message> => {
+        if (!msg.e2e) return msg;
+        const cached = plaintextCache.get(msg.id);
+        if (cached && cached.cipher === msg.text) return { ...msg, text: cached.text };
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const plaintext = await Promise.race([
+            decryptReceived(msg, currentUserId),
+            new Promise<string>((resolve) => {
+              timer = setTimeout(() => resolve(TIMEOUT_PLACEHOLDER), DECRYPT_TIMEOUT_MS);
+            }),
+          ]);
           plaintextCache.set(msg.id, { cipher: msg.text, text: plaintext });
           return { ...msg, text: plaintext };
-        }),
-      );
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+
+      const results = await Promise.all(messages.map(withTimeout));
 
       const apply = () => {
         if (isFirstRun) firstDecryptDone.current = true;

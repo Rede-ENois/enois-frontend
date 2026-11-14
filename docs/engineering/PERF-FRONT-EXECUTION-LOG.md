@@ -395,3 +395,46 @@ que não depende de terceiros. A pendência 2 segue bloqueada no design system (
 calculado dentro de `notifications-popover.js` 0.33.0).
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 9 — Teto de espera na decifragem (pendência 5, fatia final)
+
+**Data:** 2026-11-14
+
+### Diagnóstico
+
+`crypto.subtle` já roda fora da thread JS (nativo do navegador): mover as chaves ou o RSA para um
+Worker não compra nada. O buraco real do front era a espera ILIMITADA: uma `decryptReceived` presa
+(IndexedDB lento, promessa que rejeita e foi engolida) mantinha `decrypting = true` para sempre e a
+conversa ficava no "decifrando..." eterno.
+
+### Implementação
+
+- `src/lib/e2e/use-decrypted-messages.ts`
+  - `DECRYPT_TIMEOUT_MS = 5_000` e `TIMEOUT_PLACEHOLDER` (exportados, usados pelo teste).
+  - `withTimeout()`: cada decifragem disputa com um teto via `Promise.race`; a que não resolve
+    dentro dele volta como placeholder e não segura o resto nem o fim do loading. `clearTimeout`
+    no `finally`; cache de plaintext por cifra idêntica preservado.
+- `src/lib/e2e/use-decrypted-messages.test.tsx`
+  - Caso 6 novo, `vi.useFakeTimers()` em try/finally com `vi.useRealTimers()`; mock
+    discriminando `message.id === "presa"` (nunca resolve) vs `ok` (resolve).
+
+### Prova (executada, não declarada)
+
+- Sem o race (estado antigo): `× decifragem presa nao segura a thread…` → `Tests 1 failed`.
+- Com o race: o mesmo caso → `1 passed`.
+- Arquivo alvo: 6/6 casos verdes.
+- `npm run lint` completo: exit=0 (0 erros, 14 avisos pré-existentes).
+- `npx tsc --noEmit`: exit=0 (confirmado 2×).
+- Suíte completa em background: **243 arquivos / 1.412 testes / 0 falhas / exit=0**
+  (saída completa em `/tmp/vitest9.txt`).
+- `npm run build`: não exigido pelo escopo — nenhuma mudança de bundling.
+
+**PENDÊNCIA 5: COMPLETA.** `crypto.subtle` já é off-thread; a espera agora tem teto com prova nos
+dois estados.
+
+**PROXIMO PASSO:** pendência 6, fatia restante — virtualização de listas longas. A pendência 2
+segue bloqueada no design system (contador do sino dentro de `notifications-popover.js` 0.33.0).
+
+**ESTADO:** em andamento.

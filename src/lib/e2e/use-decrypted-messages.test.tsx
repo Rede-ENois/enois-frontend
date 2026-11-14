@@ -6,7 +6,12 @@ import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import AFTER mocks are declared
-import { clearDecryptedMessageCache, useDecryptedMessages } from "./use-decrypted-messages";
+import {
+  DECRYPT_TIMEOUT_MS,
+  TIMEOUT_PLACEHOLDER,
+  clearDecryptedMessageCache,
+  useDecryptedMessages,
+} from "./use-decrypted-messages";
 
 const decryptReceived = vi.fn();
 const hasLocalKeys = vi.fn();
@@ -154,5 +159,32 @@ describe("useDecryptedMessages", () => {
 
     expect(decryptReceived).toHaveBeenCalledTimes(2);
     expect(captured.messages[0].text).toBe("claro:b");
+  });
+
+  it("decifragem presa nao segura a thread: estoura o teto e vira placeholder", async () => {
+    vi.useFakeTimers();
+    try {
+      hasLocalKeys.mockResolvedValue(true);
+      decryptReceived.mockImplementation((message: Message) =>
+        message.id === "presa"
+          ? new Promise<string>(() => undefined) // nunca resolve
+          : Promise.resolve(`claro:${message.id}`),
+      );
+
+      const presa = msg({ id: "presa", text: "cipher", e2e: true, iv: "iv" });
+      const ok = msg({ id: "ok", text: "cipher", e2e: true, iv: "iv" });
+      act(() => root.render(<HookProbe messages={[presa, ok]} />));
+      // O relogio falso solta as microtarefas pendentes sem avancar o MIN_DECRYPT (que vence
+      // antes do teto); avancar ATE o teto dispara o placeholder e o fim do loading.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DECRYPT_TIMEOUT_MS);
+      });
+
+      expect(captured.decrypting).toBe(false);
+      expect(captured.messages.find((m) => m.id === "presa")?.text).toBe(TIMEOUT_PLACEHOLDER);
+      expect(captured.messages.find((m) => m.id === "ok")?.text).toBe("claro:ok");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
