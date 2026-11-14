@@ -349,3 +349,49 @@ E2E no chunk inicial.
 (contador do sino), que depende do design system.
 
 **ESTADO:** em andamento.
+
+---
+
+## RODADA 8 — busca: o pull-to-refresh não se aplica (diagnóstico com evidência)
+
+**DATA/HORA:** 2026-11-14 (America/Sao_Paulo)
+
+**FASE:** 4 (gesto) — pendência 1, fatia restante: "resultados de busca".
+
+**DIAGNOSTICO:**
+
+- O critério pedia o gesto em "listas de notificações, mensagens e resultados de busca". As duas
+  primeiras estão entregues (rodadas 3 e 4). A terceira não tem a superfície que o gesto exige.
+- As buscas do app são TRÊS, todas superfícies de overlay, não listagens de página:
+  1. `global-search.tsx` → `GlobalSearchView` do DS: os resultados saem num portal
+     (`createPortal` sobre `document.body`) com `<ul className="max-h-80 overflow-y-auto">` e
+     limite de 10 itens (`searchApi.search(..., 10)`), fechável por clique fora ou por rolar.
+  2. `user-picker.tsx` → `UserPickerView`: menu de opções do campo, 6 itens.
+  3. `company-edit-dialog.tsx` → `CompanyTeamSectionView`: lista de candidatos dentro de dialog.
+- Pull-to-refresh é um gesto de LISTA DE PÁGINA: reconhece o arrasto para baixo com a página (ou o
+  contêiner) no topo e renova aquela listagem. Num dropdown de 10 itens com altura máxima de
+  20rem, que abre e fecha com a digitação e já revalida sozinho a cada termo (TanStack Query com
+  `staleTime` padrão), o gesto não tem quando existir: não há "topo de lista" estável e a
+  renovação já é automática a cada consulta. Implementá-lo aí seria enfeite sem função.
+- As props do DS confirmam o desenho (`GlobalSearchProps`, `UserPickerProps`): não há hook de
+  renovação nem superfície de rolagem de página nenhuma delas.
+
+**DECISÃO:**
+
+- Fatia "resultados de busca" da pendência 1: **não aplicável**, com a evidência acima. As
+  superfícies de busca já renovam a cada termo (debounce 250 ms + cancelamento da anterior,
+  rodada 1). A pendência 1 fica COMPLETA: feed (anterior), notificações (rodada 3), mensagens
+  (rodada 4), busca (não aplicável, provado).
+
+**TESTES EXECUTADOS:**
+
+- Nenhum código mudou nesta rodada; a prova é a leitura do código-fonte citado
+  (`dist/domain/search/global-search.js` do DS, `global-search.tsx`, `user-picker.tsx`,
+  `company-edit-dialog.tsx`) e das props do DS. Nada a executar além da verificação de que os
+  gates continuam verdes na árvore atual (rodada 7, commit `723e0fa5`).
+
+**PROXIMO PASSO:** pendência 5 (criptografia fora da main thread com espera limitada) — a última
+que não depende de terceiros. A pendência 2 segue bloqueada no design system (contador do sino
+calculado dentro de `notifications-popover.js` 0.33.0).
+
+**ESTADO:** em andamento.
