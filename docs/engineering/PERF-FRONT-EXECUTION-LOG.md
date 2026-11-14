@@ -635,3 +635,25 @@ Sem pendência acionável neste repo; se o DS destravar, o conserto aqui é pass
 inverter o teste.
 
 **ESTADO:** pendências 1, 3, 4, 5, 6 completas; 2 bloqueada no DS, causa raiz provada em teste.
+
+## RODADA 15 — 2026-11-14 — pendência 2: bloqueio reconfirmado no DS 0.34.0
+
+DIAGNOSTICO: verificada a `main` do repositório do design-system (enois-design-system, release
+0.34.0 já mergeada, commit `9b6dd88`): `src/domain/notifications/notifications-popover.tsx`
+continua calculando `unreadCount` filtrando `panel.notifications` dentro do componente, e
+`notifications-popover-props.ts` não expõe prop de contagem. Ou seja, a versão mais nova do DS
+NÃO destravou a pendência — o front não tem como suprir o total do resumo do servidor.
+
+Também confirmado: a prop cacheada neste workspace é 0.33.0; a 0.34.0 existe no repositório do DS
+mas o registry é privado (consulta `npm view` sem token dá 401), então a atualização de versão é
+decisão da mantenedora, não do agente.
+
+Nenhuma mudança de código nesta rodada — diagnóstico puro de bloqueio externo.
+
+GATES: não aplicáveis (nenhum arquivo tocado).
+
+PROXIMO PASSO: pendência 2 segue bloqueada; destrava com (a) prop de contagem no popover do DS e
+(b) bump da versão no front — os dois fora do alcance desta automação. O teste da rodada 14 fixa
+o comportamento atual e serve de base para o conserto quando o DS destravar.
+
+**ESTADO:** pendências 1, 3, 4, 5, 6 completas; 2 bloqueada no DS (0.34.0 confirmado sem a prop).
