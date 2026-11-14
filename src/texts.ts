@@ -3059,6 +3059,21 @@ export const texts = {
       notices: "Avisos",
       releaseNotes: "Novidades",
       identityRelease: "Verificação de identidade",
+      network: "Rede Énóis",
+    },
+    network: {
+      keyIssued: "Chave de API gerada. Copie antes de fechar.",
+      keyRevoked: "Chave de API revogada.",
+      approved: "Nó aprovado.",
+      statusChanged: "Estado do nó atualizado.",
+      capacitySaved: "Capacidade do nó atualizada.",
+      disconnected: "Servidor desconectado da rede.",
+      joinRequested: "Pedido de ingresso registrado. Copie o token antes de fechar.",
+      apiRequested: "Requisição enfileirada para o nó.",
+      /** Rota ilegível no payload da tarefa: a linha diz o que sabe, sem inventar destino. */
+      apiRequestUnknownRoute: "(rota não informada)",
+      profilesSaved: "Perfis do nó atualizados.",
+      actionError: "Não foi possível concluir a ação.",
     },
     identityRelease: {
       saved: "Regras da rodada salvas.",

@@ -1,0 +1,302 @@
+import { useState } from "react";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { texts } from "@/texts";
+import type { IssuedNodeKey } from "@/types/application/network/issued-node-key";
+import type { NetworkApiRequest } from "@/types/application/network/network-api-request";
+import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
+import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
+import type { NetworkNode } from "@/types/application/network/network-node";
+import type {
+  NetworkDashboardData,
+  NetworkNodeApiRequest,
+  NetworkNodeData,
+  NetworkNodeDetailData,
+  NetworkNodeHistoryEntry,
+} from "@rede-enois/design-system/domain";
+import { NetworkNodesSection as NetworkNodesSectionView } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
+
+import { ApiError, adminNetworkApi } from "@/lib/api";
+import { dataHora } from "@/lib/date/format";
+
+const QUERY_KEY = ["admin", "network", "nodes"];
+const DASHBOARD_KEY = ["admin", "network", "dashboard"];
+const ROUTES_KEY = ["admin", "network", "api-routes"];
+
+/** Os perfis que um nó pode receber — o mesmo conjunto que o backend valida. */
+const PROFILES = [
+  "NODE_EDGE",
+  "NODE_WORKER",
+  "NODE_MEDIA",
+  "NODE_READ_REPLICA",
+  "NODE_API",
+  "NODE_LOCAL",
+  "NODE_EMERGENCY",
+];
+
+/** A fotografia da rede na forma que a faixa do design system espera. */
+function dashboardView(dashboard: NetworkDashboard): NetworkDashboardData {
+  return {
+    total: dashboard.total,
+    active: dashboard.active,
+    unavailable: dashboard.unavailable,
+    quarantined: dashboard.quarantined,
+    alive: dashboard.alive,
+    degraded: dashboard.degraded,
+    declaredCpuCores: dashboard.declaredCpuCores,
+    declaredMemoryMb: dashboard.declaredMemoryMb,
+    freeSlots: dashboard.freeSlots,
+    avgCpuPercent: dashboard.avgCpuPercent,
+    cpuSamples: dashboard.cpuSamples,
+    avgMemoryMb: dashboard.avgMemoryMb,
+    memorySamples: dashboard.memorySamples,
+    runtimeVersions: dashboard.runtimeVersions,
+  };
+}
+
+function nodeView(node: NetworkNode): NetworkNodeData {
+  return {
+    id: node.id,
+    displayName: node.displayName,
+    ownerUserId: node.ownerUserId,
+    status: node.status,
+    profiles: node.profiles,
+    region: node.region,
+    runtimeVersion: node.runtimeVersion,
+    lastSeenAtLabel: node.lastSeenAt ? dataHora(node.lastSeenAt) : null,
+    keyPrefix: node.keyPrefix,
+    keyUsed: node.keyUsed,
+    operable: node.operable,
+    degraded: node.degraded,
+    latencyMs: node.latencyMs,
+    failureStreak: node.failureStreak,
+    quarantineReason: node.quarantineReason,
+  };
+}
+
+/**
+ * Administração da rede cooperativa: os nós e a chave de API de cada um.
+ *
+ * <p>A chave em claro só existe no retorno da emissão, e a tela a mostra uma vez. Fechar sem copiar
+ * não é um beco sem saída: gerar outra revoga a anterior, e o aviso diz isso antes de fechar.</p>
+ */
+export function NetworkNodesSection() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [issuedKey, setIssuedKey] = useState<(IssuedNodeKey & { nodeId: string }) | null>(null);
+  const [openNodeId, setOpenNodeId] = useState<string | null>(null);
+
+  const { data, isLoading, isError, refetch, isRefetching } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => adminNetworkApi.nodes(),
+    retry: false,
+  });
+
+  const { data: dashboard } = useQuery({
+    queryKey: DASHBOARD_KEY,
+    queryFn: () => adminNetworkApi.dashboard(),
+    retry: false,
+  });
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: DASHBOARD_KEY });
+    if (openNodeId) {
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "network", "history", openNodeId],
+      });
+    }
+  };
+
+  const onError = (error: unknown) =>
+    toast(error instanceof ApiError ? error.message : texts.moderator.network.actionError, "error");
+
+  const issueKey = useMutation({
+    mutationFn: (nodeId: string) => adminNetworkApi.issueKey(nodeId),
+    onSuccess: (key, nodeId) => {
+      setIssuedKey({ ...key, nodeId });
+      toast(texts.moderator.network.keyIssued, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const revokeKey = useMutation({
+    mutationFn: (nodeId: string) => {
+      const node = data?.find((item) => item.id === nodeId);
+      if (!node?.keyId) {
+        // Sem chave vigente não há o que revogar; falhar aqui é melhor que mandar id vazio.
+        return Promise.reject(new Error(texts.moderator.network.actionError));
+      }
+      return adminNetworkApi.revokeKey(nodeId, node.keyId);
+    },
+    onSuccess: () => {
+      toast(texts.moderator.network.keyRevoked, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const approve = useMutation({
+    mutationFn: (nodeId: string) => adminNetworkApi.approve(nodeId),
+    onSuccess: () => {
+      toast(texts.moderator.network.approved, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const changeStatus = useMutation({
+    mutationFn: ({
+      nodeId,
+      status,
+    }: {
+      nodeId: string;
+      status: "SUSPENDED" | "QUARANTINED" | "REVOKED";
+    }) => adminNetworkApi.changeStatus(nodeId, status),
+    onSuccess: () => {
+      toast(texts.moderator.network.statusChanged, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const capacity = useMutation({
+    mutationFn: ({
+      nodeId,
+      body,
+    }: {
+      nodeId: string;
+      body: { cpuCores?: number; memoryMb?: number; diskMb?: number; bandwidthMbps?: number };
+    }) => adminNetworkApi.capacity(nodeId, body),
+    onSuccess: () => {
+      toast(texts.moderator.network.capacitySaved, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  const profiles = useMutation({
+    mutationFn: ({ nodeId, profiles }: { nodeId: string; profiles: string[] }) =>
+      adminNetworkApi.profiles(nodeId, profiles),
+    onSuccess: () => {
+      toast(texts.moderator.network.profilesSaved, "success");
+      refresh();
+    },
+    onError,
+  });
+
+  /** As rotas da rede: a mesma lista assinada que o nó recebe, para o admin escolher pelo nome. */
+  const { data: routes } = useQuery({
+    queryKey: ROUTES_KEY,
+    queryFn: () => adminNetworkApi.apiRoutes(),
+    enabled: openNodeId !== null,
+    retry: false,
+  });
+
+  /** As requisições em aberto do nó aberto. A lista é pequena e o painel recarrega com o nó. */
+  const { data: apiRequests, isLoading: apiRequestsLoading } = useQuery({
+    queryKey: ["admin", "network", "api-requests", openNodeId],
+    queryFn: () => adminNetworkApi.openApiRequests(openNodeId!),
+    enabled: openNodeId !== null,
+    retry: false,
+  });
+
+  const apiRequest = useMutation({
+    mutationFn: ({ nodeId, route }: { nodeId: string; route: string }) =>
+      adminNetworkApi.apiRequest(nodeId, route),
+    onSuccess: () => {
+      toast(texts.moderator.network.apiRequested, "success");
+      if (openNodeId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["admin", "network", "api-requests", openNodeId],
+        });
+      }
+      refresh();
+    },
+    onError,
+  });
+
+  const openNode = data?.find((item) => item.id === openNodeId);
+
+  const { data: history } = useQuery({
+    queryKey: ["admin", "network", "history", openNodeId],
+    queryFn: () => adminNetworkApi.history(openNodeId!),
+    enabled: openNodeId !== null,
+    retry: false,
+  });
+
+  const detail: NetworkNodeDetailData | null = openNode
+    ? {
+        node: nodeView(openNode),
+        declaredCpuCores: openNode.declaredCpuCores,
+        declaredMemoryMb: openNode.declaredMemoryMb,
+        declaredDiskMb: openNode.declaredDiskMb,
+        declaredBandwidthMbps: openNode.declaredBandwidthMbps,
+        availableProfiles: PROFILES,
+      }
+    : null;
+
+  /** O que o painel mostra sem inventar: sem nome de rota legível, a linha diz de onde veio. */
+  const apiRequestView = (requests: NetworkApiRequest[] | undefined): NetworkNodeApiRequest[] =>
+    (requests ?? []).map((request) => ({
+      taskId: request.taskId,
+      route: request.route ?? texts.moderator.network.apiRequestUnknownRoute,
+      status: request.status,
+      attempt: request.attempt,
+      deadlineLabel: dataHora(request.deadline),
+    }));
+
+  const historyView = (records: NetworkAuditRecord[] | undefined): NetworkNodeHistoryEntry[] =>
+    (records ?? []).map((record) => ({
+      id: record.id,
+      actorId: record.actorId,
+      action: record.action,
+      metadata: record.metadata,
+      dateLabel: dataHora(record.createdAt),
+    }));
+
+  return (
+    <NetworkNodesSectionView
+      dashboard={dashboard ? dashboardView(dashboard) : null}
+      detail={{
+        detail,
+        history: historyView(history),
+        historyLoading: openNodeId !== null && history === undefined,
+        onSaveCapacity: (body) => {
+          if (openNodeId) capacity.mutate({ nodeId: openNodeId, body });
+        },
+        capacityPending: capacity.isPending,
+        onSaveProfiles: (next) => {
+          if (openNodeId) profiles.mutate({ nodeId: openNodeId, profiles: next });
+        },
+        profilesPending: profiles.isPending,
+        routes: routes ?? [],
+        onRequestRoute: (route) => {
+          if (openNodeId) apiRequest.mutate({ nodeId: openNodeId, route });
+        },
+        routePending: apiRequest.isPending,
+        apiRequests: apiRequestView(apiRequests),
+        apiRequestsLoading: openNodeId !== null && apiRequestsLoading,
+        onOpenNode: setOpenNodeId,
+      }}
+      nodes={(data ?? []).map(nodeView)}
+      loading={isLoading}
+      error={isError}
+      onRefresh={() => void refetch()}
+      refreshPending={isRefetching}
+      onIssueKey={(nodeId) => issueKey.mutate(nodeId)}
+      issueKeyPending={issueKey.isPending}
+      onRevokeKey={(nodeId) => revokeKey.mutate(nodeId)}
+      revokeKeyPending={revokeKey.isPending}
+      onApprove={(nodeId) => approve.mutate(nodeId)}
+      approvePending={approve.isPending}
+      onChangeStatus={(nodeId, status) => changeStatus.mutate({ nodeId, status })}
+      statusPending={changeStatus.isPending}
+      issuedKey={issuedKey}
+      onDismissIssuedKey={() => setIssuedKey(null)}
+    />
+  );
+}
