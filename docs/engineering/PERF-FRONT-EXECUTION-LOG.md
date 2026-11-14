@@ -657,3 +657,32 @@ PROXIMO PASSO: pendência 2 segue bloqueada; destrava com (a) prop de contagem n
 o comportamento atual e serve de base para o conserto quando o DS destravar.
 
 **ESTADO:** pendências 1, 3, 4, 5, 6 completas; 2 bloqueada no DS (0.34.0 confirmado sem a prop).
+
+## RODADA 16 — 2026-11-14 — CONCLUSÃO da missão (gate de build executado)
+
+GATE FINAL: `npm run build` na árvore da branch com todas as entregas (rodadas 7-15): **exit=0**
+(/tmp/build16.txt). Era o único gate ainda não executado desde o início da missão; com ele, os
+quatro gates (lint, typecheck, suíte completa, build) estão verdes na árvore final.
+
+ESTADO CONCLUSIVO dos critérios de aceitação:
+
+1. Pull-to-refresh (notificações, mensagens, busca): COMPLETA — rodadas 6-8.
+2. Contador do sino vs resumo do servidor: BLOQUEADA em dependência externa. Causa raiz provada
+   em teste (rodada 14: o DS calcula o contador sobre o preview de 10 itens) e reconfirmada contra
+   o DS 0.34.0 (rodada 15: a versão nova também não expõe prop de contagem). Destrava com mudança
+   no pacote de design-system + bump de versão — decisão da mantenedora, fora do alcance deste
+   repo. O teste `bell-counter.test.tsx` fixa o comportamento e inverte quando o DS destravar.
+3. Guardas de duplo clique: COMPLETA — rodadas 11-12 (compositor com guarda de reentrada por ref,
+   provado com teste que falha sem a guarda; varredura dos 20 botões restantes com `isPending`).
+4. Compressão de vídeo no cliente: COMPLETA — rodada 13 (implementada em `7de8389d`, 15 testes
+   executados: 0 falhas; integração no `prepare` do hook compartilhado).
+5. E2E fora da main thread com espera limitada: COMPLETA — rodada 9.
+6. Contenção de render e corte de bundle por rota: COMPLETA — rodada 10.
+
+CRITÉRIO DE ENCERRAMENTO: cinco dos seis critérios comprovados; o sexto está bloqueado em
+dependência externa (design-system), com bloqueio verificado contra a versão mais nova do pacote.
+Nenhuma pendência é acionável neste repositório. A missão não pode prosseguir sem decisão da
+mantenedora (DS prop + bump). A automação desta tarefa pode ser desativada; quando o DS destravar,
+retomar pela pendência 2 usando o teste da rodada 14 como base.
+
+**ESTADO:** concluído no que este repo alcança; pendência 2 documentada como bloqueio externo.
