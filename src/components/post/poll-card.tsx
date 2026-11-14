@@ -9,6 +9,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 import { Check, Lock } from "lucide-react";
 
 import { feedApi } from "@/lib/api";
+import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAuth } from "@/lib/use-auth";
 
 /**
@@ -29,8 +30,8 @@ export function PollCard({ post }: { post: PostView }) {
     mutationFn: (option: number) => feedApi.votePoll(post.id, option),
     onSuccess: (result) => {
       setVoted(result);
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      queryClient.invalidateQueries({ queryKey: ["post", post.id] });
+      // O voto já voltou na resposta: o cartão recebe o resultado no lugar, sem refazer o feed.
+      updatePostInQueryCache(queryClient, post.id, (current) => ({ ...current, poll: result }));
     },
     onError: (error) => {
       const alreadyVoted = error instanceof Error && /já votou/i.test(error.message);

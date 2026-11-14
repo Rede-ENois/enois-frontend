@@ -126,6 +126,7 @@ export const texts = {
     seoTitle: "Avisos · Énóis",
     today: "Hoje",
     yesterday: "Ontem",
+    refreshing: "Atualizando avisos…",
   },
 
   /** The phone dock: daily destinations around the publish action. */
@@ -187,21 +188,48 @@ export const texts = {
     scopeLabel: "Agenda mostrada",
     errorSave: "Não foi possível salvar o compromisso. Tente de novo.",
     errorRespond: "Não foi possível responder ao convite. Tente de novo.",
+    respondDone: "Resposta registrada.",
     /** A tela de um compromisso só acrescenta o que o calendário não desenha. */
     errorInvite: "Não foi possível convidar. Tente de novo.",
     errorCancel: "Não foi possível cancelar o compromisso. Tente de novo.",
     errorReminder: "Não foi possível salvar o lembrete. Tente de novo.",
+    errorSeries: "Não foi possível repetir o compromisso. Tente de novo.",
+    seriesStarted: "Compromisso repetido.",
+    seriesStopped: "Repetição encerrada. As datas seguintes foram canceladas.",
+    seriesError: "Não foi possível mudar a repetição. Tente de novo.",
     detailNotFound: "Compromisso não encontrado",
     detailNotFoundHint: "Ele pode ter sido cancelado ou o link está errado.",
+    errorLoad: "Não foi possível abrir o compromisso. Tente de novo.",
+    errorLoadHint: "O compromisso não sumiu: a resposta do servidor não chegou.",
     exportIcs: "Baixar .ics",
     exportIcsHint: "Baixa o período que está na tela para abrir em outra agenda.",
     exportIcsError: "Não foi possível baixar o arquivo. Tente de novo.",
     exportIcsDone: "Arquivo da agenda baixado.",
+    availabilityLink: "Disponibilidade",
+    retry: "Tentar de novo",
     availability: {
       seoTitle: "Disponibilidade · Énóis",
       title: "Sua disponibilidade",
       subtitle: "A semana em que sua agenda admite compromissos. Ela se repete toda semana.",
       errorSave: "Não foi possível salvar a disponibilidade. Tente de novo.",
+      errorLoad: "Não foi possível carregar sua disponibilidade.",
+      errorLoadHint:
+        "Sem ler a semana salva, salvar apagaria o que você já tinha. Tente carregar de novo.",
+    },
+    importIcs: "Importar .ics",
+    importIcsHint: "Traz os compromissos de outra agenda para esta.",
+    importIcsError: "Não foi possível importar o arquivo. Tente de novo.",
+    subscription: {
+      seoTitle: "Assinatura da agenda · Énóis",
+      title: "Assinatura da agenda",
+      subtitle:
+        "Um endereço privado que o Google Calendar, o Apple Calendar ou qualquer leitor de `.ics` acompanha sozinho.",
+      errorLoad: "Não foi possível carregar a assinatura. Tente de novo.",
+      errorCreate: "Não foi possível criar o link. Tente de novo.",
+      errorRegenerate: "Não foi possível gerar outro link. Tente de novo.",
+      errorRevoke: "Não foi possível revogar o link. Tente de novo.",
+      copied: "Link copiado.",
+      copyError: "Não foi possível copiar. Selecione o endereço e copie à mão.",
     },
   },
 
@@ -669,6 +697,7 @@ export const texts = {
     capture: "Captura da chamada no momento da denúncia",
     captureMissing: "Esta denúncia de chamada veio sem captura de tela.",
     participants: "Na sala quando a denúncia foi feita",
+    reportedAt: (when: string) => `Denúncia feita em ${when}`,
   },
   onboarding: {
     seoTitle: "Boas-vindas · Énóis",
@@ -1582,6 +1611,8 @@ export const texts = {
     /** O título continua "Ranking"; a linha abaixo dele diz QUEM está ali (chegada, não disputa). */
     newMembersHint: "Quem está chegando agora — os mais recentes primeiro.",
     noPosts: "Ainda não há publicações.",
+    noReplies: "Ainda não há respostas.",
+    replyContext: (authorName: string) => `Em resposta a ${authorName}`,
     availabilityUnknown: "Não informada",
     recommendDescription: "Recomende este perfil para ajudar a comunidade.",
     recommendAction: "Recomendar",
@@ -2183,7 +2214,16 @@ export const texts = {
       locations: ["Remoto", "Híbrido", "Presencial"],
       /** O backend guarda o código (JUNIOR, INTERN...); a tela mostra o nome em português. */
       levels: { JUNIOR: "Júnior", MID: "Pleno", SENIOR: "Sênior", LEAD: "Liderança" },
-      types: { CLT: "CLT", PJ: "PJ", FREELANCE: "Freelance", INTERN: "Estágio" },
+      types: {
+        CLT: "CLT",
+        PJ: "PJ",
+        FREELANCE: "Freelance",
+        INTERN: "Estágio",
+        FULL_TIME: "Tempo integral",
+        PART_TIME: "Meio período",
+        CONTRACT: "Contrato",
+        INTERNSHIP: "Estágio",
+      },
     },
     /** Quantas habilidades o card da lista mostra antes do "+N". */
     moreSkills: (count: number) => `+${count}`,
@@ -2204,6 +2244,11 @@ export const texts = {
     back: "Voltar para vagas",
     notFound: "Vaga não encontrada.",
     about: "Sobre a vaga",
+    /** Vaga externa cuja fonte não publica descrição: a tela diz isso em vez de inventar texto. */
+    noDescription:
+      "A fonte não publica a descrição desta vaga. Abra a vaga na origem para ver os detalhes.",
+    /** Vaga da casa publicada sem descrição. */
+    noDescriptionInternal: "Quem publicou esta vaga não escreveu uma descrição.",
     skills: "Habilidades",
     noSkills: "Sem habilidades informadas.",
     save: "Salvar",
@@ -2220,6 +2265,7 @@ export const texts = {
     myApplications: "Minhas candidaturas",
     myJobsEmpty: "Você ainda não publicou vagas.",
     myApplicationsEmpty: "Você ainda não se candidatou a nenhuma vaga.",
+    interviewScheduledFor: (when: string) => `Entrevista marcada: ${when}`,
     empty: "Nenhuma vaga encontrada com os filtros selecionados.",
     createJob: "Criar vaga",
     createJobTitle: "Publicar vaga",
@@ -2323,6 +2369,14 @@ export const texts = {
       backToReview: "Voltar para análise",
       statusUpdated: "Estado atualizado.",
       statusError: "Não foi possível atualizar o estado. Tente novamente.",
+      interview: {
+        cancelTitle: "Cancelar entrevista",
+        cancelAction: "Cancelar entrevista",
+        cancelConfirm:
+          "Cancelar esta entrevista? Os dois lados deixam de ver o compromisso na agenda.",
+        error: "Não foi possível salvar a entrevista. Tente novamente.",
+        cancelError: "Não foi possível cancelar a entrevista. Tente novamente.",
+      },
     },
     createAction: "Publicar vaga",
     createError: "Não foi possível publicar a vaga. Tente novamente.",

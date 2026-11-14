@@ -293,8 +293,15 @@ function JobDetail() {
             <section className="mt-5">
               <h2 className="text-base font-normal text-text-strong">{texts.jobs.about}</h2>
 
+              {/* Sem descrição, a tela mostrava "Vagas filtradas por nível, localização, tipo e
+                  habilidades" — o texto da LISTA, que não diz nada sobre esta vaga. */}
               <RichText
-                content={job.description?.trim() || texts.jobs.description}
+                content={
+                  job.description?.trim() ||
+                  (job.sourceType === "EXTERNAL"
+                    ? texts.jobs.noDescription
+                    : texts.jobs.noDescriptionInternal)
+                }
                 className="mt-2 whitespace-pre-line break-words text-sm font-normal leading-relaxed text-text-subtle"
               />
             </section>

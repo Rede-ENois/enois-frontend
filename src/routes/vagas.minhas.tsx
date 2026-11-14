@@ -5,7 +5,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { Job } from "@/types/application/job/job";
-import { Button, ConfirmDialog, useToast } from "@rede-enois/design-system/ui";
+import { Badge, Button, ConfirmDialog, useToast } from "@rede-enois/design-system/ui";
 import {
   ArrowLeft,
   Briefcase,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { ApiError, jobsApi } from "@/lib/api";
+import { dataHoraEm } from "@/lib/date/format";
 import { applicationStatusLabel, statusTone } from "@/lib/job-application-status";
 import { requireAuth } from "@/lib/require-auth";
 import { safeHref } from "@/lib/safe-url";
@@ -304,6 +305,19 @@ function MyJobs() {
                       >
                         {applicationStatusLabel(application.status)}
                       </span>
+
+                      {/* A entrevista que está valendo, no fuso em que foi marcada: a mesma hora
+                          que está na agenda dos dois lados. */}
+                      {application.interview?.status === "SCHEDULED" && (
+                        <Badge variant="secondary">
+                          {texts.jobs.interviewScheduledFor(
+                            dataHoraEm(
+                              application.interview.startsAt,
+                              application.interview.timeZoneId,
+                            ),
+                          )}
+                        </Badge>
+                      )}
 
                       {/* O retorno do empregador fica aqui, onde a pessoa relê a candidatura. */}
                       {application.feedback && (

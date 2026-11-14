@@ -8,7 +8,8 @@ import type { UploadState } from "@/types/media-upload/upload-state";
 import { ApiError, randomUUID } from "@/lib/api-client";
 import { mediaApi } from "@/lib/api/media";
 import { compressImage } from "@/lib/compress-image";
-import { checkVideoLimit, isVideoFile } from "@/lib/video-limit";
+import { VideoCompressionError, compressVideo } from "@/lib/compress-video";
+import { MAX_VIDEO_BYTES, checkVideoLimit, isVideoFile } from "@/lib/video-limit";
 
 /**
  * Teto por arquivo: 500MB, o mesmo do servico (MediaService.MAX_MEDIA_BYTES). A checagem
@@ -67,17 +68,38 @@ function genFileName(file: File): string {
  * tamanho declarado contra a assinatura do PUT (MEDIA_SIZE_MISMATCH), então o arquivo que
  * entra no requestUpload é obrigatoriamente o mesmo que sobe — compressão antes dos dois.
  *
- * Vídeo passa pela pré-checagem de limite (#656): o aviso chega antes de o upload sair — o
- * servidor continua sendo quem recusa de verdade. A recusa local lança o erro com o texto do
- * app; a tela mostra o popup.
+ * Vídeo acima do teto é reduzido aqui antes do upload (#656): resolução e bitrate descem até o
+ * arquivo caber nos 10 MB da API. Se nem a menor combinação couber, a recusa acontece antes do
+ * envio, com o texto do app, em vez de depois de o servidor barrar. A duração é checada antes
+ * porque encurtar vídeo não é compressão: recodificar não reduz os minutos.
+ *
+ * O servidor continua sendo quem recusa de verdade (tipo, tamanho e duração por ffprobe).
  */
-async function prepare(file: File): Promise<File> {
+export async function prepare(file: File): Promise<File> {
   if (isVideoFile(file)) {
     const limit = await checkVideoLimit(file);
-    if (!limit.ok) {
-      throw new VideoLimitError(limit.reason === "size" ? "size" : "duration");
+    // A duração vem antes da compressão porque recodificar não encurta o vídeo; o tamanho, não:
+    // um vídeo grande demais é exatamente o caso que a compressão resolve, então ela roda primeiro
+    // e só quem não couber depois dela é recusado.
+    if (!limit.ok && limit.reason === "duration") {
+      throw new VideoLimitError("duration");
     }
-    return file;
+    try {
+      const compressed = await compressVideo(file);
+      if (compressed.size > MAX_VIDEO_BYTES) {
+        throw new VideoLimitError("size");
+      }
+      return compressed;
+    } catch (caught) {
+      if (caught instanceof VideoCompressionError) {
+        throw new VideoLimitError("size");
+      }
+      if (caught instanceof VideoLimitError) {
+        throw caught;
+      }
+      // Navegador sem recodificação: o arquivo segue como está e o servidor decide.
+      return file;
+    }
   }
   const compressed = await compressImage(file);
   return compressed.size < file.size ? compressed : file;

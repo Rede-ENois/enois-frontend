@@ -6,6 +6,9 @@ const routeDefinitions = [
   { source: "feed/posts", to: "/post/$postId", params: ["postId"] },
   // Notificação NEW_BLOG_POST vem como /blog/{slug}/{postId}; sem esta rota o clique não fazia nada.
   { source: "blog", to: "/blog/$username/$postId", params: ["username", "postId"] },
+  // Nova oportunidade da empresa e micro-projeto mandam "/empresa/{slug}" (ou "/api/empresa/{slug}").
+  // A página /empresa/$slug existe; sem esta entrada o clique na notificação não fazia nada.
+  { source: "empresa", to: "/empresa/$slug", params: ["slug"] },
   { source: "users", to: "/perfil/$username", params: ["username"] },
   { source: "network", to: "/rede" },
   { source: "conversations", to: "/mensagens" },
@@ -17,6 +20,11 @@ const routeDefinitions = [
   { source: "jobs", to: "/vagas" },
   { source: "events", to: "/eventos" },
   { source: "mentors", to: "/mentoria" },
+  // Lembrete de compromisso manda "/agenda/{entryId}": abre o compromisso, não a agenda vazia.
+  // A disponibilidade é filha de /agenda e precisa vir antes, senão "disponibilidade" viraria id.
+  { source: "agenda/disponibilidade", to: "/agenda/disponibilidade" },
+  { source: "agenda", to: "/agenda/$entryId", params: ["entryId"] },
+  { source: "agenda", to: "/agenda" },
   { source: "perfil", to: "/perfil/$username", params: ["username"] },
   {
     source: "comunidades",

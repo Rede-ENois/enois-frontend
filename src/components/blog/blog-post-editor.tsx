@@ -11,6 +11,7 @@ import { ArrowLeft, Eye, PenLine } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
 import { getCurrentUserId } from "@/lib/current-user";
+import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 
 import { AppContainer } from "@/components/app-container";
 import { HtmlEditor } from "@/components/html-editor";
@@ -99,7 +100,7 @@ export function BlogPostEditor({ post }: { post?: BlogPost | null }) {
       }
       queryClient.invalidateQueries({ queryKey: ["blog"] });
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
+      void refreshFeedFirstPage(queryClient);
       toast(post ? texts.blog.editor.updated : texts.blog.editor.published);
       const mine = await blogsApi.mine().catch(() => null);
       if (mine) {

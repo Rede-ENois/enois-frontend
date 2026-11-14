@@ -4,8 +4,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import type { CalendarAvailabilityWindowInput } from "@/types/application/calendar/create-calendar-availability-window-input";
 import { CalendarAvailabilitySurface } from "@rede-enois/design-system/domain";
-import { LoadingState, PageHeader } from "@rede-enois/design-system/ui";
-import { Clock } from "lucide-react";
+import { Button, EmptyState, LoadingState, PageHeader } from "@rede-enois/design-system/ui";
+import { Clock, TriangleAlert } from "lucide-react";
 
 import { calendarApi } from "@/lib/api";
 import { requireAuth } from "@/lib/require-auth";
@@ -56,7 +56,21 @@ function AvailabilityPage() {
       />
 
       {week.isPending ? (
-        <LoadingState />
+        // Sem rótulo, o `role="status"` anuncia uma região vazia e quem usa leitor de tela fica
+        // sem saber que a página está carregando.
+        <LoadingState label={texts.common.loading} />
+      ) : week.isError ? (
+        // Sem a semana do servidor, a superfície abriria vazia e "Salvar" apagaria a disponibilidade
+        // que não foi lida. A falha de leitura recusa a edição até conseguir carregar.
+        <EmptyState
+          icon={TriangleAlert}
+          title={texts.agenda.availability.errorLoad}
+          description={texts.agenda.availability.errorLoadHint}
+        >
+          <Button variant="outline" size="sm" onClick={() => void week.refetch()}>
+            {texts.agenda.retry}
+          </Button>
+        </EmptyState>
       ) : (
         <CalendarAvailabilitySurface
           windows={week.data ?? []}

@@ -3,6 +3,7 @@ import type { UserSearchResult } from "@/types/application/user/user-search-resu
 import { api, buildQuery } from "../api-client";
 
 export const usersApi = {
-  search: (query: string) =>
-    api.get<UserSearchResult[]>(`/users/search${buildQuery({ q: query })}`),
+  /** `signal` vem do TanStack Query: trocar o termo cancela a busca anterior de verdade. */
+  search: (query: string, signal?: AbortSignal) =>
+    api.get<UserSearchResult[]>(`/users/search${buildQuery({ q: query })}`, { signal }),
 };

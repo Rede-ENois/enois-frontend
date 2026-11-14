@@ -1,9 +1,13 @@
+import { useCallback } from "react";
+
 import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { NotificationsPanel } from "@rede-enois/design-system/domain";
+import { PullIndicator } from "@rede-enois/design-system/ui";
 
 import { useInterfaceContext } from "@/lib/interface-context";
+import { usePullToRefresh } from "@/lib/pull-to-refresh";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -28,9 +32,26 @@ function NotificationsPage() {
     requestsEnabled: true,
   });
 
+  const refreshing = list.isFetching && !list.isFetchingNextPage;
+  const refetch = list.refetch;
+  // Puxar para renovar no topo, em toque: o mesmo gesto do feed, renovando SÓ a lista de avisos.
+  const pullToRefresh = usePullToRefresh(
+    useCallback(() => void refetch(), [refetch]),
+    refreshing,
+  );
+
   return (
     <AppContainer>
-      <div className="mx-auto w-full max-w-2xl min-w-0">
+      <div className="relative mx-auto w-full max-w-2xl min-w-0">
+        {/* Indicador do gesto (DS): acompanha o dedo ao puxar e fica girando enquanto a lista
+            renova, para o gesto não parecer que não fez nada. */}
+        {(pullToRefresh.pulling || refreshing) && (
+          <PullIndicator
+            pull={refreshing ? pullToRefresh.trigger : pullToRefresh.pull}
+            trigger={pullToRefresh.trigger}
+          />
+        )}
+
         <NotificationsPanel
           {...panel}
           variant="page"

@@ -112,8 +112,9 @@ async function montar() {
     act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
-  const fim = Date.now() + 2_000;
-  while (client.getQueryState(["me"])?.status !== "success" && Date.now() < fim) {
+  // performance.now() não é congelado junto com Date: o teto continua valendo sob relógio fake.
+  const fim = performance.now() + 2_000;
+  while (client.getQueryState(["me"])?.status !== "success" && performance.now() < fim) {
     await esperar();
   }
   // A consulta avisa os componentes no tick seguinte: só então a tela tem a resposta.
@@ -138,6 +139,14 @@ async function salvar() {
   });
 }
 
+/** Data ISO de exatamente `years` anos atrás no calendário local, que é como a régua de idade lê. */
+function anosAtras(years: number, hoje = new Date()): string {
+  const d = new Date(hoje.getFullYear() - years, hoje.getMonth(), hoje.getDate());
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
 beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   mocks.update.mockReset().mockResolvedValue(perfilPublico);
@@ -150,6 +159,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
 
 describe("Data de nascimento na edição do perfil", () => {
@@ -209,12 +219,32 @@ describe("Data de nascimento na edição do perfil", () => {
   it("data nova de 16 anos é aceita (conta nasce como menor supervisionado)", async () => {
     await montar();
 
-    const dezesseis = new Date();
-    dezesseis.setFullYear(dezesseis.getFullYear() - 16);
-    const valor = dezesseis.toISOString().slice(0, 10);
+    const valor = anosAtras(16);
     await digitar(valor);
     await salvar();
 
     expect(mocks.update.mock.calls[0]?.[0].birthDate).toBe(valor);
+  });
+
+  it("perto da meia-noite a data de 16 anos continua sendo hoje, não amanhã", async () => {
+    // Às 23h em UTC-3 o dia já virou em UTC: montar a data pelo fuso do relógio erraria o dia por
+    // um, e quem completa 16 anos hoje seria recusado por um dia. O fuso é fixado no teste para a
+    // prova valer em qualquer máquina.
+    const tzOriginal = process.env.TZ;
+    process.env.TZ = "America/Sao_Paulo";
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 13, 23, 30));
+    try {
+      await montar();
+
+      const valor = anosAtras(16);
+      await digitar(valor);
+      await salvar();
+
+      expect(valor).toBe("2010-11-13");
+      expect(mocks.update.mock.calls[0]?.[0].birthDate).toBe("2010-11-13");
+    } finally {
+      process.env.TZ = tzOriginal;
+    }
   });
 });

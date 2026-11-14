@@ -67,6 +67,7 @@ import { jobsApi, reportsApi } from "@/lib/api";
 import { CURRENCIES, currencySymbol, formatSalary } from "@/lib/currency";
 import { useCurrentUser } from "@/lib/current-user";
 import { dataCurta } from "@/lib/date/format";
+import { EXTERNAL_JOB_TYPES, buildJobFilters } from "@/lib/job-filters";
 import { canCreateJob, missingReputationToCreateJob } from "@/lib/job-permissions";
 import { companyQueries } from "@/lib/query-options/companies";
 import { requireAuth } from "@/lib/require-auth";
@@ -157,13 +158,15 @@ export function JobsListPage({
   // nada a quem ainda não tem conta, e no celular empurravam as vagas para a segunda tela.
   const authenticated = useIsAuthenticated();
 
-  const filters = {
-    query: debouncedQuery || undefined,
-    level: level || undefined,
-    location: location || undefined,
-    type: (lockedType ?? type) || undefined,
-    skills: skills || undefined,
-  };
+  const filters = buildJobFilters({
+    aba,
+    query: debouncedQuery,
+    level,
+    location,
+    type,
+    skills,
+    lockedType,
+  });
 
   const {
     data: jobsData,
@@ -249,7 +252,9 @@ export function JobsListPage({
   });
 
   const activeCount = [level, location, type].filter(Boolean).length;
-  const hasFilters = activeCount > 0 || skills !== "";
+  // Habilidades só existe na busca interna: na aba externa o campo nem aparece, e contá-lo aqui
+  // deixaria o botão "Limpar filtros" aceso sem nenhum filtro visível.
+  const hasFilters = activeCount > 0 || (aba !== "externas" && skills !== "");
 
   const clearFilters = () => {
     setLevel("");
@@ -371,7 +376,7 @@ export function JobsListPage({
               <span className="shrink-0 pr-1 text-xs font-medium text-muted-foreground">
                 {texts.jobs.filters.type}
               </span>
-              {JOB_TYPES.map((t) => (
+              {(aba === "externas" ? EXTERNAL_JOB_TYPES : JOB_TYPES).map((t) => (
                 <Pill
                   key={t}
                   size="sm"
@@ -440,13 +445,17 @@ export function JobsListPage({
               {texts.jobs.searchHint}
             </p>
 
-            <Input
-              aria-label={texts.jobs.skillsPlaceholder}
-              value={skills}
-              onChange={(e) => setSkills(e.target.value)}
-              placeholder={texts.jobs.skillsPlaceholder}
-              className="h-9 rounded-full bg-muted max-w-xs"
-            />
+            {/* Habilidades é filtro da busca interna: as fontes externas não publicam esse campo,
+                e um campo que não filtra nada só engana quem digita nele. */}
+            {aba !== "externas" && (
+              <Input
+                aria-label={texts.jobs.skillsPlaceholder}
+                value={skills}
+                onChange={(e) => setSkills(e.target.value)}
+                placeholder={texts.jobs.skillsPlaceholder}
+                className="h-9 rounded-full bg-muted max-w-xs"
+              />
+            )}
           </div>
         </div>
 
@@ -469,6 +478,15 @@ export function JobsListPage({
               }`}
               onClick={() => {
                 setAba(id);
+                // CLT/PJ só existem nas vagas da casa; as fontes externas publicam outro
+                // vocabulário. Manter o filtro ao trocar de aba deixaria um filtro invisível
+                // ligado (nenhuma pílula marcada) e a lista viria vazia sem explicação.
+                if (
+                  id === "externas" &&
+                  !(EXTERNAL_JOB_TYPES as readonly string[]).includes(type)
+                ) {
+                  setType("");
+                }
                 setAllJobs([]);
                 setCursor(null);
               }}

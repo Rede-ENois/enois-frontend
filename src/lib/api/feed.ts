@@ -8,6 +8,7 @@ import type { FeedPage } from "@/types/application/feed/feed-page";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 import type { PollView } from "@/types/application/feed/poll-view";
 import type { PostView } from "@/types/application/feed/post-view";
+import type { ProfileReplyView } from "@/types/application/feed/profile-reply-view";
 import type { ScheduledPostView } from "@/types/application/feed/scheduled-post-view";
 
 import { api, buildQuery } from "../api-client";
@@ -46,8 +47,13 @@ export const feedApi = {
   listByUser: (username: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<PostView>>(`/users/${username}/posts${buildQuery({ cursor, limit })}`),
 
-  listByUserId: (userId: string, cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<PostView>>(`/users/${userId}/posts${buildQuery({ cursor, limit })}`),
+  listByUserId: (userId: string, cursor?: string | null, limit = 20, tab?: string) =>
+    api.get<PageResponse<PostView>>(`/users/${userId}/posts${buildQuery({ cursor, limit, tab })}`),
+
+  listReplies: (username: string, cursor?: string | null, limit = 20) =>
+    api.get<PageResponse<ProfileReplyView>>(
+      `/users/${username}/replies${buildQuery({ cursor, limit })}`,
+    ),
 
   // `pageHtml` so vai em post do tipo PAGE e `articleBody` so em ARTICLE; o backend descarta nos
   // demais tipos. Num artigo o corpo e obrigatorio tambem na edicao.

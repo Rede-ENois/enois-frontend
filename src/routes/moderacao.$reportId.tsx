@@ -3,9 +3,10 @@ import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { ModeracaoAcao } from "@/types/routes/moderacao/moderacao-acao";
-import { Button } from "@rede-enois/design-system/ui";
+import { Badge, Button } from "@rede-enois/design-system/ui";
 
 import { reportsAdminApi } from "@/lib/api/reports-admin";
+import { dataHora } from "@/lib/date/format";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -146,6 +147,12 @@ function ModeracaoDenuncia() {
                     {texts.moderacaoReview.participants}: {data.call.participants.join(", ")}
                   </p>
                 )}
+
+                {/* O horário da denúncia já vinha na resposta e não aparecia: sem ele, a
+                    captura não se ancora no momento em que a pessoa relatou o caso. */}
+                <Badge variant="outline">
+                  {texts.moderacaoReview.reportedAt(dataHora(data.call.reportedAt))}
+                </Badge>
               </section>
             )}
 

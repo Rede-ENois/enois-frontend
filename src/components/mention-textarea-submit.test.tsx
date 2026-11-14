@@ -54,19 +54,24 @@ describe("MentionTextarea: Ctrl+Enter", () => {
         </QueryClientProvider>,
       ),
     );
-    return host.querySelector("textarea")!;
+    // O campo do DS 0.33 é contentEditable; os eventos de teclado e de digitação vão nele.
+    return host.querySelector<HTMLElement>('[role="textbox"]')!;
   }
 
-  async function type(textarea: HTMLTextAreaElement, text: string) {
-    // Setter nativo: o React só vê a mudança se o valor não vier pela própria prop.
-    const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!;
+  async function type(field: HTMLElement, text: string) {
     await act(async () => {
-      setter.call(textarea, text);
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      field.textContent = text;
+      const range = document.createRange();
+      range.selectNodeContents(field);
+      range.collapse(false);
+      const selection = document.getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      field.dispatchEvent(new Event("input", { bubbles: true }));
     });
   }
 
-  async function press(textarea: HTMLTextAreaElement, init: KeyboardEventInit) {
+  async function press(field: HTMLElement, init: KeyboardEventInit) {
     const event = new KeyboardEvent("keydown", {
       key: "Enter",
       bubbles: true,
@@ -74,55 +79,55 @@ describe("MentionTextarea: Ctrl+Enter", () => {
       ...init,
     });
     await act(async () => {
-      textarea.dispatchEvent(event);
+      field.dispatchEvent(event);
     });
     return event;
   }
 
   it("Ctrl+Enter e Cmd+Enter chamam o envio e não quebram linha", async () => {
     const submit = vi.fn();
-    const textarea = await render(submit);
-    await type(textarea, "oi");
+    const campo = await render(submit);
+    await type(campo, "oi");
 
-    expect((await press(textarea, { ctrlKey: true })).defaultPrevented).toBe(true);
-    await press(textarea, { metaKey: true });
+    expect((await press(campo, { ctrlKey: true })).defaultPrevented).toBe(true);
+    await press(campo, { metaKey: true });
 
     expect(submit).toHaveBeenCalledTimes(2);
   });
 
   it("Enter puro não envia", async () => {
     const submit = vi.fn();
-    const textarea = await render(submit);
-    await type(textarea, "oi");
+    const campo = await render(submit);
+    await type(campo, "oi");
 
-    expect((await press(textarea, {})).defaultPrevented).toBe(false);
+    expect((await press(campo, {})).defaultPrevented).toBe(false);
     expect(submit).not.toHaveBeenCalled();
   });
 
   it("com a lista de menção aberta, Enter escolhe a pessoa e Ctrl+Enter envia", async () => {
     const submit = vi.fn();
-    const textarea = await render(submit);
-    await type(textarea, "@an");
+    const campo = await render(submit);
+    await type(campo, "@an");
     await act(async () => {
       await client.refetchQueries();
     });
     await vi.waitFor(() => expect(host.textContent).toContain("ana"));
 
     // Com a lista aberta: Ctrl+Enter envia sem escolher ninguém...
-    await press(textarea, { ctrlKey: true });
+    await press(campo, { ctrlKey: true });
     expect(submit).toHaveBeenCalledTimes(1);
-    expect(textarea.value).toBe("@an");
+    expect(campo.textContent).toBe("@an");
 
     // ...e Enter continua escolhendo a pessoa, sem enviar.
-    await press(textarea, {});
+    await press(campo, {});
     expect(submit).toHaveBeenCalledTimes(1);
-    expect(textarea.value).toBe("@ana ");
+    expect(campo.textContent).toBe("@ana ");
   });
 
   it("sem onSubmitShortcut, Ctrl+Enter não faz nada", async () => {
-    const textarea = await render();
-    await type(textarea, "oi");
+    const campo = await render();
+    await type(campo, "oi");
 
-    expect((await press(textarea, { ctrlKey: true })).defaultPrevented).toBe(false);
+    expect((await press(campo, { ctrlKey: true })).defaultPrevented).toBe(false);
   });
 });

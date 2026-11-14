@@ -8,6 +8,7 @@ import type { NotificationsPanelProps } from "@rede-enois/design-system/domain";
 
 import { networkApi, notificationsApi } from "@/lib/api";
 import { formatarData, ingressoDeEvento } from "@/lib/date/format";
+import { refreshNotifications } from "@/lib/inbox-sync";
 import { isNotificationHidden } from "@/lib/notification-module";
 import { markReadInCache } from "@/lib/notification-read-cache";
 import { networkQueries } from "@/lib/query-options/network";
@@ -41,7 +42,9 @@ export function useNotificationsPanel(
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const disabledModules = useDisabledModules();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  // Marcar como lida muda a linha e o resumo: a primeira página de cada lista na tela é conferida,
+  // sem refazer todas as páginas carregadas (o que a invalidação do prefixo fazia).
+  const refresh = () => void refreshNotifications(queryClient);
 
   const markAsRead = useMutation({
     mutationFn: (id: string) => notificationsApi.markAsRead(id),

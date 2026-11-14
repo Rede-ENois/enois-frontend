@@ -3,6 +3,8 @@ import type { CalendarAgendaItemView } from "@/types/application/calendar/calend
 import type { CalendarAvailabilityWindowView } from "@/types/application/calendar/calendar-availability-window-view";
 import type { CalendarConflictQuery } from "@/types/application/calendar/calendar-conflict-query";
 import type { CalendarEntryView } from "@/types/application/calendar/calendar-entry-view";
+import type { CalendarImportInput } from "@/types/application/calendar/calendar-import-input";
+import type { CalendarImportResultView } from "@/types/application/calendar/calendar-import-result-view";
 import type { CalendarParticipantView } from "@/types/application/calendar/calendar-participant-view";
 import type { CalendarParticipation } from "@/types/application/calendar/calendar-participation";
 import type { CalendarReminderView } from "@/types/application/calendar/calendar-reminder-view";
@@ -11,6 +13,7 @@ import type { CalendarSubscriptionView } from "@/types/application/calendar/cale
 import type { CalendarWindowQuery } from "@/types/application/calendar/calendar-window-query";
 import type { CalendarAvailabilityWindowInput } from "@/types/application/calendar/create-calendar-availability-window-input";
 import type { CreateCalendarEntryInput } from "@/types/application/calendar/create-calendar-entry-input";
+import type { RecurringCadence } from "@/types/application/calendar/recurring-cadence";
 import type { UpdateCalendarEntryInput } from "@/types/application/calendar/update-calendar-entry-input";
 
 import { api, apiUrl, buildQuery } from "../api-client";
@@ -47,6 +50,24 @@ export const calendarApi = {
 
   /** Cancela, não apaga: o compromisso continua na lista com `state: "CANCELLED"`. */
   cancel: (entryId: string) => api.delete<CalendarEntryView>(`/calendar/entries/${entryId}`),
+
+  /**
+   * Torna o compromisso o começo de uma série: o servidor materializa as próximas datas na hora e
+   * o worker mantém 90 dias à frente. Cada ocorrência nasce como compromisso comum — pode ser
+   * editada ou cancelada sozinha, e o que já aconteceu fica.
+   *
+   * Chamar de novo com outra cadência troca a da série. Compromisso com origem é recusado (409):
+   * quem repete o fato é o módulo que o criou.
+   */
+  startSeries: (entryId: string, recurrence: RecurringCadence) =>
+    api.post<CalendarEntryView>(`/calendar/entries/${entryId}/series`, { recurrence }),
+
+  /**
+   * Encerra a série a partir desta ocorrência: as futuras são canceladas, o passado fica e ela
+   * volta a ser um compromisso único. Encerrar o que não é série devolve o compromisso como está.
+   */
+  stopSeries: (entryId: string) =>
+    api.delete<CalendarEntryView>(`/calendar/entries/${entryId}/series`),
 
   /** Convida pelo @. Só o organizador. */
   invite: (entryId: string, username: string) =>
@@ -149,4 +170,18 @@ export const calendarApi = {
    * o leitor externo, sem sessão, e o token no caminho é a credencial inteira.
    */
   subscriptionUrl: (token: string) => apiUrl(`/calendar/subscribe/${token}.ics`),
+
+  /**
+   * Importa um `.ics` como multipart (fase 8, D23). É escrita, então o `Idempotency-Key` automático
+   * do `api.post` protege contra o clique duplo duplicar a agenda; reimportar o mesmo arquivo é
+   * idempotente no servidor por UID. O `scope` vai na query, como a criação.
+   */
+  importIcs: ({ file, scope }: CalendarImportInput) => {
+    const body = new FormData();
+    body.append("file", file);
+    return api.post<CalendarImportResultView>(
+      `/calendar/entries/import${buildQuery({ scope: scope ?? undefined })}`,
+      body,
+    );
+  },
 };

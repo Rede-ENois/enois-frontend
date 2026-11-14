@@ -70,29 +70,54 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-const settle = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+// Acima do debounce da busca de menção (250 ms): a lista só aparece depois da pausa da digitação.
+// O debounce resolve dentro desta janela e a resposta da busca chega depois; o `act` vazio
+// seguinte deixa o React confirmar (commit) o resultado resolvido, como faria no navegador.
+async function flush() {
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 300)));
+  await act(async () => {});
+  await act(async () => {});
+}
 
-async function selectMention() {
-  const textarea = host.querySelector("textarea")!;
-  await act(async () => {
-    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(
-      textarea,
-      "@an",
-    );
-    textarea.setSelectionRange(3, 3);
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await settle();
-  const option = [...host.querySelectorAll("button")].find((button) =>
+// Espera uma condição da tela como no navegador: alterna o relógio com o React e reavalia.
+async function waitFor<T>(check: () => T | undefined, tries = 20): Promise<T> {
+  for (let i = 0; i < tries; i += 1) {
+    const found = check();
+    if (found !== undefined) return found;
+    await flush();
+  }
+  throw new Error("waitFor: condição não apareceu");
+}
+
+const settle = flush;
+
+function mentionOption() {
+  return [...host.querySelectorAll("button")].find((button) =>
     button.textContent?.includes("Ana Example"),
   );
-  expect(option).toBeDefined();
+}
+
+async function selectMention() {
+  const campo = host.querySelector<HTMLElement>('[role="textbox"]')!;
+  await act(async () => {
+    campo.textContent = "@an";
+    const texto = campo.firstChild!;
+    const range = document.createRange();
+    range.setStart(texto, 3);
+    range.setEnd(texto, 3);
+    const selection = document.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    campo.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await settle();
+  const option = await waitFor(mentionOption);
   await act(async () =>
-    option!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })),
+    option.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true })),
   );
   await settle();
   expect(changed).toHaveBeenLastCalledWith("@ana-test ", ["user-a"]);
-  return textarea;
+  return campo;
 }
 
 async function chooseEmote() {
@@ -117,17 +142,25 @@ describe("emote insertion through the real mention editor", () => {
   });
 
   it("removes the recipient when an emote replaces the selected mention", async () => {
-    const textarea = await selectMention();
-    textarea.setSelectionRange(0, "@ana-test".length);
+    const campo = await selectMention();
+    // A seleção cobre o texto da menção ("@ana-test"), como quem seleciona o nome antes de
+    // escolher a figurinha: a substituição leva o destinatário embora.
+    const texto = campo.firstChild!;
+    const range = document.createRange();
+    range.setStart(texto, 0);
+    range.setEnd(texto, "@ana-test".length);
+    const selection = document.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    // O campo do DS lembra a seleção por `selectionchange`; no jsdom o evento não sai sozinho.
+    document.dispatchEvent(new Event("selectionchange"));
     await chooseEmote();
     expect(changed).toHaveBeenLastCalledWith(":KEKW: ", []);
   });
 
   it("keeps a confirmed mention when the emote is inserted after it", async () => {
-    const textarea = await selectMention();
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    await selectMention();
     await chooseEmote();
     expect(changed).toHaveBeenLastCalledWith("@ana-test :KEKW:", ["user-a"]);
-    expect(textarea.selectionStart).toBe("@ana-test :KEKW:".length);
   });
 });

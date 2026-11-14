@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { CalendarAgendaItemView } from "@/types/application/calendar/calendar-agenda-item-view";
@@ -10,10 +10,12 @@ import type {
   CalendarAgendaItemData,
   CalendarEntryData,
   CalendarEntryFormValues,
+  CalendarPendingInvitationData,
   CalendarView,
 } from "@rede-enois/design-system/domain";
 import {
   CalendarAgendaSurface,
+  CalendarImportDialog,
   instantOf,
   periodOfToday,
   periodWindow,
@@ -28,7 +30,7 @@ import {
   TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
-import { CalendarDays, Download } from "lucide-react";
+import { CalendarClock, CalendarDays, Download, Upload } from "lucide-react";
 
 import { calendarApi } from "@/lib/api";
 import { downloadCalendarExport } from "@/lib/calendar-export";
@@ -106,6 +108,14 @@ function toEntryData(item: CalendarAgendaItemView): CalendarEntryData {
   };
 }
 
+/** A gravação funcionou e a série não: o compromisso existe, avulso, e a frase diz isso. */
+class SeriesError extends Error {
+  constructor(cause: unknown) {
+    super("série não iniciada", { cause });
+    this.name = "SeriesError";
+  }
+}
+
 function AgendaPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -121,7 +131,12 @@ function AgendaPage() {
 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [respondError, setRespondError] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importScope, setImportScope] = useState<CalendarScope | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // `periodWindow` devolve dias; a API pede instantes. O `to` já é o dia seguinte (janela meio aberta).
   const window = useMemo(() => {
@@ -139,9 +154,20 @@ function AgendaPage() {
   // está nos campos, e nada aqui bloqueia o salvar. Falha silenciosa: sem lista, sem aviso.
   const conflicts = useQuery(calendarQueries.conflicts(window));
 
+  // Convite para fora do período na tela só aparece aqui: sem esta lista, quem tem convite para o
+  // mês que vem precisa abrir o mês certo para saber dele. Falha de leitura não esconde a agenda —
+  // o bloco não nasce quando não há resposta, então vazio e falha desenham igual.
+  const invitations = useQuery(calendarQueries.pendingInvitations());
+
+  /**
+   * A criação é uma chamada só; a série é a segunda, sobre o id que a primeira devolveu. Começar a
+   * série antes não é possível — ela nasce do compromisso fundador. Se a segunda falhar, o
+   * compromisso já existe e fica avulso: a pessoa vê o erro, a agenda se recarrega, e repetir o
+   * salvar com a mesma cadência não duplica nada.
+   */
   const save = useMutation({
-    mutationFn: (values: CalendarEntryFormValues) =>
-      calendarApi.create({
+    mutationFn: async (values: CalendarEntryFormValues) => {
+      const entry = await calendarApi.create({
         scope: values.scope,
         kind: values.kind,
         title: values.title,
@@ -150,12 +176,25 @@ function AgendaPage() {
         endsAt: values.endsAt,
         timeZoneId: values.timeZoneId,
         allDay: values.allDay,
-      }),
-    onSuccess: () => {
+      });
+      if (values.recurrence === "NONE") return entry;
+      try {
+        return await calendarApi.startSeries(entry.id, values.recurrence);
+      } catch (error) {
+        void queryClient.invalidateQueries({ queryKey: ["agenda"] });
+        throw new SeriesError(error);
+      }
+    },
+    onSuccess: (entry) => {
       setSaveError(null);
+      if (entry.seriesId) toast(texts.agenda.seriesStarted, "success");
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
     },
-    onError: () => setSaveError(texts.agenda.errorSave),
+    // A gravação em si falhou quando o erro não diz respeito à série; a frase muda com ele.
+    onError: (error) =>
+      setSaveError(
+        error instanceof SeriesError ? texts.agenda.errorSeries : texts.agenda.errorSave,
+      ),
   });
 
   const respond = useMutation({
@@ -168,9 +207,17 @@ function AgendaPage() {
     }) => calendarApi.respond(entryId, answer),
     onMutate: ({ entryId }) => setRespondingId(entryId),
     onSuccess: () => {
+      setRespondError(false);
+      // A resposta muda a agenda mas sem confirmar visualmente parece que nada aconteceu.
+      toast(texts.agenda.respondDone, "success");
       void queryClient.invalidateQueries({ queryKey: ["agenda"] });
     },
-    onError: () => toast(texts.agenda.errorRespond, "error"),
+    onError: () => {
+      // O toast some sozinho; o `respondError` deixa o aviso no lugar do convite, onde a resposta
+      // falhou, até a pessoa tentar de novo.
+      setRespondError(true);
+      toast(texts.agenda.errorRespond, "error");
+    },
     onSettled: () => setRespondingId(null),
   });
 
@@ -193,6 +240,23 @@ function AgendaPage() {
         participation: item.participation,
       })),
     [conflicts.data],
+  );
+
+  // O convite pendente carrega só o que a resposta precisa; a descrição e a origem ficam para o
+  // detalhe, que o link abre.
+  const pendingItems: CalendarPendingInvitationData[] = useMemo(
+    () =>
+      (invitations.data ?? []).map((entry) => ({
+        id: entry.id,
+        scope: entry.scope,
+        kind: entry.kind,
+        title: entry.title,
+        startsAt: entry.startsAt,
+        endsAt: entry.endsAt,
+        allDay: entry.allDay,
+        timeZoneId: entry.timeZoneId,
+      })),
+    [invitations.data],
   );
 
   const go = (next: { view: CalendarView; period: string; scope?: CalendarScope }) => {
@@ -219,6 +283,27 @@ function AgendaPage() {
     }
   };
 
+  // O import é escrita: o `api.post` já manda o `Idempotency-Key`, e o servidor não duplica por
+  // UID. A agenda é recarregada porque o arquivo pode ter criado, movido e cancelado de uma vez.
+  const importIcs = useMutation({
+    mutationFn: () => {
+      if (!importFile) throw new Error("no file");
+      return calendarApi.importIcs({ file: importFile, scope: importScope });
+    },
+    onSuccess: () => {
+      setImportError(null);
+      void queryClient.invalidateQueries({ queryKey: ["agenda"] });
+    },
+    onError: () => setImportError(texts.agenda.importIcsError),
+  });
+
+  const openImport = () => {
+    setImportFile(null);
+    setImportScope(scope ?? null);
+    setImportError(null);
+    setImportOpen(true);
+  };
+
   const eyebrow =
     scope === "SOCIAL"
       ? texts.agenda.scopeSocial
@@ -233,16 +318,35 @@ function AgendaPage() {
         description={texts.agenda.subtitle}
         icon={CalendarDays}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void exportCalendar()}
-            disabled={exporting}
-            title={texts.agenda.exportIcsHint}
-          >
-            <Download aria-hidden="true" />
-            {texts.agenda.exportIcs}
-          </Button>
+          <>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/agenda/disponibilidade">
+                <CalendarClock aria-hidden="true" />
+                {texts.agenda.availabilityLink}
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openImport}
+              title={texts.agenda.importIcsHint}
+            >
+              <Upload aria-hidden="true" />
+              {texts.agenda.importIcs}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void exportCalendar()}
+              disabled={exporting}
+              title={texts.agenda.exportIcsHint}
+            >
+              <Download aria-hidden="true" />
+              {texts.agenda.exportIcs}
+            </Button>
+          </>
         }
       >
         <Tabs
@@ -278,6 +382,7 @@ function AgendaPage() {
           today={today}
           newEntryScope={scope}
           conflicts={conflictItems}
+          pendingInvitations={pendingItems}
           savePending={save.isPending}
           saveError={saveError}
           onSave={async (values) => {
@@ -292,12 +397,32 @@ function AgendaPage() {
           }}
           onRespond={(entryId, answer) => respond.mutate({ entryId, answer })}
           respondingId={respondingId}
+          respondError={respondError}
           loading={agenda.isFetching}
           error={agenda.isError}
           onRetry={() => void agenda.refetch()}
           eyebrow={eyebrow}
         />
       )}
+
+      <CalendarImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        scope={importScope}
+        onScopeChange={setImportScope}
+        file={importFile}
+        onFileChange={setImportFile}
+        onImport={async () => {
+          try {
+            return await importIcs.mutateAsync();
+          } catch {
+            // O erro já foi para `importError`; `null` mantém o diálogo aberto com o arquivo
+            // escolhido, em vez de mostrar um resultado que não aconteceu.
+            return null;
+          }
+        }}
+        error={importError}
+      />
     </AppContainer>
   );
 }
