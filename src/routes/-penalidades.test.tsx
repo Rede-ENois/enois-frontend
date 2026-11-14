@@ -30,6 +30,7 @@ const Penalidades = (Route as unknown as { options: { component: () => React.JSX
 let root: Root;
 let host: HTMLDivElement;
 let client: QueryClient;
+const emptyMessage = "Nenhuma penalidade encontrada.";
 
 async function render() {
   await act(async () => {
@@ -70,7 +71,7 @@ describe("consulta das próprias penalidades", () => {
     await render();
     await waitForText("Não foi possível carregar suas penalidades.");
 
-    expect(host.textContent).not.toContain(texts.sanctions.empty);
+    expect(host.textContent).not.toContain(emptyMessage);
     expect(
       [...host.querySelectorAll("button")].some((b) => b.textContent === "Tentar novamente"),
     ).toBe(true);
@@ -79,7 +80,7 @@ describe("consulta das próprias penalidades", () => {
   it("mostra ausência de penalidades somente após consulta bem-sucedida", async () => {
     mocks.mine.mockResolvedValue({ sanctions: [], appeals: [] });
     await render();
-    await waitForText(texts.sanctions.empty);
+    await waitForText(emptyMessage);
     expect(host.textContent).not.toContain(texts.sanctions.loadError);
   });
 
@@ -100,6 +101,9 @@ describe("consulta das próprias penalidades", () => {
                   status: "ACTIVE",
                   reason: "Motivo sintético da penalidade",
                   createdAt: "2026-01-01T12:00:00Z",
+                  deadline: { kind: "NONE", at: null },
+                  evidence: { kind: "UNAVAILABLE", text: null },
+                  canAppeal: true,
                 },
               ],
         appeals: [],
@@ -109,9 +113,7 @@ describe("consulta das próprias penalidades", () => {
         (b) => b.textContent === texts.sanctions.retry,
       );
       await act(async () => retry?.click());
-      await waitForText(
-        state === "vazia" ? texts.sanctions.empty : "Motivo sintético da penalidade",
-      );
+      await waitForText(state === "vazia" ? emptyMessage : "Motivo sintético da penalidade");
       expect(host.textContent).not.toContain(texts.sanctions.loadError);
       expect(mocks.mine).toHaveBeenCalledTimes(2);
     },
@@ -126,20 +128,20 @@ describe("consulta das próprias penalidades", () => {
     );
     await act(async () => retry?.click());
     await waitForText(texts.sanctions.loadError);
-    expect(host.textContent).not.toContain(texts.sanctions.empty);
+    expect(host.textContent).not.toContain(emptyMessage);
     expect(mocks.mine).toHaveBeenCalledTimes(2);
   });
 
   it("não afirma ausência quando a atualização de uma lista vazia falha", async () => {
     mocks.mine.mockResolvedValueOnce({ sanctions: [], appeals: [] });
     await render();
-    await waitForText(texts.sanctions.empty);
+    await waitForText(emptyMessage);
     mocks.mine.mockRejectedValue(new Error("Falha sintética na atualização"));
     await act(async () => {
       await client.invalidateQueries({ queryKey: ["my-sanctions"] });
     });
     await waitForText(texts.sanctions.loadError);
-    expect(host.textContent).not.toContain(texts.sanctions.empty);
+    expect(host.textContent).not.toContain(emptyMessage);
   });
 
   it("não duplica a consulta enquanto uma tentativa está em andamento", async () => {
@@ -167,6 +169,6 @@ describe("consulta das próprias penalidades", () => {
     await act(async () => retry?.click());
     expect(mocks.mine).toHaveBeenCalledTimes(2);
     await act(async () => resolveQuery({ sanctions: [], appeals: [] }));
-    await waitForText(texts.sanctions.empty);
+    await waitForText(emptyMessage);
   });
 });

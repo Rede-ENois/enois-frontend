@@ -24,6 +24,25 @@ O cliente de `GET /me/sanctions` valida a resposta em tempo de execução: refer
 
 Somente os campos previstos pelo contrato são repassados à apresentação. A integração desse contrato depende da entrega coordenada do backend.
 
+## Conta suspensa e recurso
+
+A página `/conta-suspensa` usa a mesma consulta autorizada, sem depender do indicador de sessão normal. O backend confirma a identidade e todos os fatores antes de emitir o acesso `SANCTIONS_ONLY`, transportado pelos cookies HttpOnly existentes. Esse acesso não é gravado como uma sessão normal nem dispara sincronização de chaves, chat ou outras áreas privadas.
+
+- Login por senha, segundo fator, confirmação de e-mail e retorno OAuth respeitam o escopo confirmado pelo servidor.
+- OAuth com fator pendente consulta o desafio do cookie por `/auth/2fa/challenge` antes de concluir o login; essa etapa não revela suspensão.
+- `ACCOUNT_SUSPENDED` e `SESSION_RESTRICTED` confirmados pelo servidor encaminham para a página específica. Erro de rede, CSRF ou um 401 genérico não são interpretados como suspensão.
+- Um 401 na consulta limitada pede nova entrada, sem preservar dados da decisão como sucesso atual.
+- O recurso envia texto aparado, impede duplicação durante o envio e reconcilia seu estado com o servidor. Pendência aparece como **Recurso em análise**.
+- Após remoção da sanção, a tela apresenta o histórico e o caminho para entrar novamente; não promove a credencial limitada para sessão normal.
+
+O indicador local de acesso restrito contém apenas estado de navegação. Não é credencial nem autoriza qualquer consulta. A proteção efetiva permanece no backend.
+
+A apresentação é `SanctionsView`, do design system; o frontend mantém somente containers, consultas, relógio, navegação e autenticação. O formulário de segundo fator já existente é reutilizado no retorno OAuth. O arquivo legado de entrada continua extenso; o ajuste nele ficou restrito à aceitação do escopo e ao encaminhamento, sem refatoração visual.
+
+## Dependência coordenada
+
+A integração usa as novas exportações da entrega DS #231. A prova local utiliza um pacote gerado da branch dessa entrega, que mantém a versão-base `0.34.0`; não se trata do conteúdo já publicado dessa versão. O manifesto e o lockfile não recebem caminho local nem versão futura inventada. A publicação de uma versão ou pré-versão pelo mantenedor e a atualização coordenada do consumidor são requisitos antes de uma instalação limpa ou merge da integração.
+
 ## Verificação
 
 `src/routes/-penalidades.test.tsx` exercita o container com a consulta real do React Query e respostas sintéticas da API. Os testes cobrem falha inicial, sucesso vazio, recuperação com/sem penalidade, falha persistente, falha de atualização e tentativa concorrente.

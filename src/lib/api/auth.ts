@@ -9,6 +9,7 @@ import type { LinkedProvider } from "@/types/application/auth/linked-provider";
 import type { LoginInput } from "@/types/application/auth/login-input";
 import type { OAuthMode } from "@/types/application/auth/oauth-mode";
 import type { OAuthStartResponse } from "@/types/application/auth/oauth-start-response";
+import type { PendingAuthResponse } from "@/types/application/auth/pending-auth-response";
 import type { SignupChallenge } from "@/types/application/auth/signup-challenge";
 import type { SignupInput } from "@/types/application/auth/signup-input";
 import type { SignupResult } from "@/types/application/auth/signup-result";
@@ -31,7 +32,8 @@ export const authApi = {
     api.post<SignupResult>("/auth/signup", data, { fingerprint: true }),
 
   /** Confirma o e-mail pelo token do link e já devolve a sessão. */
-  verifyEmail: (token: string) => api.post<AuthResponse>("/auth/email/verify", { token }),
+  verifyEmail: (token: string) =>
+    api.post<AuthResponse | PendingAuthResponse>("/auth/email/verify", { token }),
 
   /** Reenvia o link de confirmação (sempre 202, sem revelar se o e-mail existe). */
   resendVerification: (email: string) => api.post<StatusResponse>("/auth/email/resend", { email }),
@@ -45,6 +47,9 @@ export const authApi = {
   /** Conclui o login com o código do segundo fator (ou um código de recuperação). */
   verifyTwoFactor: (challengeId: string, code: string) =>
     api.post<AuthResponse>("/auth/2fa/verify", { challengeId, code }),
+
+  pendingTwoFactor: () =>
+    api.get<Omit<TwoFactorChallenge, "twoFactorRequired">>("/auth/2fa/challenge"),
 
   /** Reenvia o código por e-mail do desafio em andamento. */
   resendTwoFactor: (challengeId: string) =>

@@ -2,12 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { finishOAuthLogin } from "./oauth-callback";
 
-const deps = vi.hoisted(() => ({ me: vi.fn(), renewSession: vi.fn(), storeSession: vi.fn() }));
+const deps = vi.hoisted(() => ({
+  me: vi.fn(),
+  renewSession: vi.fn(),
+  storeSession: vi.fn(),
+  clearSession: vi.fn(),
+}));
 
 vi.mock("./api/auth", () => ({ authApi: { me: deps.me } }));
-vi.mock("./api-client", () => ({
+vi.mock("./api-client", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   apiUrl: (path: string) => path,
   renewSession: deps.renewSession,
+  clearSession: deps.clearSession,
 }));
 vi.mock("./session", () => ({ storeSession: deps.storeSession }));
 
