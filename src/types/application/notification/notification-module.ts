@@ -7,6 +7,7 @@ export type NotificationModule =
   | "MENTORING"
   | "DAILY_GAMES"
   | "COMMUNITY_GAMES"
+  | "COMMUNITY_PROJECTS"
   | "GROUPS"
   | "STUDY_PAIRS"
   | "BLOGS"

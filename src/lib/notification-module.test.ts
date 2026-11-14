@@ -52,6 +52,14 @@ describe("moduleForNotification", () => {
     expect(isNotificationHidden({ kind: "JOB_APPLICATION_STATUS" }, new Set(["JOBS"]))).toBe(true);
   });
 
+  it("keeps community project notices in the disabled project module", () => {
+    expect(moduleForNotification("NEW_COMMUNITY_PROJECT")).toBe("COMMUNITY_PROJECTS");
+    expect(
+      isNotificationHidden({ kind: "NEW_COMMUNITY_PROJECT" }, new Set(["COMMUNITY_PROJECTS"])),
+    ).toBe(true);
+    expect(isNotificationHidden({ kind: "NEW_COMMUNITY_PROJECT" }, new Set(["JOBS"]))).toBe(false);
+  });
+
   it("trusts the module the backend resolved", () => {
     expect(isNotificationHidden({ kind: "ANYTHING", module: "BLOGS" }, new Set(["BLOGS"]))).toBe(
       true,
