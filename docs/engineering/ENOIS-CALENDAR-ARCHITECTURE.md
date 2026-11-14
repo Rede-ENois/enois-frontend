@@ -1237,3 +1237,32 @@ teto por ciclo.
 usuário enxerga sempre o estado real — compromisso criado aparece mesmo quando a repetição falhou — e
 a edição só toca a série quando há mudança de cadência. O custo é um caminho de erro a mais para
 testar, coberto pelos três casos de `agenda.test.tsx`.
+
+## D45 — A corrida pela mesma vaga é decidida pelo banco, não pela leitura (execução 45)
+
+1. **Três caminhos tinham o mesmo defeito: ler, decidir, escrever.** A reserva de horário de
+   mentoria, o re-pedido de lembrete resolvido e a emissão de assinatura `.ics` consultavam o
+   estado, decidiam sobre o snapshot e gravavam depois. Entre a leitura e a escrita, outra
+   requisição muda o mundo — e a decisão tomada sobre o passado vira dado inválido (horário
+   reservado duas vezes com duas retenções de faísca; lembrete que nunca mais toca; dois links
+   vivos que o revogar não mata juntos).
+2. **O padrão é o banco como árbitro, com o instrumento que o caso pede.** Reserva: UPDATE
+   condicional (`bookIfFree`) que devolve quantas linhas alcançou — quem alcança zero perdeu a
+   corrida e é recusado antes de reter qualquer valor. Emissão de assinatura: tranca a linha do
+   dono em `users` (`for update`), serializando a checagem "há ativa?" com a criação — sem linha
+   própria para travar, a linha da pessoa é o mutex. Lembrete: operação idempotente por chave
+   única (`rearm` na linha existente), sem corrida possível porque a chave única do banco é o
+   guardião.
+3. **Quem perde a corrida sai sem custo.** A recusa (`409 SLOT_UNAVAILABLE`) acontece ANTES do
+   escrow e antes de criar sessão; a emissão paralela devolve a assinatura já existente, sem
+   token novo. Falhar tarde e compensar depois é o caminho caro e cheio de exceção; falhar cedo é
+   uma linha a mais de código e nenhuma compensação.
+4. **A prova de corrida tem de criar a janela de verdade.** Teste sequencial de "reservar duas
+   vezes" passa no código antigo (a leitura enxerga a primeira reserva) — não prova nada. As
+   provas desta decisão simulam a sobreposição: o teste do slot grava na linha entre a leitura e
+   a escrita; o da assinatura usa barreira de duas pontas para as duas transações lerem antes de
+   qualquer uma gravar.
+
+**Consequência.** Os três caminhos de escrita do motor de agenda que decidem sobre estado
+compartilhado são agora atômicos no banco. O custo é uma consulta de tranca na emissão de
+assinatura (só no caminho de criação, que é raro) e um UPDATE condicional por reserva.
