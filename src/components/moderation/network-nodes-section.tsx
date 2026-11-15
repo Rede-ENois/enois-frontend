@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -18,23 +18,24 @@ import type {
 import { NetworkNodesSection as NetworkNodesSectionView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
-import { ApiError, adminNetworkApi } from "@/lib/api";
+import { ApiError, adminNetworkApi, profileApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 
 const QUERY_KEY = ["admin", "network", "nodes"];
 const DASHBOARD_KEY = ["admin", "network", "dashboard"];
 const ROUTES_KEY = ["admin", "network", "api-routes"];
 
-/** Os perfis que um nó pode receber — o mesmo conjunto que o backend valida. */
-const PROFILES = [
-  "NODE_EDGE",
-  "NODE_WORKER",
-  "NODE_MEDIA",
-  "NODE_READ_REPLICA",
-  "NODE_API",
-  "NODE_LOCAL",
-  "NODE_EMERGENCY",
-];
+/**
+ * Os perfis que um nó pode receber — o mesmo conjunto que o backend valida, na ordem em que a
+ * tela os oferece. Os rótulos vêm de `texts`; aqui só se monta a opção que o design system espera.
+ */
+const PROFILE_OPTIONS = Object.entries(texts.moderator.network.profileLabels).map(
+  ([id, label]) => ({ id, label }),
+);
+const PROFILES = PROFILE_OPTIONS.map((profile) => profile.id);
+
+/** 404 da conta dona vira erro de formulário: o admin corrige o @ e tenta de novo, sem toast. */
+class ProvisionOwnerNotFoundError extends Error {}
 
 /** A fotografia da rede na forma que a faixa do design system espera. */
 function dashboardView(dashboard: NetworkDashboard): NetworkDashboardData {
@@ -86,6 +87,12 @@ export function NetworkNodesSection() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [issuedKey, setIssuedKey] = useState<(IssuedNodeKey & { nodeId: string }) | null>(null);
+  const [issuedProvisionToken, setIssuedProvisionToken] = useState<{
+    token: string;
+    expiresAt: string;
+  } | null>(null);
+  /** Fechar o diálogo durante a emissão descarta a resposta que chegar depois. */
+  const provisionAttempt = useRef(0);
   const [openNodeId, setOpenNodeId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
@@ -121,6 +128,55 @@ export function NetworkNodesSection() {
       refresh();
     },
     onError,
+  });
+
+  /**
+   * O token de provisionamento cria o nó; a conta dona é resolvida aqui porque o design system não
+   * fala com a rede. O nó só aparece na lista depois do enroll — por isso não há refresh aqui.
+   */
+  const provisionToken = useMutation({
+    mutationFn: async ({
+      serverName,
+      ownerUsername,
+      profiles,
+    }: {
+      serverName: string;
+      ownerUsername: string;
+      profiles: string[];
+    }) => {
+      const attempt = ++provisionAttempt.current;
+      const username = ownerUsername.trim().replace(/^@/, "");
+      if (!username) {
+        throw new ProvisionOwnerNotFoundError(
+          texts.moderator.network.provisionOwnerNotFound(username),
+        );
+      }
+
+      let owner;
+      try {
+        owner = await profileApi.get(username);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          throw new ProvisionOwnerNotFoundError(
+            texts.moderator.network.provisionOwnerNotFound(username),
+          );
+        }
+        throw error;
+      }
+
+      const issued = await adminNetworkApi.provisionToken({
+        displayName: serverName,
+        ownerUserId: owner.id,
+        profiles,
+      });
+
+      return { ...issued, attempt };
+    },
+    onSuccess: ({ attempt, ...issued }) => {
+      if (attempt === provisionAttempt.current) {
+        setIssuedProvisionToken(issued);
+      }
+    },
   });
 
   const revokeKey = useMutation({
@@ -258,6 +314,17 @@ export function NetworkNodesSection() {
       dateLabel: dataHora(record.createdAt),
     }));
 
+  /**
+   * O diálogo mostra o erro no formulário, onde o admin está: erro de conta é específico; falha de
+   * rede/servidor mantém a mensagem da API; o resto vira a mensagem genérica, sem "Failed to fetch".
+   */
+  const provisionError = provisionToken.error
+    ? provisionToken.error instanceof ProvisionOwnerNotFoundError ||
+      provisionToken.error instanceof ApiError
+      ? provisionToken.error.message
+      : texts.moderator.network.provisionFailed
+    : null;
+
   return (
     <NetworkNodesSectionView
       dashboard={dashboard ? dashboardView(dashboard) : null}
@@ -297,6 +364,23 @@ export function NetworkNodesSection() {
       statusPending={changeStatus.isPending}
       issuedKey={issuedKey}
       onDismissIssuedKey={() => setIssuedKey(null)}
+      provisionToken={{
+        onProvision: (input) => provisionToken.mutate(input),
+        provisionPending: provisionToken.isPending,
+        issuedToken: issuedProvisionToken
+          ? {
+              token: issuedProvisionToken.token,
+              expiresAtLabel: dataHora(issuedProvisionToken.expiresAt),
+            }
+          : null,
+        onDismissToken: () => {
+          provisionAttempt.current += 1;
+          setIssuedProvisionToken(null);
+          provisionToken.reset();
+        },
+        provisionError,
+        profileOptions: PROFILE_OPTIONS,
+      }}
     />
   );
 }
