@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Lightbulb,
   type LucideIcon,
+  MessageSquareWarning,
   Newspaper,
   Smile,
   Star,
@@ -33,6 +34,7 @@ export const POST_TYPES: { id: string; label: string; icon: LucideIcon; hint?: s
   { id: "TUTORIAL", label: texts.feed.composer.types.tutorial, icon: Code2 },
   { id: "REVIEW", label: texts.feed.composer.types.review, icon: Star },
   { id: "DIVERTIDO", label: texts.feed.composer.types.divertido, icon: Smile },
+  { id: "COMPLAINT", label: texts.feed.composer.types.complaint, icon: MessageSquareWarning },
   {
     id: "MOMENT",
     label: texts.feed.composer.types.moment,

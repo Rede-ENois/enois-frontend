@@ -49,7 +49,9 @@ export type PostView = {
     /** Ponteiro de um post de blog: o conteúdo mora em /blog/{username}. */
     | "BLOG"
     /** Enquete: o content é o título e o `poll` traz as alternativas e o voto. */
-    | "POLL";
+    | "POLL"
+    /** Reclamação: desabafo/denúncia de problema (pedido do painel de suporte). */
+    | "COMPLAINT";
   content: string;
   /** Assunto do post (taxonomia da plataforma); nulo quando não classificado. */
   topic?: string | null;
