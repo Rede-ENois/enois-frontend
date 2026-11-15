@@ -38,8 +38,9 @@ export const feedApi = {
   get: (postId: string) => api.get<PostView>(`/feed/posts/${postId}`),
 
   /**
-   * Voto da enquete: uma alternativa, um voto por pessoa, sem troca. O backend responde 409
-   * `ALREADY_VOTED` no segundo voto — a tela não oferece votar de novo depois do primeiro.
+   * Voto da enquete: um voto por pessoa, com troca de alternativa — reenviar outra posição move o
+   * voto; repetir a mesma é idempotente. 409 `ALREADY_VOTED` só na corrida de duas requisições
+   * simultâneas da mesma pessoa (uma gravou primeiro).
    */
   votePoll: (postId: string, option: number) =>
     api.post<PollView>(`/feed/posts/${postId}/poll/vote`, { option }),

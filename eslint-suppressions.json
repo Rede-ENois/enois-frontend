@@ -266,7 +266,7 @@
   },
   "src/components/post/poll-card.tsx": {
     "local/no-front-markup": {
-      "count": 27
+      "count": 26
     }
   },
   "src/components/post/poll-composer.tsx": {

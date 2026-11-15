@@ -1377,7 +1377,7 @@ export const texts = {
     mediaSpoiler: {
       badge: "SPOILER",
     },
-    /** Enquete: o voto é único e definitivo — a tela diz isso antes e depois de votar. */
+    /** Enquete: um voto por pessoa — e dá para trocar a alternativa depois; repetir a mesma não muda nada. */
     poll: {
       optionsLabel: "Alternativas",
       optionPlaceholder: (position: number) => `Alternativa ${position}`,
@@ -1389,7 +1389,7 @@ export const texts = {
       votes: (total: number) => (total === 1 ? "1 voto" : `${total} votos`),
       noVotes: "Nenhum voto ainda",
       yourVote: "Seu voto",
-      locked: "O voto não pode ser alterado.",
+      changeHint: "Toque em outra alternativa para trocar seu voto.",
       error: "Não foi possível registrar o voto.",
       alreadyVoted: "Você já votou nesta enquete.",
     },

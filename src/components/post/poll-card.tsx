@@ -6,7 +6,7 @@ import { texts } from "@/texts";
 import type { PollView } from "@/types/application/feed/poll-view";
 import type { PostView } from "@/types/application/feed/post-view";
 import { useToast } from "@rede-enois/design-system/ui";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, Repeat } from "lucide-react";
 
 import { feedApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
@@ -15,10 +15,10 @@ import { useAuth } from "@/lib/use-auth";
 import { RichText } from "./rich-text";
 
 /**
- * Enquete no card: antes do voto são botões (uma alternativa por pessoa); depois do voto vira o
- * resultado com a escolha marcada. O voto é definitivo — o backend recusa o segundo (409) e aqui
- * não existe botão para trocar: depois do primeiro voto a enquete só mostra números. A alternativa
- * passa pelo RichText: código de figurinha (`:KEKW:`) vira imagem, igual no resto do texto.
+ * Enquete no card: cada alternativa é um botão, antes e depois do voto. O primeiro voto registra;
+ * clicar em outra alternativa de depois TROCA o voto (o backend move a linha — um voto por pessoa,
+ * a unique garante), e repetir a mesma não muda nada (idempotente). A escolha fica marcada e a
+ * barra mostra o resultado corrente.
  */
 export function PollCard({ post }: { post: PostView }) {
   const poll = post.poll;
@@ -38,8 +38,9 @@ export function PollCard({ post }: { post: PostView }) {
     },
     onError: (error) => {
       const alreadyVoted = error instanceof Error && /já votou/i.test(error.message);
+      // 409 hoje só acontece na corrida de duas requisições da mesma pessoa ao mesmo tempo.
       toast(alreadyVoted ? texts.posts.poll.alreadyVoted : texts.posts.poll.error, "error");
-      // Já votou em outra aba/dispositivo: recarrega o estado real da enquete.
+      // Recarrega o estado real da enquete: com ele na tela, trocar o voto funciona de novo.
       if (alreadyVoted) queryClient.invalidateQueries({ queryKey: ["post", post.id] });
     },
   });
@@ -58,45 +59,40 @@ export function PollCard({ post }: { post: PostView }) {
           const mine = current.myVote === position;
           return (
             <li key={`${position}-${option}`}>
-              {hasVoted ? (
-                <div
-                  className={`relative overflow-hidden rounded-xl border px-3 py-2 ${
-                    mine ? "border-primary bg-primary/10" : "border-border-soft"
-                  }`}
-                >
+              <button
+                type="button"
+                disabled={vote.isPending}
+                aria-pressed={hasVoted ? mine : undefined}
+                onClick={() => {
+                  if (!requireAuth()) return;
+                  vote.mutate(position);
+                }}
+                className={`relative block w-full overflow-hidden rounded-xl border px-3 py-2 text-left text-sm text-text-strong transition hover:border-primary hover:text-primary disabled:opacity-60 ${
+                  mine ? "border-primary bg-primary/10" : "border-border-soft"
+                }`}
+              >
+                {hasVoted && (
                   <div
                     aria-hidden="true"
                     className="absolute inset-y-0 left-0 bg-primary/15"
                     style={{ width: `${percent}%` }}
                   />
+                )}
 
-                  <div className="relative flex items-center justify-between gap-2 text-sm">
-                    <span className="flex min-w-0 items-center gap-1.5 text-text-strong">
-                      {mine && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+                <div className="relative flex items-center justify-between gap-2">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {mine && hasVoted && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
 
-                      {/* A alternativa passa pelo RichText: figurinha no código (`:KEKW:`) vira
-                          imagem, igual no resto do texto do post. */}
-                      <RichText content={option} className="min-w-0" />
-                    </span>
+                    <span className="min-w-0 break-words">{option}</span>
+                  </span>
 
+                  {hasVoted && (
                     <span className="shrink-0 tabular-nums text-text-subtle">
                       {count} · {percent}%
                     </span>
-                  </div>
+                  )}
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  disabled={vote.isPending}
-                  onClick={() => {
-                    if (!requireAuth()) return;
-                    vote.mutate(position);
-                  }}
-                  className="w-full rounded-xl border border-border-soft px-3 py-2 text-left text-sm text-text-strong transition hover:border-primary hover:text-primary disabled:opacity-60"
-                >
-                  <RichText content={option} className="min-w-0" />
-                </button>
-              )}
+              </button>
             </li>
           );
         })}
@@ -106,9 +102,19 @@ export function PollCard({ post }: { post: PostView }) {
         <span>{total === 0 ? texts.posts.poll.noVotes : texts.posts.poll.votes(total)}</span>
 
         <span className="inline-flex items-center gap-1">
-          <Lock className="h-3 w-3" aria-hidden="true" />
+          {hasVoted ? (
+            <>
+              <Repeat className="h-3 w-3" aria-hidden="true" />
 
-          {hasVoted ? texts.posts.poll.locked : texts.posts.poll.vote}
+              {texts.posts.poll.changeHint}
+            </>
+          ) : (
+            <>
+              <Lock className="h-3 w-3" aria-hidden="true" />
+
+              {texts.posts.poll.vote}
+            </>
+          )}
         </span>
       </div>
     </div>
