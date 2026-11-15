@@ -3141,7 +3141,6 @@ nenhum fluxo de produto (o valor é o mesmo teto de lote que o resto do módulo 
 
 ---
 
-
 ## EXECUÇÃO 38
 
 ### 2026-11-13T22:00-03:00 — Fase 11: a11y além dos estados de erro (contraste medido, foco e teclado)
@@ -3158,12 +3157,12 @@ branch do #855 (execução 37), ainda sem revisão — sem ele os docs da 37 nã
 `src/lib/theme/color.ts` (WCAG, composição alfa para os tintes), nos dois temas e nas superfícies
 reais onde cada par aparece. Quatro defeitos acima do limite:
 
-| par | antes | depois (novo valor) |
-| --- | --- | --- |
-| `text-destructive` sobre o próprio tinte `bg-destructive/10` (claro) | 3,80:1 | 5,03:1 |
-| `bg-destructive` + `text-destructive-foreground` — toast de erro (escuro) | 3,20:1 | 7,45:1 |
-| `--text-date` sobre `surface-2` (dock mobile) | 4,29:1 | 4,98:1 |
-| anéis de seleção `ring-primary/40` (visão semana) | 1,86:1 | 3,85:1 |
+| par                                                                       | antes  | depois (novo valor) |
+| ------------------------------------------------------------------------- | ------ | ------------------- |
+| `text-destructive` sobre o próprio tinte `bg-destructive/10` (claro)      | 3,80:1 | 5,03:1              |
+| `bg-destructive` + `text-destructive-foreground` — toast de erro (escuro) | 3,20:1 | 7,45:1              |
+| `--text-date` sobre `surface-2` (dock mobile)                             | 4,29:1 | 4,98:1              |
+| anéis de seleção `ring-primary/40` (visão semana)                         | 1,86:1 | 3,85:1              |
 
 **Unidade 1 — contraste AA nos dois temas (DS, `07961ff`).** `--destructive` passa a
 `oklch(0.48 0.2 25)` no claro e `oklch(0.74 0.14 25)` no escuro, com `--destructive-foreground`
@@ -3493,7 +3492,7 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
   escondido quando a entrada tem origem — origem não pode fundar série (409). PR
   enois-design-system#227, **mergeado**. O campo chega ao pacote pelo release 0.34.0
   (enois-design-system#229, **mergeado**, tag `v0.34.0` publicada pelo workflow `CI and Publish`,
-  run `43533084578`, job *Publish to GitHub Packages* verde).
+  run `43533084578`, job _Publish to GitHub Packages_ verde).
 - **(B) Front, cliente:** `calendarApi.startSeries(entryId, recurrence)` e
   `calendarApi.stopSeries(entryId)`; tipos `CalendarRecurrence` (`NONE|WEEKLY|BIWEEKLY|MONTHLY`) e
   `RecurringCadence` (`Exclude<…, "NONE">`); `CalendarEntryView` ganhou `seriesId` e `recurrence`.
@@ -3518,7 +3517,7 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
    salvar", porque o salvamento deu certo.
 3. **Edição por diferença.** `changeSeries` decide `stopSeries` quando a escolha é NENHUMA e
    `startSeries` nos outros casos, e o `onSuccess` da `update` só dispara se `values.recurrence !==
-   current`. `savePending` soma `update.isPending || changeSeries.isPending`, então o botão não destrava
+current`. `savePending` soma `update.isPending || changeSeries.isPending`, então o botão não destrava
    entre as duas chamadas.
 4. **Texto morto removido.** `errorSeriesStop` chegou a ser criado e nunca foi usado; saiu antes do
    commit (Q7).
@@ -3534,7 +3533,7 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
 
 - Front `npx tsc --noEmit` → **exit 0**.
 - Front `npx vitest run src/lib/api/calendar.test.ts src/routes/agenda.test.tsx
-  src/routes/agenda.$entryId.test.tsx` → **48/48**. Os três casos de cadência em `agenda.test.tsx`:
+src/routes/agenda.$entryId.test.tsx` → **48/48**. Os três casos de cadência em `agenda.test.tsx`:
   salvar com cadência cria o compromisso e começa a série sobre o id devolvido; sem cadência não há
   segunda chamada; se a série falha, o compromisso já criado não some.
 - Front `npx eslint` nos arquivos de cadência → **0 erros** (5 avisos
@@ -3620,7 +3619,6 @@ sem os mantenedores. (2) Conferir se o `main` do DS foi reconciliado. (3) Varrer
 semântica do vínculo Épapo/Tamo Junto e credencial OAuth dos provedores. (2) Conferir se o `main`
 do DS foi reconciliado. (3) Varrer a §4 atrás de linha "A construir" que ainda tenha unidade própria.
 
-
 ## Execução 45 — 2026-11-14 (~06:30–08:30) — corridas do motor de agenda decididas pelo banco
 
 **BLOCO.** Fase 11 (revisão geral), três unidades no mesmo PR de backend. Origem: auditoria da
@@ -3633,7 +3631,7 @@ três de concorrência/correção, um por unidade.
    leitura (`slot.available()` → `saveSlot(slot.book())`): duas inscrições correndo juntas liam o
    mesmo "disponível" e as duas reservavam, cada uma retendo faísca. Agora a decisão é do banco:
    `SpringDataMentorSlotJpaRepository.bookIfFree` (`UPDATE ... SET available = false WHERE id = ?
-   AND available = true`, `@Modifying`), exposto por `MentorRepository.bookSlotIfFree`. Quem
+AND available = true`, `@Modifying`), exposto por `MentorRepository.bookSlotIfFree`. Quem
    alcança zero linhas recebe `409 SLOT_UNAVAILABLE` antes de qualquer retenção.
 2. **U2 — lembrete pedido de novo não voltava a valer.** `CalendarReminderService.setForReader`
    devolvia a linha existente mesmo resolvida (`sentAt` preenchido): a tela mostrava lembrete
@@ -3702,6 +3700,7 @@ recusou. (3) Reconferir PRs e o `main` do DS.
 as quatro unidades que ficaram de fora do PR #714.
 
 **UNIDADES.**
+
 1. **U1 — `CalendarSourceService.upsert`: fuso desconhecido é 400, não 500.** O domínio lança
    `IllegalArgumentException` de `zoneOf` e escapava cru como erro de servidor. Agora o serviço
    traduz para `ApiException(400, "INVALID_CALENDAR_ENTRY", ...)` (o mesmo contrato da criação de
@@ -3746,13 +3745,13 @@ provedor) seguem externas. DS `main` continua defasado do `qa` no 0.34.0.
 flutuante do `.ics` preso a fuso fixo — único achado da auditoria ainda aberto, menor prioridade.
 (3) Reconferir PRs, o `main` do DS e fases externas.
 
-
 ## Execução 47 — 2026-11-14 (~19:30–21:30) — o limite da série importada vira dado, não variável
 
 **BLOCO.** Último achado da auditoria da fase 11 (o `UNTIL` flutuante do `.ics` preso a fuso fixo),
 que na implementação revelou um problema maior: o limite não sobrevivia ao import.
 
 **UNIDADES.**
+
 1. **U1 — o limite persiste (V322).** O `UNTIL` do arquivo só vivia na variável local do import: a
    materialização respeitava, mas a marca de ponta ficava aberta e o worker de extensão voltava a
    crescer a série para além do que o arquivo dizia. Nova coluna `series_until` em
@@ -3790,3 +3789,38 @@ defasado do `qa` no mesmo 0.34.0.
 **PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana das PRs #724 (backend) e desta docs. (2) Com a
 auditoria encerrada e as fases 7/10 paradas em decisão externa, varrer o inventário da §4 e a
 seção 12: se nada restar executável, a próxima rodada prepara o encerramento do cronjob.
+
+## Execução 48 — 2026-11-15 (~11:20–11:45) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Primeira rodada depois do estado terminal. A regra de encerramento manda não trabalhar
+quando o bloco de estado diz `PROJECT_STATUS=COMPLETED`, e diz que o `CRONJOB_STATUS=DISABLED` só
+vale quando todos os critérios da seção 12 estão comprovados. Os dois lados foram reconferidos
+nesta rodada antes de parar.
+
+**O QUE FOI FEITO (verificação, não código).**
+
+1. `git fetch` + leitura do bloco de estado na `origin/qa` do front (`578c0c89`, PR #894
+   mergeado): `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=47`,
+   `COMPLETED_AT=2026-11-15T02:00:00-03:00`, com o relatório final na seção 13 do roadmap.
+2. Critérios da seção 12 reconferidos contra o roadmap na `qa`: fases 0–11 entregues (7 e 10
+   paradas em decisão externa, com encaminhamento escrito no relatório final), suítes verdes na
+   árvore final (gates da CI em enois-backend#724), inventário da §4 sem "A construir" exceto a
+   credencial OAuth, docs atualizadas, PRs listados na seção 7, nenhum placeholder. O relatório
+   final declara `COMPLETED_AT` e lista os bloqueios externos remanescentes (credencial OAuth,
+   semântica de reuniões/workshops, Épapo/Tamo Junto por fora).
+3. Varredura de PRs abertos com `calendar` nos três repositórios: nenhum.
+4. Uma unidade candidata chegou a ser iniciada nesta rodada (selo de cadência nas superfícies de
+   leitura do DS: `recurrence` em `CalendarEntryDetailData` + marcador no detalhe e na linha da
+   lista). O projeto já encerrado não tem onde receber nova funcionalidade: o rascunho foi
+   descartado sem PR, e o achado fica registrado aqui como sugestão para retomada futura, se a
+   mantenedora reabrir o projeto.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada. Typecheck do DS rodou
+verde no rascunho antes do descarte (não é prova de entrega, a entrega não existiu).
+
+**PRs.** Só esta PR de docs (log + estado do roadmap abaixo). Nenhum PR de código.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado. Se uma execução futura rodar por engano,
+deve confirmar o estado terminal e registrar uma linha como esta, sem abrir PR de código.
