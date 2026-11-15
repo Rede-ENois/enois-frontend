@@ -9,6 +9,7 @@ import { ApiError, randomUUID } from "@/lib/api-client";
 import { mediaApi } from "@/lib/api/media";
 import { compressImage } from "@/lib/compress-image";
 import { VideoCompressionError, compressVideo } from "@/lib/compress-video";
+import { normalizeImageType } from "@/lib/media-file-type";
 import { MAX_VIDEO_BYTES, checkVideoLimit, isVideoFile } from "@/lib/video-limit";
 
 /**
@@ -75,7 +76,10 @@ function genFileName(file: File): string {
  *
  * O servidor continua sendo quem recusa de verdade (tipo, tamanho e duração por ffprobe).
  */
-export async function prepare(file: File): Promise<File> {
+export async function prepare(rawFile: File): Promise<File> {
+  // O tipo vindo do clipboard vem errado ou vazio e o servidor recusa sem olhar os bytes:
+  // conserta pela assinatura antes de qualquer decisão de compressão ou envio.
+  const file = await normalizeImageType(rawFile);
   if (isVideoFile(file)) {
     const limit = await checkVideoLimit(file);
     // A duração vem antes da compressão porque recodificar não encurta o vídeo; o tamanho, não:
