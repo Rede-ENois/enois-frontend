@@ -3726,6 +3726,7 @@ export const texts = {
     pageHeading: "Publicação",
     seoDescription: "Publicação no Énóis.",
     back: "Voltar",
+    backToCommunity: "Voltar para a comunidade",
     notFound: "Publicação não encontrada.",
   },
 
