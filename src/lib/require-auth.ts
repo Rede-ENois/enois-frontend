@@ -33,6 +33,8 @@ const PROTECTED_ROUTES = [
   "/conta",
   "/notificacoes",
   "/explorar",
+  // A Colagem pede sessão na leitura (espaço de convivência): deep link também cai no login.
+  "/colagem",
   "/par-de-estudo",
   // A agenda é do dono: a API exige sessão e responde 401 sem ela, então o deep link também.
   "/agenda",

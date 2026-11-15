@@ -16,6 +16,7 @@ export { mediaApi } from "./media";
 export { communitiesApi } from "./communities";
 export { groupsApi } from "./groups";
 export { roleplayApi, WORLD_KINDS } from "./roleplay";
+export { colagemApi } from "./colagem";
 export { jobsApi } from "./jobs";
 export { eventsApi } from "./events";
 export { calendarApi } from "./calendar";

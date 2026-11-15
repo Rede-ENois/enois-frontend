@@ -16,6 +16,7 @@ import { Route as BlogsRouteImport } from './routes/blogs'
 import { Route as BloqueadosRouteImport } from './routes/bloqueados'
 import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
 import { Route as CarteiraRouteImport } from './routes/carteira'
+import { Route as ColagemRouteImport } from './routes/colagem'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContatoRouteImport } from './routes/contato'
@@ -45,7 +46,6 @@ import { Route as ProfissionalRouteImport } from './routes/profissional'
 import { Route as RedeRouteImport } from './routes/rede'
 import { Route as ResponsavelRouteImport } from './routes/responsavel'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
-import { Route as RoleplayRouteImport } from './routes/roleplay'
 import { Route as SalvosRouteImport } from './routes/salvos'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as SelosRouteImport } from './routes/selos'
@@ -80,7 +80,6 @@ import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_
 import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
 import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$username'
 import { Route as ProjetosPainelRouteImport } from './routes/projetos.painel'
-import { Route as RoleplaySlugRouteImport } from './routes/roleplay.$slug'
 import { Route as VagasJobIdRouteImport } from './routes/vagas.$jobId'
 import { Route as VagasMinhasRouteImport } from './routes/vagas.minhas'
 import { Route as BlogUsernamePostIdRouteImport } from './routes/blog.$username_.$postId'
@@ -124,6 +123,11 @@ const BoasVindasRoute = BoasVindasRouteImport.update({
 const CarteiraRoute = CarteiraRouteImport.update({
   id: '/carteira',
   path: '/carteira',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ColagemRoute = ColagemRouteImport.update({
+  id: '/colagem',
+  path: '/colagem',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComunidadesRoute = ComunidadesRouteImport.update({
@@ -269,11 +273,6 @@ const ResponsavelRoute = ResponsavelRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoleplayRoute = RoleplayRouteImport.update({
-  id: '/roleplay',
-  path: '/roleplay',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalvosRoute = SalvosRouteImport.update({
@@ -447,11 +446,6 @@ const ProjetosPainelRoute = ProjetosPainelRouteImport.update({
   path: '/projetos/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoleplaySlugRoute = RoleplaySlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => RoleplayRoute,
-} as any)
 const VagasJobIdRoute = VagasJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -508,6 +502,7 @@ export interface FileRoutesByFullPath {
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
+  '/colagem': typeof ColagemRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
@@ -537,7 +532,6 @@ export interface FileRoutesByFullPath {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
-  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -569,7 +563,6 @@ export interface FileRoutesByFullPath {
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
-  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes/': typeof NotificacoesIndexRoute
@@ -591,6 +584,7 @@ export interface FileRoutesByTo {
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
+  '/colagem': typeof ColagemRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
@@ -620,7 +614,6 @@ export interface FileRoutesByTo {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
-  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -652,7 +645,6 @@ export interface FileRoutesByTo {
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
-  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes': typeof NotificacoesIndexRoute
@@ -675,6 +667,7 @@ export interface FileRoutesById {
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
+  '/colagem': typeof ColagemRoute
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
@@ -704,7 +697,6 @@ export interface FileRoutesById {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
-  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -736,7 +728,6 @@ export interface FileRoutesById {
   '/profissional_/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
-  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes/': typeof NotificacoesIndexRoute
@@ -760,6 +751,7 @@ export interface FileRouteTypes {
     | '/bloqueados'
     | '/boas-vindas'
     | '/carteira'
+    | '/colagem'
     | '/comunidades'
     | '/conta'
     | '/contato'
@@ -789,7 +781,6 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
-    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -821,7 +812,6 @@ export interface FileRouteTypes {
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
-    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes/'
@@ -843,6 +833,7 @@ export interface FileRouteTypes {
     | '/bloqueados'
     | '/boas-vindas'
     | '/carteira'
+    | '/colagem'
     | '/comunidades'
     | '/conta'
     | '/contato'
@@ -872,7 +863,6 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
-    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -904,7 +894,6 @@ export interface FileRouteTypes {
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
-    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes'
@@ -926,6 +915,7 @@ export interface FileRouteTypes {
     | '/bloqueados'
     | '/boas-vindas'
     | '/carteira'
+    | '/colagem'
     | '/comunidades'
     | '/conta'
     | '/contato'
@@ -955,7 +945,6 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
-    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -987,7 +976,6 @@ export interface FileRouteTypes {
     | '/profissional_/$username'
     | '/projetos/$username'
     | '/projetos/painel'
-    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes/'
@@ -1010,6 +998,7 @@ export interface RootRouteChildren {
   BloqueadosRoute: typeof BloqueadosRoute
   BoasVindasRoute: typeof BoasVindasRoute
   CarteiraRoute: typeof CarteiraRoute
+  ColagemRoute: typeof ColagemRoute
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
   ContaRoute: typeof ContaRoute
   ContatoRoute: typeof ContatoRoute
@@ -1039,7 +1028,6 @@ export interface RootRouteChildren {
   RedeRoute: typeof RedeRoute
   ResponsavelRoute: typeof ResponsavelRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
-  RoleplayRoute: typeof RoleplayRouteWithChildren
   SalvosRoute: typeof SalvosRoute
   SegurancaRoute: typeof SegurancaRoute
   SelosRoute: typeof SelosRoute
@@ -1122,6 +1110,13 @@ declare module '@tanstack/react-router' {
       path: '/carteira'
       fullPath: '/carteira'
       preLoaderRoute: typeof CarteiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/colagem': {
+      id: '/colagem'
+      path: '/colagem'
+      fullPath: '/colagem'
+      preLoaderRoute: typeof ColagemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comunidades': {
@@ -1325,13 +1320,6 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/roleplay': {
-      id: '/roleplay'
-      path: '/roleplay'
-      fullPath: '/roleplay'
-      preLoaderRoute: typeof RoleplayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/salvos': {
@@ -1572,13 +1560,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjetosPainelRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/roleplay/$slug': {
-      id: '/roleplay/$slug'
-      path: '/$slug'
-      fullPath: '/roleplay/$slug'
-      preLoaderRoute: typeof RoleplaySlugRouteImport
-      parentRoute: typeof RoleplayRoute
-    }
     '/vagas/$jobId': {
       id: '/vagas/$jobId'
       path: '/$jobId'
@@ -1730,18 +1711,6 @@ const ModeracaoRouteWithChildren = ModeracaoRoute._addFileChildren(
   ModeracaoRouteChildren,
 )
 
-interface RoleplayRouteChildren {
-  RoleplaySlugRoute: typeof RoleplaySlugRoute
-}
-
-const RoleplayRouteChildren: RoleplayRouteChildren = {
-  RoleplaySlugRoute: RoleplaySlugRoute,
-}
-
-const RoleplayRouteWithChildren = RoleplayRoute._addFileChildren(
-  RoleplayRouteChildren,
-)
-
 interface VagasJobIdRouteChildren {
   VagasJobIdCandidaturasRoute: typeof VagasJobIdCandidaturasRoute
 }
@@ -1785,6 +1754,7 @@ const rootRouteChildren: RootRouteChildren = {
   BloqueadosRoute: BloqueadosRoute,
   BoasVindasRoute: BoasVindasRoute,
   CarteiraRoute: CarteiraRoute,
+  ColagemRoute: ColagemRoute,
   ComunidadesRoute: ComunidadesRouteWithChildren,
   ContaRoute: ContaRoute,
   ContatoRoute: ContatoRoute,
@@ -1814,7 +1784,6 @@ const rootRouteChildren: RootRouteChildren = {
   RedeRoute: RedeRoute,
   ResponsavelRoute: ResponsavelRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
-  RoleplayRoute: RoleplayRouteWithChildren,
   SalvosRoute: SalvosRoute,
   SegurancaRoute: SegurancaRoute,
   SelosRoute: SelosRoute,

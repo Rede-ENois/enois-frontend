@@ -173,7 +173,27 @@ export const texts = {
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
       agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
+      colagem: { label: "Colagem", description: "O mural de fotografias da comunidade" },
     },
+  },
+
+  /** Textos que a rota da Colagem orquestra (avisos e cabeçalho); o desenho vive no DS. */
+  colagem: {
+    seoTitle: "Colagem · Énóis",
+    title: "Colagem",
+    subtitle: "Um mural vivo de fotografias: publique a sua e contribua na dos outros.",
+    publishSuccess: "Foto colada na Colagem.",
+    publishError: "Não foi possível colar a foto. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    captionTooLongError: "A legenda aceita no máximo 500 caracteres.",
+    commentSuccess: "Contribuição enviada.",
+    commentError: "Não foi possível contribuir. Tente de novo.",
+    commentTooLongError: "O comentário aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva um texto ou cole uma foto.",
+    replyBlocked: "Resposta a comentário fotográfico é só em texto.",
+    deletePhotoDone: "Foto removida da Colagem.",
+    deleteCommentDone: "Comentário removido.",
   },
 
   /**

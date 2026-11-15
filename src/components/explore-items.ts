@@ -4,6 +4,7 @@ import {
   Award,
   Briefcase,
   Building2,
+  Camera,
   Code2,
   Dices,
   FolderKanban,
@@ -77,6 +78,15 @@ export const exploreItems: {
     color: "var(--table-3)",
     module: null,
     keywords: ["api", "token", "integracao"],
+  },
+  {
+    section: "community",
+    href: "/colagem",
+    text: texts.explore.items.colagem,
+    icon: Camera,
+    color: "var(--table-2)",
+    module: null,
+    keywords: ["colagem", "fotos", "fotografias", "mural"],
   },
   {
     section: "community",
