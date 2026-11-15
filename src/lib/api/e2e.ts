@@ -1,4 +1,5 @@
 import type { ConversationKeyView } from "@/types/application/e2e/conversation-key-view";
+import type { KeypairHistoryView } from "@/types/application/e2e/keypair-history-view";
 import type { KeypairView } from "@/types/application/e2e/keypair-view";
 import type { PublicKeyView } from "@/types/application/e2e/public-key-view";
 
@@ -13,6 +14,9 @@ export const e2eApi = {
     }),
 
   myKeypair: () => api.get<KeypairView>("/e2e/keypair"),
+
+  /** Keypairs do próprio usuário, do mais recente pro mais antigo (o ativo é o primeiro). */
+  keypairHistory: () => api.get<KeypairHistoryView[]>("/e2e/keypair/history"),
 
   userPublicKey: (userId: string) =>
     api.get<PublicKeyView>(`/e2e/keypair/${encodeURIComponent(userId)}`),
