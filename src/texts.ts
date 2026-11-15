@@ -3074,6 +3074,22 @@ export const texts = {
       apiRequestUnknownRoute: "(rota não informada)",
       profilesSaved: "Perfis do nó atualizados.",
       actionError: "Não foi possível concluir a ação.",
+      provisionOwnerNotFound: (username: string) =>
+        `A conta @${username} não foi encontrada. Confira o nome de usuário.`,
+      provisionFailed: "Não foi possível gerar o token de provisionamento.",
+      /**
+       * Os perfis que um nó pode receber, na ordem em que a tela os oferece. A chave é o valor que
+       * o backend valida; o texto é o que o admin lê.
+       */
+      profileLabels: {
+        NODE_EDGE: "Borda",
+        NODE_WORKER: "Trabalho assíncrono",
+        NODE_MEDIA: "Mídia",
+        NODE_READ_REPLICA: "Réplica de leitura",
+        NODE_API: "API",
+        NODE_LOCAL: "Local",
+        NODE_EMERGENCY: "Emergência",
+      },
     },
     identityRelease: {
       saved: "Regras da rodada salvas.",
