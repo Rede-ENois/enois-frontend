@@ -12,10 +12,13 @@ import { feedApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAuth } from "@/lib/use-auth";
 
+import { RichText } from "./rich-text";
+
 /**
  * Enquete no card: antes do voto são botões (uma alternativa por pessoa); depois do voto vira o
  * resultado com a escolha marcada. O voto é definitivo — o backend recusa o segundo (409) e aqui
- * não existe botão para trocar: depois do primeiro voto a enquete só mostra números.
+ * não existe botão para trocar: depois do primeiro voto a enquete só mostra números. A alternativa
+ * passa pelo RichText: código de figurinha (`:KEKW:`) vira imagem, igual no resto do texto.
  */
 export function PollCard({ post }: { post: PostView }) {
   const poll = post.poll;
@@ -71,7 +74,9 @@ export function PollCard({ post }: { post: PostView }) {
                     <span className="flex min-w-0 items-center gap-1.5 text-text-strong">
                       {mine && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
 
-                      <span className="min-w-0 break-words">{option}</span>
+                      {/* A alternativa passa pelo RichText: figurinha no código (`:KEKW:`) vira
+                          imagem, igual no resto do texto do post. */}
+                      <RichText content={option} className="min-w-0" />
                     </span>
 
                     <span className="shrink-0 tabular-nums text-text-subtle">
@@ -89,7 +94,7 @@ export function PollCard({ post }: { post: PostView }) {
                   }}
                   className="w-full rounded-xl border border-border-soft px-3 py-2 text-left text-sm text-text-strong transition hover:border-primary hover:text-primary disabled:opacity-60"
                 >
-                  {option}
+                  <RichText content={option} className="min-w-0" />
                 </button>
               )}
             </li>
