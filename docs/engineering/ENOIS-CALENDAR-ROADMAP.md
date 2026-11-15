@@ -27,8 +27,10 @@ Execução 51 (2026-11-15): quarta rodada pós-terminal — encerramento reconfe
 Execução 52 (2026-11-15): quinta rodada pós-terminal — encerramento reconferido (estado na
 `qa` inalterado; PRs nos três repositórios: só a docs #895, sem revisão), nenhuma unidade
 entregue.
-EXECUCAO=52
-ULTIMA_ATUALIZACAO=2026-11-15T11:25:00-03:00
+Execução 53 (2026-11-15): sexta rodada pós-terminal — encerramento reconferido (estado na
+`qa` inalterado; PRs: só a docs #895, sem revisão), nenhuma unidade entregue.
+EXECUCAO=53
+ULTIMA_ATUALIZACAO=2026-11-15T12:25:00-03:00
 ```
 
 ---
