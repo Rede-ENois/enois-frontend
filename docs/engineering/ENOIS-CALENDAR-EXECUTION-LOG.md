@@ -3963,3 +3963,23 @@ o bump de estado no roadmap.
 pós-terminal cresce porque o agendador do workspace continua disparando a cada 10 minutos; o
 desligamento do cronjob é feito pelo estado textual (`CRONJOB_STATUS=DISABLED`) na resposta da
 rodada, não por ferramenta local disponível aqui.
+
+## Execução 55 — 2026-11-15 (~15:15–15:30) — confirmação do encerramento em branch nova
+
+**BLOCO.** Oitava rodada depois do estado terminal. A PR #899 (Execução 54) foi **mergeada com
+revisão humana** e a `qa` andou (`267326ce`, que traz também um conserto alheio de calendário não
+relacionado). Bloco de estado: `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`,
+`EXECUCAO=54`.
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`; varredura de PRs abertos com `calendar` nos
+três repositórios: nenhuma. Trava de concorrência criada no início e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** PR própria (docs), porque a #899 já foi mergeada. Escopo idêntico às rodadas 50 a 54:
+esta linha e o bump de estado no roadmap.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
+por engano devem apenas reconferir o estado e registrar uma linha, sem PR de código.
