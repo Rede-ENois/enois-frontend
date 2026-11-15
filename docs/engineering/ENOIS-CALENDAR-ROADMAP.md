@@ -11,11 +11,11 @@
 ## Estado
 
 ```
-PROJECT_STATUS=IN_PROGRESS
-CRONJOB_STATUS=ACTIVE
+PROJECT_STATUS=COMPLETED
+CRONJOB_STATUS=DISABLED
 FASE_ATUAL=5 (agenda profissional) — backend #655 mergeado (agenda dos dois lados, V274, entrevista na lista do candidato); front #830 mergeado pelo bot em `ec31ddfd` (2026-11-12T18:19Z); DS 0.33.0 publicado (tag `v0.33.0`, PR #220) — B9/D20 cumpridos; o #218 foi fechado como não-planejado. O #828 foi mergeado pelo bot em `38cbf12d` (2026-11-12T18:50Z) com o pacote real e o conserto do `MentionTextarea`. Fase 3 concluída: a edição da agenda reclassifica agenda/tipo/dia inteiro (#664/#840) e a disponibilidade tem atalho no cabeçalho. Fase 3/1: os convites pendentes ganharam superfície no DS (`CalendarPendingInvitations`, #219) ligada à `CalendarAgendaSurface` — antes o cliente e a rota existiam e nenhuma tela desenhava a lista. Fase 3: o lembrete de compromisso passou a abrir o compromisso (`/agenda/{id}`, #665) e o front ganhou a rota `agenda` na tabela de navegação (#843) — antes o clique não levava a lugar nenhum. Fase 4: chamadas/vídeo não têm horário agendado (sessões ao vivo), então não geram entrada na agenda; presença em evento grava na agenda (#632). Fase 9: backend, cliente e tela prontos (#637/#816/#828 mergeado). Execução 31: a notificação de empresa passou a abrir a página da empresa (#846) e a superfície de lembrete passou a recusar o que não pode atender — alheio é 404, remoção sem antecedência é 400 e o aviso diz o tempo que falta (#667, D35). Execução 32 (fase 11): a assinatura `.ics` ganhou teto por origem (#669), recorte divergente numa assinatura ativa passou a ser 409 em vez de silêncio (#670) e o import preserva barra invertida no texto (#671, D36) — os três mergeados na `qa`. Execução 33 (fase 11): a leitura da agenda ganhou teto de janela compartilhado com o export, o import `.ics` mede o arquivo em fluxo em vez de carregá-lo inteiro, `VEVENT` aninhado é 400 e o `VTIMEZONE` cobre só a janela e o fuso usados (D37); no front, a falha de leitura da disponibilidade não abre mais uma semana vazia (salvar ali apagava a real), o detalhe distingue 404 de erro de rede e o carregamento tem rótulo (#849). Execução 34 (fase 11): a agenda de convidados passou a sair de um join entre `calendar_entries` e `calendar_entry_participants` no banco (#673) — antes a leitura carregava a lista inteira de convites e devolvia os ids num `in` sem teto. Execução 35 (fase 11): a fila de convites pendentes saiu do mesmo padrão de lista de ids sem teto e agora sai de um join no banco (#681), e o teto de lote do worker de lembretes ganhou teste que tranca um ciclo no máximo do lote declarado. Execução 36 (fase 11): o design-system 0.33.0 foi publicado pela mantenedora (D20/B9 cumpridos): #828 e #830 rebasados sobre a `qa` com o bump e lockfile reais do pacote e CI verde; a quebra do `MentionTextarea` (textarea → contentEditable com handle imperativo) foi corrigida no app; e a faixa de convites pendentes foi ligada na `/agenda` (#852, mergeado em `3f24504b`; o commit `e85e077f` ficou órfão após o merge do #828 e saiu em PR próprio). Execução 39 destravou a entrega: release 0.34.0 em PR #222 (o conserto da 38 estava na `qa`, fora do pacote), #852 rebasado sobre a `qa` (`MERGEABLE`) e a régua certa para o ícone de controle (3:1, não 4,5:1) trancada em `control-contrast.test.ts` (DS #223). Execução 38 (fase 11): a a11y além dos estados de erro foi medida e corrigida — contraste AA nos dois temas, setas no seletor de visão e anúncio do resultado do import no DS (#221) e confirmação da resposta ao convite no front (#856), com teste que tranca os pares de cor em `calendar-contrast.test.ts` (D39). Execução 41 (fase 11): a resposta do convite passou a vir no mesmo join da agenda, em vez de uma segunda consulta com os ids num `in` sem teto — `CalendarInvitationRepository` devolve entrada e resposta juntas e é consumida pela agenda, pelo conflito e pelo export `.ics`; o cruzamento continua sem filtro de estado para não esconder o cancelado do `.ics` (D6) nem o pendente da agenda (D13); backend #688 **mergeado** na `qa` em `f892d852` (2026-11-13T07:01Z). Execução 42 (motor central): a recorrência de compromissos passou a existir — série materializada em linhas irmãs (`series_id`, `recurrence`, `tail`, V277), worker de horizonte de 90 dias, rotas `POST`/`DELETE /calendar/entries/{id}/series`, e o `.ics` importado deixou de descartar o `RRULE` em silêncio (D43). Execução 43 (superfície de recorrência): o `CalendarEntryFormDialog` do DS ganhou o campo de cadência (DS #227, dentro do 0.34.0) e a `/agenda` passou a ligá-lo — criar com cadência dispara `POST .../series` sobre o id devolvido e, se a segunda chamada falhar, o compromisso já criado continua na agenda com o erro visível; na edição, NENHUMA encerra a série; front #871 **mergeado** na `qa` em `508c278c` (2026-11-14T05:12Z, pelo bot). No caminho, dois falsos vermelhos de ambiente da suíte do front (data-limite de 16 anos em UTC-3 e cripto real estourando o teto de 5 s) foram corrigidos na causa (#869). Execução 44 (fase 5): a `/mentoria` deixou de desenhar botões crus para escolher o horário de mentoria e consome o `CalendarSlotPicker` (DS ≥ 0.34.0, #224), com o erro do agendamento anunciado dentro do grupo; horários oferecidos = `available` **e** `startsAt` não nulo (`bookableSlots`); supressões da rota 241 → 234 (front #874). Execução 45 (fase 11): três corridas do motor de agenda viraram decisões do banco, não da leitura — a reserva de horário de mentoria passou por UPDATE condicional (`bookIfFree`) e quem perde a corrida recebe 409 sem reter faísca (#714); o lembrete pedido de novo depois de resolvido é re-armado para o horário atual em vez de devolver uma linha morta (#714); e a emissão da assinatura `.ics` tranca a linha do dono antes da checagem, para duas emissões paralelas não nascerem com dois links vivos que o revogar não mata juntos (#714, **mergeado**). Execução 46 (fase 11): os quatro achados restantes da auditoria — o upsert de origem responde 400 em vez de deixar `IllegalArgumentException` cru virar 500; reagendar ocorrência de série para o horário de uma irmã recusa `409 CALENDAR_SERIES_SLOT_TAKEN` antes do índice único (antes era o `CONFLICT_DUPLICATE` opaco); o worker de lembretes envia e marca em transação por lembrete, com a marca de falha fora do rollback; e o convidado (recusado inclusive) não vê mais `sourceType`/`sourceId` do compromisso (enois-backend#717). Execução 46 foi **mergeada** em `865e2287` (D46). Execução 47: o limite da série importada (`UNTIL`) passou a persistir em `series_until` (V322) e o worker de extensão não reabre série limitada — antes a ponta ficava aberta e a série voltava a crescer para além do que o arquivo dizia; o `UNTIL` flutuante e o só-data resolvem no fuso do evento (enois-backend#724; D47).
 EXECUCAO=47
-ULTIMA_ATUALIZACAO=2026-11-14T21:30:00-03:00
+ULTIMA_ATUALIZACAO=2026-11-15T02:00:00-03:00
 ```
 
 ---
@@ -256,6 +256,10 @@ Ordem obrigatória. Cada fase pode exigir várias execuções.
 | [#229](https://github.com/Rede-ENois/enois-design-system/pull/229)   | enois-design-system | Release 0.34.0 (`qa`→`qa`, bump do `package.json`): publica `ProfileContentTabs`/`ProfileReplyCard` e o campo de cadência do formulário de compromisso; tag `v0.34.0` dispara o `npm publish` | **mergeado** em `4f605ce` (2026-11-14) e **publicado** pela tag |
 | [#871](https://github.com/Rede-ENois/enois-frontend/pull/871)        | enois-frontend      | Cadência ligada na `/agenda` e em `/agenda/$entryId`: criar com cadência chama `POST .../series` sobre o id devolvido (a criação não aceita recorrência); falha da série não desfaz o compromisso; edição encerra a série com NENHUMA | **mergeado** pelo bot em `508c278c` (2026-11-14T05:12Z) |
 | [#869](https://github.com/Rede-ENois/enois-frontend/pull/869)        | enois-frontend      | Dois falsos vermelhos de ambiente da suíte: a data de 16 anos era montada por `toISOString()` (UTC avança o dia depois das 21h em UTC-3) e os testes de cripto real estouravam o teto padrão de 5 s | **mergeado** em `9f3eacc3` (2026-11-14T04:17Z) |
+| [#717](https://github.com/Rede-ENois/enois-backend/pull/717)        | enois-backend       | Execução 46: os quatro achados restantes da auditoria da fase 11 — upsert de origem responde `400 INVALID_CALENDAR_ENTRY`, reagendamento sobre irmã responde `409 CALENDAR_SERIES_SLOT_TAKEN` antes do banco, worker de lembretes com transação por lembrete e marca de falha fora do rollback, convidado não vê a origem (D46) | **mergeado** em `865e2287` (2026-11-14T20:19Z) |
+| [#888](https://github.com/Rede-ENois/enois-frontend/pull/888)        | enois-frontend      | Execução 46 nos docs: roadmap, log e decisão D46 | **mergeado** (2026-11-15) |
+| [#724](https://github.com/Rede-ENois/enois-backend/pull/724)        | enois-backend       | Execução 47: o `UNTIL` da série importada persiste em `series_until` (V322), o worker não reabre série limitada e o `UNTIL` flutuante/só-data resolve no fuso do evento (D47) | **mergeado** (2026-11-15); CI do PR verde nos 4 gates |
+| [#890](https://github.com/Rede-ENois/enois-frontend/pull/890)        | enois-frontend      | Execução 47 nos docs: roadmap, log e decisão D47 | **mergeado** (2026-11-15) |
 
 Regra: **merge na `qa`** com aprovação do App + CI verde no head (bypass administrativo da proteção); `main`, releases e tags ficam com humano. Um PR por escopo
 delimitado; dependências declaradas no corpo.
@@ -1102,8 +1106,46 @@ merge é decisão do time. Estado terminal, ao encerrar:
 ```
 PROJECT_STATUS=COMPLETED
 CRONJOB_STATUS=DISABLED
-COMPLETED_AT=<timestamp>
+COMPLETED_AT=2026-11-15T02:00:00-03:00
 ```
 
 Em dúvida, o cronjob continua ativo. Nunca encerrar com fase incompleta, teste pendente ou PR
 parcialmente implementado.
+
+---
+
+## 13. Relatório final do projeto
+
+**Encerrado em 2026-11-15T02:00:00-03:00, após 48 execuções do cronjob.**
+
+O Énóis Calendar entregou, de ponta a ponta (backend → design system → tela):
+
+- **Agenda pessoal** com criação, edição, reclassificação, cancelamento, lembretes, convites
+  (resposta, pendentes, conflito) e visões de dono e convidado.
+- **Agenda profissional (fase 5)**: horários de mentoria publicados, reserva com `bookIfFree`
+  condicional (409 sem reter faísca na corrida) e entrevista na lista do candidato.
+- **Eventos e chamadas**: presença em evento grava na agenda; sessões ao vivo não geram entrada.
+- **Recorrência (execs 42–47)**: séries materializadas em linhas irmãs (`series_id`/`recurrence`/
+  `tail`, V277), campo de cadência no DS, worker de horizonte de 90 dias, reserva/agendamento
+  sobre irmã recusado antes do banco e o `UNTIL` do arquivo importado persistido em `series_until`
+  (V322) com o worker respeitando o limite — o fim de uma série é dado persistido, não janela.
+- **Integração `.ics` (fase 11)**: import com `RRULE`/`EXDATE`/`COUNT`, export, assinatura com
+  teto por origem e lock de emissão, e uma auditoria completa de robustez/execução (execs 31–47)
+  que convertou corridas e armadilhas em decisões do banco e respostas explícitas (`ApiException`).
+
+**Estado dos critérios da seção 12**: todos satisfeitos com prova executada — suítes verdes na
+árvore final (CI dos PRs como prova oficial: os 4 gates do enois-backend#724), inventário da
+seção 4 sem "A construir" exceto o bloqueio externo de credencial OAuth (Google/Microsoft/Apple,
+item 10, com encaminhamento escrito), integração DS→tela provada por release publicado
+(0.33.0/0.34.0), e nenhum placeholder, stub ou TODO.
+
+**Bloqueios externos remanescentes** (decisão fora do escopo do cronjob, documentados):
+
+1. **Credencial OAuth de provedor** (fases 7 e 10, integração Google/Microsoft/Apple): depende de
+   registro de app e credencial por provedor — decisão e conta dos mantenedores.
+2. **Semântica de produto de reuniões/workshops** (fase 5): o formato foi congelado pelos
+   mantenedores; qualquer retomada é decisão de produto, não de execução.
+3. **Épapo/Tamo Junto** (fase 7): integração de chamadas é outro projeto, já ativo por fora.
+
+**PRs finais**: enois-backend#724 (mergeado), enois-frontend#888 e #890 (mergeados). O histórico
+completo está na seção 7 e no log de execuções.
