@@ -23,7 +23,34 @@ vi.mock("@/lib/use-auth", () => ({
 vi.mock("@rede-enois/design-system/ui", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
-vi.mock("@rede-enois/design-system/domain", () => ({}));
+
+/** Caminho do proxy, igual ao que `GET /emotes/index` devolve. */
+const KEKW = "/emotes/image/BTTV/abc123?variant=full";
+
+/**
+ * As alternativas passam pelo RichText, que busca o índice de figurinhas: um `fetch` falso devolve
+ * o mesmo formato do backend para testar o caminho de verdade (índice → código → imagem).
+ */
+function fakeFetch(input: RequestInfo | URL) {
+  const url = new URL(String(input), "http://localhost");
+  if (!url.pathname.endsWith("/emotes/index")) {
+    return resposta({ code: undefined, message: undefined }, false);
+  }
+  return resposta({ entries: { KEKW }, generatedAt: "2026-10-29T00:00:00Z" });
+}
+
+/** Resposta mínima que o cliente da API entende: ele lê `text()` antes do `JSON.parse`. */
+function resposta(body: unknown, ok = true) {
+  const texto = JSON.stringify(body);
+  return {
+    ok,
+    status: ok ? 200 : 503,
+    statusText: ok ? "OK" : "Service Unavailable",
+    headers: new Headers({ "content-type": "application/json" }),
+    text: async () => texto,
+    json: async () => body,
+  };
+}
 
 let root: Root | null = null;
 let host: HTMLDivElement | null = null;
@@ -71,12 +98,23 @@ describe("enquete no card", () => {
     root = null;
     host = null;
     vi.restoreAllMocks();
+    // O índice de figurinhas é guardado no `localStorage`: sem limpar, cópia de outro teste vaza.
+    window.localStorage.clear();
+    vi.stubGlobal("fetch", vi.fn(fakeFetch));
   });
 
   afterEach(() => {
     act(() => root?.unmount());
     host?.remove();
+    vi.unstubAllGlobals();
   });
+
+  async function esperaIndiceDeEmotes() {
+    // O índice chega por promise: sem esperar, o primeiro desenho ainda mostra o código cru.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+  }
 
   it("mostra alternativas como botões antes do voto", () => {
     render({ options: ["Café", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
@@ -153,6 +191,32 @@ describe("enquete no card", () => {
 
     expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", 0);
     expect(host?.textContent).toContain("1 voto");
+  });
+
+  it("a alternativa com código de figurinha vira imagem, antes e depois do voto", async () => {
+    mocks.votePoll.mockResolvedValue({
+      options: ["Café :KEKW:", "Chá"],
+      counts: [1, 0],
+      myVote: 0,
+      totalVotes: 1,
+    });
+    render({ options: ["Café :KEKW:", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
+    await esperaIndiceDeEmotes();
+
+    const figurinha = () => host?.querySelector(`img[src*="${KEKW}"]`);
+    expect(figurinha()).not.toBeNull();
+    // As duas alternativas continuam botões de voto; "Chá" segue texto puro, sem imagem.
+    expect(host?.querySelectorAll("button").length).toBe(2);
+
+    const button = host?.querySelector("button");
+    await act(async () => {
+      button?.click();
+      await Promise.resolve();
+    });
+    await esperaIndiceDeEmotes();
+
+    // Depois do voto o resultado mantém a figurinha da alternativa escolhida.
+    expect(figurinha()).not.toBeNull();
   });
 });
 

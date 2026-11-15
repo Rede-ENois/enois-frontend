@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { feedApi, mediaApi } from "@/lib/api";
 import { buildPostShareMeta } from "@/lib/open-graph";
+import { backTargetOf } from "@/lib/post-back-target";
 
 import { AppContainer } from "@/components/app-container";
 import { PostCard } from "@/components/post-card";
@@ -123,6 +124,8 @@ function PostDetail() {
     queryFn: () => feedApi.get(postId),
   });
 
+  const backTarget = backTargetOf(post, feedTab);
+
   // Opens once: the parameter leaves the address, so closing the list (or reloading) stays closed.
   const loaded = Boolean(post);
   useEffect(() => {
@@ -141,11 +144,18 @@ function PostDetail() {
       <h1 className="sr-only">{texts.post.pageHeading}</h1>
 
       <div className="space-y-6">
+        {/* O voltar do post único: post de comunidade volta para a própria comunidade (destino
+            fixo); sem comunidade, mantém o voltar de sempre para o feed de origem. */}
         <Link
-          to="/feed"
-          search={feedTab ? { aba: feedTab } : {}}
+          to={backTarget.to}
+          params={
+            backTarget.to === "/comunidades/$communityId"
+              ? { communityId: backTarget.communityId }
+              : {}
+          }
+          search={"feedTab" in backTarget && backTarget.feedTab ? { aba: backTarget.feedTab } : {}}
           onClick={(e: React.MouseEvent) => {
-            if (window.history.length > 1) {
+            if (backTarget.to === "/feed" && window.history.length > 1) {
               e.preventDefault();
               router.history.back();
             }
@@ -154,7 +164,11 @@ function PostDetail() {
         >
           <ArrowLeft className="h-4 w-4" />
 
-          <>{texts.post.back}</>
+          <>
+            {backTarget.to === "/comunidades/$communityId"
+              ? texts.post.backToCommunity
+              : texts.post.back}
+          </>
         </Link>
 
         {isLoading ? (

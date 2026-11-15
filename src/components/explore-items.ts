@@ -5,6 +5,7 @@ import {
   Briefcase,
   Building2,
   Code2,
+  Dices,
   FolderKanban,
   Gavel,
   GraduationCap,
@@ -85,6 +86,15 @@ export const exploreItems: {
     color: "var(--table-6)",
     module: null,
     keywords: ["conquistas", "badges"],
+  },
+  {
+    section: "community",
+    href: "/roleplay",
+    text: texts.explore.items.roleplay,
+    icon: Dices,
+    color: "var(--table-4)",
+    module: null,
+    keywords: ["rpg", "roleplay", "campanha", "mesa", "dados"],
   },
   {
     section: "community",

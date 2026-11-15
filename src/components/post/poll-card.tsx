@@ -12,6 +12,8 @@ import { feedApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAuth } from "@/lib/use-auth";
 
+import { RichText } from "./rich-text";
+
 /**
  * Enquete no card: cada alternativa é um botão, antes e depois do voto. O primeiro voto registra;
  * clicar em outra alternativa de depois TROCA o voto (o backend move a linha — um voto por pessoa,
