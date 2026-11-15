@@ -3903,3 +3903,22 @@ estão na #895; abrir outra PR para repetir a confirmação seria PR duplicada.
 
 **PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). O padrão desta linha basta
 para qualquer execução futura que rodar por engano: reconferir o estado e registrar, sem PR.
+
+## Execução 52 — 2026-11-15 (~11:15–11:25) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Quinta rodada depois do estado terminal. Bloco de estado na `qa` inalterado
+(`578c0c89`: `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`); a PR de docs #895 segue
+aberta sem revisão humana (0 reviews), com as execuções 48 a 51.
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`; varredura de PRs abertos com `calendar` nos
+três repositórios: só a #895 (docs). Trava de concorrência criada no início e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Nenhum novo, pelo mesmo motivo das rodadas 50 e 51: repetir confirmação em outra PR
+seria duplicação. A #895 aguarda revisão humana para poder entrar na `qa`.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
+por engano devem apenas reconferir o estado e registrar uma linha, sem PR de código.
