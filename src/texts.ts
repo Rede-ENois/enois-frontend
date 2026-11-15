@@ -1275,6 +1275,8 @@ export const texts = {
         complaint: "Reclamação",
         moment: "Momento",
         momentHint: "O momento some em 24 horas.",
+        instante: "Instante",
+        instanteHint: "O instante some em 1 hora.",
         poll: "Enquete",
         pollHint: "O campo de cima é a pergunta. Abaixo, de 2 a 6 alternativas.",
       },

@@ -14,6 +14,7 @@ import {
   Smile,
   Star,
   Vote,
+  Zap,
 } from "lucide-react";
 
 /**
@@ -40,6 +41,12 @@ export const POST_TYPES: { id: string; label: string; icon: LucideIcon; hint?: s
     label: texts.feed.composer.types.moment,
     icon: Calendar,
     hint: texts.feed.composer.types.momentHint,
+  },
+  {
+    id: "INSTANTE",
+    label: texts.feed.composer.types.instante,
+    icon: Zap,
+    hint: texts.feed.composer.types.instanteHint,
   },
   {
     id: "POLL",

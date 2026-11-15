@@ -105,7 +105,8 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   // Republicar copia o post para o feed da pessoa, creditando o autor original. Conteúdo de
   // comunidade/canal e os tipos que não viajam (página, artigo, blog, business, moment) ficam de fora.
   const canRepost =
-    !post.community && !["PAGE", "ARTICLE", "BLOG", "BUSINESS", "MOMENT"].includes(post.type);
+    !post.community &&
+    !["PAGE", "ARTICLE", "BLOG", "BUSINESS", "MOMENT", "INSTANTE"].includes(post.type);
   // O clique abre o diálogo, que oferece republicar direto ou com uma opinião (até 600).
   const [repostOpen, setRepostOpen] = useState(false);
   const repostMounted = useMountedOnce(repostOpen);
