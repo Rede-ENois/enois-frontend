@@ -900,6 +900,9 @@ export function Home() {
                     maxLength={postContentLimit(postType)}
                     toolbar
                     onPasteImages={addMediaFiles}
+                    /* Ctrl+Enter publica: o atalho passa pelo mesmo submit do formulário (honeypot
+                       e guarda de reentrada incluídos), não por um caminho próprio. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 )}
               </div>
@@ -946,6 +949,9 @@ export function Home() {
                     className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                     rows={8}
                     toolbar
+                    /* Mesmo atalho do campo de cima: escrever o artigo inteiro sem sair do
+                       teclado. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 </div>
               )}
