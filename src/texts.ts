@@ -3072,6 +3072,11 @@ export const texts = {
       apiRequested: "Requisição enfileirada para o nó.",
       /** Rota ilegível no payload da tarefa: a linha diz o que sabe, sem inventar destino. */
       apiRequestUnknownRoute: "(rota não informada)",
+      /**
+       * Falha que não é do servidor (rede, 5xx sem corpo): sem isso o quadro apareceria vazio, como
+       * se o nó não tivesse medido nada.
+       */
+      observabilityError: "Não foi possível ler o quadro deste servidor.",
       profilesSaved: "Perfis do nó atualizados.",
       actionError: "Não foi possível concluir a ação.",
       provisionOwnerNotFound: (username: string) =>
