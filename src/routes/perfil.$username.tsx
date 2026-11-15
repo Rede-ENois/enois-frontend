@@ -5,6 +5,8 @@ import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-ro
 
 import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
+import type { PostMedia } from "@/types/application/feed/post-media";
+import type { PostView } from "@/types/application/feed/post-view";
 import type { ProfileReplyView } from "@/types/application/feed/profile-reply-view";
 import type { ProfileAppearance } from "@/types/application/profile/profile-appearance";
 import type { UpdateProfileRequest } from "@/types/application/profile/update-profile-request";
@@ -19,12 +21,13 @@ import {
   ProfileCard,
   ProfileContentTabs,
   ProfileEditMenu,
+  ProfilePhotoCarousel,
   ProfileReplyCard,
   ProfileThemeScope,
   StyledName,
   UserAvatar,
 } from "@rede-enois/design-system/domain";
-import type { ProfileContentTab } from "@rede-enois/design-system/domain";
+import type { ProfileContentTab, ProfilePhoto } from "@rede-enois/design-system/domain";
 import {
   ImageCropDialog,
   InfiniteScroll,
@@ -955,6 +958,8 @@ function Profile() {
                 </Section>
               )}
 
+              <PerfilFotos userId={user.id} />
+
               <Section id="atividade" title={texts.profile.sections.recentPosts}>
                 <ProfileContentTabs
                   activeTab={profileTab}
@@ -1198,6 +1203,60 @@ function Profile() {
         }}
       />
     </AppContainer>
+  );
+}
+
+/** Quantas fotos o carrossel busca por página (a aba MÍDIA do feed do perfil). */
+const FOTOS_PAGE_SIZE = 24;
+
+/**
+ * A galeria de fotos do perfil: a aba MÍDIA do feed da pessoa vira uma tira de miniaturas com
+ * visualizador e zoom. Reusa a mesma listagem de posts da aba — as regras de visibilidade do
+ * feed valem aqui dentro sem nenhum filtro novo. Sem fotos (e sem erro), a seção não existe.
+ */
+export function PerfilFotos({ userId }: { userId: string }) {
+  const galeria = useInfiniteQuery({
+    queryKey: ["feed", "user-fotos", userId],
+    queryFn: ({ pageParam }) => feedApi.listByUserId(userId, pageParam, FOTOS_PAGE_SIZE, "MEDIA"),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  const posts = galeria.data?.pages.flatMap((page) => page.items) ?? [];
+  const fotos = paraFotos(posts);
+
+  if (fotos.length === 0 && !galeria.isError) return null;
+
+  return (
+    <Section title={texts.profile.sections.photos}>
+      <ProfilePhotoCarousel
+        photos={fotos}
+        state={
+          galeria.isError && fotos.length === 0
+            ? ({ kind: "error" } as const)
+            : ({ kind: "ready" } as const)
+        }
+        hasMore={galeria.hasNextPage ?? false}
+        loadingMore={galeria.isFetchingNextPage}
+        onLoadMore={() => void galeria.fetchNextPage()}
+      />
+    </Section>
+  );
+}
+
+/** Só imagens com endereço viram foto da galeria; vídeos e anexos sem URL ficam de fora. */
+function paraFotos(posts: PostView[]): ProfilePhoto[] {
+  return posts.flatMap((post) =>
+    (post.media ?? [])
+      .filter((midia: PostMedia): midia is PostMedia & { cdnUrl: string } =>
+        Boolean(midia.cdnUrl && midia.mimeType.startsWith("image/")),
+      )
+      .map((midia) => ({
+        id: midia.id,
+        mediaUrl: midia.cdnUrl,
+        description: post.content,
+        mediaSpoiler: post.mediaSpoiler ?? false,
+      })),
   );
 }
 

@@ -1622,6 +1622,7 @@ export const texts = {
       skills: "Habilidades",
       goals: "Objetivos profissionais",
       recentPosts: "Publicações recentes",
+      photos: "Fotos",
       availability: "Status atual",
       recommend: "Recomendar",
       recommendations: "Depoimentos",

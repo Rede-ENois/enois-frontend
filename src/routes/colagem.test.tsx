@@ -17,7 +17,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 const mocks = vi.hoisted(() => ({
-  search: vi.fn<[], Record<string, unknown>>(() => ({})),
+  search: vi.fn<() => Record<string, unknown>>(() => ({})),
   feed: vi.fn(),
   post: vi.fn(),
   comments: vi.fn(),
