@@ -3745,3 +3745,48 @@ provedor) seguem externas. DS `main` continua defasado do `qa` no 0.34.0.
 **PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana das PRs #717 (backend) e da docs. (2) `UNTIL`
 flutuante do `.ics` preso a fuso fixo — único achado da auditoria ainda aberto, menor prioridade.
 (3) Reconferir PRs, o `main` do DS e fases externas.
+
+
+## Execução 47 — 2026-11-14 (~19:30–21:30) — o limite da série importada vira dado, não variável
+
+**BLOCO.** Último achado da auditoria da fase 11 (o `UNTIL` flutuante do `.ics` preso a fuso fixo),
+que na implementação revelou um problema maior: o limite não sobrevivia ao import.
+
+**UNIDADES.**
+1. **U1 — o limite persiste (V322).** O `UNTIL` do arquivo só vivia na variável local do import: a
+   materialização respeitava, mas a marca de ponta ficava aberta e o worker de extensão voltava a
+   crescer a série para além do que o arquivo dizia. Nova coluna `series_until` em
+   `calendar_entries` (aditiva, nula por padrão), gravada pela fundadora e por cada ocorrência.
+2. **U2 — `UNTIL` no fuso do evento.** `CalendarRule.parse(rrule, zone)`: o valor flutuante (sem
+   `Z`) e o só-data resolvem no fuso do evento, não no `America/Sao_Paulo` fixo do servidor; o
+   `UNTIL` em UTC continua absoluto. Só-data é meia-noite de parede, inclusiva pelo RFC 5545.
+3. **U3 — o worker respeita o fim.** `materialize` e `extend` param no limite; a ponta de série
+   limitada nasce **fechada** (e `extend` fecha a que encontrar aberta), para o worker não reabrir
+   a série encerrada a cada ciclo. Ocorrência adotada sem limite recebe o da série. `stop` apaga o
+   limite junto (a entrada vira compromisso único de verdade).
+
+**ARQUIVOS.** `db/migration/V322__calendar_series_until.sql`; `domain/CalendarEntry.java`;
+`application/CalendarRule.java`; `application/CalendarRecurrenceService.java`;
+`application/CalendarIcsService.java`; `adapters/out/persistence/CalendarEntryJpaEntity.java`;
+teste novo: `CalendarSeriesLimitTests` (5).
+
+**PROVA Q0.** Os 5 testes novos **nem compilam na `qa` limpa** (`b4ac5ab7`, com #717 mergeado):
+`seriesUntil()`/`limitSeries(...)` não existem — o recurso não está lá. Falha vista durante o
+desenvolvimento (coluna presente, ponta ainda aberta): `Expecting value to be false but was true`
+na ponta de 15/12 em `theWorkerNeverReopensALimitedSeries`; e a contagem de ocorrências com só-data
+errada provava o fuso (`UNTIL=20261208` em São Paulo não inclui a ocorrência de 08/12 19h —
+meia-noite é antes dela).
+
+**TESTES EXECUTADOS.** Suíte pertinente de 6 classes: **56 testes, 0 falhas, 0 erros**
+(SeriesLimit 5, SeriesPersistence 3, IcsRecurrence 6, IcsService 24, IcsApi 11,
+RecurrenceService 7). Suíte inteira disparada na árvore final; resultado a publicar na PR.
+
+**PRs.** enois-backend#724 (as 3 unidades + prova). Docs: esta PR (depende de #724).
+
+**BLOQUEIOS.** Nenhum novo. Auditoria da fase 11 encerrada — nenhum achado restante. Fase 7
+(semântica Épapo/Tamo Junto) e fase 10 (credencial OAuth) seguem externas. DS `main` segue
+defasado do `qa` no mesmo 0.34.0.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana das PRs #724 (backend) e desta docs. (2) Com a
+auditoria encerrada e as fases 7/10 paradas em decisão externa, varrer o inventário da §4 e a
+seção 12: se nada restar executável, a próxima rodada prepara o encerramento do cronjob.
