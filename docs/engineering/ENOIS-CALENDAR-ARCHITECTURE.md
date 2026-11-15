@@ -1297,3 +1297,25 @@ convite ainda lia `sourceType`/`sourceId` do compromisso.
 deixa a pessoa ler um erro de infraestrutura sem tradução. O custo é uma consulta a mais no
 reagendamento de ocorrência de série e um `TransactionTemplate` por lembrete no worker (em vez de
 um para o lote).
+
+## D47 — O limite declarado pela origem é dado persistido, não variável da execução (execução 47)
+
+**Contexto.** O `.ics` importado pode trazer `UNTIL` na regra da série. A materialização do import
+respeitava o valor — mas ele só vivia na variável local da chamada: sem coluna, a marca de ponta da
+última ocorrência ficava aberta e o worker de extensão voltava a crescer a série a cada ciclo,
+criando ocorrências que o arquivo não tem. E o `UNTIL` flutuante (sem `Z`) e o só-data eram
+resolvidos num fuso fixo do servidor, não no fuso do evento.
+
+**Decisão.**
+1. **O limite é dado, não contexto.** Coluna `series_until` (V322), gravada na fundadora e em cada
+   ocorrência, apagada quando a entrada sai da série. Regra que vale para sempre não pode depender
+   de quem lembre dela.
+2. **Horário de parede sem `Z` é do evento.** O `UNTIL` flutuante e o só-data resolvem no fuso que a
+   entrada já guarda; o `UNTIL` em UTC é absoluto. Só-data é meia-noite de parede, inclusiva pelo
+   RFC 5545 (a ocorrência que começa até lá entra; a seguinte, não).
+3. **Fim é fim, não janela.** A ponta de série limitada nasce fechada e a extensão fecha a que
+   encontrar aberta: o worker não reabre o que a origem encerrou. O horizonte de 90 dias é política
+   de materialização; o `UNTIL` é declaração da origem e vence.
+
+**Consequência.** Série importada cresce exatamente até o que o arquivo dizia, mesmo semanas depois
+do import, em qualquer instância. Custo: uma coluna e uma comparação por passo da extensão.
