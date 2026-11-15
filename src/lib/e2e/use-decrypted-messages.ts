@@ -4,6 +4,7 @@ import type { Message } from "@/types/application/message/message";
 import type { DecryptedResult } from "@/types/lib/decrypted-result";
 
 import { decryptReceived } from "./conversation";
+import { decryptMessageBatch } from "./decrypt-message-batch";
 import { hasLocalKeys } from "./key-manager";
 
 /** Tempo minimo de loading pra evitar flash de texto cifrado no primeiro load. */
@@ -27,10 +28,12 @@ export const TIMEOUT_PLACEHOLDER = "[Mensagem protegida]";
  * A entrada guarda o ciphertext junto: id igual com conteudo diferente nao reaproveita o texto.
  */
 const plaintextCache = new Map<string, { cipher: string; text: string }>();
+let cacheGeneration = 0;
 
 /** Esvazia o cache (testes; e depois de trocar de conta). */
 export function clearDecryptedMessageCache(): void {
   plaintextCache.clear();
+  cacheGeneration++;
 }
 
 /**
@@ -55,6 +58,7 @@ export function useDecryptedMessages(
   }, [currentUserId]);
 
   useEffect(() => {
+    const generation = cacheGeneration;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -62,51 +66,33 @@ export function useDecryptedMessages(
       const start = Date.now();
       const isFirstRun = !firstDecryptDone.current;
 
-      const hasE2e = messages.some((msg) => msg.e2e);
-      if (!hasE2e || !currentUserId) {
-        if (isFirstRun) firstDecryptDone.current = true;
-        if (!cancelled) {
-          setDecrypted(messages);
-          setDecrypting(false);
-        }
-        return;
-      }
+      const hasE2e = messages.some((msg) => msg.e2e || msg.replyTo?.e2e);
+      const hasKeys = hasE2e && currentUserId ? await hasLocalKeys().catch(() => false) : false;
 
-      const hasKeys = await hasLocalKeys();
-      if (!hasKeys) {
-        if (isFirstRun) firstDecryptDone.current = true;
-        if (!cancelled) {
-          setDecrypted(
-            messages.map((msg) => (msg.e2e ? { ...msg, text: "🔒 Mensagem cifrada" } : msg)),
-          );
-          setDecrypting(false);
-        }
-        return;
-      }
-
-      // Só o que ainda não foi decifrado passa pelo RSA: o histórico já lido vem do cache.
-      // Cada decifragem disputa com um teto de espera: a que não resolve dentro dele volta como
-      // placeholder e não segura o resto nem o fim do loading.
-      const withTimeout = async (msg: Message): Promise<Message> => {
-        if (!msg.e2e) return msg;
-        const cached = plaintextCache.get(msg.id);
-        if (cached && cached.cipher === msg.text) return { ...msg, text: cached.text };
-        let timer: ReturnType<typeof setTimeout> | undefined;
+      // O mesmo cache e teto da QA atendem o histórico e as originais fora da página.
+      const withTimeout = async (msg: Message, userId: string): Promise<string> => {
+        const cacheKey = JSON.stringify([userId, msg.conversationId, msg.id]);
+        const cached = plaintextCache.get(cacheKey);
+        if (cached && cached.cipher === msg.text) return cached.text;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
         try {
           const plaintext = await Promise.race([
-            decryptReceived(msg, currentUserId),
+            decryptReceived(msg, userId),
             new Promise<string>((resolve) => {
-              timer = setTimeout(() => resolve(TIMEOUT_PLACEHOLDER), DECRYPT_TIMEOUT_MS);
+              timeout = setTimeout(() => resolve(TIMEOUT_PLACEHOLDER), DECRYPT_TIMEOUT_MS);
             }),
           ]);
-          plaintextCache.set(msg.id, { cipher: msg.text, text: plaintext });
-          return { ...msg, text: plaintext };
+          // Uma operação iniciada antes da troca de conta não repopula o cache limpo.
+          if (generation === cacheGeneration) {
+            plaintextCache.set(cacheKey, { cipher: msg.text, text: plaintext });
+          }
+          return plaintext;
         } finally {
-          clearTimeout(timer);
+          clearTimeout(timeout);
         }
       };
 
-      const results = await Promise.all(messages.map(withTimeout));
+      const results = await decryptMessageBatch(messages, currentUserId, hasKeys, withTimeout);
 
       const apply = () => {
         if (isFirstRun) firstDecryptDone.current = true;
@@ -117,7 +103,7 @@ export function useDecryptedMessages(
       };
 
       // No primeiro load, garante um tempo minimo pra evitar flash.
-      if (isFirstRun) {
+      if (isFirstRun && hasE2e && hasKeys) {
         const elapsed = Date.now() - start;
         if (elapsed < MIN_DECRYPT_MS) {
           timer = setTimeout(apply, MIN_DECRYPT_MS - elapsed);
