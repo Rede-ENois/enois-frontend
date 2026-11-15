@@ -3824,3 +3824,35 @@ verde no rascunho antes do descarte (não é prova de entrega, a entrega não ex
 
 **PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado. Se uma execução futura rodar por engano,
 deve confirmar o estado terminal e registrar uma linha como esta, sem abrir PR de código.
+
+## Execução 49 — 2026-11-15 (~09:30–09:45) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Segunda rodada depois do estado terminal. A regra de encerramento manda não trabalhar
+quando o bloco de estado diz `PROJECT_STATUS=COMPLETED`; a rodada anterior (48) já tinha
+registrado essa confirmação. Esta rodada reconferiu e deixou a prova mais completa.
+
+**O QUE FOI FEITO (verificação, não código).**
+
+1. `git fetch origin qa` e leitura do bloco de estado na `origin/qa` do front (`578c0c89`, PR #894
+   mergeado): `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=47`,
+   `COMPLETED_AT=2026-11-15T02:00:00-03:00`, com o relatório final na seção 13 do roadmap.
+2. Log de execuções na `qa`: o último bloco é a Execução 47 (a 48 e esta 49 estão só na branch da
+   PR de docs, ainda não mergeada).
+3. Varredura de PRs abertos com `calendar` nos três repositórios: front #895 (esta PR de docs),
+   backend nenhum, design system nenhum. Nenhum PR de código em aberto.
+4. A trava de concorrência estava ausente; foi criada no início da rodada e removida no fim.
+5. A automação continua marcada como ativa no agendador do workspace. O desligamento do cronjob é
+   feito pelo estado textual (`CRONJOB_STATUS=DISABLED`) na resposta final da rodada, não por
+   ferramenta local: o `CronList` disponível aqui só lista e cria automação.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Só a PR de docs #895 (log + estado do roadmap), que já existia desde a rodada 48 — a
+regra de não abrir PR duplicado manda empurrar nesta mesma PR. Nenhum PR de código.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final (credencial OAuth do provedor externo,
+semântica de reuniões/workshops, Épapo/Tamo Junto por fora) seguem externos à equipe.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado. Qualquer execução futura que rodar por
+engano deve apenas reconferir o estado terminal e registrar uma linha como esta, sem abrir PR de
+código.
