@@ -3856,3 +3856,29 @@ semântica de reuniões/workshops, Épapo/Tamo Junto por fora) seguem externos �
 **PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado. Qualquer execução futura que rodar por
 engano deve apenas reconferir o estado terminal e registrar uma linha como esta, sem abrir PR de
 código.
+
+## Execução 50 — 2026-11-15 (~09:45–09:55) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Terceira rodada depois do estado terminal. A regra de encerramento manda não trabalhar
+quando o bloco de estado diz `PROJECT_STATUS=COMPLETED`; as rodadas 48 e 49 já haviam registrado
+essa confirmação. Esta rodada reconferiu os mesmos pontos e empurrou na PR de docs que já existe.
+
+**O QUE FOI FEITO (verificação, não código).**
+
+1. `git fetch enois qa` e leitura do bloco de estado na `qa` do front (`578c0c89`, PR #894
+   mergeado): `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=47` (as execuções
+   48 e 49 só existem na PR de docs #895, ainda sem revisão humana),
+   `ULTIMA_ATUALIZACAO=2026-11-15T02:00:00-03:00`.
+2. Varredura de PRs abertos com `calendar` nos três repositórios: front #895 (PR de docs, recebe
+   esta rodada), backend nenhum, design system nenhum. Nenhum PR de código em aberto.
+3. Trava de concorrência ausente no início; criada e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Só a PR de docs #895. Nenhum PR de código.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
+por engano devem apenas reconferir o estado terminal e registrar uma linha como esta, sem abrir
+PR de código.
