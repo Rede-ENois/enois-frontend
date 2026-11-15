@@ -3,6 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -102,7 +103,56 @@ describe("enquete no card", () => {
     expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", 0);
     expect(host?.textContent).toContain("1 voto");
     expect(host?.textContent).toContain("100%");
-    expect(host?.querySelectorAll("button").length).toBe(0);
+    // As alternativas continuam botões: clicar em outra troca o voto.
+    expect(host?.querySelectorAll("button").length).toBe(2);
+    expect(host?.textContent).toContain(texts.posts.poll.changeHint);
+  });
+
+  it("clicar em outra alternativa troca o voto sem crescer o total", async () => {
+    mocks.votePoll
+      .mockResolvedValueOnce({
+        options: ["Café", "Chá"],
+        counts: [1, 0],
+        myVote: 0,
+        totalVotes: 1,
+      })
+      .mockResolvedValueOnce({
+        options: ["Café", "Chá"],
+        counts: [0, 1],
+        myVote: 1,
+        totalVotes: 1,
+      });
+    render({ options: ["Café", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
+
+    await act(async () => {
+      host?.querySelector("button")?.click();
+      await Promise.resolve();
+    });
+    expect(host?.textContent).toContain("100%");
+
+    await act(async () => {
+      host?.querySelectorAll("button")[1]?.click();
+      await Promise.resolve();
+    });
+
+    expect(mocks.votePoll).toHaveBeenNthCalledWith(2, "post_poll1", 1);
+    expect(host?.textContent).toContain("0 · 0%");
+    expect(host?.textContent).toContain("1 · 100%");
+    expect(host?.textContent).toContain("1 voto");
+  });
+
+  it("clicar na alternativa escolhida de novo não muda nada", async () => {
+    const resultado = { options: ["Café", "Chá"], counts: [1, 0], myVote: 0, totalVotes: 1 };
+    mocks.votePoll.mockResolvedValue(resultado);
+    render({ ...resultado });
+
+    await act(async () => {
+      host?.querySelectorAll("button")[0]?.click();
+      await Promise.resolve();
+    });
+
+    expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", 0);
+    expect(host?.textContent).toContain("1 voto");
   });
 });
 
