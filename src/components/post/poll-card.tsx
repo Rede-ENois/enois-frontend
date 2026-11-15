@@ -83,7 +83,10 @@ export function PollCard({ post }: { post: PostView }) {
                   <span className="flex min-w-0 items-center gap-1.5">
                     {mine && hasVoted && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
 
-                    <span className="min-w-0 break-words">{option}</span>
+                    {/* A alternativa passa pelo RichText: figurinha no código (`:KEKW:`) vira
+                        imagem, igual no resto do texto. O squash do voto-mutável trouxe a versão
+                        de antes do RichText e desfez isso sem conflito aparente. */}
+                    <RichText content={option} className="min-w-0" />
                   </span>
 
                   {hasVoted && (
