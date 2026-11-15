@@ -8,12 +8,14 @@ import type { NetworkApiRequest } from "@/types/application/network/network-api-
 import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
+import type { NetworkNodeObservability as NetworkNodeObservabilityApi } from "@/types/application/network/network-node-observability";
 import type {
   NetworkDashboardData,
   NetworkNodeApiRequest,
   NetworkNodeData,
   NetworkNodeDetailData,
   NetworkNodeHistoryEntry,
+  NetworkNodeObservabilityPanel,
 } from "@rede-enois/design-system/domain";
 import { NetworkNodesSection as NetworkNodesSectionView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
@@ -74,6 +76,24 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
     quarantineReason: node.quarantineReason,
+  };
+}
+
+/**
+ * O quadro ao vivo na forma que a view do design system espera. Datas passam por `dataHora` (o fuso
+ * do app, sempre o mesmo no servidor e no navegador); o resto é o contrato, sem reescrita.
+ */
+function observabilityView(panel: NetworkNodeObservabilityApi): NetworkNodeObservabilityPanel {
+  return {
+    nodeId: panel.nodeId,
+    generatedAt: dataHora(panel.generatedAt),
+    series: panel.series.map((sample) => ({
+      ...sample,
+      sampledAt: dataHora(sample.sampledAt),
+    })),
+    console: panel.console.map((line) => ({ ...line, at: dataHora(line.at) })),
+    summary: panel.summary,
+    consoleLevels: panel.consoleLevels,
   };
 }
 
@@ -284,6 +304,36 @@ export function NetworkNodesSection() {
     retry: false,
   });
 
+  /**
+   * O quadro ao vivo do nó aberto. O ponto é do minuto e o nó empurra no heartbeat (a cada 30 s),
+   * então reler de minuto em minuto basta: reler antes disso devolve a mesma janela. Em segundo
+   * plano não relê — quem não está olhando não precisa do quadro, e o nó já foi medido de qualquer
+   * forma.
+   */
+  const {
+    data: observability,
+    isLoading: observabilityLoading,
+    error: observabilityError,
+    refetch: refetchObservability,
+    isFetching: observabilityFetching,
+  } = useQuery({
+    queryKey: ["admin", "network", "observability", openNodeId],
+    queryFn: () => adminNetworkApi.observability(openNodeId!),
+    enabled: openNodeId !== null,
+    retry: false,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+  });
+
+  /** Erro de leitura aparece na seção; a rede cair não pode parecer que o nó está sem dados. */
+  const observabilityErrorText = observabilityError
+    ? observabilityError instanceof ApiError
+      ? observabilityError.message
+      : texts.moderator.network.observabilityError
+    : null;
+
+  const observabilityRefreshedAt = observability ? dataHora(observability.generatedAt) : null;
+
   const detail: NetworkNodeDetailData | null = openNode
     ? {
         node: nodeView(openNode),
@@ -332,6 +382,13 @@ export function NetworkNodesSection() {
         detail,
         history: historyView(history),
         historyLoading: openNodeId !== null && history === undefined,
+        observability: {
+          panel: observability ? observabilityView(observability) : null,
+          loading: observabilityLoading || observabilityFetching,
+          error: observabilityErrorText,
+          onRefresh: () => void refetchObservability(),
+          refreshedAtLabel: observabilityRefreshedAt,
+        },
         onSaveCapacity: (body) => {
           if (openNodeId) capacity.mutate({ nodeId: openNodeId, body });
         },

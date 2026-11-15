@@ -3,6 +3,7 @@ import type { NetworkApiRequest } from "@/types/application/network/network-api-
 import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
+import type { NetworkNodeObservability } from "@/types/application/network/network-node-observability";
 import type { NetworkNodeStatus } from "@/types/application/network/network-node-status";
 
 import { api } from "../api-client";
@@ -70,6 +71,15 @@ export const adminNetworkApi = {
   /** As requisições em aberto do nó — o que está na fila ou executando. */
   openApiRequests: (nodeId: string) =>
     api.get<NetworkApiRequest[]>(`/admin/network/nodes/${encodeURIComponent(nodeId)}/api-request`),
+
+  /**
+   * O quadro ao vivo do nó: série dos últimos minutos e o console do runtime. É a janela que o nó
+   * EMPURRA no heartbeat (ele não abre porta), guardada curta no Control Plane — não é histórico.
+   */
+  observability: (nodeId: string, samples = 60, logs = 200) =>
+    api.get<NetworkNodeObservability>(
+      `/admin/network/nodes/${encodeURIComponent(nodeId)}/observability?samples=${samples}&logs=${logs}`,
+    ),
 
   /** O histórico administrativo do nó — a trilha de auditoria lida de volta, mais nova primeiro. */
   history: (nodeId: string, limit = 50) =>
