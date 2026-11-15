@@ -9,6 +9,7 @@ import {
   Calendar,
   CalendarDays,
   Compass,
+  Dices,
   GraduationCap,
   Handshake,
   Home,
@@ -113,6 +114,14 @@ export const navigationItems: {
     context: "SOCIAL",
     section: "community",
     notifies: "STUDY_PAIRS",
+  },
+  {
+    to: "/roleplay",
+    label: texts.navigation.items.roleplay,
+    icon: Dices,
+    module: null,
+    context: "SOCIAL",
+    section: "community",
   },
   // Professional: work.
   {
