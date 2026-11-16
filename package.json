@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.3.2",
+    "@lovable.dev/vite-tanstack-config": "2.27.2",
     "@orval/core": "^8.44.0",
     "@tailwindcss/vite": "^4.3.3",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
