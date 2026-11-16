@@ -13,6 +13,7 @@ import { Briefcase, Handshake, MessageCircle, Search, Send, Sparkles } from "luc
 // (import duplicado removido no merge)
 
 import { messagesApi, servicesApi } from "@/lib/api";
+import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { formatBrlCents, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { requireAuth } from "@/lib/require-auth";
@@ -242,8 +243,10 @@ function OfferCard({ listing }: { listing: ServiceListing }) {
       {listing.sellerName && (
         <p className="mt-2 flex items-center gap-2 text-xs text-text-subtle">
           {listing.sellerAvatar ? (
+            // O avatar chega como caminho relativo de mídia: sem resolver aqui, a src quebra no
+            // prod e a caixa de imagem quebrada aparece quadrada no lugar do rosto.
             <img
-              src={listing.sellerAvatar}
+              src={resolveCdnUrl(listing.sellerAvatar)}
               alt=""
               className="h-6 w-6 shrink-0 rounded-full object-cover"
             />
