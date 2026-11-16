@@ -188,8 +188,11 @@ function Servicos() {
 function Price({ value, currency }: { value: number; currency: string }) {
   const label = currency === "BRL" ? formatBrlCents(value) : formatFaisca(value);
   return (
-    <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-sm font-semibold text-primary-text">
-      <Sparkles className="h-3.5 w-3.5" />
+    <span
+      title={label}
+      className="block max-w-[45%] shrink-0 truncate rounded-full bg-primary-soft px-2.5 py-1 text-sm font-semibold text-primary-text"
+    >
+      <Sparkles className="mr-1 mb-0.5 inline h-3.5 w-3.5" />
       {label}
     </span>
   );
@@ -305,6 +308,7 @@ function RequestCard({ request }: { request: ServiceRequest }) {
       queryClient.invalidateQueries({ queryKey: ["services"] });
     },
   });
+  const budget = `${formatFaisca(request.budgetMin)} a ${formatFaisca(request.budgetMax)}`;
 
   return (
     <li className="surface-card p-4">
@@ -315,8 +319,11 @@ function RequestCard({ request }: { request: ServiceRequest }) {
           <span className="text-xs text-text-subtle">{request.category}</span>
         </span>
 
-        <span className="shrink-0 text-sm font-semibold text-primary-text">
-          {formatFaisca(request.budgetMin)} a {formatFaisca(request.budgetMax)}
+        <span
+          title={budget}
+          className="max-w-[45%] shrink-0 truncate text-sm font-semibold text-primary-text"
+        >
+          {budget}
         </span>
       </div>
 
