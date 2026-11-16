@@ -439,6 +439,8 @@ export function Home() {
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
@@ -572,7 +574,7 @@ export function Home() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         topic,
         website: String(formData.get("website") ?? ""),
@@ -910,7 +912,16 @@ export function Home() {
 
               {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
 
-              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+              {pollMode && (
+                <PollComposer
+                  options={pollOptions}
+                  onChange={setPollOptions}
+                  multipleChoice={pollMultipleChoice}
+                  onMultipleChoiceChange={setPollMultipleChoice}
+                  endsAt={pollEndsAt}
+                  onEndsAtChange={setPollEndsAt}
+                />
+              )}
 
               {pageMode && (
                 <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">

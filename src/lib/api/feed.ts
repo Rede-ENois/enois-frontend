@@ -38,12 +38,12 @@ export const feedApi = {
   get: (postId: string) => api.get<PostView>(`/feed/posts/${postId}`),
 
   /**
-   * Voto da enquete: um voto por pessoa, com troca de alternativa — reenviar outra posição move o
-   * voto; repetir a mesma é idempotente. 409 `ALREADY_VOTED` só na corrida de duas requisições
-   * simultâneas da mesma pessoa (uma gravou primeiro).
+   * Voto da enquete: registra (ou troca) a seleção enquanto ela está aberta. Escolha única
+   * manda `option`; múltipla escolha manda `options`. Depois do prazo o backend responde 409
+   * `POLL_CLOSED` e o resultado fica congelado.
    */
-  votePoll: (postId: string, option: number) =>
-    api.post<PollView>(`/feed/posts/${postId}/poll/vote`, { option }),
+  votePoll: (postId: string, corpo: { option?: number; options?: number[] }) =>
+    api.post<PollView>(`/feed/posts/${postId}/poll/vote`, corpo),
 
   listByUser: (username: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<PostView>>(`/users/${username}/posts${buildQuery({ cursor, limit })}`),

@@ -1462,21 +1462,10 @@ export const texts = {
     mediaSpoiler: {
       badge: "SPOILER",
     },
-    /** Enquete: um voto por pessoa — e dá para trocar a alternativa depois; repetir a mesma não muda nada. */
+    /** Enquete: os rótulos e estados são do design system; o app só trata os erros da escrita. */
     poll: {
-      optionsLabel: "Alternativas",
-      optionPlaceholder: (position: number) => `Alternativa ${position}`,
-      addOption: "Adicionar alternativa",
-      removeOption: "Remover alternativa",
-      hint: "De 2 a 6 alternativas, até 120 caracteres cada.",
-      vote: "Votar",
-      voting: "Registrando voto…",
-      votes: (total: number) => (total === 1 ? "1 voto" : `${total} votos`),
-      noVotes: "Nenhum voto ainda",
-      yourVote: "Seu voto",
-      changeHint: "Toque em outra alternativa para trocar seu voto.",
       error: "Não foi possível registrar o voto.",
-      alreadyVoted: "Você já votou nesta enquete.",
+      closedError: "O prazo desta enquete terminou.",
     },
     /** Fixar UM post no topo do feed da comunidade/grupo (a administração faz isso). */
     pin: {

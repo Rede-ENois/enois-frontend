@@ -143,6 +143,8 @@ function CommunityDetail() {
   const upload = useMediaUpload();
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
@@ -284,7 +286,7 @@ function CommunityDetail() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
       });
     } catch (error) {
@@ -650,7 +652,16 @@ function CommunityDetail() {
               </div>
             )}
 
-            {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+            {pollMode && (
+              <PollComposer
+                options={pollOptions}
+                onChange={setPollOptions}
+                multipleChoice={pollMultipleChoice}
+                onMultipleChoiceChange={setPollMultipleChoice}
+                endsAt={pollEndsAt}
+                onEndsAtChange={setPollEndsAt}
+              />
+            )}
 
             <div
               data-composer-toolbar=""
