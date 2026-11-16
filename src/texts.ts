@@ -3285,6 +3285,65 @@ export const texts = {
         `@${username} punido com ${type === "BAN" ? "banimento" : "restrição"}.`,
       error: "Não foi possível aplicar a punição.",
     },
+    direct: {
+      title: "Ações diretas de administração",
+      description: (alvo: string) =>
+        `Decisões de administrador sobre ${alvo}, sem votação: a advertência fica no histórico da conta; o banimento derruba as sessões e impede novo login; remoção de publicação não depende de denúncia.`,
+      reasonLabel: "Motivo (mínimo 10 caracteres)",
+      reasonPlaceholder: "Explique o motivo com pelo menos 10 caracteres.",
+      reasonTooShort: "O motivo precisa de pelo menos 10 caracteres.",
+      warn: "Advertir",
+      ban: "Banir",
+      banPermanent: "Banir permanentemente",
+      confirmTitle: "Confirmar ação",
+      confirmWarn: (alvo: string) =>
+        `Registrar advertência em ${alvo}? A pessoa é avisada e vê a advertência no histórico da conta.`,
+      confirmBan: (alvo: string) =>
+        `Banir ${alvo}? As sessões caem na hora e a conta não consegue entrar de novo.`,
+      confirmBanPermanent: (alvo: string) =>
+        `Banir ${alvo} PERMANENTEMENTE, sem caminho de recurso? As sessões caem e a conta não volta.`,
+      confirmReason: (motivo: string) => `Motivo registrado: “${motivo}”.`,
+      confirm: "Confirmar",
+      cancel: "Cancelar",
+      warnDone: (ativas: number) =>
+        ativas === 1
+          ? "Advertência registrada: a conta tem 1 advertência ativa."
+          : `Advertência registrada: a conta tem ${ativas} advertências ativas.`,
+      warnError: "Não foi possível advertir (motivo de 10 a 2000 caracteres).",
+      banDone: "Banimento aplicado: sessões derrubadas e login bloqueado.",
+      banPermanentDone: "Banimento permanente aplicado: sessões derrubadas e login bloqueado.",
+      banError: "Não foi possível banir a conta.",
+      activeWarnings: (n: number) => `${n} advertência(s) ativa(s) nesta conta.`,
+      historyTitle: "Histórico administrativo",
+      historyEmpty: "Nenhuma advertência ou sanção registrada nesta conta.",
+      kindWarning: "Advertência",
+      active: "ativa",
+      inactive: "inativa",
+      rowKind: (kind: "WARNING" | "SANCTION", type: string) => {
+        if (kind === "WARNING") return "Advertência";
+        if (type === "RESTRICTION") return "Restrição";
+        if (type === "SUSPENDED") return "Suspensão";
+        if (type === "PERMABAN") return "Banimento permanente";
+        return "Banimento";
+      },
+      historyWhen: (data: string) => data,
+      historyWhenWithDue: (data: string, prazo: string) => `${data} · vira banimento em ${prazo}`,
+      revoke: "Revogar advertência",
+      revokeReasonLabel: "Motivo da revogação",
+      revokeReasonPlaceholder: "Explique por que a advertência está sendo revista.",
+      revokeConfirm: "Revogar",
+      revokeDone: "Advertência revogada: sai do que conta para a escalada e fica no histórico.",
+      revokeError: "Não foi possível revogar a advertência.",
+      postRemove: "Remover publicação",
+      postRemoveTitle: "Remover esta publicação (administração)",
+      postRemoveBody:
+        "A publicação sai do ar na hora, com motivo registrado e auditoria. O autor não é banido por esta ação.",
+      postRemoveConfirm: "Remover",
+      postRemoved: "Publicação removida.",
+      postAlreadyOffline: "A publicação já estava fora do ar.",
+      postNotFound: "Publicação não encontrada.",
+      postError: "Não foi possível remover a publicação.",
+    },
     penalties: {
       title: "Penalidades aplicadas",
       description:
