@@ -152,9 +152,11 @@ export const texts = {
   explore: {
     seoTitle: "Explorar · Énóis",
     sections: {
+      // A ordem das chaves é a ordem das seções no Explorar: Comunidade vem primeiro (é a
+      // casa do convívio), depois Brincar, Construir e Trabalho.
+      community: "Comunidade",
       play: "Brincar",
       build: "Construir",
-      community: "Comunidade",
       work: "Trabalho",
     },
     items: {
