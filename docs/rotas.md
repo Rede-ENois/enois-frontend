@@ -318,6 +318,23 @@ sobre o `NotificationPreferences` do design system.
 - Publicações coladas rendem pelo card do feed (comentário e reação seguem lá); "Tirar" confirma
 - Denúncia confirmada derruba o quadro no backend; a tela mostra o vazio traduzido
 
+## `/desabafos` - Desabafos (`src/routes/desabafos.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `DesabafosPage()`
+
+- Feed de texto acolhedor do Explorar, quase um grupo: só dele e isolado — um desabafo não
+  aparece em `/feed`, no perfil, no diário ou na busca (tabelas próprias no backend, V333)
+- Compositor só de texto (1000 caracteres) do design system; publicar avisa e recarrega
+- Linha do tempo cronológica sem gamificação (sem pontos, sem ranking, sem destaque); reação
+  é contada, nunca nominada — a interface oferece as pílulas de apoio (LOVE ❤️, SUPPORT 💪),
+  uma por pessoa, trocável e removível
+- Card abre as acolhidas (comentários planos, resposta direta ao desabafo) no próprio card;
+  quem escreve remove o próprio texto ou a própria acolhida
+- Notificação de acolhida aponta para `/desabafos?post=<id>`: as acolhidas do desabafo avisado
+  abrem sozinhas; o parâmetro fica no endereço até a pessoa trocar de desabafo aberto
+
 ## `/salvos` - Posts Salvos (`src/routes/salvos.tsx`)
 
 **Auth:** Obrigatória
@@ -451,6 +468,7 @@ seguintes; aqui é o mapa completo.
 | `/colecoes/:colecaoId`           | `colecoes.$colecaoId.tsx`                        | Coleção aberta: guardar, tirar, editar, remover.                                                                                             |
 | `/murais`                        | `murais.tsx`                                     | Murais do Explorar (coleções colaborativas).                                                                                                 |
 | `/murais/:muralId`               | `murais.$muralId.tsx`                            | Mural aberto: colar, tirar, editar, remover.                                                                                                 |
+| `/desabafos`                     | `desabafos.tsx`                                  | Desabafos do Explorar: feed acolhedor de texto, só dele, fora do feed principal.                                                             |
 | `/salvos`                        | `salvos.tsx`                                     | Posts salvos.                                                                                                                                |
 | `/seguranca`                     | `seguranca.tsx`                                  | Segurança da conta: senha, 2FA, sessões, contas vinculadas.                                                                                  |
 | `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                                                                                            |

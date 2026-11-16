@@ -13,6 +13,7 @@ import {
   Gavel,
   GraduationCap,
   Handshake,
+  HeartHandshake,
   Joystick,
   Lightbulb,
   Puzzle,
@@ -89,6 +90,15 @@ export const exploreItems: {
     color: "var(--table-2)",
     module: null,
     keywords: ["colagem", "fotos", "fotografias"],
+  },
+  {
+    section: "community",
+    href: "/desabafos",
+    text: texts.explore.items.desabafos,
+    icon: HeartHandshake,
+    color: "var(--table-4)",
+    module: null,
+    keywords: ["desabafos", "apoio", "acolhida", "desabafar"],
   },
   {
     section: "community",

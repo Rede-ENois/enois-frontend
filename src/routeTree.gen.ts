@@ -22,6 +22,7 @@ import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
+import { Route as DesabafosRouteImport } from './routes/desabafos'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as EmpresasRouteImport } from './routes/empresas'
@@ -157,6 +158,11 @@ const ContatoRoute = ContatoRouteImport.update({
 const DenunciasRoute = DenunciasRouteImport.update({
   id: '/denuncias',
   path: '/denuncias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesabafosRoute = DesabafosRouteImport.update({
+  id: '/desabafos',
+  path: '/desabafos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevelopersRoute = DevelopersRouteImport.update({
@@ -532,6 +538,7 @@ export interface FileRoutesByFullPath {
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
+  '/desabafos': typeof DesabafosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -618,6 +625,7 @@ export interface FileRoutesByTo {
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
+  '/desabafos': typeof DesabafosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -705,6 +713,7 @@ export interface FileRoutesById {
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
+  '/desabafos': typeof DesabafosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -793,6 +802,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/contato'
     | '/denuncias'
+    | '/desabafos'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -879,6 +889,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/contato'
     | '/denuncias'
+    | '/desabafos'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -965,6 +976,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/contato'
     | '/denuncias'
+    | '/desabafos'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -1052,6 +1064,7 @@ export interface RootRouteChildren {
   ContaRoute: typeof ContaRoute
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
+  DesabafosRoute: typeof DesabafosRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
   EmpresasRoute: typeof EmpresasRoute
@@ -1202,6 +1215,13 @@ declare module '@tanstack/react-router' {
       path: '/denuncias'
       fullPath: '/denuncias'
       preLoaderRoute: typeof DenunciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desabafos': {
+      id: '/desabafos'
+      path: '/desabafos'
+      fullPath: '/desabafos'
+      preLoaderRoute: typeof DesabafosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developers': {
@@ -1861,6 +1881,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContaRoute: ContaRoute,
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
+  DesabafosRoute: DesabafosRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
   EmpresasRoute: EmpresasRoute,

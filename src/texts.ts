@@ -174,6 +174,7 @@ export const texts = {
       agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
+      desabafos: { label: "Desabafos", description: "Um espaço acolhedor para desabafar" },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
       colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
@@ -196,6 +197,27 @@ export const texts = {
     replyBlocked: "Resposta a comentário fotográfico é só em texto.",
     deletePhotoDone: "Foto removida da Colagem.",
     deleteCommentDone: "Comentário removido.",
+  },
+
+  /** Textos que a rota dos Desabafos orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  desabafos: {
+    seoTitle: "Desabafos · Énóis",
+    title: "Desabafos",
+    subtitle:
+      "Um espaço acolhedor para desabafar: só texto, sem pressa e sem julgamento. Nada daqui vai para o feed principal.",
+    publishSuccess: "Desabafo publicado.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    contentTooLongError: "O desabafo aceita no máximo 1000 caracteres.",
+    removeDone: "Desabafo removido.",
+    commentSuccess: "Acolhida enviada.",
+    commentError: "Não foi possível acolher. Tente de novo.",
+    commentTooLongError: "A acolhida aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva uma acolhida antes de enviar.",
+    removeCommentDone: "Acolhida removida.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    reactionError: "Não foi possível reagir. Tente de novo.",
   },
 
   /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */

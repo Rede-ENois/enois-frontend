@@ -17,6 +17,7 @@ export { communitiesApi } from "./communities";
 export { groupsApi } from "./groups";
 export { roleplayApi, WORLD_KINDS } from "./roleplay";
 export { colagemApi } from "./colagem";
+export { desabafosApi } from "./desabafos";
 export { muraisApi } from "./murais";
 export { colecoesApi } from "./colecoes";
 export { jobsApi } from "./jobs";
