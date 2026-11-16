@@ -7,8 +7,28 @@ import type { ServiceContract } from "@/types/application/services/service-contr
 import type { ServiceListing } from "@/types/application/services/service-listing";
 import type { ServiceRequest } from "@/types/application/services/service-request";
 import { StyledName } from "@rede-enois/design-system/domain";
-import { Button, Input, PageHeader, Textarea, useToast } from "@rede-enois/design-system/ui";
-import { Briefcase, Handshake, MessageCircle, Search, Send, Sparkles } from "lucide-react";
+import {
+  Button,
+  ConfirmDialog,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  PageHeader,
+  Textarea,
+  useToast,
+} from "@rede-enois/design-system/ui";
+import {
+  Briefcase,
+  Handshake,
+  MessageCircle,
+  Pencil,
+  Search,
+  Send,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 // (import duplicado removido no merge)
 
@@ -57,6 +77,7 @@ function Servicos() {
     queryFn: () => servicesApi.mine(),
     enabled: authenticated,
   });
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"ofertas" | "pedidos">("ofertas");
 
   return (
@@ -145,6 +166,13 @@ function Servicos() {
             </div>
           )}
         </div>
+
+        {mine.data && (
+          <MyOffers
+            ofertas={mine.data.ofertas}
+            onEdited={() => queryClient.invalidateQueries({ queryKey: ["services"] })}
+          />
+        )}
 
         {mine.data && (
           <MyContracts
@@ -382,6 +410,86 @@ function RequestCard({ request }: { request: ServiceRequest }) {
   );
 }
 
+/**
+ * As ofertas da própria conta com a gerência que faltava: editar (o preço publicado errado era
+ * ticket de suporte) e despublicar com confirmação. Despublicar não quebra contrato aberto — o
+ * serviço some do catálogo, os contratos já assinados continuam valendo.
+ */
+function MyOffers({ ofertas, onEdited }: { ofertas: ServiceListing[]; onEdited: () => void }) {
+  const active = ofertas.filter((l) => l.status === "ACTIVE");
+  const [editing, setEditing] = useState<ServiceListing | null>(null);
+  const [confirming, setConfirming] = useState<ServiceListing | null>(null);
+  const { toast } = useToast();
+  const remove = useMutation({
+    mutationFn: (listingId: string) => servicesApi.removeListing(listingId),
+    onSuccess: () => {
+      setConfirming(null);
+      toast("Oferta despublicada. Os contratos já abertos continuam valendo.", "success");
+      onEdited();
+    },
+    onError: () => toast("Não foi possível despublicar agora.", "error"),
+  });
+
+  if (active.length === 0) return null;
+
+  return (
+    <section className="mb-6">
+      <h2 className="mb-2 text-sm font-semibold text-text-subtle">Minhas ofertas</h2>
+
+      <ul className="space-y-2">
+        {active.map((l) => (
+          <li key={l.id} className="surface-card flex flex-wrap items-center gap-2 p-3">
+            <span className="min-w-0 flex-1 truncate text-sm">
+              {l.title} · {formatFaisca(l.price)} · {l.deliveryDays} dias
+            </span>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full gap-1.5"
+              onClick={() => setEditing(l)}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Editar
+            </Button>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              className="rounded-full gap-1.5 text-destructive"
+              onClick={() => setConfirming(l)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Despublicar
+            </Button>
+          </li>
+        ))}
+      </ul>
+
+      <OfferFormDialog
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        listing={editing}
+        onSaved={() => {
+          setEditing(null);
+          toast("Alterações salvas.", "success");
+          onEdited();
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirming !== null}
+        onOpenChange={(open) => !open && setConfirming(null)}
+        title="Despublicar serviço?"
+        description="Ele sai do catálogo agora. Quem já contratou continua com o contrato valendo."
+        confirmLabel="Despublicar"
+        destructive
+        onConfirm={() => confirming && remove.mutate(confirming.id)}
+      />
+    </section>
+  );
+}
+
 function MyContracts({
   contracts,
   sellerContracts,
@@ -503,33 +611,149 @@ function StateChip({ state }: { state: string }) {
   );
 }
 
+/** Campos do formulário de oferta, como o dialog os guarda (preço/prazo em texto de input). */
+type OfferForm = {
+  category: string;
+  title: string;
+  description: string;
+  deliverables: string;
+  price: string;
+  deliveryDays: string;
+};
+
+function offerPayload(f: OfferForm) {
+  return {
+    category: f.category.trim(),
+    title: f.title.trim(),
+    description: f.description.trim(),
+    deliverables: f.deliverables.trim(),
+    price: parseFaiscaInput(f.price) ?? 0,
+    currency: "FAISCA" as const,
+    deliveryDays: Math.round(Number(f.deliveryDays) || 0),
+  };
+}
+
+/**
+ * O dialog de oferta: cria uma nova ou edita uma que já existe (mesmos campos, mesma validação).
+ * Editar é o caminho do preço que saiu errado — sem isso, o erro só se resolve pelo suporte.
+ */
+function OfferFormDialog({
+  open,
+  onClose,
+  listing,
+  onSaved,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** Presente na edição: o dialog nasce com os valores atuais da oferta. */
+  listing?: ServiceListing | null;
+  onSaved: (saved: { id: string; status: string }) => void;
+}) {
+  const [f, setF] = useState<OfferForm>({
+    category: listing?.category ?? "design",
+    title: listing?.title ?? "",
+    description: listing?.description ?? "",
+    deliverables: listing?.deliverables ?? "",
+    price: listing ? String(Math.round(listing.price / 1000)) : "30",
+    deliveryDays: listing ? String(listing.deliveryDays) : "7",
+  });
+  const saving = useMutation({
+    mutationFn: () =>
+      listing
+        ? servicesApi.editListing(listing.id, offerPayload(f))
+        : servicesApi.publishListing(offerPayload(f)),
+    onSuccess: onSaved,
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{listing ? "Editar serviço" : "Oferecer um serviço"}</DialogTitle>
+        </DialogHeader>
+
+        <p className="text-sm text-text-subtle">
+          {listing
+            ? "Ajuste o que quiser. Com contrato aberto, o preço fica travado até ele terminar."
+            : "O que você faz, por quanto (faíscas) e o que entrega. Você pode ter até 5 ofertas abertas."}
+        </p>
+
+        <div className="space-y-2">
+          {/* Os tetos sao os mesmos da coluna e da API (que recusa com 400 dizendo o campo):
+              sem eles aqui, a pessoa podia digitar mais e tomar 409 sem entender o motivo. */}
+          <Input
+            aria-label="Categoria (design, código, escrita…)"
+            placeholder="Categoria (design, código, escrita…)"
+            value={f.category}
+            maxLength={40}
+            onChange={(e) => setF({ ...f, category: e.target.value })}
+          />
+          <Input
+            aria-label="Título (mín. 5 caracteres)"
+            placeholder="Título (mín. 5 caracteres)"
+            value={f.title}
+            maxLength={160}
+            onChange={(e) => setF({ ...f, title: e.target.value })}
+          />
+          <Textarea
+            aria-label="Descrição (mín. 20 caracteres)"
+            rows={3}
+            placeholder="Descrição (mín. 20 caracteres)"
+            value={f.description}
+            maxLength={2000}
+            onChange={(e) => setF({ ...f, description: e.target.value })}
+          />
+          <Input
+            aria-label="Entregáveis (obrigatório)"
+            placeholder="Entregáveis (obrigatório)"
+            value={f.deliverables}
+            maxLength={1000}
+            onChange={(e) => setF({ ...f, deliverables: e.target.value })}
+          />
+
+          <div className="flex gap-2">
+            <Input
+              aria-label="Preço"
+              type="number"
+              min={1}
+              value={f.price}
+              onChange={(e) => setF({ ...f, price: e.target.value })}
+            />
+            <Input
+              aria-label="Prazo (dias)"
+              type="number"
+              min={1}
+              value={f.deliveryDays}
+              onChange={(e) => setF({ ...f, deliveryDays: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>
+            Fechar
+          </Button>
+
+          <Button
+            disabled={
+              saving.isPending ||
+              f.title.trim().length < 5 ||
+              f.description.trim().length < 20 ||
+              !f.deliverables.trim()
+            }
+            onClick={() => saving.mutate()}
+          >
+            {listing ? "Salvar alterações" : "Publicar oferta"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function NewOfferButton() {
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({
-    category: "design",
-    title: "",
-    description: "",
-    deliverables: "",
-    price: "30",
-    deliveryDays: "7",
-  });
-  const queryClient = useQueryClient();
-  const publish = useMutation({
-    mutationFn: () =>
-      servicesApi.publishListing({
-        category: f.category.trim(),
-        title: f.title.trim(),
-        description: f.description.trim(),
-        deliverables: f.deliverables.trim(),
-        price: parseFaiscaInput(f.price) ?? 0,
-        currency: "FAISCA",
-        deliveryDays: Math.round(Number(f.deliveryDays) || 0),
-      }),
-    onSuccess: () => {
-      setOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["services"] });
-    },
-  });
+  const { toast } = useToast();
 
   return (
     <>
@@ -537,93 +761,15 @@ function NewOfferButton() {
         <Sparkles className="h-4 w-4" />
         Oferecer
       </Button>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="surface-card w-full max-w-md rounded-2xl p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold">Oferecer um serviço</h2>
 
-            <p className="mt-1 text-sm text-text-subtle">
-              O que você faz, por quanto (faíscas) e o que entrega. Você pode ter até 5 ofertas
-              abertas.
-            </p>
-
-            <div className="mt-3 space-y-2">
-              {/* Os tetos sao os mesmos da coluna e da API (que recusa com 400 dizendo o campo):
-                  sem eles aqui, a pessoa podia digitar mais e tomar 409 sem entender o motivo. */}
-              <Input
-                aria-label="Categoria (design, código, escrita…)"
-                placeholder="Categoria (design, código, escrita…)"
-                value={f.category}
-                maxLength={40}
-                onChange={(e) => setF({ ...f, category: e.target.value })}
-              />
-              <Input
-                aria-label="Título (mín. 5 caracteres)"
-                placeholder="Título (mín. 5 caracteres)"
-                value={f.title}
-                maxLength={160}
-                onChange={(e) => setF({ ...f, title: e.target.value })}
-              />
-              <Textarea
-                aria-label="Descrição (mín. 20 caracteres)"
-                rows={3}
-                placeholder="Descrição (mín. 20 caracteres)"
-                value={f.description}
-                maxLength={2000}
-                onChange={(e) => setF({ ...f, description: e.target.value })}
-              />
-              <Input
-                aria-label="Entregáveis (obrigatório)"
-                placeholder="Entregáveis (obrigatório)"
-                value={f.deliverables}
-                maxLength={1000}
-                onChange={(e) => setF({ ...f, deliverables: e.target.value })}
-              />
-
-              <div className="flex gap-2">
-                <Input
-                  aria-label="Preço"
-                  type="number"
-                  min={1}
-                  value={f.price}
-                  onChange={(e) => setF({ ...f, price: e.target.value })}
-                />
-                <Input
-                  aria-label="Prazo (dias)"
-                  type="number"
-                  min={1}
-                  value={f.deliveryDays}
-                  onChange={(e) => setF({ ...f, deliveryDays: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setOpen(false)}>
-                Fechar
-              </Button>
-
-              <Button
-                disabled={
-                  publish.isPending ||
-                  f.title.trim().length < 5 ||
-                  f.description.trim().length < 20 ||
-                  !f.deliverables.trim()
-                }
-                onClick={() => publish.mutate()}
-              >
-                Publicar oferta
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <OfferFormDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onSaved={() => {
+          setOpen(false);
+          toast("Oferta publicada.", "success");
+        }}
+      />
     </>
   );
 }
