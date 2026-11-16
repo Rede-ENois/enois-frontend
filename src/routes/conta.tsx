@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { createFileRoute } from "@tanstack/react-router";
 
+import { usePreferencesStore } from "@/stores/preferences.store";
 import { texts } from "@/texts";
 import { AccountSettings } from "@rede-enois/design-system/domain";
 
@@ -28,6 +29,10 @@ function AccountSettingsPage() {
     "email" | "password" | "linked" | "delete" | "healthy" | null
   >(null);
   const openChange = (name: typeof dialog) => (open: boolean) => setDialog(open ? name : null);
+  // Preferência de mídia sensível vive neste dispositivo (como o tema): o design system só
+  // desenha a linha, e a escrita passa pela store persistida.
+  const revealSensitiveMedia = usePreferencesStore((state) => state.revealSensitiveMedia);
+  const setRevealSensitiveMedia = usePreferencesStore((state) => state.setRevealSensitiveMedia);
 
   return (
     <AppContainer>
@@ -47,6 +52,8 @@ function AccountSettingsPage() {
         onOpenLinkedAccounts={() => setDialog("linked")}
         onDeleteAccount={() => setDialog("delete")}
         onOpenHealthyUsage={() => setDialog("healthy")}
+        revealSensitiveMedia={revealSensitiveMedia}
+        onToggleRevealSensitiveMedia={setRevealSensitiveMedia}
       />
 
       {profile && (

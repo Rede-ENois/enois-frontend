@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { usePreferencesStore } from "@/stores/preferences.store";
 import type { DesignSystemProviderProps } from "@/types/components/design-system-provider-props";
 import { EnoisProvider, type LinkProps } from "@rede-enois/design-system";
 
@@ -39,12 +40,16 @@ function RouterLink({ href, onClick, ...props }: LinkProps) {
 
 /** Plugs the app's router and media CDN into the design system components. */
 export function DesignSystemProvider({ children, resolveMediaUrl }: DesignSystemProviderProps) {
+  // Preferência salva neste dispositivo: com ela ligada, mídia sensível nasce revelada em
+  // tudo que é desenhado pelo design system (feed, perfil, colagem).
+  const revealSensitiveMedia = usePreferencesStore((state) => state.revealSensitiveMedia);
   return (
     <EnoisProvider
       Link={RouterLink}
       resolveMediaUrl={resolveMediaUrl ?? resolveCdnUrl}
       resolveMediaOriginalUrl={withImageKitOriginal}
       isOwnMediaUrl={isOwnMediaUrl}
+      revealSensitiveMedia={revealSensitiveMedia}
     >
       {children}
     </EnoisProvider>
