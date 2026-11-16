@@ -108,7 +108,10 @@ describe("compressImage", () => {
     expect(result.size).toBe(1024);
   });
 
-  it("keeps a png named as png when the output is the jpeg pipeline", async () => {
+  it("keeps a png as png, name and type, when it is compressed", async () => {
+    // PNG sai em PNG: JPEG não tem canal alfa e achatava a transparência no fundo preto —
+    // a foto de perfil subia com o fundo trocado. Antes o arquivo ficava com nome .png
+    // e bytes de JPEG; agora nome e tipo seguem o conteúdo.
     const original = new File([new Uint8Array(COMPRESS_MIN_BYTES + 10)], "print.png", {
       type: "image/png",
     });
@@ -117,7 +120,21 @@ describe("compressImage", () => {
       canvas.getContext = (() => ({ drawImage() {} })) as unknown as typeof canvas.getContext;
     });
     const result = await compressImage(original, undefined, fakeDoc);
+    expect(result).not.toBe(original);
+    expect(result.type).toBe("image/png");
     expect(result.name).toBe("print.png");
+    expect(result.size).toBe(1024);
+  });
+
+  it("lets the caller choose the output type explicitly", async () => {
+    const original = jpegFile(new Array(COMPRESS_MIN_BYTES + 10).fill(0x00));
+    const fakeDoc = fakeDocumentWithCanvas((canvas) => {
+      canvas.toBlob = (cb: (b: Blob | null) => void) => cb(new Blob([new Uint8Array(1024)]));
+      canvas.getContext = (() => ({ drawImage() {} })) as unknown as typeof canvas.getContext;
+    });
+    const result = await compressImage(original, { outputType: "image/webp" }, fakeDoc);
+    expect(result.type).toBe("image/webp");
+    expect(result.name).toBe("foto-de-teste.webp");
   });
 });
 

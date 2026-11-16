@@ -80,6 +80,7 @@ import { authApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { profileCardData } from "@/lib/cosmetics";
+import { croppedFile } from "@/lib/media/cropped-file";
 import { connectionAction } from "@/lib/network/connection-action";
 import { buildShareTags } from "@/lib/open-graph";
 import { authorNameStyle } from "@/lib/profile-name-style";
@@ -451,10 +452,7 @@ function Profile() {
   const handleCropComplete = useCallback(
     async (blob: Blob) => {
       const upload = cropPurpose === "AVATAR" ? avatarUpload : bannerUpload;
-      const result = await upload.upload(
-        new File([blob], "crop.jpg", { type: "image/jpeg" }),
-        cropPurpose!,
-      );
+      const result = await upload.upload(croppedFile(blob), cropPurpose!);
       const field = cropPurpose === "AVATAR" ? "avatar" : "banner";
       await updateProfile.mutateAsync({ [field]: result.cdnUrl });
       if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
