@@ -1,12 +1,5 @@
 import { texts } from "@/texts";
 
-/** "https://enois.ia.br/feed/post_9#x" → "post_9"; id puro passa direto. */
-export function postIdDoElo(elo: string): string {
-  const semCorte = elo.trim().split(/[?#]/)[0] ?? "";
-  const pedacos = semCorte.split("/").filter((pedaco) => pedaco.length > 0);
-  return pedacos[pedacos.length - 1] ?? semCorte;
-}
-
 /**
  * Erro com tradução nossa nos Murais: limite e restrição têm frase própria, título e descrição
  * longos também; o resto cai na genérica de quem chamou.

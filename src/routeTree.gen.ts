@@ -17,6 +17,7 @@ import { Route as BloqueadosRouteImport } from './routes/bloqueados'
 import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
 import { Route as CarteiraRouteImport } from './routes/carteira'
 import { Route as ColagemRouteImport } from './routes/colagem'
+import { Route as ColecoesRouteImport } from './routes/colecoes'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContatoRouteImport } from './routes/contato'
@@ -66,6 +67,7 @@ import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
 import { Route as CallCallIdRouteImport } from './routes/call.$callId'
+import { Route as ColecoesColecaoIdRouteImport } from './routes/colecoes.$colecaoId'
 import { Route as ComunidadesCommunityIdRouteImport } from './routes/comunidades.$communityId'
 import { Route as EmpresaSlugRouteImport } from './routes/empresa.$slug'
 import { Route as GamesUsernameRouteImport } from './routes/games.$username'
@@ -130,6 +132,11 @@ const CarteiraRoute = CarteiraRouteImport.update({
 const ColagemRoute = ColagemRouteImport.update({
   id: '/colagem',
   path: '/colagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ColecoesRoute = ColecoesRouteImport.update({
+  id: '/colecoes',
+  path: '/colecoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComunidadesRoute = ComunidadesRouteImport.update({
@@ -377,6 +384,11 @@ const CallCallIdRoute = CallCallIdRouteImport.update({
   path: '/call/$callId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ColecoesColecaoIdRoute = ColecoesColecaoIdRouteImport.update({
+  id: '/$colecaoId',
+  path: '/$colecaoId',
+  getParentRoute: () => ColecoesRoute,
+} as any)
 const ComunidadesCommunityIdRoute = ComunidadesCommunityIdRouteImport.update({
   id: '/$communityId',
   path: '/$communityId',
@@ -515,6 +527,7 @@ export interface FileRoutesByFullPath {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/colagem': typeof ColagemRoute
+  '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
@@ -564,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
+  '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
@@ -599,6 +613,7 @@ export interface FileRoutesByTo {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/colagem': typeof ColagemRoute
+  '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
@@ -648,6 +663,7 @@ export interface FileRoutesByTo {
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
+  '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
@@ -684,6 +700,7 @@ export interface FileRoutesById {
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
   '/colagem': typeof ColagemRoute
+  '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
@@ -733,6 +750,7 @@ export interface FileRoutesById {
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
+  '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
@@ -770,6 +788,7 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/carteira'
     | '/colagem'
+    | '/colecoes'
     | '/comunidades'
     | '/conta'
     | '/contato'
@@ -819,6 +838,7 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/blog/$username'
     | '/call/$callId'
+    | '/colecoes/$colecaoId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
@@ -854,6 +874,7 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/carteira'
     | '/colagem'
+    | '/colecoes'
     | '/comunidades'
     | '/conta'
     | '/contato'
@@ -903,6 +924,7 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/blog/$username'
     | '/call/$callId'
+    | '/colecoes/$colecaoId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
@@ -938,6 +960,7 @@ export interface FileRouteTypes {
     | '/boas-vindas'
     | '/carteira'
     | '/colagem'
+    | '/colecoes'
     | '/comunidades'
     | '/conta'
     | '/contato'
@@ -987,6 +1010,7 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/blog/$username'
     | '/call/$callId'
+    | '/colecoes/$colecaoId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
@@ -1023,6 +1047,7 @@ export interface RootRouteChildren {
   BoasVindasRoute: typeof BoasVindasRoute
   CarteiraRoute: typeof CarteiraRoute
   ColagemRoute: typeof ColagemRoute
+  ColecoesRoute: typeof ColecoesRouteWithChildren
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
   ContaRoute: typeof ContaRoute
   ContatoRoute: typeof ContatoRoute
@@ -1142,6 +1167,13 @@ declare module '@tanstack/react-router' {
       path: '/colagem'
       fullPath: '/colagem'
       preLoaderRoute: typeof ColagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/colecoes': {
+      id: '/colecoes'
+      path: '/colecoes'
+      fullPath: '/colecoes'
+      preLoaderRoute: typeof ColecoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comunidades': {
@@ -1487,6 +1519,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallCallIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/colecoes/$colecaoId': {
+      id: '/colecoes/$colecaoId'
+      path: '/$colecaoId'
+      fullPath: '/colecoes/$colecaoId'
+      preLoaderRoute: typeof ColecoesColecaoIdRouteImport
+      parentRoute: typeof ColecoesRoute
+    }
     '/comunidades/$communityId': {
       id: '/comunidades/$communityId'
       path: '/$communityId'
@@ -1676,6 +1715,18 @@ const AgendaRouteChildren: AgendaRouteChildren = {
 const AgendaRouteWithChildren =
   AgendaRoute._addFileChildren(AgendaRouteChildren)
 
+interface ColecoesRouteChildren {
+  ColecoesColecaoIdRoute: typeof ColecoesColecaoIdRoute
+}
+
+const ColecoesRouteChildren: ColecoesRouteChildren = {
+  ColecoesColecaoIdRoute: ColecoesColecaoIdRoute,
+}
+
+const ColecoesRouteWithChildren = ColecoesRoute._addFileChildren(
+  ColecoesRouteChildren,
+)
+
 interface ComunidadesCommunityIdRouteChildren {
   ComunidadesCommunityIdCanaisChannelIdRoute: typeof ComunidadesCommunityIdCanaisChannelIdRoute
 }
@@ -1805,6 +1856,7 @@ const rootRouteChildren: RootRouteChildren = {
   BoasVindasRoute: BoasVindasRoute,
   CarteiraRoute: CarteiraRoute,
   ColagemRoute: ColagemRoute,
+  ColecoesRoute: ColecoesRouteWithChildren,
   ComunidadesRoute: ComunidadesRouteWithChildren,
   ContaRoute: ContaRoute,
   ContatoRoute: ContatoRoute,

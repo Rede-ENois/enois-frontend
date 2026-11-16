@@ -14,7 +14,8 @@ import { EmptyState, PageHeader, useToast } from "@rede-enois/design-system/ui";
 
 import { muraisApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
-import { mensagemDeErroMural as mensagemDeErro, postIdDoElo } from "@/lib/murais-helpers";
+import { mensagemDeErroMural as mensagemDeErro } from "@/lib/murais-helpers";
+import { postIdDoElo } from "@/lib/post-links";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";

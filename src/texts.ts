@@ -175,6 +175,7 @@ export const texts = {
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
+      colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
   },
 
@@ -224,6 +225,35 @@ export const texts = {
     tirado: "Publicação tirada do mural.",
     naoAutorizado: "Só quem colou ou o dono do mural pode tirar a publicação.",
     naoEncontrado: "Esse mural não existe mais.",
+  },
+
+  /** Textos que a rota das Coleções orquestra (avisos e cabeçalho); o desenho vive no DS. */
+  colecoes: {
+    seoTitle: "Coleções · Énóis",
+    title: "Coleções",
+    subtitle:
+      "Pastas só suas, com os posts que você salvou: guarde, organize e releia quando quiser.",
+    criar: "Criar coleção",
+    criado: "Coleção criada.",
+    editado: "Coleção atualizada.",
+    removido: "Coleção removida.",
+    erro: "Não foi possível abrir suas coleções. Tente de novo.",
+    erroCriar: "Não foi possível criar a coleção. Tente de novo.",
+    erroEditar: "Não foi possível salvar as mudanças. Tente de novo.",
+    erroRemover: "Não foi possível remover a coleção. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode fazer isso aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 500 caracteres.",
+    tituloObrigatorio: "Dê um título à coleção.",
+    guardado: "Publicação guardada na coleção.",
+    erroGuardar: "Não foi possível guardar a publicação. Tente de novo.",
+    naoSalvo: "Salve a publicação no perfil antes de guardá-la numa coleção.",
+    jaNaColecao: "Essa publicação já está nesta coleção.",
+    postNaoEncontrado: "Publicação não encontrada ou invisível para você.",
+    erroTirar: "Não foi possível tirar a publicação da coleção. Tente de novo.",
+    tirado: "Publicação tirada da coleção.",
+    naoEncontrado: "Essa coleção não existe mais.",
   },
 
   /**

@@ -275,6 +275,48 @@ sobre o `NotificationPreferences` do design system.
   "Notificações e avisos" do diálogo "Uso saudável" (`src/components/healthy-usage/`), junto do
   interruptor de avisos; o menu da conta não repete essas opções.
 
+## `/colecoes` - Coleções (`src/routes/colecoes.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `ColecoesPage()`
+
+- Pastas privadas com os posts que o usuário salvou; entrada pelo Explorar
+- Lista de cartões (título, descrição, contagem) com "carregar mais"
+- Botão "Criar coleção" abre o diálogo do design system; criar salva e navega para a pasta
+- Recusas do servidor viram toast traduzido por código (`COLECAO_TITLE_TOO_LONG`, limite, restrição)
+
+## `/colecoes/:colecaoId` - Coleção aberta (`src/routes/colecoes.$colecaoId.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `ColecaoPage()`
+
+- A pasta (sempre sua): editar e remover no cabeçalho; remover apaga a pasta de verdade
+- Barra "Guardar" aceita link ou id do post salvo (extrai o id); recusas `NAO_SALVO`,
+  `JA_NA_COLECAO` e `POST_NOT_FOUND` aparecem na linha, traduzidas
+- Posts guardados rendem pelo card de sempre do feed; "Tirar da coleção" confirma e apaga só o elo
+- Coleção alheia (404) mostra o vazio traduzido
+
+## `/murais` - Murais (`src/routes/murais.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `MuraisPage()`
+
+- Coleções colaborativas do Explorar; lista de cartões (título, dono, contagem) com "carregar mais"
+- Botão "Criar mural" abre o diálogo do design system; criar salva e navega para o quadro
+
+## `/murais/:muralId` - Mural aberto (`src/routes/murais.$muralId.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `MuralPage()`
+
+- O quadro: dono edita/remove; barra "Colar" aceita link ou id de publicação existente
+- Publicações coladas rendem pelo card do feed (comentário e reação seguem lá); "Tirar" confirma
+- Denúncia confirmada derruba o quadro no backend; a tela mostra o vazio traduzido
+
 ## `/salvos` - Posts Salvos (`src/routes/salvos.tsx`)
 
 **Auth:** Obrigatória
@@ -399,6 +441,10 @@ seguintes; aqui é o mapa completo.
 | `/projetos/painel`               | `projetos.painel.tsx`                            | Painel de projetos (criar/editar, fila de revisão).                                                                                          |
 | `/rede`                          | `rede.tsx`                                       | Minha rede (convites, sugestões e conexões).                                                                                                 |
 | `/responsavel`                   | `responsavel.tsx`                                | Fluxo de responsável parental (ECA).                                                                                                         |
+| `/colecoes`                      | `colecoes.tsx`                                   | Coleções pessoais (pastas de posts salvos).                                                                                                  |
+| `/colecoes/:colecaoId`           | `colecoes.$colecaoId.tsx`                        | Coleção aberta: guardar, tirar, editar, remover.                                                                                             |
+| `/murais`                        | `murais.tsx`                                     | Murais do Explorar (coleções colaborativas).                                                                                                 |
+| `/murais/:muralId`               | `murais.$muralId.tsx`                            | Mural aberto: colar, tirar, editar, remover.                                                                                                 |
 | `/salvos`                        | `salvos.tsx`                                     | Posts salvos.                                                                                                                                |
 | `/seguranca`                     | `seguranca.tsx`                                  | Segurança da conta: senha, 2FA, sessões, contas vinculadas.                                                                                  |
 | `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                                                                                            |
