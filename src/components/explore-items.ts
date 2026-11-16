@@ -4,6 +4,7 @@ import {
   Award,
   Briefcase,
   Building2,
+  CalendarDays,
   Camera,
   Code2,
   Dices,
@@ -135,6 +136,15 @@ export const exploreItems: {
     color: "var(--table-4)",
     module: null,
     keywords: ["rpg", "roleplay", "campanha", "mesa", "dados"],
+  },
+  {
+    section: "community",
+    href: "/agenda",
+    text: texts.explore.items.agenda,
+    icon: CalendarDays,
+    color: "var(--table-5)",
+    module: null,
+    keywords: ["agenda", "compromissos", "calendário"],
   },
   {
     section: "community",
