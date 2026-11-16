@@ -31,6 +31,13 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Diagnóstico temporário da issue #941: o lockfile precisa do resolved/integrity reais
+      # da 0.37.4, que só o runner consegue (token local não tem read:packages).
+      - name: Integridade da 0.37.4
+        run: npm view @rede-enois/design-system@0.37.4 dist.integrity dist.tarball --registry=https://npm.pkg.github.com --//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN --always-auth
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Instalar dependências
         run: rm -rf node_modules && npm ci
         env:
