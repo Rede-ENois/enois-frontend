@@ -737,11 +737,6 @@
       "count": 9
     }
   },
-  "src/routes/vagas.$jobId.candidaturas.tsx": {
-    "local/no-front-markup": {
-      "count": 74
-    }
-  },
   "src/routes/vagas.$jobId.tsx": {
     "local/no-front-markup": {
       "count": 145
