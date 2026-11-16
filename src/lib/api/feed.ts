@@ -5,6 +5,8 @@ import type { BulkDeleteResult } from "@/types/application/feed/bulk-delete-resu
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { DeleteResult } from "@/types/application/feed/delete-result";
 import type { DiarioPagina } from "@/types/application/feed/diario-pagina";
+import type { DraftPostInput } from "@/types/application/feed/draft-post-input";
+import type { DraftPostView } from "@/types/application/feed/draft-post-view";
 import type { FeedPage } from "@/types/application/feed/feed-page";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 import type { PollView } from "@/types/application/feed/poll-view";
@@ -118,4 +120,15 @@ export const feedApi = {
 
   cancelScheduled: (id: string) =>
     api.delete<{ id: string; status: string }>(`/feed/scheduled/${encodeURIComponent(id)}`),
+
+  // --- rascunho: onde a pessoa parou de escrever, um por conta, em qualquer dispositivo ---
+
+  /** O meu rascunho atual; `draft` nulo quando não há rascunho. */
+  draft: () => api.get<{ draft: DraftPostView | null }>("/feed/draft"),
+
+  /** Salva (substitui) o meu rascunho; a resposta traz o rascunho com o `updatedAt` novo. */
+  saveDraft: (data: DraftPostInput) => api.put<{ draft: DraftPostView }>("/feed/draft", data),
+
+  /** Descarta o meu rascunho; sem rascunho continua ok (idempotente). */
+  discardDraft: () => api.delete<{ status: string }>("/feed/draft"),
 };
