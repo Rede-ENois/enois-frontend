@@ -39,28 +39,34 @@ vi.mock("./badge-media-provider", () => ({
 }));
 
 // A view do DS vira sonda: o que se prova aqui é o contrato que o app entrega a ela —
-// kits mapeados com a data curta e o clique aplicando no servidor.
-vi.mock("@rede-enois/design-system/domain", () => ({
-  MAX_BADGES: 5,
-  isOfficialBadgeId: () => false,
-  IdentitySection: function View(props: IdentitySectionProps) {
-    mocks.view(props);
-    return (
-      <div>
-        <button
-          type="button"
-          onClick={() =>
-            props.onApplyBadgeKit({ id: "kit-1", badges: ["kit-url"], createdAtLabel: "hoje" })
-          }
-        >
-          aplicar kit
-        </button>
+// kits mapeados com a data curta e o clique aplicando no servidor. O resto do módulo (as
+// constantes de aparência, por exemplo) vem de verdade: o store de preferências as consome
+// no import deste teste.
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@rede-enois/design-system/domain")>();
+  return {
+    ...real,
+    MAX_BADGES: 5,
+    isOfficialBadgeId: () => false,
+    IdentitySection: function View(props: IdentitySectionProps) {
+      mocks.view(props);
+      return (
+        <div>
+          <button
+            type="button"
+            onClick={() =>
+              props.onApplyBadgeKit({ id: "kit-1", badges: ["kit-url"], createdAtLabel: "hoje" })
+            }
+          >
+            aplicar kit
+          </button>
 
-        <span data-testid="kits-loading">{String(props.kitsLoading)}</span>
-      </div>
-    );
-  },
-}));
+          <span data-testid="kits-loading">{String(props.kitsLoading)}</span>
+        </div>
+      );
+    },
+  };
+});
 
 const me = {
   id: "user-1",

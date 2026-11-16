@@ -264,16 +264,6 @@
       "count": 25
     }
   },
-  "src/components/post/poll-card.tsx": {
-    "local/no-front-markup": {
-      "count": 25
-    }
-  },
-  "src/components/post/poll-composer.tsx": {
-    "local/no-front-markup": {
-      "count": 18
-    }
-  },
   "src/components/post/post-comments.tsx": {
     "local/no-front-markup": {
       "count": 1

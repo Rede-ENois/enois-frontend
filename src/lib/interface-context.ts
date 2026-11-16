@@ -37,6 +37,7 @@ const EXCLUSIVE_PREFIXES: [prefix: string, context: InterfaceContext][] = [
   ["/roleplay", "SOCIAL"],
   ["/salvos", "SOCIAL"],
   ["/blogs", "SOCIAL"],
+  ["/desabafos", "SOCIAL"],
   ["/blog", "SOCIAL"],
   ["/eventos", "SOCIAL"],
   ["/par-de-estudo", "SOCIAL"],

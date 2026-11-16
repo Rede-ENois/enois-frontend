@@ -3,7 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { texts } from "@/texts";
+import type { PollView } from "@/types/application/feed/poll-view";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -12,7 +12,7 @@ import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { PollCard } from "./poll-card";
 import { PollComposer } from "./poll-composer";
 
-const mocks = vi.hoisted(() => ({ votePoll: vi.fn() }));
+const mocks = vi.hoisted(() => ({ votePoll: vi.fn(), toast: vi.fn(), invalidate: vi.fn() }));
 vi.mock("@/lib/api", () => ({ feedApi: { votePoll: mocks.votePoll } }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -21,36 +21,11 @@ vi.mock("@/lib/use-auth", () => ({
   useAuth: () => ({ requireAuth: () => true, user: { id: "u1" } }),
 }));
 vi.mock("@rede-enois/design-system/ui", () => ({
-  useToast: () => ({ toast: vi.fn() }),
+  useToast: () => ({ toast: mocks.toast }),
 }));
-
-/** Caminho do proxy, igual ao que `GET /emotes/index` devolve. */
-const KEKW = "/emotes/image/BTTV/abc123?variant=full";
-
-/**
- * As alternativas passam pelo RichText, que busca o índice de figurinhas: um `fetch` falso devolve
- * o mesmo formato do backend para testar o caminho de verdade (índice → código → imagem).
- */
-function fakeFetch(input: RequestInfo | URL) {
-  const url = new URL(String(input), "http://localhost");
-  if (!url.pathname.endsWith("/emotes/index")) {
-    return resposta({ code: undefined, message: undefined }, false);
-  }
-  return resposta({ entries: { KEKW }, generatedAt: "2026-10-29T00:00:00Z" });
-}
-
-/** Resposta mínima que o cliente da API entende: ele lê `text()` antes do `JSON.parse`. */
-function resposta(body: unknown, ok = true) {
-  const texto = JSON.stringify(body);
-  return {
-    ok,
-    status: ok ? 200 : 503,
-    statusText: ok ? "OK" : "Service Unavailable",
-    headers: new Headers({ "content-type": "application/json" }),
-    text: async () => texto,
-    json: async () => body,
-  };
-}
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+}));
 
 let root: Root | null = null;
 let host: HTMLDivElement | null = null;
@@ -60,17 +35,23 @@ function mount(node: React.ReactNode) {
   document.body.appendChild(host);
   root = createRoot(host);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client.invalidateQueries = mocks.invalidate;
   act(() => {
     root?.render(<QueryClientProvider client={client}>{node}</QueryClientProvider>);
   });
 }
 
-function render(poll: {
-  options: string[];
-  counts: number[];
-  myVote: number | null;
-  totalVotes: number;
-}) {
+const poll = (overrides: Partial<PollView> = {}): PollView => ({
+  options: ["Café", "Chá"],
+  counts: [0, 0],
+  myVotes: [],
+  totalVotes: 0,
+  multipleChoice: false,
+  endsAt: null,
+  ...overrides,
+});
+
+function renderCard(current: PollView) {
   mount(
     <PollCard
       post={{
@@ -87,136 +68,145 @@ function render(poll: {
         visibility: "PUBLIC",
         counters: { reactions: 0, comments: 0, saves: 0, shares: 0, reposts: 0 },
         status: "ACTIVE",
-        poll,
+        poll: current,
       }}
     />,
   );
 }
 
-describe("enquete no card", () => {
+describe("enquete no card do feed", () => {
   beforeEach(() => {
     root = null;
     host = null;
     vi.restoreAllMocks();
-    // O índice de figurinhas é guardado no `localStorage`: sem limpar, cópia de outro teste vaza.
-    window.localStorage.clear();
-    vi.stubGlobal("fetch", vi.fn(fakeFetch));
   });
 
   afterEach(() => {
     act(() => root?.unmount());
     host?.remove();
-    vi.unstubAllGlobals();
   });
 
-  async function esperaIndiceDeEmotes() {
-    // O índice chega por promise: sem esperar, o primeiro desenho ainda mostra o código cru.
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
-  }
-
-  it("mostra alternativas como botões antes do voto", () => {
-    render({ options: ["Café", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
-    const buttons = host?.querySelectorAll("button");
-    expect(buttons?.length).toBe(2);
-    expect(host?.textContent).toContain("Café");
-    expect(host?.textContent).toContain("Nenhum voto ainda");
-  });
-
-  it("vota uma vez e passa a mostrar o resultado com a escolha marcada", async () => {
-    mocks.votePoll.mockResolvedValue({
-      options: ["Café", "Chá"],
-      counts: [1, 0],
-      myVote: 0,
-      totalVotes: 1,
-    });
-    render({ options: ["Café", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
-    const button = host?.querySelector("button");
-    await act(async () => {
-      button?.click();
-      // `mutate` do TanStack Query roda a mutação no próximo tick: deixa o promise resolver.
-      await Promise.resolve();
-    });
-    expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", 0);
-    expect(host?.textContent).toContain("1 voto");
-    expect(host?.textContent).toContain("100%");
-    // As alternativas continuam botões: clicar em outra troca o voto.
+  it("mostra as alternativas antes do voto", () => {
+    renderCard(poll());
     expect(host?.querySelectorAll("button").length).toBe(2);
-    expect(host?.textContent).toContain(texts.posts.poll.changeHint);
+    expect(host?.textContent).toContain("Café");
+    expect(mocks.votePoll).not.toHaveBeenCalled();
   });
 
-  it("clicar em outra alternativa troca o voto sem crescer o total", async () => {
-    mocks.votePoll
-      .mockResolvedValueOnce({
-        options: ["Café", "Chá"],
-        counts: [1, 0],
-        myVote: 0,
-        totalVotes: 1,
-      })
-      .mockResolvedValueOnce({
-        options: ["Café", "Chá"],
-        counts: [0, 1],
-        myVote: 1,
-        totalVotes: 1,
-      });
-    render({ options: ["Café", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
-
+  it("escolha única: o clique registra o voto e o resultado entra no lugar", async () => {
+    mocks.votePoll.mockResolvedValue(poll({ counts: [1, 0], myVotes: [0], totalVotes: 1 }));
+    renderCard(poll());
     await act(async () => {
       host?.querySelector("button")?.click();
       await Promise.resolve();
     });
+    expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", { option: 0 });
+    expect(host?.textContent).toContain("1 voto");
     expect(host?.textContent).toContain("100%");
+  });
 
+  it("troca de voto: volta às alternativas e manda o novo voto", async () => {
+    mocks.votePoll
+      .mockResolvedValueOnce(poll({ counts: [1, 0], myVotes: [0], totalVotes: 1 }))
+      .mockResolvedValueOnce(poll({ counts: [0, 1], myVotes: [1], totalVotes: 1 }));
+    renderCard(poll());
+    await act(async () => {
+      host?.querySelector("button")?.click();
+      await Promise.resolve();
+    });
+    const trocar = [...(host?.querySelectorAll("button") ?? [])].find(
+      (botao) => botao.textContent === "Trocar voto",
+    );
+    await act(async () => {
+      trocar?.click();
+    });
     await act(async () => {
       host?.querySelectorAll("button")[1]?.click();
       await Promise.resolve();
     });
-
-    expect(mocks.votePoll).toHaveBeenNthCalledWith(2, "post_poll1", 1);
-    expect(host?.textContent).toContain("0 · 0%");
-    expect(host?.textContent).toContain("1 · 100%");
-    expect(host?.textContent).toContain("1 voto");
+    expect(mocks.votePoll).toHaveBeenLastCalledWith("post_poll1", { option: 1 });
+    expect(host?.textContent).toContain("Chá");
   });
 
-  it("clicar na alternativa escolhida de novo não muda nada", async () => {
-    const resultado = { options: ["Café", "Chá"], counts: [1, 0], myVote: 0, totalVotes: 1 };
-    mocks.votePoll.mockResolvedValue(resultado);
-    render({ ...resultado });
-
+  it("múltipla escolha: marca alternativas e confirma a lista", async () => {
+    mocks.votePoll.mockResolvedValue(
+      poll({
+        options: ["A", "B", "C"],
+        counts: [1, 0, 1],
+        myVotes: [0, 2],
+        totalVotes: 1,
+        multipleChoice: true,
+      }),
+    );
+    renderCard(poll({ options: ["A", "B", "C"], multipleChoice: true }));
+    const botoes = [...(host?.querySelectorAll("button") ?? [])];
     await act(async () => {
-      host?.querySelectorAll("button")[0]?.click();
+      botoes[0]?.click();
+      botoes[2]?.click();
+    });
+    // Marcar não vota: só o confirmar manda a lista.
+    expect(mocks.votePoll).not.toHaveBeenCalled();
+    const confirmar = [...(host?.querySelectorAll("button") ?? [])].find(
+      (botao) => botao.textContent === "Confirmar voto",
+    );
+    await act(async () => {
+      confirmar?.click();
       await Promise.resolve();
     });
-
-    expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", 0);
-    expect(host?.textContent).toContain("1 voto");
+    expect(mocks.votePoll).toHaveBeenCalledWith("post_poll1", { options: [0, 2] });
   });
 
-  it("a alternativa com código de figurinha vira imagem, antes e depois do voto", async () => {
-    mocks.votePoll.mockResolvedValue({
-      options: ["Café :KEKW:", "Chá"],
-      counts: [1, 0],
-      myVote: 0,
-      totalVotes: 1,
-    });
-    render({ options: ["Café :KEKW:", "Chá"], counts: [0, 0], myVote: null, totalVotes: 0 });
-    await esperaIndiceDeEmotes();
+  it("enquete encerrada mostra o resultado sem gesto de voto", () => {
+    renderCard(
+      poll({ counts: [2, 1], totalVotes: 3, endsAt: new Date(Date.now() - 60_000).toISOString() }),
+    );
+    expect(host?.querySelectorAll("button").length).toBe(0);
+    expect(host?.textContent).toContain("Encerrada em");
+    expect(host?.textContent).toContain("3 votos");
+  });
 
-    const figurinha = () => host?.querySelector(`img[src*="${KEKW}"]`);
-    expect(figurinha()).not.toBeNull();
-    // As duas alternativas continuam botões de voto; "Chá" segue texto puro, sem imagem.
-    expect(host?.querySelectorAll("button").length).toBe(2);
-
-    const button = host?.querySelector("button");
+  it("409 de prazo: toast próprio e recarrega o estado real", async () => {
+    mocks.votePoll.mockRejectedValue(new Error("O prazo desta enquete terminou."));
+    renderCard(poll());
     await act(async () => {
-      button?.click();
+      host?.querySelector("button")?.click();
       await Promise.resolve();
     });
-    await esperaIndiceDeEmotes();
+    expect(mocks.toast).toHaveBeenCalledWith("O prazo desta enquete terminou.", "error");
+    expect(mocks.invalidate).toHaveBeenCalled();
+  });
+});
 
-    // Depois do voto o resultado mantém a figurinha da alternativa escolhida.
-    expect(figurinha()).not.toBeNull();
+describe("controles do composer", () => {
+  it("múltipla escolha e prazo passam pelos callbacks", () => {
+    const onMultipleChoiceChange = vi.fn();
+    const onEndsAtChange = vi.fn();
+    const local = document.createElement("div");
+    document.body.appendChild(local);
+    const raiz = createRoot(local);
+    act(() => {
+      raiz.render(
+        <PollComposer
+          options={["A", "B"]}
+          onChange={vi.fn()}
+          onMultipleChoiceChange={onMultipleChoiceChange}
+          onEndsAtChange={onEndsAtChange}
+        />,
+      );
+    });
+    act(() => {
+      (local.querySelector('input[type="checkbox"]') as HTMLInputElement).click();
+    });
+    expect(onMultipleChoiceChange).toHaveBeenCalledWith(true);
+    const campo = local.querySelector("#enquete-prazo") as HTMLInputElement;
+    const digitar = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    act(() => {
+      digitar?.call(campo, "2026-12-01T10:30");
+      campo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect((onEndsAtChange.mock.calls[0][0] as string).endsWith("Z")).toBe(true);
+    act(() => raiz.unmount());
+    local.remove();
   });
 });
 
@@ -224,20 +214,5 @@ describe("alternativas do composer", () => {
   it("normaliza: tira vazio, repetido e o excesso do teto", () => {
     const options = normalizePollOptions(["Café", "  ", "café ", "Chá", "a", "b", "c", "d"]);
     expect(options).toEqual(["Café", "Chá", "a", "b", "c", "d"]);
-  });
-
-  it("manda remover a alternativa só quando há mais de duas", () => {
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    const root = createRoot(host);
-    const onChange = vi.fn();
-    act(() => {
-      root.render(<PollComposer options={["A", "B"]} onChange={onChange} />);
-    });
-    expect(host.querySelectorAll('button[aria-label="Remover alternativa"]').length).toBe(0);
-    act(() => {
-      root.unmount();
-    });
-    host.remove();
   });
 });

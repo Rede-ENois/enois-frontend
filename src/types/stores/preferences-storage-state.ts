@@ -13,4 +13,5 @@ export type PreferencesStorageState = {
   displayNameFont?: unknown;
   displayNameColor?: unknown;
   displayNameTheme?: unknown;
+  revealSensitiveMedia?: unknown;
 };
