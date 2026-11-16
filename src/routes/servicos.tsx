@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import type { OfferForm } from "@/types/application/services/offer-form";
 import type { ServiceContract } from "@/types/application/services/service-contract";
 import type { ServiceListing } from "@/types/application/services/service-listing";
 import type { ServiceRequest } from "@/types/application/services/service-request";
@@ -14,7 +15,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  EmptyState,
   Input,
+  LoadingState,
   PageHeader,
   Textarea,
   useToast,
@@ -182,16 +185,12 @@ function Servicos() {
         )}
 
         {catalog.isLoading ? (
-          <p className="py-10 text-center text-sm text-text-subtle">Carregando…</p>
+          <LoadingState label="Carregando serviços…" />
         ) : catalog.isError ? (
-          <p className="py-10 text-center text-sm text-text-subtle">
-            Não foi possível carregar agora.
-          </p>
+          <EmptyState title="Não foi possível carregar agora." />
         ) : tab === "ofertas" ? (
           (catalog.data?.ofertas?.length ?? 0) === 0 ? (
-            <p className="py-10 text-center text-sm text-text-subtle">
-              Nenhuma oferta publicada ainda.
-            </p>
+            <EmptyState title="Nenhuma oferta publicada ainda." />
           ) : (
             <ul className="grid min-w-0 gap-3 sm:grid-cols-2">
               {catalog.data!.ofertas.map((l) => (
@@ -200,7 +199,7 @@ function Servicos() {
             </ul>
           )
         ) : (catalog.data?.pedidos?.length ?? 0) === 0 ? (
-          <p className="py-10 text-center text-sm text-text-subtle">Nenhum pedido aberto ainda.</p>
+          <EmptyState title="Nenhum pedido aberto ainda." />
         ) : (
           <ul className="space-y-3">
             {catalog.data!.pedidos.map((r) => (
@@ -476,7 +475,6 @@ function MyOffers({ ofertas, onEdited }: { ofertas: ServiceListing[]; onEdited: 
           onEdited();
         }}
       />
-
       <ConfirmDialog
         open={confirming !== null}
         onOpenChange={(open) => !open && setConfirming(null)}
@@ -610,16 +608,6 @@ function StateChip({ state }: { state: string }) {
     </span>
   );
 }
-
-/** Campos do formulário de oferta, como o dialog os guarda (preço/prazo em texto de input). */
-type OfferForm = {
-  category: string;
-  title: string;
-  description: string;
-  deliverables: string;
-  price: string;
-  deliveryDays: string;
-};
 
 function offerPayload(f: OfferForm) {
   return {
@@ -812,93 +800,88 @@ function NewRequestButton() {
         <Briefcase className="h-4 w-4" />
         Pedir
       </Button>
-      {open && (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="surface-card w-full max-w-md rounded-2xl p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold">Pedir um serviço</h2>
 
-            <p className="mt-1 text-sm text-text-subtle">
-              Descreva o que precisa e o orçamento (faixa). Profissionais propõem dentro dela — quem
-              você escolher recebe as faíscas em escrow.
-            </p>
+      <Dialog open={open} onOpenChange={(next) => !next && setOpen(false)}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pedir um serviço</DialogTitle>
+          </DialogHeader>
 
-            <div className="mt-3 space-y-2">
+          <p className="text-sm text-text-subtle">
+            Descreva o que precisa e o orçamento (faixa). Profissionais propõem dentro dela — quem
+            você escolher recebe as faíscas em escrow.
+          </p>
+
+          <div className="space-y-2">
+            <Input
+              aria-label="Categoria"
+              placeholder="Categoria"
+              value={f.category}
+              maxLength={40}
+              onChange={(e) => setF({ ...f, category: e.target.value })}
+            />
+            <Input
+              aria-label="Título (mín. 5 caracteres)"
+              placeholder="Título (mín. 5 caracteres)"
+              value={f.title}
+              maxLength={160}
+              onChange={(e) => setF({ ...f, title: e.target.value })}
+            />
+            <Textarea
+              aria-label="Descrição (mín. 20 caracteres)"
+              rows={3}
+              placeholder="Descrição (mín. 20 caracteres)"
+              value={f.description}
+              maxLength={2000}
+              onChange={(e) => setF({ ...f, description: e.target.value })}
+            />
+            <Input
+              aria-label="Entregáveis e critérios de aceite (obrigatório)"
+              placeholder="Entregáveis e critérios de aceite (obrigatório)"
+              value={f.deliverables}
+              maxLength={1000}
+              onChange={(e) => setF({ ...f, deliverables: e.target.value })}
+            />
+
+            <div className="flex gap-2">
               <Input
-                aria-label="Categoria"
-                placeholder="Categoria"
-                value={f.category}
-                maxLength={40}
-                onChange={(e) => setF({ ...f, category: e.target.value })}
+                aria-label="Orçamento mínimo"
+                type="number"
+                min={1}
+                placeholder="mín"
+                value={f.budgetMin}
+                onChange={(e) => setF({ ...f, budgetMin: e.target.value })}
               />
               <Input
-                aria-label="Título (mín. 5 caracteres)"
-                placeholder="Título (mín. 5 caracteres)"
-                value={f.title}
-                maxLength={160}
-                onChange={(e) => setF({ ...f, title: e.target.value })}
+                aria-label="Orçamento máximo"
+                type="number"
+                min={1}
+                placeholder="máx"
+                value={f.budgetMax}
+                onChange={(e) => setF({ ...f, budgetMax: e.target.value })}
               />
-              <Textarea
-                aria-label="Descrição (mín. 20 caracteres)"
-                rows={3}
-                placeholder="Descrição (mín. 20 caracteres)"
-                value={f.description}
-                maxLength={2000}
-                onChange={(e) => setF({ ...f, description: e.target.value })}
-              />
-              <Input
-                aria-label="Entregáveis e critérios de aceite (obrigatório)"
-                placeholder="Entregáveis e critérios de aceite (obrigatório)"
-                value={f.deliverables}
-                maxLength={1000}
-                onChange={(e) => setF({ ...f, deliverables: e.target.value })}
-              />
-
-              <div className="flex gap-2">
-                <Input
-                  aria-label="Orçamento mínimo"
-                  type="number"
-                  min={1}
-                  placeholder="mín"
-                  value={f.budgetMin}
-                  onChange={(e) => setF({ ...f, budgetMin: e.target.value })}
-                />
-                <Input
-                  aria-label="Orçamento máximo"
-                  type="number"
-                  min={1}
-                  placeholder="máx"
-                  value={f.budgetMax}
-                  onChange={(e) => setF({ ...f, budgetMax: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setOpen(false)}>
-                Fechar
-              </Button>
-
-              <Button
-                disabled={
-                  create.isPending ||
-                  f.title.trim().length < 5 ||
-                  f.description.trim().length < 20 ||
-                  !f.deliverables.trim()
-                }
-                onClick={() => create.mutate()}
-              >
-                Publicar pedido
-              </Button>
             </div>
           </div>
-        </div>
-      )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Fechar
+            </Button>
+
+            <Button
+              disabled={
+                create.isPending ||
+                f.title.trim().length < 5 ||
+                f.description.trim().length < 20 ||
+                !f.deliverables.trim()
+              }
+              onClick={() => create.mutate()}
+            >
+              Publicar pedido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
