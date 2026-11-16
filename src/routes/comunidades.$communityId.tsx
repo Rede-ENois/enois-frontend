@@ -60,6 +60,7 @@ import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { croppedFile } from "@/lib/media/cropped-file";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -924,10 +925,7 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
   const handleCropComplete = useCallback(
     async (blob: Blob) => {
       const upload = cropPurpose === "COVER" ? coverUpload : avatarUpload;
-      const result = await upload.upload(
-        new File([blob], "crop.jpg", { type: "image/jpeg" }),
-        cropPurpose!,
-      );
+      const result = await upload.upload(croppedFile(blob), cropPurpose!);
       if (cropPurpose === "COVER") setCover(result.cdnUrl);
       else setAvatar(result.cdnUrl);
       if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
