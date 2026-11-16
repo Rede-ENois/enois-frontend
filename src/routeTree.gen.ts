@@ -49,6 +49,7 @@ import { Route as ProfissionalRouteImport } from './routes/profissional'
 import { Route as RedeRouteImport } from './routes/rede'
 import { Route as ResponsavelRouteImport } from './routes/responsavel'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as RoleplayRouteImport } from './routes/roleplay'
 import { Route as SalvosRouteImport } from './routes/salvos'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as SelosRouteImport } from './routes/selos'
@@ -85,6 +86,7 @@ import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_
 import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
 import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$username'
 import { Route as ProjetosPainelRouteImport } from './routes/projetos.painel'
+import { Route as RoleplaySlugRouteImport } from './routes/roleplay.$slug'
 import { Route as VagasJobIdRouteImport } from './routes/vagas.$jobId'
 import { Route as VagasMinhasRouteImport } from './routes/vagas.minhas'
 import { Route as BlogUsernamePostIdRouteImport } from './routes/blog.$username_.$postId'
@@ -295,6 +297,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoleplayRoute = RoleplayRouteImport.update({
+  id: '/roleplay',
+  path: '/roleplay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SalvosRoute = SalvosRouteImport.update({
   id: '/salvos',
   path: '/salvos',
@@ -476,6 +483,11 @@ const ProjetosPainelRoute = ProjetosPainelRouteImport.update({
   path: '/projetos/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoleplaySlugRoute = RoleplaySlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RoleplayRoute,
+} as any)
 const VagasJobIdRoute = VagasJobIdRouteImport.update({
   id: '/$jobId',
   path: '/$jobId',
@@ -565,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -598,6 +611,7 @@ export interface FileRoutesByFullPath {
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes/': typeof NotificacoesIndexRoute
@@ -652,6 +666,7 @@ export interface FileRoutesByTo {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -685,6 +700,7 @@ export interface FileRoutesByTo {
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes': typeof NotificacoesIndexRoute
@@ -740,6 +756,7 @@ export interface FileRoutesById {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -773,6 +790,7 @@ export interface FileRoutesById {
   '/profissional_/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes/': typeof NotificacoesIndexRoute
@@ -829,6 +847,7 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
+    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -862,6 +881,7 @@ export interface FileRouteTypes {
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes/'
@@ -916,6 +936,7 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
+    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -949,6 +970,7 @@ export interface FileRouteTypes {
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes'
@@ -1003,6 +1025,7 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
+    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -1036,6 +1059,7 @@ export interface FileRouteTypes {
     | '/profissional_/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes/'
@@ -1091,6 +1115,7 @@ export interface RootRouteChildren {
   RedeRoute: typeof RedeRoute
   ResponsavelRoute: typeof ResponsavelRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  RoleplayRoute: typeof RoleplayRouteWithChildren
   SalvosRoute: typeof SalvosRoute
   SegurancaRoute: typeof SegurancaRoute
   SelosRoute: typeof SelosRoute
@@ -1406,6 +1431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/roleplay': {
+      id: '/roleplay'
+      path: '/roleplay'
+      fullPath: '/roleplay'
+      preLoaderRoute: typeof RoleplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/salvos': {
       id: '/salvos'
       path: '/salvos'
@@ -1658,6 +1690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjetosPainelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/roleplay/$slug': {
+      id: '/roleplay/$slug'
+      path: '/$slug'
+      fullPath: '/roleplay/$slug'
+      preLoaderRoute: typeof RoleplaySlugRouteImport
+      parentRoute: typeof RoleplayRoute
+    }
     '/vagas/$jobId': {
       id: '/vagas/$jobId'
       path: '/$jobId'
@@ -1832,6 +1871,18 @@ const MuraisRouteChildren: MuraisRouteChildren = {
 const MuraisRouteWithChildren =
   MuraisRoute._addFileChildren(MuraisRouteChildren)
 
+interface RoleplayRouteChildren {
+  RoleplaySlugRoute: typeof RoleplaySlugRoute
+}
+
+const RoleplayRouteChildren: RoleplayRouteChildren = {
+  RoleplaySlugRoute: RoleplaySlugRoute,
+}
+
+const RoleplayRouteWithChildren = RoleplayRoute._addFileChildren(
+  RoleplayRouteChildren,
+)
+
 interface VagasJobIdRouteChildren {
   VagasJobIdCandidaturasRoute: typeof VagasJobIdCandidaturasRoute
 }
@@ -1908,6 +1959,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedeRoute: RedeRoute,
   ResponsavelRoute: ResponsavelRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  RoleplayRoute: RoleplayRouteWithChildren,
   SalvosRoute: SalvosRoute,
   SegurancaRoute: SegurancaRoute,
   SelosRoute: SelosRoute,
