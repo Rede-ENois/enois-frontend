@@ -2995,6 +2995,9 @@ export const texts = {
     bannedNotice: "Sua conta está banida após revisão do recurso. Se precisar, fale com o suporte.",
     suspendedNotice:
       "Sua conta está suspensa: você não entra nem publica até recorrer ou o prazo terminar.",
+    reasonLine: (reason: string) => `Motivo: ${reason}`,
+    dueLine: (due: string) =>
+      `Revisável até ${due}. Sem recurso aceito até lá, a suspensão vira banimento.`,
     moderationTitle: "Moderação · recursos",
     moderationDescription:
       "Fila de recursos de penalidade automática. Aprovar remove a restrição; negar converte em banimento (sessões revogadas).",
