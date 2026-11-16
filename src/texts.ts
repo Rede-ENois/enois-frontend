@@ -1240,6 +1240,8 @@ export const texts = {
     newPosts: "Novos posts",
     newPostsCount: (count: number) => (count === 1 ? "1 novo post" : `${count} novos posts`),
     empty: "Sem publicações por enquanto. As da sua rede aparecem aqui.",
+    emptyInteracted:
+      "Você ainda não interagiu com nada. O que você comentar, reagir ou guardar aparece aqui.",
     composer: {
       removeMedia: "Remover mídia",
       topic: "Assunto",
