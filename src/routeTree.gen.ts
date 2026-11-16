@@ -39,6 +39,7 @@ import { Route as MentoriaRouteImport } from './routes/mentoria'
 import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as ModeradorRouteImport } from './routes/moderador'
+import { Route as MuraisRouteImport } from './routes/murais'
 import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -71,6 +72,7 @@ import { Route as GamesUsernameRouteImport } from './routes/games.$username'
 import { Route as GamesPainelRouteImport } from './routes/games.painel'
 import { Route as GruposSlugRouteImport } from './routes/grupos.$slug'
 import { Route as ModeracaoReportIdRouteImport } from './routes/moderacao.$reportId'
+import { Route as MuraisMuralIdRouteImport } from './routes/murais.$muralId'
 import { Route as NotificacoesIndexRouteImport } from './routes/notificacoes.index'
 import { Route as NotificacoesPreferenciasRouteImport } from './routes/notificacoes.preferencias'
 import { Route as PerfilIndexRouteImport } from './routes/perfil.index'
@@ -240,6 +242,11 @@ const ModeradorRoute = ModeradorRouteImport.update({
   path: '/moderador',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MuraisRoute = MuraisRouteImport.update({
+  id: '/murais',
+  path: '/murais',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
   id: '/par-de-estudo',
   path: '/par-de-estudo',
@@ -400,6 +407,11 @@ const ModeracaoReportIdRoute = ModeracaoReportIdRouteImport.update({
   path: '/$reportId',
   getParentRoute: () => ModeracaoRoute,
 } as any)
+const MuraisMuralIdRoute = MuraisMuralIdRouteImport.update({
+  id: '/$muralId',
+  path: '/$muralId',
+  getParentRoute: () => MuraisRoute,
+} as any)
 const NotificacoesIndexRoute = NotificacoesIndexRouteImport.update({
   id: '/notificacoes/',
   path: '/notificacoes/',
@@ -525,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/murais': typeof MuraisRouteWithChildren
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -557,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -607,6 +621,7 @@ export interface FileRoutesByTo {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/murais': typeof MuraisRouteWithChildren
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -639,6 +654,7 @@ export interface FileRoutesByTo {
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -690,6 +706,7 @@ export interface FileRoutesById {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/murais': typeof MuraisRouteWithChildren
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -722,6 +739,7 @@ export interface FileRoutesById {
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -774,6 +792,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/murais'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -806,6 +825,7 @@ export interface FileRouteTypes {
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
@@ -856,6 +876,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/murais'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -888,6 +909,7 @@ export interface FileRouteTypes {
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
@@ -938,6 +960,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/murais'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -970,6 +993,7 @@ export interface FileRouteTypes {
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
@@ -1021,6 +1045,7 @@ export interface RootRouteChildren {
   MeusServicosRoute: typeof MeusServicosRoute
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
+  MuraisRoute: typeof MuraisRouteWithChildren
   ParDeEstudoRoute: typeof ParDeEstudoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1273,6 +1298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModeradorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/murais': {
+      id: '/murais'
+      path: '/murais'
+      fullPath: '/murais'
+      preLoaderRoute: typeof MuraisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/par-de-estudo': {
       id: '/par-de-estudo'
       path: '/par-de-estudo'
@@ -1497,6 +1529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModeracaoReportIdRouteImport
       parentRoute: typeof ModeracaoRoute
     }
+    '/murais/$muralId': {
+      id: '/murais/$muralId'
+      path: '/$muralId'
+      fullPath: '/murais/$muralId'
+      preLoaderRoute: typeof MuraisMuralIdRouteImport
+      parentRoute: typeof MuraisRoute
+    }
     '/notificacoes/': {
       id: '/notificacoes/'
       path: '/notificacoes'
@@ -1711,6 +1750,17 @@ const ModeracaoRouteWithChildren = ModeracaoRoute._addFileChildren(
   ModeracaoRouteChildren,
 )
 
+interface MuraisRouteChildren {
+  MuraisMuralIdRoute: typeof MuraisMuralIdRoute
+}
+
+const MuraisRouteChildren: MuraisRouteChildren = {
+  MuraisMuralIdRoute: MuraisMuralIdRoute,
+}
+
+const MuraisRouteWithChildren =
+  MuraisRoute._addFileChildren(MuraisRouteChildren)
+
 interface VagasJobIdRouteChildren {
   VagasJobIdCandidaturasRoute: typeof VagasJobIdCandidaturasRoute
 }
@@ -1777,6 +1827,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeusServicosRoute: MeusServicosRoute,
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
+  MuraisRoute: MuraisRouteWithChildren,
   ParDeEstudoRoute: ParDeEstudoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,

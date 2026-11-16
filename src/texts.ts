@@ -173,7 +173,8 @@ export const texts = {
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
       agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
-      colagem: { label: "Colagem", description: "O mural de fotografias da comunidade" },
+      colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
+      murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
     },
   },
 
@@ -194,6 +195,35 @@ export const texts = {
     replyBlocked: "Resposta a comentário fotográfico é só em texto.",
     deletePhotoDone: "Foto removida da Colagem.",
     deleteCommentDone: "Comentário removido.",
+  },
+
+  /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */
+  murais: {
+    seoTitle: "Murais · Énóis",
+    title: "Murais",
+    subtitle:
+      "Coleções colaborativas: qualquer pessoa cola publicações que já estão no feed — e elas continuam sendo elas mesmas.",
+    criar: "Criar mural",
+    criado: "Mural criado.",
+    editado: "Mural atualizado.",
+    removido: "Mural removido.",
+    erro: "Não foi possível carregar os murais. Tente de novo.",
+    erroCriar: "Não foi possível criar o mural. Tente de novo.",
+    erroEditar: "Não foi possível salvar as mudanças. Tente de novo.",
+    erroRemover: "Não foi possível remover o mural. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode fazer isso aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 500 caracteres.",
+    tituloObrigatorio: "Dê um título ao mural.",
+    colado: "Publicação colada no mural.",
+    erroColar: "Não foi possível colar a publicação. Tente de novo.",
+    jaNoMural: "Essa publicação já está neste mural.",
+    postNaoEncontrado: "Publicação não encontrada ou invisível para você.",
+    erroTirar: "Não foi possível tirar a publicação do mural. Tente de novo.",
+    tirado: "Publicação tirada do mural.",
+    naoAutorizado: "Só quem colou ou o dono do mural pode tirar a publicação.",
+    naoEncontrado: "Esse mural não existe mais.",
   },
 
   /**
