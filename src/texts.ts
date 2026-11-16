@@ -1524,6 +1524,13 @@ export const texts = {
         CLAP: "👏",
         CLOWN: "🤡",
         NAILS: "💅",
+        // Contextuais: cada um tem situação clara de uso (ver ReactionType no backend).
+        USEFUL: "🧰",
+        RELATABLE: "🫂",
+        HYPE: "🚀",
+        THANKS: "🙏",
+        VIBE: "✨",
+        SALUTE: "🫡",
       },
     },
     report: {
