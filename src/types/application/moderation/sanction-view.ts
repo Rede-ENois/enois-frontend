@@ -8,4 +8,6 @@ export type SanctionView = {
   status: "ACTIVE" | "REMOVED";
   createdAt: string;
   removedAt: string | null;
+  /** Prazo de revisão da suspensão ativa (quando vira ban se não houver recurso aceito). */
+  dueAt: string | null;
 };
