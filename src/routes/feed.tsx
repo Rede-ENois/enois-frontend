@@ -1471,7 +1471,11 @@ export function Home() {
                   </Fragment>
                 ))}
 
-              {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
+              {!feedLoading && feedPosts.length === 0 && (
+                <EmptyState
+                  title={tab === "INTERACTED" ? texts.feed.emptyInteracted : texts.feed.empty}
+                />
+              )}
 
               <InfiniteScroll
                 hasMore={Boolean(hasNextPage)}
