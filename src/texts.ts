@@ -1270,6 +1270,7 @@ export const texts = {
         tutorial: "Tutorial",
         review: "Avaliação",
         divertido: "Divertido",
+        complaint: "Reclamação",
         moment: "Momento",
         momentHint: "O momento some em 24 horas.",
         poll: "Enquete",
