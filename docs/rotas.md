@@ -365,6 +365,11 @@ Página pública (qualquer um pode ver). Loader busca dados ou `notFound`.
 
 - `Section()` - Wrapper de seção do perfil
 - `RecommendationItem()` - Item de recomendação
+- `PerfilFotos()` - Galeria de fotos (aba MÍDIA): tira de miniaturas com visualizador e zoom
+- `PerfilDiario()` - Diário de atividade (aba DIARIO): linha do tempo unificada do que a pessoa
+  publicou, comentou e repostou, buscada de `/users/{username}/diario` por cursor. Os comentários
+  só entram na linha de quem é o dono (regra do backend, igual à aba de respostas); o clique num
+  evento abre `/post/$postId` (o próprio, em publicações; o original, em comentários e reposts).
 
 ## Tratamento de Erros por Rota
 

@@ -15,6 +15,7 @@ import type { RecommendationItemProps } from "@/types/routes/profile/recommendat
 import type { SectionProps } from "@/types/routes/profile/section-props";
 import {
   ContributorTag,
+  DiarioLinhaTempo,
   EMPTY_PROFILE_LOOK,
   HumanitySeal,
   PostCardSkeletons,
@@ -304,6 +305,7 @@ function Profile() {
   // Paginado por cursor: a listagem simples devolvia só a primeira pagina, e o post antigo
   // ficava inalcancavel no proprio perfil — quem procurava algo de meses atras nao encontrava.
   const isRepliesTab = profileTab === "REPLIES";
+  const isDiarioTab = profileTab === "DIARIO";
   const {
     data: feedData,
     hasNextPage: hasMoreUserPosts,
@@ -316,7 +318,7 @@ function Profile() {
       feedApi.listByUserId(user.id, pageParam, USER_POSTS_PAGE_SIZE, profileTab),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: !isRepliesTab,
+    enabled: !isRepliesTab && !isDiarioTab,
   });
 
   const {
@@ -968,6 +970,7 @@ function Profile() {
                 />
 
                 {(() => {
+                  if (isDiarioTab) return <PerfilDiario username={user.username} />;
                   const loading = isRepliesTab ? repliesLoading : userPostsLoading;
                   const items = isRepliesTab ? userReplies : userPosts;
                   const emptyText = isRepliesTab ? texts.profile.noReplies : texts.profile.noPosts;
@@ -1208,6 +1211,47 @@ function Profile() {
 
 /** Quantas fotos o carrossel busca por página (a aba MÍDIA do feed do perfil). */
 const FOTOS_PAGE_SIZE = 24;
+
+/** Eventos do diário são leves (excerto, sem enriquecimento), então a página é maior que a do feed. */
+const DIARIO_PAGE_SIZE = 20;
+
+/**
+ * O diário de atividade do perfil (aba DIARIO): linha do tempo unificada do que a pessoa
+ * publicou, comentou e repostou — comentários só existem na linha de quem é o dono, regra
+ * aplicada no backend. O clique abre o post do evento, que é o próprio em publicações e o
+ * original em comentários e reposts.
+ */
+export function PerfilDiario({ username }: { username: string }) {
+  const navigate = useNavigate();
+  const {
+    data: diarioData,
+    hasNextPage: hasMoreDiario,
+    isFetchingNextPage: isLoadingMoreDiario,
+    fetchNextPage: fetchMoreDiario,
+    isLoading: diarioLoading,
+  } = useInfiniteQuery({
+    queryKey: ["feed", "user-diario", username],
+    queryFn: ({ pageParam }) => feedApi.listDiario(username, pageParam, DIARIO_PAGE_SIZE),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  if (diarioLoading) return <PostCardSkeletons count={2} />;
+
+  const eventos = diarioData?.pages.flatMap((page) => page.itens) ?? [];
+
+  return (
+    <DiarioLinhaTempo
+      eventos={eventos}
+      temMais={Boolean(hasMoreDiario)}
+      carregandoMais={isLoadingMoreDiario}
+      onCarregarMais={() => void fetchMoreDiario()}
+      onAbrirEvento={(evento) =>
+        void navigate({ to: "/post/$postId", params: { postId: evento.postId } })
+      }
+    />
+  );
+}
 
 /**
  * A galeria de fotos do perfil: a aba MÍDIA do feed da pessoa vira uma tira de miniaturas com

@@ -4,6 +4,7 @@ import type { BulkDeleteInput } from "@/types/application/feed/bulk-delete-input
 import type { BulkDeleteResult } from "@/types/application/feed/bulk-delete-result";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { DeleteResult } from "@/types/application/feed/delete-result";
+import type { DiarioPagina } from "@/types/application/feed/diario-pagina";
 import type { FeedPage } from "@/types/application/feed/feed-page";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 import type { PollView } from "@/types/application/feed/poll-view";
@@ -55,6 +56,10 @@ export const feedApi = {
     api.get<PageResponse<ProfileReplyView>>(
       `/users/${username}/replies${buildQuery({ cursor, limit })}`,
     ),
+
+  /** Diário de atividade do perfil: linha do tempo unificada (comentários só para o dono). */
+  listDiario: (username: string, cursor?: string | null, limit = 20) =>
+    api.get<DiarioPagina>(`/users/${username}/diario${buildQuery({ cursor, limit })}`),
 
   // `pageHtml` so vai em post do tipo PAGE e `articleBody` so em ARTICLE; o backend descarta nos
   // demais tipos. Num artigo o corpo e obrigatorio tambem na edicao.
