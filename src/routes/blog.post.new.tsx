@@ -6,6 +6,7 @@ import { ContinueWriting } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
 import { feedApi } from "@/lib/api/feed";
+import { dataHora } from "@/lib/date/format";
 import { requireAuth } from "@/lib/require-auth";
 
 import { BlogPostEditor } from "@/components/blog/blog-post-editor";
@@ -45,12 +46,7 @@ function NewPostPage() {
           .map((d) => ({
             id: d.id,
             title: d.content?.trim() || "",
-            updatedAtLabel: d.updatedAt
-              ? new Date(d.updatedAt).toLocaleString("pt-BR", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })
-              : "",
+            updatedAtLabel: d.updatedAt ? dataHora(d.updatedAt) : "",
           }))}
         resumeHref={(draftId) =>
           rascunho === draftId ? "/blog/post/new" : `/blog/post/new?rascunho=${draftId}`
