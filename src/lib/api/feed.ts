@@ -4,6 +4,9 @@ import type { BulkDeleteInput } from "@/types/application/feed/bulk-delete-input
 import type { BulkDeleteResult } from "@/types/application/feed/bulk-delete-result";
 import type { CreatePostInput } from "@/types/application/feed/create-post-input";
 import type { DeleteResult } from "@/types/application/feed/delete-result";
+import type { DiarioPagina } from "@/types/application/feed/diario-pagina";
+import type { DraftPostInput } from "@/types/application/feed/draft-post-input";
+import type { DraftPostView } from "@/types/application/feed/draft-post-view";
 import type { FeedPage } from "@/types/application/feed/feed-page";
 import type { FeedTab } from "@/types/application/feed/feed-tab";
 import type { PollView } from "@/types/application/feed/poll-view";
@@ -38,11 +41,12 @@ export const feedApi = {
   get: (postId: string) => api.get<PostView>(`/feed/posts/${postId}`),
 
   /**
-   * Voto da enquete: uma alternativa, um voto por pessoa, sem troca. O backend responde 409
-   * `ALREADY_VOTED` no segundo voto — a tela não oferece votar de novo depois do primeiro.
+   * Voto da enquete: registra (ou troca) a seleção enquanto ela está aberta. Escolha única
+   * manda `option`; múltipla escolha manda `options`. Depois do prazo o backend responde 409
+   * `POLL_CLOSED` e o resultado fica congelado.
    */
-  votePoll: (postId: string, option: number) =>
-    api.post<PollView>(`/feed/posts/${postId}/poll/vote`, { option }),
+  votePoll: (postId: string, corpo: { option?: number; options?: number[] }) =>
+    api.post<PollView>(`/feed/posts/${postId}/poll/vote`, corpo),
 
   listByUser: (username: string, cursor?: string | null, limit = 20) =>
     api.get<PageResponse<PostView>>(`/users/${username}/posts${buildQuery({ cursor, limit })}`),
@@ -54,6 +58,10 @@ export const feedApi = {
     api.get<PageResponse<ProfileReplyView>>(
       `/users/${username}/replies${buildQuery({ cursor, limit })}`,
     ),
+
+  /** Diário de atividade do perfil: linha do tempo unificada (comentários só para o dono). */
+  listDiario: (username: string, cursor?: string | null, limit = 20) =>
+    api.get<DiarioPagina>(`/users/${username}/diario${buildQuery({ cursor, limit })}`),
 
   // `pageHtml` so vai em post do tipo PAGE e `articleBody` so em ARTICLE; o backend descarta nos
   // demais tipos. Num artigo o corpo e obrigatorio tambem na edicao.
@@ -112,4 +120,15 @@ export const feedApi = {
 
   cancelScheduled: (id: string) =>
     api.delete<{ id: string; status: string }>(`/feed/scheduled/${encodeURIComponent(id)}`),
+
+  // --- rascunho: onde a pessoa parou de escrever, um por conta, em qualquer dispositivo ---
+
+  /** O meu rascunho atual; `draft` nulo quando não há rascunho. */
+  draft: () => api.get<{ draft: DraftPostView | null }>("/feed/draft"),
+
+  /** Salva (substitui) o meu rascunho; a resposta traz o rascunho com o `updatedAt` novo. */
+  saveDraft: (data: DraftPostInput) => api.put<{ draft: DraftPostView }>("/feed/draft", data),
+
+  /** Descarta o meu rascunho; sem rascunho continua ok (idempotente). */
+  discardDraft: () => api.delete<{ status: string }>("/feed/draft"),
 };

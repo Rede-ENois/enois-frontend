@@ -6,7 +6,12 @@ import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import AFTER mocks are declared
-import { useDecryptedMessages } from "./use-decrypted-messages";
+import {
+  DECRYPT_TIMEOUT_MS,
+  TIMEOUT_PLACEHOLDER,
+  clearDecryptedMessageCache,
+  useDecryptedMessages,
+} from "./use-decrypted-messages";
 
 const decryptReceived = vi.fn();
 const hasLocalKeys = vi.fn();
@@ -54,6 +59,7 @@ describe("useDecryptedMessages", () => {
   beforeEach(() => {
     decryptReceived.mockReset();
     hasLocalKeys.mockReset();
+    clearDecryptedMessageCache();
     captured = { messages: [], decrypting: true };
     host = document.createElement("div");
     document.body.appendChild(host);
@@ -106,5 +112,79 @@ describe("useDecryptedMessages", () => {
     expect(captured.messages[0].text).toBe("normal");
     expect(captured.messages[1].text).toBe("decifrada");
     expect(decryptReceived).toHaveBeenCalledOnce();
+  });
+
+  it("uma mensagem nova nao decifra o historico de novo", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockImplementation((message: Message) =>
+      Promise.resolve(`claro:${message.id}`),
+    );
+
+    const first = [
+      msg({ id: "m1", text: "cipher-1", e2e: true, iv: "iv1" }),
+      msg({ id: "m2", text: "cipher-2", e2e: true, iv: "iv2" }),
+    ];
+    act(() => root.render(<HookProbe messages={first} />));
+    await flush();
+    expect(decryptReceived).toHaveBeenCalledTimes(2);
+
+    // Chega uma terceira: so ela passa pelo RSA; as duas primeiras vem do cache.
+    const second = [...first, msg({ id: "m3", text: "cipher-3", e2e: true, iv: "iv3" })];
+    act(() => root.render(<HookProbe messages={second} />));
+    await flush();
+
+    expect(decryptReceived).toHaveBeenCalledTimes(3);
+    expect(decryptReceived.mock.calls.map((call) => (call[0] as Message).id)).toEqual([
+      "m1",
+      "m2",
+      "m3",
+    ]);
+    expect(captured.messages.map((message) => message.text)).toEqual([
+      "claro:m1",
+      "claro:m2",
+      "claro:m3",
+    ]);
+  });
+
+  it("id repetido com outro ciphertext e decifrado de novo", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockImplementation((message: Message) =>
+      Promise.resolve(`claro:${message.text}`),
+    );
+
+    act(() => root.render(<HookProbe messages={[msg({ id: "m1", text: "a", e2e: true })]} />));
+    await flush();
+    act(() => root.render(<HookProbe messages={[msg({ id: "m1", text: "b", e2e: true })]} />));
+    await flush();
+
+    expect(decryptReceived).toHaveBeenCalledTimes(2);
+    expect(captured.messages[0].text).toBe("claro:b");
+  });
+
+  it("decifragem presa nao segura a thread: estoura o teto e vira placeholder", async () => {
+    vi.useFakeTimers();
+    try {
+      hasLocalKeys.mockResolvedValue(true);
+      decryptReceived.mockImplementation((message: Message) =>
+        message.id === "presa"
+          ? new Promise<string>(() => undefined) // nunca resolve
+          : Promise.resolve(`claro:${message.id}`),
+      );
+
+      const presa = msg({ id: "presa", text: "cipher", e2e: true, iv: "iv" });
+      const ok = msg({ id: "ok", text: "cipher", e2e: true, iv: "iv" });
+      act(() => root.render(<HookProbe messages={[presa, ok]} />));
+      // O relogio falso solta as microtarefas pendentes sem avancar o MIN_DECRYPT (que vence
+      // antes do teto); avancar ATE o teto dispara o placeholder e o fim do loading.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DECRYPT_TIMEOUT_MS);
+      });
+
+      expect(captured.decrypting).toBe(false);
+      expect(captured.messages.find((m) => m.id === "presa")?.text).toBe(TIMEOUT_PLACEHOLDER);
+      expect(captured.messages.find((m) => m.id === "ok")?.text).toBe("claro:ok");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

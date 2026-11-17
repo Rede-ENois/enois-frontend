@@ -16,11 +16,14 @@ import { Route as BlogsRouteImport } from './routes/blogs'
 import { Route as BloqueadosRouteImport } from './routes/bloqueados'
 import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
 import { Route as CarteiraRouteImport } from './routes/carteira'
+import { Route as ColagemRouteImport } from './routes/colagem'
+import { Route as ColecoesRouteImport } from './routes/colecoes'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContaSuspensaRouteImport } from './routes/conta-suspensa'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
+import { Route as DesabafosRouteImport } from './routes/desabafos'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as EmpresasRouteImport } from './routes/empresas'
@@ -39,6 +42,7 @@ import { Route as MentoriaRouteImport } from './routes/mentoria'
 import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as ModeradorRouteImport } from './routes/moderador'
+import { Route as MuraisRouteImport } from './routes/murais'
 import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -46,6 +50,7 @@ import { Route as ProfissionalRouteImport } from './routes/profissional'
 import { Route as RedeRouteImport } from './routes/rede'
 import { Route as ResponsavelRouteImport } from './routes/responsavel'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as RoleplayRouteImport } from './routes/roleplay'
 import { Route as SalvosRouteImport } from './routes/salvos'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as SelosRouteImport } from './routes/selos'
@@ -65,12 +70,14 @@ import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
 import { Route as CallCallIdRouteImport } from './routes/call.$callId'
+import { Route as ColecoesColecaoIdRouteImport } from './routes/colecoes.$colecaoId'
 import { Route as ComunidadesCommunityIdRouteImport } from './routes/comunidades.$communityId'
 import { Route as EmpresaSlugRouteImport } from './routes/empresa.$slug'
 import { Route as GamesUsernameRouteImport } from './routes/games.$username'
 import { Route as GamesPainelRouteImport } from './routes/games.painel'
 import { Route as GruposSlugRouteImport } from './routes/grupos.$slug'
 import { Route as ModeracaoReportIdRouteImport } from './routes/moderacao.$reportId'
+import { Route as MuraisMuralIdRouteImport } from './routes/murais.$muralId'
 import { Route as NotificacoesIndexRouteImport } from './routes/notificacoes.index'
 import { Route as NotificacoesPreferenciasRouteImport } from './routes/notificacoes.preferencias'
 import { Route as PerfilIndexRouteImport } from './routes/perfil.index'
@@ -80,6 +87,7 @@ import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_
 import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
 import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$username'
 import { Route as ProjetosPainelRouteImport } from './routes/projetos.painel'
+import { Route as RoleplaySlugRouteImport } from './routes/roleplay.$slug'
 import { Route as VagasJobIdRouteImport } from './routes/vagas.$jobId'
 import { Route as VagasMinhasRouteImport } from './routes/vagas.minhas'
 import { Route as BlogUsernamePostIdRouteImport } from './routes/blog.$username_.$postId'
@@ -125,6 +133,16 @@ const CarteiraRoute = CarteiraRouteImport.update({
   path: '/carteira',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ColagemRoute = ColagemRouteImport.update({
+  id: '/colagem',
+  path: '/colagem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ColecoesRoute = ColecoesRouteImport.update({
+  id: '/colecoes',
+  path: '/colecoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComunidadesRoute = ComunidadesRouteImport.update({
   id: '/comunidades',
   path: '/comunidades',
@@ -148,6 +166,11 @@ const ContatoRoute = ContatoRouteImport.update({
 const DenunciasRoute = DenunciasRouteImport.update({
   id: '/denuncias',
   path: '/denuncias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesabafosRoute = DesabafosRouteImport.update({
+  id: '/desabafos',
+  path: '/desabafos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevelopersRoute = DevelopersRouteImport.update({
@@ -240,6 +263,11 @@ const ModeradorRoute = ModeradorRouteImport.update({
   path: '/moderador',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MuraisRoute = MuraisRouteImport.update({
+  id: '/murais',
+  path: '/murais',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
   id: '/par-de-estudo',
   path: '/par-de-estudo',
@@ -273,6 +301,11 @@ const ResponsavelRoute = ResponsavelRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoleplayRoute = RoleplayRouteImport.update({
+  id: '/roleplay',
+  path: '/roleplay',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalvosRoute = SalvosRouteImport.update({
@@ -370,6 +403,11 @@ const CallCallIdRoute = CallCallIdRouteImport.update({
   path: '/call/$callId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ColecoesColecaoIdRoute = ColecoesColecaoIdRouteImport.update({
+  id: '/$colecaoId',
+  path: '/$colecaoId',
+  getParentRoute: () => ColecoesRoute,
+} as any)
 const ComunidadesCommunityIdRoute = ComunidadesCommunityIdRouteImport.update({
   id: '/$communityId',
   path: '/$communityId',
@@ -399,6 +437,11 @@ const ModeracaoReportIdRoute = ModeracaoReportIdRouteImport.update({
   id: '/$reportId',
   path: '/$reportId',
   getParentRoute: () => ModeracaoRoute,
+} as any)
+const MuraisMuralIdRoute = MuraisMuralIdRouteImport.update({
+  id: '/$muralId',
+  path: '/$muralId',
+  getParentRoute: () => MuraisRoute,
 } as any)
 const NotificacoesIndexRoute = NotificacoesIndexRouteImport.update({
   id: '/notificacoes/',
@@ -445,6 +488,11 @@ const ProjetosPainelRoute = ProjetosPainelRouteImport.update({
   id: '/projetos/painel',
   path: '/projetos/painel',
   getParentRoute: () => rootRouteImport,
+} as any)
+const RoleplaySlugRoute = RoleplaySlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RoleplayRoute,
 } as any)
 const VagasJobIdRoute = VagasJobIdRouteImport.update({
   id: '/$jobId',
@@ -502,11 +550,14 @@ export interface FileRoutesByFullPath {
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
+  '/colagem': typeof ColagemRoute
+  '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
+  '/desabafos': typeof DesabafosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -525,6 +576,7 @@ export interface FileRoutesByFullPath {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/murais': typeof MuraisRouteWithChildren
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -532,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -551,18 +604,21 @@ export interface FileRoutesByFullPath {
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
+  '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes/': typeof NotificacoesIndexRoute
@@ -584,11 +640,14 @@ export interface FileRoutesByTo {
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
+  '/colagem': typeof ColagemRoute
+  '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
+  '/desabafos': typeof DesabafosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -607,6 +666,7 @@ export interface FileRoutesByTo {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/murais': typeof MuraisRouteWithChildren
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -614,6 +674,7 @@ export interface FileRoutesByTo {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -633,18 +694,21 @@ export interface FileRoutesByTo {
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
+  '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes': typeof NotificacoesIndexRoute
@@ -667,11 +731,14 @@ export interface FileRoutesById {
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
   '/carteira': typeof CarteiraRoute
+  '/colagem': typeof ColagemRoute
+  '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/conta': typeof ContaRoute
   '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
+  '/desabafos': typeof DesabafosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -690,6 +757,7 @@ export interface FileRoutesById {
   '/meus-servicos': typeof MeusServicosRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
+  '/murais': typeof MuraisRouteWithChildren
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -697,6 +765,7 @@ export interface FileRoutesById {
   '/rede': typeof RedeRoute
   '/responsavel': typeof ResponsavelRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/roleplay': typeof RoleplayRouteWithChildren
   '/salvos': typeof SalvosRoute
   '/seguranca': typeof SegurancaRoute
   '/selos': typeof SelosRoute
@@ -716,18 +785,21 @@ export interface FileRoutesById {
   '/auth/verify': typeof AuthVerifyRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
+  '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
   '/comunidades/$communityId': typeof ComunidadesCommunityIdRouteWithChildren
   '/empresa/$slug': typeof EmpresaSlugRoute
   '/games/$username': typeof GamesUsernameRouteWithChildren
   '/games/painel': typeof GamesPainelRoute
   '/grupos/$slug': typeof GruposSlugRoute
   '/moderacao/$reportId': typeof ModeracaoReportIdRoute
+  '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional_/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
   '/notificacoes/': typeof NotificacoesIndexRoute
@@ -751,11 +823,14 @@ export interface FileRouteTypes {
     | '/bloqueados'
     | '/boas-vindas'
     | '/carteira'
+    | '/colagem'
+    | '/colecoes'
     | '/comunidades'
     | '/conta'
     | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
+    | '/desabafos'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -774,6 +849,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/murais'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -781,6 +857,7 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
+    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -800,18 +877,21 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/blog/$username'
     | '/call/$callId'
+    | '/colecoes/$colecaoId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes/'
@@ -833,11 +913,14 @@ export interface FileRouteTypes {
     | '/bloqueados'
     | '/boas-vindas'
     | '/carteira'
+    | '/colagem'
+    | '/colecoes'
     | '/comunidades'
     | '/conta'
     | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
+    | '/desabafos'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -856,6 +939,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/murais'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -863,6 +947,7 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
+    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -882,18 +967,21 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/blog/$username'
     | '/call/$callId'
+    | '/colecoes/$colecaoId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes'
@@ -915,11 +1003,14 @@ export interface FileRouteTypes {
     | '/bloqueados'
     | '/boas-vindas'
     | '/carteira'
+    | '/colagem'
+    | '/colecoes'
     | '/comunidades'
     | '/conta'
     | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
+    | '/desabafos'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -938,6 +1029,7 @@ export interface FileRouteTypes {
     | '/meus-servicos'
     | '/moderacao'
     | '/moderador'
+    | '/murais'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -945,6 +1037,7 @@ export interface FileRouteTypes {
     | '/rede'
     | '/responsavel'
     | '/robots.txt'
+    | '/roleplay'
     | '/salvos'
     | '/seguranca'
     | '/selos'
@@ -964,18 +1057,21 @@ export interface FileRouteTypes {
     | '/auth/verify'
     | '/blog/$username'
     | '/call/$callId'
+    | '/colecoes/$colecaoId'
     | '/comunidades/$communityId'
     | '/empresa/$slug'
     | '/games/$username'
     | '/games/painel'
     | '/grupos/$slug'
     | '/moderacao/$reportId'
+    | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
     | '/post/$postId'
     | '/profissional_/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
     | '/notificacoes/'
@@ -998,11 +1094,14 @@ export interface RootRouteChildren {
   BloqueadosRoute: typeof BloqueadosRoute
   BoasVindasRoute: typeof BoasVindasRoute
   CarteiraRoute: typeof CarteiraRoute
+  ColagemRoute: typeof ColagemRoute
+  ColecoesRoute: typeof ColecoesRouteWithChildren
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
   ContaRoute: typeof ContaRoute
   ContaSuspensaRoute: typeof ContaSuspensaRoute
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
+  DesabafosRoute: typeof DesabafosRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
   EmpresasRoute: typeof EmpresasRoute
@@ -1021,6 +1120,7 @@ export interface RootRouteChildren {
   MeusServicosRoute: typeof MeusServicosRoute
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
+  MuraisRoute: typeof MuraisRouteWithChildren
   ParDeEstudoRoute: typeof ParDeEstudoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1028,6 +1128,7 @@ export interface RootRouteChildren {
   RedeRoute: typeof RedeRoute
   ResponsavelRoute: typeof ResponsavelRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  RoleplayRoute: typeof RoleplayRouteWithChildren
   SalvosRoute: typeof SalvosRoute
   SegurancaRoute: typeof SegurancaRoute
   SelosRoute: typeof SelosRoute
@@ -1112,6 +1213,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarteiraRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/colagem': {
+      id: '/colagem'
+      path: '/colagem'
+      fullPath: '/colagem'
+      preLoaderRoute: typeof ColagemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/colecoes': {
+      id: '/colecoes'
+      path: '/colecoes'
+      fullPath: '/colecoes'
+      preLoaderRoute: typeof ColecoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/comunidades': {
       id: '/comunidades'
       path: '/comunidades'
@@ -1145,6 +1260,13 @@ declare module '@tanstack/react-router' {
       path: '/denuncias'
       fullPath: '/denuncias'
       preLoaderRoute: typeof DenunciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desabafos': {
+      id: '/desabafos'
+      path: '/desabafos'
+      fullPath: '/desabafos'
+      preLoaderRoute: typeof DesabafosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developers': {
@@ -1273,6 +1395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModeradorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/murais': {
+      id: '/murais'
+      path: '/murais'
+      fullPath: '/murais'
+      preLoaderRoute: typeof MuraisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/par-de-estudo': {
       id: '/par-de-estudo'
       path: '/par-de-estudo'
@@ -1320,6 +1449,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roleplay': {
+      id: '/roleplay'
+      path: '/roleplay'
+      fullPath: '/roleplay'
+      preLoaderRoute: typeof RoleplayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/salvos': {
@@ -1455,6 +1591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallCallIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/colecoes/$colecaoId': {
+      id: '/colecoes/$colecaoId'
+      path: '/$colecaoId'
+      fullPath: '/colecoes/$colecaoId'
+      preLoaderRoute: typeof ColecoesColecaoIdRouteImport
+      parentRoute: typeof ColecoesRoute
+    }
     '/comunidades/$communityId': {
       id: '/comunidades/$communityId'
       path: '/$communityId'
@@ -1496,6 +1639,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/moderacao/$reportId'
       preLoaderRoute: typeof ModeracaoReportIdRouteImport
       parentRoute: typeof ModeracaoRoute
+    }
+    '/murais/$muralId': {
+      id: '/murais/$muralId'
+      path: '/$muralId'
+      fullPath: '/murais/$muralId'
+      preLoaderRoute: typeof MuraisMuralIdRouteImport
+      parentRoute: typeof MuraisRoute
     }
     '/notificacoes/': {
       id: '/notificacoes/'
@@ -1559,6 +1709,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projetos/painel'
       preLoaderRoute: typeof ProjetosPainelRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/roleplay/$slug': {
+      id: '/roleplay/$slug'
+      path: '/$slug'
+      fullPath: '/roleplay/$slug'
+      preLoaderRoute: typeof RoleplaySlugRouteImport
+      parentRoute: typeof RoleplayRoute
     }
     '/vagas/$jobId': {
       id: '/vagas/$jobId'
@@ -1637,6 +1794,18 @@ const AgendaRouteChildren: AgendaRouteChildren = {
 const AgendaRouteWithChildren =
   AgendaRoute._addFileChildren(AgendaRouteChildren)
 
+interface ColecoesRouteChildren {
+  ColecoesColecaoIdRoute: typeof ColecoesColecaoIdRoute
+}
+
+const ColecoesRouteChildren: ColecoesRouteChildren = {
+  ColecoesColecaoIdRoute: ColecoesColecaoIdRoute,
+}
+
+const ColecoesRouteWithChildren = ColecoesRoute._addFileChildren(
+  ColecoesRouteChildren,
+)
+
 interface ComunidadesCommunityIdRouteChildren {
   ComunidadesCommunityIdCanaisChannelIdRoute: typeof ComunidadesCommunityIdCanaisChannelIdRoute
 }
@@ -1711,6 +1880,29 @@ const ModeracaoRouteWithChildren = ModeracaoRoute._addFileChildren(
   ModeracaoRouteChildren,
 )
 
+interface MuraisRouteChildren {
+  MuraisMuralIdRoute: typeof MuraisMuralIdRoute
+}
+
+const MuraisRouteChildren: MuraisRouteChildren = {
+  MuraisMuralIdRoute: MuraisMuralIdRoute,
+}
+
+const MuraisRouteWithChildren =
+  MuraisRoute._addFileChildren(MuraisRouteChildren)
+
+interface RoleplayRouteChildren {
+  RoleplaySlugRoute: typeof RoleplaySlugRoute
+}
+
+const RoleplayRouteChildren: RoleplayRouteChildren = {
+  RoleplaySlugRoute: RoleplaySlugRoute,
+}
+
+const RoleplayRouteWithChildren = RoleplayRoute._addFileChildren(
+  RoleplayRouteChildren,
+)
+
 interface VagasJobIdRouteChildren {
   VagasJobIdCandidaturasRoute: typeof VagasJobIdCandidaturasRoute
 }
@@ -1754,11 +1946,14 @@ const rootRouteChildren: RootRouteChildren = {
   BloqueadosRoute: BloqueadosRoute,
   BoasVindasRoute: BoasVindasRoute,
   CarteiraRoute: CarteiraRoute,
+  ColagemRoute: ColagemRoute,
+  ColecoesRoute: ColecoesRouteWithChildren,
   ComunidadesRoute: ComunidadesRouteWithChildren,
   ContaRoute: ContaRoute,
   ContaSuspensaRoute: ContaSuspensaRoute,
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
+  DesabafosRoute: DesabafosRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
   EmpresasRoute: EmpresasRoute,
@@ -1777,6 +1972,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeusServicosRoute: MeusServicosRoute,
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
+  MuraisRoute: MuraisRouteWithChildren,
   ParDeEstudoRoute: ParDeEstudoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,
@@ -1784,6 +1980,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedeRoute: RedeRoute,
   ResponsavelRoute: ResponsavelRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  RoleplayRoute: RoleplayRouteWithChildren,
   SalvosRoute: SalvosRoute,
   SegurancaRoute: SegurancaRoute,
   SelosRoute: SelosRoute,
@@ -1819,13 +2016,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

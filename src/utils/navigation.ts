@@ -17,6 +17,12 @@ const routeDefinitions = [
     to: "/comunidades/$communityId",
     params: ["communityId"],
   },
+  // Éroleplay: o href da notificação é "/roleplay/campaigns/{slug}".
+  {
+    source: "roleplay/campaigns",
+    to: "/roleplay/$slug",
+    params: ["slug"],
+  },
   { source: "jobs", to: "/vagas" },
   { source: "events", to: "/eventos" },
   { source: "mentors", to: "/mentoria" },

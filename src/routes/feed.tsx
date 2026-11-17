@@ -26,6 +26,7 @@ import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
   CaughtUpDivider,
+  ComposerDraftStatus,
   ComposerLauncher,
   PostCardSkeletons,
   QuestionComposerHint,
@@ -89,7 +90,6 @@ import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { feedRefreshOptions, refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
-import { useFeedPullToRefresh } from "@/lib/feed/pull-to-refresh";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -98,6 +98,7 @@ import {
 } from "@/lib/interface-context";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { usePullToRefresh } from "@/lib/pull-to-refresh";
 import { requireAuth } from "@/lib/require-auth";
 import { ogMetas } from "@/lib/seo";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -156,6 +157,7 @@ const POST_TYPE_FILTERS = [
   { value: "DIVERTIDO", label: "Diversão" },
   { value: "ARTICLE", label: "Artigos" },
   { value: "POLL", label: "Enquetes" },
+  { value: "COMPLAINT", label: "Reclamações" },
 ] as const;
 
 export const Route = createFileRoute("/feed")({
@@ -301,12 +303,13 @@ export function FeedPostRow({
 }) {
   return (
     <div ref={index === 0 ? firstPostRef : undefined}>
-      <PostCard post={post} feedTab={feedTab} virtualized />
+      <PostCard post={post} feedTab={feedTab} />
     </div>
   );
 }
 
-function Home() {
+// Exportada para o teste da guarda de duplo envio; a rota continua montando pelo Route.
+export function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const authenticated = useIsAuthenticated();
@@ -437,6 +440,8 @@ function Home() {
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
@@ -444,6 +449,9 @@ function Home() {
       : POST_TYPES.filter((option) => option.id !== "BUSINESS");
   const currentType = availableTypes.find((option) => option.id === postType) ?? availableTypes[0];
   const fileRef = useRef<HTMLInputElement>(null);
+  // Guarda de reentrada da publicação (ver `publishPost`): um ref, não estado — o segundo envio
+  // precisa ser descartado na hora, sem esperar um novo render.
+  const publishingRef = useRef(false);
   const upload = useMediaUpload();
 
   const createPost = useMutation({
@@ -462,6 +470,114 @@ function Home() {
     staleTime: 60_000,
   });
   const scheduledList = scheduledQuery.data ?? [];
+
+  // Rascunho do compositor (V332): um por conta, em qualquer dispositivo. Salva sozinho
+  // enquanto a pessoa escreve; publicar, agendar ou descartar apaga.
+  const draftQuery = useQuery({
+    queryKey: ["feed", "draft"],
+    queryFn: () => feedApi.draft(),
+    enabled: authenticated && !composerLocked,
+  });
+  const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<string | null>(null);
+
+  // Restaurar o rascunho do servidor UMA vez, e só se o compositor está intocado aqui — quem
+  // já começou a escrever não é sobrescrito pelo que veio de outro dispositivo. Mídia anexada
+  // não faz parte do rascunho (os arquivos só sobem ao publicar): quem restaurar reanexa.
+  const rascunhoRestauradoRef = useRef(false);
+  useEffect(() => {
+    const salvo = draftQuery.data?.draft;
+    if (!salvo || rascunhoRestauradoRef.current) return;
+    rascunhoRestauradoRef.current = true;
+    const compositorIntacto =
+      draft.trim() === "" &&
+      media.length === 0 &&
+      pageHtml === "" &&
+      articleBody === "" &&
+      normalizePollOptions(pollOptions).length === 0;
+    if (!compositorIntacto) return;
+    setPostType(salvo.type as PostView["type"]);
+    setDraft(salvo.content ?? "");
+    setPageHtml(salvo.pageHtml ?? "");
+    setArticleBody(salvo.articleBody ?? "");
+    if (salvo.topic) setTopic(salvo.topic);
+    if (salvo.pollOptions.length > 0) setPollOptions([...salvo.pollOptions]);
+    setPollMultipleChoice(salvo.pollMultipleChoice);
+    setPollEndsAt(salvo.pollEndsAt ? valorDeDataLocal(new Date(salvo.pollEndsAt)) : undefined);
+    setMentionedUserIds(salvo.mentionedUserIds);
+    setComposerOpen(true);
+    setRascunhoSalvoEm(salvo.updatedAt);
+    // Regravar o que acabou de chegar é escrita à toa: o primeiro autosave depois da
+    // restauração é pulado; a próxima mudança de verdade salva.
+    pularAutosaveRef.current = true;
+    // Roda uma vez, quando o rascunho chega (a guarda do ref impede repetição).
+  }, [draftQuery.data]);
+
+  // Autosave: 1,5s depois da última mudança, o estado do compositor viaja para o servidor.
+  // Mesma régua mínima do backend: só salva quando há algo para restaurar. Falha no autosave
+  // é silenciosa — a pessoa segue escrevendo, e o rascunho anterior continua lá.
+  const pularAutosaveRef = useRef(false);
+  const saveDraftMutation = useMutation({
+    mutationFn: (data: Parameters<typeof feedApi.saveDraft>[0]) => feedApi.saveDraft(data),
+    onSuccess: (resposta) => setRascunhoSalvoEm(resposta.draft.updatedAt),
+  });
+  useEffect(() => {
+    if (!authenticated || composerLocked) return;
+    const temConteudo =
+      (pageMode ? pageHtml.trim() !== "" : draft.trim() !== "") ||
+      (articleMode && articleBody.trim() !== "") ||
+      (pollMode && normalizePollOptions(pollOptions).length > 0);
+    if (!temConteudo) return;
+    const id = setTimeout(() => {
+      if (pularAutosaveRef.current) {
+        pularAutosaveRef.current = false;
+        return;
+      }
+      saveDraftMutation.mutate({
+        type: postType,
+        content: pageMode ? "" : draft,
+        ...(pageMode ? { pageHtml } : {}),
+        ...(articleMode ? { articleBody } : {}),
+        ...(topic ? { topic } : {}),
+        ...(pollMode ? { pollOptions: normalizePollOptions(pollOptions) } : {}),
+        ...(pollMode ? { pollMultipleChoice } : {}),
+        ...(pollMode && pollEndsAt ? { pollEndsAt: new Date(pollEndsAt).toISOString() } : {}),
+        ...(pageMode ? {} : { mentionedUserIds }),
+      });
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [
+    authenticated,
+    composerLocked,
+    draft,
+    postType,
+    pageMode,
+    pageHtml,
+    articleMode,
+    articleBody,
+    pollMode,
+    pollOptions,
+    pollMultipleChoice,
+    pollEndsAt,
+    topic,
+    mentionedUserIds,
+  ]);
+
+  /** Descartar apaga o rascunho salvo E limpa o compositor: começar de novo é isso. */
+  const descartarRascunho = () => {
+    setRascunhoSalvoEm(null);
+    void feedApi.discardDraft().catch(() => {});
+    setDraft("");
+    setMentionedUserIds([]);
+    setPostType("INSIGHT");
+    setMedia([]);
+    setMediaSpoiler(false);
+    setPageHtml("");
+    setArticleBody("");
+    setPollOptions(["", ""]);
+    setPollMultipleChoice(false);
+    setPollEndsAt(undefined);
+    setSchedulingOpen(false);
+  };
 
   const schedulePost = useMutation({
     mutationFn: (data: Parameters<typeof feedApi.schedule>[0]) => feedApi.schedule(data),
@@ -528,6 +644,9 @@ function Home() {
       setPollOptions(["", ""]);
       setScheduleAt("");
       setSchedulingOpen(false);
+      // Agendou: o rascunho não tem mais o que guardar.
+      setRascunhoSalvoEm(null);
+      void feedApi.discardDraft().catch(() => {});
     } catch {
       // o motivo já foi para o publishError pelo onError da mutation
     }
@@ -538,6 +657,10 @@ function Home() {
 
   const publishPost = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Guarda de reentrada: o botão desabilita com `createPost.isPending`, mas ele só liga quando o
+    // `mutateAsync` começa — antes disso há awaits (upload da mídia) em que um segundo Enter
+    // publicaria duas vezes.
+    if (publishingRef.current) return;
     if (!mediaReady) return;
     const content = draft.trim();
     // Pagina e uma coisa OU outra: o HTML e o conteudo e o texto do post nao e exigido. Artigo
@@ -548,7 +671,7 @@ function Home() {
     // Enquete sem pelo menos 2 alternativas preenchidas não sai (o backend recusaria em 400).
     const options = normalizePollOptions(pollOptions);
     if (pollMode && options.length < POLL_MIN_OPTIONS) return;
-
+    publishingRef.current = true;
     const formData = new FormData(event.currentTarget);
     setPublishError(null);
     try {
@@ -563,7 +686,7 @@ function Home() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         topic,
         website: String(formData.get("website") ?? ""),
@@ -591,8 +714,13 @@ function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      // Publicou: o rascunho não tem mais o que guardar.
+      setRascunhoSalvoEm(null);
+      void feedApi.discardDraft().catch(() => {});
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
+    } finally {
+      publishingRef.current = false;
     }
   };
 
@@ -704,7 +832,7 @@ function Home() {
 
   // Puxar para renovar no topo, em toque: renova SÓ a lista do feed — o gesto é sobre o que está
   // na tela, não sobre o aplicativo. O indicador de renovação é o mesmo da busca automática.
-  const pullToRefresh = useFeedPullToRefresh(
+  const pullToRefresh = usePullToRefresh(
     useCallback(() => void feedRefetch(), [feedRefetch]),
     feedFetching && !isFetchingNextPage,
   );
@@ -890,13 +1018,25 @@ function Home() {
                     maxLength={postContentLimit(postType)}
                     toolbar
                     onPasteImages={addMediaFiles}
+                    /* Ctrl+Enter publica: o atalho passa pelo mesmo submit do formulário (honeypot
+                       e guarda de reentrada incluídos), não por um caminho próprio. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 )}
               </div>
 
               {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
 
-              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+              {pollMode && (
+                <PollComposer
+                  options={pollOptions}
+                  onChange={setPollOptions}
+                  multipleChoice={pollMultipleChoice}
+                  onMultipleChoiceChange={setPollMultipleChoice}
+                  endsAt={pollEndsAt}
+                  onEndsAtChange={setPollEndsAt}
+                />
+              )}
 
               {pageMode && (
                 <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
@@ -936,6 +1076,9 @@ function Home() {
                     className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                     rows={8}
                     toolbar
+                    /* Mesmo atalho do campo de cima: escrever o artigo inteiro sem sair do
+                       teclado. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 </div>
               )}
@@ -1166,6 +1309,8 @@ function Home() {
                     </a>
                   </div>
                 )}
+
+                <ComposerDraftStatus salvoEm={rascunhoSalvoEm} onDescartar={descartarRascunho} />
 
                 {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
                   alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
@@ -1454,7 +1599,11 @@ function Home() {
                   </Fragment>
                 ))}
 
-              {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
+              {!feedLoading && feedPosts.length === 0 && (
+                <EmptyState
+                  title={tab === "INTERACTED" ? texts.feed.emptyInteracted : texts.feed.empty}
+                />
+              )}
 
               <InfiniteScroll
                 hasMore={Boolean(hasNextPage)}

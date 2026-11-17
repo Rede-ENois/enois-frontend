@@ -1,21 +1,44 @@
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { JobApplication } from "@/types/application/job/job-application";
+import type { RecruitmentApplication } from "@/types/application/job/recruitment-application";
+import type { RecruitmentBoard as RecruitmentBoardView } from "@/types/application/job/recruitment-board";
 import type { ScheduleInterviewInput } from "@/types/application/job/schedule-interview-input";
+import type {
+  RecruitmentBatchTarget,
+  RecruitmentCandidate,
+  RecruitmentColumn,
+  RecruitmentDetailView,
+  RecruitmentStage,
+  RecruitmentStatus,
+  RecruitmentTableRow,
+} from "@rede-enois/design-system/domain";
 import {
+  ApplicationFeedbackDialog,
   CalendarInterviewDialog,
   JobInterviewActions,
-  UserAvatar,
+  RecruitmentBoard,
+  RecruitmentDetailDialog,
+  RecruitmentTable,
 } from "@rede-enois/design-system/domain";
-import { Button, ConfirmDialog } from "@rede-enois/design-system/ui";
-import { ArrowLeft, BadgeCheck, Loader2, MessageCircle, ShieldAlert } from "lucide-react";
+import {
+  AppLink,
+  Button,
+  EmptyState,
+  LoadingState,
+  PageHeader,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@rede-enois/design-system/ui";
 
-import { jobsApi } from "@/lib/api";
-import { actionsFor, statusTone } from "@/lib/job-application-status";
+import { jobsApi, recruitmentApi } from "@/lib/api";
+import { actionsFor, applicationStatusLabel } from "@/lib/job-application-status";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -30,38 +53,166 @@ export const Route = createFileRoute("/vagas/$jobId/candidaturas")({
   component: JobApplications,
 });
 
+/** Os estados são um contrato fechado do backend; o rótulo é vocabulário de produto da app. */
+const STATUS_OPTIONS: { value: RecruitmentStatus; label: string }[] = (
+  ["APPLIED", "IN_REVIEW", "ADVANCED", "NOT_SELECTED"] as const
+).map((value) => ({ value, label: texts.jobs.applications.statusLabels[value] }));
+
+/** O score da candidatura em qualquer coluna do board (o `rejected` só tem as que saíram). */
+function scoreOf(board: RecruitmentBoardView | undefined, applicationId: string) {
+  if (!board) return null;
+  for (const column of board.columns) {
+    const card = column.cards.find((item) => item.applicationId === applicationId);
+    if (card) return card.score;
+  }
+  return board.rejected.find((item) => item.applicationId === applicationId)?.score ?? null;
+}
+
 /**
- * Candidaturas recebidas: quem publicou a vaga ve o perfil que o candidato tinha no momento da
- * inscricao (tempo de experiencia, reputacao, verificacao) e as respostas do formulario.
- *
- * A candidatura tambem chega por e-mail e na conversa direta; esta tela e onde o empregador revê
- * tudo sem depender da caixa de entrada.
+ * Candidaturas recebidas: o funil completo da vaga, desenhado pelo design system (kanban por
+ * etapa, tabela paginada por cursor e a ficha da candidatura). A app só orquestra — buscas,
+ * mutações e o mapeamento da API nos view models do DS. A autorização é toda do backend.
  */
 function JobApplications() {
   const { jobId } = Route.useParams();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: job } = useQuery({
     queryKey: ["job", jobId],
     queryFn: () => jobsApi.get(jobId),
   });
 
-  const { data, isLoading, isError } = useQuery({
+  const boardQuery = useQuery({
+    queryKey: ["recruitment-board", jobId],
+    queryFn: () => recruitmentApi.board(jobId),
+  });
+
+  // A tabela pagina por cursor; a página corrente vive em estado para o "carregar mais" anexar.
+  const [tab, setTab] = useState("board");
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [rows, setRows] = useState<RecruitmentApplication[]>([]);
+  const [statusFilter, setStatusFilter] = useState<RecruitmentStatus | null>(null);
+  const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pending, setPending] = useState(false);
+  const [resultNote, setResultNote] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<string[] | null>(null);
+  const [interviewFor, setInterviewFor] = useState<JobApplication | null>(null);
+  const [interviewError, setInterviewError] = useState<string | null>(null);
+  const timeZoneId = browserZone();
+
+  const pageQuery = useQuery({
+    queryKey: ["recruitment-page", jobId, statusFilter, search],
+    queryFn: () =>
+      recruitmentApi.page(jobId, { status: statusFilter, search: search || null, limit: 30 }),
+    enabled: tab === "table",
+  });
+
+  // O retrato vem da candidatura clássica: a ficha mostra o perfil do momento da inscrição.
+  const applicationsQuery = useQuery({
     queryKey: ["job-applications", jobId],
     queryFn: () => jobsApi.receivedApplications(jobId),
   });
 
-  const applications = data ?? [];
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["recruitment-board", jobId] });
+    queryClient.invalidateQueries({ queryKey: ["recruitment-page", jobId] });
+    queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
+  };
 
-  const queryClient = useQueryClient();
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ id: string; ok: boolean } | null>(null);
+  const applicationOf = (applicationId: string) =>
+    (applicationsQuery.data ?? []).find((application) => application.id === applicationId) ?? null;
 
-  // Entrevista: o dialogo e o mesmo para marcar e reagendar; o que muda e a candidatura aberta.
-  const [interviewFor, setInterviewFor] = useState<JobApplication | null>(null);
-  const [cancelFor, setCancelFor] = useState<JobApplication | null>(null);
-  const [interviewError, setInterviewError] = useState<string | null>(null);
-  const timeZoneId = browserZone();
+  const candidateOf = (userId: string): RecruitmentCandidate | null => {
+    const application = (applicationsQuery.data ?? []).find(
+      (item) => item.candidate?.userId === userId,
+    );
+    if (!application?.candidate) return null;
+    const candidate = application.candidate;
+    return {
+      applicationId: application.id,
+      userId: candidate.userId,
+      name: candidate.name || texts.jobs.applications.candidate,
+      avatarUrl: candidate.avatar || null,
+      headline: candidate.headline || null,
+      status: application.status,
+      statusLabel: applicationStatusLabel(application.status),
+      appliedAt: application.appliedAt,
+      stageId:
+        boardQuery.data?.columns.find((column) =>
+          column.cards.some((card) => card.applicationId === application.id),
+        )?.stageId ?? null,
+      rejected: application.status === "NOT_SELECTED",
+      score: scoreOf(boardQuery.data, application.id),
+    };
+  };
+
+  // A ficha é um retrato, mas é barata de recomputar por render: uma busca na lista carregada.
+  const detail: RecruitmentDetailView | null = (() => {
+    if (!openId) return null;
+    const application = applicationOf(openId);
+    const candidate = application?.candidate ?? null;
+    if (!application || !candidate) return null;
+    return {
+      applicationId: application.id,
+      name: candidate.name || texts.jobs.applications.candidate,
+      avatarUrl: candidate.avatar || null,
+      headline: candidate.headline || null,
+      identityVerified: candidate.identityVerified,
+      reputation: candidate.reputation,
+      experienceYears: candidate.experienceYears,
+      experiencesCount: candidate.experiencesCount,
+      location: candidate.location || null,
+      skills: candidate.skills,
+      message: application.message,
+      answers: application.answers.map((answer) => ({ label: answer.label, value: answer.value })),
+      statusLabel: applicationStatusLabel(application.status),
+      score: scoreOf(boardQuery.data, application.id),
+    };
+  })();
+
+  const openApplication = openId ? applicationOf(openId) : null;
+
+  const batchMove = useMutation({
+    // REJECT só sai depois do motivo: o diálogo coleta o texto e a mutação de lote é chamada lá.
+    mutationFn: (target: RecruitmentBatchTarget) =>
+      target.kind === "REJECT"
+        ? Promise.resolve([])
+        : recruitmentApi.batchMove(jobId, selectedIds, target.stageId, target.kind),
+    onMutate: () => {
+      setError(null);
+      setResultNote(null);
+      setPending(true);
+    },
+    onSuccess: (outcomes) => {
+      const moved = outcomes.filter((outcome) => outcome.movement !== null).length;
+      const refused = outcomes.filter((outcome) => outcome.errorCode !== null);
+      const lines = [
+        moved === 1 ? "1 candidatura movida." : `${moved} candidaturas movidas.`,
+        ...refused.slice(0, 3).map((outcome) => outcome.errorMessage ?? outcome.errorCode ?? ""),
+      ].filter(Boolean);
+      setResultNote(lines.join(" "));
+      setSelectedIds([]);
+      refresh();
+    },
+    onError: () => setError(texts.jobs.applications.error),
+    onSettled: () => setPending(false),
+  });
+
+  const changeStatus = useMutation({
+    mutationFn: (vars: { applicationId: string; status: JobApplication["status"] }) =>
+      jobsApi.updateApplicationStatus(jobId, vars.applicationId, vars.status),
+    onMutate: () => {
+      setError(null);
+      setResultNote(null);
+      setPending(true);
+    },
+    onSuccess: () => refresh(),
+    onError: () => setError(texts.jobs.applications.statusError),
+    onSettled: () => setPending(false),
+  });
 
   const saveInterview = useMutation({
     mutationFn: (vars: { application: JobApplication; values: ScheduleInterviewInput }) => {
@@ -72,7 +223,7 @@ function JobApplications() {
     },
     onMutate: () => setInterviewError(null),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
+      refresh();
       setInterviewFor(null);
     },
     onError: () => setInterviewError(texts.jobs.applications.interview.error),
@@ -83,237 +234,217 @@ function JobApplications() {
       jobsApi.cancelInterview(jobId, application.id, application.interview?.id ?? ""),
     onMutate: () => setInterviewError(null),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
-      setCancelFor(null);
+      refresh();
+      setInterviewFor(null);
     },
     onError: () => setInterviewError(texts.jobs.applications.interview.cancelError),
   });
 
-  const changeStatus = useMutation({
-    mutationFn: (vars: { applicationId: string; status: JobApplication["status"] }) =>
-      jobsApi.updateApplicationStatus(jobId, vars.applicationId, vars.status),
-    onMutate: (vars) => {
-      setPendingId(vars.applicationId);
-      setFeedback(null);
-    },
-    // A lista so muda depois da resposta do backend: nao ha atualizacao otimista de estado.
-    onSuccess: (_updated, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["job-applications", jobId] });
-      setFeedback({ id: vars.applicationId, ok: true });
-    },
-    onError: (_error, vars) => setFeedback({ id: vars.applicationId, ok: false }),
-    onSettled: () => setPendingId(null),
+  const stages: RecruitmentStage[] = boardQuery.data?.stages ?? [];
+  const columns: RecruitmentColumn[] = (boardQuery.data?.columns ?? []).map((column) => ({
+    stageId: column.stageId,
+    cards: column.cards
+      .map((card) => candidateOf(card.userId))
+      .filter((candidate): candidate is RecruitmentCandidate => candidate !== null),
+  }));
+
+  const tableRows: RecruitmentTableRow[] = (pageQuery.data?.items ?? []).map((item) => {
+    const candidate = candidateOf(item.userId);
+    const stage = stages.find((candidateStage) => candidateStage.id === item.stageId);
+    return {
+      applicationId: item.applicationId,
+      userId: item.userId,
+      name: candidate?.name ?? texts.jobs.applications.candidate,
+      avatarUrl: candidate?.avatarUrl ?? null,
+      headline: candidate?.headline ?? null,
+      status: item.status,
+      statusLabel: applicationStatusLabel(item.status),
+      appliedAt: item.appliedAt,
+      stageId: item.stageId,
+      stageName: stage?.name ?? null,
+      rejected: item.rejected,
+      score: item.score,
+    };
   });
+
+  const summary = boardQuery.data?.summary ?? { total: 0, inProcess: 0, rejected: 0 };
 
   return (
     <AppContainer>
-      <div className="mx-auto w-full max-w-3xl space-y-5">
-        <Link
-          to="/vagas/$jobId"
-          params={{ jobId }}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
+      <AppLink href={`/vagas/${jobId}`}>
+        <Button variant="link" size="sm">
+          {texts.jobs.applications.backToJob}
+        </Button>
+      </AppLink>
 
-          <>{texts.jobs.applications.backToJob}</>
-        </Link>
+      <PageHeader
+        title={job ? texts.jobs.applications.titleFor(job.title) : texts.jobs.applications.title}
+        description={texts.jobs.applications.snapshotHint}
+      />
 
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {job ? texts.jobs.applications.titleFor(job.title) : texts.jobs.applications.title}
-          </h1>
+      {boardQuery.isPending ? (
+        <LoadingState />
+      ) : boardQuery.isError ? (
+        <EmptyState title={texts.jobs.applications.error}>
+          <Button variant="outline" size="sm" onClick={() => boardQuery.refetch()}>
+            {texts.jobs.retry}
+          </Button>
+        </EmptyState>
+      ) : summary.total === 0 ? (
+        <EmptyState title={texts.jobs.applications.empty} />
+      ) : (
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList>
+            <TabsTrigger value="board">{texts.jobs.applications.title}</TabsTrigger>
 
-          <p className="mt-1 text-xs text-muted-foreground">
-            {texts.jobs.applications.snapshotHint}
-          </p>
-        </div>
+            <TabsTrigger value="table">{texts.jobs.applications.link}</TabsTrigger>
+          </TabsList>
 
-        {isLoading && (
-          <div className="flex justify-center py-10 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
+          <TabsContent value="board">
+            <RecruitmentBoard
+              stages={stages}
+              columns={columns}
+              rejected={(boardQuery.data?.rejected ?? [])
+                .map((item) => candidateOf(item.userId))
+                .filter((candidate): candidate is RecruitmentCandidate => candidate !== null)}
+              summary={summary}
+              selectedIds={selectedIds}
+              onToggleSelected={(applicationId) =>
+                setSelectedIds((current) =>
+                  current.includes(applicationId)
+                    ? current.filter((id) => id !== applicationId)
+                    : [...current, applicationId],
+                )
+              }
+              onOpen={setOpenId}
+              onBatchMove={(target) =>
+                target.kind === "REJECT"
+                  ? setRejectTarget([...selectedIds])
+                  : batchMove.mutate(target)
+              }
+              pending={pending}
+              error={error}
+              resultNote={resultNote}
+            />
+          </TabsContent>
+
+          <TabsContent value="table">
+            <RecruitmentTable
+              rows={tableRows}
+              stages={stages}
+              statusOptions={STATUS_OPTIONS}
+              statusFilter={statusFilter}
+              onStatusFilter={(status) => {
+                setStatusFilter(status);
+                setCursor(null);
+                setRows([]);
+              }}
+              search={search}
+              onSearch={setSearch}
+              selectedIds={selectedIds}
+              onToggleSelected={(applicationId) =>
+                setSelectedIds((current) =>
+                  current.includes(applicationId)
+                    ? current.filter((id) => id !== applicationId)
+                    : [...current, applicationId],
+                )
+              }
+              onTogglePage={(selectAll) =>
+                setSelectedIds(selectAll ? tableRows.map((row) => row.applicationId) : [])
+              }
+              onOpen={setOpenId}
+              onBatchMove={(target) =>
+                target.kind === "REJECT"
+                  ? setRejectTarget([...selectedIds])
+                  : batchMove.mutate(target)
+              }
+              hasMore={Boolean(pageQuery.data?.nextCursor)}
+              loadingMore={pageQuery.isFetching}
+              onLoadMore={() => {
+                const next = pageQuery.data?.nextCursor;
+                if (next) setCursor(next);
+              }}
+              loading={pageQuery.isPending}
+              pending={pending}
+              error={pageQuery.isError ? texts.jobs.applications.error : error}
+              resultNote={resultNote}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
+
+      <RecruitmentDetailDialog
+        open={detail !== null}
+        onOpenChange={(open) => {
+          if (!open) setOpenId(null);
+        }}
+        detail={detail}
+      >
+        {openApplication && (
+          <>
+            {actionsFor(openApplication.status).map((action) => (
+              <Button
+                key={action.status}
+                variant={action.status === "NOT_SELECTED" ? "destructive" : "outline"}
+                size="sm"
+                disabled={pending}
+                onClick={() => {
+                  if (action.status === "NOT_SELECTED") {
+                    setRejectTarget([openApplication.id]);
+                    return;
+                  }
+                  changeStatus.mutate({ applicationId: openApplication.id, status: action.status });
+                }}
+              >
+                {action.label}
+              </Button>
+            ))}
+
+            {openApplication.status !== "NOT_SELECTED" && (
+              <JobInterviewActions
+                interview={openApplication.interview ?? null}
+                separated
+                onSchedule={() => setInterviewFor(openApplication)}
+                onReschedule={() => setInterviewFor(openApplication)}
+                onCancel={() => cancelInterview.mutate(openApplication)}
+                error={interviewError}
+              />
+            )}
+          </>
         )}
+      </RecruitmentDetailDialog>
 
-        {!isLoading && isError && (
-          <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {texts.jobs.applications.error}
-          </p>
-        )}
-
-        {!isLoading && !isError && applications.length === 0 && (
-          <p className="rounded-2xl border border-border-soft px-4 py-8 text-center text-sm text-muted-foreground">
-            {texts.jobs.applications.empty}
-          </p>
-        )}
-
-        <ul className="space-y-4">
-          {applications.map((application) => (
-            <li key={application.id} className="surface-card space-y-4 p-4 sm:p-5">
-              <header className="flex flex-wrap items-start gap-3">
-                <UserAvatar
-                  src={application.candidate?.avatar || null}
-                  alt={application.candidate?.name ?? ""}
-                  className="h-12 w-12 shrink-0"
-                />
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-medium">
-                      {application.candidate?.name || texts.jobs.applications.candidate}
-                    </span>
-
-                    {application.candidate?.identityVerified ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-growth/15 px-2 py-0.5 text-xs text-growth">
-                        <BadgeCheck className="h-3 w-3" />
-
-                        <>{texts.jobs.author.verified}</>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                        <ShieldAlert className="h-3 w-3" />
-
-                        <>{texts.jobs.author.notVerified}</>
-                      </span>
-                    )}
-
-                    <span className="rounded-full bg-accent px-2 py-0.5 text-xs">
-                      {texts.jobs.applications.reputation(application.candidate?.reputation ?? 0)}
-                    </span>
-                  </div>
-
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {application.candidate?.headline}
-                  </p>
-
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {texts.jobs.applications.experience(
-                      application.candidate?.experienceYears ?? 0,
-                      application.candidate?.experiencesCount ?? 0,
-                    )}
-                    {application.candidate?.location ? ` · ${application.candidate.location}` : ""}
-                  </p>
-
-                  {(application.candidate?.skills ?? []).length > 0 && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {texts.jobs.applications.skills}: {application.candidate?.skills.join(", ")}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex shrink-0 gap-2">
-                  {application.candidate?.username && (
-                    // Candidaturas antigas (retrato SOCIAL) continuam no perfil em que foram feitas.
-                    <Link
-                      to={
-                        application.candidate.identity === "CORPORATE"
-                          ? "/profissional/$username"
-                          : "/perfil/$username"
-                      }
-                      params={{ username: application.candidate.username }}
-                    >
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        {texts.jobs.applications.openProfile}
-                      </Button>
-                    </Link>
-                  )}
-
-                  <Button
-                    size="sm"
-                    className="rounded-full gap-1.5"
-                    onClick={() => navigate({ to: "/mensagens" })}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-
-                    <>{texts.jobs.applications.sendMessage}</>
-                  </Button>
-                </div>
-              </header>
-
-              {/* Triagem: estado persistido + so as acoes validas para ele. As regras sao as
-                  mesmas que o backend valida — a tela nao oferece transicao que seria recusada. */}
-              <div className="flex flex-wrap items-center gap-2 border-t border-border-soft pt-3">
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusTone(application.status)}`}
-                >
-                  {texts.jobs.applications.statusLabels[application.status]}
-                </span>
-
-                {actionsFor(application.status).map((action) => (
-                  <Button
-                    key={action.status}
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full"
-                    disabled={pendingId === application.id}
-                    onClick={() =>
-                      changeStatus.mutate({ applicationId: application.id, status: action.status })
-                    }
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-
-                {pendingId === application.id && (
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                )}
-
-                {feedback?.id === application.id && (
-                  <span
-                    className={`text-xs ${feedback.ok ? "text-growth" : "text-destructive"}`}
-                    role="status"
-                  >
-                    {feedback.ok
-                      ? texts.jobs.applications.statusUpdated
-                      : texts.jobs.applications.statusError}
-                  </span>
-                )}
-              </div>
-
-              {application.status !== "NOT_SELECTED" && (
-                <JobInterviewActions
-                  interview={application.interview ?? null}
-                  separated
-                  onSchedule={() => setInterviewFor(application)}
-                  onReschedule={() => setInterviewFor(application)}
-                  onCancel={() => setCancelFor(application)}
-                  error={interviewError}
-                />
-              )}
-
-              {application.message && (
-                <div className="rounded-xl bg-muted/50 px-3 py-2">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    {texts.jobs.applications.message}
-                  </p>
-
-                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm">
-                    {application.message}
-                  </p>
-                </div>
-              )}
-
-              {application.answers.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    {texts.jobs.applications.answers}
-                  </p>
-
-                  <dl className="space-y-1.5">
-                    {application.answers.map((answer) => (
-                      <div key={answer.label} className="text-sm">
-                        <dt className="font-medium">{answer.label}</dt>
-
-                        <dd className="break-words text-muted-foreground">{answer.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-
+      <ApplicationFeedbackDialog
+        open={rejectTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setRejectTarget(null);
+        }}
+        pending={pending}
+        onSubmit={(feedback) => {
+          const targets = rejectTarget ?? [];
+          setRejectTarget(null);
+          setPending(true);
+          const request =
+            targets.length === 1
+              ? jobsApi
+                  .updateApplicationStatus(jobId, targets[0], "NOT_SELECTED", feedback)
+                  .then(() => [])
+              : recruitmentApi.batchMove(jobId, targets, null, "REJECT", feedback);
+          request
+            .then((outcomes) => {
+              const moved = outcomes.filter((outcome) => outcome.movement !== null).length;
+              if (outcomes.length > 0) {
+                setResultNote(
+                  moved === 1 ? "1 candidatura movida." : `${moved} candidaturas movidas.`,
+                );
+                setSelectedIds([]);
+              }
+              refresh();
+            })
+            .catch(() => setError(texts.jobs.applications.error))
+            .finally(() => setPending(false));
+        }}
+      />
       <CalendarInterviewDialog
         open={interviewFor !== null}
         onOpenChange={(open) => {
@@ -328,21 +459,16 @@ function JobApplications() {
         savePending={saveInterview.isPending}
         saveError={interviewError}
         onSave={(values) => {
-          if (interviewFor) saveInterview.mutate({ application: interviewFor, values });
-        }}
-      />
-      <ConfirmDialog
-        open={cancelFor !== null}
-        onOpenChange={(open) => {
-          if (!open) setCancelFor(null);
-        }}
-        title={texts.jobs.applications.interview.cancelTitle}
-        description={texts.jobs.applications.interview.cancelConfirm}
-        confirmLabel={texts.jobs.applications.interview.cancelAction}
-        destructive
-        pending={cancelInterview.isPending}
-        onConfirm={() => {
-          if (cancelFor) cancelInterview.mutate(cancelFor);
+          if (!interviewFor) return;
+          saveInterview.mutate({
+            application: interviewFor,
+            values: {
+              startsAt: values.startsAt,
+              endsAt: values.endsAt,
+              timeZoneId: values.timeZoneId,
+              notes: values.notes,
+            },
+          });
         }}
       />
     </AppContainer>

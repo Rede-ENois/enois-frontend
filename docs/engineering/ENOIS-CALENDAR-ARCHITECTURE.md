@@ -1266,3 +1266,56 @@ testar, coberto pelos três casos de `agenda.test.tsx`.
 **Consequência.** Os três caminhos de escrita do motor de agenda que decidem sobre estado
 compartilhado são agora atômicos no banco. O custo é uma consulta de tranca na emissão de
 assinatura (só no caminho de criação, que é raro) e um UPDATE condicional por reserva.
+
+## D46 — O erro tem contrato próprio: recuse antes da violação do banco e não deixe exceção de infraestrutura virar resposta opaca (execução 46)
+
+**Contexto.** A auditoria da fase 11 deixou quatro achados que, juntos, desenhavam o mesmo vício
+por quatro caminhos diferentes: um fuso desconhecido no upsert de origem deixava o
+`IllegalArgumentException` do domínio escapar como 500; reagendar uma ocorrência de série sobre o
+horário de uma irmã estourava o índice único `uq_calendar_series_start` e a pessoa lia o
+`CONFLICT_DUPLICATE` genérico ("Este registro ja existe"), sem saber de qual horário batia; o laço
+do worker de lembretes rodava dentro de uma única transação — uma exceção do meio do lote
+descartava o envio dos que já saíram e não deixava marca de falha; e o convidado que recusou o
+convite ainda lia `sourceType`/`sourceId` do compromisso.
+
+**Decisão.**
+1. **Entrada inválida é erro de contrato com código próprio**, não exceção crua. O serviço traduz
+   o erro de domínio para `ApiException(400, "INVALID_CALENDAR_ENTRY")` — o mesmo contrato que a
+   criação de entrada já usava.
+2. **Quando um conflito é previsível por consulta, recuse ANTES do `save`.** O `update` consulta
+   `findBySeriesAndStart` e responde `409 CALENDAR_SERIES_SLOT_TAKEN` com a semântica do caso
+   ("já existe ocorrência da série neste horário"). O índice único continua lá como árbitro da
+   corrida (D45) — a consulta não o substitui, dá nome à violação.
+3. **Um lote de entregas não é uma transação.** Cada lembrete é enviado e marcado na transação
+   própria; a marca de falha é gravada FORA da transação que voltou, para sobreviver ao rollback.
+   Uma falha no meio do lote não descarta o que já saiu nem deixa a linha sem memória do erro.
+4. **Bookkeeping entre módulos não é dado da pessoa.** `sourceType`/`sourceId` descrevem de onde o
+   compromisso veio para o módulo dono; o id é interno de outro módulo. O projection passa esses
+   campos só para o dono — o convidado (recusado inclusive) recebe nulos.
+
+**Consequência.** Os quatro caminhos respondem com erro nomeado ou silêncio correto; nenhum deles
+deixa a pessoa ler um erro de infraestrutura sem tradução. O custo é uma consulta a mais no
+reagendamento de ocorrência de série e um `TransactionTemplate` por lembrete no worker (em vez de
+um para o lote).
+
+## D47 — O limite declarado pela origem é dado persistido, não variável da execução (execução 47)
+
+**Contexto.** O `.ics` importado pode trazer `UNTIL` na regra da série. A materialização do import
+respeitava o valor — mas ele só vivia na variável local da chamada: sem coluna, a marca de ponta da
+última ocorrência ficava aberta e o worker de extensão voltava a crescer a série a cada ciclo,
+criando ocorrências que o arquivo não tem. E o `UNTIL` flutuante (sem `Z`) e o só-data eram
+resolvidos num fuso fixo do servidor, não no fuso do evento.
+
+**Decisão.**
+1. **O limite é dado, não contexto.** Coluna `series_until` (V322), gravada na fundadora e em cada
+   ocorrência, apagada quando a entrada sai da série. Regra que vale para sempre não pode depender
+   de quem lembre dela.
+2. **Horário de parede sem `Z` é do evento.** O `UNTIL` flutuante e o só-data resolvem no fuso que a
+   entrada já guarda; o `UNTIL` em UTC é absoluto. Só-data é meia-noite de parede, inclusiva pelo
+   RFC 5545 (a ocorrência que começa até lá entra; a seguinte, não).
+3. **Fim é fim, não janela.** A ponta de série limitada nasce fechada e a extensão fecha a que
+   encontrar aberta: o worker não reabre o que a origem encerrou. O horizonte de 90 dias é política
+   de materialização; o `UNTIL` é declaração da origem e vence.
+
+**Consequência.** Série importada cresce exatamente até o que o arquivo dizia, mesmo semanas depois
+do import, em qualquer instância. Custo: uma coluna e uma comparação por passo da extensão.

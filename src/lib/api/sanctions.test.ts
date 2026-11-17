@@ -31,6 +31,25 @@ beforeEach(() => {
 });
 
 describe("contrato das próprias penalidades", () => {
+  it("preserva dueAt da QA junto do prazo com significado explícito", async () => {
+    const data = response();
+    const expected = {
+      ...data,
+      sanctions: [{ ...data.sanctions[0], dueAt: data.sanctions[0].deadline.at }],
+    };
+    mocks.get.mockResolvedValue(expected);
+    await expect(sanctionsApi.mine()).resolves.toEqual(expected);
+  });
+
+  it("recusa dueAt inválido sem descartar silenciosamente o contrato da QA", async () => {
+    const data = response();
+    mocks.get.mockResolvedValue({
+      ...data,
+      sanctions: [{ ...data.sanctions[0], dueAt: "inválido" }],
+    });
+    await expect(sanctionsApi.mine()).rejects.toThrow();
+  });
+
   it("recusa uma referência de horário inválida, em vez de fabricar contador", async () => {
     mocks.get.mockResolvedValue({ ...response(), serverNow: "data inválida" });
     await expect(sanctionsApi.mine()).rejects.toThrow();

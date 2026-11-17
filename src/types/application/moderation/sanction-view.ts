@@ -14,4 +14,6 @@ export type SanctionView = {
   deadline: SanctionDeadline;
   evidence: SanctionEvidence;
   canAppeal: boolean;
+  /** Campo de compatibilidade da QA; a apresentação usa o significado explícito de deadline. */
+  dueAt?: string | null;
 };

@@ -60,6 +60,7 @@ import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { croppedFile } from "@/lib/media/cropped-file";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -143,6 +144,8 @@ function CommunityDetail() {
   const upload = useMediaUpload();
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
@@ -284,7 +287,7 @@ function CommunityDetail() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
       });
     } catch (error) {
@@ -650,7 +653,16 @@ function CommunityDetail() {
               </div>
             )}
 
-            {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+            {pollMode && (
+              <PollComposer
+                options={pollOptions}
+                onChange={setPollOptions}
+                multipleChoice={pollMultipleChoice}
+                onMultipleChoiceChange={setPollMultipleChoice}
+                endsAt={pollEndsAt}
+                onEndsAtChange={setPollEndsAt}
+              />
+            )}
 
             <div
               data-composer-toolbar=""
@@ -924,10 +936,7 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
   const handleCropComplete = useCallback(
     async (blob: Blob) => {
       const upload = cropPurpose === "COVER" ? coverUpload : avatarUpload;
-      const result = await upload.upload(
-        new File([blob], "crop.jpg", { type: "image/jpeg" }),
-        cropPurpose!,
-      );
+      const result = await upload.upload(croppedFile(blob), cropPurpose!);
       if (cropPurpose === "COVER") setCover(result.cdnUrl);
       else setAvatar(result.cdnUrl);
       if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);

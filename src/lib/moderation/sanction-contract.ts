@@ -25,6 +25,7 @@ const sanction = z.object({
   deadline,
   evidence,
   canAppeal: z.boolean(),
+  dueAt: instant.nullable().optional(),
 });
 const appeal = z.object({
   id: z.string(),

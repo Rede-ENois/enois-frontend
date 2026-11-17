@@ -31,6 +31,11 @@ O cliente de `GET /me/sanctions` valida a resposta em tempo de execução: refer
 
 Somente os campos previstos pelo contrato são repassados à apresentação. A integração desse contrato depende da entrega coordenada do backend.
 
+O campo `dueAt`, já presente na QA, é preservado e validado quando recebido. A apresentação usa
+`deadline.kind` e `deadline.at` como contrato explícito do prazo: não transforma a ausência de
+`dueAt` em ausência de prazo nem inventa uma duração a partir da criação da sanção. A página
+continua mostrando motivo, data de recurso e ausência de prazo, agora pela view do design system.
+
 O snapshot da consulta conserva junto dos dados o instante monotônico da observação, apenas no cache local. Remontar a tela com dados ainda frescos não reinicia o prazo nem reassocia um `serverNow` antigo a uma nova observação. Esse metadado não integra o payload HTTP.
 
 A troca do indicador de acesso limitado em outra aba também invalida o cache dependente da sessão. Assim, uma troca entre duas contas limitadas não conserva motivo, evidência ou recurso da conta anterior.

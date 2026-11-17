@@ -25,7 +25,7 @@ export function GlobalSearch() {
 
   const { data: results, isFetching } = useQuery({
     queryKey: ["search", debounced],
-    queryFn: () => searchApi.search(debounced),
+    queryFn: ({ signal }) => searchApi.search(debounced, undefined, 10, signal),
     enabled: debounced.length >= 2,
   });
 

@@ -153,6 +153,7 @@ const preferencesStorage = {
           parsed.state.displayNameFont = normalizeNameFont(parsed.state.displayNameFont);
           parsed.state.displayNameColor = normalizeNameColor(parsed.state.displayNameColor);
           parsed.state.displayNameTheme = normalizeNameTheme(parsed.state.displayNameTheme);
+          parsed.state.revealSensitiveMedia = parsed.state.revealSensitiveMedia === true;
         }
 
         return JSON.stringify(parsed);
@@ -202,6 +203,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       displayNameFont: null,
       displayNameColor: null,
       displayNameTheme: null,
+      revealSensitiveMedia: false,
 
       setTheme: (theme: Theme) => set({ theme }),
       setThemeSettings: (themeSettings: ThemeSettings) =>
@@ -233,6 +235,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       setDisplayNameFont: (displayNameFont) => set({ displayNameFont }),
       setDisplayNameColor: (displayNameColor) => set({ displayNameColor }),
       setDisplayNameTheme: (displayNameTheme) => set({ displayNameTheme }),
+      setRevealSensitiveMedia: (revealSensitiveMedia) => set({ revealSensitiveMedia }),
       toggleSidebar: () =>
         set((state) => ({
           sidebarCollapsed: !state.sidebarCollapsed,
@@ -255,6 +258,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         displayNameFont: state.displayNameFont,
         displayNameColor: state.displayNameColor,
         displayNameTheme: state.displayNameTheme,
+        revealSensitiveMedia: state.revealSensitiveMedia,
       }),
       skipHydration: true,
     },
