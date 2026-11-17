@@ -44,8 +44,9 @@ async function refreshFirstPage(queryClient: QueryClient, query: Query): Promise
   queryClient.setQueryData<Paged<{ id: string }>>(query.queryKey, (current) => {
     if (!current || !Array.isArray(current.pages) || current.pages.length === 0) return current;
     const [first, ...older] = current.pages;
+    // Campos mudados com os mesmos ids (prévia editada, leitura acesa) PRECISAM chegar:
+    // comparar quantidades deixava a resposta fresca de fora justamente nesse caso.
     const items = mergeRows(fresh.items, first.items);
-    if (items.length === first.items.length) return current;
     return { ...current, pages: [{ ...first, items }, ...older] };
   });
 }

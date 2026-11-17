@@ -39,6 +39,18 @@ The owned frames in the `Minhas molduras` tab of `/carteira` (`onlyOwned`). It l
 - Search, filters, `oldest`/`newest` order (`GET /loja?order=`), pagination of 12 and the frame
   preview come from the design system `FrameShop`
 
+## `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`)
+
+The seasonal cosmetics shop (`/carteira`), mounted by `CosmeticShop`. Besides the design system
+`CosmeticShopProps` it takes:
+
+- `bannerHtml?: CapaEmHtml` — the shopper's HTML profile cover. The preview card shows it through
+  the design system `ProfileCard` `bannerSlot`, with the same `BannerHtmlFrame` the profile route
+  uses, so the shop never previews a cover different from the real profile (#695). Without it the
+  card falls back to the uploaded photo or the theme gradient.
+
+`bannerHtmlSlot(profile)` in `src/lib/cosmetics.ts` builds that value.
+
 ## `ProfilePeek` (`src/components/profile/profile-peek.tsx`)
 
 The avatar or name of a person in a list opens a popover with the design system
@@ -172,6 +184,15 @@ Card de post no feed, com todas as ações sociais.
 - Seção de comentários com replies encadeadas
 - Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)
+
+A fileira `PostActions` repassa `post.reactionSummary` à view do design system: as bolinhas do
+contador mostram até três tipos recebidos pelo post, do mais usado para o menos usado. Resumo
+`null` ou ausente preserva os emojis padrão; resumo vazio não mostra o botão de reações, mesmo
+quando o contador antigo ainda é positivo.
+
+Em `PostComments`, o seletor `selectCommentMentions` reutiliza uma lista vazia estável enquanto o
+estado do cartão não existe. A abertura da publicação não recria o snapshot a cada leitura; quando o
+cartão é inicializado, o componente acompanha as menções normalmente e as preserva no envio.
 
 **Componentes internos:**
 

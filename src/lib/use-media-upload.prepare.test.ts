@@ -46,6 +46,30 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+describe("prepare — tipo vindo do clipboard consertado antes de tudo", () => {
+  it("normaliza image/jpg para image/jpeg antes de decidir a compressão", async () => {
+    const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const clipboard = new File([JPEG], "print.jpg", { type: "image/jpg" });
+    mocks.compressImage.mockImplementation(async (file: File) => file);
+
+    const prepared = await prepare(clipboard);
+
+    expect(prepared.type).toBe("image/jpeg");
+    // O compressor recebe o arquivo já consertado: é o tipo que vai no pedido de upload.
+    expect(mocks.compressImage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "image/jpeg" }),
+    );
+  });
+
+  it("descobre PNG sem tipo pela assinatura em vez de deixar o servidor recusar", async () => {
+    const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+    const colada = new File([PNG], "image.png", { type: "" });
+    mocks.compressImage.mockImplementation(async (file: File) => file);
+
+    expect((await prepare(colada)).type).toBe("image/png");
+  });
+});
+
 describe("prepare — vídeo acima do teto passa pela compressão antes da recusa", () => {
   it("comprime o vídeo grande em vez de recusar direto", async () => {
     const big = sizedFile(MAX * 5);

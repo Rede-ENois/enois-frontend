@@ -26,7 +26,11 @@ export const TIMEOUT_PLACEHOLDER = "[Mensagem protegida]";
  * TODO o historico por causa de uma linha que entrou.
  *
  * A entrada guarda o ciphertext junto: id igual com conteudo diferente nao reaproveita o texto.
+ * Teto de entradas: a conversa é memória de sessão, não um arquivo que cresce sem limite; quem
+ * sai do teto volta a passar pelo RSA na próxima leitura. `Map` preserva a ordem de inserção,
+ * então o mais antigo sai primeiro.
  */
+const PLAINTEXT_CACHE_LIMIT = 500;
 const plaintextCache = new Map<string, { cipher: string; text: string }>();
 let cacheGeneration = 0;
 
@@ -34,6 +38,15 @@ let cacheGeneration = 0;
 export function clearDecryptedMessageCache(): void {
   plaintextCache.clear();
   cacheGeneration++;
+}
+
+function cachePlaintext(id: string, entry: { cipher: string; text: string }): void {
+  plaintextCache.set(id, entry);
+  while (plaintextCache.size > PLAINTEXT_CACHE_LIMIT) {
+    const oldest = plaintextCache.keys().next().value;
+    if (oldest === undefined) break;
+    plaintextCache.delete(oldest);
+  }
 }
 
 /**
@@ -69,7 +82,7 @@ export function useDecryptedMessages(
       const hasE2e = messages.some((msg) => msg.e2e || msg.replyTo?.e2e);
       const hasKeys = hasE2e && currentUserId ? await hasLocalKeys().catch(() => false) : false;
 
-      // O mesmo cache e teto da QA atendem o histórico e as originais fora da página.
+      // Histórico e citações compartilham cache, teto e isolamento de falha por item da QA.
       const withTimeout = async (msg: Message, userId: string): Promise<string> => {
         const cacheKey = JSON.stringify([userId, msg.conversationId, msg.id]);
         const cached = plaintextCache.get(cacheKey);
@@ -77,14 +90,14 @@ export function useDecryptedMessages(
         let timeout: ReturnType<typeof setTimeout> | undefined;
         try {
           const plaintext = await Promise.race([
-            decryptReceived(msg, userId),
+            decryptReceived(msg, userId).catch(() => TIMEOUT_PLACEHOLDER),
             new Promise<string>((resolve) => {
               timeout = setTimeout(() => resolve(TIMEOUT_PLACEHOLDER), DECRYPT_TIMEOUT_MS);
             }),
           ]);
           // Uma operação iniciada antes da troca de conta não repopula o cache limpo.
           if (generation === cacheGeneration) {
-            plaintextCache.set(cacheKey, { cipher: msg.text, text: plaintext });
+            cachePlaintext(cacheKey, { cipher: msg.text, text: plaintext });
           }
           return plaintext;
         } finally {

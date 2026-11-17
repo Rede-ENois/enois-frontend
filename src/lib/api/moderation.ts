@@ -1,4 +1,7 @@
 import type { AdminAccountView } from "@/types/application/moderation/admin-account-view";
+import type { AdminHistoryView } from "@/types/application/moderation/admin-history-view";
+import type { AdminPostRemovalView } from "@/types/application/moderation/admin-post-removal-view";
+import type { AdminWarningView } from "@/types/application/moderation/admin-warning-view";
 import type { BulkBanResult } from "@/types/application/moderation/bulk-ban-result";
 import type { BulkDeletePostsResult } from "@/types/application/moderation/bulk-delete-posts-result";
 import type { EmailLogView } from "@/types/application/moderation/email-log-view";
@@ -97,6 +100,45 @@ export const moderationApi = {
       type,
       reason,
     }),
+
+  /**
+   * Ações administrativas DIRETAS (só admin, sem votação): advertir a conta, banir, remover uma
+   * publicação pelo id e ler o histórico. O backend recusa moderador e conta comum; o design system
+   * só desenha o que a API libera. Tudo aqui é auditado no servidor e pede motivo.
+   */
+  adminWarnUser: (username: string, reason: string) =>
+    api.post<AdminWarningView>(`/admin/moderation/users/${encodeURIComponent(username)}/warnings`, {
+      reason,
+    }),
+
+  adminRevokeWarning: (warningId: string, reason: string) =>
+    api.post<AdminWarningView>(
+      `/admin/moderation/warnings/${encodeURIComponent(warningId)}/revoke`,
+      {
+        reason,
+      },
+    ),
+
+  adminSanctionUser: (
+    username: string,
+    type: "RESTRICTION" | "SUSPENDED" | "BAN" | "PERMABAN",
+    reason: string,
+  ) =>
+    api.post<ModeratorSanctionResult>(
+      `/admin/moderation/users/${encodeURIComponent(username)}/sanction`,
+      { type, reason },
+    ),
+
+  adminRemovePost: (postId: string, reason: string) =>
+    api.post<AdminPostRemovalView>(`/admin/moderation/posts/${encodeURIComponent(postId)}/remove`, {
+      reason,
+    }),
+
+  /** Histórico administrativo da conta: advertências e sanções, mais recente primeiro. */
+  adminUserHistory: (username: string, limit = 50) =>
+    api.get<AdminHistoryView>(
+      `/admin/moderation/users/${encodeURIComponent(username)}/history?limit=${limit}`,
+    ),
 
   /** Posts denunciados com score alto na pré-triagem (admin). */
   suspiciousPosts: (minScore = 30, limit = 50) =>

@@ -14,6 +14,8 @@ const LIMITS: Record<PostView["type"], number> = {
   QUESTION: 1200,
   DIVERTIDO: 400,
   MOMENT: 500,
+  // Instante: efêmero de 1h — mesma leveza do Momento (PostContentLimits.INSTANTE).
+  INSTANTE: 500,
   // Enquete: o título da enquete (as alternativas têm limite próprio: 120 cada).
   POLL: 400,
   REVIEW: 600,
@@ -27,6 +29,8 @@ const LIMITS: Record<PostView["type"], number> = {
   // Conteúdo profissional: mesmo teto do backend (PostContentLimits.BUSINESS).
   BUSINESS: 2000,
   BLOG: 1200,
+  // Reclamação: texto padrão, como o insight (backend não tem teto próprio para ela).
+  COMPLAINT: 1200,
 };
 
 /** Longest new comment, as the backend accepts it (`PostInteractionService`: 800). */

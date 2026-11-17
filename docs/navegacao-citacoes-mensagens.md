@@ -19,10 +19,11 @@ identidade, chave local ou metadados válidos, a interface informa a indisponibi
 mostra ciphertext como se fosse texto. A autoria de “Você” é comparada com a pessoa que está
 lendo, não com a autoria da resposta. Citações sem texto mostram “Mensagem com mídia”.
 
-A alteração exige entrega coordenada: backend com os metadados de citação e design system
-com as props abaixo. A validação local usa um tarball do DS, sem persistir seu caminho no
-manifesto ou lockfile. Antes de integrar, os mantenedores precisam publicar uma versão
-aprovada do DS e atualizar a dependência do consumidor. Instalação local não comprova release.
+A alteração exige o contrato backend com os metadados de citação e o design system com as props
+abaixo. O lockfile herdado da QA resolve o DS `0.37.10`, que contém esse contrato. A validação
+local usa um tarball reproduzido da fonte oficial, com integridade idêntica à referência do lock,
+sem persistir caminho local no manifesto ou lockfile. Isso não comprova acesso ao registro privado;
+a instalação pelo registro original deve ser confirmada no CI remoto.
 
 O container `ConversationThread` liga o clique da citação ao `replyTo.id` do preview exibido.
 O hook `useReplyNavigation` coordena a busca, a espera pelo DOM e o foco, sem decifrar conteúdo
@@ -30,20 +31,19 @@ nem fazer chamadas diretas à API.
 
 ## Estado do porte para QA
 
-A base deste porte é `578c0c89e1649db6bdb575f2ce9b441cfecd4418` da `upstream/qa`.
-Foram preservados o cache e o teto da decifragem, as mensagens atuais e a fixture de agenda com
-recorrência já integrada na QA. O porte contém somente o delta local de mensagens privadas,
-sem incorporar os commits anteriores da branch de origem.
+A atualização incorpora a QA `4d651c15627a8c6a25e0886b45173733f90be6e3`, mantendo o histórico
+publicado da correção. As mudanças atuais de envio, restauração do rascunho de resposta,
+histórico de chaves, cache limitado e falha isolada de decifragem foram preservadas. A baseline
+de supressões, o manifesto e o lockfile são idênticos aos dessa QA.
 
-As provas da composição anterior são **históricas**: não validam esta nova base, nem o novo pacote
-do design system. Nesta etapa, a cópia isolada das dependências exclui deliberadamente o DS e os
-caches do Vite. Testes puros/focais e lint não substituem a validação da integração real.
+Na composição atual, lint, typecheck, suíte completa (1.597 testes), testes das regras do ESLint,
+build e comparador de supressões passaram. O navegador foi repetido em 390 e 1280 px, claro e
+escuro, com o container e as views reais. O transporte era simulado, com dados fictícios e
+criptografia real; não é E2E integrado com backend.
 
-A instalação do novo tarball reconciliado, a verificação dos exports/declarações, o typecheck
-integral, os testes com as views reais, a suíte completa, o build e o navegador ainda dependem da
-integração do pacote pelo responsável da entrega. A publicação de uma versão aprovada e o bump
-correspondente permanecem **pendentes dos mantenedores**, mesmo após eventual prova com tarball.
-Nenhuma versão antiga ou inventada foi instalada para contornar esse bloqueio.
+Os relatórios e capturas anteriores ficam identificados como históricos. A proveniência do DS,
+a integridade do pacote, as novas capturas e o limite de acesso ao registro estão em
+[prova da atualização](proof/message-replies-qa/atualizacao/README.md).
 
 ## Comportamento
 

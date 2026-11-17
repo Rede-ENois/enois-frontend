@@ -14,7 +14,7 @@ import {
 // --- Mocks ---
 const batchPublicKeys = vi.fn();
 const myConversationKey = vi.fn();
-const getLocalPrivateKey = vi.fn();
+const getAllPrivateKeys = vi.fn();
 
 vi.mock("@/lib/api/e2e", () => ({
   e2eApi: {
@@ -24,7 +24,7 @@ vi.mock("@/lib/api/e2e", () => ({
 }));
 
 vi.mock("./key-manager", () => ({
-  getLocalPrivateKey: () => getLocalPrivateKey(),
+  getAllPrivateKeys: () => getAllPrivateKeys(),
 }));
 
 describe("conversation e2e per-message", () => {
@@ -66,7 +66,7 @@ describe("conversation e2e per-message", () => {
     const alicePriv = await exportPrivateKey(alice.privateKey);
 
     batchPublicKeys.mockResolvedValue({ user_alice: alicePub });
-    getLocalPrivateKey.mockResolvedValue(alicePriv);
+    getAllPrivateKeys.mockResolvedValue([alicePriv]);
 
     const encrypted = await encryptForSend("conv_1", "Mensagem secreta!", ["user_alice"]);
 
@@ -88,6 +88,70 @@ describe("conversation e2e per-message", () => {
     expect(result).toBe("Mensagem secreta!");
   });
 
+  it("decryptReceived abre mensagem antiga com a privada do histórico quando a principal não serve", async () => {
+    const { decryptReceived } = await import("./conversation");
+
+    // Keypair ANTIGO: foi com a pública dele que a mensagem foi cifrada na época.
+    const antigo = await generateKeypair();
+    const antigoPriv = await exportPrivateKey(antigo.privateKey);
+    // Keypair ATUAL: o que está como principal no aparelho hoje.
+    const atual = await generateKeypair();
+    const atualPriv = await exportPrivateKey(atual.privateKey);
+
+    const aes = await generateConversationKey();
+    const { ciphertext, iv } = await encryptMessage("Da época do par antigo!", aes);
+    const wrapped = await encryptForRecipient(await exportSymmetricKey(aes), antigo.publicKey);
+
+    getAllPrivateKeys.mockResolvedValue([atualPriv, antigoPriv]);
+
+    const result = await decryptReceived(
+      {
+        id: "msg_old",
+        conversationId: "conv_1",
+        from: "user_bob",
+        text: ciphertext,
+        mediaIds: [],
+        time: "2026-11-05T00:00:00Z",
+        e2e: true,
+        iv,
+        encryptedKeys: { user_me: wrapped },
+      },
+      "user_me",
+    );
+
+    expect(result).toBe("Da época do par antigo!");
+  });
+
+  it("decryptReceived mostra o marcador quando nenhuma chave local abre a mensagem", async () => {
+    const { decryptReceived } = await import("./conversation");
+
+    // A mensagem foi cifrada para um keypair que este aparelho não tem.
+    const estranho = await generateKeypair();
+    const aes = await generateConversationKey();
+    const { ciphertext, iv } = await encryptMessage("secreta", aes);
+    const wrapped = await encryptForRecipient(await exportSymmetricKey(aes), estranho.publicKey);
+
+    const minha = await generateKeypair();
+    getAllPrivateKeys.mockResolvedValue([await exportPrivateKey(minha.privateKey)]);
+
+    const result = await decryptReceived(
+      {
+        id: "msg_perdida",
+        conversationId: "conv_1",
+        from: "user_bob",
+        text: ciphertext,
+        mediaIds: [],
+        time: "2026-11-05T00:00:00Z",
+        e2e: true,
+        iv,
+        encryptedKeys: { user_me: wrapped },
+      },
+      "user_me",
+    );
+
+    expect(result).toBe("[Nao foi possivel decifrar esta mensagem]");
+  });
+
   it("decryptReceived faz fallback pra conversation key em mensagem antiga", async () => {
     const { decryptReceived } = await import("./conversation");
 
@@ -99,7 +163,7 @@ describe("conversation e2e per-message", () => {
     const { ciphertext, iv } = await encryptMessage("Mensagem antiga!", convKey);
 
     myConversationKey.mockResolvedValue({ encryptedKey: encryptedConvKey });
-    getLocalPrivateKey.mockResolvedValue(privBase64);
+    getAllPrivateKeys.mockResolvedValue([privBase64]);
 
     const result = await decryptReceived(
       {
@@ -119,10 +183,10 @@ describe("conversation e2e per-message", () => {
     expect(result).toBe("Mensagem antiga!");
   });
 
-  it("decryptReceived retorna fallback quando private key nao existe", async () => {
+  it("decryptReceived retorna fallback quando nenhuma chave privada existe", async () => {
     const { decryptReceived } = await import("./conversation");
 
-    getLocalPrivateKey.mockResolvedValue(null);
+    getAllPrivateKeys.mockResolvedValue([]);
 
     const result = await decryptReceived(
       {

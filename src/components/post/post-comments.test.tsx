@@ -80,6 +80,50 @@ function order() {
   );
 }
 
+describe("card ainda não inicializado", () => {
+  it("carrega sem snapshot instável e mantém as menções ao enviar", async () => {
+    usePostCardStore.setState({ cards: {} });
+    mocks.list.mockResolvedValue({ items: [comment("root", 1)], nextCursor: null });
+    mocks.create.mockResolvedValue(comment("new", 2));
+    const errors = vi.spyOn(console, "error");
+    try {
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" />
+          </QueryClientProvider>,
+        ),
+      );
+      await settle();
+      expect(order()).toEqual(["root"]);
+      expect(usePostCardStore.getState().cards.post).toBeUndefined();
+      await act(async () => {
+        usePostCardStore.getState().initializePostCard("post");
+        usePostCardStore.getState().setDraft("post", "Resposta com menção");
+        usePostCardStore.getState().setCommentMentions("post", ["user_sintetico"]);
+      });
+      await act(async () =>
+        container
+          .querySelector("form")!
+          .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
+      );
+      await settle();
+      expect(mocks.create).toHaveBeenCalledTimes(1);
+      expect(mocks.create.mock.calls[0].slice(0, 4)).toEqual([
+        "post",
+        "Resposta com menção",
+        null,
+        ["user_sintetico"],
+      ]);
+      expect(errors.mock.calls.flat().map(String).join("\n")).not.toContain(
+        "getSnapshot should be cached",
+      );
+    } finally {
+      errors.mockRestore();
+    }
+  });
+});
+
 describe("ordem após enviar comentários", () => {
   it.each(["root", "reply", null])(
     "insere no fim da conversa ao responder %s e mantém a ordem ao recarregar",

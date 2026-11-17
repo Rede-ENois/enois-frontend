@@ -16,11 +16,28 @@ const mocks = vi.hoisted(() => ({
   edit: vi.fn(),
   mine: vi.fn(),
   navigate: vi.fn(),
+  drafts: vi.fn(),
+  createDraft: vi.fn(),
+  saveDraftById: vi.fn(),
+  discardDraftById: vi.fn(),
 }));
 vi.mock("@/lib/current-user", () => ({ getCurrentUserId: () => mocks.userId }));
 vi.mock("@/lib/api/blogs", () => ({
   blogsApi: { publish: mocks.publish, editPost: mocks.edit, mine: mocks.mine },
 }));
+vi.mock("@/lib/api/feed", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/api/feed")>();
+  return {
+    ...actual,
+    feedApi: {
+      ...actual.feedApi,
+      drafts: () => mocks.drafts(),
+      createDraft: (data: unknown) => mocks.createDraft(data),
+      saveDraftById: (id: string, data: unknown) => mocks.saveDraftById(id, data),
+      discardDraftById: (id: string) => mocks.discardDraftById(id),
+    },
+  };
+});
 vi.mock("@/components/ui/toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mocks.navigate,
@@ -40,7 +57,22 @@ vi.mock("@/components/html-editor", () => ({
   ),
 }));
 const key = "connect-grow-blog-post-draft:user-a";
-const draft = {
+/** O rascunho que o servidor devolve (o título do artigo mora no `content`, o corpo no `articleBody`). */
+const rascunhoServidor = {
+  id: "draft_srv_1",
+  type: "ARTICLE",
+  content: "Meu título",
+  pageHtml: null,
+  articleBody: "Texto que não pode sumir",
+  topic: null,
+  pollOptions: [],
+  pollMultipleChoice: false,
+  pollEndsAt: null,
+  mentionedUserIds: [],
+  createdAt: "2026-11-15T10:00:00Z",
+  updatedAt: "2026-11-15T10:00:00Z",
+};
+const localDraft = {
   title: "Meu título",
   body: "Texto que não pode sumir",
   format: "MARKDOWN",
@@ -57,6 +89,10 @@ beforeEach(() => {
   mocks.mine.mockResolvedValue(null);
   mocks.publish.mockResolvedValue({});
   mocks.edit.mockResolvedValue({});
+  mocks.drafts.mockResolvedValue({ drafts: [rascunhoServidor] });
+  mocks.createDraft.mockResolvedValue({ draft: { ...rascunhoServidor, id: "draft_srv_2" } });
+  mocks.saveDraftById.mockResolvedValue({ draft: rascunhoServidor });
+  mocks.discardDraftById.mockResolvedValue({ status: "DISCARDED" });
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -71,14 +107,16 @@ afterEach(async () => {
   vi.restoreAllMocks();
   localStorage.clear();
 });
-async function render(post?: BlogPost) {
-  await act(async () =>
+async function render(post?: BlogPost, continueDraftId?: string) {
+  await act(async () => {
     root.render(
       <QueryClientProvider client={client}>
-        <BlogPostEditor post={post} />
+        <BlogPostEditor post={post} continueDraftId={continueDraftId} />
       </QueryClientProvider>,
-    ),
-  );
+    );
+  });
+  // A restauração vem da rede (feedApi.drafts): gira até o React assentar.
+  for (let turn = 0; turn < 5; turn += 1) await act(async () => {});
 }
 async function fill(selector: string, value: string) {
   const input = container.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)!;
@@ -109,83 +147,116 @@ function title() {
   )!;
 }
 
-describe("rascunho local de novos posts do blog", () => {
-  it("salva enquanto digita e recupera título, HTML e opção de aviso ao voltar ou recarregar", async () => {
+describe("rascunhos de artigo do blog (lista no servidor)", () => {
+  it("restaura da conta o rascunho de artigo mais recente", async () => {
     await render();
-    await fill("input", draft.title);
-    await click(texts.blog.editor.modeHtml);
-    await fill("textarea", "<p>Meu HTML</p>");
-    await act(async () =>
-      container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click(),
-    );
-    await remount();
-    expect(title().value).toBe(draft.title);
-    expect(container.querySelector<HTMLTextAreaElement>('textarea[aria-label="HTML"]')?.value).toBe(
-      "<p>Meu HTML</p>",
-    );
-    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(
-      false,
-    );
+    expect(title().value).toBe(rascunhoServidor.content);
+    expect(container.querySelector("textarea")?.value).toBe(rascunhoServidor.articleBody);
     expect(container.textContent).toContain(texts.blog.editor.draftSaved);
-    expect(JSON.parse(localStorage.getItem(key)!)).toEqual({
-      title: draft.title,
-      body: "<p>Meu HTML</p>",
-      format: "HTML",
-      avisar: false,
+    expect(mocks.drafts).toHaveBeenCalled();
+  });
+
+  it("restaura o rascunho específico quando vem de Continuar escrevendo", async () => {
+    mocks.drafts.mockResolvedValue({
+      drafts: [
+        rascunhoServidor,
+        {
+          ...rascunhoServidor,
+          id: "draft_srv_0",
+          content: "O outro texto",
+          articleBody: "Corpo do outro",
+          updatedAt: "2026-11-14T09:00:00Z",
+        },
+      ],
     });
+    await render(undefined, "draft_srv_0");
+    expect(title().value).toBe("O outro texto");
+    expect(container.querySelector("textarea")?.value).toBe("Corpo do outro");
   });
-  it("restaura sem sobrescrever o rascunho com o formulário vazio inicial", async () => {
-    localStorage.setItem(key, JSON.stringify(draft));
+
+  it("continua digitando no rascunho restaurado: salva por id, sem criar outro", async () => {
+    vi.useFakeTimers();
     await render();
-    expect(title().value).toBe(draft.title);
-    expect(container.querySelector("textarea")?.value).toBe(draft.body);
-    expect(JSON.parse(localStorage.getItem(key)!)).toEqual(draft);
+    await fill("input", "Título editado por cima");
+    // O autosave tem 2s de espera: girar o tempo dele.
+    try {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(mocks.saveDraftById).toHaveBeenCalledWith(
+      "draft_srv_1",
+      expect.objectContaining({ type: "ARTICLE", content: "Título editado por cima" }),
+    );
+    expect(mocks.createDraft).not.toHaveBeenCalled();
   });
-  it("separa os rascunhos por usuário", async () => {
-    localStorage.setItem(key, JSON.stringify(draft));
-    mocks.userId = "user-b";
+
+  it("cria um rascunho novo na conta quando não há nenhum de artigo", async () => {
+    vi.useFakeTimers();
+    mocks.drafts.mockResolvedValue({ drafts: [] });
     await render();
-    expect(title().value).toBe("");
-    await fill("input", "Texto de outra pessoa");
-    expect(JSON.parse(localStorage.getItem(key)!)).toEqual(draft);
-    expect(JSON.parse(localStorage.getItem("connect-grow-blog-post-draft:user-b")!).title).toBe(
-      "Texto de outra pessoa",
+    await fill("input", "Post novo");
+    try {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(mocks.createDraft).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "ARTICLE", content: "Post novo" }),
     );
   });
-  it("mantém o rascunho se publicar falhar e limpa somente após sucesso", async () => {
-    localStorage.setItem(key, JSON.stringify(draft));
+
+  it("sem rede, restaura e salva pelo localStorage como emergência", async () => {
+    vi.useFakeTimers();
+    mocks.drafts.mockRejectedValue(new Error("offline"));
+    mocks.createDraft.mockRejectedValue(new Error("offline"));
+    localStorage.setItem(key, JSON.stringify(localDraft));
+    await render();
+    expect(title().value).toBe(localDraft.title);
+    expect(container.querySelector("textarea")?.value).toBe(localDraft.body);
+    // A escrita local continua (a rede caiu; o navegador segura o rascunho do dia).
+    await fill("input", "Editado offline");
+    try {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2500);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(JSON.parse(localStorage.getItem(key)!).title).toBe("Editado offline");
+    // A tentativa de servidor falhou; nenhuma resposta de rascunho criado chegou ao editor.
+    expect(mocks.createDraft).toHaveBeenCalled();
+    expect(mocks.saveDraftById).not.toHaveBeenCalled();
+  });
+
+  it("descarta o rascunho do servidor quando o post publica", async () => {
+    await render();
+    await click(texts.blog.editor.publish);
+    await act(async () => {});
+    expect(mocks.publish).toHaveBeenCalledWith({
+      title: rascunhoServidor.content,
+      body: rascunhoServidor.articleBody,
+      format: "MARKDOWN",
+      notifySubscribers: true,
+    });
+    expect(mocks.discardDraftById).toHaveBeenCalledWith("draft_srv_1");
+  });
+
+  it("mantém o rascunho se publicar falhar", async () => {
     mocks.publish.mockRejectedValueOnce(new Error("Sem conexão"));
     await render();
     await click(texts.blog.editor.publish);
-    expect(JSON.parse(localStorage.getItem(key)!)).toEqual(draft);
     expect(container.textContent).toContain("Sem conexão");
-    await click(texts.blog.editor.publish);
-    expect(mocks.publish).toHaveBeenLastCalledWith({
-      title: draft.title,
-      body: draft.body,
-      format: draft.format,
-      notifySubscribers: true,
-    });
-    expect(localStorage.getItem(key)).toBeNull();
-    await remount();
-    expect(title().value).toBe("");
+    expect(mocks.discardDraftById).not.toHaveBeenCalled();
+    expect(title().value).toBe(rascunhoServidor.content);
   });
-  it("preserva alterações digitadas enquanto uma publicação está em andamento", async () => {
-    let finish!: (value: object) => void;
-    mocks.publish.mockReturnValue(
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-    );
-    localStorage.setItem(key, JSON.stringify(draft));
-    await render();
-    await click(texts.blog.editor.publish);
-    await fill("textarea", "Continuei digitando");
-    await act(async () => finish({}));
-    expect(JSON.parse(localStorage.getItem(key)!).body).toBe("Continuei digitando");
-  });
+
   it("não aplica nem remove o rascunho de criação ao editar um post publicado", async () => {
-    localStorage.setItem(key, JSON.stringify(draft));
+    localStorage.setItem(key, JSON.stringify(localDraft));
     await render({
       id: "post-a",
       title: "Já publicado",
@@ -195,29 +266,14 @@ describe("rascunho local de novos posts do blog", () => {
       updatedAt: "",
     });
     expect(title().value).toBe("Já publicado");
+    expect(mocks.drafts).not.toHaveBeenCalled();
     await fill("input", "Título editado");
     await click(texts.blog.editor.savePost);
-    expect(JSON.parse(localStorage.getItem(key)!)).toEqual(draft);
+    expect(mocks.discardDraftById).not.toHaveBeenCalled();
     expect(mocks.edit).toHaveBeenCalledWith("post-a", {
       title: "Título editado",
       body: "Conteúdo publicado",
       format: "MARKDOWN",
     });
-  });
-  it("permite continuar escrevendo se o rascunho estiver corrompido", async () => {
-    localStorage.setItem(key, "JSON inválido");
-    await render();
-    await fill("input", "Novo rascunho");
-    expect(JSON.parse(localStorage.getItem(key)!).title).toBe("Novo rascunho");
-  });
-  it("avisa quando o navegador não consegue salvar, sem impedir a escrita", async () => {
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("quota");
-    });
-    await render();
-    await fill("input", "Meu texto");
-    expect(title().value).toBe("Meu texto");
-    expect(container.textContent).toContain(texts.blog.editor.draftSaveError);
-    expect(container.textContent).not.toContain(texts.blog.editor.draftSaved);
   });
 });

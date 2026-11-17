@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { texts } from "@/texts";
 import type { UploadInput } from "@/types/media-upload/upload-input";
@@ -9,6 +9,7 @@ import { ApiError, randomUUID } from "@/lib/api-client";
 import { mediaApi } from "@/lib/api/media";
 import { compressImage } from "@/lib/compress-image";
 import { VideoCompressionError, compressVideo } from "@/lib/compress-video";
+import { normalizeImageType } from "@/lib/media-file-type";
 import { MAX_VIDEO_BYTES, checkVideoLimit, isVideoFile } from "@/lib/video-limit";
 
 /**
@@ -75,7 +76,10 @@ function genFileName(file: File): string {
  *
  * O servidor continua sendo quem recusa de verdade (tipo, tamanho e duração por ffprobe).
  */
-export async function prepare(file: File): Promise<File> {
+export async function prepare(rawFile: File): Promise<File> {
+  // O tipo vindo do clipboard vem errado ou vazio e o servidor recusa sem olhar os bytes:
+  // conserta pela assinatura antes de qualquer decisão de compressão ou envio.
+  const file = await normalizeImageType(rawFile);
   if (isVideoFile(file)) {
     const limit = await checkVideoLimit(file);
     // A duração vem antes da compressão porque recodificar não encurta o vídeo; o tamanho, não:
@@ -120,6 +124,29 @@ export class VideoLimitError extends Error {
 export function useMediaUpload() {
   const [state, setState] = useState<UploadState>({ status: "idle", progress: 0 });
 
+  // Chamadas simultâneas disputam um único estado: o status global só muda quando TODOS os
+  // envios em curso terminam, e uma falha não é apagada pelo sucesso de um irmão — terminado
+  // o conjunto, qualquer falha vence (issue #880).
+  const pending = useRef(0);
+  const firstError = useRef<string | null>(null);
+  const settle = useCallback((error?: string) => {
+    pending.current = Math.max(0, pending.current - 1);
+    if (error && firstError.current === null) {
+      firstError.current = error;
+    }
+    if (pending.current > 0) return;
+    const failed = firstError.current;
+    firstError.current = null;
+    if (failed) setState({ status: "error", progress: 0, error: failed });
+    else setState({ status: "done", progress: 100 });
+  }, []);
+
+  const begin = useCallback(() => {
+    pending.current += 1;
+    firstError.current = null;
+    setState({ status: "uploading", progress: 0 });
+  }, []);
+
   const upload = useCallback(
     async (rawFile: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
       const file = await prepare(rawFile);
@@ -129,11 +156,11 @@ export function useMediaUpload() {
             MAX_MEDIA_BYTES / (1024 * 1024)
           }MB.`,
         );
-        setState({ status: "error", progress: 0, error: error.message });
+        settle(error.message);
         throw error;
       }
 
-      setState({ status: "uploading", progress: 0 });
+      begin();
 
       try {
         const fileName = genFileName(file);
@@ -153,65 +180,66 @@ export function useMediaUpload() {
         }
         await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
 
-        setState({ status: "done", progress: 100 });
+        settle();
         return { mediaId: id, cdnUrl };
       } catch (caught) {
         const err = uploadError(caught);
         const msg = err instanceof Error ? err.message : "Upload falhou";
-        setState({ status: "error", progress: 0, error: msg });
+        settle(msg);
         throw err;
       }
     },
-    [],
+    [begin, settle],
   );
 
-  const uploadAll = useCallback(async (files: UploadInput[]): Promise<UploadResult[]> => {
-    if (files.length === 0) return [];
-    setState({ status: "uploading", progress: 0 });
+  const uploadAll = useCallback(
+    async (files: UploadInput[]): Promise<UploadResult[]> => {
+      if (files.length === 0) return [];
+      begin();
 
-    const results: UploadResult[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const { file: rawInput, purpose = "POST_IMAGE" } = files[i];
-      const file = await prepare(rawInput);
-      if (!isVideoFile(file) && file.size > MAX_MEDIA_BYTES) {
-        const error = new Error(
-          `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
-            MAX_MEDIA_BYTES / (1024 * 1024)
-          }MB.`,
-        );
-        setState({ status: "error", progress: 0, error: error.message });
-        throw error;
-      }
+      const results: UploadResult[] = [];
       try {
-        const fileName = genFileName(file);
-        const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
-          fileName,
-          mimeType: file.type,
-          size: file.size,
-          purpose,
-        });
-        // Mesma bifurcação do upload avulso: quem manda no caminho é o provedor que o servidor
-        // respondeu, não o formato da URL. Aqui subia sempre pelo ImageKit — com o storage em S3,
-        // o compositor (que usa este caminho para TODOS os anexos) falhava.
-        if (provider !== "S3") {
-          throw new Error(
-            "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
-          );
+        for (let i = 0; i < files.length; i++) {
+          const { file: rawInput, purpose = "POST_IMAGE" } = files[i];
+          const file = await prepare(rawInput);
+          if (!isVideoFile(file) && file.size > MAX_MEDIA_BYTES) {
+            const error = new Error(
+              `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
+                MAX_MEDIA_BYTES / (1024 * 1024)
+              }MB.`,
+            );
+            throw error;
+          }
+          const fileName = genFileName(file);
+          const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
+            fileName,
+            mimeType: file.type,
+            size: file.size,
+            purpose,
+          });
+          // Mesma bifurcação do upload avulso: quem manda no caminho é o provedor que o servidor
+          // respondeu, não o formato da URL. Aqui subia sempre pelo ImageKit — com o storage em S3,
+          // o compositor (que usa este caminho para TODOS os anexos) falhava.
+          if (provider !== "S3") {
+            throw new Error(
+              "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
+            );
+          }
+          await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
+          results.push({ mediaId: id, cdnUrl });
+          setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
         }
-        await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
-        results.push({ mediaId: id, cdnUrl });
-        setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
       } catch (caught) {
         const err = uploadError(caught);
         const msg = err instanceof Error ? err.message : "Upload falhou";
-        setState({ status: "error", progress: 0, error: msg });
+        settle(msg);
         throw err;
       }
-    }
-
-    setState({ status: "done", progress: 100 });
-    return results;
-  }, []);
+      settle();
+      return results;
+    },
+    [begin, settle],
+  );
 
   return { ...state, upload, uploadAll };
 }

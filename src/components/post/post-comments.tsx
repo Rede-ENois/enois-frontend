@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { COMMENT_COUNTER_FROM, COMMENT_MAX_LENGTH } from "@/constants/post-content-limits";
-import { usePostCardStore } from "@/stores/post-card.store";
+import { selectCommentMentions, usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { CommentView } from "@/types/application/comment/comment-view";
 import type { MediaItem } from "@/types/routes/feed/media-item";
@@ -53,7 +53,7 @@ export function PostComments({
   const queryClient = useQueryClient();
   const [comments, setComments] = useState<CommentView[]>([]);
   const draft = usePostCardStore((state) => state.cards[postId]?.draft ?? "");
-  const mentions = usePostCardStore((state) => state.cards[postId]?.commentMentions ?? []);
+  const mentions = usePostCardStore(selectCommentMentions(postId));
   const replyToId = usePostCardStore((state) => state.cards[postId]?.replyToId ?? null);
   const setDraft = usePostCardStore((state) => state.setDraft);
   const setCommentMentions = usePostCardStore((state) => state.setCommentMentions);

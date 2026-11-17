@@ -33,9 +33,14 @@ const PROTECTED_ROUTES = [
   "/conta",
   "/notificacoes",
   "/explorar",
+  // A Colagem pede sessão na leitura (espaço de convivência): deep link também cai no login.
+  "/colagem",
   "/par-de-estudo",
   // A agenda é do dono: a API exige sessão e responde 401 sem ela, então o deep link também.
   "/agenda",
+  // A lista de campanhas é pública; a campanha em si mostra o recorte do participante e as
+  // ações (entrar, ficha, mesa) pedem conta — o deep link da notificação já cai logado.
+  "/roleplay",
 ];
 
 export function hasSession(): boolean {

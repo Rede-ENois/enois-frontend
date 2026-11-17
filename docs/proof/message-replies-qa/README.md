@@ -1,4 +1,8 @@
-# Prova visual de citações privadas na QA reconciliada
+# Prova visual histórica de citações privadas
+
+Esta pasta registra a composição anterior à atualização da PR #896. Os limites e pendências
+abaixo descrevem aquela etapa. A composição atual, seus gates e suas capturas estão em
+[atualização da QA](atualizacao/README.md).
 
 ## Composição
 

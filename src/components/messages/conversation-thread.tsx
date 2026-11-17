@@ -26,6 +26,7 @@ import { messagesApi, reportsApi, servicesApi } from "@/lib/api";
 import { conversationPeer } from "@/lib/conversation-peer";
 import { encryptForSend } from "@/lib/e2e/conversation";
 import { useDecryptedMessages } from "@/lib/e2e/use-decrypted-messages";
+import { refreshConversation } from "@/lib/inbox-sync";
 import { litePageSize } from "@/lib/lite-mode";
 import { useInboxPollInterval } from "@/lib/message-stream";
 import { profileQueries } from "@/lib/query-options/profiles";
@@ -163,8 +164,9 @@ export function ConversationThread({
     }: SendMessageInput) =>
       messagesApi.sendMessage(conversationId, text, mediaIds, mediaSpoiler, e2e, replyToId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", conversation.id] });
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      // Mesmo caminho do stream: só a primeira página das consultas na tela. O invalidate aqui
+      // refazia TODAS as páginas do histórico que a pessoa já tinha rolado.
+      void refreshConversation(queryClient, conversation.id);
     },
     // Sem isto o envio falhava em silêncio: o texto já tinha sido limpo e a pessoa achava que
     // tinha mandado.
@@ -382,6 +384,7 @@ export function ConversationThread({
           : null
       }
       onCancelReply={() => setReplyingTo(null)}
+      onRestoreReply={(target) => setReplyingTo(target)}
     >
       {messages.length === 0 && !isLoadingMessages && peer ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">

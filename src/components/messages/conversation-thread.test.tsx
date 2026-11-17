@@ -11,17 +11,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConversationThread } from "./conversation-thread";
 
-const mocks = vi.hoisted(() => ({ listMessages: vi.fn(), toast: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  listMessages: vi.fn(),
+  sendMessage: vi.fn(),
+  encryptForSend: vi.fn(),
+  toast: vi.fn(),
+}));
 
 vi.mock("@/lib/api", () => ({
-  messagesApi: { listMessages: mocks.listMessages },
+  messagesApi: { listMessages: mocks.listMessages, sendMessage: mocks.sendMessage },
   servicesApi: { mine: vi.fn() },
   reportsApi: { create: vi.fn() },
 }));
 vi.mock("@/lib/e2e/use-decrypted-messages", () => ({
   useDecryptedMessages: (messages: Message[]) => ({ messages, decrypting: false }),
 }));
-vi.mock("@/lib/e2e/conversation", () => ({ encryptForSend: vi.fn() }));
+vi.mock("@/lib/e2e/conversation", () => ({ encryptForSend: mocks.encryptForSend }));
 vi.mock("@/lib/use-conversation-on-screen", () => ({ useConversationOnScreen: vi.fn() }));
 vi.mock("@/lib/use-lite-mode", () => ({ useLiteMode: () => false }));
 vi.mock("@/lib/message-stream", () => ({ useInboxPollInterval: () => false }));
@@ -79,6 +84,8 @@ describe("ConversationThread: integração com a view real do design system", ()
 
   beforeEach(() => {
     mocks.listMessages.mockReset();
+    mocks.sendMessage.mockReset().mockResolvedValue({ id: "msg_new" });
+    mocks.encryptForSend.mockReset().mockResolvedValue({ ciphertext: "x" });
     mocks.toast.mockReset();
     HTMLElement.prototype.scrollTo = vi.fn();
     host = document.createElement("div");
@@ -266,5 +273,56 @@ describe("ConversationThread: integração com a view real do design system", ()
       failure === "missing" ? texts.messages.replyUnavailable : texts.messages.replyNavigationError,
       "error",
     );
+  });
+
+  it("após enviar, só a primeira página da thread aberta é buscada de novo", async () => {
+    const fetches: string[] = [];
+    mocks.listMessages.mockImplementation((_conv: string, cursor?: string | null) => {
+      fetches.push(cursor ?? "primeira");
+      return Promise.resolve(
+        cursor === null
+          ? { items: [message("m1", { text: "a" })], nextCursor: "c2" }
+          : { items: [message("m2", { text: "b" })], nextCursor: null },
+      );
+    });
+    // A view real preserva a prova da QA sem substituir os controles de navegação.
+    client.setQueryData(["messages", conversation.id], {
+      pages: [
+        { items: [message("m1")], nextCursor: "c2" },
+        { items: [message("m2")], nextCursor: null },
+      ],
+      pageParams: [null, "c2"],
+    });
+    await render();
+
+    const textarea = host.querySelector("textarea");
+    const form = host.querySelector("form");
+    expect(textarea).not.toBeNull();
+    expect(form).not.toBeNull();
+    const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!;
+    act(() => {
+      setValue.call(textarea, "oi");
+      textarea!.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      form!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+    await flush();
+
+    expect(mocks.sendMessage).toHaveBeenCalledExactlyOnceWith(
+      conversation.id,
+      "oi",
+      [],
+      false,
+      { ciphertext: "x" },
+      undefined,
+    );
+    expect(fetches).toEqual(["primeira"]);
+    expect(client.getQueryData(["messages", conversation.id])).toMatchObject({
+      pages: [
+        expect.objectContaining({ items: [expect.objectContaining({ id: "m1" })] }),
+        expect.objectContaining({ items: [expect.objectContaining({ id: "m2" })] }),
+      ],
+    });
   });
 });

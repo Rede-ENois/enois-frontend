@@ -26,6 +26,8 @@ export type PreferencesState = {
   widgetAlpha: number | null;
   /** Transparência da página; `null` = a nativa do tema (ou opaca). */
   pageAlpha: number | null;
+  /** Mídia sensível nasce revelada no feed, no perfil e na colagem (preferência do dispositivo). */
+  revealSensitiveMedia: boolean;
   /** Estilo local usado imediatamente enquanto o perfil sincroniza com o backend. */
   displayNameFont: ProfileNameFont | null;
   displayNameColor: string | null;
@@ -40,6 +42,7 @@ export type PreferencesState = {
   setAccentAlpha: (alpha: number) => void;
   setWidgetAlpha: (alpha: number | null) => void;
   setPageAlpha: (alpha: number | null) => void;
+  setRevealSensitiveMedia: (revealed: boolean) => void;
   setDisplayNameFont: (font: PreferencesState["displayNameFont"]) => void;
   setDisplayNameColor: (color: string | null) => void;
   setDisplayNameTheme: (theme: PreferencesState["displayNameTheme"]) => void;

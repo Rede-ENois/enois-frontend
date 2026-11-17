@@ -20,6 +20,32 @@ const mocks = vi.hoisted(() => ({
   changeStatus: vi.fn(),
   provisionToken: vi.fn(),
   profileGet: vi.fn(),
+  observability: vi.fn(),
+  history: vi.fn(),
+  apiRoutes: vi.fn(),
+  openApiRequests: vi.fn(),
+  /** A query do quadro liga ao abrir o nó; o que a view recebeu fica aqui. */
+  detailObservability: null as null | {
+    panel: {
+      nodeId: string;
+      generatedAt: string;
+      series: { sampledAt: string; cpuPercent: number | null }[];
+      console: { id: string; at: string; level: string; message: string }[];
+      summary: {
+        cpuAvgPercent: number | null;
+        cpuMaxPercent: number | null;
+        memoryMbLatest: number | null;
+        diskFreeMbLatest: number | null;
+        runningTasksLatest: number | null;
+        sampleCount: number;
+      };
+      consoleLevels: Record<string, number>;
+    } | null;
+    loading?: boolean;
+    error?: string | null;
+    onRefresh?: () => void;
+    refreshedAtLabel?: string | null;
+  },
   props: null as null | {
     nodes: { lastSeenAtLabel: string | null; keyPrefix: string | null; keyUsed: boolean }[];
     issuedKey: { nodeId: string; apiKey: string; prefix: string } | null;
@@ -36,6 +62,30 @@ const mocks = vi.hoisted(() => ({
       onDismissToken: () => void;
       provisionError?: string | null;
       profileOptions: { id: string; label: string }[];
+    };
+    detail?: {
+      observability?: {
+        panel: {
+          nodeId: string;
+          generatedAt: string;
+          series: { sampledAt: string; cpuPercent: number | null }[];
+          console: { id: string; at: string; level: string; message: string }[];
+          summary: {
+            cpuAvgPercent: number | null;
+            cpuMaxPercent: number | null;
+            memoryMbLatest: number | null;
+            diskFreeMbLatest: number | null;
+            runningTasksLatest: number | null;
+            sampleCount: number;
+          };
+          consoleLevels: Record<string, number>;
+        } | null;
+        loading?: boolean;
+        error?: string | null;
+        onRefresh?: () => void;
+        refreshedAtLabel?: string | null;
+      };
+      onOpenNode?: (nodeId: string | null) => void;
     };
   },
 }));
@@ -57,6 +107,10 @@ vi.mock("@/lib/api", () => ({
     approve: mocks.approve,
     changeStatus: mocks.changeStatus,
     provisionToken: mocks.provisionToken,
+    observability: mocks.observability,
+    history: mocks.history,
+    apiRoutes: mocks.apiRoutes,
+    openApiRequests: mocks.openApiRequests,
   },
   profileApi: {
     get: mocks.profileGet,
@@ -81,8 +135,33 @@ vi.mock("@rede-enois/design-system/domain", () => ({
       provisionError?: string | null;
       profileOptions: { id: string; label: string }[];
     };
+    detail?: {
+      observability?: {
+        panel: {
+          nodeId: string;
+          generatedAt: string;
+          series: { sampledAt: string; cpuPercent: number | null }[];
+          console: { id: string; at: string; level: string; message: string }[];
+          summary: {
+            cpuAvgPercent: number | null;
+            cpuMaxPercent: number | null;
+            memoryMbLatest: number | null;
+            diskFreeMbLatest: number | null;
+            runningTasksLatest: number | null;
+            sampleCount: number;
+          };
+          consoleLevels: Record<string, number>;
+        } | null;
+        loading?: boolean;
+        error?: string | null;
+        onRefresh?: () => void;
+        refreshedAtLabel?: string | null;
+      };
+      onOpenNode?: (nodeId: string | null) => void;
+    };
   }) => {
     mocks.props = props;
+    mocks.detailObservability = props.detail?.observability ?? null;
     return <p>secao</p>;
   },
 }));
@@ -101,7 +180,15 @@ beforeEach(() => {
   mocks.revokeKey.mockReset();
   mocks.provisionToken.mockReset();
   mocks.profileGet.mockReset();
+  mocks.observability.mockReset();
+  mocks.history.mockReset();
+  mocks.history.mockResolvedValue([]);
+  mocks.apiRoutes.mockReset();
+  mocks.apiRoutes.mockResolvedValue([]);
+  mocks.openApiRequests.mockReset();
+  mocks.openApiRequests.mockResolvedValue([]);
   mocks.props = null;
+  mocks.detailObservability = null;
   root = createRoot(document.createElement("div"));
 });
 
@@ -113,6 +200,7 @@ function propsOf(): NonNullable<typeof mocks.props> {
 }
 
 async function render() {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   await act(async () =>
     root.render(
       <QueryClientProvider client={new QueryClient()}>
@@ -133,6 +221,14 @@ const backendNode = {
   runtimeVersion: "1.0.0",
   lastSeenAt: "2026-11-11T12:00:00Z",
   operable: true,
+  degraded: false,
+  latencyMs: 120,
+  failureStreak: 0,
+  quarantineReason: null,
+  declaredCpuCores: 4,
+  declaredMemoryMb: 8192,
+  declaredDiskMb: 51200,
+  declaredBandwidthMbps: 100,
   keyId: "nk_9",
   keyPrefix: "enk_nd_1_",
   keyUsed: true,
@@ -301,4 +397,71 @@ it("resposta que chega depois de fechar não reabre o token de uma emissão desc
   });
 
   expect(propsOf().provisionToken?.issuedToken).toBeNull();
+});
+
+const quadroDoBackend = {
+  nodeId: "nd_1",
+  generatedAt: "2026-11-15T12:02:00Z",
+  series: [
+    { sampledAt: "2026-11-15T12:00:00Z", cpuPercent: 12, memoryMb: 1024, diskFreeMb: 2048 },
+    { sampledAt: "2026-11-15T12:01:00Z", cpuPercent: null, memoryMb: null, diskFreeMb: null },
+  ],
+  console: [{ id: "nl_1", at: "2026-11-15T12:01:00Z", level: "INFO", message: "aceito pela rede" }],
+  summary: {
+    cpuAvgPercent: 12,
+    cpuMaxPercent: 12,
+    memoryMbLatest: null,
+    diskFreeMbLatest: null,
+    runningTasksLatest: null,
+    sampleCount: 2,
+  },
+  consoleLevels: { INFO: 1 },
+};
+
+/** Abre o nó: é o que o admin faz antes de ver o quadro daquele servidor. */
+async function abrirNo() {
+  mocks.nodes.mockResolvedValue([backendNode]);
+  await render();
+  // `onOpenNode` mora no `detail` do contrato da seção; abrir o nó é o que liga o quadro.
+  await act(async () => propsOf().detail?.onOpenNode?.("nd_1"));
+  await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+}
+
+it("abre o nó e pede o quadro ao vivo daquele nó", async () => {
+  mocks.observability.mockResolvedValue(quadroDoBackend);
+  await abrirNo();
+
+  expect(mocks.observability).toHaveBeenCalledWith("nd_1");
+});
+
+it("quadro do backend vira o view model do design system, com as datas no fuso do app", async () => {
+  mocks.observability.mockResolvedValue(quadroDoBackend);
+  await abrirNo();
+
+  const quadro = mocks.detailObservability;
+  expect(quadro?.panel?.nodeId).toBe("nd_1");
+  // 12:00 UTC é 09:00 em São Paulo: a mesma hora que o servidor e o navegador mostram.
+  expect(quadro?.panel?.series[0]?.sampledAt).toContain("09:00");
+  expect(quadro?.panel?.console[0]?.at).toContain("09:01");
+  expect(quadro?.panel?.console[0]?.message).toBe("aceito pela rede");
+  // A lacuna atravessa o mapeamento como lacuna: não vira zero no caminho.
+  expect(quadro?.panel?.series[1]?.cpuPercent).toBeNull();
+  expect(quadro?.panel?.summary.memoryMbLatest).toBeNull();
+});
+
+it("fracasso ao ler o quadro aparece como erro, não como nó sem dados", async () => {
+  mocks.observability.mockRejectedValue(new Error("Failed to fetch"));
+  await abrirNo();
+
+  expect(mocks.detailObservability?.panel).toBeNull();
+  expect(mocks.detailObservability?.error).toBe(texts.moderator.network.observabilityError);
+});
+
+it("recusa do servidor mostra a mensagem dela, que diz o motivo ao admin", async () => {
+  mocks.observability.mockRejectedValue(
+    new ApiError(404, "NODE_NOT_FOUND", "Servidor não encontrado."),
+  );
+  await abrirNo();
+
+  expect(mocks.detailObservability?.error).toBe("Servidor não encontrado.");
 });

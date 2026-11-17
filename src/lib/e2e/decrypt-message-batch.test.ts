@@ -11,7 +11,12 @@ const mocks = vi.hoisted(() => ({ publicKeys: vi.fn(), privateKey: vi.fn(), lega
 vi.mock("@/lib/api/e2e", () => ({
   e2eApi: { batchPublicKeys: mocks.publicKeys, myConversationKey: mocks.legacyKey },
 }));
-vi.mock("./key-manager", () => ({ getLocalPrivateKey: mocks.privateKey }));
+vi.mock("./key-manager", () => ({
+  getAllPrivateKeys: async () => {
+    const key = await mocks.privateKey();
+    return key ? [key] : [];
+  },
+}));
 const message = (extra: Partial<Message> = {}): Message => ({
   id: "resposta",
   conversationId: "conversa-ficticia",
