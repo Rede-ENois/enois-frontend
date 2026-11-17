@@ -209,12 +209,47 @@ describe("Data de nascimento na edição do perfil", () => {
   it("data nova de 16 anos é aceita (conta nasce como menor supervisionado)", async () => {
     await montar();
 
-    const dezesseis = new Date();
-    dezesseis.setFullYear(dezesseis.getFullYear() - 16);
-    const valor = dezesseis.toISOString().slice(0, 10);
+    const valor = dataDezesseisAnosLocal();
     await digitar(valor);
     await salvar();
 
     expect(mocks.update.mock.calls[0]?.[0].birthDate).toBe(valor);
   });
+
+  it("data-limite de 16 anos continua válida à noite no fuso de Brasília", async () => {
+    // 23h30 de 13/11 em UTC-3 = 02h30 de 14/11 em UTC: o dia em UTC já tinha virado e o
+    // toISOString() devolvia a data de amanhã. Fuso fixado no teste para reproduzir em
+    // qualquer máquina; shouldAdvanceTime mantém os timers assíncronos do diálogo vivos.
+    const fusoOriginal = process.env.TZ;
+    process.env.TZ = "America/Sao_Paulo";
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-11-14T02:30:00.000Z"));
+
+    try {
+      await montar();
+      const valor = dataDezesseisAnosLocal();
+      expect(valor).toBe("2010-11-13");
+      await digitar(valor);
+      await salvar();
+
+      expect(mocks.update.mock.calls[0]?.[0].birthDate).toBe(valor);
+    } finally {
+      vi.useRealTimers();
+      if (fusoOriginal === undefined) delete process.env.TZ;
+      else process.env.TZ = fusoOriginal;
+    }
+  });
 });
+/**
+ * A data-limite de 16 anos montada por componentes locais: é como a régua de idade lê
+ * (`ageFromBirthDate` usa getFullYear/getMonth/getDate locais). `toISOString` convertia para
+ * UTC e, em UTC-3 após as 21h, o dia já tinha virado — a data ficava um dia no futuro e a
+ * edição era recusada (a suíte quebrava à noite).
+ */
+function dataDezesseisAnosLocal(): string {
+  const hoje = new Date();
+  const limite = new Date(hoje.getFullYear() - 16, hoje.getMonth(), hoje.getDate());
+  const mes = String(limite.getMonth() + 1).padStart(2, "0");
+  const dia = String(limite.getDate()).padStart(2, "0");
+  return `${limite.getFullYear()}-${mes}-${dia}`;
+}
