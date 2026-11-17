@@ -1,10 +1,9 @@
-import type { DesabafosAuthorView } from "@/types/application/desabafos/desabafos-author-view";
-
-/** Uma acolhida num desabafo: texto puro, resposta direta ao desabafo. */
+/** Uma acolhida num desabafo: texto puro, SEM autor — o anonimato vale para a acolhida também. */
 export type DesabafosCommentView = {
   id: string;
   postId: string;
-  author: DesabafosAuthorView;
   content: string;
   createdAt: string;
+  /** Quem vê é quem escreveu: a tela mostra o gesto de remover a própria. */
+  mine: boolean;
 };
