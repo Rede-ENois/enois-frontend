@@ -77,10 +77,14 @@ async function renderPage() {
       </QueryClientProvider>,
     );
   });
-  await vi.waitFor(async () => {
-    await act(async () => new Promise<void>((resolve) => setTimeout(resolve, 0)));
-    expect(host.textContent).toContain("Spam repetido na rede.");
-  });
+  // A view mantém uma região de status após carregar; aguardamos o conteúdo, não sua remoção.
+  await vi.waitFor(
+    async () => {
+      await act(async () => new Promise<void>((resolve) => setTimeout(resolve, 0)));
+      expect(host.textContent).toContain("Spam repetido na rede.");
+    },
+    { timeout: 10_000 },
+  );
 }
 
 describe("Penalidades", () => {
