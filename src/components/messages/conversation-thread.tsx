@@ -340,6 +340,7 @@ export function ConversationThread({
           : null
       }
       onCancelReply={() => setReplyingTo(null)}
+      onRestoreReply={(target) => setReplyingTo(target)}
     >
       {messages.length === 0 && !isLoadingMessages && peer ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
