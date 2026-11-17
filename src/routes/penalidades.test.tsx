@@ -99,6 +99,28 @@ describe("Penalidades", () => {
     expect(host.textContent).toMatch(/vira banimento/);
   });
 
+  it("consulta que falha mostra erro com Tentar novamente, nunca 'nenhuma penalidade'", async () => {
+    mocks.mine.mockReturnValue(Promise.reject(new Error("rede caiu")));
+    await renderPage();
+
+    expect(host.textContent).toContain("Não foi possível consultar suas penalidades.");
+    expect(host.textContent).toContain("Tentar novamente");
+    expect(host.textContent).not.toContain("Nenhuma penalidade na sua conta.");
+
+    mocks.mine.mockReturnValue(Promise.resolve({ sanctions: [], appeals: [] }));
+    await act(async () =>
+      [...host.querySelectorAll("button")]
+        .find((b) => b.textContent === "Tentar novamente")!
+        .click(),
+    );
+    for (let turn = 0; turn < 100 && host.querySelector('[role="status"]'); turn += 1) {
+      await act(async () => {});
+    }
+
+    expect(host.textContent).toContain("Nenhuma penalidade na sua conta.");
+    expect(host.textContent).not.toContain("Não foi possível consultar suas penalidades.");
+  });
+
   it("não inventa prazo quando a sanção não tem dueAt", async () => {
     mocks.mine.mockReturnValue(
       Promise.resolve({ ...FIXTURE, sanctions: [{ ...FIXTURE.sanctions[0], dueAt: null }] }),
