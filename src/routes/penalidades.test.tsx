@@ -74,8 +74,10 @@ async function renderPage() {
     );
   });
   // A query resolve em microtasks encadeadas (react-query notifica o observador em job separado):
-  // gira o act até a página sair do estado de carregamento ou esgotar as voltas.
-  for (let turn = 0; turn < 10 && host.querySelector('[role="status"]'); turn += 1) {
+  // gira o act até a página sair do estado de carregamento. Sob carga (suíte inteira no CI) a
+  // microtask pode demorar mais que o esperado — o teto alto é folga, o teste falha por asserção
+  // de conteúdo e não por corrida com o scheduler.
+  for (let turn = 0; turn < 100 && host.querySelector('[role="status"]'); turn += 1) {
     await act(async () => {});
   }
 }
@@ -97,6 +99,31 @@ describe("Penalidades", () => {
     expect(host.textContent).toContain("Motivo: Spam repetido na rede.");
     expect(host.textContent).toMatch(/Revisável até/);
     expect(host.textContent).toMatch(/vira banimento/);
+  });
+
+  it("consulta que falha mostra erro com Tentar novamente, nunca 'nenhuma penalidade'", async () => {
+    mocks.mine.mockReturnValue(Promise.reject(new Error("rede caiu")));
+    await renderPage();
+
+    expect(host.textContent).toContain("Não foi possível consultar suas penalidades.");
+    expect(host.textContent).toContain("Tentar novamente");
+    expect(host.textContent).not.toContain("Nenhuma penalidade na sua conta.");
+
+    mocks.mine.mockReturnValue(Promise.resolve({ sanctions: [], appeals: [] }));
+    await act(async () =>
+      [...host.querySelectorAll("button")]
+        .find((b) => b.textContent === "Tentar novamente")!
+        .click(),
+    );
+    // O banner de erro não tem role="status": gira o act até o texto do erro sair (ou esgotar a
+    // folga) — sob carga do CI o refetch resolve em mais de um giro.
+    for (let turn = 0; turn < 100; turn += 1) {
+      await act(async () => {});
+      if (!host.textContent.includes("Não foi possível consultar suas penalidades.")) break;
+    }
+
+    expect(host.textContent).toContain("Nenhuma penalidade na sua conta.");
+    expect(host.textContent).not.toContain("Não foi possível consultar suas penalidades.");
   });
 
   it("não inventa prazo quando a sanção não tem dueAt", async () => {
