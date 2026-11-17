@@ -3,11 +3,11 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import type { Message } from "@/types/application/message/message";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { messagesApi } from "@/lib/api";
-import type { Message } from "@/types/application/message/message";
 
 import { ConversationThread } from "./conversation-thread";
 
@@ -64,10 +64,19 @@ vi.mock("@rede-enois/design-system/domain", () => ({
     onSend,
   }: {
     children?: React.ReactNode;
-    onSend: (values: { text: string; files: File[]; mediaSpoiler: boolean; replyToId?: string }) => Promise<void>;
+    onSend: (values: {
+      text: string;
+      files: File[];
+      mediaSpoiler: boolean;
+      replyToId?: string;
+    }) => Promise<void>;
   }) => (
     <div>
-      <button onClick={() => void onSend({ text: "oi", files: [], mediaSpoiler: false, replyToId: undefined })}>
+      <button
+        onClick={() =>
+          void onSend({ text: "oi", files: [], mediaSpoiler: false, replyToId: undefined })
+        }
+      >
         enviar
       </button>
       {children}
