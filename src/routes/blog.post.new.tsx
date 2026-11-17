@@ -5,9 +5,8 @@ import { texts } from "@/texts";
 import { ContinueWriting } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
-import { dataHora } from "@/lib/date/format";
-
 import { feedApi } from "@/lib/api/feed";
+import { dataHora } from "@/lib/date/format";
 import { requireAuth } from "@/lib/require-auth";
 
 import { BlogPostEditor } from "@/components/blog/blog-post-editor";
