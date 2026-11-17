@@ -714,6 +714,8 @@ function BookSessionDialog({
       setBooked(true);
       queryClient.invalidateQueries({ queryKey: ["mentor-slots", mentorId] });
       queryClient.invalidateQueries({ queryKey: ["mentors"] });
+      queryClient.invalidateQueries({ queryKey: ["my-mentor-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
     },
     onError: (err) =>
       setError(

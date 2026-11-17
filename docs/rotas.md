@@ -182,6 +182,8 @@ Página pública (mostra layout mesmo sem auth, mas sem funcionalidade).
 - Card: avatar, nome, headline, especialidades, avaliação, sessões, preço, próximo horário
 - Dono do perfil pode editar/excluir mentoria
 - Dialog de cadastro como mentor (especialidades, preço)
+- Após o agendamento confirmado, invalida as consultas de sessões, horários, mentores e saldo
+  do diálogo.
 
 **Componentes auxiliares:**
 
