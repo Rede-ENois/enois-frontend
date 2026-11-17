@@ -53,6 +53,7 @@ const listeners = new Set<() => void>();
  * atender ou começar uma chamada a apaga.
  */
 let leftCallId: string | null = null;
+let joiningAttempt = 0;
 
 export function wasCallLeft(callId: string): boolean {
   return leftCallId === callId;
@@ -136,6 +137,7 @@ export const callSessionStore = {
    * pronta, e quem estava de fora não via nada acontecer até ela chegar).
    */
   joining(call?: CallView) {
+    const attempt = ++joiningAttempt;
     set({
       phase: "joining",
       call: call ?? state.call,
@@ -143,6 +145,7 @@ export const callSessionStore = {
       notConfigured: false,
       minimized: state.minimized && state.needsRejoin && (!call || call.id === state.call?.id),
     });
+    return attempt;
   },
 
   /** A tela pediu credencial nova; o provider consome e zera na mesma volta. */
@@ -154,7 +157,17 @@ export const callSessionStore = {
     set({ needsCredential: false });
   },
 
-  live(join: CallJoin) {
+  live(join: CallJoin, attempt?: number): boolean {
+    if (
+      wasCallLeft(join.call.id) ||
+      (attempt !== undefined &&
+        (attempt !== joiningAttempt ||
+          state.phase !== "joining" ||
+          state.call?.id !== join.call.id))
+    ) {
+      return false;
+    }
+
     const minimized =
       state.phase === "joining" &&
       state.needsRejoin &&
@@ -170,6 +183,7 @@ export const callSessionStore = {
       needsCredential: false,
       minimized,
     });
+    return true;
   },
 
   minimize() {
