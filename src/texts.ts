@@ -211,7 +211,7 @@ export const texts = {
     publishError: "Não foi possível publicar. Tente de novo.",
     rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
     restrictedError: "Sua conta está restrita e não pode publicar aqui.",
-    contentTooLongError: "O desabafo aceita no máximo 1000 caracteres.",
+    contentTooLongError: "O desabafo aceita no máximo 5000 caracteres.",
     removeDone: "Desabafo removido.",
     commentSuccess: "Acolhida enviada.",
     commentError: "Não foi possível acolher. Tente de novo.",
