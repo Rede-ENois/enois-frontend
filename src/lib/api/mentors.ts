@@ -15,8 +15,16 @@ import type { UpdateMentorInput } from "@/types/application/mentor/update-mentor
 import { api, buildQuery } from "../api-client";
 
 export const mentorsApi = {
-  list: (expertise?: string, cursor?: string | null, limit = 20, query?: string) =>
-    api.get<PageResponse<Mentor>>(`/mentors${buildQuery({ expertise, cursor, limit, query })}`),
+  list: (
+    expertise?: string,
+    cursor?: string | null,
+    limit = 20,
+    query?: string,
+    signal?: AbortSignal,
+  ) =>
+    api.get<PageResponse<Mentor>>(`/mentors${buildQuery({ expertise, cursor, limit, query })}`, {
+      signal,
+    }),
 
   get: (mentorId: string) => api.get<Mentor>(`/mentors/${mentorId}`),
 

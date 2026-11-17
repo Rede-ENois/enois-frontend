@@ -42,6 +42,7 @@ import { FAIS_SCALE, formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { bookableSlots } from "@/lib/mentoring/bookable-slots";
 import { profileQueries } from "@/lib/query-options/profiles";
 import { requireAuth } from "@/lib/require-auth";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
@@ -88,7 +89,7 @@ function Mentoria() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const searchTerm = query.trim();
+  const searchTerm = useDebouncedValue(query.trim(), 250);
   const [createError, setCreateError] = useState<string | null>(null);
   const [slotsForMentorId, setSlotsForMentorId] = useState<string | null>(null);
 
@@ -96,11 +97,11 @@ function Mentoria() {
     queryKey: ["mentors"],
     // 200: a lista já era renderizada inteira; e precisamos achar o perfil do próprio usuário
     // mesmo quando ele não está nas primeiras 20 posições.
-    queryFn: () => mentorsApi.list(undefined, null, 200),
+    queryFn: ({ signal }) => mentorsApi.list(undefined, null, 200, undefined, signal),
   });
   const searchResults = useQuery({
     queryKey: ["mentors", "search", searchTerm],
-    queryFn: () => mentorsApi.list(undefined, null, 200, searchTerm),
+    queryFn: ({ signal }) => mentorsApi.list(undefined, null, 200, searchTerm, signal),
     enabled: Boolean(searchTerm),
   });
   const {

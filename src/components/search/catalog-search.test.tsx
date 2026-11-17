@@ -73,6 +73,7 @@ afterEach(async () => {
   await act(async () => root.unmount());
   client.clear();
   container.remove();
+  vi.useRealTimers();
 });
 async function render(Page: ComponentType) {
   await act(async () =>
@@ -86,17 +87,21 @@ async function render(Page: ComponentType) {
 }
 async function settle() {
   await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    if (vi.isFakeTimers()) {
+      await vi.advanceTimersByTimeAsync(30);
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
   });
 }
-async function search(label: string, value: string) {
+async function search(label: string, value: string, settleAfter = true) {
   const input = container.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!;
   expect(input).not.toBeNull();
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await settle();
+  if (settleAfter) await settle();
 }
 
 describe("buscas dos catálogos", () => {
@@ -112,16 +117,75 @@ describe("buscas dos catálogos", () => {
     expect(container.textContent).toContain("Pessoa");
   });
   it("busca mentores no servidor sem perder o perfil de quem pesquisa", async () => {
+    vi.useFakeTimers();
     await render(MentoriaRoute.options.component as ComponentType);
     expect(container.textContent).toContain(texts.mentoring.editMentor);
     await search(texts.mentoring.searchPlaceholder, "  React  ");
-    expect(mocks.list).toHaveBeenLastCalledWith(undefined, null, 200, "React");
+    await act(async () => vi.advanceTimersByTimeAsync(220));
+    await act(async () => vi.advanceTimersByTimeAsync(5));
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      undefined,
+      null,
+      200,
+      "React",
+      expect.any(AbortSignal),
+    );
     expect(container.textContent).toContain(texts.mentoring.searchEmpty);
     expect(container.textContent).toContain(texts.mentoring.editMentor);
     expect(container.textContent).not.toContain(texts.mentoring.becomeMentor);
     await search(texts.mentoring.searchPlaceholder, " ");
+    await act(async () => vi.advanceTimersByTimeAsync(220));
+    await act(async () => vi.advanceTimersByTimeAsync(5));
     expect(container.textContent).not.toContain(texts.mentoring.searchEmpty);
     expect(container.textContent).toContain("Java");
     expect(container.textContent).toContain(texts.mentoring.editMentor);
+  });
+
+  it("agrupa a digitação e cancela a busca de mentores substituída", async () => {
+    vi.useFakeTimers();
+    mocks.list.mockImplementation((_expertise, _cursor, _limit, query) =>
+      query ? new Promise(() => {}) : Promise.resolve({ items: [mentor], nextCursor: null }),
+    );
+    await render(MentoriaRoute.options.component as ComponentType);
+
+    await search(texts.mentoring.searchPlaceholder, "  R", false);
+    await search(texts.mentoring.searchPlaceholder, "  Re", false);
+    await search(texts.mentoring.searchPlaceholder, "  React  ", false);
+    await act(async () => vi.advanceTimersByTimeAsync(249));
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+
+    await act(async () => vi.advanceTimersByTimeAsync(1));
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      undefined,
+      null,
+      200,
+      "React",
+      expect.any(AbortSignal),
+    );
+    const reactSignal = mocks.list.mock.calls[1][4] as AbortSignal;
+
+    await search(texts.mentoring.searchPlaceholder, "   React   ", false);
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(reactSignal.aborted).toBe(false);
+
+    await search(texts.mentoring.searchPlaceholder, "Vue", false);
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(reactSignal.aborted).toBe(true);
+    expect(mocks.list).toHaveBeenCalledTimes(3);
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      undefined,
+      null,
+      200,
+      "Vue",
+      expect.any(AbortSignal),
+    );
+    const vueSignal = mocks.list.mock.calls[2][4] as AbortSignal;
+
+    await search(texts.mentoring.searchPlaceholder, "  ", false);
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(vueSignal.aborted).toBe(true);
+    expect(mocks.list).toHaveBeenCalledTimes(3);
   });
 });

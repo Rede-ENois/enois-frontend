@@ -179,6 +179,8 @@ Página pública (mostra layout mesmo sem auth, mas sem funcionalidade).
 
 - Hero com explicação do programa de mentoria
 - Grid de cards de mentores
+- Busca com espaços nas bordas removidos e consulta após 250 ms de pausa; trocar o termo consultado
+  cancela a busca anterior.
 - Card: avatar, nome, headline, especialidades, avaliação, sessões, preço, próximo horário
 - Dono do perfil pode editar/excluir mentoria
 - Dialog de cadastro como mentor (especialidades, preço)
@@ -505,6 +507,9 @@ fim da URL pública, tem namespace próprio no backend e pode ser diferente do `
 com ação própria (não espera o resto do formulário); o formato é validado em
 `src/lib/corporate/nametag.ts`, o mesmo do backend. Trocar o nametag muda o endereço público — o
 antigo deixa de responder — sem tocar no perfil social.
+
+Em grupos, o filtro dos grupos próprios é imediato. A busca no catálogo remove espaços nas bordas,
+espera 250 ms de pausa e cancela a consulta anterior quando o termo consultado muda.
 
 Em grupos, o dono pode selecionar um tópico e usar **Renomear tópico** para editar o nome
 pelo diálogo. O formulário aceita até 80 caracteres e usa o PATCH existente, mantendo a descrição,
