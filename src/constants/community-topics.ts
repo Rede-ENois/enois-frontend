@@ -52,6 +52,15 @@ export const TOPICS = [
   "RELIGIAO",
   // A #725 pediu o espaço de desabafo; como assunto, entra também no filtro de conteúdo.
   "DESABAFO",
+  // Nichos pedidos no dia a dia da rede (2026-11-17).
+  "MEIO_AMBIENTE",
+  "ANIMAIS",
+  "CULINARIA",
+  "JARDINAGEM",
+  "ARTESANATO",
+  "HISTORIA",
+  "FILOSOFIA",
+  "IDIOMAS",
 ] as const;
 
 export const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
@@ -91,6 +100,14 @@ export const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
   POLITICA: texts.communities.topics.POLITICA,
   RELIGIAO: texts.communities.topics.RELIGIAO,
   DESABAFO: texts.communities.topics.DESABAFO,
+  MEIO_AMBIENTE: texts.communities.topics.MEIO_AMBIENTE,
+  ANIMAIS: texts.communities.topics.ANIMAIS,
+  CULINARIA: texts.communities.topics.CULINARIA,
+  JARDINAGEM: texts.communities.topics.JARDINAGEM,
+  ARTESANATO: texts.communities.topics.ARTESANATO,
+  HISTORIA: texts.communities.topics.HISTORIA,
+  FILOSOFIA: texts.communities.topics.FILOSOFIA,
+  IDIOMAS: texts.communities.topics.IDIOMAS,
 };
 
 /**
