@@ -115,8 +115,11 @@ describe("Penalidades", () => {
         .find((b) => b.textContent === "Tentar novamente")!
         .click(),
     );
-    for (let turn = 0; turn < 100 && host.querySelector('[role="status"]'); turn += 1) {
+    // O banner de erro não tem role="status": gira o act até o texto do erro sair (ou esgotar a
+    // folga) — sob carga do CI o refetch resolve em mais de um giro.
+    for (let turn = 0; turn < 100; turn += 1) {
       await act(async () => {});
+      if (!host.textContent.includes("Não foi possível consultar suas penalidades.")) break;
     }
 
     expect(host.textContent).toContain("Nenhuma penalidade na sua conta.");
