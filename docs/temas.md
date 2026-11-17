@@ -18,6 +18,8 @@ O app tem um sistema de temas em duas camadas: **coleções** (temas prontos) e 
   (ver [`modo-batata.md`](modo-batata.md)).
 - O seletor fica em Configurações → Aparência, com busca e categorias (as coleções têm identidade
   própria — paleta, não só matiz).
+- Na conta, a escolha com data mais recente prevalece, incluindo `null` para voltar ao padrão.
+  Sem data ou com identificador desconhecido, conserva-se a escolha local.
 
 ## Coleções
 

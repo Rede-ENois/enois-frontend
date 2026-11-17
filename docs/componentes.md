@@ -39,6 +39,18 @@ The owned frames in the `Minhas molduras` tab of `/carteira` (`onlyOwned`). It l
 - Search, filters, `oldest`/`newest` order (`GET /loja?order=`), pagination of 12 and the frame
   preview come from the design system `FrameShop`
 
+## `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`)
+
+The seasonal cosmetics shop (`/carteira`), mounted by `CosmeticShop`. Besides the design system
+`CosmeticShopProps` it takes:
+
+- `bannerHtml?: CapaEmHtml` — the shopper's HTML profile cover. The preview card shows it through
+  the design system `ProfileCard` `bannerSlot`, with the same `BannerHtmlFrame` the profile route
+  uses, so the shop never previews a cover different from the real profile (#695). Without it the
+  card falls back to the uploaded photo or the theme gradient.
+
+`bannerHtmlSlot(profile)` in `src/lib/cosmetics.ts` builds that value.
+
 ## `ProfilePeek` (`src/components/profile/profile-peek.tsx`)
 
 The avatar or name of a person in a list opens a popover with the design system
@@ -169,6 +181,8 @@ Card de post no feed, com todas as ações sociais.
 - Resumo de reações com emojis
 - Tags
 - Ações: reagir (popover com 8 emojis), comentar, salvar, compartilhar, denunciar
+- Exclusão reversível: desfazer reinsere a resposta do servidor na posição original das páginas
+  ainda em cache, sem duplicar o post nem perder alterações feitas em outros posts.
 - Seção de comentários com replies encadeadas
 - Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)

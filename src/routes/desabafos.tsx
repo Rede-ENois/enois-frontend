@@ -18,7 +18,6 @@ import { PageHeader, useToast } from "@rede-enois/design-system/ui";
 import { z } from "zod";
 
 import { desabafosApi } from "@/lib/api";
-import { useCurrentUser } from "@/lib/current-user";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -44,8 +43,6 @@ export const Route = createFileRoute("/desabafos")({
 
 function DesabafosPage() {
   const { post: postAvisado } = Route.useSearch();
-  const { data: me } = useCurrentUser();
-  const euId = me?.id ?? null;
   // Só UM feed de acolhidas aberto por vez: o desabafo do aviso abre sozinho.
   const [aberto, setAberto] = useState<string | null>(null);
 
@@ -62,8 +59,7 @@ function DesabafosPage() {
     getNextPageParam: (last) => last.nextCursor,
   });
 
-  const posts =
-    feed.data?.pages.flatMap((page) => page.items).map((post) => paraCard(post, euId)) ?? [];
+  const posts = feed.data?.pages.flatMap((page) => page.items).map(paraCard) ?? [];
   const estado: DesabafosFeedState = feed.isLoading
     ? { kind: "loading" }
     : feed.isError
@@ -86,7 +82,6 @@ function DesabafosPage() {
           <DesabafosCardAberto
             key={post.id}
             post={post}
-            euId={euId}
             aberto={aberto === post.id}
             onAbrir={setAberto}
           />
@@ -133,12 +128,10 @@ function DesabafosPublicacao() {
 /** O card de um desabafo: apoio contado e, quando aberto, as acolhidas do próprio card. */
 function DesabafosCardAberto({
   post,
-  euId,
   aberto,
   onAbrir,
 }: {
   post: DesabafoCardView;
-  euId: string | null;
   aberto: boolean;
   onAbrir: (postId: string | null) => void;
 }) {
@@ -220,9 +213,7 @@ function DesabafosCardAberto({
       <DesabafosCard
         post={post}
         commentsOpen={aberto}
-        comments={(comentarios.data?.items ?? []).map((comentario) =>
-          paraAcolhida(comentario, euId),
-        )}
+        comments={(comentarios.data?.items ?? []).map(paraAcolhida)}
         commentsState={estadoAcolhidas}
         onToggleComments={() => onAbrir(aberto ? null : post.id)}
         onReact={(tipo) => apoiar.mutate(tipo)}
@@ -247,13 +238,14 @@ function DesabafosCardAberto({
 }
 
 // ---- Tradução das views do backend para os modelos do design system ----
+//
+// O anonimato é do contrato: o backend não manda autor, então a tela não tem nome, avatar nem
+// estilo a montar. Quem reconhece o próprio desabafo (e a própria acolhida) é o `mine` que o
+// servidor calculou a partir da sessão.
 
-function paraCard(post: DesabafoPostView, euId: string | null): DesabafoCardView {
+function paraCard(post: DesabafoPostView): DesabafoCardView {
   return {
     id: post.id,
-    authorName: post.author.name,
-    authorAvatar: post.author.avatar,
-    authorStyle: post.author.style,
     content: post.content,
     createdAt: post.createdAt,
     reactions: post.reactions,
@@ -261,17 +253,14 @@ function paraCard(post: DesabafoPostView, euId: string | null): DesabafoCardView
     myReaction:
       post.myReaction === "LOVE" || post.myReaction === "SUPPORT" ? post.myReaction : null,
     comments: post.comments,
-    isMine: euId === post.author.id,
+    isMine: post.mine,
   };
 }
 
-function paraAcolhida(comentario: DesabafosCommentApi, euId: string | null): DesabafosCommentView {
+function paraAcolhida(comentario: DesabafosCommentApi): DesabafosCommentView {
   return {
     id: comentario.id,
-    authorName: comentario.author.name,
-    authorAvatar: comentario.author.avatar,
-    authorStyle: comentario.author.style,
     content: comentario.content,
-    isMine: euId === comentario.author.id,
+    isMine: comentario.mine,
   };
 }

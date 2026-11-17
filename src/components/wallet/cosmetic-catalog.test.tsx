@@ -8,6 +8,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CosmeticCatalog } from "./cosmetic-catalog";
 
+const frameSpies = vi.hoisted(() => ({ props: [] as Record<string, unknown>[] }));
+vi.mock("@/components/post/sandboxed-html-frame", () => ({
+  SandboxedHtmlFrame: (props: Record<string, unknown>) => {
+    frameSpies.props.push(props);
+    return null;
+  },
+}));
+
 /** Um item de cada canto do catálogo: clássicos, sazonais e um de fora de temporada. */
 const shopItems: CosmeticShopItem[] = [
   {
@@ -105,6 +113,7 @@ describe("Catálogo da loja", () => {
     items?: CosmeticShopItem[];
     collections?: CosmeticShopCollection[];
     lookPending?: string | null;
+    bannerHtml?: { html: string; allowSoundCloudPlayer: boolean };
   }) {
     const node = (
       <CosmeticCatalog
@@ -114,6 +123,7 @@ describe("Catálogo da loja", () => {
         actionPending={false}
         {...actions}
         {...(props.lookPending === undefined ? {} : { lookPending: props.lookPending })}
+        {...(props.bannerHtml === undefined ? {} : { bannerHtml: props.bannerHtml })}
       />
     );
     return act(async () => root.render(node));
@@ -121,6 +131,7 @@ describe("Catálogo da loja", () => {
 
   beforeEach(async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    frameSpies.props.length = 0;
     host = document.createElement("div");
     document.body.append(host);
     root = createRoot(host);
@@ -393,5 +404,25 @@ describe("Catálogo da loja", () => {
       "Todas as coleções",
       "Clássicos",
     ]);
+  });
+
+  /**
+   * A #695: quem tem capa em HTML via a prévia da loja com a faixa genérica, não a capa do
+   * perfil. O cartão de prévia recebe a mesma faixa que a rota do perfil monta.
+   */
+  it("a prévia mostra a capa em HTML de quem compra", async () => {
+    await render({ bannerHtml: { html: "<div>minha capa</div>", allowSoundCloudPlayer: false } });
+
+    expect(frameSpies.props).toHaveLength(1);
+    expect(frameSpies.props[0]).toMatchObject({
+      html: "<div>minha capa</div>",
+      allowSoundCloudPlayer: false,
+      innerPadding: false,
+      autoHeight: false,
+    });
+  });
+
+  it("sem capa em HTML, a prévia não monta faixa nenhuma", () => {
+    expect(frameSpies.props).toHaveLength(0);
   });
 });

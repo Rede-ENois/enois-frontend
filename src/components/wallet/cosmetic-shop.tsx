@@ -11,6 +11,7 @@ import { useToast } from "@rede-enois/design-system/ui";
 import { lojaApi } from "@/lib/api";
 import {
   DUEL_COLLECTIONS,
+  bannerHtmlSlot,
   changesNameStyle,
   cosmeticErrorMessage,
   invalidateCosmetics,
@@ -115,6 +116,7 @@ export function CosmeticShop() {
       items={items}
       collections={shopCollections}
       user={me ? profileCardData(me) : { name: "" }}
+      bannerHtml={me ? bannerHtmlSlot(me) : undefined}
       loading={catalog.isPending || collections.isPending}
       error={catalog.isError || collections.isError}
       onRetry={() => {
