@@ -100,7 +100,6 @@ function mergeSweptPages(
       const fresh = tally.get(cursor)?.settled;
       if (!fresh) return page;
       const items = mergeRows(fresh.items, page.items);
-      if (items.length === page.items.length) return page;
       changed = true;
       return { ...page, items };
     });

@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { ExploreHub } from "@rede-enois/design-system/domain";
+import type { ExploreHubState } from "@rede-enois/design-system/domain";
 
 import { isOfInterface, useInterfaceContext } from "@/lib/interface-context";
 import { signalFor, useNavigationCounts } from "@/lib/navigation-signals";
 import { requireAuth } from "@/lib/require-auth";
-import { useDisabledModules } from "@/lib/use-personalization";
+import { usePersonalization } from "@/lib/use-personalization";
 
 import { AppContainer } from "@/components/app-container";
 import { exploreItems } from "@/components/explore-items";
@@ -24,15 +25,28 @@ const SECTION_ORDER = Object.keys(
 /**
  * Every room of the active interface that is not on the dock or in the menu. Rooms of the other
  * interface stay out (Trabalho is professional): the menu switcher is the way across.
+ *
+ * The hub has three states of truth: loading while the preferences that decide which rooms exist
+ * have not arrived, error (with a retry) when they fail, and ready once there are rooms to show.
+ * The news counts only light dots on tiles — they never block the hub.
  */
 function ExplorePage() {
-  const disabledModules = useDisabledModules();
+  const personalization = usePersonalization();
+  const disabledModules = new Set(personalization.data?.disabledModules ?? []);
   const counts = useNavigationCounts();
   const context = useInterfaceContext();
+
+  const state: ExploreHubState = personalization.isPending
+    ? { kind: "loading" }
+    : personalization.isError
+      ? { kind: "error" }
+      : { kind: "ready" };
 
   return (
     <AppContainer>
       <ExploreHub
+        state={state}
+        onRetry={() => void personalization.refetch()}
         sections={SECTION_ORDER.map((section) => ({
           id: section,
           title: texts.explore.sections[section],
