@@ -1774,7 +1774,9 @@ export const texts = {
       publish: "Publicar",
       savePost: "Salvar",
       published: "Post publicado. Quem segue seu blog foi avisado.",
-      draftSaved: "Rascunho salvo neste navegador.",
+      draftSaved: "Rascunho salvo na sua conta.",
+      draftDiscarded: "Rascunho excluído.",
+      draftDiscardError: "Não foi possível excluir agora.",
       draftSaveError:
         "Não foi possível salvar o rascunho neste navegador. Mantenha esta página aberta.",
       notifySubscribers: "Avisar os assinantes por e-mail",
