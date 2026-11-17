@@ -161,6 +161,7 @@ function PostCardContainer({
     mutationFn: () => feedApi.delete(post.id),
     onSuccess: () => {
       setDeleteOpen(false);
+      const restoreInCache = removePostFromFeedCache(queryClient, post.id);
       // Exclusão é lógica: dá para desfazer de verdade, então o aviso traz a ação.
       toast(texts.posts.owner.deleted, "success", {
         label: texts.posts.owner.undo,
@@ -168,13 +169,12 @@ function PostCardContainer({
           feedApi
             .restore(post.id)
             .then((restored) => {
-              updatePostInQueryCache(queryClient, post.id, () => restored);
+              restoreInCache(restored);
               toast(texts.posts.owner.edited);
             })
             .catch(() => toast(texts.posts.owner.error, "error"));
         },
       });
-      removePostFromFeedCache(queryClient, post.id);
       queryClient.invalidateQueries({ queryKey: savedPostsQueryOptions().queryKey });
       // Na pagina do post unico, o conteudo some: volta para o feed em vez de ficar num "nao encontrado".
       if (typeof window !== "undefined" && window.location.pathname.startsWith("/post/")) {

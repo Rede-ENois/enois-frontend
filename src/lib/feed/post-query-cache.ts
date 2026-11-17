@@ -63,7 +63,6 @@ export async function refreshFeedFirstPage(queryClient: QueryClient): Promise<vo
         if (!current || !Array.isArray(current.pages) || current.pages.length === 0) return current;
         const [first, ...older] = current.pages;
         const items = mergeRows(fresh.items, first.items);
-        if (items.length === first.items.length) return current;
         return { ...current, pages: [{ ...first, items }, ...older] };
       });
     }),
@@ -72,9 +71,10 @@ export async function refreshFeedFirstPage(queryClient: QueryClient): Promise<vo
 
 /**
  * Apagou (ou o post saiu do feed): some de todas as páginas carregadas, sem pedir nada ao servidor.
- * A exclusão é lógica e reversível, então o post volta pelo mesmo caminho quando a pessoa desfaz.
+ * O retorno desfaz a remoção sem substituir os dados atuais dos outros posts.
  */
-export function removePostFromFeedCache(queryClient: QueryClient, postId: string): void {
+export function removePostFromFeedCache(queryClient: QueryClient, postId: string) {
+  const snapshot = queryClient.getQueriesData<FeedPages>({ queryKey: ["feed"] });
   queryClient.setQueriesData<FeedPages>({ queryKey: ["feed"] }, (current) => {
     if (!current || !Array.isArray(current.pages)) return current;
     let changed = false;
@@ -86,6 +86,26 @@ export function removePostFromFeedCache(queryClient: QueryClient, postId: string
     });
     return changed ? { ...current, pages } : current;
   });
+
+  return (restored: PostView) => {
+    updatePostInQueryCache(queryClient, postId, () => restored);
+    for (const [key, saved] of snapshot) {
+      queryClient.setQueryData<FeedPages>(key, (current) => {
+        if (!current || !Array.isArray(current.pages)) return current;
+        if (current.pages.some((page) => page.items.some((p) => p.id === postId))) return current;
+        const pages = current.pages.map((page, index) => {
+          const oldPage = saved?.pages?.[saved.pageParams.indexOf(current.pageParams[index])];
+          const position = oldPage?.items.findIndex((post) => post.id === postId) ?? -1;
+          if (position < 0) return page;
+          return {
+            ...page,
+            items: mergeRows([...page.items.slice(0, position), restored], page.items),
+          };
+        });
+        return { ...current, pages };
+      });
+    }
+  };
 }
 
 export function updatePostInQueryCache(
