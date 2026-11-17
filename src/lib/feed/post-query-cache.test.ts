@@ -177,4 +177,64 @@ describe("removePostFromFeedCache", () => {
     expect(data?.pages[0].items.map((item) => item.id)).toEqual(["p1"]);
     expect(data?.pages[1].items.map((item) => item.id)).toEqual(["p3"]);
   });
+
+  it("desfazer recoloca o post na posição original sem perder outras alterações", () => {
+    const client = new QueryClient();
+    const key = ["feed", "ALL", "", ""];
+    const original: FeedPages = {
+      pages: [page(["p1"], "c1"), page(["p2", "p3", "p4"])],
+      pageParams: [null, "c1"],
+    };
+    client.setQueryData(key, original);
+    client.setQueryData(["post", "p3"], post("p3"));
+
+    try {
+      const restore = removePostFromFeedCache(client, "p3");
+      updatePostInQueryCache(client, "p4", () => post("p4", 4));
+      const restored = post("p3", 7);
+
+      restore(restored);
+      restore(restored);
+
+      expect(client.getQueryData(key)).toEqual({
+        ...original,
+        pages: [
+          original.pages[0],
+          { ...original.pages[1], items: [post("p2"), restored, post("p4", 4)] },
+        ],
+      });
+      expect(client.getQueryData(["post", "p3"])).toEqual(restored);
+    } finally {
+      client.clear();
+    }
+  });
+
+  it("ignora cursores descartados e consultas removidas, sem alterar listas vizinhas", () => {
+    const client = new QueryClient();
+    const key = ["feed", "ALL", "", ""];
+    client.setQueryData<FeedPages>(key, {
+      pages: [page(["p1"], "c1"), page(["p2"])],
+      pageParams: [null, "c1"],
+    });
+    client.setQueryData(["feed", "scheduled"], []);
+
+    try {
+      const restore = removePostFromFeedCache(client, "p2");
+      const current: FeedPages = {
+        pages: [page(["p1"], "c2"), page(["p3"])],
+        pageParams: [null, "c2"],
+      };
+      client.setQueryData(key, current);
+
+      restore(post("p2"));
+      expect(client.getQueryData(key)).toEqual(current);
+      expect(client.getQueryData(["feed", "scheduled"])).toEqual([]);
+
+      client.removeQueries({ queryKey: key, exact: true });
+      restore(post("p2"));
+      expect(client.getQueryData(key)).toBeUndefined();
+    } finally {
+      client.clear();
+    }
+  });
 });
