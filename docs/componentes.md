@@ -169,7 +169,9 @@ palpite (issue #532).
 
 ## `PostCard` (`src/components/post-card.tsx`)
 
-Card de post no feed, com todas as ações sociais.
+Card de post no feed, com todas as ações sociais. O corpo de artigo ausente na listagem é buscado
+quando o autor abre a edição. Artigos sem corpo e sem flag de spoiler antecipam a consulta para
+recuperar a flag; páginas continuam buscando o HTML necessário à prévia.
 
 **Props:** `{ post: PostView }`
 
