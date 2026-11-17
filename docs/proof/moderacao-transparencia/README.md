@@ -1,5 +1,9 @@
 # Evidências visuais de penalidades e conta suspensa
 
+> **Prova histórica anterior à reconciliação da QA.** As capturas e os totais deste documento
+> permanecem vinculados à composição abaixo. Veja a [nova prova reconciliada](./reconciliacao-qa/README.md)
+> para a composição atual; o resultado antigo não valida automaticamente os avanços da base.
+
 Capturas de revisão das entregas frontend #875/#873 e design system #231, vinculadas às PRs
 Rede-ENois/enois-frontend#883 e Rede-ENois/enois-design-system#236.
 
