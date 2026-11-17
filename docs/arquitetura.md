@@ -41,6 +41,8 @@ Configura o TanStack Router com:
 Fornece:
 
 - **QueryClientProvider** para toda a aplicação
+- **CallsProvider** publica as ações e a chamada atuais pelo contexto, mantendo os filhos montados
+  durante a hidratação; os efeitos de chamadas só iniciam com sessão.
 - **OAuthCallbackHandler** - captura tokens OAuth da URL e armazena no localStorage
 - **Head meta tags** globais (charset, viewport, SEO, Open Graph)
 - **404** (`NotFoundComponent`) e **Error Boundary** (`ErrorComponent`)
