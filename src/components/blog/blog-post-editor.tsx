@@ -10,6 +10,7 @@ import { Button, Input, Pill, useToast } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Eye, PenLine } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
+import { feedApi } from "@/lib/api/feed";
 import { getCurrentUserId } from "@/lib/current-user";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 
@@ -23,7 +24,14 @@ import { RichText } from "@/components/post/rich-text";
  * Com `post` é edição (preenche e salva por cima); sem ele publica um post novo. Dois formatos: "Texto" (markdown simples, com barra e prévia) e "HTML/CSS" (editor
  * livre). O backend guarda o que a pessoa escreveu (markdown como markdown, HTML sanitizado).
  */
-export function BlogPostEditor({ post }: { post?: BlogPost | null }) {
+export function BlogPostEditor({
+  post,
+  continueDraftId,
+}: {
+  post?: BlogPost | null;
+  /** Id do rascunho que a pessoa veio retomar da lista "Continuar escrevendo" (?rascunho=). */
+  continueDraftId?: string;
+}) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -33,54 +41,100 @@ export function BlogPostEditor({ post }: { post?: BlogPost | null }) {
   const [preview, setPreview] = useState(false);
   const [avisar, setAvisar] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [draftKey, setDraftKey] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState<boolean | null>(null);
 
   // Restaura depois da hidratação e só então permite gravar: o formulário vazio não apaga o rascunho.
+  // O rascunho mora no servidor (lista por pessoa — quem escreve mais de um texto não perde
+  // material); o localStorage continua como rede de segurança para quando a rede falha.
   useEffect(() => {
     if (post) return;
+    let cancelled = false;
     const userId = getCurrentUserId();
-    if (!userId) {
-      setDraftSaved(false);
-      return;
-    }
-    const key = `connect-grow-blog-post-draft:${userId}`;
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) {
-        const draft = JSON.parse(raw) as Record<string, unknown>;
-        if (
-          draft &&
-          typeof draft.title === "string" &&
-          typeof draft.body === "string" &&
-          (draft.format === "MARKDOWN" || draft.format === "HTML") &&
-          typeof draft.avisar === "boolean"
-        ) {
-          setTitle(draft.title);
-          setBody(draft.body);
-          setFormat(draft.format);
-          setAvisar(draft.avisar);
+    const localKey = userId ? `connect-grow-blog-post-draft:${userId}` : null;
+
+    (async () => {
+      let restored = false;
+      try {
+        const { drafts } = await feedApi.drafts();
+        const artigo = continueDraftId
+          ? drafts.find((d) => d.id === continueDraftId)
+          : drafts.find((d) => d.type === "ARTICLE" && (d.articleBody || d.content));
+        if (!cancelled && artigo) {
+          // O rascunho de artigo guarda o TÍTULO no content e o corpo no articleBody.
+          setTitle(artigo.content ?? "");
+          setBody(artigo.articleBody ?? "");
+          setDraftId(artigo.id);
+          restored = true;
+        }
+      } catch {
+        // Sem rede, o localStorage segura a escrita do dia.
+      }
+      if (!cancelled && !restored && localKey) {
+        try {
+          const raw = localStorage.getItem(localKey);
+          if (raw) {
+            const draft = JSON.parse(raw) as Record<string, unknown>;
+            if (
+              draft &&
+              typeof draft.title === "string" &&
+              typeof draft.body === "string" &&
+              (draft.format === "MARKDOWN" || draft.format === "HTML") &&
+              typeof draft.avisar === "boolean"
+            ) {
+              setTitle(draft.title);
+              setBody(draft.body);
+              setFormat(draft.format);
+              setAvisar(draft.avisar);
+            }
+          }
+        } catch {
+          // Um rascunho ilegível não impede escrever outro post.
         }
       }
-    } catch {
-      // Um rascunho ilegível não impede escrever outro post.
-    }
-    setDraftKey(key);
-  }, [post]);
+      if (!cancelled) setDraftSaved(restored ? true : null);
+    })();
 
+    return () => {
+      cancelled = true;
+    };
+  }, [post, continueDraftId]);
+
+  // Autosave no servidor com espera entre salvamentos: cada tecla não vira requisição. O rascunho
+  // novo nasce na primeira gravação e ganha id; daí em diante o id atualiza o mesmo rascunho.
+  // Com a rede fora, o localStorage segura o rascunho do dia (a restauração dele já cobre o caso).
   useEffect(() => {
-    if (post || !draftKey) return;
-    try {
-      if (title || body) {
-        localStorage.setItem(draftKey, JSON.stringify({ title, body, format, avisar }));
-      } else {
-        localStorage.removeItem(draftKey);
+    if (post) return;
+    if (!title.trim() && !body.trim()) return;
+    const timer = window.setTimeout(async () => {
+      try {
+        const payload = {
+          type: "ARTICLE",
+          content: title.trim(),
+          articleBody: body,
+        };
+        const { draft } = draftId
+          ? await feedApi.saveDraftById(draftId, payload)
+          : await feedApi.createDraft(payload);
+        setDraftId(draft.id);
+        setDraftSaved(true);
+      } catch {
+        const userId = getCurrentUserId();
+        if (userId) {
+          try {
+            localStorage.setItem(
+              `connect-grow-blog-post-draft:${userId}`,
+              JSON.stringify({ title, body, format, avisar }),
+            );
+          } catch {
+            // Sem servidor e sem armazenamento: mantenha a página aberta.
+          }
+        }
+        setDraftSaved(false);
       }
-      setDraftSaved(Boolean(title || body));
-    } catch {
-      setDraftSaved(false);
-    }
-  }, [post, draftKey, title, body, format, avisar]);
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [post, draftId, title, body, format, avisar]);
 
   const publish = useMutation({
     onMutate: () => JSON.stringify({ title, body, format, avisar }),
@@ -89,13 +143,11 @@ export function BlogPostEditor({ post }: { post?: BlogPost | null }) {
         ? blogsApi.editPost(post.id, { title, body, format })
         : blogsApi.publish({ title, body, format, notifySubscribers: avisar }),
     onSuccess: async (_result, _variables, submittedDraft) => {
-      if (!post && draftKey) {
+      if (!post && draftId) {
         try {
-          if (localStorage.getItem(draftKey) === submittedDraft) {
-            localStorage.removeItem(draftKey);
-          }
+          await feedApi.discardDraftById(draftId);
         } catch {
-          // A publicação já foi concluída mesmo se o navegador bloquear o armazenamento.
+          // A publicação já foi concluída mesmo se o descarte do rascunho falhar.
         }
       }
       queryClient.invalidateQueries({ queryKey: ["blog"] });

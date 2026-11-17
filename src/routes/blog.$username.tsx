@@ -144,7 +144,7 @@ function BlogPage() {
             <div className="flex flex-wrap gap-2">
               {blog.owner ? (
                 <>
-                  <Link to="/blog/post/new">
+                  <Link to="/blog/post/new" search={{ rascunho: undefined }}>
                     <Button size="sm" className="rounded-full gap-1.5">
                       <Plus className="h-4 w-4" aria-hidden />
 
