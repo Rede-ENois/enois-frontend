@@ -11,6 +11,7 @@ import { PostActions } from "./post-actions";
 const navigate = vi.fn();
 const toast = vi.fn();
 const clipboard = vi.fn();
+const shareRequest = vi.hoisted(() => vi.fn());
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
@@ -25,8 +26,7 @@ vi.mock("@rede-enois/design-system/ui", async () => {
 vi.mock("@/lib/api", () => ({
   REACTION_EMOJIS: [],
   reactionsApi: {
-    share: () =>
-      Promise.resolve({ counters: { reactions: 0, comments: 0, saves: 0, shares: 1, reposts: 0 } }),
+    share: shareRequest,
   },
 }));
 vi.mock("@/lib/use-auth", () => ({
@@ -79,9 +79,13 @@ describe("PostActions share menu", () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   beforeEach(() => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     navigate.mockReset();
     toast.mockReset();
     clipboard.mockReset();
+    shareRequest.mockReset().mockResolvedValue({
+      counters: { ...post.counters, shares: 1 },
+    });
     // jsdom nao tem matchMedia; mocka como mobile pra abrir Sheet
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -104,7 +108,9 @@ describe("PostActions share menu", () => {
 
   afterEach(() => {
     act(() => root.unmount());
+    qc.clear();
     host.remove();
+    vi.unstubAllGlobals();
   });
 
   it("clipboard falha no enviar via chat mostra erro e nao navega", async () => {
@@ -138,4 +144,61 @@ describe("PostActions share menu", () => {
     expect(toast).toHaveBeenCalledWith("Não foi possível copiar o link.", "error");
     expect(navigate).not.toHaveBeenCalled();
   });
+
+  it.each(["Copiar link", "Compartilhar via..."])(
+    "inicia %s no clique mesmo com a contagem pendente",
+    async (label) => {
+      const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+      const shareDescriptor = Object.getOwnPropertyDescriptor(navigator, "share");
+      const browserAction = vi.fn().mockResolvedValue(undefined);
+      shareRequest.mockReturnValue(new Promise(() => {}));
+      Object.defineProperty(navigator, "clipboard", {
+        value: { writeText: browserAction },
+        configurable: true,
+      });
+      Object.defineProperty(navigator, "share", {
+        value: browserAction,
+        configurable: true,
+      });
+
+      try {
+        await act(async () =>
+          root.render(
+            <QueryClientProvider client={qc}>
+              <PostActions post={{ ...post, authorAvatar: null }} onComments={() => {}} />
+            </QueryClientProvider>,
+          ),
+        );
+        const shareButton = host.querySelector<HTMLButtonElement>('[aria-label="Compartilhar"]');
+        expect(shareButton).not.toBeNull();
+        await act(async () => shareButton!.click());
+
+        const action = Array.from(document.body.querySelectorAll("button")).find((button) =>
+          button.textContent?.includes(label),
+        );
+        expect(action).toBeDefined();
+        expect(shareRequest).not.toHaveBeenCalled();
+
+        await act(async () => {
+          action!.click();
+          expect(browserAction).toHaveBeenCalledOnce();
+          expect(shareRequest).toHaveBeenCalledExactlyOnceWith(post.id);
+        });
+
+        const url = `${window.location.origin}/post/${post.id}`;
+        expect(browserAction).toHaveBeenCalledWith(label === "Copiar link" ? url : { url });
+      } finally {
+        if (clipboardDescriptor) {
+          Object.defineProperty(navigator, "clipboard", clipboardDescriptor);
+        } else {
+          Reflect.deleteProperty(navigator, "clipboard");
+        }
+        if (shareDescriptor) {
+          Object.defineProperty(navigator, "share", shareDescriptor);
+        } else {
+          Reflect.deleteProperty(navigator, "share");
+        }
+      }
+    },
+  );
 });
