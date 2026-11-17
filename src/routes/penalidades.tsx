@@ -75,12 +75,16 @@ function Penalidades() {
         {banned && (
           <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
             {texts.sanctions.bannedNotice}
+            {banned.reason && ` ${texts.sanctions.reasonLine(banned.reason)}`}
           </div>
         )}
 
         {suspended && (
           <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
             {texts.sanctions.suspendedNotice}
+            {suspended.reason && ` ${texts.sanctions.reasonLine(suspended.reason)}`}
+            {suspended.dueAt &&
+              ` ${texts.sanctions.dueLine(formatarData(suspended.dueAt, { dateStyle: "long" }))}`}
           </div>
         )}
 
@@ -88,6 +92,10 @@ function Penalidades() {
           <div className="space-y-3 rounded-2xl border border-border-soft bg-surface-card p-4">
             <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
               {suspended ? texts.sanctions.suspendedNotice : texts.sanctions.restrictedNotice}
+              {(suspended ?? active)?.reason &&
+                ` ${texts.sanctions.reasonLine((suspended ?? active)?.reason ?? "")}`}
+              {suspended?.dueAt &&
+                ` ${texts.sanctions.dueLine(formatarData(suspended.dueAt, { dateStyle: "long" }))}`}
             </p>
 
             <h2 className="text-sm font-semibold">{texts.sanctions.appealTitle}</h2>
@@ -151,7 +159,15 @@ function Penalidades() {
                   </span>
                 </div>
 
-                {sanction.reason && <p className="text-sm text-text-subtle">{sanction.reason}</p>}
+                {sanction.reason && (
+                  <p className="text-sm text-text-subtle">
+                    {sanction.reason}
+                    {sanction.status === "ACTIVE" &&
+                      sanction.type === "SUSPENDED" &&
+                      sanction.dueAt &&
+                      ` ${texts.sanctions.dueLine(formatarData(sanction.dueAt, { dateStyle: "long" }))}`}
+                  </p>
+                )}
               </li>
             ))}
           </ul>

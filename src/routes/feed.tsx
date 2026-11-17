@@ -26,6 +26,7 @@ import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
   CaughtUpDivider,
+  ComposerDraftStatus,
   ComposerLauncher,
   PostCardSkeletons,
   QuestionComposerHint,
@@ -156,6 +157,7 @@ const POST_TYPE_FILTERS = [
   { value: "DIVERTIDO", label: "Diversão" },
   { value: "ARTICLE", label: "Artigos" },
   { value: "POLL", label: "Enquetes" },
+  { value: "COMPLAINT", label: "Reclamações" },
 ] as const;
 
 export const Route = createFileRoute("/feed")({
@@ -438,6 +440,8 @@ export function Home() {
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
@@ -466,6 +470,114 @@ export function Home() {
     staleTime: 60_000,
   });
   const scheduledList = scheduledQuery.data ?? [];
+
+  // Rascunho do compositor (V332): um por conta, em qualquer dispositivo. Salva sozinho
+  // enquanto a pessoa escreve; publicar, agendar ou descartar apaga.
+  const draftQuery = useQuery({
+    queryKey: ["feed", "draft"],
+    queryFn: () => feedApi.draft(),
+    enabled: authenticated && !composerLocked,
+  });
+  const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<string | null>(null);
+
+  // Restaurar o rascunho do servidor UMA vez, e só se o compositor está intocado aqui — quem
+  // já começou a escrever não é sobrescrito pelo que veio de outro dispositivo. Mídia anexada
+  // não faz parte do rascunho (os arquivos só sobem ao publicar): quem restaurar reanexa.
+  const rascunhoRestauradoRef = useRef(false);
+  useEffect(() => {
+    const salvo = draftQuery.data?.draft;
+    if (!salvo || rascunhoRestauradoRef.current) return;
+    rascunhoRestauradoRef.current = true;
+    const compositorIntacto =
+      draft.trim() === "" &&
+      media.length === 0 &&
+      pageHtml === "" &&
+      articleBody === "" &&
+      normalizePollOptions(pollOptions).length === 0;
+    if (!compositorIntacto) return;
+    setPostType(salvo.type as PostView["type"]);
+    setDraft(salvo.content ?? "");
+    setPageHtml(salvo.pageHtml ?? "");
+    setArticleBody(salvo.articleBody ?? "");
+    if (salvo.topic) setTopic(salvo.topic);
+    if (salvo.pollOptions.length > 0) setPollOptions([...salvo.pollOptions]);
+    setPollMultipleChoice(salvo.pollMultipleChoice);
+    setPollEndsAt(salvo.pollEndsAt ? valorDeDataLocal(new Date(salvo.pollEndsAt)) : undefined);
+    setMentionedUserIds(salvo.mentionedUserIds);
+    setComposerOpen(true);
+    setRascunhoSalvoEm(salvo.updatedAt);
+    // Regravar o que acabou de chegar é escrita à toa: o primeiro autosave depois da
+    // restauração é pulado; a próxima mudança de verdade salva.
+    pularAutosaveRef.current = true;
+    // Roda uma vez, quando o rascunho chega (a guarda do ref impede repetição).
+  }, [draftQuery.data]);
+
+  // Autosave: 1,5s depois da última mudança, o estado do compositor viaja para o servidor.
+  // Mesma régua mínima do backend: só salva quando há algo para restaurar. Falha no autosave
+  // é silenciosa — a pessoa segue escrevendo, e o rascunho anterior continua lá.
+  const pularAutosaveRef = useRef(false);
+  const saveDraftMutation = useMutation({
+    mutationFn: (data: Parameters<typeof feedApi.saveDraft>[0]) => feedApi.saveDraft(data),
+    onSuccess: (resposta) => setRascunhoSalvoEm(resposta.draft.updatedAt),
+  });
+  useEffect(() => {
+    if (!authenticated || composerLocked) return;
+    const temConteudo =
+      (pageMode ? pageHtml.trim() !== "" : draft.trim() !== "") ||
+      (articleMode && articleBody.trim() !== "") ||
+      (pollMode && normalizePollOptions(pollOptions).length > 0);
+    if (!temConteudo) return;
+    const id = setTimeout(() => {
+      if (pularAutosaveRef.current) {
+        pularAutosaveRef.current = false;
+        return;
+      }
+      saveDraftMutation.mutate({
+        type: postType,
+        content: pageMode ? "" : draft,
+        ...(pageMode ? { pageHtml } : {}),
+        ...(articleMode ? { articleBody } : {}),
+        ...(topic ? { topic } : {}),
+        ...(pollMode ? { pollOptions: normalizePollOptions(pollOptions) } : {}),
+        ...(pollMode ? { pollMultipleChoice } : {}),
+        ...(pollMode && pollEndsAt ? { pollEndsAt: new Date(pollEndsAt).toISOString() } : {}),
+        ...(pageMode ? {} : { mentionedUserIds }),
+      });
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [
+    authenticated,
+    composerLocked,
+    draft,
+    postType,
+    pageMode,
+    pageHtml,
+    articleMode,
+    articleBody,
+    pollMode,
+    pollOptions,
+    pollMultipleChoice,
+    pollEndsAt,
+    topic,
+    mentionedUserIds,
+  ]);
+
+  /** Descartar apaga o rascunho salvo E limpa o compositor: começar de novo é isso. */
+  const descartarRascunho = () => {
+    setRascunhoSalvoEm(null);
+    void feedApi.discardDraft().catch(() => {});
+    setDraft("");
+    setMentionedUserIds([]);
+    setPostType("INSIGHT");
+    setMedia([]);
+    setMediaSpoiler(false);
+    setPageHtml("");
+    setArticleBody("");
+    setPollOptions(["", ""]);
+    setPollMultipleChoice(false);
+    setPollEndsAt(undefined);
+    setSchedulingOpen(false);
+  };
 
   const schedulePost = useMutation({
     mutationFn: (data: Parameters<typeof feedApi.schedule>[0]) => feedApi.schedule(data),
@@ -532,6 +644,9 @@ export function Home() {
       setPollOptions(["", ""]);
       setScheduleAt("");
       setSchedulingOpen(false);
+      // Agendou: o rascunho não tem mais o que guardar.
+      setRascunhoSalvoEm(null);
+      void feedApi.discardDraft().catch(() => {});
     } catch {
       // o motivo já foi para o publishError pelo onError da mutation
     }
@@ -571,7 +686,7 @@ export function Home() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         topic,
         website: String(formData.get("website") ?? ""),
@@ -599,6 +714,9 @@ export function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      // Publicou: o rascunho não tem mais o que guardar.
+      setRascunhoSalvoEm(null);
+      void feedApi.discardDraft().catch(() => {});
     } catch (err) {
       setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
     } finally {
@@ -900,13 +1018,25 @@ export function Home() {
                     maxLength={postContentLimit(postType)}
                     toolbar
                     onPasteImages={addMediaFiles}
+                    /* Ctrl+Enter publica: o atalho passa pelo mesmo submit do formulário (honeypot
+                       e guarda de reentrada incluídos), não por um caminho próprio. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 )}
               </div>
 
               {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
 
-              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+              {pollMode && (
+                <PollComposer
+                  options={pollOptions}
+                  onChange={setPollOptions}
+                  multipleChoice={pollMultipleChoice}
+                  onMultipleChoiceChange={setPollMultipleChoice}
+                  endsAt={pollEndsAt}
+                  onEndsAtChange={setPollEndsAt}
+                />
+              )}
 
               {pageMode && (
                 <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
@@ -946,6 +1076,9 @@ export function Home() {
                     className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                     rows={8}
                     toolbar
+                    /* Mesmo atalho do campo de cima: escrever o artigo inteiro sem sair do
+                       teclado. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 </div>
               )}
@@ -1176,6 +1309,8 @@ export function Home() {
                     </a>
                   </div>
                 )}
+
+                <ComposerDraftStatus salvoEm={rascunhoSalvoEm} onDescartar={descartarRascunho} />
 
                 {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
                   alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
@@ -1464,7 +1599,11 @@ export function Home() {
                   </Fragment>
                 ))}
 
-              {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
+              {!feedLoading && feedPosts.length === 0 && (
+                <EmptyState
+                  title={tab === "INTERACTED" ? texts.feed.emptyInteracted : texts.feed.empty}
+                />
+              )}
 
               <InfiniteScroll
                 hasMore={Boolean(hasNextPage)}

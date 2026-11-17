@@ -686,3 +686,33 @@ mantenedora (DS prop + bump). A automação desta tarefa pode ser desativada; qu
 retomar pela pendência 2 usando o teste da rodada 14 como base.
 
 **ESTADO:** concluído no que este repo alcança; pendência 2 documentada como bloqueio externo.
+
+## RODADA 17 — 2026-11-14 — pendência 2 CONCLUÍDA: sino mostra o total do servidor
+
+CONTEXTO: o design-system destravou a pendência. PR enois-design-system#240 ("contador do sino
+aceita o total do servidor") foi mergeado na qa do DS e a prop `unreadCount` está no pacote
+(publish da release com a prop pendente da mantenedora; a validação aqui usou o build da tip da
+qa do DS, que já contém o merge `c4e1f94`).
+
+IMPLEMENTAÇÃO:
+
+- `src/components/notifications-popover.tsx`: o sino recebe `unreadCount` derivado do
+  `signalFor({ href: "/notificacoes" }, counts)` — a MESMA conta do sinal do menu (total do
+  resumo menos módulos desativados), garantindo que sino e menu nunca divirjam. Sem sinal
+  (resumo zerado), passa 0 e o DS não desenha pílula.
+- `src/components/notifications/bell-counter.test.tsx` invertido: antes fixava o teto do preview
+  (10 com 12 não lidos); agora exige o TOTAL do servidor (12) e verifica que resumo zerado tira a
+  pílula mesmo com linhas não lidas na página.
+
+PROVA (executada): bell-counter.test.tsx 2/2 passed. A suíte foi rodada com o DS antigo (sem a
+prop) e falhou (2/2), provando que o teste depende da prop nova.
+
+GATES: eslint (arquivos tocados) exit=0; tsc --noEmit exit=0; suíte completa **247 arquivos /
+1.430 testes / 0 falhas / exit=0** (/tmp/vit_bell.txt). Ambiente: token local sem read:packages,
+DS instalado do tarball construído da tip da qa do DS (--no-save; o lockfile segue com ^0.35.0).
+
+PROXIMO PASSO: nenhum — as seis pendências da auditoria estão completas. A publicação da release
+do DS com a prop (>= 0.35.1) é ação da mantenedora; o package.json do front já pede ^0.35.0 e o
+npm resolverá a próxima minor automaticamente.
+
+**ESTADO:** CONCLUÍDO — pendências 1, 2, 3, 4, 5, 6 completas.

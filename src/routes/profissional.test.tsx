@@ -110,6 +110,16 @@ describe("/profissional picture", () => {
     expect(host.querySelector('[data-testid="crop"]')).toBeNull();
   });
 
+  it("sends a transparent crop as png, so the background stays transparent", async () => {
+    await pick(new File(["x"], "me.png", { type: "image/png" }));
+
+    await act(() => mocks.crop!.onCropComplete(new Blob(["y"], { type: "image/png" })));
+
+    const [sent] = mocks.upload.mock.calls[0] as [File, string];
+    expect(sent.type).toBe("image/png");
+    expect(sent.name).toBe("crop.png");
+  });
+
   it("sends a GIF as is, so it keeps moving", async () => {
     await pick(new File(["x"], "me.gif", { type: "image/gif" }));
 

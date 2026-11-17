@@ -23,6 +23,7 @@ import { callsApi } from "@/lib/api";
 import { ApiError, apiUrl } from "@/lib/api-client";
 import { shouldAutoEnter } from "@/lib/calls/call-entry";
 import { requestCallMedia } from "@/lib/calls/call-media-permission";
+import { startPresencePing } from "@/lib/calls/call-presence";
 import {
   callInRoom,
   callSessionStore,
@@ -432,6 +433,14 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("pagehide", onPageHide);
     return () => window.removeEventListener("pagehide", onPageHide);
+  }, [openCallId]);
+
+  // Sinal de vida da sala: presença sem ping recente deixa de contar como gente no servidor,
+  // e a sala sem ninguém vivo fecha sozinha. Falha de ping é silenciosa — o próximo intervalo
+  // tenta de novo, e a tela não ensaia erro de rede para quem está na chamada.
+  useEffect(() => {
+    if (!openCallId) return;
+    return startPresencePing(openCallId, (id) => callsApi.presence(id));
   }, [openCallId]);
 
   /**

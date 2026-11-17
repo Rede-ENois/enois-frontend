@@ -14,7 +14,7 @@
       "count": 37
     },
     "no-restricted-globals": {
-      "count": 5
+      "count": 2
     },
     "no-restricted-syntax": {
       "count": 1
@@ -262,16 +262,6 @@
   "src/components/post/link-preview-card.tsx": {
     "local/no-front-markup": {
       "count": 25
-    }
-  },
-  "src/components/post/poll-card.tsx": {
-    "local/no-front-markup": {
-      "count": 27
-    }
-  },
-  "src/components/post/poll-composer.tsx": {
-    "local/no-front-markup": {
-      "count": 18
     }
   },
   "src/components/post/post-comments.tsx": {
@@ -719,7 +709,7 @@
   },
   "src/routes/servicos.tsx": {
     "local/no-front-markup": {
-      "count": 145
+      "count": 141
     }
   },
   "src/routes/silenciados.tsx": {
@@ -745,11 +735,6 @@
   "src/routes/termos.tsx": {
     "local/no-front-markup": {
       "count": 9
-    }
-  },
-  "src/routes/vagas.$jobId.candidaturas.tsx": {
-    "local/no-front-markup": {
-      "count": 74
     }
   },
   "src/routes/vagas.$jobId.tsx": {

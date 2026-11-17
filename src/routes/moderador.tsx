@@ -46,6 +46,7 @@ import {
   Megaphone,
   Scale,
   ScanEye,
+  Server,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -72,6 +73,7 @@ import { EmailLogSection } from "@/components/moderation/email-log-section";
 import { GamesReviewSection } from "@/components/moderation/games-review-section";
 import { IdentityReleaseSection } from "@/components/moderation/identity-release-section";
 import { MonitoringSection } from "@/components/moderation/monitoring-section";
+import { NetworkNodesSection } from "@/components/moderation/network-nodes-section";
 import { NotesSection } from "@/components/moderation/notes-section";
 import { NoticesSection } from "@/components/moderation/notices-section";
 import { PanicModeSection } from "@/components/moderation/panic-mode-section";
@@ -137,6 +139,7 @@ const TAB_ICON: Record<ModeratorTabId, typeof Flag> = {
   contributors: Users,
   githubContributions: GitPullRequest,
   identityRelease: ShieldCheck,
+  network: Server,
 };
 
 /**
@@ -294,6 +297,7 @@ function Moderador() {
             {me.admin && activeTab === "notices" && <NoticesSection />}
             {me.admin && activeTab === "releaseNotes" && <ReleaseNotesSection />}
             {me.admin && activeTab === "identityRelease" && <IdentityReleaseSection />}
+            {me.admin && activeTab === "network" && <NetworkNodesSection />}
           </div>
         ) : (
           <ApplicationSection me={me} />
