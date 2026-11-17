@@ -107,6 +107,9 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
 - Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
 
+A leitura é otimista em todas as páginas; se o servidor recusa, os avisos afetados voltam ao estado
+anterior de leitura, preservando o conteúdo e as páginas recebidos durante a requisição.
+
 O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, sidebar.
 
 **Estado:** `useQuery` para perfil, notificações; `useMutation` para marcar lidas
