@@ -15,7 +15,8 @@ const Penalidades = (Route as unknown as { options: { component: () => React.JSX
 /**
  * Regressão da issue #922: quem é punido descobria a punição pelos efeitos, sem motivo nem prazo,
  * e abria ticket de suporte para cada caso. A página de penalidades tem que dizer o motivo da
- * sanção ativa e, na suspensão, a data em que ela revisa.
+ * sanção ativa e, na suspensão, a data em que ela revisa. E quando a consulta falha, a página
+ * tem que dizer o erro com um Tentar novamente, nunca inventar que não há penalidade nenhuma.
  */
 
 const mocks = vi.hoisted(() => ({ mine: vi.fn() }));
@@ -107,5 +108,35 @@ describe("Penalidades", () => {
 
     expect(host.textContent).toContain("Motivo: Spam repetido na rede.");
     expect(host.textContent).not.toMatch(/Revisável até/);
+  });
+
+  it("falha de consulta mostra erro com Tentar novamente, nunca 'nenhuma penalidade'", async () => {
+    mocks.mine.mockRejectedValue(new Error("rede caiu"));
+    await renderPage();
+
+    expect(host.textContent).toContain("Não foi possível consultar suas penalidades.");
+    expect(host.textContent).toContain("Tentar novamente");
+    expect(host.textContent).not.toContain("Nenhuma penalidade na sua conta.");
+
+    mocks.mine.mockReturnValue(Promise.resolve({ sanctions: [], appeals: [] }));
+    const tentar = [...document.body.querySelectorAll("button")].find(
+      (botao) => botao.textContent === "Tentar novamente",
+    );
+    if (!tentar) throw new Error("botão Tentar novamente não renderizado");
+    await act(async () => tentar.click());
+    for (let turn = 0; turn < 10 && !host.textContent.includes("Nenhuma penalidade"); turn += 1) {
+      await act(async () => {});
+    }
+
+    expect(host.textContent).toContain("Nenhuma penalidade na sua conta.");
+    expect(host.textContent).not.toContain("Não foi possível consultar suas penalidades.");
+  });
+
+  it("consulta bem-sucedida sem sanções mostra o vazio, não o erro", async () => {
+    mocks.mine.mockReturnValue(Promise.resolve({ sanctions: [], appeals: [] }));
+    await renderPage();
+
+    expect(host.textContent).toContain("Nenhuma penalidade na sua conta.");
+    expect(host.textContent).not.toContain("Não foi possível consultar suas penalidades.");
   });
 });

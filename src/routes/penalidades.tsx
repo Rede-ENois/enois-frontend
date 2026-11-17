@@ -32,7 +32,7 @@ function Penalidades() {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-sanctions"],
     queryFn: () => sanctionsApi.mine(),
   });
@@ -129,6 +129,19 @@ function Penalidades() {
 
         {isLoading ? (
           <LoadingState />
+        ) : isError ? (
+          <div className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p>{texts.sanctions.loadError}</p>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2 rounded-full"
+              onClick={() => refetch()}
+            >
+              {texts.sanctions.retry}
+            </Button>
+          </div>
         ) : sanctions.length === 0 ? (
           <div className="rounded-2xl border border-border-soft bg-surface-card">
             <EmptyState icon={ShieldAlert} title={texts.sanctions.empty} />
