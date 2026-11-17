@@ -54,29 +54,33 @@ function startFeedLiveTally(
 }
 
 /**
- * Confere as páginas ainda não conferidas desta varredura, da mais nova para a mais antiga, e
- * devolve o que veio. O cursor de cada página vem de `pageParams` — o mesmo que a tela usou.
+ * Confere as páginas carregadas em rodízio e devolve o índice da próxima rodada.
+ * O cursor de cada página vem de `pageParams` — o mesmo que a tela usou.
  */
 async function sweepLoadedPages(
   queryClient: QueryClient,
   queryKey: readonly unknown[],
   tally: Map<FeedLiveCursor, FeedLiveTally>,
-): Promise<void> {
+  startIndex: number,
+): Promise<number> {
   const snapshot = queryClient.getQueryData<FeedPages>(queryKey);
-  if (!snapshot || !Array.isArray(snapshot.pages) || snapshot.pages.length === 0) return;
+  if (!snapshot || !Array.isArray(snapshot.pages) || snapshot.pages.length === 0) return 0;
 
   const pending: FeedLiveCursor[] = [];
-  for (let index = 0; index < snapshot.pages.length; index++) {
-    const cursor = (snapshot.pageParams[index] as FeedLiveCursor) ?? null;
+  let nextIndex = startIndex % snapshot.pages.length;
+  for (let visited = 0; visited < snapshot.pages.length; visited++) {
+    const cursor = (snapshot.pageParams[nextIndex] as FeedLiveCursor) ?? null;
+    nextIndex = (nextIndex + 1) % snapshot.pages.length;
     if (!tally.has(cursor)) {
       tally.set(cursor, startFeedLiveTally(queryClient, queryKey, cursor));
       pending.push(cursor);
     }
     if (pending.length === PAGES_PER_SWEEP) break;
   }
-  if (pending.length === 0) return;
+  if (pending.length === 0) return nextIndex;
 
   await Promise.all(pending.map((cursor) => tally.get(cursor)?.pending));
+  return nextIndex;
 }
 
 /**
@@ -118,6 +122,7 @@ export function useFeedLiveRefresh({ queryClient, queryKey, enabled }: FeedLiveS
     const key = JSON.parse(serialized) as unknown[];
     const scope = `feed:${serialized}`;
     let stopped = false;
+    let nextPageIndex = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const sweep = async () => {
@@ -126,7 +131,7 @@ export function useFeedLiveRefresh({ queryClient, queryKey, enabled }: FeedLiveS
         running.add(scope);
         const tally = new Map<FeedLiveCursor, FeedLiveTally>();
         try {
-          await sweepLoadedPages(queryClient, key, tally);
+          nextPageIndex = await sweepLoadedPages(queryClient, key, tally, nextPageIndex);
           if (!stopped) mergeSweptPages(queryClient, key, tally);
         } finally {
           running.delete(scope);
