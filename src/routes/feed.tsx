@@ -342,7 +342,6 @@ export function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch: feedRefetch,
   } = useFeed(
     tab,
     tab === "ALL" ? typeFilter : undefined,
@@ -832,9 +831,19 @@ export function Home() {
 
   // Puxar para renovar no topo, em toque: renova SÓ a lista do feed — o gesto é sobre o que está
   // na tela, não sobre o aplicativo. O indicador de renovação é o mesmo da busca automática.
+  const [refreshingFeed, setRefreshingFeed] = useState(false);
+  const refreshingFeedRef = useRef(false);
   const pullToRefresh = usePullToRefresh(
-    useCallback(() => void feedRefetch(), [feedRefetch]),
-    feedFetching && !isFetchingNextPage,
+    useCallback(() => {
+      if (refreshingFeedRef.current) return;
+      refreshingFeedRef.current = true;
+      setRefreshingFeed(true);
+      void refreshFeedFirstPage(queryClient).finally(() => {
+        refreshingFeedRef.current = false;
+        setRefreshingFeed(false);
+      });
+    }, [queryClient]),
+    (feedFetching && !isFetchingNextPage) || refreshingFeed,
   );
 
   useEffect(() => {
@@ -1569,7 +1578,7 @@ export function Home() {
 
             {feedLoading && <PostCardSkeletons />}
 
-            {!feedLoading && feedFetching && !isFetchingNextPage && (
+            {!feedLoading && ((feedFetching && !isFetchingNextPage) || refreshingFeed) && (
               <div
                 role="status"
                 className="pointer-events-none absolute inset-x-0 -top-8 z-10 flex justify-center"
@@ -1585,7 +1594,7 @@ export function Home() {
                 contínuo e ao soltar vira o "Atualizando..." de cima. Sem isso o gesto parecia
                 não fazer nada — e, sem o overscroll do documento bloqueado, o Chrome assumia
                 o gesto e recarregava a página inteira. */}
-            {pullToRefresh.pulling && !feedFetching && (
+            {pullToRefresh.pulling && !feedFetching && !refreshingFeed && (
               <PullIndicator pull={pullToRefresh.pull} trigger={pullToRefresh.trigger} />
             )}
 
