@@ -7,6 +7,7 @@ import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { messagesApi } from "@/lib/api";
+import type { Message } from "@/types/application/message/message";
 
 import { ConversationThread } from "./conversation-thread";
 
@@ -63,10 +64,10 @@ vi.mock("@rede-enois/design-system/domain", () => ({
     onSend,
   }: {
     children?: React.ReactNode;
-    onSend: () => void;
+    onSend: (values: { text: string; files: File[]; mediaSpoiler: boolean; replyToId?: string }) => Promise<void>;
   }) => (
     <div>
-      <button onClick={() => void onSend({ text: "oi", files: [], replyToId: undefined })}>
+      <button onClick={() => void onSend({ text: "oi", files: [], mediaSpoiler: false, replyToId: undefined })}>
         enviar
       </button>
       {children}
@@ -126,14 +127,18 @@ describe("thread: envio não refaz o histórico inteiro", () => {
   afterEach(() => act(() => root.unmount()));
 
   it("após enviar, só a primeira página da thread aberta é buscada de novo", async () => {
-    vi.mocked(messagesApi.listMessages).mockImplementation((_conv, cursor: string | null) => {
-      fetches.push(cursor ?? "primeira");
-      return Promise.resolve(
-        cursor === null
-          ? { items: [{ id: "m1", from: "user_ana", text: "a", time: "t1" }], nextCursor: "c2" }
-          : { items: [{ id: "m2", from: "user_ana", text: "b", time: "t2" }], nextCursor: null },
-      );
-    });
+    const msg = (id: string, text: string): Message =>
+      ({ id, from: "user_ana", text, time: "t" }) as Message;
+    vi.mocked(messagesApi.listMessages).mockImplementation(
+      (_conv: string, cursor?: string | null) => {
+        fetches.push(cursor ?? "primeira");
+        return Promise.resolve(
+          cursor === null
+            ? { items: [msg("m1", "a")], nextCursor: "c2" }
+            : { items: [msg("m2", "b")], nextCursor: null },
+        );
+      },
+    );
 
     // Thread com DUAS páginas em cache: quem rolou até o fim não pode ter o histórico refeito.
     queryClient.setQueryData(["messages", "conv_1"], twoPages(["m1"], ["m2"]));
