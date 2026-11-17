@@ -74,8 +74,10 @@ async function renderPage() {
     );
   });
   // A query resolve em microtasks encadeadas (react-query notifica o observador em job separado):
-  // gira o act até a página sair do estado de carregamento ou esgotar as voltas.
-  for (let turn = 0; turn < 10 && host.querySelector('[role="status"]'); turn += 1) {
+  // gira o act até a página sair do estado de carregamento. Sob carga (suíte inteira no CI) a
+  // microtask pode demorar mais que o esperado — o teto alto é folga, o teste falha por asserção
+  // de conteúdo e não por corrida com o scheduler.
+  for (let turn = 0; turn < 100 && host.querySelector('[role="status"]'); turn += 1) {
     await act(async () => {});
   }
 }
