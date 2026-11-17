@@ -33,6 +33,8 @@ import {
 import { Button, LoadingState } from "@rede-enois/design-system/ui";
 import { ChevronDown, RotateCcw, Search, Sparkles, X } from "lucide-react";
 
+import { BannerHtmlFrame } from "@/components/banner-html-frame";
+
 const PAGE_SIZE = 24;
 /** Looks are bigger cards than the item grid, so fewer of them fit a screen at a time. */
 const LOOK_PAGE_SIZE = 12;
@@ -121,6 +123,7 @@ export function CosmeticCatalog({
   lookPending = null,
   renderCollectionExtra,
   initialCollection,
+  bannerHtml,
 }: CosmeticCatalogProps) {
   const messages = useMessages().cosmeticShop;
   const [picked, setPicked] = useState<string | null | undefined>(initialCollection);
@@ -601,7 +604,19 @@ export function CosmeticCatalog({
         </div>
 
         <aside className="cos-shop__side" aria-label={messages.previewLabel}>
-          <ProfileCard profile={preview} effectReplayKey={replay} />
+          <ProfileCard
+            profile={preview}
+            effectReplayKey={replay}
+            bannerSlot={
+              bannerHtml ? (
+                <BannerHtmlFrame
+                  html={bannerHtml.html}
+                  title={texts.profile.bannerHtml.frameTitle}
+                  allowSoundCloudPlayer={bannerHtml.allowSoundCloudPlayer}
+                />
+              ) : undefined
+            }
+          />
 
           <div className="cos-shop__panel">
             <p className="cos-shop__trying" aria-live="polite">

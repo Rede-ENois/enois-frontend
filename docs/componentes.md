@@ -39,6 +39,18 @@ The owned frames in the `Minhas molduras` tab of `/carteira` (`onlyOwned`). It l
 - Search, filters, `oldest`/`newest` order (`GET /loja?order=`), pagination of 12 and the frame
   preview come from the design system `FrameShop`
 
+## `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`)
+
+The seasonal cosmetics shop (`/carteira`), mounted by `CosmeticShop`. Besides the design system
+`CosmeticShopProps` it takes:
+
+- `bannerHtml?: CapaEmHtml` — the shopper's HTML profile cover. The preview card shows it through
+  the design system `ProfileCard` `bannerSlot`, with the same `BannerHtmlFrame` the profile route
+  uses, so the shop never previews a cover different from the real profile (#695). Without it the
+  card falls back to the uploaded photo or the theme gradient.
+
+`bannerHtmlSlot(profile)` in `src/lib/cosmetics.ts` builds that value.
+
 ## `ProfilePeek` (`src/components/profile/profile-peek.tsx`)
 
 The avatar or name of a person in a list opens a popover with the design system
