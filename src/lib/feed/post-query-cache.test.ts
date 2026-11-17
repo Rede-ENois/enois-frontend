@@ -1,6 +1,7 @@
 import { QueryClient, QueryObserver, type QueryObserverOptions } from "@tanstack/react-query";
 
 import type { PostView } from "@/types/application/feed/post-view";
+import type { FeedPages } from "@/types/lib/feed/feed-pages";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -121,6 +122,44 @@ describe("refreshFeedFirstPage", () => {
     await refreshFeedFirstPage(client);
 
     expect(queryFn).not.toHaveBeenCalled();
+  });
+
+  it("aplica campos novos com os mesmos ids e preserva referências quando nada muda", async () => {
+    const client = new QueryClient();
+    const key = ["feed", "ALL", "", ""] as const;
+    const queryFn = vi.fn().mockImplementation(async () => ({
+      items: [{ ...post("p1", 7), content: "texto editado" }],
+      nextCursor: "cursor-1",
+    }));
+    const observer = new QueryObserver(client, {
+      queryKey: key,
+      queryFn,
+      initialPageParam: null,
+      enabled: false,
+    } as QueryObserverOptions & { initialPageParam: null });
+    const unsubscribe = observer.subscribe(() => {});
+    client.setQueryData<FeedPages>(key, {
+      pages: [page(["p1"], "cursor-1"), page(["p2"])],
+      pageParams: [null, "cursor-1"],
+    });
+    const before = client.getQueryData<FeedPages>(key)!;
+
+    try {
+      await refreshFeedFirstPage(client);
+
+      const updated = client.getQueryData<FeedPages>(key)!;
+      expect(updated.pages[0].items).toEqual([{ ...post("p1", 7), content: "texto editado" }]);
+      expect(updated.pages[1]).toBe(before.pages[1]);
+      expect(updated.pageParams).toBe(before.pageParams);
+
+      await refreshFeedFirstPage(client);
+
+      expect(client.getQueryData(key)).toBe(updated);
+      expect(queryFn).toHaveBeenCalledTimes(2);
+    } finally {
+      unsubscribe();
+      client.clear();
+    }
   });
 });
 
