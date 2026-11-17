@@ -13,13 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/blog-rascunhos
+          ref: fix/chat-draft-falha-app
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: https://npm.pkg.github.com
-          scope: '@rede-enois'
+          scope: "@rede-enois"
       - name: Remove the design-system entry from the lockfile
         run: |
           node -e "
@@ -37,5 +37,5 @@ jobs:
           git config user.name "melissa"
           git config user.email "amelissariver@gmail.com"
           git add package-lock.json
-          git commit -m "chore(deps): lockfile aponta o design-system 0.37.5 publicado"
+          git commit -m "chore(deps): lockfile aponta o design-system 0.37.9 publicado"
           git push
