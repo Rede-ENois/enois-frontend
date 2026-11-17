@@ -115,9 +115,9 @@ describe("Penalidades", () => {
         .find((b) => b.textContent === "Tentar novamente")!
         .click(),
     );
-    // O banner de erro não tem role="status": gira o act até o texto do erro sair (ou esgotar a
-    // folga) — sob carga do CI o refetch resolve em mais de um giro.
-    for (let turn = 0; turn < 100; turn += 1) {
+    // Espera o CONTEÚDO do retry aparecer (não o fim do spinner): sob carga do CI o refetch
+    // resolve em mais de um giro, e o banner de erro não tem role="status" para girar por ele.
+    for (let turn = 0; turn < 100 && !host.textContent.includes("Nenhuma penalidade"); turn += 1) {
       await act(async () => {});
       if (!host.textContent.includes("Não foi possível consultar suas penalidades.")) break;
     }
