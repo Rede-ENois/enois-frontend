@@ -38,8 +38,8 @@ Funcionalidades:
 - **Caption required with media:** the backend refuses a post without text (except PAGE), so "Publicar" stays disabled while the field is empty. With media attached and an empty field, the composer says so below the buttons ("Escreva uma legenda para publicar"); article and poll are left out, since there the field is the title or the question (`lib/feed/caption-required`).
 - **Rascunho persistido (V332):** enquanto a pessoa escreve, o compositor salva sozinho (1,5s depois da última mudança) em `PUT /feed/draft` — um rascunho por conta, o mesmo em qualquer dispositivo. Quem abre o feed com o compositor intocado recebe o rascunho de volta (`GET /feed/draft`), com tipo, texto, assunto, alternativas e extensões da enquete; quem já começou a escrever não é sobrescrito. O `ComposerDraftStatus` (DS) mostra "Rascunho salvo às HH:MM" com o botão "Descartar rascunho" (apaga o salvo no servidor e limpa o compositor). Publicar ou agendar apaga o rascunho (`DELETE /feed/draft`). A mídia anexada não entra no rascunho — os arquivos só sobem no momento de publicar, então quem retoma reanexa. Falha no autosave é silenciosa; as regras completas (tamanho, antiflood, enquete inteira) continuam valendo só na publicação.
 - **Feed infinito** de `PostCard` components
-- **Renovação de fundo:** com a aba visível, cada rodada confere até duas páginas carregadas.
-  O rodízio retoma a posição da rodada anterior, por consulta, sem buscar páginas extras.
+- **Chave da consulta:** a listagem e a renovação de fundo usam `feedQueryKey`. Nas dúvidas,
+  Todas usa o filtro vazio, Abertas usa `false` e Resolvidas usa `true`.
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
   not move it). "Para você" is ordered by relevance, so the loaded posts newer than the marker go first,
