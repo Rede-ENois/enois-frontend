@@ -12,6 +12,7 @@ import { formatarData } from "@/lib/date/format";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
+import { ErrorBanner } from "@/components/error-banner";
 
 export const Route = createFileRoute("/penalidades")({
   beforeLoad: requireAuth,
@@ -32,7 +33,7 @@ function Penalidades() {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["my-sanctions"],
     queryFn: () => sanctionsApi.mine(),
   });
@@ -129,6 +130,14 @@ function Penalidades() {
 
         {isLoading ? (
           <LoadingState />
+        ) : isError ? (
+          <>
+            <ErrorBanner error={texts.sanctions.loadError} showDetails={false} />
+
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              {texts.sanctions.retry}
+            </Button>
+          </>
         ) : sanctions.length === 0 ? (
           <div className="rounded-2xl border border-border-soft bg-surface-card">
             <EmptyState icon={ShieldAlert} title={texts.sanctions.empty} />
