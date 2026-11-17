@@ -40,4 +40,13 @@ export type CommunityTopic =
   | "POLITICA"
   | "RELIGIAO"
   /** Espaço acolhedor para desabafar (#725). */
-  | "DESABAFO";
+  | "DESABAFO"
+  /** Nichos pedidos no dia a dia da rede (2026-11-17). */
+  | "MEIO_AMBIENTE"
+  | "ANIMAIS"
+  | "CULINARIA"
+  | "JARDINAGEM"
+  | "ARTESANATO"
+  | "HISTORIA"
+  | "FILOSOFIA"
+  | "IDIOMAS";

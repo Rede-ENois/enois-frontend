@@ -24,6 +24,22 @@ describe("rótulo do assunto", () => {
     expect(topicLabel("DESABAFO")).toBe("Desabafo");
   });
 
+  /**
+   * Ampliação de 2026-11-17: nichos que a rede pediu (pets já existia; meio ambiente foi o
+   * pedido explícito). O rótulo tem que existir do lado do app — o backend rejeita o assunto
+   * que só um lado conhece.
+   */
+  it("traduz os oito assuntos da ampliação de 2026-11-17", () => {
+    expect(topicLabel("MEIO_AMBIENTE")).toBe("Meio ambiente");
+    expect(topicLabel("ANIMAIS")).toBe("Animais");
+    expect(topicLabel("CULINARIA")).toBe("Culinária");
+    expect(topicLabel("JARDINAGEM")).toBe("Jardinagem");
+    expect(topicLabel("ARTESANATO")).toBe("Artesanato");
+    expect(topicLabel("HISTORIA")).toBe("História");
+    expect(topicLabel("FILOSOFIA")).toBe("Filosofia");
+    expect(topicLabel("IDIOMAS")).toBe("Idiomas");
+  });
+
   it("não mostra nada em comunidade sem assunto", () => {
     expect(topicLabel(null)).toBeNull();
     expect(topicLabel(undefined)).toBeNull();
