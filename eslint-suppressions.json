@@ -628,7 +628,7 @@
   },
   "src/routes/penalidades.tsx": {
     "local/no-front-markup": {
-      "count": 59
+      "count": 55
     }
   },
   "src/routes/perfil.$username.tsx": {

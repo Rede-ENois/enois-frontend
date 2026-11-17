@@ -134,7 +134,7 @@ function Penalidades() {
           <>
             <ErrorBanner error={texts.sanctions.loadError} showDetails={false} />
 
-            <Button variant="outline" size="sm" className="rounded-full" onClick={() => refetch()}>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
               {texts.sanctions.retry}
             </Button>
           </>
