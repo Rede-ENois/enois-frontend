@@ -34,5 +34,5 @@ jobs:
           git config user.name "melissa"
           git config user.email "melissa@users.noreply.github.com"
           git add package.json package-lock.json
-          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): design system 0.37.7 (colagem e emojis)"
+          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): design system 0.37.8 (colagem e emojis)"
           git push
