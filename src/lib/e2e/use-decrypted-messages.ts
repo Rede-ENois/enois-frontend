@@ -25,12 +25,25 @@ export const TIMEOUT_PLACEHOLDER = "[Mensagem protegida]";
  * TODO o historico por causa de uma linha que entrou.
  *
  * A entrada guarda o ciphertext junto: id igual com conteudo diferente nao reaproveita o texto.
+ * Teto de entradas: a conversa é memória de sessão, não um arquivo que cresce sem limite; quem
+ * sai do teto volta a passar pelo RSA na próxima leitura. `Map` preserva a ordem de inserção,
+ * então o mais antigo sai primeiro.
  */
+const PLAINTEXT_CACHE_LIMIT = 500;
 const plaintextCache = new Map<string, { cipher: string; text: string }>();
 
 /** Esvazia o cache (testes; e depois de trocar de conta). */
 export function clearDecryptedMessageCache(): void {
   plaintextCache.clear();
+}
+
+function cachePlaintext(id: string, entry: { cipher: string; text: string }): void {
+  plaintextCache.set(id, entry);
+  while (plaintextCache.size > PLAINTEXT_CACHE_LIMIT) {
+    const oldest = plaintextCache.keys().next().value;
+    if (oldest === undefined) break;
+    plaintextCache.delete(oldest);
+  }
 }
 
 /**
@@ -86,7 +99,9 @@ export function useDecryptedMessages(
 
       // Só o que ainda não foi decifrado passa pelo RSA: o histórico já lido vem do cache.
       // Cada decifragem disputa com um teto de espera: a que não resolve dentro dele volta como
-      // placeholder e não segura o resto nem o fim do loading.
+      // placeholder e não segura o resto nem o fim do loading. Falha de uma (chave ausente,
+      // envelope inválido) é isolada na própria mensagem: sem o catch, a rejeição derrubava o
+      // Promise.all e a thread inteira ficava "decifrando..." para sempre.
       const withTimeout = async (msg: Message): Promise<Message> => {
         if (!msg.e2e) return msg;
         const cached = plaintextCache.get(msg.id);
@@ -94,12 +109,12 @@ export function useDecryptedMessages(
         let timer: ReturnType<typeof setTimeout> | undefined;
         try {
           const plaintext = await Promise.race([
-            decryptReceived(msg, currentUserId),
+            decryptReceived(msg, currentUserId).catch(() => TIMEOUT_PLACEHOLDER),
             new Promise<string>((resolve) => {
               timer = setTimeout(() => resolve(TIMEOUT_PLACEHOLDER), DECRYPT_TIMEOUT_MS);
             }),
           ]);
-          plaintextCache.set(msg.id, { cipher: msg.text, text: plaintext });
+          cachePlaintext(msg.id, { cipher: msg.text, text: plaintext });
           return { ...msg, text: plaintext };
         } finally {
           clearTimeout(timer);
