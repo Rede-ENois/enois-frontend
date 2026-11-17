@@ -76,6 +76,8 @@ TanStack Query.
 
 Condições de interface, polling e exceções de frescor continuam nos consumidores. Loaders de SSR,
 revalidação de dados associados à sessão e paginação por cursor conservam suas regras próprias.
+A entrada em chamadas só aplica credenciais à tentativa ainda aberta; respostas após sair não
+reabrem o painel, e a presença é liberada quando a tela já saiu daquela chamada.
 
 **Mensagens em tempo real.** `MessageStream` (montado no root, só com sessão) abre um `EventSource`
 em `/conversations/stream` (`src/lib/message-stream.ts`). Cada evento `conversation` invalida

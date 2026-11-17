@@ -1,8 +1,8 @@
 import type { CallJoin } from "@/types/application/call/call-join";
 import type { CallView } from "@/types/application/call/call-view";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { MAX_WAITING, callSessionStore, getCallSession } from "./call-session";
+import { MAX_WAITING, callSessionStore, forgetLeftCall, getCallSession } from "./call-session";
 
 const CALL: CallView = {
   id: "call_1",
@@ -298,5 +298,69 @@ describe("fila de chamadas", () => {
     callSessionStore.ring(OTHER, "incoming");
     callSessionStore.ended({ ...OTHER, state: "MISSED" });
     expect(getCallSession().waiting).toEqual([]);
+  });
+});
+
+describe("credencial tardia de entrada", () => {
+  beforeEach(() => {
+    getCallSession().waiting.forEach((held) => callSessionStore.removeWaiting(held.id));
+    callSessionStore.idle();
+    forgetLeftCall();
+  });
+
+  afterEach(() => {
+    callSessionStore.idle();
+    forgetLeftCall();
+  });
+
+  it("não reabre a tela depois de desligar durante a entrada", () => {
+    const attempt = callSessionStore.joining(JOIN.call);
+    callSessionStore.markLeft(JOIN.callId);
+    const left = getCallSession();
+
+    const accepted = callSessionStore.live(JOIN, attempt);
+
+    expect(getCallSession()).toBe(left);
+    expect(getCallSession()).toMatchObject({ phase: "idle", call: null, join: null });
+    expect(accepted).toBe(false);
+  });
+
+  it("não substitui a entrada em outra chamada", () => {
+    const attempt = callSessionStore.joining(JOIN.call);
+    const other = { ...JOIN.call, id: "call_next" };
+    callSessionStore.joining(other);
+    const current = getCallSession();
+
+    const accepted = callSessionStore.live(JOIN, attempt);
+
+    expect(getCallSession()).toBe(current);
+    expect(getCallSession().call).toEqual(other);
+    expect(accepted).toBe(false);
+  });
+
+  it("não confunde uma resposta antiga com a reentrada na mesma chamada", () => {
+    const abandoned = callSessionStore.joining(JOIN.call);
+    callSessionStore.markLeft(JOIN.callId);
+    forgetLeftCall(JOIN.callId);
+    const current = callSessionStore.joining(JOIN.call);
+    const joining = getCallSession();
+
+    const accepted = callSessionStore.live(JOIN, abandoned);
+
+    expect(getCallSession()).toBe(joining);
+    expect(accepted).toBe(false);
+    expect(callSessionStore.live(JOIN, current)).toBe(true);
+    expect(getCallSession()).toMatchObject({ phase: "live", join: JOIN });
+  });
+
+  it("não desfaz o encerramento recebido enquanto a credencial estava a caminho", () => {
+    const attempt = callSessionStore.joining(JOIN.call);
+    callSessionStore.ended({ ...JOIN.call, state: "ENDED" });
+    const ended = getCallSession();
+
+    const accepted = callSessionStore.live(JOIN, attempt);
+
+    expect(getCallSession()).toBe(ended);
+    expect(accepted).toBe(false);
   });
 });
