@@ -38,4 +38,6 @@ export type CommunityTopic =
   | "RELACIONAMENTOS"
   | "MODA"
   | "POLITICA"
-  | "RELIGIAO";
+  | "RELIGIAO"
+  /** Espaço acolhedor para desabafar (#725). */
+  | "DESABAFO";

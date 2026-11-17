@@ -19,6 +19,11 @@ describe("rótulo do assunto", () => {
     expect(topicLabel("CARREIRA")).toBe("Carreira");
   });
 
+  /** A #725 pediu o assunto "Desabafo": o rótulo tem que existir nos dois lados da API. */
+  it("traduz o assunto desabafo", () => {
+    expect(topicLabel("DESABAFO")).toBe("Desabafo");
+  });
+
   it("não mostra nada em comunidade sem assunto", () => {
     expect(topicLabel(null)).toBeNull();
     expect(topicLabel(undefined)).toBeNull();

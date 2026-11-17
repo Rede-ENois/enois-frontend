@@ -2089,6 +2089,7 @@ export const texts = {
       MODA: "Moda e estilo",
       POLITICA: "Política",
       RELIGIAO: "Religião",
+      DESABAFO: "Desabafo",
     },
     memberCount: (count: number) => `${count} membro${count === 1 ? "" : "s"}`,
     participating: "Participando",
