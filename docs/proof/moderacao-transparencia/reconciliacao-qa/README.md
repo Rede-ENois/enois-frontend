@@ -1,5 +1,8 @@
 # Reconciliação das penalidades com a QA
 
+> **Primeira composição reconciliada, preservada como histórica.** O novo avanço de QA e suas
+> provas estão em [qa-b57.md](./qa-b57.md). Os totais abaixo continuam vinculados ao código aqui indicado.
+
 ## Composição exercitada
 
 - Frontend: `e2b271f07acb9ae632d564514322cc2090fa173b`, incorporando a QA
