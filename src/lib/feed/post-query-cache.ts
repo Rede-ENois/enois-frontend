@@ -58,7 +58,6 @@ export async function refreshFeedFirstPage(queryClient: QueryClient): Promise<vo
         if (!current || !Array.isArray(current.pages) || current.pages.length === 0) return current;
         const [first, ...older] = current.pages;
         const items = mergeRows(fresh.items, first.items);
-        if (items.length === first.items.length) return current;
         return { ...current, pages: [{ ...first, items }, ...older] };
       });
     }),
