@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  packages: read
 
 jobs:
   relock:
