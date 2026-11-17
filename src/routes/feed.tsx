@@ -263,23 +263,23 @@ function useProfile() {
   });
 }
 
-function useSuggestions() {
+function useSuggestions(enabled: boolean) {
   const authenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["network", "suggestions"],
     // Busca um lote maior: o "ver outras" gira entre os 4 primeiros sem pedir de novo.
     queryFn: () => networkApi.suggestions(12),
-    enabled: authenticated,
+    enabled: authenticated && enabled,
     staleTime: 120_000,
   });
 }
 
-function useEvents() {
+function useEvents(enabled: boolean) {
   const authenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["events"],
     queryFn: () => eventsApi.list(),
-    enabled: authenticated,
+    enabled: authenticated && enabled,
     staleTime: 120_000,
   });
 }
@@ -313,6 +313,15 @@ export function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const authenticated = useIsAuthenticated();
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(min-width: 64rem)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   // A aba vem da URL; trocar de aba REPLACES o histórico (o "voltar" continua voltando para a
   // página anterior, e não passeando pelas abas).
   const { aba, compor } = Route.useSearch();
@@ -359,8 +368,8 @@ export function Home() {
     enabled: authenticated && tabReady,
   });
   const { data: profile } = useProfile();
-  const { data: suggestions } = useSuggestions();
-  const { data: eventsData } = useEvents();
+  const { data: suggestions } = useSuggestions(isDesktop);
+  const { data: eventsData } = useEvents(isDesktop);
   const {
     data: corporate,
     isError: corporateError,
@@ -1679,7 +1688,7 @@ export function Home() {
               </Link>
             </div>
           )}
-          <TodayGamesCard />
+          <TodayGamesCard enabled={isDesktop} />
 
           {suggestionList.length > 0 && (
             <div className="surface-card p-4 sm:p-5">
@@ -1752,7 +1761,7 @@ export function Home() {
             </div>
           )}
 
-          <CompanyPromptCard />
+          <CompanyPromptCard enabled={isDesktop} />
           <ApoieCard />
         </aside>
       </div>
