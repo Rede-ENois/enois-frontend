@@ -161,6 +161,54 @@ describe("useDecryptedMessages", () => {
     expect(captured.messages[0].text).toBe("claro:b");
   });
 
+  it("decifragem que falha nao prende o lote: o item vira placeholder e os demais aparecem", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockImplementation((message: Message) =>
+      message.id === "quebrada"
+        ? Promise.reject(new Error("chave da conversa ausente"))
+        : Promise.resolve(`claro:${message.id}`),
+    );
+
+    const quebrada = msg({ id: "quebrada", text: "cipher", e2e: true, iv: "iv" });
+    const ok = msg({ id: "ok", text: "cipher", e2e: true, iv: "iv" });
+    act(() => root.render(<HookProbe messages={[quebrada, ok]} />));
+    await flush();
+
+    expect(captured.decrypting).toBe(false);
+    expect(captured.messages.find((m) => m.id === "quebrada")?.text).toBe(TIMEOUT_PLACEHOLDER);
+    expect(captured.messages.find((m) => m.id === "ok")?.text).toBe("claro:ok");
+  });
+
+  it("o cache de textos decifrados tem teto: as primeiras saem quando o teto enche", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockImplementation((message: Message) =>
+      Promise.resolve(`claro:${message.id}`),
+    );
+
+    const primeiras = Array.from({ length: 600 }, (_, i) =>
+      msg({ id: `m${i}`, text: `cipher-${i}`, e2e: true, iv: "iv" }),
+    );
+    act(() => root.render(<HookProbe messages={primeiras} />));
+    await flush();
+    expect(decryptReceived).toHaveBeenCalledTimes(600);
+
+    // Chegam 200 novas: o teto (500) expulsa as mais antigas; m0 (a primeira de todas) sai,
+    // m599 (a última inserida) segue — e só quem saiu volta a passar pelo RSA.
+    const seguintes = Array.from({ length: 200 }, (_, i) =>
+      msg({ id: `n${i}`, text: `cipher-n${i}`, e2e: true, iv: "iv" }),
+    );
+    const antes = decryptReceived.mock.calls.length;
+    act(() => root.render(<HookProbe messages={[...seguintes, ...primeiras]} />));
+    await flush();
+
+    const decifradasDeNovo = decryptReceived.mock.calls
+      .slice(antes)
+      .map((call) => (call[0] as Message).id)
+      .filter((id) => id.startsWith("m"));
+    expect(decifradasDeNovo).toContain("m0");
+    expect(decifradasDeNovo).not.toContain("m599");
+  });
+
   it("decifragem presa nao segura a thread: estoura o teto e vira placeholder", async () => {
     vi.useFakeTimers();
     try {
