@@ -1,0 +1,45 @@
+name: Reescrever o lockfile da qa
+
+# O merge main->qa (c276781c) resolveu o package-lock com a entrada antiga do design system
+# (0.34.1) enquanto o package.json pede ^0.37.5 — o npm ci do CI recusa na hora. Este workflow
+# regenera o lockfile com o GITHUB_TOKEN do runner (packages: read) e empurra na mesma branch.
+on:
+  push:
+    branches: [fix/relock-qa-2]
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/relock-qa-2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@rede-enois"
+
+      - name: Instalar e gravar o lockfile
+        run: npm install --package-lock-only --no-audit --no-fund --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Provar que o npm ci aceita o lockfile novo
+        run: npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commitar
+        run: |
+          git config user.name "lockfile-bot"
+          git config user.email "noreply@github.com"
+          git add package-lock.json
+          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): regenera o lockfile da qa com o design system 0.37.5"
+          git push
