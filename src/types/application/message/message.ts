@@ -1,3 +1,5 @@
+import type { MessageReply } from "./message-reply";
+
 export type Message = {
   id: string;
   conversationId: string;
@@ -17,9 +19,9 @@ export type Message = {
   /** IV usado na cifragem (base64). Presente quando e2e=true. */
   iv?: string | null;
   /** Chaves AES cifradas por participante (per-message E2E). Null em mensagens antigas. */
-  encryptedKeys?: Record<string, string> | null;
+  encryptedKeys?: Record<string, string> | string | null;
   /** Id da mensagem sendo respondida. */
   replyToId?: string | null;
   /** Dados da mensagem citada (preview do backend). */
-  replyTo?: { id: string; from: string; text: string; e2e: boolean } | null;
+  replyTo?: MessageReply | null;
 };

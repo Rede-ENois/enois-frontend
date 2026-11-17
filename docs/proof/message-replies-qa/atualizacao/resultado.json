@@ -1,0 +1,49 @@
+{
+  "environment": "Local, API simulada, dados fictícios, WebCrypto real, ConversationThread e DS reais",
+  "results": [
+    {
+      "width": 1280,
+      "theme": "light",
+      "decryptedQuote": true,
+      "paginatedNavigation": true,
+      "keyboard": true,
+      "overflow": false,
+      "errors": [],
+      "unknown": [],
+      "requests": 10
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "decryptedQuote": true,
+      "paginatedNavigation": true,
+      "keyboard": true,
+      "overflow": false,
+      "errors": [],
+      "unknown": [],
+      "requests": 11
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "decryptedQuote": true,
+      "paginatedNavigation": true,
+      "keyboard": true,
+      "overflow": false,
+      "errors": [],
+      "unknown": [],
+      "requests": 11
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "decryptedQuote": true,
+      "paginatedNavigation": true,
+      "keyboard": true,
+      "overflow": false,
+      "errors": [],
+      "unknown": [],
+      "requests": 11
+    }
+  ]
+}

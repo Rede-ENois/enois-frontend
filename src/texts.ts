@@ -2768,6 +2768,13 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    loadingReply: "Buscando a mensagem original...",
+    replyUnavailable: "A mensagem original não está disponível nesta conversa.",
+    replyNavigationError: "Não foi possível abrir a mensagem original. Tente novamente.",
+    encryptedMessage: "🔒 Mensagem cifrada",
+    messageDecryptError: "Não foi possível decifrar esta mensagem neste dispositivo.",
+    attachmentPreview: "Mensagem com mídia",
+    unknownAuthor: "Participante",
     /**
      * Inbox preview with its author: "Você" for the viewer (otherwise the peer seems to have
      * written it) and the sender's first name in groups (the row shows the group, not the author).
