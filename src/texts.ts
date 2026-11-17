@@ -2970,10 +2970,10 @@ export const texts = {
     description:
       "Restrições ativas na sua conta e o andamento dos seus recursos. A decisão final é sempre de uma pessoa do time.",
     empty: "Nenhuma penalidade na sua conta.",
-    loadError: "Não foi possível carregar suas penalidades.",
     suspendedSeoTitle: "Conta suspensa · Énóis",
-    retry: "Tentar novamente",
     emptyHint: "Isto não é um histórico de elogios — é só o que de fato restringiu a conta.",
+    loadError: "Não foi possível consultar suas penalidades.",
+    retry: "Tentar novamente",
     type: {
       RESTRICTION: "Restrição",
       SUSPENDED: "Suspensão",

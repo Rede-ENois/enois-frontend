@@ -31,6 +31,7 @@ let root: Root;
 let host: HTMLDivElement;
 let client: QueryClient;
 const emptyMessage = "Nenhuma penalidade encontrada.";
+const errorMessage = "Não foi possível carregar suas penalidades.";
 
 async function render() {
   await act(async () => {
@@ -69,7 +70,7 @@ describe("consulta das próprias penalidades", () => {
   it("não confunde falha na consulta com ausência de penalidades", async () => {
     mocks.mine.mockRejectedValue(new Error("Falha sintética na consulta"));
     await render();
-    await waitForText("Não foi possível carregar suas penalidades.");
+    await waitForText(errorMessage);
 
     expect(host.textContent).not.toContain(emptyMessage);
     expect(
@@ -81,7 +82,7 @@ describe("consulta das próprias penalidades", () => {
     mocks.mine.mockResolvedValue({ sanctions: [], appeals: [] });
     await render();
     await waitForText(emptyMessage);
-    expect(host.textContent).not.toContain(texts.sanctions.loadError);
+    expect(host.textContent).not.toContain(errorMessage);
   });
 
   it.each(["vazia", "com penalidade"])(
@@ -89,7 +90,7 @@ describe("consulta das próprias penalidades", () => {
     async (state) => {
       mocks.mine.mockRejectedValueOnce(new Error("Falha sintética"));
       await render();
-      await waitForText(texts.sanctions.loadError);
+      await waitForText(errorMessage);
       mocks.mine.mockResolvedValue({
         sanctions:
           state === "vazia"
@@ -114,7 +115,7 @@ describe("consulta das próprias penalidades", () => {
       );
       await act(async () => retry?.click());
       await waitForText(state === "vazia" ? emptyMessage : "Motivo sintético da penalidade");
-      expect(host.textContent).not.toContain(texts.sanctions.loadError);
+      expect(host.textContent).not.toContain(errorMessage);
       expect(mocks.mine).toHaveBeenCalledTimes(2);
     },
   );
@@ -122,12 +123,12 @@ describe("consulta das próprias penalidades", () => {
   it("mantém erro explícito quando uma nova tentativa falha", async () => {
     mocks.mine.mockRejectedValue(new Error("Falha sintética persistente"));
     await render();
-    await waitForText(texts.sanctions.loadError);
+    await waitForText(errorMessage);
     const retry = [...host.querySelectorAll("button")].find(
       (b) => b.textContent === texts.sanctions.retry,
     );
     await act(async () => retry?.click());
-    await waitForText(texts.sanctions.loadError);
+    await waitForText(errorMessage);
     expect(host.textContent).not.toContain(emptyMessage);
     expect(mocks.mine).toHaveBeenCalledTimes(2);
   });
@@ -140,14 +141,14 @@ describe("consulta das próprias penalidades", () => {
     await act(async () => {
       await client.invalidateQueries({ queryKey: ["my-sanctions"] });
     });
-    await waitForText(texts.sanctions.loadError);
+    await waitForText(errorMessage);
     expect(host.textContent).not.toContain(emptyMessage);
   });
 
   it("não duplica a consulta enquanto uma tentativa está em andamento", async () => {
     mocks.mine.mockRejectedValueOnce(new Error("Falha sintética"));
     await render();
-    await waitForText(texts.sanctions.loadError);
+    await waitForText(errorMessage);
     let resolveQuery: (value: { sanctions: []; appeals: [] }) => void = () => undefined;
     mocks.mine.mockImplementation(
       () =>

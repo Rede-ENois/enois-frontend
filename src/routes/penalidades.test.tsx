@@ -65,7 +65,7 @@ let root: Root;
 let host: HTMLDivElement;
 let client: QueryClient;
 
-async function renderPage() {
+async function renderPage(expectedText = "Spam repetido na rede.") {
   host = document.createElement("div");
   document.body.appendChild(host);
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -81,7 +81,7 @@ async function renderPage() {
   await vi.waitFor(
     async () => {
       await act(async () => new Promise<void>((resolve) => setTimeout(resolve, 0)));
-      expect(host.textContent).toContain("Spam repetido na rede.");
+      expect(host.textContent).toContain(expectedText);
     },
     { timeout: 10_000 },
   );
@@ -131,5 +131,31 @@ describe("Penalidades", () => {
     await renderPage();
     expect(host.textContent).toContain("Prazo para recorrer");
     expect(host.textContent).toContain("17/11/2026, 12:00:00 UTC");
+  });
+
+  it("consulta que falha mostra erro com Tentar novamente, nunca 'nenhuma penalidade'", async () => {
+    mocks.mine.mockReset();
+    mocks.mine.mockRejectedValue(new Error("Falha sintética na consulta"));
+    await renderPage("Não foi possível carregar suas penalidades.");
+
+    expect(host.textContent).toContain("Tentar novamente");
+    expect(host.textContent).not.toContain("Nenhuma penalidade na sua conta.");
+    expect(host.textContent).not.toContain("Nenhuma penalidade encontrada.");
+
+    mocks.mine.mockResolvedValue({ ...FIXTURE, sanctions: [], appeals: [] });
+    const retry = [...host.querySelectorAll("button")].find(
+      (button) => button.textContent === "Tentar novamente",
+    );
+    expect(retry).toBeDefined();
+    await act(async () => retry?.click());
+    await vi.waitFor(
+      async () => {
+        await act(async () => new Promise<void>((resolve) => setTimeout(resolve, 0)));
+        expect(host.textContent).toContain("Nenhuma penalidade encontrada.");
+      },
+      { timeout: 10_000 },
+    );
+    expect(host.textContent).not.toContain("Não foi possível carregar suas penalidades.");
+    expect(mocks.mine).toHaveBeenCalledTimes(2);
   });
 });
