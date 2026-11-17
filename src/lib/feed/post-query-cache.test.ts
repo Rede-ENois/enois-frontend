@@ -4,6 +4,7 @@ import type { PostView } from "@/types/application/feed/post-view";
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  feedQueryKey,
   feedRefreshOptions,
   isUnseenFeedQuery,
   refreshFeedFirstPage,
@@ -73,6 +74,31 @@ describe("renovação automática do feed", () => {
     expect(isUnseenFeedQuery(["feed", "UNSEEN", "", ""])).toBe(true);
     expect(isUnseenFeedQuery(["feed", "ALL", "", ""])).toBe(false);
     expect(isUnseenFeedQuery(["post", "UNSEEN"])).toBe(false);
+  });
+});
+
+describe("feedQueryKey", () => {
+  it.each([
+    ["all", undefined, ""],
+    ["open", false, false],
+    ["resolved", true, true],
+  ] as const)("usa o valor canônico de resolved para %s", (_status, resolved, expected) => {
+    expect(feedQueryKey("ALL", "QUESTION", resolved)).toEqual([
+      "feed",
+      "ALL",
+      "QUESTION",
+      expected,
+    ]);
+  });
+
+  it("normaliza filtros ausentes e mantém as abas separadas", () => {
+    expect(feedQueryKey("ALL")).toEqual(["feed", "ALL", "", ""]);
+    expect(feedQueryKey("ALL", "")).toEqual(feedQueryKey("ALL"));
+    expect(feedQueryKey("CORPORATE")).toEqual(["feed", "CORPORATE", "", ""]);
+    expect(feedQueryKey("ALL", "QUESTION", false)).not.toEqual(feedQueryKey("ALL", "QUESTION"));
+    expect(feedQueryKey("ALL", "QUESTION", false)).not.toEqual(
+      feedQueryKey("ALL", "QUESTION", true),
+    );
   });
 });
 
