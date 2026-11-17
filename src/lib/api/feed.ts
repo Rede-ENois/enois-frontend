@@ -131,4 +131,18 @@ export const feedApi = {
 
   /** Descarta o meu rascunho; sem rascunho continua ok (idempotente). */
   discardDraft: () => api.delete<{ status: string }>("/feed/draft"),
+
+  /** A lista de rascunhos da pessoa (blog: mais de um texto sem perder nenhum). */
+  drafts: () => api.get<{ drafts: DraftPostView[] }>("/feed/drafts"),
+
+  /** Cria um rascunho novo na lista. */
+  createDraft: (data: DraftPostInput) => api.put<{ draft: DraftPostView }>("/feed/drafts", data),
+
+  /** Salva por cima de um rascunho específico da lista. */
+  saveDraftById: (draftId: string, data: DraftPostInput) =>
+    api.put<{ draft: DraftPostView }>(`/feed/drafts/${encodeURIComponent(draftId)}`, data),
+
+  /** Descarta um rascunho específico da lista. */
+  discardDraftById: (draftId: string) =>
+    api.delete<{ status: string }>(`/feed/drafts/${encodeURIComponent(draftId)}`),
 };

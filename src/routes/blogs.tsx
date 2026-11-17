@@ -76,7 +76,7 @@ function Blogs() {
               {/* Post mora DENTRO de um blog: sem blog, o caminho é criar o blog primeiro (o botão
                 ao lado) — não publicar num cantinho que ainda não existe. */}
               {mine && (
-                <Link to="/blog/post/new">
+                <Link to="/blog/post/new" search={{ rascunho: undefined }}>
                   <Button size="sm" className="rounded-full gap-1.5">
                     <Plus className="h-4 w-4" aria-hidden />
 
