@@ -50,6 +50,8 @@ export const TOPICS = [
   "MODA",
   "POLITICA",
   "RELIGIAO",
+  // A #725 pediu o espaço de desabafo; como assunto, entra também no filtro de conteúdo.
+  "DESABAFO",
 ] as const;
 
 export const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
@@ -88,6 +90,7 @@ export const TOPIC_LABELS: Record<(typeof TOPICS)[number], string> = {
   MODA: texts.communities.topics.MODA,
   POLITICA: texts.communities.topics.POLITICA,
   RELIGIAO: texts.communities.topics.RELIGIAO,
+  DESABAFO: texts.communities.topics.DESABAFO,
 };
 
 /**
