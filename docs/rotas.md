@@ -43,6 +43,8 @@ Funcionalidades:
 - **Atualização do cache:** edições e contadores chegam mesmo quando a resposta mantém os mesmos
   ids e quantidade. Respostas idênticas preservam referências pelo compartilhamento estrutural
   do TanStack Query.
+- **Chave da consulta:** a listagem e a renovação de fundo usam `feedQueryKey`. Nas dúvidas,
+  Todas usa o filtro vazio, Abertas usa `false` e Resolvidas usa `true`.
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
   not move it). "Para você" is ordered by relevance, so the loaded posts newer than the marker go first,

@@ -89,7 +89,11 @@ import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-ex
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
-import { feedRefreshOptions, refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
+import {
+  feedQueryKey,
+  feedRefreshOptions,
+  refreshFeedFirstPage,
+} from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -238,7 +242,7 @@ const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
 function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
   return useInfiniteQuery({
-    queryKey: ["feed", tab, typeFilter ?? "", resolved ?? ""],
+    queryKey: feedQueryKey(tab, typeFilter, resolved),
     queryFn: ({ pageParam }): Promise<FeedPage> =>
       tab === "CORPORATE"
         ? feedApi.corporate(pageParam ?? null, FEED_PAGE_SIZE)
@@ -354,7 +358,11 @@ export function Home() {
   // refazer a consulta (que traria todas as páginas e reescreveria o topo embaixo de quem lê).
   useFeedLiveRefresh({
     queryClient,
-    queryKey: ["feed", tab, tab === "ALL" ? typeFilter : "", questionsFeed ? questionStatus : ""],
+    queryKey: feedQueryKey(
+      tab,
+      tab === "ALL" ? typeFilter : undefined,
+      questionsFeed ? RESOLVED_FILTER[questionStatus] : undefined,
+    ),
     enabled: authenticated && tabReady,
   });
   const { data: profile } = useProfile();

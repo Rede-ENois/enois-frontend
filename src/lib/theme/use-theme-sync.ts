@@ -96,7 +96,7 @@ function useThemeAccountSync(): void {
     const accountAt = data.updatedAt ? Date.parse(data.updatedAt) : 0;
     const localAt = themeCollectionUpdatedAt ?? 0;
 
-    if (fromAccount && accountAt > localAt) {
+    if ((data.theme === null || fromAccount !== null) && accountAt > localAt) {
       setThemeCollection(fromAccount);
       return;
     }

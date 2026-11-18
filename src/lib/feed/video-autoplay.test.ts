@@ -347,6 +347,29 @@ describe("autoplay: interação manual", () => {
     expect(b.paused).toBe(true);
   });
 
+  it("T6: vídeo do dono com menos do que o piso de permanência na tela pausa (o som não segue o scroll)", () => {
+    const a = fakeVideo({ top: 100, height: 300 });
+    const b = fakeVideo({ top: 450, height: 300 });
+    const { scroll, flush } = mount(a, b);
+    a.muted = false;
+    a.emit("volumechange");
+
+    // Ainda perto (o IntersectionObserver segue "true"), mas só um pedaço na viewport:
+    // com o som assumido, a reprodução não pode continuar fora de vista.
+    a.rect = { top: -240, height: 300 };
+    scroll();
+    flush();
+    expect(a.paused).toBe(true);
+
+    // De volta à vista: quem assume é o autoplay (mudo), como depois de qualquer saída de cena.
+    a.rect = { top: 250, height: 300 };
+    scroll();
+    flush();
+    expect(a.paused).toBe(false);
+    expect(a.muted).toBe(true);
+    expect(b.paused).toBe(true);
+  });
+
   it("T6: vídeo que terminou não recomeça sozinho", () => {
     const a = fakeVideo();
     const { scroll, flush } = mount(a);

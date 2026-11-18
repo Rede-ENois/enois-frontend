@@ -177,6 +177,7 @@ export const texts = {
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
       desabafos: { label: "Desabafos", description: "Um espaço acolhedor para desabafar" },
+      confessionario: { label: "Confessionário", description: "Histórias anônimas para contar" },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
       colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
@@ -218,6 +219,27 @@ export const texts = {
     commentTooLongError: "A acolhida aceita no máximo 800 caracteres.",
     commentEmptyError: "Escreva uma acolhida antes de enviar.",
     removeCommentDone: "Acolhida removida.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota do Confessionário orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  confessionario: {
+    seoTitle: "Confessionário · Énóis",
+    title: "Confessionário",
+    subtitle:
+      "Histórias anônimas para contar: experiências, situações constrangedoras e confissões. Ninguém fica sabendo quem contou — e nada daqui vai para o feed principal.",
+    publishSuccess: "História publicada.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    contentTooLongError: "A história aceita no máximo 5000 caracteres.",
+    removeDone: "História removida.",
+    commentSuccess: "Comentário enviado.",
+    commentError: "Não foi possível comentar. Tente de novo.",
+    commentTooLongError: "O comentário aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva um comentário antes de enviar.",
+    removeCommentDone: "Comentário removido.",
     removeError: "Não foi possível remover. Tente de novo.",
     reactionError: "Não foi possível reagir. Tente de novo.",
   },
@@ -2746,6 +2768,13 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    loadingReply: "Buscando a mensagem original...",
+    replyUnavailable: "A mensagem original não está disponível nesta conversa.",
+    replyNavigationError: "Não foi possível abrir a mensagem original. Tente novamente.",
+    encryptedMessage: "🔒 Mensagem cifrada",
+    messageDecryptError: "Não foi possível decifrar esta mensagem neste dispositivo.",
+    attachmentPreview: "Mensagem com mídia",
+    unknownAuthor: "Participante",
     /**
      * Inbox preview with its author: "Você" for the viewer (otherwise the peer seems to have
      * written it) and the sender's first name in groups (the row shows the group, not the author).

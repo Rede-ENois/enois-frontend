@@ -49,4 +49,48 @@ describe("markReadInCache", () => {
     const bell = client.getQueryData<{ items: Notification[] }>(["notifications", "SOCIAL"]);
     expect(bell?.items.every((item) => item.read)).toBe(true);
   });
+
+  it("restaura só a leitura afetada sem perder conteúdo, cursores ou linhas novas", () => {
+    const client = new QueryClient();
+    const key = ["notifications", "page", "SOCIAL"];
+    client.setQueryData(key, {
+      pages: [
+        { items: [notification("a")], nextCursor: "older" },
+        { items: [notification("b")], nextCursor: null },
+      ],
+      pageParams: [null, "older"],
+    });
+
+    const rollback = markReadInCache(client, "b");
+
+    client.setQueryData(key, {
+      pages: [
+        { items: [{ ...notification("a"), read: true }], nextCursor: "older" },
+        {
+          items: [
+            { ...notification("b"), read: true, body: "Conteúdo atualizado" },
+            notification("c"),
+          ],
+          nextCursor: "next",
+        },
+      ],
+      pageParams: [null, "older"],
+    });
+    rollback?.();
+
+    expect(client.getQueryData(key)).toMatchObject({
+      pages: [
+        { items: [{ id: "a", read: true }], nextCursor: "older" },
+        {
+          items: [
+            { id: "b", read: false, body: "Conteúdo atualizado" },
+            { id: "c", read: false },
+          ],
+          nextCursor: "next",
+        },
+      ],
+      pageParams: [null, "older"],
+    });
+    client.clear();
+  });
 });

@@ -18,6 +18,7 @@ import {
   Joystick,
   Lightbulb,
   Puzzle,
+  ScrollText,
   ShoppingBag,
   Wrench,
 } from "lucide-react";
@@ -100,6 +101,15 @@ export const exploreItems: {
     color: "var(--table-4)",
     module: null,
     keywords: ["desabafos", "apoio", "acolhida", "desabafar"],
+  },
+  {
+    section: "community",
+    href: "/confessionario",
+    text: texts.explore.items.confessionario,
+    icon: ScrollText,
+    color: "var(--table-6)",
+    module: null,
+    keywords: ["confessionario", "historias", "confissoes", "anonimo"],
   },
   {
     section: "community",

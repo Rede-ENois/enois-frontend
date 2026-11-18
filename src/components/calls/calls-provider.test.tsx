@@ -8,7 +8,7 @@ import type { CallsContextValue } from "@/types/application/call/calls-context-v
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { callSessionStore, getCallSession } from "@/lib/calls/call-session";
+import { callSessionStore, forgetLeftCall, getCallSession } from "@/lib/calls/call-session";
 
 import { CallsProvider, useCalls } from "./calls-provider";
 
@@ -75,6 +75,8 @@ const flush = () =>
 function clearSession() {
   callSessionStore.idle();
   for (const held of [...getCallSession().waiting]) callSessionStore.removeWaiting(held.id);
+  // A marca de sala largada vive fora do estado e vaza entre testes: o guard de live() a consulta.
+  forgetLeftCall();
 }
 
 function call(overrides: Partial<CallView>): CallView {
