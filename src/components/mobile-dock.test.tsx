@@ -47,4 +47,19 @@ describe("MobileDock", () => {
 
     expect(host.querySelector('[data-testid="dock"]')).not.toBeNull();
   });
+
+  it("esconde o menu inferior enquanto um campo de texto está focado (teclado aberto)", () => {
+    const textarea = document.createElement("textarea");
+    document.body.append(textarea);
+    act(() => root.render(<MobileDock />));
+    expect(host.querySelector('[data-testid="dock"]')).not.toBeNull();
+
+    act(() => {
+      textarea.focus();
+      textarea.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+    });
+    expect(host.querySelector('[data-testid="dock"]')).toBeNull();
+
+    textarea.remove();
+  });
 });

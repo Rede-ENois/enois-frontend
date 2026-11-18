@@ -12,12 +12,14 @@ import {
   PostComments as PostCommentsView,
   orderCommentsWithAccepted,
 } from "@rede-enois/design-system/domain";
+import { Button } from "@rede-enois/design-system/ui";
+import { RefreshCw } from "lucide-react";
 
 import { commentsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAcceptedAnswer } from "@/lib/feed/use-accepted-answer";
-import { litePageSize } from "@/lib/lite-mode";
+import { liteInterval, litePageSize } from "@/lib/lite-mode";
 import { useAuth } from "@/lib/use-auth";
 import { useLiteMode } from "@/lib/use-lite-mode";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -29,6 +31,24 @@ import { GifPickerDialog } from "./gif-picker-dialog";
 
 const PAGE_SIZE = 20;
 
+/** Intervalo entre atualizações silenciosas dos comentários na publicação aberta. */
+export const COMMENTS_LIVE_REFRESH_MS = 30_000;
+
+function mergeRefreshedComments(
+  current: CommentView[],
+  fresh: CommentView[],
+  sort: (items: CommentView[]) => CommentView[],
+): { next: CommentView[]; addedCount: number } {
+  const freshById = new Map(fresh.map((item) => [item.id, item]));
+  const existingIds = new Set(current.map((item) => item.id));
+  const newItems = fresh.filter((item) => !existingIds.has(item.id));
+  const updated = current.map((item) => freshById.get(item.id) ?? item);
+  return {
+    next: sort([...updated, ...newItems]),
+    addedCount: newItems.length,
+  };
+}
+
 /**
  * Comentarios de um post: carrega as páginas, guarda o rascunho (no store do card) e os anexos, e
  * envia. Como a API devolve os mais recentes primeiro, "ver comentarios anteriores" carrega a
@@ -39,12 +59,15 @@ export function PostComments({
   postAuthorId,
   isQuestion = false,
   acceptedCommentId = null,
+  liveRefresh = false,
 }: {
   postId: string;
   postAuthorId: string;
   /** QUESTION post: the asker can mark one answer, which goes to the top. */
   isQuestion?: boolean;
   acceptedCommentId?: string | null;
+  /** Ativo apenas na publicação aberta (/post/:id ou blog) para não fazer polling nos cards do feed. */
+  liveRefresh?: boolean;
 }) {
   // Em modo lite a primeira página (e cada "carregar mais") já vem maior.
   const lite = useLiteMode();
@@ -52,6 +75,8 @@ export function PostComments({
   const { requireAuth } = useAuth();
   const queryClient = useQueryClient();
   const [comments, setComments] = useState<CommentView[]>([]);
+  const commentsRef = useRef<CommentView[]>(comments);
+  commentsRef.current = comments;
   const draft = usePostCardStore((state) => state.cards[postId]?.draft ?? "");
   const mentions = usePostCardStore(selectCommentMentions(postId));
   const replyToId = usePostCardStore((state) => state.cards[postId]?.replyToId ?? null);
@@ -64,6 +89,9 @@ export function PostComments({
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [sending, setSending] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null);
+  const [lastAddedCount, setLastAddedCount] = useState(0);
   const [error, setError] = useState<CommentsError | null>(null);
   /** Razao da recusa vinda da API: sem ela, "tente de novo" nao diz o que corrigir. */
   const [sendErrorDetail, setSendErrorDetail] = useState<string | null>(null);
@@ -160,6 +188,54 @@ export function PostComments({
     void loadFirstPage();
   }, [loadFirstPage]);
 
+  const refreshFirstPage = useCallback(async () => {
+    if (loading || sending || refreshing) return;
+    if (typeof document !== "undefined" && document.hidden) return;
+    setRefreshing(true);
+    try {
+      const page = await commentsApi.list(postId, null, pageSize);
+      if (currentPostId.current !== postId) return;
+      const existingIds = new Set(commentsRef.current.map((item) => item.id));
+      const addedCount = page.items.filter((item) => !existingIds.has(item.id)).length;
+      setComments((current) => mergeRefreshedComments(current, page.items, oldestFirst).next);
+      setLastAddedCount(addedCount);
+      setLastRefreshedAt(
+        new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      );
+      if (addedCount > 0) {
+        updatePostInQueryCache(queryClient, postId, (current) => ({
+          ...current,
+          counters: {
+            ...current.counters,
+            comments: current.counters.comments + addedCount,
+          },
+        }));
+      }
+    } catch {
+      // Atualização em segundo plano: falha silenciosa para não interromper a leitura.
+    } finally {
+      if (currentPostId.current === postId) setRefreshing(false);
+    }
+  }, [loading, pageSize, postId, queryClient, refreshing, sending]);
+
+  useEffect(() => {
+    if (!liveRefresh) return;
+    const intervalMs = liteInterval(COMMENTS_LIVE_REFRESH_MS, lite);
+    const timer = window.setInterval(() => {
+      void refreshFirstPage();
+    }, intervalMs);
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        void refreshFirstPage();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [lite, liveRefresh, refreshFirstPage]);
+
   const loadMore = async () => {
     if (!cursor || loadingMore) return;
     setLoadingMore(true);
@@ -248,88 +324,110 @@ export function PostComments({
     }));
   };
 
+  const liveStatusLabel = refreshing
+    ? "Atualizando comentários…"
+    : lastRefreshedAt
+      ? `Comentários atualizados às ${lastRefreshedAt}${lastAddedCount > 0 ? ` (+${lastAddedCount} ${lastAddedCount === 1 ? "novo" : "novos"})` : ""}`
+      : "Atualização automática ativa";
+
   return (
-    <PostCommentsView
-      formId={`comment-form-${postId}`}
-      comments={shownComments}
-      loading={loading}
-      loadingMore={loadingMore}
-      hasMore={hasMore}
-      error={error}
-      sendErrorDetail={sendErrorDetail}
-      onRetry={loadFirstPage}
-      onLoadMore={loadMore}
-      renderComment={(comment, replyingTo) => (
-        <CommentItem
-          key={comment.id}
-          comment={comment}
-          replyingTo={replyingTo}
-          postAuthorId={postAuthorId}
-          onPinChanged={() => void loadFirstPage()}
-          onDeleted={handleCommentDeleted}
-          acceptance={
-            isQuestion
-              ? {
-                  pending: acceptedAnswer.pending,
-                  onAccept: () => acceptedAnswer.accept(comment.id),
-                  onUnaccept: acceptedAnswer.unaccept,
-                }
-              : undefined
-          }
-        />
+    <>
+      {liveRefresh && !loading && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-live="polite"
+          disabled={refreshing}
+          onClick={() => void refreshFirstPage()}
+        >
+          <RefreshCw aria-hidden="true" />
+          {liveStatusLabel}
+        </Button>
       )}
-      replyToId={replyToId}
-      onCancelReply={() => setReplyToId(postId, null)}
-      media={media}
-      mediaSpoiler={mediaSpoiler}
-      onToggleMediaSpoiler={() => setMediaSpoiler((active) => !active)}
-      onRemoveMedia={(index) => {
-        const item = media[index];
-        if (item) URL.revokeObjectURL(item.preview);
-        setMedia((current) => {
-          const next = current.filter((_, i) => i !== index);
-          if (next.length === 0) setMediaSpoiler(false);
-          return next;
-        });
-      }}
-      onInsertMedia={(index) => setDraft(postId, `${draft}{{media:pendente-${index}}}`)}
-      onAddImages={addMediaFiles}
-      onAddAudio={addAudio}
-      onErrorChange={setError}
-      composerField={({ toolsOpen, replyingTo }) => (
-        <MentionTextarea
-          value={draft}
-          onChange={(value, ids) => {
-            setDraft(postId, value);
-            setCommentMentions(postId, ids);
-          }}
-          placeholder={
-            replyingTo
-              ? texts.posts.comments.replyPlaceholder(replyingTo)
-              : texts.posts.comments.placeholder
-          }
-          className="w-full resize-none border-0 bg-transparent px-2 py-1.5 text-sm font-normal outline-none"
-          rows={1}
-          maxLength={COMMENT_MAX_LENGTH}
-          // The counter speaks up near the limit only: a quiet field otherwise.
-          showCounter={draft.length >= COMMENT_COUNTER_FROM}
-          toolbar
-          toolbarVisible={toolsOpen}
-          emoteInline
-          onPasteImages={addMediaFiles}
-          // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
-          onSubmitShortcut={() =>
-            (
-              document.getElementById(`comment-form-${postId}`) as HTMLFormElement | null
-            )?.requestSubmit()
-          }
-        />
-      )}
-      canSend={Boolean(draft.trim()) || media.length > 0}
-      sending={sending}
-      onSubmit={submit}
-      onOpenGifPicker={() => setGifOpen(true)}
-      gifPicker={<GifPickerDialog open={gifOpen} onOpenChange={setGifOpen} onSelect={addGif} />}
-    />
+
+      <PostCommentsView
+        formId={`comment-form-${postId}`}
+        comments={shownComments}
+        loading={loading}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
+        error={error}
+        sendErrorDetail={sendErrorDetail}
+        onRetry={loadFirstPage}
+        onLoadMore={loadMore}
+        renderComment={(comment, replyingTo) => (
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            replyingTo={replyingTo}
+            postAuthorId={postAuthorId}
+            onPinChanged={() => void loadFirstPage()}
+            onDeleted={handleCommentDeleted}
+            acceptance={
+              isQuestion
+                ? {
+                    pending: acceptedAnswer.pending,
+                    onAccept: () => acceptedAnswer.accept(comment.id),
+                    onUnaccept: acceptedAnswer.unaccept,
+                  }
+                : undefined
+            }
+          />
+        )}
+        replyToId={replyToId}
+        onCancelReply={() => setReplyToId(postId, null)}
+        media={media}
+        mediaSpoiler={mediaSpoiler}
+        onToggleMediaSpoiler={() => setMediaSpoiler((active) => !active)}
+        onRemoveMedia={(index) => {
+          const item = media[index];
+          if (item) URL.revokeObjectURL(item.preview);
+          setMedia((current) => {
+            const next = current.filter((_, i) => i !== index);
+            if (next.length === 0) setMediaSpoiler(false);
+            return next;
+          });
+        }}
+        onInsertMedia={(index) => setDraft(postId, `${draft}{{media:pendente-${index}}}`)}
+        onAddImages={addMediaFiles}
+        onAddAudio={addAudio}
+        onErrorChange={setError}
+        composerField={({ toolsOpen, replyingTo }) => (
+          <MentionTextarea
+            value={draft}
+            onChange={(value, ids) => {
+              setDraft(postId, value);
+              setCommentMentions(postId, ids);
+            }}
+            placeholder={
+              replyingTo
+                ? texts.posts.comments.replyPlaceholder(replyingTo)
+                : texts.posts.comments.placeholder
+            }
+            className="w-full resize-none border-0 bg-transparent px-2 py-1.5 text-sm font-normal outline-none"
+            rows={1}
+            maxLength={COMMENT_MAX_LENGTH}
+            // The counter speaks up near the limit only: a quiet field otherwise.
+            showCounter={draft.length >= COMMENT_COUNTER_FROM}
+            toolbar
+            toolbarVisible={toolsOpen}
+            emoteInline
+            onPasteImages={addMediaFiles}
+            // requestSubmit passa pelo mesmo submit do botão (validação, anexos e login).
+            onSubmitShortcut={() =>
+              (
+                document.getElementById(`comment-form-${postId}`) as HTMLFormElement | null
+              )?.requestSubmit()
+            }
+          />
+        )}
+        canSend={Boolean(draft.trim()) || media.length > 0}
+        sending={sending}
+        onSubmit={submit}
+        onOpenGifPicker={() => setGifOpen(true)}
+        gifPicker={<GifPickerDialog open={gifOpen} onOpenChange={setGifOpen} onSelect={addGif} />}
+      />
+    </>
   );
 }
