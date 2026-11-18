@@ -197,8 +197,8 @@ contador mostram até três tipos recebidos pelo post, do mais usado para o meno
 `null` ou ausente preserva os emojis padrão; resumo vazio não mostra o botão de reações, mesmo
 quando o contador antigo ainda é positivo.
 
-A lista de salvos é compartilhada entre os cards e `/salvos`. Cada card acompanha somente se o
-seu post está salvo; a confirmação da ação continua visível mesmo sem a lista carregada.
+Ao copiar ou compartilhar pelo menu do post, o navegador recebe a ação no clique. A contagem é
+atualizada em paralelo e não impede a cópia ou a abertura do compartilhamento nativo.
 
 Em `PostComments`, o seletor `selectCommentMentions` reutiliza uma lista vazia estável enquanto o
 estado do cartão não existe. A abertura da publicação não recria o snapshot a cada leitura; quando o
