@@ -47,6 +47,7 @@ Fornece:
 - **Head meta tags** globais (charset, viewport, SEO, Open Graph)
 - **404** (`NotFoundComponent`) e **Error Boundary** (`ErrorComponent`)
 - **RootShell** - HTML shell com `<head>` e `<body>`
+- **CallsProvider** - observa chamadas; o painel é carregado quando a sessão sai de `idle`
 
 ### 5. Layout Principal (`src/components/authenticated-app-container.tsx`)
 
