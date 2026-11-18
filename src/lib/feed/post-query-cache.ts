@@ -113,27 +113,95 @@ export function removePostFromFeedCache(queryClient: QueryClient, postId: string
   };
 }
 
+function isMatchingPost(value: unknown, postId: string): value is PostView {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as {
+    id?: unknown;
+    counters?: unknown;
+    type?: unknown;
+    items?: unknown;
+    pages?: unknown;
+  };
+  if (candidate.id !== postId) return false;
+  if (Array.isArray(candidate.items) || Array.isArray(candidate.pages)) return false;
+  return (
+    (typeof candidate.counters === "object" && candidate.counters !== null) ||
+    typeof candidate.type === "string" ||
+    "authorId" in candidate
+  );
+}
+
+function updatePostEntry(
+  entry: unknown,
+  postId: string,
+  update: (post: PostView) => PostView,
+): { next: unknown; changed: boolean } {
+  if (isMatchingPost(entry, postId)) {
+    return { next: update(entry), changed: true };
+  }
+  if (entry && typeof entry === "object" && "post" in entry) {
+    const wrapper = entry as { post: unknown };
+    if (isMatchingPost(wrapper.post, postId)) {
+      return { next: { ...wrapper, post: update(wrapper.post) }, changed: true };
+    }
+  }
+  return { next: entry, changed: false };
+}
+
+function updateItemsArray(
+  items: unknown[],
+  postId: string,
+  update: (post: PostView) => PostView,
+): { next: unknown[]; changed: boolean } {
+  let changed = false;
+  const next = items.map((item) => {
+    const result = updatePostEntry(item, postId, update);
+    if (result.changed) changed = true;
+    return result.next;
+  });
+  return { next: changed ? next : items, changed };
+}
+
 export function updatePostInQueryCache(
   queryClient: QueryClient,
   postId: string,
   update: (post: PostView) => PostView,
 ) {
-  // O prefixo `["feed"]` alcança também as consultas vizinhas que não são páginas de feed
-  // (`["feed","scheduled"]` guarda uma lista simples). Sem esta checagem, `pages` vinha
-  // indefinido e o `.map` estourava DENTRO da atualização otimista — o efeito era a ação
-  // morrer antes de falar com o servidor. Só mexe em quem realmente tem páginas.
-  queryClient.setQueriesData<FeedPages>({ queryKey: ["feed"] }, (current) => {
-    if (!current || !Array.isArray(current.pages)) return current;
-    return {
-      ...current,
-      pages: current.pages.map((page) => ({
-        ...page,
-        items: page.items.map((post) => (post.id === postId ? update(post) : post)),
-      })),
-    };
-  });
+  // Atualiza o post em qualquer consulta em cache (feed principal, comunidades, canais, salvos,
+  // coleções, murais, perfil corporativo ou post isolado), preservando a referência quando nada mudou.
+  queryClient.setQueriesData<unknown>({}, (current: unknown) => {
+    if (!current || typeof current !== "object") return current;
 
-  queryClient.setQueryData<PostView>(["post", postId], (post) =>
-    post && post.id === postId ? update(post) : post,
-  );
+    if (isMatchingPost(current, postId)) {
+      return update(current);
+    }
+
+    const record = current as { pages?: unknown; items?: unknown };
+
+    if (Array.isArray(record.pages)) {
+      let pagesChanged = false;
+      const pages = record.pages.map((page) => {
+        if (
+          !page ||
+          typeof page !== "object" ||
+          !Array.isArray((page as { items?: unknown }).items)
+        ) {
+          return page;
+        }
+        const pageObj = page as { items: unknown[] };
+        const { next, changed } = updateItemsArray(pageObj.items, postId, update);
+        if (!changed) return page;
+        pagesChanged = true;
+        return { ...pageObj, items: next };
+      });
+      return pagesChanged ? { ...record, pages } : current;
+    }
+
+    if (Array.isArray(record.items)) {
+      const { next, changed } = updateItemsArray(record.items, postId, update);
+      return changed ? { ...record, items: next } : current;
+    }
+
+    return current;
+  });
 }

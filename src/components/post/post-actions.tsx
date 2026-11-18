@@ -71,7 +71,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   useEffect(() => {
     initializePostCard(post.id);
     return () => disposePostCard(post.id);
-  }, [disposePostCard, initializePostCard, post]);
+  }, [disposePostCard, initializePostCard, post.id]);
 
   const [saved, setSaved] = useState(false);
 

@@ -297,6 +297,9 @@ function PostCardContainer({
               innerPadding={false}
               // Janela, não faixa: a altura vem do contêiner e o excedente rola dentro do quadro.
               autoHeight={false}
+              // Idem: o primeiro filho é conteúdo de página — esticá-lo empurrava o resto da página
+              // para fora do quadro, como na prévia do editor.
+              stretchFirstChild={false}
             />
           }
         />

@@ -1,3 +1,5 @@
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
@@ -510,6 +512,33 @@ export const texts = {
     editCommentError: "Não foi possível editar o comentário.",
     removeCommentTitle: "Remover comentário?",
     removeCommentDescription: "Ele some da publicação; a ação fica registrada na auditoria.",
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre este grupo. Excluir apaga o conteúdo junto; encerrar preserva o histórico.",
+      open: "Gerenciar membros",
+      delete: "Excluir grupo",
+      deleteTitle: "Excluir grupo?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}” com todo o conteúdo dele?`,
+      closeTitle: "Encerrar grupo?",
+      closeBody: (name: string) =>
+        `Encerrar “${name}”? O grupo sai da descoberta e não recebe novos membros; o conteúdo continua guardado.`,
+      deleted: (name: string) => `Grupo “${name}” excluído.`,
+      closed: (name: string) => `Grupo “${name}” encerrado. O conteúdo foi preservado.`,
+      deleteError: "Não foi possível excluir o grupo.",
+      closeError: "Não foi possível encerrar o grupo.",
+      removed: "Membro removido do grupo.",
+      removeError: "Não foi possível remover o membro.",
+      removedOwner: "Dono removido; o grupo passou para o membro mais antigo que ficou.",
+      roles: {
+        OWNER: "Dono",
+        ADMIN: "Administrador",
+        MODERATOR: "Moderador",
+        MEMBER: "Membro",
+      },
+      loadError: "Não foi possível carregar os membros.",
+    },
     removeCommentError: "Não foi possível remover o comentário.",
   },
 
@@ -1584,35 +1613,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: {
-        LIKE: "👍",
-        LOVE: "❤️",
-        LAUGH: "😂",
-        ROFL: "🤣",
-        SKULL: "💀",
-        WOW: "😮",
-        SAD: "😢",
-        SOB: "😭",
-        CELEBRATE: "🎉",
-        SUPPORT: "💪",
-        INSIGHTFUL: "💡",
-        ANGRY: "😡",
-        DISGUST: "🤢",
-        SKEPTICAL: "🤨",
-        EYES: "👀",
-        NOTE: "📝",
-        FIRE: "🔥",
-        CLAP: "👏",
-        CLOWN: "🤡",
-        NAILS: "💅",
-        // Contextuais: cada um tem situação clara de uso (ver ReactionType no backend).
-        USEFUL: "🧰",
-        RELATABLE: "🫂",
-        HYPE: "🚀",
-        THANKS: "🙏",
-        VIBE: "✨",
-        SALUTE: "🫡",
-      },
+      emojis: REACTION_EMOJIS,
     },
     report: {
       title: "Denunciar post",
@@ -2180,6 +2181,22 @@ export const texts = {
       description:
         "A comunidade deixa de existir para todo mundo e os membros são desvinculados. Isso não pode ser desfeito.",
       confirm: "Excluir",
+    },
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre esta comunidade. Só admin vê esta área, e o backend recusa qualquer outro papel.",
+      open: "Gerenciar membros",
+      delete: "Excluir comunidade",
+      deleteTitle: "Excluir comunidade?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}”?`,
+      deleted: (name: string) => `Comunidade “${name}” excluída.`,
+      deleteError: "Não foi possível excluir a comunidade.",
+      removed: "Membro removido da comunidade.",
+      removeError: "Não foi possível remover o membro.",
+      roles: { ADMIN: "Administrador", MEMBER: "Membro" },
+      loadError: "Não foi possível carregar os membros.",
     },
     loadMore: "Carregar mais",
     create: {
