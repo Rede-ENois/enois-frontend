@@ -41,6 +41,8 @@ Configura o TanStack Router com:
 Fornece:
 
 - **QueryClientProvider** para toda a aplicação
+- **CallsProvider** publica as ações e a chamada atuais pelo contexto, mantendo os filhos montados
+  durante a hidratação; os efeitos de chamadas só iniciam com sessão.
 - **OAuthCallbackHandler** - captura tokens OAuth da URL e armazena no localStorage
 - **Head meta tags** globais (charset, viewport, SEO, Open Graph)
 - **404** (`NotFoundComponent`) e **Error Boundary** (`ErrorComponent`)
@@ -75,6 +77,8 @@ TanStack Query.
 
 Condições de interface, polling e exceções de frescor continuam nos consumidores. Loaders de SSR,
 revalidação de dados associados à sessão e paginação por cursor conservam suas regras próprias.
+A entrada em chamadas só aplica credenciais à tentativa ainda aberta; respostas após sair não
+reabrem o painel, e a presença é liberada quando a tela já saiu daquela chamada.
 
 **Mensagens em tempo real.** `MessageStream` (montado no root, só com sessão) abre um `EventSource`
 em `/conversations/stream` (`src/lib/message-stream.ts`). Cada evento `conversation` invalida

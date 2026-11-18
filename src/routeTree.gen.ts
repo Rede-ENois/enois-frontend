@@ -19,6 +19,7 @@ import { Route as CarteiraRouteImport } from './routes/carteira'
 import { Route as ColagemRouteImport } from './routes/colagem'
 import { Route as ColecoesRouteImport } from './routes/colecoes'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
+import { Route as ConfessionarioRouteImport } from './routes/confessionario'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
@@ -145,6 +146,11 @@ const ColecoesRoute = ColecoesRouteImport.update({
 const ComunidadesRoute = ComunidadesRouteImport.update({
   id: '/comunidades',
   path: '/comunidades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfessionarioRoute = ConfessionarioRouteImport.update({
+  id: '/confessionario',
+  path: '/confessionario',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContaRoute = ContaRouteImport.update({
@@ -547,6 +553,7 @@ export interface FileRoutesByFullPath {
   '/colagem': typeof ColagemRoute
   '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
+  '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
@@ -636,6 +643,7 @@ export interface FileRoutesByTo {
   '/colagem': typeof ColagemRoute
   '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
+  '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
@@ -726,6 +734,7 @@ export interface FileRoutesById {
   '/colagem': typeof ColagemRoute
   '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
+  '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
@@ -817,6 +826,7 @@ export interface FileRouteTypes {
     | '/colagem'
     | '/colecoes'
     | '/comunidades'
+    | '/confessionario'
     | '/conta'
     | '/contato'
     | '/denuncias'
@@ -906,6 +916,7 @@ export interface FileRouteTypes {
     | '/colagem'
     | '/colecoes'
     | '/comunidades'
+    | '/confessionario'
     | '/conta'
     | '/contato'
     | '/denuncias'
@@ -995,6 +1006,7 @@ export interface FileRouteTypes {
     | '/colagem'
     | '/colecoes'
     | '/comunidades'
+    | '/confessionario'
     | '/conta'
     | '/contato'
     | '/denuncias'
@@ -1085,6 +1097,7 @@ export interface RootRouteChildren {
   ColagemRoute: typeof ColagemRoute
   ColecoesRoute: typeof ColecoesRouteWithChildren
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
+  ConfessionarioRoute: typeof ConfessionarioRoute
   ContaRoute: typeof ContaRoute
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
@@ -1219,6 +1232,13 @@ declare module '@tanstack/react-router' {
       path: '/comunidades'
       fullPath: '/comunidades'
       preLoaderRoute: typeof ComunidadesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confessionario': {
+      id: '/confessionario'
+      path: '/confessionario'
+      fullPath: '/confessionario'
+      preLoaderRoute: typeof ConfessionarioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conta': {
@@ -1929,6 +1949,7 @@ const rootRouteChildren: RootRouteChildren = {
   ColagemRoute: ColagemRoute,
   ColecoesRoute: ColecoesRouteWithChildren,
   ComunidadesRoute: ComunidadesRouteWithChildren,
+  ConfessionarioRoute: ConfessionarioRoute,
   ContaRoute: ContaRoute,
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,

@@ -9,10 +9,14 @@ import type { UnreadSummary } from "@/types/application/notification/unread-summ
 import { notificationsApi } from "@/lib/api";
 import { refreshNotifications } from "@/lib/inbox-sync";
 
-function markPage(page: PageResponse<Notification>, isTarget: (n: Notification) => boolean) {
+function markPage(
+  page: PageResponse<Notification>,
+  isTarget: (n: Notification) => boolean,
+  read = true,
+) {
   return {
     ...page,
-    items: page.items.map((item) => (isTarget(item) ? { ...item, read: true } : item)),
+    items: page.items.map((item) => (isTarget(item) ? { ...item, read } : item)),
   };
 }
 
@@ -21,13 +25,14 @@ function isSummary(data: unknown): data is UnreadSummary {
 }
 
 /**
- * Marks notifications read in every cached list (the bell's page and the full page) before the
- * server answers. The row dims the moment it is opened, even when the person leaves the page
- * right away; the invalidation after the request settles brings back the server truth (and the
- * summary behind the menu signals).
+ * Marca as linhas antes da resposta. A devolução restaura só quem estava não lido, porque
+ * renovar a primeira página não corrige a leitura otimista das páginas antigas.
  */
 export function markReadInCache(queryClient: QueryClient, id: string | "all") {
   const isTarget = (notification: Notification) => id === "all" || notification.id === id;
+  const previous = queryClient.getQueriesData<
+    PageResponse<Notification> | InfiniteData<PageResponse<Notification>> | UnreadSummary
+  >({ queryKey: ["notifications"] });
 
   queryClient.setQueriesData<
     PageResponse<Notification> | InfiniteData<PageResponse<Notification>> | UnreadSummary
@@ -38,6 +43,30 @@ export function markReadInCache(queryClient: QueryClient, id: string | "all") {
     if ("items" in data) return markPage(data, isTarget);
     return data;
   });
+
+  return () => {
+    for (const [queryKey, data] of previous) {
+      if (!data || isSummary(data)) continue;
+      const pages = "pages" in data ? data.pages : [data];
+      const unreadIds = new Set(
+        pages.flatMap((page) =>
+          page.items.filter((item) => isTarget(item) && !item.read).map((item) => item.id),
+        ),
+      );
+      if (unreadIds.size === 0) continue;
+      queryClient.setQueryData<typeof data>(queryKey, (current) => {
+        if (!current || isSummary(current)) return current;
+        const isUnread = (item: Notification) => unreadIds.has(item.id);
+        if ("pages" in current) {
+          return {
+            ...current,
+            pages: current.pages.map((page) => markPage(page, isUnread, false)),
+          };
+        }
+        return markPage(current, isUnread, false);
+      });
+    }
+  };
 }
 
 /**
@@ -50,10 +79,10 @@ export function useMarkPushRead() {
   return useCallback(
     (id: string | null) => {
       if (!id) return;
-      markReadInCache(queryClient, id);
+      const rollback = markReadInCache(queryClient, id);
       void notificationsApi
         .markAsRead(id)
-        .catch(() => undefined)
+        .catch(() => rollback())
         // Só a primeira página de cada lista na tela: invalidar o prefixo refazia todas as páginas
         // carregadas para marcar uma linha como lida.
         .finally(() => void refreshNotifications(queryClient));

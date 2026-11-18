@@ -112,7 +112,13 @@ export function createVideoAutoplay(env: AutoplayEnvironment) {
   function reevaluate() {
     if (!observer) return;
     if (owner) {
-      if (!owner.near) {
+      // Mesmo piso de permanência do autoplay: com só um pedaço do vídeo na viewport o
+      // `near` continua verdadeiro, e o som da reprodução assumida seguiria tocando fora de vista.
+      const visible = scoreVideoRect(
+        owner.video.getBoundingClientRect(),
+        env.viewportHeight(),
+      ).visible;
+      if (!owner.near || visible < STAY_VISIBLE) {
         pauseP(owner);
         owner = null;
       } else {
