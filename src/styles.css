@@ -424,3 +424,28 @@ span.rounded-full:has(> [data-enois-reaction-glyph]) {
 [data-enois-reaction-glyph="SALUTE"] {
   --enois-reaction-img: url("/emojis/enois/salute.svg");
 }
+
+/*
+ * Acessibilidade tipográfica em publicações, reposts citados e comentários.
+ *
+ * O design system usa 15px no corpo do post no mobile e 14px (text-sm) no conteúdo de reposts
+ * citados e comentários. Elevamos para 16px no corpo do post e 15px -> 16px nos reposts e
+ * comentários sem alterar botões, badges ou metadados de outros componentes.
+ */
+article .text-\[15px\] {
+  font-size: 1rem;
+  line-height: 1.625;
+}
+
+article .rounded-xl.border.bg-surface-1 .text-sm,
+.rounded-xl.bg-surface-1 .text-sm.leading-relaxed {
+  font-size: 0.9375rem;
+  line-height: 1.625;
+}
+
+@media (min-width: 640px) {
+  article .rounded-xl.border.bg-surface-1 .text-sm,
+  .rounded-xl.bg-surface-1 .text-sm.leading-relaxed {
+    font-size: 1rem;
+  }
+}
