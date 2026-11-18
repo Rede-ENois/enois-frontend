@@ -17,6 +17,7 @@ import {
   HeartHandshake,
   Joystick,
   Lightbulb,
+  MessageCircle,
   Puzzle,
   ScrollText,
   ShoppingBag,
@@ -120,6 +121,15 @@ export const exploreItems: {
     color: "var(--table-5)",
     module: null,
     keywords: ["termometro", "clima", "sentimento", "emocoes", "comunidade"],
+  },
+  {
+    section: "community",
+    href: "/papo-reto",
+    text: texts.explore.items.papoReto,
+    icon: MessageCircle,
+    color: "var(--table-4)",
+    module: null,
+    keywords: ["papo reto", "assuntos", "em alta", "conversa", "tendencias"],
   },
   {
     section: "community",
