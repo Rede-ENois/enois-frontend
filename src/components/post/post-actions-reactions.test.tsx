@@ -11,7 +11,9 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import type { PostView } from "@/types/application/feed/post-view";
+import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import { ToastProvider } from "@rede-enois/design-system/ui";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -91,25 +93,28 @@ describe("PostActions: reações reais da publicação", () => {
   };
 
   const reactionButton = () => host.querySelector('button[aria-label^="Ver quem reagiu ("]');
+  // O resumo desenha o emoji da FIGURA de cada tipo (`REACTION_FIGURE_EMOJIS`), não o emoji de
+  // apoio: FIRE desenha o termômetro, CLAP o pirata e LOVE o coração — os mesmos do seletor.
   const reactionEmojis = () =>
     Array.from(reactionButton()?.querySelectorAll("span") ?? [], (item) => item.textContent);
+  const figura = (type: ReactionType) => REACTION_FIGURE_EMOJIS[type];
 
   it("mostra só fogo quando essa é a única reação que o post recebeu", async () => {
     await render(post);
 
-    expect(reactionEmojis()).toEqual(["🔥"]);
+    expect(reactionEmojis()).toEqual([figura("FIRE")]);
   });
 
   it("mostra até três tipos reais, do mais usado para o menos usado", async () => {
     await render({ ...post, reactionSummary: { LIKE: 1, LOVE: 2, CLAP: 3, FIRE: 4 } });
 
-    expect(reactionEmojis()).toEqual(["🔥", "👏", "❤️"]);
+    expect(reactionEmojis()).toEqual([figura("FIRE"), figura("CLAP"), figura("LOVE")]);
   });
 
   it.each([undefined, null])("preserva os emojis padrão quando o resumo é %s", async (summary) => {
     await render({ ...post, reactionSummary: summary });
 
-    expect(reactionEmojis()).toEqual(["👍", "❤️", "💡"]);
+    expect(reactionEmojis()).toEqual([figura("LIKE"), figura("LOVE"), figura("INSIGHTFUL")]);
   });
 
   it("não mostra reações quando o resumo está vazio, mesmo com contador antigo", async () => {

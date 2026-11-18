@@ -1,17 +1,21 @@
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
-import { getEnoisEmojiByCode } from "@/lib/emotes/enois-pack";
+import { ENOIS_CUSTOM_EMOJIS, getEnoisEmojiByCode } from "@/lib/emotes/enois-pack";
 
 /**
- * Emoji de cada reação oficial (Unicode de verdade: a API guarda o tipo, o leitor de tela lê o
- * símbolo, e o resumo mostra o emoji quando o ícone não carrega).
+ * Emoji de apoio de cada reação oficial: o símbolo que textos e leitores de tela usam quando não
+ * há imagem (a API guarda o tipo, nunca o emoji).
  *
- * As 26 primeiras ficam como estavam: é o rosto que a pílula de quem já reagiu mostra hoje.
+ * As 26 primeiras ficam como estavam: são o rosto que quem já reagiu reconhece no texto.
  *
- * O emoji NÃO é único por desenho, e não precisa ser: a reação é escolhida pelo ícone
- * (`REACTION_EMOJI_ASSETS`), e o emoji só entra na tela como apoio (o resumo, o título do botão)
- * ou pelo texto de quem mandou a reação no corpo da mensagem. O leitor de glifo reconhece a
- * primeira reação de cada símbolo, então um emoji repetido mostra o tipo que aparece antes.
+ * Este mapa NÃO é o conteúdo das views do design system — lá vai `REACTION_FIGURE_EMOJIS`, o emoji
+ * da própria figura. Usar o de apoio ali faria a pílula de um tipo mostrar o rosto de outro (vários
+ * tipos dividem o mesmo emoji de apoio), e clicar nela gravaria um tipo diferente do que se vê.
+ *
+ * O leitor de glifo (`useEnoisReactionGlyphs`, que pinta o ícone no texto) casa o emoji de apoio
+ * primeiro: é ele que está no texto de quem reagiu. Por isso as 26 originais não têm emoji de apoio
+ * repetido; nas novas, quando o de apoio repete, o texto mostra o ícone do tipo que aparece antes —
+ * o que aparece na tela é o mesmo da figura, mas o tipo de lá pode não ser o da figura.
  */
 export const REACTION_EMOJIS: Record<ReactionType, string> = {
   LIKE: "👍",
@@ -184,3 +188,25 @@ export const REACTION_EMOJI_ASSETS: Record<ReactionType, string> = {
   SMIRK: officialAsset("useful"),
   GHOST: officialAsset("salute"),
 };
+
+const EMOJI_BY_SRC = new Map(ENOIS_CUSTOM_EMOJIS.map((item) => [item.src, item.unicode]));
+
+/** Emoji da figura apontada por `REACTION_EMOJI_ASSETS`, ou erro se o pacote não tiver um. */
+function figureEmoji(type: ReactionType): string {
+  const glyph = EMOJI_BY_SRC.get(REACTION_EMOJI_ASSETS[type]);
+  if (!glyph) throw new Error(`Figura da reação ${type} sem emoji no pacote É Nóis`);
+  return glyph;
+}
+
+/**
+ * Emoji de cada figura — o valor que as views do design system recebem em `emojis[type]`.
+ *
+ * A view escolhe a reação pelo mapa (`emojis[type]` é a chave, e o clique devolve a chave) e desenha
+ * o valor. Para o desenho e o tipo salvo serem o mesmo, o valor do tipo X é a figura de X: o leitor
+ * de glifo (`useEnoisReactionGlyphs`) reconhece o emoji de volta como X e o CSS pinta o ícone de X.
+ * O emoji de apoio (`REACTION_EMOJIS`) não serve aqui: dois tipos podem dividi-lo, e a pílula de um
+ * apareceria com o rosto do outro — clicando nela, a pessoa gravaria o tipo errado.
+ */
+export const REACTION_FIGURE_EMOJIS: Record<ReactionType, string> = Object.fromEntries(
+  (Object.keys(REACTION_EMOJI_ASSETS) as ReactionType[]).map((type) => [type, figureEmoji(type)]),
+) as Record<ReactionType, string>;
