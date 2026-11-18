@@ -20,6 +20,7 @@ import {
   Puzzle,
   ScrollText,
   ShoppingBag,
+  Thermometer,
   Wrench,
 } from "lucide-react";
 
@@ -110,6 +111,15 @@ export const exploreItems: {
     color: "var(--table-6)",
     module: null,
     keywords: ["confessionario", "historias", "confissoes", "anonimo"],
+  },
+  {
+    section: "community",
+    href: "/termometro",
+    text: texts.explore.items.termometro,
+    icon: Thermometer,
+    color: "var(--table-5)",
+    module: null,
+    keywords: ["termometro", "clima", "sentimento", "emocoes", "comunidade"],
   },
   {
     section: "community",

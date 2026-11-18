@@ -60,6 +60,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SugestoesRouteImport } from './routes/sugestoes'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as TermometroRouteImport } from './routes/termometro'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
@@ -353,6 +354,11 @@ const SuporteRoute = SuporteRouteImport.update({
   path: '/suporte',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermometroRoute = TermometroRouteImport.update({
+  id: '/termometro',
+  path: '/termometro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
@@ -594,6 +600,7 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
+  '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
@@ -684,6 +691,7 @@ export interface FileRoutesByTo {
   '/sobre': typeof SobreRoute
   '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
+  '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
@@ -775,6 +783,7 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
+  '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
@@ -867,6 +876,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/sugestoes'
     | '/suporte'
+    | '/termometro'
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
@@ -957,6 +967,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/sugestoes'
     | '/suporte'
+    | '/termometro'
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
@@ -1047,6 +1058,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/sugestoes'
     | '/suporte'
+    | '/termometro'
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
@@ -1138,6 +1150,7 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   SugestoesRoute: typeof SugestoesRoute
   SuporteRoute: typeof SuporteRoute
+  TermometroRoute: typeof TermometroRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
   AgendaAssinaturaRoute: typeof AgendaAssinaturaRoute
@@ -1519,6 +1532,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/suporte'
       preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termometro': {
+      id: '/termometro'
+      path: '/termometro'
+      fullPath: '/termometro'
+      preLoaderRoute: typeof TermometroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/termos': {
@@ -1990,6 +2010,7 @@ const rootRouteChildren: RootRouteChildren = {
   SobreRoute: SobreRoute,
   SugestoesRoute: SugestoesRoute,
   SuporteRoute: SuporteRoute,
+  TermometroRoute: TermometroRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
   AgendaAssinaturaRoute: AgendaAssinaturaRoute,
