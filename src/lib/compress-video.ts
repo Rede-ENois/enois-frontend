@@ -1,6 +1,6 @@
 import type { VideoCompressionStep } from "@/types/media-upload/video-compression-step";
 
-import { MAX_VIDEO_BYTES } from "@/lib/video-limit";
+import { MAX_VIDEO_BYTES, readDurationSeconds } from "@/lib/video-limit";
 
 /**
  * Compressão de vídeo no cliente, antes do upload (#656): a API aceita no máximo 10 MB, e um
@@ -33,6 +33,17 @@ export class VideoCompressionError extends Error {
     super("Não foi possível reduzir o vídeo para o limite da rede.");
     this.name = "VideoCompressionError";
   }
+}
+
+/**
+ * Degrau inicial pela duração: cada minuto de clipe em 1280px produz ~9-12MB — acima de um
+ * minuto o topo da escada já é matematicamente inviável, e acima de dois o 960px também.
+ * Começar do degrau que a duração indica evita rodar passadas que não podem caber.
+ */
+export function startIndexForDuration(seconds: number): number {
+  if (seconds > 120) return Math.min(3, LADDER.length - 1);
+  if (seconds > 60) return Math.min(2, LADDER.length - 1);
+  return 0;
 }
 
 export function supportsVideoCompression(): boolean {
@@ -207,8 +218,15 @@ export async function compressVideo(
     return file;
   }
 
-  for (let index = 0; index < LADDER.length; index += 1) {
-    onAttempt?.(Math.round((index / LADDER.length) * 100));
+  // A recodificação roda em tempo quase real: cada passada custa a duração do clipe. Clipe
+  // longo não pode começar no topo da escada — um vídeo perto do teto de 3 minutos em 1280px
+  // nunca cabe nos 10MB, e a passada inteira seria jogada fora. O degrau inicial vem da
+  // duração: mais longo, mais compressão precisa; quem não tem duração legível segue de cima.
+  const seconds = await readDurationSeconds(file);
+  const firstIndex = seconds === null ? 0 : startIndexForDuration(seconds);
+
+  for (let index = firstIndex; index < LADDER.length; index += 1) {
+    onAttempt?.(Math.round(((index - firstIndex) / (LADDER.length - firstIndex)) * 100));
     const candidate = await reencode(file, LADDER[index]);
     if (!candidate) {
       return file;
