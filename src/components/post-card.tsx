@@ -52,6 +52,7 @@ function PostCardContainer({
   post,
   feedTab,
   fullPost = false,
+  highlightCommentId = null,
   pinned = false,
   onTogglePin,
   pinPending = false,
@@ -388,6 +389,7 @@ function PostCardContainer({
             postAuthorId={post.authorId}
             isQuestion={post.type === "QUESTION"}
             acceptedCommentId={post.acceptedCommentId ?? null}
+            highlightCommentId={highlightCommentId}
           />
         ) : null
       }
