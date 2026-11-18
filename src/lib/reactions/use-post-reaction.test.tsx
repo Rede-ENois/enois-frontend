@@ -219,4 +219,46 @@ describe("Reações rápidas de uma publicação", () => {
     expect(mocks.react).toHaveBeenCalledTimes(2);
     expect(statusOf(post.id)).toBe("WOW");
   });
+
+  it("restaura o resumo de reações quando a remoção falha", async () => {
+    const comReacao: PostView = {
+      ...post,
+      currentUserReaction: "LOVE",
+      counters: { ...post.counters, reactions: 1 },
+      reactionSummary: { LOVE: 1 },
+    };
+    // O card do feed lê do cache do feed: é ele que pinta a bolinha e o contador na tela.
+    const feedKey = ["feed", "ALL", "", ""] as const;
+    client.setQueryData(feedKey, {
+      pages: [{ items: [comReacao], nextCursor: null }],
+      pageParams: [null],
+    });
+    client.setQueryData<PostView>(["post", post.id], comReacao);
+    mocks.removeReaction.mockRejectedValueOnce(new Error("Falha simulada"));
+
+    await act(async () => controls[0].toggle("LOVE"));
+    await act(async () => {});
+
+    const doFeed = client.getQueryData<FeedPages>(feedKey)?.pages[0].items[0];
+    expect(doFeed?.currentUserReaction).toBe("LOVE");
+    expect(doFeed?.reactionSummary).toEqual({ LOVE: 1 });
+    const depois = client.getQueryData<PostView>(["post", post.id]);
+    expect(depois?.reactionSummary).toEqual({ LOVE: 1 });
+  });
+
+  it("restaura o resumo de reações quando a adição falha", async () => {
+    client.setQueryData<PostView>(["post", post.id], {
+      ...post,
+      counters: { ...post.counters, reactions: 1 },
+      reactionSummary: { LIKE: 1 },
+    });
+    mocks.react.mockRejectedValueOnce(new Error("Falha simulada"));
+
+    await act(async () => controls[0].toggle("WOW"));
+    await act(async () => {});
+
+    const depois = client.getQueryData<PostView>(["post", post.id]);
+    expect(depois?.currentUserReaction).toBeNull();
+    expect(depois?.reactionSummary).toEqual({ LIKE: 1 });
+  });
 });

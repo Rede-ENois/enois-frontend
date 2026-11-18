@@ -146,6 +146,9 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
           ...current,
           currentUserReaction: before.currentUserReaction ?? null,
           counters: before.counters ?? current.counters,
+          // O resumo também é otimista: sem restaurá-lo, a bolinha e o contador da reação que
+          // falhou ficavam pintados (ou sumiam, quando a soma zerava) até a revalidação chegar.
+          reactionSummary: before.reactionSummary ?? current.reactionSummary,
         }));
       } catch {
         // Sem cache para restaurar: o refetch abaixo alinha com o servidor.
