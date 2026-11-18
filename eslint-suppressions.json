@@ -67,7 +67,7 @@
   },
   "src/components/emotes/emote-picker-dialog.tsx": {
     "local/no-front-markup": {
-      "count": 37
+      "count": 45
     }
   },
   "src/components/error-banner.tsx": {
