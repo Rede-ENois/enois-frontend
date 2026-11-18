@@ -58,7 +58,7 @@ export const roleplayApi = {
     api.delete<StatusResponse>(`/roleplay/campaigns/${campaignId}/members/me`),
 
   members: (campaignId: string) =>
-    api.get<CampaignMember[]>(`/roleplay/campaigns/${campaignId}/members`),
+    api.get<PageResponse<CampaignMember>>(`/roleplay/campaigns/${campaignId}/members`),
 
   removeMember: (campaignId: string, memberId: string) =>
     api.delete<StatusResponse>(`/roleplay/campaigns/${campaignId}/members/${memberId}`),
