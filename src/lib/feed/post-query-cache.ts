@@ -115,9 +115,19 @@ export function removePostFromFeedCache(queryClient: QueryClient, postId: string
 
 function isMatchingPost(value: unknown, postId: string): value is PostView {
   if (!value || typeof value !== "object") return false;
-  const candidate = value as { id?: unknown; counters?: unknown };
+  const candidate = value as {
+    id?: unknown;
+    counters?: unknown;
+    type?: unknown;
+    items?: unknown;
+    pages?: unknown;
+  };
+  if (candidate.id !== postId) return false;
+  if (Array.isArray(candidate.items) || Array.isArray(candidate.pages)) return false;
   return (
-    candidate.id === postId && typeof candidate.counters === "object" && candidate.counters !== null
+    (typeof candidate.counters === "object" && candidate.counters !== null) ||
+    typeof candidate.type === "string" ||
+    "authorId" in candidate
   );
 }
 
