@@ -300,6 +300,14 @@ export const texts = {
     naoEncontrado: "Esse mural não existe mais.",
   },
 
+  /** Seletor "para onde vai este post", no menu do card (murais e coleções). */
+  postDestinos: {
+    acao: "Adicionar ao mural ou coleção",
+    colado: "Publicação colada no mural.",
+    guardado: "Publicação guardada na coleção.",
+    erro: "Não foi possível abrir os destinos. Tente de novo.",
+  },
+
   /** Textos que a rota das Coleções orquestra (avisos e cabeçalho); o desenho vive no DS. */
   colecoes: {
     seoTitle: "Coleções · Énóis",
