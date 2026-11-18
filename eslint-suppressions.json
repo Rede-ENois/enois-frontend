@@ -65,11 +65,6 @@
       "count": 1
     }
   },
-  "src/components/emotes/emote-picker-dialog.tsx": {
-    "local/no-front-markup": {
-      "count": 45
-    }
-  },
   "src/components/error-banner.tsx": {
     "local/no-front-markup": {
       "count": 1
@@ -142,11 +137,6 @@
     },
     "no-restricted-syntax": {
       "count": 6
-    }
-  },
-  "src/components/mention-textarea.tsx": {
-    "local/no-front-markup": {
-      "count": 8
     }
   },
   "src/components/mentoring/mentor-agenda-dialog.tsx": {

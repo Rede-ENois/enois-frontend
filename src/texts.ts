@@ -1,3 +1,5 @@
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
@@ -1563,35 +1565,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: {
-        LIKE: "👍",
-        LOVE: "❤️",
-        LAUGH: "😂",
-        ROFL: "🤣",
-        SKULL: "💀",
-        WOW: "😮",
-        SAD: "😢",
-        SOB: "😭",
-        CELEBRATE: "🎉",
-        SUPPORT: "💪",
-        INSIGHTFUL: "💡",
-        ANGRY: "😡",
-        DISGUST: "🤢",
-        SKEPTICAL: "🤨",
-        EYES: "👀",
-        NOTE: "📝",
-        FIRE: "🔥",
-        CLAP: "👏",
-        CLOWN: "🤡",
-        NAILS: "💅",
-        // Contextuais: cada um tem situação clara de uso (ver ReactionType no backend).
-        USEFUL: "🧰",
-        RELATABLE: "🫂",
-        HYPE: "🚀",
-        THANKS: "🙏",
-        VIBE: "✨",
-        SALUTE: "🫡",
-      },
+      emojis: REACTION_EMOJIS,
     },
     report: {
       title: "Denunciar post",
