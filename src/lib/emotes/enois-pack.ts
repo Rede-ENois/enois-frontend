@@ -68,7 +68,7 @@ export const ENOIS_CUSTOM_EMOJIS: readonly CustomEmojiEntry[] = [
   entry("chef", "Chef", "👨‍🍳", ["chef", "cozinheiro", "cozinhar"]),
   entry("surf", "Surfista", "🏄", ["surf", "onda", "praia"]),
   entry("magic", "Cartola mágica", "🎩", ["magica", "cartola", "truque"]),
-  entry("rebel", "Rebelde", null, ["rebelde", "dedo", "maroto", "enois"]),
+  entry("rebel", "Rebelde", "🖕", ["rebelde", "dedo", "maroto", "enois"]),
 
   // Emojis e mãos redondas no estilo É Nóis
   entry("wink", "Piscando", "😉", ["piscar", "piscadinha"]),
