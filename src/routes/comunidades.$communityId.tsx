@@ -54,7 +54,7 @@ import {
   X,
 } from "lucide-react";
 
-import { ApiError, communitiesApi, feedApi } from "@/lib/api";
+import { ApiError, communitiesApi, feedApi, moderationApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
@@ -69,6 +69,7 @@ import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
 
+import { AdminEntityPanel } from "@/components/admin/admin-entity-panel";
 import { AppContainer } from "@/components/app-container";
 import { CommunityChannels } from "@/components/communities/community-channels";
 import { CommunityFavoriteButton } from "@/components/community-favorite-button";
@@ -180,6 +181,21 @@ function CommunityDetail() {
     queryFn: () => communitiesApi.getMembers(community.id),
   });
 
+  const members = membersData?.items ?? [];
+  const isCommunityAdmin = currentUser
+    ? members.some((member) => member.role === "ADMIN" && member.userId === currentUser.id)
+    : false;
+
+  // Admin DA PLATAFORMA (users.is_admin) — outra coisa que "admin da comunidade". Só este recebe a
+  // área de gerenciamento; o backend recusa a chamada de qualquer outro, mesmo pela API direta.
+  // Fica antes dos returns de carregando/erro: hook depois de return antecipado quebra a ordem.
+  const { data: platformMe } = useQuery({
+    queryKey: ["moderator", "me"],
+    queryFn: () => moderationApi.me(),
+    retry: false,
+    enabled: Boolean(currentUser) && !isCommunityAdmin,
+  });
+
   const { data: feedData } = useQuery({
     queryKey: ["community", community.id, "feed"],
     queryFn: () => communitiesApi.getFeed(community.id),
@@ -192,7 +208,6 @@ function CommunityDetail() {
     queryFn: () => communitiesApi.pinned(community.id).catch(() => null),
   });
 
-  const members = membersData?.items ?? [];
   const posts = feedData?.items ?? [];
   const orderedPosts = pinnedPost
     ? [pinnedPost, ...posts.filter((p) => p.id !== pinnedPost.id)]
@@ -360,8 +375,9 @@ function CommunityDetail() {
   };
 
   const isMember = live.joined;
+  const isAdmin = isCommunityAdmin;
   const admins = members.filter((m) => m.role === "ADMIN");
-  const isAdmin = currentUser ? admins.some((a) => a.userId === currentUser.id) : false;
+  const isPlatformAdmin = platformMe?.admin === true && !isAdmin;
 
   const togglePin = useMutation({
     mutationFn: (post: PostView) =>
@@ -528,6 +544,18 @@ function CommunityDetail() {
             </div>
           </div>
         </div>
+
+        {isPlatformAdmin && (
+          <AdminEntityPanel
+            kind="community"
+            entityId={live.id}
+            entityName={live.name}
+            onGone={() => {
+              toast(texts.communities.admin.deleted(live.name), "success");
+              navigate({ to: "/comunidades" });
+            }}
+          />
+        )}
 
         <ConfirmDialog
           open={leaveOpen}
