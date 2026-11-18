@@ -159,7 +159,7 @@ export function updatePostInQueryCache(
 ) {
   // Atualiza o post em qualquer consulta em cache (feed principal, comunidades, canais, salvos,
   // coleções, murais, perfil corporativo ou post isolado), preservando a referência quando nada mudou.
-  queryClient.setQueriesData<unknown>({}, (current) => {
+  queryClient.setQueriesData<unknown>({}, (current: unknown) => {
     if (!current || typeof current !== "object") return current;
 
     if (isMatchingPost(current, postId)) {
