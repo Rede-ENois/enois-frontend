@@ -11,7 +11,7 @@ import { api, apiUrl, buildQuery } from "@/lib/api-client";
  * mora em outro host, então o caminho só vira URL completa passando pelo `apiUrl`.
  */
 export function emoteImageUrl(path: string): string {
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\//i.test(path) || path.startsWith("/emojis/")) return path;
   return apiUrl(path);
 }
 

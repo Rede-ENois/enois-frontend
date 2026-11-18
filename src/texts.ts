@@ -31,6 +31,7 @@ export const texts = {
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
     tabRecent: "Recentes",
+    tabEnois: "É Nóis",
     tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
