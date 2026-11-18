@@ -89,7 +89,11 @@ import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-ex
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
-import { feedRefreshOptions, refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
+import {
+  feedQueryKey,
+  feedRefreshOptions,
+  refreshFeedFirstPage,
+} from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -238,7 +242,7 @@ const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
 function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
   return useInfiniteQuery({
-    queryKey: ["feed", tab, typeFilter ?? "", resolved ?? ""],
+    queryKey: feedQueryKey(tab, typeFilter, resolved),
     queryFn: ({ pageParam }): Promise<FeedPage> =>
       tab === "CORPORATE"
         ? feedApi.corporate(pageParam ?? null, FEED_PAGE_SIZE)
@@ -263,23 +267,23 @@ function useProfile() {
   });
 }
 
-function useSuggestions() {
+function useSuggestions(enabled: boolean) {
   const authenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["network", "suggestions"],
     // Busca um lote maior: o "ver outras" gira entre os 4 primeiros sem pedir de novo.
     queryFn: () => networkApi.suggestions(12),
-    enabled: authenticated,
+    enabled: authenticated && enabled,
     staleTime: 120_000,
   });
 }
 
-function useEvents() {
+function useEvents(enabled: boolean) {
   const authenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["events"],
     queryFn: () => eventsApi.list(),
-    enabled: authenticated,
+    enabled: authenticated && enabled,
     staleTime: 120_000,
   });
 }
@@ -313,6 +317,15 @@ export function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const authenticated = useIsAuthenticated();
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(min-width: 64rem)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   // A aba vem da URL; trocar de aba REPLACES o histórico (o "voltar" continua voltando para a
   // página anterior, e não passeando pelas abas).
   const { aba, compor } = Route.useSearch();
@@ -342,7 +355,6 @@ export function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch: feedRefetch,
   } = useFeed(
     tab,
     tab === "ALL" ? typeFilter : undefined,
@@ -355,12 +367,16 @@ export function Home() {
   // refazer a consulta (que traria todas as páginas e reescreveria o topo embaixo de quem lê).
   useFeedLiveRefresh({
     queryClient,
-    queryKey: ["feed", tab, tab === "ALL" ? typeFilter : "", questionsFeed ? questionStatus : ""],
+    queryKey: feedQueryKey(
+      tab,
+      tab === "ALL" ? typeFilter : undefined,
+      questionsFeed ? RESOLVED_FILTER[questionStatus] : undefined,
+    ),
     enabled: authenticated && tabReady,
   });
   const { data: profile } = useProfile();
-  const { data: suggestions } = useSuggestions();
-  const { data: eventsData } = useEvents();
+  const { data: suggestions } = useSuggestions(isDesktop);
+  const { data: eventsData } = useEvents(isDesktop);
   const {
     data: corporate,
     isError: corporateError,
@@ -832,9 +848,19 @@ export function Home() {
 
   // Puxar para renovar no topo, em toque: renova SÓ a lista do feed — o gesto é sobre o que está
   // na tela, não sobre o aplicativo. O indicador de renovação é o mesmo da busca automática.
+  const [refreshingFeed, setRefreshingFeed] = useState(false);
+  const refreshingFeedRef = useRef(false);
   const pullToRefresh = usePullToRefresh(
-    useCallback(() => void feedRefetch(), [feedRefetch]),
-    feedFetching && !isFetchingNextPage,
+    useCallback(() => {
+      if (refreshingFeedRef.current) return;
+      refreshingFeedRef.current = true;
+      setRefreshingFeed(true);
+      void refreshFeedFirstPage(queryClient).finally(() => {
+        refreshingFeedRef.current = false;
+        setRefreshingFeed(false);
+      });
+    }, [queryClient]),
+    (feedFetching && !isFetchingNextPage) || refreshingFeed,
   );
 
   useEffect(() => {
@@ -1569,7 +1595,7 @@ export function Home() {
 
             {feedLoading && <PostCardSkeletons />}
 
-            {!feedLoading && feedFetching && !isFetchingNextPage && (
+            {!feedLoading && ((feedFetching && !isFetchingNextPage) || refreshingFeed) && (
               <div
                 role="status"
                 className="pointer-events-none absolute inset-x-0 -top-8 z-10 flex justify-center"
@@ -1585,7 +1611,7 @@ export function Home() {
                 contínuo e ao soltar vira o "Atualizando..." de cima. Sem isso o gesto parecia
                 não fazer nada — e, sem o overscroll do documento bloqueado, o Chrome assumia
                 o gesto e recarregava a página inteira. */}
-            {pullToRefresh.pulling && !feedFetching && (
+            {pullToRefresh.pulling && !feedFetching && !refreshingFeed && (
               <PullIndicator pull={pullToRefresh.pull} trigger={pullToRefresh.trigger} />
             )}
 
@@ -1679,7 +1705,7 @@ export function Home() {
               </Link>
             </div>
           )}
-          <TodayGamesCard />
+          <TodayGamesCard enabled={isDesktop} />
 
           {suggestionList.length > 0 && (
             <div className="surface-card p-4 sm:p-5">
@@ -1752,7 +1778,7 @@ export function Home() {
             </div>
           )}
 
-          <CompanyPromptCard />
+          <CompanyPromptCard enabled={isDesktop} />
           <ApoieCard />
         </aside>
       </div>

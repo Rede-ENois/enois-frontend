@@ -76,11 +76,12 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const { data: savedData } = useQuery({
     ...savedPostsQueryOptions(),
     enabled: !!user,
+    select: (data) => data.items.some((p) => p.id === post.id),
   });
 
   useEffect(() => {
-    if (savedData) {
-      setSaved(savedData.items.some((p) => p.id === post.id));
+    if (savedData !== undefined) {
+      setSaved(savedData);
     }
   }, [savedData, post.id]);
 

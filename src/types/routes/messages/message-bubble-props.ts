@@ -3,6 +3,8 @@ import type { ConversationPeerData } from "@rede-enois/design-system/domain";
 
 export type MessageBubbleProps = {
   message: Message;
+  currentUserId: string | null;
+  onReplyQuoteClick?: () => void;
   /** A mensagem é de quem está olhando a tela: muda o lado, a cor e o canto do balão. */
   isMe: boolean;
   /** O outro participante como ele aparece nesta conversa (identidade profissional em conversa de trabalho). */

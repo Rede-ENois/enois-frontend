@@ -5,6 +5,7 @@ import type { FeedPages } from "@/types/lib/feed/feed-pages";
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  feedQueryKey,
   feedRefreshOptions,
   isUnseenFeedQuery,
   refreshFeedFirstPage,
@@ -74,6 +75,31 @@ describe("renovação automática do feed", () => {
     expect(isUnseenFeedQuery(["feed", "UNSEEN", "", ""])).toBe(true);
     expect(isUnseenFeedQuery(["feed", "ALL", "", ""])).toBe(false);
     expect(isUnseenFeedQuery(["post", "UNSEEN"])).toBe(false);
+  });
+});
+
+describe("feedQueryKey", () => {
+  it.each([
+    ["all", undefined, ""],
+    ["open", false, false],
+    ["resolved", true, true],
+  ] as const)("usa o valor canônico de resolved para %s", (_status, resolved, expected) => {
+    expect(feedQueryKey("ALL", "QUESTION", resolved)).toEqual([
+      "feed",
+      "ALL",
+      "QUESTION",
+      expected,
+    ]);
+  });
+
+  it("normaliza filtros ausentes e mantém as abas separadas", () => {
+    expect(feedQueryKey("ALL")).toEqual(["feed", "ALL", "", ""]);
+    expect(feedQueryKey("ALL", "")).toEqual(feedQueryKey("ALL"));
+    expect(feedQueryKey("CORPORATE")).toEqual(["feed", "CORPORATE", "", ""]);
+    expect(feedQueryKey("ALL", "QUESTION", false)).not.toEqual(feedQueryKey("ALL", "QUESTION"));
+    expect(feedQueryKey("ALL", "QUESTION", false)).not.toEqual(
+      feedQueryKey("ALL", "QUESTION", true),
+    );
   });
 });
 
@@ -156,6 +182,37 @@ describe("refreshFeedFirstPage", () => {
 
       expect(client.getQueryData(key)).toBe(updated);
       expect(queryFn).toHaveBeenCalledTimes(2);
+    } finally {
+      unsubscribe();
+      client.clear();
+    }
+  });
+
+  it("não repete no histórico o post que subiu para a primeira página", async () => {
+    const client = new QueryClient();
+    const key = ["feed", "ALL", "", ""] as const;
+    const queryFn = vi.fn().mockResolvedValue(page(["p2", "p1"], "cursor-1"));
+    const observer = new QueryObserver(client, {
+      queryKey: key,
+      queryFn,
+      initialPageParam: null,
+      enabled: false,
+    } as QueryObserverOptions & { initialPageParam: null });
+    const unsubscribe = observer.subscribe(() => {});
+    client.setQueryData<FeedPages>(key, {
+      pages: [page(["p1"], "cursor-1"), page(["p2"])],
+      pageParams: [null, "cursor-1"],
+    });
+
+    try {
+      await refreshFeedFirstPage(client);
+      const updated = client.getQueryData<FeedPages>(key)!;
+      expect(updated.pages.map((entry) => entry.items.map((item) => item.id))).toEqual([
+        ["p2", "p1"],
+        [],
+      ]);
+      expect(updated.pageParams).toEqual([null, "cursor-1"]);
+      expect(queryFn).toHaveBeenCalledTimes(1);
     } finally {
       unsubscribe();
       client.clear();

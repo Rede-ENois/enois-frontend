@@ -97,7 +97,9 @@ describe("painel de grupos: meus grupos e descobrir", () => {
 
   afterEach(() => {
     act(() => root.unmount());
+    client.clear();
     host.remove();
+    vi.useRealTimers();
   });
 
   it("mostra os grupos que participamos primeiro e novos grupos no painel Descobrir", async () => {
@@ -145,5 +147,91 @@ describe("painel de grupos: meus grupos e descobrir", () => {
     expect(host.textContent).toContain(texts.groups.myGroupsEmpty);
     expect(host.textContent).toContain(texts.groups.myGroupsEmptyHint);
     expect(host.textContent).toContain("Designers Brasil");
+  });
+
+  it("agrupa a busca de grupos, normaliza a chave e cancela a consulta substituída", async () => {
+    vi.useFakeTimers();
+    const mine = { items: [myGroup], nextCursor: null };
+    client.setQueryData(["groups", "mine"], mine);
+    mocks.mine.mockResolvedValue(mine);
+    mocks.list.mockImplementation((query?: string) =>
+      query ? new Promise(() => {}) : Promise.resolve({ items: [], nextCursor: null }),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <Grupos />
+        </QueryClientProvider>,
+      );
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(5));
+
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain("Turma do Café");
+    expect(host.textContent).toContain(texts.groups.discoverEmpty);
+
+    const input = host.querySelector<HTMLInputElement>(
+      `input[aria-label="${texts.groups.searchPlaceholder}"]`,
+    )!;
+    const search = async (value: string) => {
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
+          input,
+          value,
+        );
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    };
+
+    await search("  R");
+    await search("  Re");
+    await search("  React  ");
+    expect(host.textContent).not.toContain("Turma do Café");
+    expect(host.textContent).toContain(texts.groups.discoverEmpty);
+    expect(host.textContent).not.toContain(texts.groups.discoverSearchEmpty);
+    await act(async () => vi.advanceTimersByTimeAsync(249));
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+
+    await act(async () => vi.advanceTimersByTimeAsync(1));
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      "React",
+      undefined,
+      undefined,
+      expect.any(AbortSignal),
+    );
+    expect(
+      client.getQueryCache().find({ queryKey: ["groups", "list", "React"], exact: true }),
+    ).toBeDefined();
+    expect(
+      client.getQueryCache().find({ queryKey: ["groups", "list", "  React  "], exact: true }),
+    ).toBeUndefined();
+    const reactSignal = mocks.list.mock.calls[1][3] as AbortSignal;
+
+    await search("   React   ");
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(reactSignal.aborted).toBe(false);
+
+    await search("Vue");
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(reactSignal.aborted).toBe(true);
+    expect(mocks.list).toHaveBeenCalledTimes(3);
+    expect(mocks.list).toHaveBeenLastCalledWith(
+      "Vue",
+      undefined,
+      undefined,
+      expect.any(AbortSignal),
+    );
+    const vueSignal = mocks.list.mock.calls[2][3] as AbortSignal;
+
+    await search("  ");
+    expect(host.textContent).toContain("Turma do Café");
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(vueSignal.aborted).toBe(true);
+    expect(
+      client.getQueryCache().find({ queryKey: ["groups", "list", ""], exact: true }),
+    ).toBeDefined();
   });
 });

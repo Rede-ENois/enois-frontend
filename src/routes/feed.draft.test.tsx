@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   draftApi: vi.fn(),
   saveDraft: vi.fn(),
   discardDraft: vi.fn(),
+  list: vi.fn(),
   create: vi.fn(),
   uploadAll: vi.fn(),
 }));
@@ -31,7 +32,7 @@ vi.mock("@/lib/api", () => ({
   corporateApi: { status: vi.fn().mockResolvedValue({ state: "ACTIVE" }) },
   eventsApi: { list: vi.fn().mockResolvedValue({ items: [] }) },
   feedApi: {
-    list: vi.fn().mockResolvedValue({ items: [], nextCursor: null, lastSeenAt: null }),
+    list: mocks.list,
     corporate: vi.fn().mockResolvedValue({ items: [], nextCursor: null, lastSeenAt: null }),
     scheduled: vi.fn().mockResolvedValue([]),
     draft: mocks.draftApi,
@@ -65,9 +66,6 @@ vi.mock("@/lib/feed/feed-live", () => ({ useFeedLiveRefresh: vi.fn() }));
 vi.mock("@/lib/use-media-upload", () => ({
   useMediaUpload: () => ({ upload: mocks.uploadAll, uploadAll: mocks.uploadAll, status: "idle" }),
   VideoLimitError: class VideoLimitError extends Error {},
-}));
-vi.mock("@/lib/pull-to-refresh", () => ({
-  usePullToRefresh: () => ({ pull: 0, pulling: false, trigger: false }),
 }));
 vi.mock("@/lib/require-auth", () => ({ requireAuth: vi.fn() }));
 vi.mock("@/lib/composer-handoff", () => ({ takeComposerFiles: vi.fn(() => []) }));
@@ -188,6 +186,7 @@ describe("rascunho do compositor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    mocks.list.mockReset().mockResolvedValue({ items: [], nextCursor: null, lastSeenAt: null });
     mocks.draftApi.mockResolvedValue({ draft: null });
     mocks.saveDraft.mockImplementation((data: { content: string }) =>
       Promise.resolve({ draft: { ...rascunhoServidor, content: data.content } }),
@@ -322,5 +321,69 @@ describe("rascunho do compositor", () => {
 
     expect(mocks.create).toHaveBeenCalledTimes(1);
     expect(mocks.discardDraft).toHaveBeenCalled();
+  });
+
+  it("ao puxar, busca só o topo e mantém o indicador durante a renovação", async () => {
+    const key = ["feed", "ALL", "", ""] as const;
+    const first = {
+      items: [{ id: "p1", createdAt: "2024-01-01T00:00:00Z" }],
+      nextCursor: "cursor-1",
+      lastSeenAt: null,
+    };
+    const older = {
+      items: [{ id: "p2", createdAt: "2024-01-01T00:00:00Z" }],
+      nextCursor: null,
+      lastSeenAt: null,
+    };
+    const fresh = { ...first, items: [older.items[0], first.items[0]] };
+    client.setQueryData(key, { pages: [first, older], pageParams: [null, "cursor-1"] });
+    let resolveFirst!: (page: typeof fresh) => void;
+    mocks.list.mockImplementationOnce(
+      () =>
+        new Promise<typeof fresh>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+    await montar();
+    expect(mocks.list).not.toHaveBeenCalled();
+
+    const pull = () => {
+      const touch = { clientX: 10, clientY: 0 };
+      window.dispatchEvent(
+        new TouchEvent("touchstart", { touches: [touch] as unknown as Touch[] }),
+      );
+      window.dispatchEvent(
+        new TouchEvent("touchmove", {
+          touches: [{ ...touch, clientY: 90 }] as unknown as Touch[],
+        }),
+      );
+      window.dispatchEvent(new TouchEvent("touchend", { touches: [] }));
+    };
+
+    await act(async () => pull());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5);
+    });
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+    expect(mocks.list).toHaveBeenCalledWith(null, 10, "ALL", undefined, undefined);
+    expect(host.textContent).toContain("Atualizando publicações…");
+
+    await act(async () => pull());
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFirst(fresh);
+      await vi.advanceTimersByTimeAsync(5);
+    });
+    expect(mocks.list).toHaveBeenCalledTimes(1);
+    const data = client.getQueryData<{ pages: { items: { id: string }[] }[] }>(key);
+    expect(data?.pages.map((page) => page.items.map((item) => item.id))).toEqual([
+      ["p2", "p1"],
+      [],
+    ]);
+    expect(host.textContent).not.toContain("Atualizando publicações…");
+
+    await act(async () => pull());
+    expect(mocks.list).toHaveBeenCalledTimes(2);
   });
 });

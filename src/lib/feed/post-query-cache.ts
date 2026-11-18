@@ -2,8 +2,13 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import type { PostView } from "@/types/application/feed/post-view";
 import type { FeedPages } from "@/types/lib/feed/feed-pages";
+import type { HomeTab } from "@/types/routes/feed/home-tab";
 
 import { fetchFirstPage, mergeRows } from "../query-first-page";
+
+export function feedQueryKey(tab: HomeTab, typeFilter?: string, resolved?: boolean) {
+  return ["feed", tab, typeFilter ?? "", resolved ?? ""] as const;
+}
 
 /**
  * Aba "Ainda não vi": o servidor deixa de mandar o post assim que ele tem reação ou comentário
@@ -58,7 +63,12 @@ export async function refreshFeedFirstPage(queryClient: QueryClient): Promise<vo
         if (!current || !Array.isArray(current.pages) || current.pages.length === 0) return current;
         const [first, ...older] = current.pages;
         const items = mergeRows(fresh.items, first.items);
-        return { ...current, pages: [{ ...first, items }, ...older] };
+        const freshIds = new Set(fresh.items.map((post) => post.id));
+        const olderPages = older.map((page) => {
+          const items = page.items.filter((post) => !freshIds.has(post.id));
+          return items.length === page.items.length ? page : { ...page, items };
+        });
+        return { ...current, pages: [{ ...first, items }, ...olderPages] };
       });
     }),
   );

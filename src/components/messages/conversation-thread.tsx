@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import {
+  type InfiniteData,
   keepPreviousData,
   useInfiniteQuery,
   useMutation,
@@ -10,6 +11,7 @@ import {
 import { Link } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { PageResponse } from "@/types/application/api/page-response";
 import type { Message } from "@/types/application/message/message";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
 import type { SendMessageInput } from "@/types/routes/messages/send-message-input";
@@ -34,6 +36,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { ConversationCallBar } from "../calls/conversation-call-bar";
 import { MessageBubble } from "./message-bubble";
+import { useReplyNavigation } from "./use-reply-navigation";
 
 /** Tamanho que o app sempre usou; em modo lite cada página vem maior (menos idas ao servidor). */
 const MESSAGES_PAGE_SIZE = 50;
@@ -107,6 +110,41 @@ export function ConversationThread({
     return items.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
   }, [messagesData]);
   const { messages, decrypting } = useDecryptedMessages(rawMessages, currentUserId);
+  const {
+    messagesScrollRef,
+    navigating: navigatingReply,
+    navigateToReply,
+  } = useReplyNavigation({
+    conversationId: conversation.id,
+    enabled: !showingPreviousThread && !isLoadingMessages,
+    loadedMessageIds: new Set(rawMessages.map((message) => message.id)),
+    nextCursor: messagesData?.pages.at(-1)?.nextCursor ?? null,
+    loadOlder: async (messageId, signal) => {
+      const queryKey = ["messages", conversation.id];
+      const query = queryClient.getQueryCache().find({ queryKey, exact: true });
+      // cancelRefetch:false sozinho só aguarda um refetch concorrente, sem paginar.
+      if (query && query.state.fetchStatus !== "idle") await query.promise;
+      signal.throwIfAborted();
+      const cached = queryClient.getQueryData<InfiniteData<PageResponse<Message>>>(queryKey);
+      if (cached?.pages.some((page) => page.items.some((message) => message.id === messageId))) {
+        return { targetLoaded: true, nextCursor: cached.pages.at(-1)?.nextCursor ?? null };
+      }
+      // Uma busca da mesma página pode pertencer também à outra instância do dock.
+      const result = await fetchOlderMessages({ cancelRefetch: false, throwOnError: true });
+      if (result.isError) throw result.error;
+      const pages = result.data?.pages;
+      if (!pages?.length) throw new Error("reply-messages-page-missing");
+      return {
+        targetLoaded: pages.some((page) => page.items.some((message) => message.id === messageId)),
+        nextCursor: pages.at(-1)?.nextCursor ?? null,
+      };
+    },
+    notify: (status) => {
+      if (status === "loading") toast(texts.messages.loadingReply);
+      else if (status === "unavailable") toast(texts.messages.replyUnavailable, "error");
+      else toast(texts.messages.replyNavigationError, "error");
+    },
+  });
 
   const latestIncoming = [...rawMessages].reverse().find((m) => m.from !== currentUserId);
   useConversationOnScreen(
@@ -312,7 +350,11 @@ export function ConversationThread({
       newestMessageId={messages.length > 0 ? messages[messages.length - 1].id : null}
       hasOlderMessages={hasOlderMessages}
       loadingOlder={isLoadingOlder}
-      onLoadOlder={() => fetchOlderMessages()}
+      onLoadOlder={() => {
+        if (!navigatingReply) void fetchOlderMessages({ cancelRefetch: false });
+      }}
+      messagesScrollRef={messagesScrollRef}
+      suppressAutoScroll={navigatingReply}
       selecting={selectingMessages}
       selectedCount={selectedMessages.size}
       onStartSelecting={() => setSelectingMessages(true)}
@@ -372,6 +414,7 @@ export function ConversationThread({
         <MessageBubble
           key={m.id}
           message={m}
+          currentUserId={currentUserId}
           isMe={m.from === currentUserId}
           readByOther={
             peerLastReadAt !== null &&
@@ -399,6 +442,17 @@ export function ConversationThread({
             showingPreviousThread
               ? undefined
               : () => setReplyingTo({ id: m.id, from: m.from, text: m.text })
+          }
+          onReplyQuoteClick={
+            showingPreviousThread ||
+            selectingMessages ||
+            m.conversationId !== conversation.id ||
+            !m.replyTo?.id
+              ? undefined
+              : () => {
+                  const originalId = m.replyTo?.id;
+                  if (originalId) void navigateToReply(originalId);
+                }
           }
         />
       ))}

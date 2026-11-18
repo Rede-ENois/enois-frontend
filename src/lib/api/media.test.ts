@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
 import { describe, expect, it } from "vitest";
 
-import { mediaUploadResponseError } from "./media";
+import { mediaUploadResponseError, resolveCdnUrl, withImageKitOriginal } from "./media";
 
 describe("mediaUploadResponseError", () => {
   it("preserves the API code and maps the moderation message", () => {
@@ -38,5 +38,41 @@ describe("mediaUploadResponseError", () => {
       path: "/storage/key",
       message: "Upload falhou: 503",
     });
+  });
+});
+
+describe("withImageKitOriginal", () => {
+  /**
+   * A mídia saindo do Énóis Storage (brief §13) tem de chegar ao player SEM transformação: a rota
+   * nova responde `Range`/`206` nativamente. Se este adapter passasse a reescrever a URL do nosso
+   * Storage, o seek do vídeo quebraria — e o sintoma seria "vídeo que reinicia", invisível em teste
+   * de upload.
+   */
+  it("deixa a URL do nosso Storage intacta", () => {
+    const url = "https://api.enois.ia.br/api/network/storage/objects/sob_abc/content";
+
+    expect(withImageKitOriginal(url)).toBe(url);
+  });
+
+  it("mantém o caminho de figurinha do próprio backend intacto", () => {
+    const url = "/emotes/image/abc";
+
+    expect(withImageKitOriginal(url)).toContain("/emotes/image/abc");
+  });
+
+  it("ainda troca a entrega do ImageKit pelo original", () => {
+    const resolved = withImageKitOriginal("https://ik.imagekit.io/conta/clipe.mp4");
+
+    expect(resolved).toContain("tr=orig-true");
+  });
+
+  it("não inventa parâmetro em URL que não é do CDN", () => {
+    const url = "https://exemplo.com/video.mp4";
+
+    expect(withImageKitOriginal(url)).toBe(url);
+  });
+
+  it("resolveCdnUrl não duplica a barra em caminho relativo", () => {
+    expect(resolveCdnUrl("/a/b.png")).not.toContain("//a/b");
   });
 });
