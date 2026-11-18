@@ -47,6 +47,7 @@ Fornece:
 - **Head meta tags** globais (charset, viewport, SEO, Open Graph)
 - **404** (`NotFoundComponent`) e **Error Boundary** (`ErrorComponent`)
 - **RootShell** - HTML shell com `<head>` e `<body>`
+- **CallsProvider** - observa chamadas; o painel é carregado quando a sessão sai de `idle`
 
 ### 5. Layout Principal (`src/components/authenticated-app-container.tsx`)
 
@@ -76,6 +77,8 @@ TanStack Query.
 
 Condições de interface, polling e exceções de frescor continuam nos consumidores. Loaders de SSR,
 revalidação de dados associados à sessão e paginação por cursor conservam suas regras próprias.
+A entrada em chamadas só aplica credenciais à tentativa ainda aberta; respostas após sair não
+reabrem o painel, e a presença é liberada quando a tela já saiu daquela chamada.
 
 **Mensagens em tempo real.** `MessageStream` (montado no root, só com sessão) abre um `EventSource`
 em `/conversations/stream` (`src/lib/message-stream.ts`). Cada evento `conversation` invalida

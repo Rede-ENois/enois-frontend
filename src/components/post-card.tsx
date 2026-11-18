@@ -97,7 +97,8 @@ function PostCardContainer({
   const { data: pagePost, isLoading: pageLoading } = useQuery({
     queryKey: ["post", post.id],
     queryFn: () => feedApi.get(post.id),
-    enabled: needsPage || needsArticleBody,
+    enabled:
+      needsPage || (needsArticleBody && (post.mediaSpoiler == null || (isOwner && editOpen))),
   });
   const pageHtml = post.pageHtml ?? pagePost?.pageHtml ?? "";
   const articleBody = post.articleBody ?? pagePost?.articleBody ?? "";

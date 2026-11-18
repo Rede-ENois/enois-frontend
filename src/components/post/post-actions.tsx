@@ -76,11 +76,12 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const { data: savedData } = useQuery({
     ...savedPostsQueryOptions(),
     enabled: !!user,
+    select: (data) => data.items.some((p) => p.id === post.id),
   });
 
   useEffect(() => {
-    if (savedData) {
-      setSaved(savedData.items.some((p) => p.id === post.id));
+    if (savedData !== undefined) {
+      setSaved(savedData);
     }
   }, [savedData, post.id]);
 
@@ -128,7 +129,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const resolvePostUrl = () => shareUrl ?? `${window.location.origin}/post/${post.id}`;
 
   const handleCopyLink = async () => {
-    await trackShare();
+    void trackShare();
     try {
       await navigator.clipboard.writeText(resolvePostUrl());
       toast(texts.posts.shareCopied, "success");
@@ -138,7 +139,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   };
 
   const handleNativeShare = async () => {
-    await trackShare();
+    void trackShare();
     try {
       await navigator.share({ url: resolvePostUrl() });
     } catch {

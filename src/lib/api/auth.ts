@@ -24,7 +24,7 @@ export const authApi = {
   config: () => api.get<AuthConfig>("/auth/config"),
 
   /** Desafio de soma emitido pelo backend quando o Turnstile não está configurado. */
-  signupChallenge: () => api.get<SignupChallenge>("/auth/signup-challenge"),
+  signupChallenge: () => api.get<SignupChallenge>("/auth/signup-challenge", { fingerprint: true }),
 
   /** Cria a conta pendente de confirmação e envia o link para o e-mail. */
   signup: (data: SignupInput) =>

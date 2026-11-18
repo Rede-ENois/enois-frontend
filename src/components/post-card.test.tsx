@@ -14,18 +14,21 @@ import { PostCard } from "./post-card";
 
 const mocks = vi.hoisted(() => ({
   card: null as PostCardProps | null,
+  get: vi.fn(),
   mediaItems: [] as { id: string; width?: number | null }[],
 }));
 
 vi.mock("@/lib/api", () => ({
   communitiesApi: { follow: vi.fn(), unfollow: vi.fn() },
-  feedApi: {},
+  feedApi: { get: mocks.get },
   mediaApi: { get: vi.fn() },
 }));
 vi.mock("@/lib/api/seals", () => ({
   sealsApi: { forPost: () => Promise.resolve({ seals: [] }) },
 }));
-vi.mock("@/lib/use-auth", () => ({ useAuth: () => ({ requireAuth: () => true, user: null }) }));
+vi.mock("@/lib/use-auth", () => ({
+  useAuth: () => ({ requireAuth: () => true, user: { id: "u1" } }),
+}));
 vi.mock("@/lib/use-lite-mode", () => ({ useLiteMode: () => false }));
 vi.mock("@/lib/feed/video-autoplay", () => ({ autoplayVideoRef: vi.fn() }));
 vi.mock("@/lib/feed-scroll-restoration", () => ({ saveFeedScroll: vi.fn() }));
@@ -83,18 +86,23 @@ const post: PostView = {
 describe("PostCard container", () => {
   let root: Root;
   let host: HTMLDivElement;
+  let client: QueryClient;
 
   beforeEach(() => {
     mocks.card = null;
+    mocks.get.mockReset();
     mocks.mediaItems = [];
     host = document.createElement("div");
     root = createRoot(host);
+    client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   });
 
-  afterEach(() => act(() => root.unmount()));
+  afterEach(() => {
+    act(() => root.unmount());
+    client.clear();
+  });
 
   const render = async (node: React.ReactNode) => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     await act(async () =>
       root.render(<QueryClientProvider client={client}>{node}</QueryClientProvider>),
     );
@@ -137,5 +145,64 @@ describe("PostCard container", () => {
 
     expect(mocks.card).not.toBeNull();
     expect(mocks.card!.autoplayLinks ?? false).toBe(false);
+  });
+
+  const settle = () =>
+    act(async () => {
+      for (let i = 0; i < 3; i++) await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+  it.each([false, true])(
+    "consulta o artigo somente ao abrir a edição, com mediaSpoiler=%s",
+    async (mediaSpoiler) => {
+      const article = { ...post, type: "ARTICLE" as const, mediaSpoiler };
+      mocks.get.mockResolvedValue({ ...article, articleBody: "Corpo completo" });
+
+      await render(<PostCard post={article} />);
+      expect(mocks.get).not.toHaveBeenCalled();
+
+      expect(mocks.card?.onEdit).toBeTypeOf("function");
+      await act(async () => {
+        mocks.card?.onEdit?.();
+      });
+      await settle();
+
+      expect(mocks.get).toHaveBeenCalledExactlyOnceWith(post.id);
+      expect(client.getQueryData<PostView>(["post", post.id])?.articleBody).toBe("Corpo completo");
+    },
+  );
+
+  it("não consulta o artigo de outro autor com a flag de spoiler presente", async () => {
+    await render(
+      <PostCard post={{ ...post, authorId: "outro", type: "ARTICLE", mediaSpoiler: false }} />,
+    );
+
+    expect(mocks.card?.isOwner).toBe(false);
+    expect(mocks.get).not.toHaveBeenCalled();
+  });
+
+  it("continua buscando o HTML de página com o editor fechado", async () => {
+    mocks.get.mockResolvedValue({ ...post, type: "PAGE", pageHtml: "Página completa" });
+
+    await render(<PostCard post={{ ...post, type: "PAGE" }} />);
+    await settle();
+
+    expect(mocks.get).toHaveBeenCalledExactlyOnceWith(post.id);
+    expect(mocks.card?.pageHtml).toBe("Página completa");
+  });
+
+  it("recupera a flag de spoiler de artigo antigo que não a trouxe", async () => {
+    mocks.get.mockResolvedValue({
+      ...post,
+      type: "ARTICLE",
+      articleBody: "Corpo completo",
+      mediaSpoiler: true,
+    });
+
+    await render(<PostCard post={{ ...post, type: "ARTICLE" }} />);
+    await settle();
+
+    expect(mocks.get).toHaveBeenCalledExactlyOnceWith(post.id);
+    expect(mocks.card?.mediaSpoiler).toBe(true);
   });
 });

@@ -107,6 +107,9 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
 - Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
 
+A leitura é otimista em todas as páginas; se o servidor recusa, os avisos afetados voltam ao estado
+anterior de leitura, preservando o conteúdo e as páginas recebidos durante a requisição.
+
 O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, sidebar.
 
 **Estado:** `useQuery` para perfil, notificações; `useMutation` para marcar lidas
@@ -169,7 +172,9 @@ palpite (issue #532).
 
 ## `PostCard` (`src/components/post-card.tsx`)
 
-Card de post no feed, com todas as ações sociais.
+Card de post no feed, com todas as ações sociais. O corpo de artigo ausente na listagem é buscado
+quando o autor abre a edição. Artigos sem corpo e sem flag de spoiler antecipam a consulta para
+recuperar a flag; páginas continuam buscando o HTML necessário à prévia.
 
 **Props:** `{ post: PostView }`
 
@@ -191,6 +196,9 @@ A fileira `PostActions` repassa `post.reactionSummary` à view do design system:
 contador mostram até três tipos recebidos pelo post, do mais usado para o menos usado. Resumo
 `null` ou ausente preserva os emojis padrão; resumo vazio não mostra o botão de reações, mesmo
 quando o contador antigo ainda é positivo.
+
+Ao copiar ou compartilhar pelo menu do post, o navegador recebe a ação no clique. A contagem é
+atualizada em paralelo e não impede a cópia ou a abertura do compartilhamento nativo.
 
 Em `PostComments`, o seletor `selectCommentMentions` reutiliza uma lista vazia estável enquanto o
 estado do cartão não existe. A abertura da publicação não recria o snapshot a cada leitura; quando o

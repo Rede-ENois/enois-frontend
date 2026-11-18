@@ -1,5 +1,7 @@
 import {
+  Suspense,
   createContext,
+  lazy,
   useCallback,
   useContext,
   useEffect,
@@ -38,8 +40,11 @@ import { subscribeToCallEvents } from "@/lib/message-stream";
 import { hasSession } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
-import { CallPanel } from "./call-panel";
 import { startRingtone } from "./call-ringtone";
+
+const CallPanel = lazy(() =>
+  import("./call-panel").then((module) => ({ default: module.CallPanel })),
+);
 
 /**
  * A chamada vive no topo do app, não numa tela: começar, receber, atender e encerrar funcionam em
@@ -203,14 +208,14 @@ function CallsRuntime({ active, children }: { active: boolean; children: React.R
   /**
    * Pede a credencial ao servidor e abre o painel com o Jitsi.
    *
-   * Devolve `"left"` quando a entrada chegou a ser registrada e a sala não abriu (a saída já foi
-   * avisada) e `"failed"` quando a credencial nem veio — quem chamou decide se ainda há presença
-   * para largar.
+   * Devolve `"left"` quando a credencial chegou mas a sala não abriu: a presença foi liberada
+   * ou pertence à entrada mais nova na mesma chamada. `"failed"` significa que a credencial
+   * nem veio — quem chamou decide se ainda há presença para largar.
    */
   const enterRoom = useCallback(async (target: CallView): Promise<"live" | "left" | "failed"> => {
     // A chamada vai junto: quem clica em "entrar" vê a tela abrir na hora, em vez de achar que
     // o clique não fez nada enquanto a credencial não chega.
-    callSessionStore.joining(target);
+    const attempt = callSessionStore.joining(target);
     // A permissão é pedida aqui, na página do app, e não dentro do iframe: no celular, um pedido
     // que parte de dentro da sala não vira pergunta nenhuma, e a chamada abria muda. Recusar não
     // impede entrar — a sala tem o botão para pedir de novo; a tela só diz o que aconteceu.
@@ -228,7 +233,12 @@ function CallsRuntime({ active, children }: { active: boolean; children: React.R
         callSessionStore.error(texts.calls.untrustedRoom);
         return "left";
       }
-      callSessionStore.live(join);
+      if (!callSessionStore.live(join, attempt)) {
+        // Uma entrada mais nova na mesma chamada ainda usa a presença: só larga se a tela
+        // já saiu dela.
+        if (getCallSession().call?.id !== target.id) await leaveAnsweredRoom(target);
+        return "left";
+      }
       return "live";
     } catch (error) {
       if (error instanceof ApiError && error.code?.startsWith("CALL_")) {
@@ -585,7 +595,11 @@ function CallsRuntime({ active, children }: { active: boolean; children: React.R
   return (
     <CallsContext.Provider value={active ? value : noSession}>
       {children}
-      {active && session.phase !== "idle" ? <CallPanel /> : null}
+      {active && session.phase !== "idle" ? (
+        <Suspense fallback={null}>
+          <CallPanel />
+        </Suspense>
+      ) : null}
     </CallsContext.Provider>
   );
 }

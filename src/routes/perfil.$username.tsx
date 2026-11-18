@@ -84,6 +84,7 @@ import { authApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { profileCardData } from "@/lib/cosmetics";
+import { withoutRepeatedPosts } from "@/lib/feed/repeated-posts";
 import { croppedFile } from "@/lib/media/cropped-file";
 import { connectionAction } from "@/lib/network/connection-action";
 import { buildShareTags } from "@/lib/open-graph";
@@ -319,6 +320,7 @@ function Profile() {
       feedApi.listByUserId(user.id, pageParam, USER_POSTS_PAGE_SIZE, profileTab),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    select: (data) => ({ ...data, pages: withoutRepeatedPosts(data.pages) }),
     enabled: !isRepliesTab && !isDiarioTab,
   });
 

@@ -3,7 +3,8 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { type Root, createRoot } from "react-dom/client";
+import { type Root, createRoot, hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Home } from "./feed";
@@ -21,21 +22,27 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   uploadAll: vi.fn(),
   draft: { value: "" },
+  suggestions: vi.fn().mockResolvedValue([]),
+  events: vi.fn().mockResolvedValue({ items: [] }),
+  games: vi.fn().mockResolvedValue([]),
+  companies: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/api", () => ({
   authApi: { oauthProviders: vi.fn().mockResolvedValue([]) },
   communitiesApi: { follow: vi.fn(), unfollow: vi.fn() },
+  companiesApi: { mine: mocks.companies },
   corporateApi: { status: vi.fn().mockResolvedValue({ state: "ACTIVE" }) },
-  eventsApi: { list: vi.fn().mockResolvedValue({ items: [] }) },
+  eventsApi: { list: mocks.events },
   feedApi: {
     list: vi.fn().mockResolvedValue({ items: [], nextCursor: null, lastSeenAt: null }),
     corporate: vi.fn().mockResolvedValue({ items: [], nextCursor: null, lastSeenAt: null }),
     scheduled: vi.fn().mockResolvedValue([]),
     create: mocks.create,
   },
+  gamesApi: { trendingToday: mocks.games },
   mediaApi: { get: vi.fn() },
-  networkApi: { suggestions: vi.fn().mockResolvedValue([]) },
+  networkApi: { suggestions: mocks.suggestions },
   profileApi: { me: vi.fn().mockResolvedValue({ id: "u1" }) },
 }));
 vi.mock("@/lib/api/seals", () => ({
@@ -77,12 +84,10 @@ vi.mock("@/components/app-container", () => ({
 }));
 vi.mock("@/components/events/saci-spot", () => ({ SaciSpot: () => null }));
 vi.mock("@/components/events/saci-duel-banner", () => ({ SaciDuelBanner: () => null }));
-vi.mock("@/components/feed/company-prompt-card", () => ({ CompanyPromptCard: () => null }));
 vi.mock("@/components/feed/post-type-picker", () => ({ PostTypePicker: () => null }));
 vi.mock("@/components/feed/professional-composer-notice", () => ({
   ProfessionalComposerNotice: () => null,
 }));
-vi.mock("@/components/games/today-games-card", () => ({ TodayGamesCard: () => null }));
 vi.mock("@/components/html-editor", () => ({ HtmlEditor: () => null }));
 vi.mock("@/components/linkedin-sync-prompt", () => ({ LinkedInSyncPrompt: () => null }));
 vi.mock("@/components/moderation/conduct-lesson-dialog", () => ({
@@ -121,6 +126,10 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   };
 });
 
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@rede-enois/design-system/domain")>();
+  return { ...actual, TodayGamesCard: () => null };
+});
 vi.mock("@rede-enois/design-system/ui", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@rede-enois/design-system/ui")>();
   return { ...actual, useToast: () => ({ toast: vi.fn() }) };
@@ -151,6 +160,9 @@ describe("guarda de duplo envio no compositor", () => {
     await act(async () => root.unmount());
     host.remove();
     client.clear();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     localStorage.clear();
   });
 
@@ -185,5 +197,104 @@ describe("guarda de duplo envio no compositor", () => {
     await act(async () => {});
 
     expect(mocks.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("consulta a barra lateral apenas no desktop e preserva o convite dispensado", async () => {
+    vi.useFakeTimers();
+    let desktop = false;
+    const listeners = new Set<() => void>();
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      get matches() {
+        return query === "(min-width: 64rem)" && desktop;
+      },
+      addEventListener: (_type: string, listener: () => void) => {
+        if (query === "(min-width: 64rem)") listeners.add(listener);
+      },
+      removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
+    }));
+    const calls = () =>
+      [mocks.suggestions, mocks.events, mocks.games, mocks.companies].map(
+        (query) => query.mock.calls.length,
+      );
+    const flush = () =>
+      act(async () => {
+        await vi.advanceTimersByTimeAsync(5);
+      });
+    const resize = async (matches: boolean) => {
+      await act(async () => {
+        desktop = matches;
+        listeners.forEach((listener) => listener());
+      });
+      await flush();
+    };
+
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <Home />
+        </QueryClientProvider>,
+      ),
+    );
+    await flush();
+    expect(calls()).toEqual([0, 0, 0, 0]);
+    expect(listeners.size).toBe(1);
+
+    await resize(true);
+    expect(calls()).toEqual([1, 1, 1, 1]);
+
+    await resize(false);
+    await act(async () => {
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["network", "suggestions"] }),
+        client.invalidateQueries({ queryKey: ["events"] }),
+        client.invalidateQueries({ queryKey: ["games", "trending", "today"] }),
+        client.invalidateQueries({ queryKey: ["companies", "mine"] }),
+      ]);
+    });
+    expect(calls()).toEqual([1, 1, 1, 1]);
+
+    await resize(true);
+    expect(calls()).toEqual([2, 2, 2, 2]);
+    const close = host.querySelector<HTMLButtonElement>('button[aria-label="Fechar"]');
+    expect(close).not.toBeNull();
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("armazenamento bloqueado");
+    });
+    await act(async () => close!.click());
+    expect(host.textContent).not.toContain("Sua empresa no Énóis");
+
+    await resize(false);
+    await resize(true);
+    expect(host.textContent).not.toContain("Sua empresa no Énóis");
+  });
+
+  it("hidrata a barra lateral no desktop sem diferença em relação ao servidor", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    const app = (
+      <QueryClientProvider client={client}>
+        <Home />
+      </QueryClientProvider>
+    );
+    const html = renderToString(app);
+    expect(mocks.suggestions).not.toHaveBeenCalled();
+    expect(mocks.events).not.toHaveBeenCalled();
+    expect(mocks.games).not.toHaveBeenCalled();
+    expect(mocks.companies).not.toHaveBeenCalled();
+
+    await act(async () => root.unmount());
+    host.innerHTML = html;
+    const onRecoverableError = vi.fn();
+    await act(async () => {
+      root = hydrateRoot(host, app, { onRecoverableError });
+    });
+    expect(onRecoverableError).not.toHaveBeenCalled();
+    expect(mocks.suggestions).toHaveBeenCalledTimes(1);
+    expect(mocks.events).toHaveBeenCalledTimes(1);
+    expect(mocks.games).toHaveBeenCalledTimes(1);
+    expect(mocks.companies).toHaveBeenCalledTimes(1);
   });
 });

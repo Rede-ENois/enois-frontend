@@ -31,6 +31,7 @@ export const texts = {
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
     tabRecent: "Recentes",
+    tabEnois: "É Nóis",
     tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
@@ -178,6 +179,10 @@ export const texts = {
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
       desabafos: { label: "Desabafos", description: "Um espaço acolhedor para desabafar" },
       confessionario: { label: "Confessionário", description: "Histórias anônimas para contar" },
+      termometro: {
+        label: "Termômetro",
+        description: "O clima coletivo medido pelo que a comunidade publica",
+      },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
       colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
@@ -242,6 +247,15 @@ export const texts = {
     removeCommentDone: "Comentário removido.",
     removeError: "Não foi possível remover. Tente de novo.",
     reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  termometro: {
+    seoTitle: "Termômetro · Énóis",
+    title: "Termômetro",
+    subtitle:
+      "O clima coletivo da rede, medido a partir do que a comunidade já publicou. Ninguém responde nada aqui: o sistema lê o que é público e conta o conjunto. Só porcentagens, nunca quem escreveu.",
+    error: "Não foi possível abrir o Termômetro. Tente de novo.",
   },
 
   /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */

@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
+import { texts } from "@/texts";
 import type { Notification } from "@/types/application/notification/notification";
 import { navigateToHref } from "@/utils/navigation";
 import { formatNotificationTime, notificationDayLabel } from "@/utils/notification-time";
 import type { NotificationsPanelProps } from "@rede-enois/design-system/domain";
+import { useToast } from "@rede-enois/design-system/ui";
 
 import { networkApi, notificationsApi } from "@/lib/api";
 import { formatarData, ingressoDeEvento } from "@/lib/date/format";
@@ -41,6 +43,7 @@ export function useNotificationsPanel(
 ): Omit<NotificationsPanelProps, "variant" | "onNavigate" | "allHref"> {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const disabledModules = useDisabledModules();
   // Marcar como lida muda a linha e o resumo: a primeira página de cada lista na tela é conferida,
   // sem refazer todas as páginas carregadas (o que a invalidação do prefixo fazia).
@@ -48,13 +51,27 @@ export function useNotificationsPanel(
 
   const markAsRead = useMutation({
     mutationFn: (id: string) => notificationsApi.markAsRead(id),
-    onMutate: (id) => markReadInCache(queryClient, id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      return markReadInCache(queryClient, id);
+    },
+    onError: (_error, _id, rollback) => {
+      rollback?.();
+      toast(texts.errors.unexpected, "error");
+    },
     onSettled: refresh,
   });
 
   const markAllAsRead = useMutation({
     mutationFn: () => notificationsApi.markAllAsRead(),
-    onMutate: () => markReadInCache(queryClient, "all"),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      return markReadInCache(queryClient, "all");
+    },
+    onError: (_error, _variables, rollback) => {
+      rollback?.();
+      toast(texts.errors.unexpected, "error");
+    },
     onSettled: refresh,
   });
 
