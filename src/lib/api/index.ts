@@ -20,6 +20,7 @@ export { colagemApi } from "./colagem";
 export { desabafosApi } from "./desabafos";
 export { confessionarioApi } from "./confessionario";
 export { termometroApi } from "./termometro";
+export { papoRetoApi } from "./papo-reto";
 export { muraisApi } from "./murais";
 export { colecoesApi } from "./colecoes";
 export { jobsApi } from "./jobs";

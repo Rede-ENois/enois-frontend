@@ -50,6 +50,68 @@ describe("markReadInCache", () => {
     expect(bell?.items.every((item) => item.read)).toBe(true);
   });
 
+  /**
+   * O contador do sino e do menu vem do RESUMO (byModule), não das linhas: "limpar" zerava as
+   * linhas e deixava o contador no ar até alguma outra invalidação — o relato do bug. Ler tudo
+   * zera o resumo na hora; ler UMA linha não o mexe (a contagem das outras continua).
+   */
+  it("zerar tudo zera o resumo do contador; ler uma não o mexe", () => {
+    const client = new QueryClient();
+    client.setQueryData(["notifications", "SOCIAL"], {
+      items: [notification("a"), notification("b")],
+      nextCursor: null,
+    });
+    client.setQueryData(["notifications", "summary", "SOCIAL"], {
+      total: 2,
+      byModule: { NEW_REACTION: 1, MENTION: 1 },
+    });
+
+    markReadInCache(client, "all");
+
+    const summary = client.getQueryData<{ total: number; byModule: Record<string, number> }>([
+      "notifications",
+      "summary",
+      "SOCIAL",
+    ]);
+    expect(summary?.total).toBe(0);
+    expect(summary?.byModule).toEqual({});
+
+    // Ler UMA linha: o resumo fica como está (as outras contagens continuam valendo) —
+    // o refetch do servidor resolve o valor exato logo depois.
+    client.setQueryData(["notifications", "summary", "SOCIAL"], {
+      total: 2,
+      byModule: { NEW_REACTION: 1, MENTION: 1 },
+    });
+    markReadInCache(client, "a");
+    expect(
+      client.getQueryData<{ total: number; byModule: Record<string, number> }>([
+        "notifications",
+        "summary",
+        "SOCIAL",
+      ]),
+    ).toEqual({ total: 2, byModule: { NEW_REACTION: 1, MENTION: 1 } });
+  });
+
+  /** Um "ler tudo" que falha restaura o resumo anterior junto das linhas. */
+  it("a reversão restaura o resumo anterior", () => {
+    const client = new QueryClient();
+    client.setQueryData(["notifications", "SOCIAL"], {
+      items: [notification("a")],
+      nextCursor: null,
+    });
+    const summaryAnterior = { total: 1, byModule: { NEW_REACTION: 1 } };
+    client.setQueryData(["notifications", "summary", "SOCIAL"], summaryAnterior);
+
+    const rollback = markReadInCache(client, "all");
+    expect(client.getQueryData(["notifications", "summary", "SOCIAL"])).toEqual({
+      total: 0,
+      byModule: {},
+    });
+
+    rollback();
+    expect(client.getQueryData(["notifications", "summary", "SOCIAL"])).toEqual(summaryAnterior);
+  });
+
   it("restaura só a leitura afetada sem perder conteúdo, cursores ou linhas novas", () => {
     const client = new QueryClient();
     const key = ["notifications", "page", "SOCIAL"];

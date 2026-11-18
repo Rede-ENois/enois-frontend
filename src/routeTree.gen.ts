@@ -43,6 +43,7 @@ import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as ModeradorRouteImport } from './routes/moderador'
 import { Route as MuraisRouteImport } from './routes/murais'
+import { Route as PapoRetoRouteImport } from './routes/papo-reto'
 import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -267,6 +268,11 @@ const ModeradorRoute = ModeradorRouteImport.update({
 const MuraisRoute = MuraisRouteImport.update({
   id: '/murais',
   path: '/murais',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PapoRetoRoute = PapoRetoRouteImport.update({
+  id: '/papo-reto',
+  path: '/papo-reto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
@@ -583,6 +589,7 @@ export interface FileRoutesByFullPath {
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
+  '/papo-reto': typeof PapoRetoRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -674,6 +681,7 @@ export interface FileRoutesByTo {
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
+  '/papo-reto': typeof PapoRetoRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -766,6 +774,7 @@ export interface FileRoutesById {
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
+  '/papo-reto': typeof PapoRetoRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -859,6 +868,7 @@ export interface FileRouteTypes {
     | '/moderacao'
     | '/moderador'
     | '/murais'
+    | '/papo-reto'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -950,6 +960,7 @@ export interface FileRouteTypes {
     | '/moderacao'
     | '/moderador'
     | '/murais'
+    | '/papo-reto'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -1041,6 +1052,7 @@ export interface FileRouteTypes {
     | '/moderacao'
     | '/moderador'
     | '/murais'
+    | '/papo-reto'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -1133,6 +1145,7 @@ export interface RootRouteChildren {
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
   MuraisRoute: typeof MuraisRouteWithChildren
+  PapoRetoRoute: typeof PapoRetoRoute
   ParDeEstudoRoute: typeof ParDeEstudoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1413,6 +1426,13 @@ declare module '@tanstack/react-router' {
       path: '/murais'
       fullPath: '/murais'
       preLoaderRoute: typeof MuraisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/papo-reto': {
+      id: '/papo-reto'
+      path: '/papo-reto'
+      fullPath: '/papo-reto'
+      preLoaderRoute: typeof PapoRetoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/par-de-estudo': {
@@ -1993,6 +2013,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
   MuraisRoute: MuraisRouteWithChildren,
+  PapoRetoRoute: PapoRetoRoute,
   ParDeEstudoRoute: ParDeEstudoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,

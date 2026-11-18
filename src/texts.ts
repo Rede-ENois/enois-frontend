@@ -183,6 +183,10 @@ export const texts = {
         label: "Termômetro",
         description: "O clima coletivo medido pelo que a comunidade publica",
       },
+      papoReto: {
+        label: "Papo Reto",
+        description: "Os assuntos que a rede está conversando agora",
+      },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
       colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
@@ -256,6 +260,15 @@ export const texts = {
     subtitle:
       "O clima coletivo da rede, medido a partir do que a comunidade já publicou. Ninguém responde nada aqui: o sistema lê o que é público e conta o conjunto. Só porcentagens, nunca quem escreveu.",
     error: "Não foi possível abrir o Termômetro. Tente de novo.",
+  },
+
+  /** Textos que a rota do Papo Reto orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  papoReto: {
+    seoTitle: "Papo Reto · Énóis",
+    title: "Papo Reto",
+    subtitle:
+      "O que a rede está conversando, medido a partir do que já é público no feed. Ninguém responde nada aqui: o sistema lê os textos públicos e conta as expressões que nomeiam a conversa. Só assunto e contagem, nunca quem falou.",
+    error: "Não foi possível abrir o Papo Reto. Tente de novo.",
   },
 
   /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */
