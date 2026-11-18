@@ -1,4 +1,4 @@
-name: Bump design-system para GroupComposer (temporário)
+name: Relock do design system 0.38.2 (temporário)
 on:
   workflow_dispatch:
 permissions:
@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/chat-grupos
+          ref: fix/ds-0.38.2
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v4
         with:
@@ -34,5 +34,5 @@ jobs:
           git config user.name "melissa"
           git config user.email "melissa@users.noreply.github.com"
           git add package.json package-lock.json
-          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): design system 0.38.x (GroupComposer)"
+          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): design system 0.38.2"
           git push
