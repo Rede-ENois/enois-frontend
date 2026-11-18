@@ -97,6 +97,15 @@ describe("pagesWithHeldFirst", () => {
     ]);
   });
 
+  it("drops a post a later page repeats while nothing is held", () => {
+    // A pure repost carries the original's id: the original comes back pages later.
+    const pages = [page("p1", "p2"), page("p3", "p1", "p4")];
+    expect(ids(pagesWithHeldFirst({ pages, pageParams: [] }, null))).toEqual([
+      ["p1", "p2"],
+      ["p3", "p4"],
+    ]);
+  });
+
   it("returns no pages before the first load", () => {
     expect(pagesWithHeldFirst(undefined, null)).toEqual([]);
   });
