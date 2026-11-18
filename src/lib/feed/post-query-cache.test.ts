@@ -57,6 +57,48 @@ describe("updatePostInQueryCache", () => {
     }));
     expect((client.getQueryData(["post", "p2"]) as PostView).counters.reactions).toBe(9);
   });
+
+  it("atualiza listas de comunidades, salvos, coleções e fixados sem tocar em outras queries", () => {
+    const client = new QueryClient();
+    const communityFeedKey = ["community", "c1", "feed"];
+    const pinnedKey = ["community", "c1", "pinned"];
+    const channelPostsKey = ["community", "c1", "channel", "ch1", "posts"];
+    const collectionKey = ["colecoes-posts", "col1"];
+    const unrelatedKey = ["community", "c2", "feed"];
+
+    client.setQueryData(communityFeedKey, { items: [post("p3", 1)], nextCursor: null });
+    client.setQueryData(pinnedKey, post("p3", 1));
+    client.setQueryData(channelPostsKey, {
+      pages: [{ items: [post("p3", 1)], nextCursor: null }],
+      pageParams: [null],
+    });
+    client.setQueryData(collectionKey, {
+      items: [{ postId: "p3", adicionadoAt: "2026-11-01T00:00:00Z", post: post("p3", 1) }],
+      nextCursor: null,
+    });
+    const unrelatedData = { items: [post("other", 4)], nextCursor: null };
+    client.setQueryData(unrelatedKey, unrelatedData);
+
+    updatePostInQueryCache(client, "p3", (current) => ({
+      ...current,
+      currentUserReaction: "FIRE",
+      counters: { ...current.counters, reactions: 2 },
+    }));
+
+    expect(
+      client.getQueryData<{ items: PostView[] }>(communityFeedKey)?.items[0].counters.reactions,
+    ).toBe(2);
+    expect(client.getQueryData<PostView>(pinnedKey)?.currentUserReaction).toBe("FIRE");
+    expect(
+      client.getQueryData<{ pages: { items: PostView[] }[] }>(channelPostsKey)?.pages[0].items[0]
+        .counters.reactions,
+    ).toBe(2);
+    expect(
+      client.getQueryData<{ items: { post: PostView }[] }>(collectionKey)?.items[0].post.counters
+        .reactions,
+    ).toBe(2);
+    expect(client.getQueryData(unrelatedKey)).toBe(unrelatedData);
+  });
 });
 
 describe("renovação automática do feed", () => {
