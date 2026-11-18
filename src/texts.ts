@@ -2294,6 +2294,12 @@ export const texts = {
       notOwner: "Só quem criou o evento muda a repetição.",
       updateError: "Não foi possível mudar a repetição. Tente de novo.",
     },
+    conflictTitle: "Outro compromisso nesse horário",
+    conflictDescription: (when: string, what: string) =>
+      `No mesmo horário (${when}) já está na sua agenda: ${what}. Dá para confirmar mesmo assim — é só um aviso.`,
+    conflictsMany: (count: number, first: string) => `${first} e mais ${count - 1}`,
+    conflictConfirm: "Vou mesmo assim",
+    conflictCancel: "Deixa para depois",
     attendSuccess: "Presença confirmada.",
     attendError: "Não foi possível confirmar a presença.",
     cancelAttendanceSuccess: "Presença cancelada.",
