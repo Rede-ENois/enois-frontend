@@ -108,11 +108,17 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
     { value: "all", label: texts.emotes.tabAll },
   ];
 
+  // O caminho CRU do backend (`/emotes/image/...`) acompanha o código na escolha: é ele que o
+  // Recentes valida e guarda (`recent-emotes` rejeita URL prefixada); o src desenhado leva o
+  // prefixo da API, que é o que a <img> pede.
   const itens = mostrandoRecentes
     ? recentesVisiveis
     : mostrandoEnois
       ? enoisFiltrados
       : (data?.items ?? []).map((emote) => ({ code: emote.code, src: emoteImageUrl(emote.thumb) }));
+  const caminhos = new Map(
+    (data?.items ?? []).map((emote) => [emoteImageUrl(emote.thumb), emote.thumb]),
+  );
 
   return (
     <>
@@ -123,7 +129,7 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
           setAberto(open);
           onOpenChange?.(open);
         }}
-        onSelect={(item) => escolher(item.code, item.src)}
+        onSelect={(item) => escolher(item.code, caminhos.get(item.src) ?? item.src)}
         query={busca}
         onQueryChange={setBusca}
         tab={aba}
@@ -139,7 +145,12 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
         totalPages={data?.totalPages ?? 1}
         onPageChange={setPagina}
       />
-      <EmotePickerTriggerButton id={id} trigger={<EmotePickerIcon />} label={texts.emotes.button} />
+      <EmotePickerTriggerButton
+        id={id}
+        trigger={<EmotePickerIcon />}
+        label={texts.emotes.button}
+        onOpen={() => setAberto(true)}
+      />
     </>
   );
 }

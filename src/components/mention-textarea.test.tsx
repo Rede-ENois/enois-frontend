@@ -78,8 +78,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// Pelo rótulo acessível: o gatilho do seletor é botão só com ícone — o nome vive no aria-label.
 function botao(texto: string) {
-  return [...document.querySelectorAll("button")].find((node) => node.textContent?.includes(texto));
+  return [...document.querySelectorAll("button")].find(
+    (node) => node.getAttribute("aria-label") === texto,
+  );
 }
 
 async function esperar() {
