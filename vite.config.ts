@@ -17,6 +17,13 @@ const NITRO_PRESET = process.env.NITRO_PRESET ?? "vercel";
 export default defineConfig({
   nitro: {
     preset: NITRO_PRESET,
+    routeRules: {
+      "/emojis/enois/**": {
+        headers: {
+          "cache-control": "public, max-age=604800, immutable",
+        },
+      },
+    },
   },
   tanstackStart: {
     server: { entry: "server" },

@@ -372,3 +372,52 @@ describe("envio recusado não some com a conversa", () => {
     expect(order()).toEqual(["root", "new"]);
   });
 });
+
+describe("atualização automática na publicação aberta", () => {
+  it("atualiza comentários em segundo plano quando liveRefresh está ativo e não faz polling no feed", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.list
+        .mockResolvedValueOnce({ items: [comment("c1", 1)], nextCursor: null })
+        .mockResolvedValueOnce({ items: [comment("c2", 2), comment("c1", 1)], nextCursor: null });
+
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" liveRefresh />
+          </QueryClientProvider>,
+        ),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(order()).toEqual(["c1"]);
+      expect(mocks.list).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain("Atualização automática ativa");
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+      });
+      expect(mocks.list).toHaveBeenCalledTimes(2);
+      expect(order()).toEqual(["c1", "c2"]);
+      expect(container.textContent).toContain("Comentários atualizados às");
+      expect(container.textContent).toContain("(+1 novo)");
+
+      mocks.list.mockClear();
+      mocks.list.mockResolvedValue({ items: [comment("c1", 1)], nextCursor: null });
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" />
+          </QueryClientProvider>,
+        ),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      expect(mocks.list).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

@@ -388,6 +388,7 @@ function PostCardContainer({
             postAuthorId={post.authorId}
             isQuestion={post.type === "QUESTION"}
             acceptedCommentId={post.acceptedCommentId ?? null}
+            liveRefresh={fullPost}
           />
         ) : null
       }
