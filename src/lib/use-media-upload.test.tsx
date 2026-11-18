@@ -70,6 +70,55 @@ async function mountState(): Promise<{
 }
 
 describe("useMediaUpload com envios simultâneos", () => {
+  it("o progresso acompanha os bytes do PUT e o cancelamento aborta o envio (#925)", async () => {
+    mocks.requestUpload.mockResolvedValue({
+      id: "m",
+      cdnUrl: "https://cdn/m",
+      uploadUrl: "https://s3/put",
+      provider: "S3",
+      uploadHeaders: {},
+    });
+    const captura: { onProgress?: (f: number) => void; signal?: AbortSignal } = {};
+    mocks.uploadToSignedUrl.mockImplementationOnce(
+      (
+        _url: string,
+        _f: File,
+        _h: unknown,
+        onProgress: (f: number) => void,
+        signal: AbortSignal,
+      ) => {
+        captura.onProgress = onProgress;
+        captura.signal = signal;
+        return new Promise((_resolve, reject) => {
+          captura.signal?.addEventListener("abort", () =>
+            reject(new DOMException("x", "AbortError")),
+          );
+        });
+      },
+    );
+
+    const { root, host, snapshot } = await mountState();
+    const u = bridge.current!;
+    let envio!: Promise<unknown>;
+    await act(async () => {
+      envio = u.upload(file("grande.png")).catch(() => undefined);
+    });
+
+    // Bytes reais do PUT chegam ao estado (antes a barra só movia por arquivo concluído).
+    await act(async () => captura.onProgress?.(0.4));
+    expect(snapshot().progress).toBe("40");
+    await act(async () => captura.onProgress?.(0.9));
+    expect(snapshot().progress).toBe("90");
+
+    // Cancelar aborta o signal que o uploadToSignedUrl recebeu e encerra com erro limpo.
+    await act(async () => u.cancel());
+    await act(async () => envio);
+    expect(snapshot().status).toBe("error");
+    expect(captura.signal?.aborted).toBe(true);
+    root.unmount();
+    host.remove();
+  });
+
   it("só conclui quando o último envio em curso termina", async () => {
     let releaseFirst!: () => void;
     let releaseSecond!: () => void;
