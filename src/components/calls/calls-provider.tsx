@@ -1,5 +1,7 @@
 import {
+  Suspense,
   createContext,
+  lazy,
   useCallback,
   useContext,
   useEffect,
@@ -38,8 +40,11 @@ import { subscribeToCallEvents } from "@/lib/message-stream";
 import { hasSession } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 
-import { CallPanel } from "./call-panel";
 import { startRingtone } from "./call-ringtone";
+
+const CallPanel = lazy(() =>
+  import("./call-panel").then((module) => ({ default: module.CallPanel })),
+);
 
 /**
  * A chamada vive no topo do app, não numa tela: começar, receber, atender e encerrar funcionam em
@@ -596,7 +601,11 @@ function CallsRuntime({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      {session.phase === "idle" ? null : <CallPanel />}
+      {session.phase === "idle" ? null : (
+        <Suspense fallback={null}>
+          <CallPanel />
+        </Suspense>
+      )}
     </>
   );
 }
