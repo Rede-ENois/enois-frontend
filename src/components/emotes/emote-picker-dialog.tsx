@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from "react";
 
 import { texts } from "@/texts";
 import type { EmotePickerDialogProps } from "@/types/components/emotes/emote-picker-dialog-props";
+import type { EmotePickerItem } from "@/types/components/emotes/emote-picker-item";
 import type { EmotePickerTab } from "@/types/components/emotes/emote-picker-tab";
 import type { RecentEmote } from "@/types/components/emotes/recent-emote";
 import {
@@ -108,17 +109,22 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
     { value: "all", label: texts.emotes.tabAll },
   ];
 
-  // O caminho CRU do backend (`/emotes/image/...`) acompanha o código na escolha: é ele que o
-  // Recentes valida e guarda (`recent-emotes` rejeita URL prefixada); o src desenhado leva o
-  // prefixo da API, que é o que a <img> pede.
-  const itens = mostrandoRecentes
+  // `src` é o que a grade desenha: a miniatura do proxy (`/api/emotes/...`), como sempre. O
+  // clique devolve o caminho CRU do backend (`/emotes/image/...`), que é o formato que o Recentes
+  // valida e guarda (`recent-emotes` recusa URL fora do padrão); o do pacote É Nóis
+  // (`/emojis/...`) é o mesmo nos dois.
+  const crus: EmotePickerItem[] = mostrandoRecentes
     ? recentesVisiveis
     : mostrandoEnois
       ? enoisFiltrados
-      : (data?.items ?? []).map((emote) => ({ code: emote.code, src: emoteImageUrl(emote.thumb) }));
-  const caminhos = new Map(
-    (data?.items ?? []).map((emote) => [emoteImageUrl(emote.thumb), emote.thumb]),
-  );
+      : (data?.items ?? []).map((emote) => ({ code: emote.code, src: emote.thumb }));
+  const itens: EmotePickerItem[] = crus.map((item) => ({
+    code: item.code,
+    src: item.src ? emoteImageUrl(item.src) : undefined,
+  }));
+  // O item volta do clique com o `src` desenhado; o Recentes precisa do cru por trás dele.
+  const cruPorDesenho = new Map(crus.map((item, indice) => [itens[indice]?.src, item.src]));
+  const caminhoCru = (item: EmotePickerItem) => cruPorDesenho.get(item.src) ?? item.src;
 
   return (
     <>
@@ -129,7 +135,7 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
           setAberto(open);
           onOpenChange?.(open);
         }}
-        onSelect={(item) => escolher(item.code, caminhos.get(item.src) ?? item.src)}
+        onSelect={(item) => escolher(item.code, caminhoCru(item))}
         query={busca}
         onQueryChange={setBusca}
         tab={aba}
