@@ -60,3 +60,6 @@ jobs:
 
       - name: Testes das regras do ESLint
         run: npm run test:eslint-rules
+
+      - name: Build de produção
+        run: npm run build
