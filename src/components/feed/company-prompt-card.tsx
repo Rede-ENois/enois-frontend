@@ -24,17 +24,17 @@ function isDismissed(): boolean {
  * Card na sidebar do feed que convida a criar uma pagina de empresa.
  * Aparece so pra quem esta logado, nao tem empresa e nao dispensou.
  */
-export function CompanyPromptCard() {
+export function CompanyPromptCard({ enabled }: { enabled: boolean }) {
   const { user } = useAuth();
   const [dismissed, setDismissed] = useState(isDismissed);
 
   const { data: myCompanies, isLoading } = useQuery({
     queryKey: ["companies", "mine"],
     queryFn: () => companiesApi.mine(),
-    enabled: Boolean(user) && !dismissed,
+    enabled: enabled && Boolean(user) && !dismissed,
   });
 
-  if (dismissed || !user || isLoading || (myCompanies && myCompanies.length > 0)) {
+  if (!enabled || dismissed || !user || isLoading || (myCompanies && myCompanies.length > 0)) {
     return null;
   }
 
