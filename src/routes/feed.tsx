@@ -88,6 +88,7 @@ import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caug
 import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
+import { keepPostsById } from "@/lib/feed/keep-posts-by-id";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import {
   feedQueryKey,
@@ -251,6 +252,10 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
+    // Post novo no topo nao invalida os objetos dos posts que nao mudaram: o memo do PostCard
+    // deixa os outros de fora. Sem isso, replaceEqualDeep compara por posicao e cada card
+    // re-renderiza quando alguem publica.
+    structuralSharing: keepPostsById,
     // O feed não se renova sozinho: quem mantém a lista em dia é a varredura de `feed-live.ts`,
     // uma página por vez, sem trocar o que está na tela (ver `feedRefreshOptions`).
     ...feedRefreshOptions(tab),
