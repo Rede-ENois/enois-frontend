@@ -105,6 +105,11 @@ function Eventos() {
   // Dono do evento: editar (o formulário é o mesmo da criação) e excluir com confirmação.
   const [editing, setEditing] = useState<Event | null>(null);
   const [deleting, setDeleting] = useState<Event | null>(null);
+  // Alerta de conflito de presença: evento pendente e o evento já confirmado no mesmo horário.
+  const [attendConflict, setAttendConflict] = useState<{
+    pending: Event;
+    conflict: Event;
+  } | null>(null);
 
   const {
     data: eventsData,
@@ -315,10 +320,18 @@ function Eventos() {
                   event={withPlace(e)}
                   dateTimeLabel={texts.events.dateTime(e.date ?? "", e.time ?? "")}
                   attendancePending={attendancePending}
-                  onAttend={() => {
-                    requireAuth();
-                    attend.mutate(e.id);
-                  }}
+                onAttend={() => {
+                  requireAuth();
+                  const conflict = events.find(
+                    (other) =>
+                      other.attending && other.id !== e.id && other.date === e.date && other.time === e.time,
+                  );
+                  if (conflict) {
+                    setAttendConflict({ pending: e, conflict });
+                    return;
+                  }
+                  attend.mutate(e.id);
+                }}
                   onCancelAttend={() => {
                     requireAuth();
                     cancelAttendance.mutate(e.id);
@@ -401,6 +414,24 @@ function Eventos() {
           destructive
           pending={deleteEvent.isPending}
           onConfirm={() => deleting && deleteEvent.mutate(deleting.id)}
+        />
+
+        <ConfirmDialog
+          open={attendConflict !== null}
+          onOpenChange={(open) => !open && setAttendConflict(null)}
+          title={attendConflict ? texts.events.attendConflict.title(attendConflict.pending.title) : ""}
+          description={
+            attendConflict
+              ? texts.events.attendConflict.description(attendConflict.conflict.title)
+              : ""
+          }
+          confirmLabel={texts.events.attendConflict.confirm}
+          cancelLabel={texts.events.attendConflict.cancel}
+          pending={attend.isPending}
+          onConfirm={() => {
+            if (attendConflict) attend.mutate(attendConflict.pending.id);
+            setAttendConflict(null);
+          }}
         />
       </div>
     </AppContainer>

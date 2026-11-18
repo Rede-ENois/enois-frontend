@@ -2297,6 +2297,12 @@ export const texts = {
     attendSuccess: "Presença confirmada.",
     attendError: "Não foi possível confirmar a presença.",
     cancelAttendanceSuccess: "Presença cancelada.",
+    attendConflict: {
+      title: (pending: string) => `Confirmar presença em "${pending}"?`,
+      description: (conflict: string) => `Você já tem presença confirmada em "${conflict}" neste mesmo horário.`,
+      confirm: "Confirmar mesmo assim",
+      cancel: "Cancelar",
+    },
     cancelAttendanceError: "Não foi possível cancelar a presença.",
     form: {
       title: "Título",
