@@ -187,6 +187,37 @@ describe("refreshFeedFirstPage", () => {
       client.clear();
     }
   });
+
+  it("não repete no histórico o post que subiu para a primeira página", async () => {
+    const client = new QueryClient();
+    const key = ["feed", "ALL", "", ""] as const;
+    const queryFn = vi.fn().mockResolvedValue(page(["p2", "p1"], "cursor-1"));
+    const observer = new QueryObserver(client, {
+      queryKey: key,
+      queryFn,
+      initialPageParam: null,
+      enabled: false,
+    } as QueryObserverOptions & { initialPageParam: null });
+    const unsubscribe = observer.subscribe(() => {});
+    client.setQueryData<FeedPages>(key, {
+      pages: [page(["p1"], "cursor-1"), page(["p2"])],
+      pageParams: [null, "cursor-1"],
+    });
+
+    try {
+      await refreshFeedFirstPage(client);
+      const updated = client.getQueryData<FeedPages>(key)!;
+      expect(updated.pages.map((entry) => entry.items.map((item) => item.id))).toEqual([
+        ["p2", "p1"],
+        [],
+      ]);
+      expect(updated.pageParams).toEqual([null, "cursor-1"]);
+      expect(queryFn).toHaveBeenCalledTimes(1);
+    } finally {
+      unsubscribe();
+      client.clear();
+    }
+  });
 });
 
 describe("removePostFromFeedCache", () => {
