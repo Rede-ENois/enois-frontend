@@ -1,3 +1,5 @@
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
@@ -183,6 +185,10 @@ export const texts = {
         label: "Termômetro",
         description: "O clima coletivo medido pelo que a comunidade publica",
       },
+      papoReto: {
+        label: "Papo Reto",
+        description: "Os assuntos que a rede está conversando agora",
+      },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
       colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
@@ -258,6 +264,15 @@ export const texts = {
     error: "Não foi possível abrir o Termômetro. Tente de novo.",
   },
 
+  /** Textos que a rota do Papo Reto orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  papoReto: {
+    seoTitle: "Papo Reto · Énóis",
+    title: "Papo Reto",
+    subtitle:
+      "O que a rede está conversando, medido a partir do que já é público no feed. Ninguém responde nada aqui: o sistema lê os textos públicos e conta as expressões que nomeiam a conversa. Só assunto e contagem, nunca quem falou.",
+    error: "Não foi possível abrir o Papo Reto. Tente de novo.",
+  },
+
   /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */
   murais: {
     seoTitle: "Murais · Énóis",
@@ -285,6 +300,14 @@ export const texts = {
     tirado: "Publicação tirada do mural.",
     naoAutorizado: "Só quem colou ou o dono do mural pode tirar a publicação.",
     naoEncontrado: "Esse mural não existe mais.",
+  },
+
+  /** Seletor "para onde vai este post", no menu do card (murais e coleções). */
+  postDestinos: {
+    acao: "Adicionar ao mural ou coleção",
+    colado: "Publicação colada no mural.",
+    guardado: "Publicação guardada na coleção.",
+    erro: "Não foi possível abrir os destinos. Tente de novo.",
   },
 
   /** Textos que a rota das Coleções orquestra (avisos e cabeçalho); o desenho vive no DS. */
@@ -489,6 +512,33 @@ export const texts = {
     editCommentError: "Não foi possível editar o comentário.",
     removeCommentTitle: "Remover comentário?",
     removeCommentDescription: "Ele some da publicação; a ação fica registrada na auditoria.",
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre este grupo. Excluir apaga o conteúdo junto; encerrar preserva o histórico.",
+      open: "Gerenciar membros",
+      delete: "Excluir grupo",
+      deleteTitle: "Excluir grupo?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}” com todo o conteúdo dele?`,
+      closeTitle: "Encerrar grupo?",
+      closeBody: (name: string) =>
+        `Encerrar “${name}”? O grupo sai da descoberta e não recebe novos membros; o conteúdo continua guardado.`,
+      deleted: (name: string) => `Grupo “${name}” excluído.`,
+      closed: (name: string) => `Grupo “${name}” encerrado. O conteúdo foi preservado.`,
+      deleteError: "Não foi possível excluir o grupo.",
+      closeError: "Não foi possível encerrar o grupo.",
+      removed: "Membro removido do grupo.",
+      removeError: "Não foi possível remover o membro.",
+      removedOwner: "Dono removido; o grupo passou para o membro mais antigo que ficou.",
+      roles: {
+        OWNER: "Dono",
+        ADMIN: "Administrador",
+        MODERATOR: "Moderador",
+        MEMBER: "Membro",
+      },
+      loadError: "Não foi possível carregar os membros.",
+    },
     removeCommentError: "Não foi possível remover o comentário.",
   },
 
@@ -1563,35 +1613,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: {
-        LIKE: "👍",
-        LOVE: "❤️",
-        LAUGH: "😂",
-        ROFL: "🤣",
-        SKULL: "💀",
-        WOW: "😮",
-        SAD: "😢",
-        SOB: "😭",
-        CELEBRATE: "🎉",
-        SUPPORT: "💪",
-        INSIGHTFUL: "💡",
-        ANGRY: "😡",
-        DISGUST: "🤢",
-        SKEPTICAL: "🤨",
-        EYES: "👀",
-        NOTE: "📝",
-        FIRE: "🔥",
-        CLAP: "👏",
-        CLOWN: "🤡",
-        NAILS: "💅",
-        // Contextuais: cada um tem situação clara de uso (ver ReactionType no backend).
-        USEFUL: "🧰",
-        RELATABLE: "🫂",
-        HYPE: "🚀",
-        THANKS: "🙏",
-        VIBE: "✨",
-        SALUTE: "🫡",
-      },
+      emojis: REACTION_EMOJIS,
     },
     report: {
       title: "Denunciar post",
@@ -2159,6 +2181,22 @@ export const texts = {
       description:
         "A comunidade deixa de existir para todo mundo e os membros são desvinculados. Isso não pode ser desfeito.",
       confirm: "Excluir",
+    },
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre esta comunidade. Só admin vê esta área, e o backend recusa qualquer outro papel.",
+      open: "Gerenciar membros",
+      delete: "Excluir comunidade",
+      deleteTitle: "Excluir comunidade?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}”?`,
+      deleted: (name: string) => `Comunidade “${name}” excluída.`,
+      deleteError: "Não foi possível excluir a comunidade.",
+      removed: "Membro removido da comunidade.",
+      removeError: "Não foi possível remover o membro.",
+      roles: { ADMIN: "Administrador", MEMBER: "Membro" },
+      loadError: "Não foi possível carregar os membros.",
     },
     loadMore: "Carregar mais",
     create: {

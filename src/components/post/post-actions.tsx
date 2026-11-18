@@ -6,7 +6,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
-import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
+import {
+  PostActions as PostActionsView,
+  PostDestinosDialog,
+} from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
 import { Copy, ExternalLink, MessageCircle } from "lucide-react";
 
@@ -18,6 +21,7 @@ import {
   syncSavedPostsCache,
 } from "@/lib/feed/saved-posts";
 import { prefersReducedMotion, readEconomicMode, readForceMotion } from "@/lib/lite-mode";
+import { usePostDestinos } from "@/lib/post-destinos/use-post-destinos";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
 import { useMountedOnce } from "@/lib/use-mounted-once";
@@ -67,7 +71,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   useEffect(() => {
     initializePostCard(post.id);
     return () => disposePostCard(post.id);
-  }, [disposePostCard, initializePostCard, post]);
+  }, [disposePostCard, initializePostCard, post.id]);
 
   const [saved, setSaved] = useState(false);
 
@@ -102,6 +106,11 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       // silently fail
     }
   };
+
+  // "Para onde vai este post": murais e coleções do próprio usuário, com a marca de onde o
+  // post já está. O salvar acima é compartilhado — guardar numa coleção salva antes, se preciso.
+  const destinos = usePostDestinos(post);
+  const destinosMounted = useMountedOnce(destinos.open);
 
   // Republicar copia o post para o feed da pessoa, creditando o autor original. Conteúdo de
   // comunidade/canal e os tipos que não viajam (página, artigo, blog, business, moment) ficam de fora.
@@ -204,8 +213,25 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       }
       onReport={() => setShowReport(post.id, true)}
       onSave={handleSave}
+      onDestinos={destinos.disponivel ? destinos.abrir : undefined}
       dialogs={
         <>
+          {destinosMounted && (
+            <PostDestinosDialog
+              open={destinos.open}
+              onOpenChange={destinos.onOpenChange}
+              postId={post.id}
+              murais={destinos.murais}
+              colecoes={destinos.colecoes}
+              carregando={destinos.carregando}
+              pendentes={destinos.pendentes}
+              erro={destinos.erro}
+              onColarNoMural={destinos.colarNoMural}
+              onGuardarNaColecao={(colecaoId) =>
+                destinos.guardarNaColecao(colecaoId, saved, setSaved)
+              }
+            />
+          )}
           {repostMounted && (
             <RepostDialog
               postId={post.id}

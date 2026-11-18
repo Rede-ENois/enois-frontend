@@ -7,6 +7,7 @@ import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { abrirSeletor } from "./emotes/abrir-seletor.test-helper";
 import { MentionTextarea } from "./mention-textarea";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -77,8 +78,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// Pelo rótulo acessível: o gatilho do seletor é botão só com ícone — o nome vive no aria-label.
 function botao(texto: string) {
-  return [...document.querySelectorAll("button")].find((node) => node.textContent?.includes(texto));
+  return [...document.querySelectorAll("button")].find(
+    (node) => node.getAttribute("aria-label") === texto,
+  );
 }
 
 async function esperar() {
@@ -110,7 +114,7 @@ describe("Seletor de figurinhas do campo de escrita", () => {
     const abrir = botao(texts.emotes.button);
     expect(abrir).toBeTruthy();
 
-    await act(async () => abrir?.click());
+    await act(async () => abrirSeletor(document));
     await esperarFigurinha();
 
     const figurinha = document.querySelector<HTMLButtonElement>(`button[title="KEKW"]`);

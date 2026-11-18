@@ -7,8 +7,10 @@ import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ENOIS_CUSTOM_EMOJIS } from "@/lib/emotes/enois-pack";
 import { EMOTES_POR_PAGINA } from "@/lib/emotes/use-emotes";
 
+import { abrirSeletor } from "./abrir-seletor.test-helper";
 import { EmotePickerDialog } from "./emote-picker-dialog";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -111,14 +113,19 @@ async function esperarAte(criterio: () => boolean, limite = 12_000) {
   }
 }
 
-async function renderizar(open = true) {
+/**
+ * Monta o seletor fechado e abre pelo próprio botão (o gatilho do DS), como a pessoa faz: fechado,
+ * ele não busca nada, e é o clique que liga a primeira página.
+ */
+async function renderizar(onSelect: (code: string) => void = () => {}) {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={new QueryClient()}>
-        <EmotePickerDialog open={open} onOpenChange={() => {}} onSelect={() => {}} />
+        <EmotePickerDialog onSelect={onSelect} />
       </QueryClientProvider>,
     );
   });
+  await act(async () => abrirSeletor(document));
   await esperar();
 }
 
@@ -188,13 +195,7 @@ describe("Seletor de figurinhas", () => {
 
   it("aba É Nóis exibe o pacote personalizado com busca local e devolve código próprio", async () => {
     const onSelect = vi.fn();
-    await act(async () => {
-      root?.render(
-        <QueryClientProvider client={new QueryClient()}>
-          <EmotePickerDialog open onOpenChange={() => {}} onSelect={onSelect} />
-        </QueryClientProvider>,
-      );
-    });
+    await renderizar(onSelect);
     await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
 
     const abaEnois = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
@@ -215,6 +216,29 @@ describe("Seletor de figurinhas", () => {
 
     await act(async () => joinha?.click());
     expect(onSelect).toHaveBeenCalledWith("enois_like");
+  });
+
+  it("a aba É Nóis é o pacote oficial inteiro: nada de BTTV, e cada ícone do pacote aparece", async () => {
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+
+    const abaEnois = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (item) => item.textContent === "É Nóis",
+    );
+    await act(async () => {
+      abaEnois?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      abaEnois?.click();
+    });
+    await esperarAte(() => Boolean(document.querySelector('button[title="enois_like"]')));
+
+    const codigos = [...document.querySelectorAll<HTMLButtonElement>("button[title^=enois_]")].map(
+      (item) => item.title,
+    );
+
+    expect(codigos).toHaveLength(ENOIS_CUSTOM_EMOJIS.length);
+    // Só o pacote da plataforma: nenhum código do catálogo remoto entra na lista das reações.
+    expect(codigos.every((codigo) => codigo.startsWith("enois_"))).toBe(true);
+    expect(codigos).toEqual(expect.arrayContaining(["enois_poop", "enois_salute", "enois_alien"]));
   });
 
   it("navega entre as páginas e trava nos extremos", async () => {
@@ -251,10 +275,11 @@ describe("Seletor de figurinhas", () => {
     await act(async () => {
       root?.render(
         <QueryClientProvider client={new QueryClient()}>
-          <EmotePickerDialog open onOpenChange={() => {}} onSelect={() => {}} />
+          <EmotePickerDialog onSelect={() => {}} />
         </QueryClientProvider>,
       );
     });
+    await act(async () => abrirSeletor(document));
     await avancar(50);
     expect(grade()).toHaveLength(EMOTES_POR_PAGINA);
 
@@ -355,7 +380,14 @@ describe("Seletor de figurinhas", () => {
   });
 
   it("fechado não busca nada no backend", async () => {
-    await renderizar(false);
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={new QueryClient()}>
+          <EmotePickerDialog onSelect={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+    await esperar();
 
     expect(grade()).toHaveLength(0);
     expect(vi.mocked(globalThis.fetch)).not.toHaveBeenCalled();
