@@ -1,19 +1,37 @@
 import { useEffect } from "react";
 
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_EMOJIS, REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 const VARIATION_SELECTOR = /\uFE0F/g;
 const IGNORED_ANCESTOR_SELECTOR =
   "input, textarea, code, pre, [contenteditable='true'], script, style";
 
+/**
+ * Emoji → tipo, em duas passadas.
+ *
+ * Primeiro o emoji de APOIO, que é o que está no texto de quem reagiu (`😭` = SOB). Depois o emoji
+ * da FIGURA, que é o que as views do design system desenham (`emojis[type]` = `REACTION_FIGURE_EMOJIS`,
+ * a fonte da figura de cada tipo): a pílula de X mostra um emoji que pode ser o de apoio de outro
+ * tipo, e aí quem manda é a figura — não o primeiro tipo que registrou aquele símbolo. Sem a segunda
+ * passada, a pílula do ROFL (estrela, emoji de apoio do VIBE) seria pintada com o ícone do VIBE.
+ */
 const EMOJI_TO_REACTION_TYPE = new Map<string, ReactionType>();
-for (const [type, glyph] of Object.entries(REACTION_EMOJIS) as [ReactionType, string][]) {
-  EMOJI_TO_REACTION_TYPE.set(glyph, type);
-  const stripped = glyph.replace(VARIATION_SELECTOR, "");
-  if (stripped && !EMOJI_TO_REACTION_TYPE.has(stripped)) {
-    EMOJI_TO_REACTION_TYPE.set(stripped, type);
+
+function registrar(glyph: string, type: ReactionType, sobrescrever: boolean): void {
+  const chaves = [glyph, glyph.replace(VARIATION_SELECTOR, "")].filter(Boolean);
+  for (const chave of chaves) {
+    if (sobrescrever || !EMOJI_TO_REACTION_TYPE.has(chave)) {
+      EMOJI_TO_REACTION_TYPE.set(chave, type);
+    }
   }
+}
+
+for (const [type, glyph] of Object.entries(REACTION_EMOJIS) as [ReactionType, string][]) {
+  registrar(glyph, type, false);
+}
+for (const [type, glyph] of Object.entries(REACTION_FIGURE_EMOJIS) as [ReactionType, string][]) {
+  registrar(glyph, type, true);
 }
 
 export function resolveReactionTypeFromGlyph(text: string | null | undefined): ReactionType | null {

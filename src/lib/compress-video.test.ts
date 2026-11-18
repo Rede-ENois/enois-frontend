@@ -5,8 +5,10 @@ import {
   VideoCompressionError,
   compressVideo,
   scaledDimensions,
+  startIndexForDuration,
   supportsVideoCompression,
 } from "./compress-video";
+import * as videoLimit from "./video-limit";
 import { MAX_VIDEO_BYTES } from "./video-limit";
 
 /** Sizes the fake recorder will produce, one per ladder attempt. */
@@ -47,10 +49,14 @@ class FakeRecorder {
   }
 }
 
+let duracao: number | null = 0;
+
 beforeEach(() => {
   producedSizes = [];
   attempts = 0;
   supportsVp8 = true;
+  duracao = 0;
+  vi.spyOn(videoLimit, "readDurationSeconds").mockImplementation(() => Promise.resolve(duracao));
   vi.stubGlobal("MediaRecorder", FakeRecorder);
   vi.stubGlobal("requestAnimationFrame", () => 0);
 
@@ -155,5 +161,38 @@ describe("compressVideo", () => {
 
     expect(seen.at(-1)).toBe(100);
     expect(seen.length).toBeGreaterThan(1);
+  });
+
+  it("começa da escada pela duração: clipe longo não gasta passada inviável no topo", async () => {
+    producedSizes = [1024];
+    duracao = 150; // 2min30: acima de 120s começa no último degrau (480px)
+    const result = await compressVideo(videoOfSize(MAX_VIDEO_BYTES * 5));
+
+    expect(attempts).toBe(1);
+    expect(result.size).toBe(1024);
+  });
+
+  it("clipe de até um minuto continua do topo, que ainda pode caber", async () => {
+    producedSizes = [MAX_VIDEO_BYTES * 2, 1024];
+    duracao = 45;
+    const result = await compressVideo(videoOfSize(MAX_VIDEO_BYTES * 5));
+
+    expect(attempts).toBe(2);
+    expect(result.size).toBe(1024);
+  });
+
+  it("sem duração legível a escada inteira segue disponível", async () => {
+    producedSizes = [MAX_VIDEO_BYTES * 2, 1024];
+    duracao = null;
+    const result = await compressVideo(videoOfSize(MAX_VIDEO_BYTES * 5));
+
+    expect(attempts).toBe(2);
+    expect(result.size).toBe(1024);
+  });
+
+  it("degrau inicial pela duração: 90s pula o topo, até 120s pega o do meio", () => {
+    expect(startIndexForDuration(30)).toBe(0);
+    expect(startIndexForDuration(90)).toBe(2);
+    expect(startIndexForDuration(150)).toBe(3);
   });
 });
