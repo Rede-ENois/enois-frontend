@@ -171,7 +171,7 @@ describe("Seletor de figurinhas", () => {
     expect(src).toContain("/api/emotes/image/BTTV/EMOTE00?variant=thumb");
   });
 
-  it("lista única: não há filtro por provedor nem aba de populares", async () => {
+  it("lista única no catálogo remoto: não há filtro por provedor nem aba de populares", async () => {
     await renderizar();
     await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
 
@@ -179,10 +179,42 @@ describe("Seletor de figurinhas", () => {
       (item) => item.textContent,
     );
 
-    expect(rotulos).not.toContain("Todas");
+    expect(rotulos).toContain("É Nóis");
+    expect(rotulos).toContain("Todas");
     expect(rotulos).not.toContain("Populares");
     expect(rotulos).not.toContain("BTTV");
     expect(rotulos).not.toContain("FFZ");
+  });
+
+  it("aba É Nóis exibe o pacote personalizado com busca local e devolve código próprio", async () => {
+    const onSelect = vi.fn();
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={new QueryClient()}>
+          <EmotePickerDialog open onOpenChange={() => {}} onSelect={onSelect} />
+        </QueryClientProvider>,
+      );
+    });
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+
+    const abaEnois = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (item) => item.textContent === "É Nóis",
+    );
+    expect(abaEnois).toBeTruthy();
+    await act(async () => {
+      abaEnois?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      abaEnois?.click();
+    });
+    await esperarAte(() =>
+      Boolean(document.querySelector<HTMLButtonElement>('button[title="enois_like"]')),
+    );
+
+    const joinha = document.querySelector<HTMLButtonElement>('button[title="enois_like"]');
+    expect(joinha).toBeTruthy();
+    expect(joinha?.querySelector("img")?.getAttribute("src")).toBe("/emojis/enois/like.webp");
+
+    await act(async () => joinha?.click());
+    expect(onSelect).toHaveBeenCalledWith("enois_like");
   });
 
   it("navega entre as páginas e trava nos extremos", async () => {

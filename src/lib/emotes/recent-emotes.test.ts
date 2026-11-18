@@ -46,4 +46,12 @@ describe("recent emotes", () => {
     );
     expect(loadRecentEmotes()).toEqual([{ code: "KEKW", thumb: null }, POG]);
   });
+
+  it("preserves local É Nóis emoji pack thumbnails", () => {
+    const like = { code: "enois_like", thumb: "/emojis/enois/like.webp" };
+    const fire = { code: "enois_fire", thumb: "/emojis/enois/fire.svg" };
+    rememberRecentEmote(like);
+    rememberRecentEmote(fire);
+    expect(loadRecentEmotes()).toEqual([fire, like]);
+  });
 });

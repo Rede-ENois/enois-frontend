@@ -14,8 +14,9 @@ export const RECENT_EMOTES_LIMIT = 24;
 
 /** Same shape the index cache accepts: no whitespace, brackets or backticks. */
 const CODE = /^[^\s[\]`]{1,64}$/u;
-/** Only our proxy: a stored entry never becomes an image from somewhere else. */
-const THUMB = /^\/emotes\/image\/[A-Za-z0-9]+\/[A-Za-z0-9_-]+\?[A-Za-z0-9=&_.-]*$/;
+/** Only our proxy or our local É Nóis pack: a stored entry never becomes an image from somewhere else. */
+const THUMB =
+  /^(?:\/emotes\/image\/[A-Za-z0-9]+\/[A-Za-z0-9_-]+\?[A-Za-z0-9=&_.-]*|\/emojis\/enois\/[a-z0-9_-]+\.(?:webp|svg))$/;
 
 function toEntry(value: unknown): RecentEmote | null {
   // The first version of this list stored bare codes; those still load, just without a thumbnail.

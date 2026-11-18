@@ -16,6 +16,7 @@ import {
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 import { emoteImageUrl } from "@/lib/emotes/api";
+import { filterEnoisEmojis, getEnoisEmojiSrc } from "@/lib/emotes/enois-pack";
 import { loadRecentEmotes, rememberRecentEmote } from "@/lib/emotes/recent-emotes";
 import { useEmoteIndex, useEmotePage } from "@/lib/emotes/use-emotes";
 
@@ -47,7 +48,7 @@ export function EmotePickerDialog({
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(1);
   const [recentes, setRecentes] = useState<RecentEmote[]>([]);
-  const [aba, setAba] = useState<"recent" | "all">("all");
+  const [aba, setAba] = useState<"recent" | "enois" | "all">("all");
   // Closed, the picker only reads the cached index: opening the composer costs no request. The
   // index is a FALLBACK for entries saved before the thumbnail was stored — the tab draws from
   // what is on this device, so an empty index no longer hides it.
@@ -56,7 +57,7 @@ export function EmotePickerDialog({
   // é a célula que fica sem imagem — a lista não some.
   const recentesVisiveis = recentes.map((item) => ({
     code: item.code,
-    src: item.thumb ?? index.get(item.code) ?? null,
+    src: item.thumb ?? getEnoisEmojiSrc(item.code) ?? index.get(item.code) ?? null,
   }));
 
   // A busca só vai ao backend depois de uma pausa: cada tecla dispararia uma página nova. O termo
@@ -88,8 +89,10 @@ export function EmotePickerDialog({
     setAba(salvos.length > 0 ? "recent" : "all");
   }, [open]);
 
-  // Typing a search always shows the full list: "Recentes" is for browsing, not for finding.
+  // Typing a search in "Recentes" switches to the full list; in "É Nóis" it filters locally.
   const mostrandoRecentes = aba === "recent" && !busca.trim() && recentesVisiveis.length > 0;
+  const mostrandoEnois = aba === "enois";
+  const enoisFiltrados = mostrandoEnois ? filterEnoisEmojis(busca) : [];
 
   const escolher = (code: string, thumb?: string) => {
     setRecentes(rememberRecentEmote({ code, thumb: thumb ?? null }));
@@ -99,7 +102,7 @@ export function EmotePickerDialog({
   const { data, isLoading, isError, isPlaceholderData } = useEmotePage(
     pagina,
     termo,
-    open && !mostrandoRecentes,
+    open && !mostrandoRecentes && !mostrandoEnois,
   );
 
   const itens = data?.items ?? [];
@@ -126,18 +129,48 @@ export function EmotePickerDialog({
           />
         </div>
 
-        {recentesVisiveis.length > 0 && !busca.trim() && (
-          <Tabs value={aba} onValueChange={(value) => setAba(value as "recent" | "all")}>
-            <TabsList>
+        <Tabs
+          value={aba === "recent" && busca.trim() ? "all" : aba}
+          onValueChange={(value) => setAba(value as "recent" | "enois" | "all")}
+        >
+          <TabsList>
+            {recentesVisiveis.length > 0 && !busca.trim() && (
               <TabsTrigger value="recent">{texts.emotes.tabRecent}</TabsTrigger>
+            )}
 
-              <TabsTrigger value="all">{texts.emotes.tabAll}</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
+            <TabsTrigger value="enois">{texts.emotes.tabEnois}</TabsTrigger>
+
+            <TabsTrigger value="all">{texts.emotes.tabAll}</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {mostrandoRecentes ? (
           <RecentEmotesGrid emotes={recentesVisiveis} onSelect={escolher} />
+        ) : mostrandoEnois ? (
+          <>
+            <div className="max-h-[45vh] min-w-0 overflow-y-auto pr-1">
+              {enoisFiltrados.length === 0 ? (
+                <p className="py-8 text-center text-sm text-text-subtle">{texts.emotes.empty}</p>
+              ) : (
+                <div className="grid grid-cols-6 gap-1 sm:grid-cols-8">
+                  {enoisFiltrados.map((item) => (
+                    <EmoteCell
+                      key={item.code}
+                      code={item.code}
+                      src={item.src}
+                      onSelect={() => escolher(item.code, item.src)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {enoisFiltrados.length > 0 && (
+              <p className="text-[11px] text-text-subtle">
+                {texts.emotes.count(enoisFiltrados.length)}
+              </p>
+            )}
+          </>
         ) : (
           <>
             <div
@@ -257,7 +290,7 @@ function EmoteCell({
       onClick={() => onSelect(code)}
       // O clique é confirmado na própria célula: só `hover` não aparece no toque, e em
       // telas pequenas a pessoa não sabia se pegou a certa.
-      className="flex h-11 items-center justify-center rounded-lg p-1 transition hover:bg-surface-2 active:bg-surface-2 active:ring-2 active:ring-ring"
+      className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg p-1.5 transition hover:scale-105 hover:bg-surface-2 hover:ring-1 hover:ring-primary/35 active:scale-95 active:bg-surface-2 active:ring-2 active:ring-ring"
     >
       {src && (
         <img
