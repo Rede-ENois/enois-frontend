@@ -11,12 +11,15 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostView } from "@/types/application/feed/post-view";
+import { ReactionsSummary as ReactionsSummaryView } from "@rede-enois/design-system/domain";
 import { ToastProvider } from "@rede-enois/design-system/ui";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useEnoisReactionGlyphs } from "@/lib/reactions/use-enois-reaction-glyphs";
 import { resetReactionGuards } from "@/lib/reactions/use-post-reaction";
 
 import { PostActions } from "./post-actions";
@@ -146,5 +149,52 @@ describe("Sincronização entre ReactionsSummary e PostActions", () => {
     expect(
       host.querySelector<HTMLButtonElement>('button[aria-pressed="true"][aria-label*="Remover"]'),
     ).not.toBeNull();
+  });
+});
+
+/** O app liga o leitor de glifo na raiz (`__root`); sem ele nada leva `data-enois-reaction-glyph`. */
+function ComLeitorDeGlifo() {
+  useEnoisReactionGlyphs();
+  return null;
+}
+
+describe("Pílula mostra o tipo que ela grava (reação cujo emoji de apoio repete)", () => {
+  it("a pílula do ROFL carrega o tipo ROFL, e não o do outro tipo que usa o mesmo emoji", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <ToastProvider>
+            <ComLeitorDeGlifo />
+            <ReactionsSummaryView
+              summary={{ ROFL: 1 }}
+              emojis={REACTION_FIGURE_EMOJIS}
+              activeType={null}
+              clickable
+              onToggle={() => {}}
+            />
+          </ToastProvider>
+        </QueryClientProvider>,
+      );
+    });
+
+    // O CSS pinta o ícone pelo tipo deste atributo: tem que ser o da pílula (ROFL, a estrela), e não
+    // o VIBE — o outro tipo que usa ✨ no texto. Quem clica no que vê grava o mesmo tipo.
+    const pill = host.querySelector('button[aria-label="Reagir com ✨"]');
+    expect(pill).not.toBeNull();
+    expect(
+      pill?.querySelector("[data-enois-reaction-glyph]")?.getAttribute("data-enois-reaction-glyph"),
+    ).toBe("ROFL");
+    expect(host.querySelector('[data-enois-reaction-glyph="VIBE"]')).toBeNull();
+
+    await act(async () => root.unmount());
+    host.remove();
+    client.clear();
+    vi.unstubAllGlobals();
   });
 });
