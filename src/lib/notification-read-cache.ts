@@ -24,6 +24,11 @@ function isSummary(data: unknown): data is UnreadSummary {
   return typeof data === "object" && data !== null && "byModule" in data;
 }
 
+/** O resumo zerado: é ele que alimenta o contador do sino e do menu. */
+function emptySummary(): UnreadSummary {
+  return { total: 0, byModule: {} } as unknown as UnreadSummary;
+}
+
 /**
  * Marca as linhas antes da resposta. A devolução restaura só quem estava não lido, porque
  * renovar a primeira página não corrige a leitura otimista das páginas antigas.
@@ -37,7 +42,12 @@ export function markReadInCache(queryClient: QueryClient, id: string | "all") {
   queryClient.setQueriesData<
     PageResponse<Notification> | InfiniteData<PageResponse<Notification>> | UnreadSummary
   >({ queryKey: ["notifications"] }, (data) => {
-    if (!data || isSummary(data)) return data;
+    if (!data) return data;
+    // O RESUMO é a fonte do contador do sino e do menu: "ler tudo" zera ele na hora, senão o
+    // contador fica no ar até alguma outra invalidação — exatamente o relato do bug.
+    if (isSummary(data)) {
+      return id === "all" ? emptySummary() : data;
+    }
     if ("pages" in data)
       return { ...data, pages: data.pages.map((page) => markPage(page, isTarget)) };
     if ("items" in data) return markPage(data, isTarget);
@@ -46,7 +56,13 @@ export function markReadInCache(queryClient: QueryClient, id: string | "all") {
 
   return () => {
     for (const [queryKey, data] of previous) {
-      if (!data || isSummary(data)) continue;
+      if (!data) continue;
+      // O resumo anterior volta na reversão também: sem isto, um "ler tudo" que falha deixaria
+      // o contador zerado com as notificações ainda não lidas no servidor.
+      if (isSummary(data)) {
+        queryClient.setQueryData(queryKey, data);
+        continue;
+      }
       const pages = "pages" in data ? data.pages : [data];
       const unreadIds = new Set(
         pages.flatMap((page) =>
