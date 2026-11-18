@@ -183,7 +183,7 @@ function useTablesProps(
   });
 
   const tables = tablesData?.items ?? [];
-  const members = membersData ?? [];
+  const members = membersData?.items ?? [];
 
   const { data: firstState } = useQuery({
     queryKey: ["roleplay", "tableState", tables[0]?.id ?? ""],
@@ -377,7 +377,7 @@ function useChatProps(
 
   return {
     messages: (messages ?? []).map(chatMessageView),
-    presence: (presence ?? []).map((p) => presenceView(p, membersById(membersData ?? []))),
+    presence: (presence ?? []).map((p) => presenceView(p, membersById(membersData?.items ?? []))),
     loading: isLoading,
     sending,
     onSend: (channel, content) => {
