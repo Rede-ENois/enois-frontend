@@ -1,54 +1,49 @@
-name: Relock temporario
+name: Reescrever o lockfile do Papo Reto
 
+# O lockfile não pode ser regerado localmente (o token da máquina não tem read:packages).
+# Este workflow regenera o lock com o GITHUB_TOKEN do runner (packages: read) e empurra na
+# mesma branch. Descartável: remover o arquivo depois do merge.
 on:
-  workflow_dispatch:
+  push:
+    branches: [feat/papo-reto-fe]
 
 permissions:
   contents: write
   packages: read
 
-concurrency:
-  group: relock-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  relock:
+  lock:
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar o codigo
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: feat/papo-reto-fe
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Configurar o Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           registry-url: https://npm.pkg.github.com
           scope: "@rede-enois"
 
-      - name: Relock do design system
+      # A 2ª passada existe porque o primeiro relock pode resolver parcialmente (lock antigo +
+      # package.json avançado); a 2ª às vezes sai "nothing to commit" e o commit não nasce.
+      - name: Instalar e gravar o lockfile
+        run: |
+          npm install --package-lock-only --no-audit --no-fund --ignore-scripts
+          npm install --package-lock-only --no-audit --no-fund --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          node -e "
-          const fs = require('fs');
-          const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
-          delete lock.packages['node_modules/@rede-enois/design-system'];
-          fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-          "
-          npm install --package-lock-only --ignore-scripts || true
-          npm install --package-lock-only --ignore-scripts
-          grep -A3 'node_modules/@rede-enois/design-system' package-lock.json | head -4
 
-      - name: Commitar o lock
+      - name: Provar que o npm ci aceita o lockfile novo
+        run: npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commitar
         run: |
-          git config user.name "relock-bot"
-          git config user.email "relock-bot@users.noreply.github.com"
+          git config user.name "lockfile-bot"
+          git config user.email "noreply@github.com"
           git add package-lock.json
-          if git diff --cached --quiet; then
-            echo "Nada a commitar: lock ja sincronizado"
-            exit 0
-          fi
-          git commit -m "chore(deps): relock do design system 0.37.15"
+          git diff --cached --quiet && echo "lockfile igual" || git commit -m "chore(deps): relock do design system 0.37.15"
           git push
