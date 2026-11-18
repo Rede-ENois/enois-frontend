@@ -210,7 +210,9 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
 
 /* Reações oficiais da Rede É Nóis: substitui visualmente os emojis do sistema em toda a UI
    (ReactionPicker, PostActions, ReactionsSummary, CommentItem, MessageBubble, ReactionsDialog)
-   mantendo os códigos Unicode reais no DOM para acessibilidade e retrocompatibilidade. */
+   mantendo os códigos Unicode reais no DOM para acessibilidade e retrocompatibilidade.
+   Uma regra por tipo, as 76 do pacote na ordem do seletor: o tipo X mostra o ícone X de
+   REACTION_EMOJI_ASSETS (a posição 1 daqui é a posição 1 do pacote). */
 [data-reaction-emoji],
 [data-enois-reaction-glyph] {
   display: inline-flex !important;
@@ -331,93 +333,293 @@ span.rounded-full:has(> [data-enois-reaction-glyph]) {
 }
 [data-reaction-emoji="ROFL"],
 [data-enois-reaction-glyph="ROFL"] {
-  --enois-reaction-img: url("/emojis/enois/grin.webp");
+  --enois-reaction-img: url("/emojis/enois/sparkle.webp");
 }
 [data-reaction-emoji="SKULL"],
 [data-enois-reaction-glyph="SKULL"] {
-  --enois-reaction-img: url("/emojis/enois/skull.webp");
+  --enois-reaction-img: url("/emojis/enois/wow.webp");
 }
 [data-reaction-emoji="WOW"],
 [data-enois-reaction-glyph="WOW"] {
-  --enois-reaction-img: url("/emojis/enois/wow.webp");
+  --enois-reaction-img: url("/emojis/enois/angry.webp");
 }
 [data-reaction-emoji="SAD"],
 [data-enois-reaction-glyph="SAD"] {
-  --enois-reaction-img: url("/emojis/enois/cry.webp");
+  --enois-reaction-img: url("/emojis/enois/cool.webp");
 }
 [data-reaction-emoji="SOB"],
 [data-enois-reaction-glyph="SOB"] {
-  --enois-reaction-img: url("/emojis/enois/pleading.webp");
+  --enois-reaction-img: url("/emojis/enois/cry.webp");
 }
 [data-reaction-emoji="CELEBRATE"],
 [data-enois-reaction-glyph="CELEBRATE"] {
-  --enois-reaction-img: url("/emojis/enois/confetti.webp");
+  --enois-reaction-img: url("/emojis/enois/sob.webp");
 }
 [data-reaction-emoji="SUPPORT"],
 [data-enois-reaction-glyph="SUPPORT"] {
-  --enois-reaction-img: url("/emojis/enois/muscle.webp");
+  --enois-reaction-img: url("/emojis/enois/sleep.webp");
 }
 [data-reaction-emoji="INSIGHTFUL"],
 [data-enois-reaction-glyph="INSIGHTFUL"] {
-  --enois-reaction-img: url("/emojis/enois/insightful.svg");
+  --enois-reaction-img: url("/emojis/enois/think.webp");
 }
 [data-reaction-emoji="ANGRY"],
 [data-enois-reaction-glyph="ANGRY"] {
-  --enois-reaction-img: url("/emojis/enois/mad.webp");
+  --enois-reaction-img: url("/emojis/enois/nerd.webp");
 }
 [data-reaction-emoji="DISGUST"],
 [data-enois-reaction-glyph="DISGUST"] {
-  --enois-reaction-img: url("/emojis/enois/nauseated.webp");
+  --enois-reaction-img: url("/emojis/enois/party.webp");
 }
 [data-reaction-emoji="SKEPTICAL"],
 [data-enois-reaction-glyph="SKEPTICAL"] {
-  --enois-reaction-img: url("/emojis/enois/monocle.webp");
+  --enois-reaction-img: url("/emojis/enois/confetti.webp");
 }
 [data-reaction-emoji="EYES"],
 [data-enois-reaction-glyph="EYES"] {
-  --enois-reaction-img: url("/emojis/enois/eyes.webp");
+  --enois-reaction-img: url("/emojis/enois/coffee.webp");
 }
 [data-reaction-emoji="NOTE"],
 [data-enois-reaction-glyph="NOTE"] {
-  --enois-reaction-img: url("/emojis/enois/note.svg");
+  --enois-reaction-img: url("/emojis/enois/selfie.webp");
 }
 [data-reaction-emoji="FIRE"],
 [data-enois-reaction-glyph="FIRE"] {
-  --enois-reaction-img: url("/emojis/enois/fire.svg");
+  --enois-reaction-img: url("/emojis/enois/thermometer.webp");
 }
 [data-reaction-emoji="CLAP"],
 [data-enois-reaction-glyph="CLAP"] {
-  --enois-reaction-img: url("/emojis/enois/clap.webp");
+  --enois-reaction-img: url("/emojis/enois/pirate.webp");
 }
 [data-reaction-emoji="CLOWN"],
 [data-enois-reaction-glyph="CLOWN"] {
-  --enois-reaction-img: url("/emojis/enois/clown.svg");
+  --enois-reaction-img: url("/emojis/enois/hero.webp");
 }
 [data-reaction-emoji="NAILS"],
 [data-enois-reaction-glyph="NAILS"] {
-  --enois-reaction-img: url("/emojis/enois/nails.svg");
+  --enois-reaction-img: url("/emojis/enois/zany.webp");
 }
 [data-reaction-emoji="USEFUL"],
 [data-enois-reaction-glyph="USEFUL"] {
-  --enois-reaction-img: url("/emojis/enois/useful.svg");
+  --enois-reaction-img: url("/emojis/enois/scream.webp");
 }
 [data-reaction-emoji="RELATABLE"],
 [data-enois-reaction-glyph="RELATABLE"] {
-  --enois-reaction-img: url("/emojis/enois/hug.webp");
+  --enois-reaction-img: url("/emojis/enois/grimace.webp");
 }
 [data-reaction-emoji="HYPE"],
 [data-enois-reaction-glyph="HYPE"] {
-  --enois-reaction-img: url("/emojis/enois/rocket.webp");
+  --enois-reaction-img: url("/emojis/enois/melting.webp");
 }
 [data-reaction-emoji="THANKS"],
 [data-enois-reaction-glyph="THANKS"] {
-  --enois-reaction-img: url("/emojis/enois/pray.webp");
+  --enois-reaction-img: url("/emojis/enois/pleading.webp");
 }
 [data-reaction-emoji="VIBE"],
 [data-enois-reaction-glyph="VIBE"] {
-  --enois-reaction-img: url("/emojis/enois/sparkle.webp");
+  --enois-reaction-img: url("/emojis/enois/eyes.webp");
 }
 [data-reaction-emoji="SALUTE"],
 [data-enois-reaction-glyph="SALUTE"] {
+  --enois-reaction-img: url("/emojis/enois/mindblown.webp");
+}
+[data-reaction-emoji="COOL"],
+[data-enois-reaction-glyph="COOL"] {
+  --enois-reaction-img: url("/emojis/enois/vomit.webp");
+}
+[data-reaction-emoji="SLEEP"],
+[data-enois-reaction-glyph="SLEEP"] {
+  --enois-reaction-img: url("/emojis/enois/nauseated.webp");
+}
+[data-reaction-emoji="THINK"],
+[data-enois-reaction-glyph="THINK"] {
+  --enois-reaction-img: url("/emojis/enois/skull.webp");
+}
+[data-reaction-emoji="NERD"],
+[data-enois-reaction-glyph="NERD"] {
+  --enois-reaction-img: url("/emojis/enois/eyeroll.webp");
+}
+[data-reaction-emoji="PARTY"],
+[data-enois-reaction-glyph="PARTY"] {
+  --enois-reaction-img: url("/emojis/enois/rocket.webp");
+}
+[data-reaction-emoji="COFFEE"],
+[data-enois-reaction-glyph="COFFEE"] {
+  --enois-reaction-img: url("/emojis/enois/wizard.webp");
+}
+[data-reaction-emoji="SELFIE"],
+[data-enois-reaction-glyph="SELFIE"] {
+  --enois-reaction-img: url("/emojis/enois/chef.webp");
+}
+[data-reaction-emoji="THERMOMETER"],
+[data-enois-reaction-glyph="THERMOMETER"] {
+  --enois-reaction-img: url("/emojis/enois/surf.webp");
+}
+[data-reaction-emoji="PIRATE"],
+[data-enois-reaction-glyph="PIRATE"] {
+  --enois-reaction-img: url("/emojis/enois/magic.webp");
+}
+[data-reaction-emoji="HERO"],
+[data-enois-reaction-glyph="HERO"] {
+  --enois-reaction-img: url("/emojis/enois/rebel.webp");
+}
+[data-reaction-emoji="ZANY"],
+[data-enois-reaction-glyph="ZANY"] {
+  --enois-reaction-img: url("/emojis/enois/wink.webp");
+}
+[data-reaction-emoji="SCREAM"],
+[data-enois-reaction-glyph="SCREAM"] {
+  --enois-reaction-img: url("/emojis/enois/grin.webp");
+}
+[data-reaction-emoji="GRIMACE"],
+[data-enois-reaction-glyph="GRIMACE"] {
+  --enois-reaction-img: url("/emojis/enois/rage.webp");
+}
+[data-reaction-emoji="MELTING"],
+[data-enois-reaction-glyph="MELTING"] {
+  --enois-reaction-img: url("/emojis/enois/mad.webp");
+}
+[data-reaction-emoji="CRYING"],
+[data-enois-reaction-glyph="CRYING"] {
+  --enois-reaction-img: url("/emojis/enois/money.webp");
+}
+[data-reaction-emoji="MINDBLOWN"],
+[data-enois-reaction-glyph="MINDBLOWN"] {
+  --enois-reaction-img: url("/emojis/enois/fear.webp");
+}
+[data-reaction-emoji="VOMIT"],
+[data-enois-reaction-glyph="VOMIT"] {
+  --enois-reaction-img: url("/emojis/enois/wave.webp");
+}
+[data-reaction-emoji="FUMING"],
+[data-enois-reaction-glyph="FUMING"] {
+  --enois-reaction-img: url("/emojis/enois/peace.webp");
+}
+[data-reaction-emoji="EYEROLL"],
+[data-enois-reaction-glyph="EYEROLL"] {
+  --enois-reaction-img: url("/emojis/enois/ok.webp");
+}
+[data-reaction-emoji="ROBOT"],
+[data-enois-reaction-glyph="ROBOT"] {
+  --enois-reaction-img: url("/emojis/enois/rock.webp");
+}
+[data-reaction-emoji="WIZARD"],
+[data-enois-reaction-glyph="WIZARD"] {
+  --enois-reaction-img: url("/emojis/enois/dislike.webp");
+}
+[data-reaction-emoji="CHEF"],
+[data-enois-reaction-glyph="CHEF"] {
+  --enois-reaction-img: url("/emojis/enois/clap.webp");
+}
+[data-reaction-emoji="SURF"],
+[data-enois-reaction-glyph="SURF"] {
+  --enois-reaction-img: url("/emojis/enois/raised.webp");
+}
+[data-reaction-emoji="MAGIC"],
+[data-enois-reaction-glyph="MAGIC"] {
+  --enois-reaction-img: url("/emojis/enois/pray.webp");
+}
+[data-reaction-emoji="REBEL"],
+[data-enois-reaction-glyph="REBEL"] {
+  --enois-reaction-img: url("/emojis/enois/gasp.webp");
+}
+[data-reaction-emoji="WINK"],
+[data-enois-reaction-glyph="WINK"] {
+  --enois-reaction-img: url("/emojis/enois/hug.webp");
+}
+[data-reaction-emoji="ALIEN"],
+[data-enois-reaction-glyph="ALIEN"] {
+  --enois-reaction-img: url("/emojis/enois/mask.webp");
+}
+[data-reaction-emoji="RAGE"],
+[data-enois-reaction-glyph="RAGE"] {
+  --enois-reaction-img: url("/emojis/enois/cowboy.webp");
+}
+[data-reaction-emoji="MONEY"],
+[data-enois-reaction-glyph="MONEY"] {
+  --enois-reaction-img: url("/emojis/enois/smirk.webp");
+}
+[data-reaction-emoji="FEAR"],
+[data-enois-reaction-glyph="FEAR"] {
+  --enois-reaction-img: url("/emojis/enois/ghost.webp");
+}
+[data-reaction-emoji="WAVE"],
+[data-enois-reaction-glyph="WAVE"] {
+  --enois-reaction-img: url("/emojis/enois/poop.webp");
+}
+[data-reaction-emoji="PEACE"],
+[data-enois-reaction-glyph="PEACE"] {
+  --enois-reaction-img: url("/emojis/enois/robot.webp");
+}
+[data-reaction-emoji="OK"],
+[data-enois-reaction-glyph="OK"] {
+  --enois-reaction-img: url("/emojis/enois/alien.webp");
+}
+[data-reaction-emoji="ROCK"],
+[data-enois-reaction-glyph="ROCK"] {
+  --enois-reaction-img: url("/emojis/enois/monocle.webp");
+}
+[data-reaction-emoji="DISLIKE"],
+[data-enois-reaction-glyph="DISLIKE"] {
+  --enois-reaction-img: url("/emojis/enois/vulcan.webp");
+}
+[data-reaction-emoji="RAISED"],
+[data-enois-reaction-glyph="RAISED"] {
+  --enois-reaction-img: url("/emojis/enois/crossed.webp");
+}
+[data-reaction-emoji="GASP"],
+[data-enois-reaction-glyph="GASP"] {
+  --enois-reaction-img: url("/emojis/enois/point_right.webp");
+}
+[data-reaction-emoji="POOP"],
+[data-enois-reaction-glyph="POOP"] {
+  --enois-reaction-img: url("/emojis/enois/fistbump.webp");
+}
+[data-reaction-emoji="TONGUE"],
+[data-enois-reaction-glyph="TONGUE"] {
+  --enois-reaction-img: url("/emojis/enois/muscle.webp");
+}
+[data-reaction-emoji="KISS"],
+[data-enois-reaction-glyph="KISS"] {
+  --enois-reaction-img: url("/emojis/enois/starstruck.webp");
+}
+[data-reaction-emoji="DROOL"],
+[data-enois-reaction-glyph="DROOL"] {
+  --enois-reaction-img: url("/emojis/enois/tongue.webp");
+}
+[data-reaction-emoji="STARSTRUCK"],
+[data-enois-reaction-glyph="STARSTRUCK"] {
+  --enois-reaction-img: url("/emojis/enois/kiss.webp");
+}
+[data-reaction-emoji="VULCAN"],
+[data-enois-reaction-glyph="VULCAN"] {
+  --enois-reaction-img: url("/emojis/enois/drool.webp");
+}
+[data-reaction-emoji="CROSSED"],
+[data-enois-reaction-glyph="CROSSED"] {
+  --enois-reaction-img: url("/emojis/enois/insightful.svg");
+}
+[data-reaction-emoji="POINT_RIGHT"],
+[data-enois-reaction-glyph="POINT_RIGHT"] {
+  --enois-reaction-img: url("/emojis/enois/note.svg");
+}
+[data-reaction-emoji="FISTBUMP"],
+[data-enois-reaction-glyph="FISTBUMP"] {
+  --enois-reaction-img: url("/emojis/enois/fire.svg");
+}
+[data-reaction-emoji="MASK"],
+[data-enois-reaction-glyph="MASK"] {
+  --enois-reaction-img: url("/emojis/enois/clown.svg");
+}
+[data-reaction-emoji="COWBOY"],
+[data-enois-reaction-glyph="COWBOY"] {
+  --enois-reaction-img: url("/emojis/enois/nails.svg");
+}
+[data-reaction-emoji="SMIRK"],
+[data-enois-reaction-glyph="SMIRK"] {
+  --enois-reaction-img: url("/emojis/enois/useful.svg");
+}
+[data-reaction-emoji="GHOST"],
+[data-enois-reaction-glyph="GHOST"] {
   --enois-reaction-img: url("/emojis/enois/salute.svg");
 }

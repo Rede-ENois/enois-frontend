@@ -1,11 +1,13 @@
 /**
  * Reações oficiais, na ordem em que o seletor mostra — e a mesma do `ReactionType` do backend.
  *
- * É a lista inteira das oficiais, não uma seleção: cada tipo é um tipo de reação do servidor, e
- * o que não é reação do servidor (BTTV, FrankerFaceZ) não entra aqui — reagir é escolher entre as
- * oficiais.
+ * É a lista inteira do pacote É Nóis: 76 expressões, uma reação por ícone. Cada tipo é um tipo de
+ * reação do servidor, e o que não é reação do servidor (BTTV, FrankerFaceZ) não entra aqui —
+ * reagir é escolher entre as oficiais. O ícone de cada tipo é o de `REACTION_EMOJI_ASSETS`; os dois
+ * mapas têm exatamente estas chaves.
  */
 export const REACTION_TYPES = [
+  // As 26 originais: humor, apoio e os seis contextuais. Não mudam de nome nem de posição.
   "LIKE",
   "LOVE",
   "LAUGH",
@@ -33,6 +35,57 @@ export const REACTION_TYPES = [
   "THANKS",
   "VIBE",
   "SALUTE",
+  // O resto das expressões É Nóis, agora também reações — no fim, como no backend.
+  "COOL",
+  "SLEEP",
+  "THINK",
+  "NERD",
+  "PARTY",
+  "COFFEE",
+  "SELFIE",
+  "THERMOMETER",
+  "PIRATE",
+  "HERO",
+  "ZANY",
+  "SCREAM",
+  "GRIMACE",
+  "MELTING",
+  "CRYING",
+  "MINDBLOWN",
+  "VOMIT",
+  "FUMING",
+  "EYEROLL",
+  "ROBOT",
+  "WIZARD",
+  "CHEF",
+  "SURF",
+  "MAGIC",
+  "REBEL",
+  "WINK",
+  "ALIEN",
+  "RAGE",
+  "MONEY",
+  "FEAR",
+  "WAVE",
+  "PEACE",
+  "OK",
+  "ROCK",
+  "DISLIKE",
+  "RAISED",
+  "GASP",
+  "POOP",
+  "TONGUE",
+  "KISS",
+  "DROOL",
+  "STARSTRUCK",
+  "VULCAN",
+  "CROSSED",
+  "POINT_RIGHT",
+  "FISTBUMP",
+  "MASK",
+  "COWBOY",
+  "SMIRK",
+  "GHOST",
 ] as const;
 
 export type ReactionType = (typeof REACTION_TYPES)[number];
