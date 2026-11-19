@@ -1899,6 +1899,10 @@ export const texts = {
     buy: "Comprar",
     buying: "Retendo faíscas…",
     buyError: "Não foi possível comprar agora. Confira seu saldo e tente de novo.",
+    useMine: "Usar meu tema",
+    usingMine: "Aplicando…",
+    useMineError: "Não foi possível aplicar o seu tema agora. Tente de novo.",
+    mineHint: "Este tema é seu: aplicar não cobra faíscas nem abre compra.",
   },
   projects: {
     seoTitle: "Projetos da comunidade · Énóis",

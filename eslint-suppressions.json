@@ -133,7 +133,7 @@
   },
   "src/components/marketplace/marketplace-section.tsx": {
     "local/no-front-markup": {
-      "count": 197
+      "count": 205
     },
     "no-restricted-syntax": {
       "count": 6

@@ -15,18 +15,28 @@ import { MarketplaceSection } from "./marketplace-section";
  * inteira em "Ver detalhes", junto de quem vende (com link para o perfil), do preço e do
  * "Comprar". O conteúdo em si continua saindo só depois da compra.
  */
-const mocks = vi.hoisted(() => ({ catalog: vi.fn(), buy: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  catalog: vi.fn(),
+  buy: vi.fn(),
+  ownerDownload: vi.fn(),
+  theme: vi.fn(),
+  user: { id: "user_VisITANTE" },
+}));
 
 vi.mock("@/lib/api", () => ({
   marketplaceApi: {
     catalog: mocks.catalog,
     buy: mocks.buy,
+    ownerDownload: mocks.ownerDownload,
     purchases: vi.fn().mockResolvedValue([]),
     sales: vi.fn().mockResolvedValue([]),
   },
-  themesApi: { get: vi.fn() },
+  themesApi: { get: mocks.theme },
 }));
-vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => false }));
+vi.mock("@/lib/use-auth", () => ({
+  useIsAuthenticated: () => true,
+  useAuth: () => ({ user: mocks.user }),
+}));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
     to,
@@ -82,6 +92,7 @@ describe("detalhes da listagem no marketplace", () => {
   let host: HTMLDivElement;
 
   beforeEach(() => {
+    mocks.user.id = "user_VisITANTE";
     mocks.catalog.mockReset().mockResolvedValue([listagem()]);
     mocks.buy.mockReset().mockResolvedValue({ purchaseId: "pur_1" });
     host = document.createElement("div");
@@ -164,6 +175,61 @@ describe("detalhes da listagem no marketplace", () => {
 
     expect(dialogo()!.querySelector("[role='alert']")?.textContent).toContain(
       "Não foi possível comprar",
+    );
+  });
+
+  it("no tema do próprio autor o card oferece usar, e nunca comprar", async () => {
+    mocks.user.id = "user_1";
+    await montar();
+    expect(botao("Usar meu tema").length).toBeGreaterThan(0);
+    expect(botao("Comprar")).toHaveLength(0);
+    expect(mocks.buy).not.toHaveBeenCalled();
+  });
+
+  it("para outra listagem o card continua oferecendo comprar", async () => {
+    mocks.catalog.mockResolvedValue([listagem({ sellerId: "user_2" })]);
+    await montar();
+    expect(botao("Usar meu tema")).toHaveLength(0);
+    expect(botao("Comprar").length).toBeGreaterThan(0);
+  });
+
+  it("usar o próprio tema libera a baixa do autor e aplica o pacote", async () => {
+    mocks.catalog.mockResolvedValue([listagem({ itemKind: "THEME", itemId: "theme_1" })]);
+    mocks.ownerDownload.mockResolvedValue({ status: "OWNER" });
+    mocks.theme.mockResolvedValue({
+      id: "theme_1",
+      name: "Maré",
+      packageJson: "{}",
+      modeDefault: "light",
+    });
+    const collection = { id: "galeria_theme_1" };
+    const register = vi
+      .spyOn(await import("@/lib/theme/gallery-collections"), "registerGalleryCollection")
+      .mockReturnValue(collection as never);
+    try {
+      mocks.user.id = "user_1";
+      await montar();
+      act(() => botao("Usar meu tema")[0].click());
+      await flush();
+
+      expect(mocks.ownerDownload).toHaveBeenCalledWith("mkt_1");
+      expect(mocks.theme).toHaveBeenCalledWith("theme_1");
+      expect(register).toHaveBeenCalled();
+      expect(mocks.buy).not.toHaveBeenCalled();
+    } finally {
+      register.mockRestore();
+    }
+  });
+
+  it("avisa quando não dá para aplicar o próprio tema", async () => {
+    mocks.user.id = "user_1";
+    mocks.catalog.mockResolvedValue([listagem({ itemKind: "THEME", itemId: "theme_1" })]);
+    mocks.ownerDownload.mockRejectedValue(new Error("rede"));
+    await montar();
+    act(() => botao("Usar meu tema")[0].click());
+    await flush();
+    expect(host.querySelector("[role='alert']")?.textContent).toContain(
+      "Não foi possível aplicar o seu tema",
     );
   });
 });
