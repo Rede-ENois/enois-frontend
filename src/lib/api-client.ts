@@ -344,6 +344,28 @@ function isAborted(signal?: AbortSignal): boolean {
   return signal?.aborted === true;
 }
 
+/** Valor de `detail` que a API usa quando a sessão foi ENCERRADA (troca de senha ou de e-mail). */
+const SESSION_REVOKED_DETAIL = "SESSION_REVOKED";
+
+function sessionDetailOf(body: unknown): string | undefined {
+  const detail = (body as { detail?: unknown } | null)?.detail;
+  return typeof detail === "string" ? detail : undefined;
+}
+
+/**
+ * O corpo do `Response` só pode ser lido uma vez, por isso a leitura é por clone — mas só o que
+ * pode ser clonado é consumido. Ler o body pode falhar em qualquer caso (corpo vazio, já lido),
+ * e o motivo é enfeite sobre uma sessão que acabou: não pode virar erro no lugar do 401.
+ */
+async function detailOfResponse(response: Response): Promise<string | undefined> {
+  if (typeof response.clone !== "function") return undefined;
+  try {
+    return sessionDetailOf(await response.clone().json());
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Cancelamento não é falha: o TanStack Query trata o `AbortError` como consulta cancelada, sem
  * retry e sem aviso na tela. Deixá-lo cair no `ApiError` genérico transformaria "troquei de termo
@@ -395,6 +417,8 @@ async function request<T>(
   }
 
   let response: Response;
+  /** Detalhe do último 401: o body é consumido aqui e é o único lugar que sabe por que a sessão morreu. */
+  let sessionDetail: string | undefined;
   try {
     response = await fetch(`${baseUrl()}${path}`, {
       method,
@@ -465,6 +489,7 @@ async function request<T>(
   // PERMISSAO negada, nao sessao: derrubar o usuario aqui era um erro (quem tem conta pendente de
   // verificacao, por exemplo, era desconectado em vez de ler o aviso).
   if (response.status === HttpStatus.UNAUTHORIZED && hadSession && !path.startsWith("/auth/")) {
+    sessionDetail = await detailOfResponse(response);
     const refreshed = await refreshSession(expiryAtSend);
 
     if (refreshed === "unavailable") {
@@ -514,6 +539,8 @@ async function request<T>(
         // (data de nascimento, consentimento parental, Retry-After), sem deslogar ninguém.
         return fail<T>(response, path, hadSession);
       }
+      // O retry é o pedido mais recente: se ele diz por que a sessão morreu, é a resposta dele que vale.
+      sessionDetail = (await detailOfResponse(response)) ?? sessionDetail;
     }
 
     // Só chega aqui quando:
@@ -521,14 +548,19 @@ async function request<T>(
     //  • o retry após renovação também veio 401 (token novo rejeitado).
     // Em ambos os casos a sessão acabou de verdade: limpa, manda para o login e responde com o
     // código próprio (o corpo do 401 da operação não descreve o que houve com a sessão).
+    // Quem troca a senha perde a própria sessão logo em seguida; sem o detalhe, a tela mandava essa
+    // pessoa achar que a conta tinha um problema. O login é o mesmo nos dois casos.
+    const revoked = sessionDetail === SESSION_REVOKED_DETAIL;
     clearSession();
     if (typeof window !== "undefined") {
-      window.location.href = "/entrar?tab=login";
+      window.location.href = revoked ? "/entrar?tab=login&sessao=encerrada" : "/entrar?tab=login";
     }
     throw new ApiError(
       HttpStatus.UNAUTHORIZED,
-      "SESSION_EXPIRED",
-      "Sessão expirada. Faça login novamente.",
+      revoked ? "SESSION_REVOKED" : "SESSION_EXPIRED",
+      revoked
+        ? "Sua sessão foi encerrada. Entre novamente."
+        : "Sessão expirada. Faça login novamente.",
       path,
     );
   }

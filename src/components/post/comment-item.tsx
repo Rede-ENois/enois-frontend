@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionSummary } from "@/types/application/reaction/reaction-summary";
@@ -30,6 +30,8 @@ import { RichText } from "./rich-text";
 /** Um comentário (com responder, reagir e excluir). */
 export function CommentItem({
   comment,
+  commentDomId,
+  highlighted,
   replyingTo,
   postAuthorId,
   onPinChanged,
@@ -170,6 +172,8 @@ export function CommentItem({
   return (
     <CommentItemView
       comment={comment}
+      commentDomId={commentDomId}
+      highlighted={highlighted}
       content={content}
       edited={Boolean(editedAt)}
       // Nome e foto levam ao perfil de quem comentou (quando o perfil existe).
@@ -183,7 +187,7 @@ export function CommentItem({
       acceptPending={acceptance?.pending}
       onAccept={acceptance?.onAccept}
       onUnaccept={acceptance?.onUnaccept}
-      emojis={REACTION_EMOJIS}
+      emojis={REACTION_FIGURE_EMOJIS}
       reaction={commentReaction}
       onReact={handleCommentReaction}
       // Sem resumo do servidor (resposta antiga), fica só o total, sem pílulas.

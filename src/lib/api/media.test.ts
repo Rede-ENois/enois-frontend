@@ -1,7 +1,7 @@
 import { texts } from "@/texts";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { mediaUploadResponseError, resolveCdnUrl, withImageKitOriginal } from "./media";
+import { mediaApi, mediaUploadResponseError, resolveCdnUrl, withImageKitOriginal } from "./media";
 
 describe("mediaUploadResponseError", () => {
   it("preserves the API code and maps the moderation message", () => {
@@ -74,5 +74,95 @@ describe("withImageKitOriginal", () => {
 
   it("resolveCdnUrl não duplica a barra em caminho relativo", () => {
     expect(resolveCdnUrl("/a/b.png")).not.toContain("//a/b");
+  });
+});
+
+describe("uploadToSignedUrl", () => {
+  /** Dublê mínimo de XHR: captura o PUT e deixa o teste dirigir progresso, resposta e aborto. */
+  function fakeXhr() {
+    const request = {
+      status: 0,
+      responseText: "",
+      withCredentials: false,
+      requestHeaders: {} as Record<string, string>,
+      body: null as unknown,
+      onload: null as (() => void) | null,
+      onabort: null as (() => void) | null,
+      opened: false,
+      upload: {
+        onprogress: null as
+          ((ev: { loaded: number; total: number; lengthComputable: boolean }) => void) | null,
+      },
+      open: (_m: string, _u: string) => {
+        request.opened = true;
+      },
+      setRequestHeader: (n: string, v: string) => {
+        request.requestHeaders[n] = v;
+      },
+      send: (body: unknown) => {
+        request.body = body;
+      },
+      abort: () => request.onabort?.(),
+      // Ganchos de teste (fora do contrato real de XHR, só para o dublê ser dirigido).
+      responde: (status: number, body = "") => {
+        request.status = status;
+        request.responseText = body;
+        request.onload?.();
+      },
+    };
+    return request;
+  }
+
+  const signedUrl = "https://bucket.example.com/put?X-Amz-Signature=abc";
+  const arquivo = new File(["bytes"], "a.png", { type: "image/png" });
+
+  it("reporta o progresso por bytes do PUT", async () => {
+    const request = fakeXhr();
+    vi.stubGlobal("XMLHttpRequest", function () {
+      return request;
+    });
+    const progressos: number[] = [];
+    const promessa = mediaApi.uploadToSignedUrl(signedUrl, arquivo, {}, (f) => progressos.push(f));
+    await vi.waitFor(() => expect(request.body).toBe(arquivo));
+    request.upload.onprogress!({ loaded: 300, total: 1000, lengthComputable: true });
+    request.upload.onprogress!({ loaded: 1000, total: 1000, lengthComputable: true });
+    request.responde(200);
+    await promessa;
+    expect(progressos).toEqual([0.3, 1]);
+    vi.unstubAllGlobals();
+  });
+
+  it("aborta o PUT no meio e rejeita com AbortError", async () => {
+    const request = fakeXhr();
+    vi.stubGlobal("XMLHttpRequest", function () {
+      return request;
+    });
+    const controller = new AbortController();
+    const promessa = mediaApi.uploadToSignedUrl(
+      signedUrl,
+      arquivo,
+      {},
+      undefined,
+      controller.signal,
+    );
+    await vi.waitFor(() => expect(request.body).toBe(arquivo));
+    controller.abort();
+    await expect(promessa).rejects.toMatchObject({ name: "AbortError" });
+    vi.unstubAllGlobals();
+  });
+
+  it("recusa resposta de erro com o código da API (mesmo contrato do fetch)", async () => {
+    const request = fakeXhr();
+    vi.stubGlobal("XMLHttpRequest", function () {
+      return request;
+    });
+    vi.stubGlobal("window", {
+      location: { href: "https://app.example.com/feed", origin: "https://app.example.com" },
+    });
+    const promessa = mediaApi.uploadToSignedUrl("https://app.example.com/api/storage/k", arquivo);
+    await vi.waitFor(() => expect(request.body).toBe(arquivo));
+    request.responde(422, JSON.stringify({ code: "MEDIA_TOO_LARGE", message: "grande" }));
+    await expect(promessa).rejects.toMatchObject({ status: 422, code: "MEDIA_TOO_LARGE" });
+    vi.unstubAllGlobals();
   });
 });

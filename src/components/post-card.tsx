@@ -53,6 +53,7 @@ function PostCardContainer({
   feedTab,
   fullPost = false,
   commento,
+  highlightCommentId = null,
   pinned = false,
   onTogglePin,
   pinPending = false,
@@ -390,6 +391,8 @@ function PostCardContainer({
             commento={commento}
             isQuestion={post.type === "QUESTION"}
             acceptedCommentId={post.acceptedCommentId ?? null}
+            highlightCommentId={highlightCommentId}
+            liveRefresh={fullPost}
           />
         ) : null
       }

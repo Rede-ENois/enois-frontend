@@ -53,9 +53,23 @@ function PapoRetoPage() {
     staleTime: 60_000,
   });
 
+  const publicacoes = useQuery({
+    queryKey: ["papo-reto-publicacoes", subjectAberto, janela],
+    queryFn: () => papoRetoApi.publicacoes(subjectAberto ?? "", janela),
+    enabled: subjectAberto !== null,
+    // A publicação que falou do assunto não muda de minuto a minuto; o corte é periódico.
+    staleTime: 60_000,
+  });
+
   const estado = ranking.isLoading
     ? ("loading" as const)
     : ranking.isError
+      ? ("error" as const)
+      : ("ready" as const);
+
+  const publicacoesEstado = publicacoes.isLoading
+    ? ("loading" as const)
+    : publicacoes.isError
       ? ("error" as const)
       : ("ready" as const);
 
@@ -73,6 +87,11 @@ function PapoRetoPage() {
         timeline={subjectAberto !== null ? (timeline.data ?? null) : null}
         janela={janela}
         onJanelaChange={setJanela}
+        publicacoes={subjectAberto !== null ? (publicacoes.data ?? null) : null}
+        publicacoesEstado={publicacoesEstado}
+        onPublicacoesRetry={() => {
+          void publicacoes.refetch();
+        }}
         onRetry={() => {
           void ranking.refetch();
           void analise.refetch();

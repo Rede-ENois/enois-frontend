@@ -117,6 +117,46 @@ describe("Reações rápidas de uma publicação", () => {
     vi.unstubAllGlobals();
   });
 
+  it("executa o clique feito durante o voo quando a requisição termina (#1053)", async () => {
+    const response = deferredResponse();
+    mocks.react.mockReturnValueOnce(response.promise);
+
+    // Primeira reação sai; o clique de remover acontece enquanto ela ainda está em voo (rede
+    // lenta). Antes ele era descartado em silêncio: a pessoa clicava várias vezes e nada mudava.
+    await act(async () => controls[0].toggle("LOVE"));
+    expect(statusOf(post.id)).toBe("LOVE");
+    now += 1_000;
+    await act(async () => {
+      controls[1].toggle("LOVE"); // em voo: fica enfileirado
+      response.resolve({ counters: post.counters });
+    });
+    // A intenção enfileirada roda com o cache já alinhado: a remoção vai ao servidor.
+    expect(mocks.removeReaction).toHaveBeenCalledTimes(1);
+    expect(statusOf(post.id)).toBeNull();
+    await act(async () => {});
+    expect(usePostCardStore.getState().cards[post.id].reactionPending).toBe(false);
+  });
+
+  it("cliques múltiplos em voo guardam só a última intenção", async () => {
+    const response = deferredResponse();
+    mocks.react.mockReturnValueOnce(response.promise);
+
+    await act(async () => controls[0].toggle("LOVE"));
+    now += 1_000;
+    await act(async () => {
+      controls[1].toggle("LOVE");
+      controls[0].toggle("WOW");
+      controls[1].toggle("WOW");
+      response.resolve({ counters: post.counters });
+    });
+
+    // Apenas a última (WOW) roda: era LOVES alternados que faziam a contagem dançar.
+    expect(mocks.removeReaction).not.toHaveBeenCalled();
+    expect(mocks.react).toHaveBeenLastCalledWith(post.id, "WOW");
+    await act(async () => {});
+    expect(statusOf(post.id)).toBe("WOW");
+  });
+
   it("aceita uma única ação antes de cancelar as leituras, mesmo entre duas instâncias", async () => {
     const response = deferredResponse();
     mocks.react.mockReturnValue(response.promise);

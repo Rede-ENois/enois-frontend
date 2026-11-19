@@ -13,7 +13,7 @@
  * cliente recarrega sozinho quando o novo SW assume (ver src/lib/pwa.ts).
  */
 
-const VERSION = "enois-v15";
+const VERSION = "enois-v16";
 const STATIC_CACHE = `${VERSION}-static`;
 
 const PRECACHE = [
@@ -183,6 +183,24 @@ self.addEventListener("fetch", (event) => {
               fallback ||
               new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain" } }),
           ),
+      ),
+    );
+    return;
+  }
+
+  // Figurinhas e reações oficiais da É Nóis: cache-first sem revalidar na rede a cada uso.
+  if (url.pathname.startsWith("/emojis/enois/")) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ||
+          fetch(request).then((response) => {
+            if (response && response.status === 200) {
+              const copy = response.clone();
+              caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+            }
+            return response;
+          }),
       ),
     );
     return;

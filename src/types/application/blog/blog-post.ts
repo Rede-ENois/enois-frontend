@@ -9,6 +9,8 @@ export type BlogPost = {
    */
   body: string;
   bodyFormat: BlogPostFormat;
+  /** Fotos e vídeos do post (vlog), na ordem em que aparecem na leitura. */
+  mediaIds: string[];
   publishedAt: string;
   updatedAt: string;
 };

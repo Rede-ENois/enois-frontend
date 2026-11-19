@@ -14,6 +14,11 @@ export type PostCardProps = {
 
   /** ID do comentário alvo de uma notificação: rola até ele quando a lista carregar. */
   commento?: string;
+  /**
+   * Comentário a abrir em destaque (notificação de comentário): a thread rola até a linha e a
+   * realça por um instante — o clique leva AO comentário, não ao post (issue #1022).
+   */
+  highlightCommentId?: string | null;
 
   /** É o post fixado no topo da comunidade (mostra o selo "Fixado"). */
   pinned?: boolean;

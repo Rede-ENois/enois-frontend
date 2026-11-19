@@ -17,6 +17,7 @@ import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { buildShareTags } from "@/lib/open-graph";
 
 import { AppContainer } from "@/components/app-container";
+import { MediaGrid } from "@/components/post/media-grid";
 import { PostActions } from "@/components/post/post-actions";
 import { PostComments } from "@/components/post/post-comments";
 import { ReactionsSummary } from "@/components/post/reactions-summary";
@@ -206,6 +207,9 @@ function BlogPostPage() {
             </p>
           </header>
 
+          {/* Vlog: fotos e vídeos do post (o vídeo toca aqui mesmo) antes do texto. */}
+          <MediaGrid mediaIds={post.mediaIds} />
+
           {post.bodyFormat === "HTML" ? (
             <SandboxedHtmlFrame
               html={post.body}
@@ -245,7 +249,7 @@ function BlogPostPage() {
           ref={commentsRef}
           className="scroll-mt-24 overflow-hidden rounded-2xl border border-border-soft bg-surface-card"
         >
-          <PostComments postId={post.id} postAuthorId={feedPost?.authorId ?? ""} />
+          <PostComments postId={post.id} postAuthorId={feedPost?.authorId ?? ""} liveRefresh />
         </section>
       </div>
 

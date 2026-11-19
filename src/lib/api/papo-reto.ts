@@ -1,5 +1,8 @@
 import type { PapoIntervaloTimelineView } from "@/types/application/paporeto/papo-intervalo-view";
+import type { PapoPublicacaoRelacionadaResponse } from "@/types/application/paporeto/papo-publicacao-relacionada-response";
 import type { PapoAssuntoView } from "@/types/application/paporeto/papo-subject-view";
+
+import { dataHora } from "@/lib/date/format";
 
 import { api } from "../api-client";
 
@@ -20,6 +23,22 @@ export const papoRetoApi = {
     api.get<PapoIntervaloTimelineView[]>(
       `/papo-reto/${encodeURIComponent(subject)}/timeline?janela=${janela}`,
     ),
+
+  /**
+   * As publicações que falaram do assunto, da mais recente para a mais antiga.
+   * O backend devolve `criadoEm` em ISO; o painel mostra `quando` já como rótulo.
+   */
+  publicacoes: (subject: string, janela: "24h" | "7d" | "30d") =>
+    api
+      .get<PapoPublicacaoRelacionadaResponse[]>(
+        `/papo-reto/${encodeURIComponent(subject)}/publicacoes?janela=${janela}`,
+      )
+      .then((publicacoes) =>
+        publicacoes.map(({ criadoEm, anonima: _anonima, ...publicacao }) => ({
+          ...publicacao,
+          quando: dataHora(criadoEm),
+        })),
+      ),
 
   /** Quantas falas a última semana analisou (a honestidade da amostra em número). */
   analise: () => api.get<number>("/papo-reto/analise"),

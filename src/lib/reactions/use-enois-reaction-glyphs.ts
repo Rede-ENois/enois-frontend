@@ -1,19 +1,41 @@
 import { useEffect } from "react";
 
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import {
+  REACTION_EMOJIS,
+  REACTION_EMOJI_LABELS,
+  REACTION_FIGURE_EMOJIS,
+} from "@/constants/reaction-emojis";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 const VARIATION_SELECTOR = /\uFE0F/g;
 const IGNORED_ANCESTOR_SELECTOR =
   "input, textarea, code, pre, [contenteditable='true'], script, style";
 
+/**
+ * Emoji → tipo, em duas passadas.
+ *
+ * Primeiro o emoji de APOIO, que é o que está no texto de quem reagiu (`😭` = SOB). Depois o emoji
+ * da FIGURA, que é o que as views do design system desenham (`emojis[type]` = `REACTION_FIGURE_EMOJIS`,
+ * a fonte da figura de cada tipo): a pílula de X mostra um emoji que pode ser o de apoio de outro
+ * tipo, e aí quem manda é a figura — não o primeiro tipo que registrou aquele símbolo. Sem a segunda
+ * passada, a pílula do ROFL (estrela, emoji de apoio do VIBE) seria pintada com o ícone do VIBE.
+ */
 const EMOJI_TO_REACTION_TYPE = new Map<string, ReactionType>();
-for (const [type, glyph] of Object.entries(REACTION_EMOJIS) as [ReactionType, string][]) {
-  EMOJI_TO_REACTION_TYPE.set(glyph, type);
-  const stripped = glyph.replace(VARIATION_SELECTOR, "");
-  if (stripped && !EMOJI_TO_REACTION_TYPE.has(stripped)) {
-    EMOJI_TO_REACTION_TYPE.set(stripped, type);
+
+function registrar(glyph: string, type: ReactionType, sobrescrever: boolean): void {
+  const chaves = [glyph, glyph.replace(VARIATION_SELECTOR, "")].filter(Boolean);
+  for (const chave of chaves) {
+    if (sobrescrever || !EMOJI_TO_REACTION_TYPE.has(chave)) {
+      EMOJI_TO_REACTION_TYPE.set(chave, type);
+    }
   }
+}
+
+for (const [type, glyph] of Object.entries(REACTION_EMOJIS) as [ReactionType, string][]) {
+  registrar(glyph, type, false);
+}
+for (const [type, glyph] of Object.entries(REACTION_FIGURE_EMOJIS) as [ReactionType, string][]) {
+  registrar(glyph, type, true);
 }
 
 export function resolveReactionTypeFromGlyph(text: string | null | undefined): ReactionType | null {
@@ -27,8 +49,32 @@ export function resolveReactionTypeFromGlyph(text: string | null | undefined): R
   );
 }
 
+function syncButtonTooltip(element: Element, type: ReactionType, glyph: string | null): void {
+  const button = element.closest("button[title]");
+  if (!button) return;
+  const currentTitle = button.getAttribute("title");
+  if (!currentTitle) return;
+  const label = REACTION_EMOJI_LABELS[type];
+  if (!label || !glyph) return;
+  const trimmedGlyph = glyph.trim();
+  if (!trimmedGlyph || !currentTitle.includes(trimmedGlyph)) return;
+  const nextTitle = currentTitle.replace(trimmedGlyph, label);
+  if (nextTitle !== currentTitle) {
+    button.setAttribute("title", nextTitle);
+  }
+}
+
 function syncElementGlyph(element: Element): void {
-  if (element.hasAttribute("data-reaction-emoji")) return;
+  if (element.hasAttribute("data-reaction-emoji")) {
+    const pickerType = element.getAttribute("data-reaction-emoji") as ReactionType | null;
+    if (pickerType && pickerType in REACTION_EMOJI_LABELS) {
+      const label = REACTION_EMOJI_LABELS[pickerType];
+      if (element.getAttribute("title") !== label) {
+        element.setAttribute("title", label);
+      }
+    }
+    return;
+  }
   if (element.closest(IGNORED_ANCESTOR_SELECTOR)) {
     if (element.hasAttribute("data-enois-reaction-glyph")) {
       element.removeAttribute("data-enois-reaction-glyph");
@@ -38,11 +84,13 @@ function syncElementGlyph(element: Element): void {
 
   // Only target leaf elements wrapping a single text node with a known reaction glyph
   if (element.childNodes.length === 1 && element.firstChild?.nodeType === Node.TEXT_NODE) {
-    const type = resolveReactionTypeFromGlyph(element.firstChild.textContent);
+    const rawGlyph = element.firstChild.textContent;
+    const type = resolveReactionTypeFromGlyph(rawGlyph);
     if (type) {
       if (element.getAttribute("data-enois-reaction-glyph") !== type) {
         element.setAttribute("data-enois-reaction-glyph", type);
       }
+      syncButtonTooltip(element, type, rawGlyph);
       return;
     }
   }

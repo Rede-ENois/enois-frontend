@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
@@ -13,7 +14,8 @@ import {
 import { Button, useToast } from "@rede-enois/design-system/ui";
 import { Copy, ExternalLink, MessageCircle } from "lucide-react";
 
-import { REACTION_EMOJIS, reactionsApi } from "@/lib/api";
+import { useIsPlatformAdmin } from "@/lib/admin/use-is-platform-admin";
+import { reactionsApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import {
   savedPostsQueryOptions,
@@ -25,6 +27,8 @@ import { usePostDestinos } from "@/lib/post-destinos/use-post-destinos";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
 import { useMountedOnce } from "@/lib/use-mounted-once";
+
+import { AdminPostRemoveButton } from "@/components/admin/admin-post-remove-button";
 
 import { ReactionsDialog } from "./reactions-dialog";
 import { ReportDialog } from "./report-dialog";
@@ -64,6 +68,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   // Os diálogos do card só montam quando abertos pela primeira vez: com 20 a 60 cards na tela,
   // montar todos de saída eram quatro diálogos, quatro queries e uma mutation a mais por card.
   const reactionsMounted = useMountedOnce(card?.showReactions ?? false);
+  const isPlatformAdmin = useIsPlatformAdmin();
   const sealsMounted = useMountedOnce(card?.showSeals ?? false);
   const reportMounted = useMountedOnce(showReport);
   const { toggle: toggleReaction } = usePostReaction(post.id, post);
@@ -171,7 +176,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
 
   return (
     <PostActionsView
-      emojis={REACTION_EMOJIS}
+      emojis={REACTION_FIGURE_EMOJIS}
       reactionStatus={post.currentUserReaction ?? null}
       onReact={toggleReaction}
       // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
@@ -216,6 +221,9 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       onDestinos={destinos.disponivel ? destinos.abrir : undefined}
       dialogs={
         <>
+          {/* Admin da plataforma: remoção direta do post, com motivo, sem denúncia nem votação.
+              Para o resto, nada é montado. */}
+          {isPlatformAdmin && <AdminPostRemoveButton postId={post.id} />}
           {destinosMounted && (
             <PostDestinosDialog
               open={destinos.open}

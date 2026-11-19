@@ -116,11 +116,16 @@ export const mediaApi = {
    * o storage recusa a subida. Com o gateway do b7 a subida passa pelo próprio app
    * (`PUT /api/storage/{chave}`), que exige a sessão de quem é dono do asset — por isso os cookies
    * vão junto. Na AWS, a URL assinada direto no bucket ignora esse cabecalho extra.
+   *
+   * XHR em vez de fetch: o fetch não reporta bytes enviados, e o PUT é a fase mais longa do
+   * upload — sem ele a barra ficava congelada na compressão e pulava para 100% no fim (#925).
    */
   uploadToSignedUrl: async (
     signedUrl: string,
     file: File,
     headers: Record<string, string> = {},
+    onProgress?: (fracao: number) => void,
+    signal?: AbortSignal,
   ) => {
     // Only the API's own storage gateway gets the session cookies and CSRF header: a bucket URL
     // signed by AWS would refuse a credentialed CORS request.
@@ -128,20 +133,40 @@ export const mediaApi = {
       typeof window !== "undefined" &&
       new URL(signedUrl, window.location.href).origin ===
         new URL(apiUrl("/"), window.location.href).origin;
-    const response = await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      credentials: toApi ? "include" : "same-origin",
-      headers: toApi ? { ...headers, ...sessionHeaders() } : headers,
+
+    const resposta = await new Promise<{ status: number; body: string }>((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open("PUT", signedUrl, true);
+      request.withCredentials = toApi;
+      for (const [nome, valor] of Object.entries(
+        toApi ? { ...headers, ...sessionHeaders() } : headers,
+      )) {
+        request.setRequestHeader(nome, valor);
+      }
+      if (signal) {
+        // Abortar depois de enviado não cancela nada: só encerra a espera pela resposta.
+        if (signal.aborted) return reject(new DOMException("Envio cancelado.", "AbortError"));
+        signal.addEventListener("abort", () => request.abort(), { once: true });
+      }
+      request.upload.onprogress = (evento) => {
+        if (evento.lengthComputable && onProgress) {
+          onProgress(evento.loaded / evento.total);
+        }
+      };
+      request.onload = () =>
+        resolve({ status: request.status, body: request.responseText.slice(0, 4096) });
+      request.onerror = () =>
+        reject(new Error(`Upload falhou: falha de rede ao falar com ${new URL(signedUrl).host}`));
+      request.onabort = () => reject(new DOMException("Envio cancelado.", "AbortError"));
+      request.send(file);
     });
 
-    if (!response.ok) {
-      const body = await response.text().catch(() => "");
+    if (resposta.status < 200 || resposta.status >= 300) {
       if (toApi) {
         const path = new URL(signedUrl, window.location.href).pathname;
-        throw mediaUploadResponseError(response.status, body, path);
+        throw mediaUploadResponseError(resposta.status, resposta.body, path);
       }
-      throw new Error(`Upload falhou: ${response.status} ${body}`);
+      throw new Error(`Upload falhou: ${resposta.status} ${resposta.body}`);
     }
   },
 

@@ -44,6 +44,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional().default("signup"),
+  /** Posta pelo cliente quando a sessão caiu de propósito (troca de senha/e-mail). */
+  sessao: z.enum(["encerrada"]).optional(),
 });
 
 export const Route = createFileRoute("/entrar")({
@@ -90,6 +92,7 @@ const signupSchema = z.object({
 
 function Auth() {
   const initial = Route.useSearch().tab;
+  const sessaoEncerrada = Route.useSearch().sessao === "encerrada";
   const navigate = useNavigate();
   const [tab, setTab] = useState(initial);
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -160,6 +163,13 @@ function Auth() {
                 {texts.auth.signupClosed.description}
               </p>
             </div>
+          )}
+
+          {sessaoEncerrada && (
+            <ErrorBanner
+              error={`${texts.auth.login.sessionEnded.title}. ${texts.auth.login.sessionEnded.description}`}
+              showDetails={false}
+            />
           )}
 
           <div className="mt-8">

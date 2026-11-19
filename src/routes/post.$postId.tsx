@@ -21,10 +21,19 @@ export const Route = createFileRoute("/post/$postId")({
   validateSearch: (
     search: Record<string, unknown>,
   ): { feedTab?: HomeTab; reacoes?: true; commento?: string } => ({
+  ): {
+    feedTab?: HomeTab;
+    reacoes?: true;
+    comentario?: string;
+  } => ({
     // A grouped reaction notification ("Ana e mais 14 pessoas reagiram") opens the list of who
     // reacted, one by one.
     reacoes:
       search.reacoes === 1 || search.reacoes === "1" || search.reacoes === true ? true : undefined,
+    // A comment notification opens THE COMMENT: the id scrolls the thread to the row and
+    // highlights it (issue #1022 — "não perde tempo procurando entre vários comentários").
+    comentario:
+      typeof search.comentario === "string" && search.comentario ? search.comentario : undefined,
     feedTab:
       search.feedTab === "FOR_YOU" ||
       search.feedTab === "ALL" ||
@@ -118,6 +127,7 @@ export const Route = createFileRoute("/post/$postId")({
 function PostDetail() {
   const { postId } = Route.useParams();
   const { feedTab, reacoes, commento } = Route.useSearch();
+  const { feedTab, reacoes, comentario } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
   const setShowReactions = usePostCardStore((state) => state.setShowReactions);
@@ -196,6 +206,7 @@ function PostDetail() {
               fullPost
               commento={commento}
             />
+            <PostCard key={post.id} post={post} fullPost highlightCommentId={comentario} />
 
             {/* Artigo: o corpo vem so na leitura do post unico (a listagem traz o resumo), entao e
                 aqui que ele aparece — na mesma largura de leitura do resto. */}
