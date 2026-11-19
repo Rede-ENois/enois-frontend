@@ -1,4 +1,4 @@
-/** `GET/PUT /me/notification-preferences`: o que chega à pessoa fora do app. */
+/** `GET/PUT /me/notification-preferences`: entrega de avisos, assinaturas e resumo semanal. */
 export type NotificationPreferences = {
   weeklyDigest: boolean;
   pushSocial: boolean;
@@ -10,5 +10,7 @@ export type NotificationPreferences = {
   muteReactions: boolean;
   /** O aviso de comentário no post nem nasce; resposta ao seu comentário e menção continuam. */
   mutePostComments: boolean;
+  /** Ausente em um backend anterior à assinatura de projetos. */
+  communityProjects?: boolean;
   updatedAt: string | null;
 };
