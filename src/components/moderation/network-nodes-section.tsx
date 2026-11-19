@@ -75,6 +75,9 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     degraded: node.degraded,
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
+    // A API admin ainda não mede tráfego do nó; `null` diz "não medido" — sem inventar zero.
+    trafficInMb: null,
+    trafficOutMb: null,
     quarantineReason: node.quarantineReason,
   };
 }
