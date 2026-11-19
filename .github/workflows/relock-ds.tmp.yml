@@ -32,6 +32,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm install --package-lock-only --ignore-scripts
+      - name: Show the resolved version
+        run: node -e "const l=require('./package-lock.json');console.log(l.packages['node_modules/@rede-enois/design-system'].version, l.packages['node_modules/@rede-enois/design-system'].resolved)"
       - name: Commit the relocked file
         run: |
           git config user.name "melissa"
