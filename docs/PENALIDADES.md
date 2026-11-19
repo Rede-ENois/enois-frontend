@@ -40,6 +40,8 @@ O snapshot da consulta conserva junto dos dados o instante monotônico da observ
 
 A troca do indicador de acesso limitado em outra aba também invalida o cache dependente da sessão. Assim, uma troca entre duas contas limitadas não conserva motivo, evidência ou recurso da conta anterior.
 
+O mesmo limite de sessão invalida a geração efêmera do formulário, inclusive quando não há chave de sessão normal. O rascunho e o estado de envio são descartados nessa troca; uma revalidação da mesma sessão preserva o texto. Conclusões de envios anteriores não alteram o formulário nem revalidam a decisão da geração atual. Isso não cancela uma operação que o servidor já recebeu. A geração fica apenas na memória da apresentação e não identifica nem autoriza a pessoa.
+
 ## Conta suspensa e recurso
 
 A página `/conta-suspensa` usa a mesma consulta autorizada, sem depender do indicador de sessão normal. O backend confirma a identidade e todos os fatores antes de emitir o acesso `SANCTIONS_ONLY`, transportado pelos cookies HttpOnly existentes. Esse acesso não é gravado como uma sessão normal nem dispara sincronização de chaves, chat ou outras áreas privadas.

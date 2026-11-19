@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import {
+  getSanctionSessionGeneration,
+  useSanctionSessionGeneration,
+} from "@/stores/sanction-access.store";
 import type { SanctionsSnapshot } from "@/types/application/moderation/sanctions-snapshot";
 import { SanctionsView } from "@rede-enois/design-system/domain";
 
@@ -10,6 +14,17 @@ import { ApiError, clearSession } from "@/lib/api-client";
 import { useSanctionClock } from "@/lib/moderation/use-sanction-clock";
 
 export function SanctionsContainer({ mode }: { mode: "history" | "suspended" }) {
+  const generation = useSanctionSessionGeneration();
+  return <SanctionsSession key={generation} mode={mode} generation={generation} />;
+}
+
+function SanctionsSession({
+  mode,
+  generation,
+}: {
+  mode: "history" | "suspended";
+  generation: number;
+}) {
   const client = useQueryClient();
   const [message, setMessage] = useState("");
   const submitting = useRef(false);
@@ -35,8 +50,14 @@ export function SanctionsContainer({ mode }: { mode: "history" | "suspended" }) 
   const eligible = sanctions.find((s) => s.canAppeal);
   const pending = decision?.appeals.some((a) => a.status === "PENDING");
   const appeal = useMutation({
-    mutationFn: () => sanctionsApi.appeal(message.trim()),
+    mutationFn: () => {
+      if (getSanctionSessionGeneration() !== generation) {
+        throw new DOMException("Sessão de apresentação substituída", "AbortError");
+      }
+      return sanctionsApi.appeal(message.trim());
+    },
     onSuccess: async () => {
+      if (getSanctionSessionGeneration() !== generation) return;
       setMessage("");
       await client.invalidateQueries({ queryKey: ["my-sanctions"] });
     },

@@ -2,6 +2,25 @@ import { useSyncExternalStore } from "react";
 
 const KEY = "sanction_access";
 const EVENT = "enois:sanction-access";
+let sessionGeneration = 0;
+const sessionListeners = new Set<() => void>();
+
+/** Geração efêmera de apresentação; não representa identidade nem autorização do servidor. */
+export function invalidateSanctionSession() {
+  sessionGeneration++;
+  for (const listener of sessionListeners) listener();
+}
+export function getSanctionSessionGeneration() {
+  return sessionGeneration;
+}
+function subscribeSession(listener: () => void) {
+  sessionListeners.add(listener);
+  return () => sessionListeners.delete(listener);
+}
+export function useSanctionSessionGeneration() {
+  return useSyncExternalStore(subscribeSession, getSanctionSessionGeneration, () => 0);
+}
+
 /** Indicador de navegação, nunca uma credencial ou prova de autorização. */
 export function hasSanctionAccess(): boolean {
   return typeof localStorage !== "undefined" && localStorage.getItem(KEY) === "1";
