@@ -83,6 +83,13 @@ li img[src^="https://cdn.frankerfacez.com/"] {
     outline-offset: 2px;
   }
 
+  /* Mantém contraste visível ao selecionar texto no mobile e no desktop (evita que o texto
+     selecionado suma contra o destaque padrão do navegador). */
+  ::selection {
+    background-color: var(--color-primary, #6d28d9);
+    color: var(--color-primary-foreground, #ffffff);
+  }
+
   /* Quem pede menos movimento no sistema não recebe animações nem rolagem suave. */
   @media (prefers-reduced-motion: reduce) {
     *,
