@@ -17,6 +17,7 @@ import { RefreshCw } from "lucide-react";
 
 import { commentsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
+import { formatarData } from "@/lib/date/format";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import { useAcceptedAnswer } from "@/lib/feed/use-accepted-answer";
 import { liteInterval, litePageSize } from "@/lib/lite-mode";
@@ -90,7 +91,7 @@ export function PostComments({
   const [loadingMore, setLoadingMore] = useState(false);
   const [sending, setSending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [lastAddedCount, setLastAddedCount] = useState(0);
   const [error, setError] = useState<CommentsError | null>(null);
   /** Razao da recusa vinda da API: sem ela, "tente de novo" nao diz o que corrigir. */
@@ -199,9 +200,7 @@ export function PostComments({
       const addedCount = page.items.filter((item) => !existingIds.has(item.id)).length;
       setComments((current) => mergeRefreshedComments(current, page.items, oldestFirst).next);
       setLastAddedCount(addedCount);
-      setLastRefreshedAt(
-        new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      );
+      setLastRefreshedAt(new Date());
       if (addedCount > 0) {
         updatePostInQueryCache(queryClient, postId, (current) => ({
           ...current,
@@ -327,7 +326,11 @@ export function PostComments({
   const liveStatusLabel = refreshing
     ? "Atualizando comentários…"
     : lastRefreshedAt
-      ? `Comentários atualizados às ${lastRefreshedAt}${lastAddedCount > 0 ? ` (+${lastAddedCount} ${lastAddedCount === 1 ? "novo" : "novos"})` : ""}`
+      ? `Comentários atualizados às ${formatarData(lastRefreshedAt, {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })}${lastAddedCount > 0 ? ` (+${lastAddedCount} ${lastAddedCount === 1 ? "novo" : "novos"})` : ""}`
       : "Atualização automática ativa";
 
   return (
