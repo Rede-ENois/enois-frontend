@@ -184,6 +184,11 @@
       "count": 1
     }
   },
+  "src/components/messages/new-group-composer.tsx": {
+    "local/no-front-markup": {
+      "count": 21
+    }
+  },
   "src/components/micro-project-management.tsx": {
     "local/no-front-markup": {
       "count": 25
@@ -578,7 +583,7 @@
   },
   "src/routes/mensagens.tsx": {
     "local/no-front-markup": {
-      "count": 67
+      "count": 68
     }
   },
   "src/routes/mentoria.tsx": {

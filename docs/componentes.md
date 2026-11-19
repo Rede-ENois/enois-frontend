@@ -227,6 +227,18 @@ Post do feed de um grupo, com reações, comentários e ações de moderação.
   do campo. O contador interno do `MentionTextarea` fica desativado nesse formulário, que renderiza
   o mesmo `CharCounter` no rodapé.
 
+## `NewGroupComposer` (`src/components/messages/new-group-composer.tsx`)
+
+Aba "Novo grupo" de `/mensagens`: título, busca de pessoas (a mesma lista de `/rede`, via
+`networkApi.list`) e seleção múltipla. "Criar grupo" só liga com título de 3+ caracteres e ao menos
+uma pessoa marcada; a conversa nasce com `messagesApi.createConversation({ kind: "GROUP", title,
+participantIds })` e abre na tela. A trava síncrona (`creatingRef`) é a mesma do "abrir conversa":
+um segundo toque no mesmo tick criaria um grupo repetido, porque `isPending` só chega à tela no
+próximo render. A aba não aparece na caixa profissional, onde as conversas nascem dos fluxos de
+trabalho.
+
+**Props:** `{ onCreated: (conversationId: string) => void }`
+
 ## `EditProfileDialog` (`src/components/edit-profile-dialog.tsx`)
 
 Dialog multi-aba para edição completa do perfil.
