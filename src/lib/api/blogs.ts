@@ -26,12 +26,16 @@ export const blogsApi = {
     title: string;
     body: string;
     format: BlogPostFormat;
+    /** Fotos e vídeos já subidos (vlog), na ordem da leitura. */
+    mediaIds?: string[];
     /** false = publica sem avisar assinantes (nem in-app, nem e-mail). */
     notifySubscribers?: boolean;
   }) => api.post<BlogPost>("/blogs/me/posts", data),
 
-  editPost: (postId: string, data: { title: string; body: string; format: BlogPostFormat }) =>
-    api.patch<BlogPost>(`/blogs/me/posts/${encodeURIComponent(postId)}`, data),
+  editPost: (
+    postId: string,
+    data: { title: string; body: string; format: BlogPostFormat; mediaIds?: string[] },
+  ) => api.patch<BlogPost>(`/blogs/me/posts/${encodeURIComponent(postId)}`, data),
 
   removePost: (postId: string) =>
     api.delete<StatusResponse>(`/blogs/me/posts/${encodeURIComponent(postId)}`),
