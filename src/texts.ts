@@ -1785,6 +1785,18 @@ export const texts = {
       error: "Não foi possível importar agora. Tente de novo.",
       readmeSaved: "Bio atualizada com o README.",
       readmeError: "Não foi possível ler o README agora.",
+      orgs: {
+        title: "Organizações",
+        hint: "Transforme uma organização do GitHub em empresa da comunidade, com os repositórios escolhidos como projetos dela.",
+        choose: "Escolha a organização",
+        /** O botão do aviso de sucesso leva à empresa importada. */
+        open: "Abrir empresa",
+      },
+      orgImported: (name: string, created: number) =>
+        created === 0
+          ? `Organização ${name} pronta, sem projetos novos.`
+          : `${name}: ${created === 1 ? "1 projeto importado" : `${created} projetos importados`}.`,
+      orgError: "Não foi possível importar a organização agora.",
     },
     sections: {
       about: "Sobre",
