@@ -626,9 +626,9 @@ export const apiSections: ApiSection[] = [
         path: "/me/notification-preferences",
         access: "auth",
         description:
-          "O que chega fora do app: resumo semanal por e-mail e as categorias de push (social, mensagens, grupos, vagas, sistema). Padrão: tudo ligado.",
+          "Preferências de push e resumo semanal, ligados por padrão, e assinatura de novos projetos da comunidade, desligada por padrão. A assinatura também controla a criação dos avisos no app.",
         response: `200 OK
-{"weeklyDigest":true,"pushSocial":true,"pushMessages":true,"pushGroups":true,"pushJobs":true,"pushSystem":true,"updatedAt":null}`,
+{"weeklyDigest":true,"pushSocial":true,"pushMessages":true,"pushGroups":true,"pushJobs":true,"pushSystem":true,"communityProjects":false,"updatedAt":null}`,
       },
       {
         method: "PUT",
