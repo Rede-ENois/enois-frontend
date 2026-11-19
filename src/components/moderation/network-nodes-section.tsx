@@ -79,6 +79,8 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     trafficInMb: null,
     trafficOutMb: null,
     quarantineReason: node.quarantineReason,
+    trafficInMb: node.trafficInMb,
+    trafficOutMb: node.trafficOutMb,
   };
 }
 

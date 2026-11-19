@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 
-import { REACTION_EMOJIS, REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import {
+  REACTION_EMOJIS,
+  REACTION_EMOJI_LABELS,
+  REACTION_FIGURE_EMOJIS,
+} from "@/constants/reaction-emojis";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 const VARIATION_SELECTOR = /\uFE0F/g;
@@ -45,8 +49,32 @@ export function resolveReactionTypeFromGlyph(text: string | null | undefined): R
   );
 }
 
+function syncButtonTooltip(element: Element, type: ReactionType, glyph: string | null): void {
+  const button = element.closest("button[title]");
+  if (!button) return;
+  const currentTitle = button.getAttribute("title");
+  if (!currentTitle) return;
+  const label = REACTION_EMOJI_LABELS[type];
+  if (!label || !glyph) return;
+  const trimmedGlyph = glyph.trim();
+  if (!trimmedGlyph || !currentTitle.includes(trimmedGlyph)) return;
+  const nextTitle = currentTitle.replace(trimmedGlyph, label);
+  if (nextTitle !== currentTitle) {
+    button.setAttribute("title", nextTitle);
+  }
+}
+
 function syncElementGlyph(element: Element): void {
-  if (element.hasAttribute("data-reaction-emoji")) return;
+  if (element.hasAttribute("data-reaction-emoji")) {
+    const pickerType = element.getAttribute("data-reaction-emoji") as ReactionType | null;
+    if (pickerType && pickerType in REACTION_EMOJI_LABELS) {
+      const label = REACTION_EMOJI_LABELS[pickerType];
+      if (element.getAttribute("title") !== label) {
+        element.setAttribute("title", label);
+      }
+    }
+    return;
+  }
   if (element.closest(IGNORED_ANCESTOR_SELECTOR)) {
     if (element.hasAttribute("data-enois-reaction-glyph")) {
       element.removeAttribute("data-enois-reaction-glyph");
@@ -56,11 +84,13 @@ function syncElementGlyph(element: Element): void {
 
   // Only target leaf elements wrapping a single text node with a known reaction glyph
   if (element.childNodes.length === 1 && element.firstChild?.nodeType === Node.TEXT_NODE) {
-    const type = resolveReactionTypeFromGlyph(element.firstChild.textContent);
+    const rawGlyph = element.firstChild.textContent;
+    const type = resolveReactionTypeFromGlyph(rawGlyph);
     if (type) {
       if (element.getAttribute("data-enois-reaction-glyph") !== type) {
         element.setAttribute("data-enois-reaction-glyph", type);
       }
+      syncButtonTooltip(element, type, rawGlyph);
       return;
     }
   }
