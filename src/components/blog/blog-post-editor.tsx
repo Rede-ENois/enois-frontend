@@ -6,13 +6,22 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import type { BlogPost } from "@/types/application/blog/blog-post";
 import type { BlogPostFormat } from "@/types/application/blog/blog-post-format";
+import type { VlogAttachment } from "@/types/media-upload/vlog-attachment";
 import { Button, Input, Pill, useToast } from "@rede-enois/design-system/ui";
-import { ArrowLeft, Eye, PenLine } from "lucide-react";
+import { ArrowLeft, Eye, ImageUp, PenLine, X } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
 import { feedApi } from "@/lib/api/feed";
+import { mediaApi } from "@/lib/api/media";
 import { getCurrentUserId } from "@/lib/current-user";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
+import {
+  BLOG_POST_MEDIA_LIMIT,
+  importedMedia,
+  uploadedMediaIds,
+} from "@/lib/media-upload/vlog-media";
+import { useMediaUpload } from "@/lib/use-media-upload";
+import { isVideoFile } from "@/lib/video-limit";
 
 import { AppContainer } from "@/components/app-container";
 import { HtmlEditor } from "@/components/html-editor";
@@ -43,6 +52,14 @@ export function BlogPostEditor({
   const [error, setError] = useState<string | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState<boolean | null>(null);
+  const [attachments, setAttachments] = useState<VlogAttachment[]>(
+    (post?.mediaIds ?? []).map((id) => ({
+      file: new File([], ""),
+      media: importedMedia(id, null),
+    })),
+  );
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const upload = useMediaUpload();
 
   // Restaura depois da hidratação e só então permite gravar: o formulário vazio não apaga o rascunho.
   // O rascunho mora no servidor (lista por pessoa — quem escreve mais de um texto não perde
@@ -136,12 +153,16 @@ export function BlogPostEditor({
     return () => window.clearTimeout(timer);
   }, [post, draftId, title, body, format, avisar]);
 
+  const pendingAttachments = attachments.some((attachment) => !attachment.media);
+
   const publish = useMutation({
     onMutate: () => JSON.stringify({ title, body, format, avisar }),
-    mutationFn: () =>
-      post
-        ? blogsApi.editPost(post.id, { title, body, format })
-        : blogsApi.publish({ title, body, format, notifySubscribers: avisar }),
+    mutationFn: () => {
+      const mediaIds = uploadedMediaIds(attachments);
+      return post
+        ? blogsApi.editPost(post.id, { title, body, format, mediaIds })
+        : blogsApi.publish({ title, body, format, mediaIds, notifySubscribers: avisar });
+    },
     onSuccess: async (_result, _variables, submittedDraft) => {
       if (!post && draftId) {
         try {
@@ -164,7 +185,49 @@ export function BlogPostEditor({
     onError: (err) => setError(err instanceof Error ? err.message : texts.blog.editor.error),
   });
 
-  const canPublish = title.trim().length > 0 && body.trim().length > 0 && !publish.isPending;
+  const canPublish =
+    title.trim().length > 0 && body.trim().length > 0 && !publish.isPending && !pendingAttachments;
+
+  // O anexo sobe assim que é escolhido: ao salvar, o post só guarda os ids. Falha na subida deixa
+  // o anexo marcado para remover e tentar de novo, em vez de ir embora sem aviso.
+  const addFiles = async (files: File[]) => {
+    const room = BLOG_POST_MEDIA_LIMIT - attachments.length;
+    if (files.length > room) {
+      setMediaError(texts.blog.editor.mediaLimit);
+    }
+    const chosen = files.slice(0, Math.max(room, 0));
+    if (chosen.length === 0) return;
+    setMediaError(null);
+    const added: VlogAttachment[] = chosen.map((file) => ({ file, media: null }));
+    setAttachments((current) => [...current, ...added]);
+    try {
+      const results: Awaited<ReturnType<typeof upload.uploadAll>> = await upload.uploadAll(
+        chosen.map((file) => ({ file })),
+      );
+      setAttachments((current) =>
+        current.map((attachment) => {
+          const index = added.indexOf(attachment);
+          return index >= 0 && results[index]
+            ? { ...attachment, media: results[index] }
+            : attachment;
+        }),
+      );
+    } catch {
+      setAttachments((current) => current.filter((attachment) => !added.includes(attachment)));
+      setMediaError(texts.blog.editor.mediaError);
+    }
+  };
+
+  const removeAttachment = (target: VlogAttachment) => {
+    const isUploaded = !!target.media;
+    setAttachments((current) => current.filter((attachment) => attachment !== target));
+    setMediaError(null);
+    // Mídia que subiu e não entrou no post não deve ficar órfã no storage: o servidor recusa a
+    // remoção de mídia já em uso, e aí a limpeza periódica cuida dela.
+    if (isUploaded) {
+      void mediaApi.delete(target.media!.mediaId).catch(() => undefined);
+    }
+  };
 
   return (
     <AppContainer>
@@ -263,6 +326,78 @@ export function BlogPostEditor({
               previewClassName="-mx-3 -mb-3 mt-3 h-[60vh] w-full"
             />
           )}
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-text-strong">{texts.blog.editor.mediaTitle}</p>
+
+            <p className="text-xs font-normal text-text-subtle">{texts.blog.editor.mediaHint}</p>
+
+            {attachments.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {attachments.map((attachment, index) => (
+                  <li key={`${attachment.media?.mediaId ?? ""}-${attachment.file.name}-${index}`}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full gap-1.5"
+                      disabled={!attachment.media}
+                      onClick={() => removeAttachment(attachment)}
+                      aria-label={texts.blog.editor.mediaRemove(index)}
+                    >
+                      <ImageUp className="h-3.5 w-3.5" aria-hidden />
+
+                      <>
+                        {attachment.file.name ||
+                          (attachment.file.type.startsWith("video/") || isVideoFile(attachment.file)
+                            ? texts.blog.editor.mediaVideo
+                            : texts.blog.editor.mediaPhoto)}
+                      </>
+
+                      <X className="h-3.5 w-3.5" aria-hidden />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {pendingAttachments && (
+              <p role="status" className="text-xs font-normal text-text-subtle">
+                {texts.blog.editor.mediaUploading}
+              </p>
+            )}
+
+            {mediaError && (
+              <p role="alert" className="text-xs text-destructive">
+                {mediaError}
+              </p>
+            )}
+
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-muted/40">
+              <ImageUp className="h-4 w-4" aria-hidden />
+
+              <>{texts.blog.editor.mediaAdd}</>
+
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="sr-only"
+                disabled={attachments.length >= BLOG_POST_MEDIA_LIMIT}
+                aria-label={texts.blog.editor.mediaAdd}
+                onChange={(event) => {
+                  const files = [...(event.target.files ?? [])];
+                  event.target.value = "";
+                  void addFiles(files);
+                }}
+              />
+            </label>
+
+            {pendingAttachments && (
+              <p className="text-xs font-normal text-text-subtle">
+                {texts.blog.editor.mediaPending}
+              </p>
+            )}
+          </div>
 
           {!post && (
             <label className="flex items-start gap-2 text-xs font-normal text-text-subtle">

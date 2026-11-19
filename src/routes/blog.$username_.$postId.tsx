@@ -14,9 +14,11 @@ import { resolveCdnUrl } from "@/lib/api/media";
 import { blogReadingMinutes } from "@/lib/blog-reading-time";
 import { formatarData } from "@/lib/date/format";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
+import { blogMediaQuery } from "@/lib/media-upload/vlog-media";
 import { buildShareTags } from "@/lib/open-graph";
 
 import { AppContainer } from "@/components/app-container";
+import { MediaGrid } from "@/components/post/media-grid";
 import { PostActions } from "@/components/post/post-actions";
 import { PostComments } from "@/components/post/post-comments";
 import { ReactionsSummary } from "@/components/post/reactions-summary";
@@ -206,6 +208,9 @@ function BlogPostPage() {
             </p>
           </header>
 
+          {/* Vlog: fotos e vídeos do post (o vídeo toca aqui mesmo) antes do texto. */}
+          <BlogMedia mediaIds={post.mediaIds ?? []} />
+
           {post.bodyFormat === "HTML" ? (
             <SandboxedHtmlFrame
               html={post.body}
@@ -260,5 +265,16 @@ function BlogPostPage() {
         onConfirm={() => deletePost.mutate()}
       />
     </AppContainer>
+  );
+}
+
+/** Fotos e vídeos do post do blog: a mesma grade do feed, buscada pela lista de mídias do post. */
+function BlogMedia({ mediaIds }: { mediaIds: string[] }) {
+  const { data } = useQuery(blogMediaQuery(mediaIds));
+  if (mediaIds.length === 0) return null;
+  return (
+    <div className="px-3 pt-3 sm:px-5 sm:pt-5">
+      <MediaGrid mediaIds={mediaIds} known={data ?? []} />
+    </div>
   );
 }
