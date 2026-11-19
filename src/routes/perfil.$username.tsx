@@ -507,6 +507,11 @@ function Profile() {
 
           <ProfileCard
             profile={{ ...profileCardData(user, renderedNameStyle), bio: null }}
+            onAvatarClick={
+              isOwnProfile && avatarUpload.status !== "uploading"
+                ? () => avatarRef.current?.click()
+                : undefined
+            }
             bannerSlot={
               user.bannerHtml ? (
                 // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.
