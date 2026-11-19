@@ -76,13 +76,8 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
     quarantineReason: node.quarantineReason,
-    // O DS publicado (0.39.x) ainda não declara o tráfego; o 0.40.0, com a PR #336, declara — mas
-    // `qa` do DS está em 0.40.0 SEM tag, então nada foi publicado. O cast some quando a dependência
-    // subir para a 0.40.0 publicada. O tipo local do teste faz o mesmo do outro lado.
-    ...({
-      trafficInMb: node.trafficInMb,
-      trafficOutMb: node.trafficOutMb,
-    } as Partial<NetworkNodeData>),
+    trafficInMb: node.trafficInMb,
+    trafficOutMb: node.trafficOutMb,
   };
 }
 
