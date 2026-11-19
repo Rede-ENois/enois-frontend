@@ -24,6 +24,7 @@ import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
 import { Route as DesabafosRouteImport } from './routes/desabafos'
+import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as EmpresasRouteImport } from './routes/empresas'
@@ -173,6 +174,11 @@ const DenunciasRoute = DenunciasRouteImport.update({
 const DesabafosRoute = DesabafosRouteImport.update({
   id: '/desabafos',
   path: '/desabafos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesafiosRoute = DesafiosRouteImport.update({
+  id: '/desafios',
+  path: '/desafios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevelopersRoute = DevelopersRouteImport.update({
@@ -570,6 +576,7 @@ export interface FileRoutesByFullPath {
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
+  '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -662,6 +669,7 @@ export interface FileRoutesByTo {
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
+  '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -755,6 +763,7 @@ export interface FileRoutesById {
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
+  '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -849,6 +858,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/denuncias'
     | '/desabafos'
+    | '/desafios'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -941,6 +951,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/denuncias'
     | '/desabafos'
+    | '/desafios'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -1033,6 +1044,7 @@ export interface FileRouteTypes {
     | '/contato'
     | '/denuncias'
     | '/desabafos'
+    | '/desafios'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -1126,6 +1138,7 @@ export interface RootRouteChildren {
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
   DesabafosRoute: typeof DesabafosRoute
+  DesafiosRoute: typeof DesafiosRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
   EmpresasRoute: typeof EmpresasRoute
@@ -1293,6 +1306,13 @@ declare module '@tanstack/react-router' {
       path: '/desabafos'
       fullPath: '/desabafos'
       preLoaderRoute: typeof DesabafosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desafios': {
+      id: '/desafios'
+      path: '/desafios'
+      fullPath: '/desafios'
+      preLoaderRoute: typeof DesafiosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developers': {
@@ -1994,6 +2014,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
   DesabafosRoute: DesabafosRoute,
+  DesafiosRoute: DesafiosRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
   EmpresasRoute: EmpresasRoute,

@@ -181,6 +181,7 @@ export const texts = {
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
       desabafos: { label: "Desabafos", description: "Um espaço acolhedor para desabafar" },
       confessionario: { label: "Confessionário", description: "Histórias anônimas para contar" },
+      desafios: { label: "Desafios", description: "Convites da comunidade com reconhecimento" },
       termometro: {
         label: "Termômetro",
         description: "O clima coletivo medido pelo que a comunidade publica",
@@ -253,6 +254,34 @@ export const texts = {
     removeCommentDone: "Comentário removido.",
     removeError: "Não foi possível remover. Tente de novo.",
     reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota dos Desafios orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  desafios: {
+    seoTitle: "Desafios · Énóis",
+    title: "Desafios",
+    subtitle:
+      "Convites da comunidade: alguém convoca, a galera responde no mural e quem convocou encerra reconhecendo uma participação. Autoria nominal, sem ranking e sem prêmio.",
+    publishSuccess: "Desafio convocado.",
+    publishError: "Não foi possível convocar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 3000 caracteres.",
+    deadlineInvalidError: "O prazo precisa ser uma data futura (até 31 dias).",
+    removeDone: "Desafio removido.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    closeDone: "Desafio encerrado com reconhecimento.",
+    closeError: "Não foi possível encerrar. Tente de novo.",
+    participateSuccess: "Participação enviada.",
+    participateError: "Não foi possível participar. Tente de novo.",
+    contentTooLongError: "A participação aceita no máximo 2000 caracteres.",
+    contentEmptyError: "Escreva sua participação antes de enviar.",
+    closedError: "Este desafio não recebe mais participação.",
+    ownChallengeError: "Quem convocou não participa do próprio desafio.",
+    removeParticipacaoDone: "Participação removida.",
+    removeParticipacaoError: "Não foi possível remover a participação. Tente de novo.",
+    cheerError: "Não foi possível torcer. Tente de novo.",
   },
 
   /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */

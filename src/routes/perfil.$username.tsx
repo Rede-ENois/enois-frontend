@@ -507,6 +507,9 @@ function Profile() {
 
           <ProfileCard
             profile={{ ...profileCardData(user, renderedNameStyle), bio: null }}
+            // Próprio perfil: a foto vira botão e abre o mesmo recorte/upload do menu. Em perfil
+            // alheio a prop não entra — o avatar continua sendo só a imagem.
+            onAvatarClick={isOwnProfile ? () => avatarRef.current?.click() : undefined}
             bannerSlot={
               user.bannerHtml ? (
                 // Só o embed oficial recebe scripts; HTML arbitrário continua no sandbox sem scripts.

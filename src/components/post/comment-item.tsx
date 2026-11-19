@@ -30,6 +30,8 @@ import { RichText } from "./rich-text";
 /** Um comentário (com responder, reagir e excluir). */
 export function CommentItem({
   comment,
+  commentDomId,
+  highlighted,
   replyingTo,
   postAuthorId,
   onPinChanged,
@@ -170,6 +172,8 @@ export function CommentItem({
   return (
     <CommentItemView
       comment={comment}
+      commentDomId={commentDomId}
+      highlighted={highlighted}
       content={content}
       edited={Boolean(editedAt)}
       // Nome e foto levam ao perfil de quem comentou (quando o perfil existe).

@@ -76,6 +76,8 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
     quarantineReason: node.quarantineReason,
+    trafficInMb: node.trafficInMb,
+    trafficOutMb: node.trafficOutMb,
   };
 }
 
