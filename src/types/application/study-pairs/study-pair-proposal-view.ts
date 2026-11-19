@@ -1,6 +1,7 @@
 import type { StudyPairIcebreakerAnswers } from "./study-pair-icebreaker-answers";
 import type { StudyPairPartnerView } from "./study-pair-partner-view";
 
+/** Uma proposta de par como o app recebe do servidor, antes de virar o que a tela desenha. */
 export type StudyPairProposalView = {
   id: string;
   goal: string;

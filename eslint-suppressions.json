@@ -299,14 +299,9 @@
       "count": 25
     }
   },
-  "src/components/study-pairs/study-pair-proposals.tsx": {
-    "local/no-front-markup": {
-      "count": 56
-    }
-  },
   "src/components/study-pairs/study-pairs.tsx": {
     "local/no-front-markup": {
-      "count": 6
+      "count": 3
     }
   },
   "src/components/suggestion-form.tsx": {

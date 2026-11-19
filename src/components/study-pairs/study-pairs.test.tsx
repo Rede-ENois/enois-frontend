@@ -38,11 +38,18 @@ vi.mock("@rede-enois/design-system/domain", () => ({
     mocks.props = props;
     return null;
   },
+  // O componente de propostas tem os próprios testes no DS; aqui só o canal de dados importa.
+  StudyPairProposals: () => null,
 }));
 vi.mock("@rede-enois/design-system/ui", () => ({
   useToast: () => ({ toast: mocks.toast }),
   Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+  PillRow: ({ label, children }: { label: string; children?: React.ReactNode }) => (
+    <div role="group" aria-label={label}>
+      {children}
+    </div>
+  ),
 }));
 vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
 vi.mock("@/lib/api", () => ({
@@ -216,7 +223,7 @@ describe("StudyPairs container", () => {
     mocks.openDirect.mockResolvedValue({ id: "conv_1" });
 
     const botao = [...host.querySelectorAll("button")].find(
-      (b) => b.getAttribute("aria-label") === "Mandar mensagem: Ada",
+      (b) => b.textContent === texts.studyPairs.message,
     );
     await act(async () => botao!.click());
     await settle();
@@ -232,7 +239,7 @@ describe("StudyPairs container", () => {
   it("warns when the conversation cannot be opened", async () => {
     mocks.openDirect.mockRejectedValue(new Error("offline"));
     const botao = [...host.querySelectorAll("button")].find(
-      (b) => b.getAttribute("aria-label") === "Mandar mensagem: Ada",
+      (b) => b.textContent === texts.studyPairs.message,
     );
     await act(async () => botao!.click());
     await settle();
