@@ -24,6 +24,7 @@ const MODULE_BY_KIND: Record<string, string> = {
   mentoring: "MENTORING",
   jogo_diario: "DAILY_GAMES",
   new_game: "COMMUNITY_GAMES",
+  new_community_project: "COMMUNITY_PROJECTS",
   new_blog_post: "BLOGS",
 };
 
