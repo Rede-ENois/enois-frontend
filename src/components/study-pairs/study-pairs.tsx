@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { POST_TOPICS } from "@/constants/community-topics";
 import { texts } from "@/texts";
@@ -12,11 +13,13 @@ import {
 } from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
 
-import { studyPairsApi } from "@/lib/api";
+import { messagesApi, studyPairsApi } from "@/lib/api";
+import { conversationErrorMessage } from "@/lib/conversation-error";
 import { studyPairsErrorCode, toStudyPair, topicLabel } from "@/lib/study-pairs/to-study-pair";
 import { useReenableModule } from "@/lib/use-personalization";
 
 import { GoalSearch } from "./goal-search";
+import { StudyPairProposals } from "./study-pair-proposals";
 
 const ME_KEY = ["study-pairs", "me"] as const;
 const POPULAR_KEY = ["study-pairs", "popular"] as const;
@@ -37,6 +40,7 @@ export function StudyPairs() {
   // Chips are a nice-to-have: a failure just hides them.
   const popular = useQuery({ queryKey: POPULAR_KEY, queryFn: () => studyPairsApi.popularGoals() });
 
+  const navigate = useNavigate();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["study-pairs"] });
 
   const request = useMutation({
@@ -85,10 +89,21 @@ export function StudyPairs() {
     onError: () => toast(texts.studyPairs.endError, "error"),
   });
 
+  const openConversation = useMutation({
+    mutationFn: (userId: string) => messagesApi.openDirect(userId),
+    onSuccess: (conversation) => {
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      void navigate({ to: "/mensagens", search: { conversation: conversation.id } });
+    },
+    onError: (error) => toast(conversationErrorMessage(error), "error"),
+  });
+  const openingPartnerId = openConversation.isPending ? openConversation.variables : null;
+
   const data = me.data;
 
   return (
     <div className="space-y-4">
+      <StudyPairProposals proposals={data?.proposals ?? []} />
       <GoalSearch
         disabled={request.isPending}
         onRequest={(goal, topic) => request.mutate({ goal, topic })}
@@ -131,6 +146,25 @@ export function StudyPairs() {
         onEndPair={(pairId) => endPair.mutate(pairId)}
         endingPairId={endPair.isPending ? endPair.variables : null}
       />
+      {/* O par ativo sai do ritual semanal para a conversa: abre a conversa direta com a pessoa. */}
+      {(data?.pairs ?? []).length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {data!.pairs.map((pair) => (
+            <Button
+              key={pair.id}
+              type="button"
+              size="sm"
+              variant="outline"
+              className="rounded-full"
+              aria-label={`${texts.studyPairs.message}: ${pair.partner.name}`}
+              disabled={openingPartnerId !== null}
+              onClick={() => openConversation.mutate(pair.partner.id)}
+            >
+              {texts.studyPairs.message}
+            </Button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

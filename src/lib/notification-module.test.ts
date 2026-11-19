@@ -25,6 +25,9 @@ describe("moduleForNotification", () => {
   it("study pair notifications belong to STUDY_PAIRS", () => {
     for (const kind of [
       "STUDY_PAIR_MATCHED",
+      "STUDY_PAIR_PROPOSED",
+      "STUDY_PAIR_ACCEPTED",
+      "STUDY_PAIR_DECLINED",
       "STUDY_PAIR_CHECKIN",
       "STUDY_PAIR_ENDED",
       "STUDY_PAIR_REMINDER",

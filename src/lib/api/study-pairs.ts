@@ -1,6 +1,8 @@
 import type { MyStudyPairs } from "@/types/application/study-pairs/my-study-pairs";
 import type { PopularStudyGoals } from "@/types/application/study-pairs/popular-study-goals";
 import type { StudyPairCheckinView } from "@/types/application/study-pairs/study-pair-checkin-view";
+import type { StudyPairIcebreakerAnswers } from "@/types/application/study-pairs/study-pair-icebreaker-answers";
+import type { StudyPairIcebreakerField } from "@/types/application/study-pairs/study-pair-icebreaker-field";
 import type { StudyPairRequestResult } from "@/types/application/study-pairs/study-pair-request-result";
 import type { StudyPairSearchResult } from "@/types/application/study-pairs/study-pair-search-result";
 
@@ -22,6 +24,21 @@ export const studyPairsApi = {
 
   cancelRequest: () =>
     api.delete<{ id: string; status: "CANCELLED" }>("/study-pairs/requests/current"),
+
+  /** Perguntas do quebra-gelo, na ordem em que o aceite as faz. */
+  icebreakers: () => api.get<{ items: StudyPairIcebreakerField[] }>("/study-pairs/icebreakers"),
+
+  /** Aceita a proposta; as respostas viram o quebra-gelo que a outra pessoa vai ler. */
+  accept: (pairId: string, answers: StudyPairIcebreakerAnswers) =>
+    api.post<{ pairActive: boolean }>(`/study-pairs/${encodeURIComponent(pairId)}/accept`, {
+      answers,
+    }),
+
+  /** Recusa a proposta; quem não recusou volta para a fila na posição original. */
+  decline: (pairId: string) =>
+    api.post<{ id: string; status: "DECLINED" }>(
+      `/study-pairs/${encodeURIComponent(pairId)}/decline`,
+    ),
 
   checkin: (pairId: string, note: string) =>
     api.post<StudyPairCheckinView>(`/study-pairs/${encodeURIComponent(pairId)}/checkins`, {
