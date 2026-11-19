@@ -1651,6 +1651,7 @@ export const texts = {
       error: "Não foi possível enviar a denúncia. Tente de novo.",
     },
     reposted: "Republicado no seu perfil.",
+    repostedCommunity: "Republicado na comunidade.",
     alreadyReposted: "Você já republicou este post.",
     repostRemoved: "Republicação removida.",
     repostError: "Não foi possível republicar.",

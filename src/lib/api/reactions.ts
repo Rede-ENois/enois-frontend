@@ -45,6 +45,12 @@ export const reactionsApi = {
   /** Republica no próprio feed; `opinion` (até 600) transforma em repost com comentário. */
   repost: (postId: string, opinion?: string) =>
     api.post<unknown>(`/feed/posts/${postId}/repost`, opinion ? { opinion } : {}),
+  /**
+   * Republica no mural de uma comunidade em que a pessoa participa: exige comentário
+   * (o backend recusa comunidade sem opinião com 400 COMMUNITY_REQUIRES_OPINION).
+   */
+  repostToCommunity: (postId: string, communityId: string, opinion: string) =>
+    api.post<unknown>(`/feed/posts/${postId}/repost`, { communityId, opinion }),
 
   /** Desfaz o repost puro (remove o ponteiro, não o post original). */
   undoRepost: (postId: string) => api.delete<unknown>(`/feed/posts/${postId}/repost`),
