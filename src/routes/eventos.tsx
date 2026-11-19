@@ -8,6 +8,7 @@ import type { PageResponse } from "@/types/application/api/page-response";
 import type { CreateEventRequest } from "@/types/application/event/create-event-request";
 import type { Event } from "@/types/application/event/event";
 import type { EventRecurrence } from "@/types/application/event/event-recurrence";
+import type { EventConflictCheck } from "@/types/routes/events/event-conflict-check";
 import type { EventFormProps } from "@/types/routes/events/event-form-props";
 import type { EventListsSnapshot } from "@/types/routes/events/event-lists-snapshot";
 import type { FieldProps } from "@/types/routes/events/field-props";
@@ -36,9 +37,10 @@ import {
 } from "@rede-enois/design-system/ui";
 import { Calendar, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 
-import { eventsApi } from "@/lib/api";
+import { calendarApi, eventsApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { resolveCdnUrl } from "@/lib/api/media";
+import { dataHora } from "@/lib/date/format";
 import { requireAuth } from "@/lib/require-auth";
 import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -81,6 +83,21 @@ function recurrenceErrorMessage(error: unknown): string {
   return texts.events.recurrence.updateError;
 }
 
+/**
+ * O horário do evento como hora de calendário do app. O card mostra `date` + `time` nesse fuso, e é
+ * essa a hora que a janela de conflito precisa: ler no fuso do navegador deslocaria o aviso.
+ */
+function startOfEvent({ date, time }: EventConflictCheck): Date | null {
+  if (!date || !time) return null;
+  const start = new Date(`${date}T${time}:00-03:00`);
+  return Number.isNaN(start.getTime()) ? null : start;
+}
+
+/** Um compromisso aparece pelo nome dele; vários, pelo primeiro e pela contagem. */
+function conflictsLabel(occurrences: number, first: string): string {
+  return occurrences === 1 ? first : texts.events.conflictsMany(occurrences, first);
+}
+
 export const Route = createFileRoute("/eventos")({
   validateSearch: (search: Record<string, unknown>): { evento?: string } => ({
     evento:
@@ -105,6 +122,11 @@ function Eventos() {
   // Dono do evento: editar (o formulário é o mesmo da criação) e excluir com confirmação.
   const [editing, setEditing] = useState<Event | null>(null);
   const [deleting, setDeleting] = useState<Event | null>(null);
+  // Evento em que a pessoa clicou "Vou participar" e a agenda acusou outro compromisso na mesma
+  // hora. O aviso é de decisão: a confirmação só sai depois do "vou mesmo assim".
+  const [conflicting, setConflicting] = useState<{ event: Event; what: string; at: string } | null>(
+    null,
+  );
 
   const {
     data: eventsData,
@@ -151,6 +173,45 @@ function Eventos() {
 
   const rollback = (context: { previous: EventListsSnapshot } | undefined) =>
     context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+
+  /**
+   * Confirma a presença, mas antes olha a agenda: um evento vira compromisso na hora que a pessoa
+   * confirma, então dois eventos no mesmo horário disputam o mesmo espaço. O aviso não bloqueia —
+   * sobrepor de propósito é permitido —, só evita a descoberta depois, na agenda.
+   *
+   * A consulta é a mesma da agenda (`/calendar/entries/conflicts`). Se ela falhar, a presença segue:
+   * um aviso que não carregou não pode impedir a pessoa de participar.
+   */
+  const confirmAttendance = async (event: Event) => {
+    let found: { what: string; at: string } | null = null;
+    if (event.date && event.time && !event.attending) {
+      const start = startOfEvent(event);
+      const end = start ? new Date(start.getTime() + 60 * 60_000) : null;
+      if (start && end) {
+        try {
+          const conflicts = await calendarApi.conflicts({
+            from: start.toISOString(),
+            to: end.toISOString(),
+          });
+          const live = conflicts.filter((item) => !item.entry.cancelledAt);
+          const first = live[0];
+          if (first) {
+            found = {
+              what: conflictsLabel(live.length, first.entry.title),
+              at: dataHora(start.toISOString()),
+            };
+          }
+        } catch {
+          found = null;
+        }
+      }
+    }
+    if (found) {
+      setConflicting({ event, ...found });
+      return;
+    }
+    attend.mutate(event.id);
+  };
 
   const attend = useMutation({
     mutationFn: (eventId: string) => eventsApi.attend(eventId),
@@ -317,7 +378,7 @@ function Eventos() {
                   attendancePending={attendancePending}
                   onAttend={() => {
                     requireAuth();
-                    attend.mutate(e.id);
+                    void confirmAttendance(e);
                   }}
                   onCancelAttend={() => {
                     requireAuth();
@@ -401,6 +462,21 @@ function Eventos() {
           destructive
           pending={deleteEvent.isPending}
           onConfirm={() => deleting && deleteEvent.mutate(deleting.id)}
+        />
+        <ConfirmDialog
+          open={conflicting !== null}
+          onOpenChange={(open) => !open && setConflicting(null)}
+          title={texts.events.conflictTitle}
+          description={
+            conflicting ? texts.events.conflictDescription(conflicting.at, conflicting.what) : ""
+          }
+          cancelLabel={texts.events.conflictCancel}
+          confirmLabel={texts.events.conflictConfirm}
+          onConfirm={() => {
+            const pending = conflicting;
+            setConflicting(null);
+            if (pending) attend.mutate(pending.event.id);
+          }}
         />
       </div>
     </AppContainer>

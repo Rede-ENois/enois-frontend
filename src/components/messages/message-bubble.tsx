@@ -1,4 +1,4 @@
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
 import type { MessageBubbleProps } from "@/types/routes/messages/message-bubble-props";
 import { MessageBubble as MessageBubbleView } from "@rede-enois/design-system/domain";
@@ -34,7 +34,7 @@ export function MessageBubble({
       isMe={isMe}
       peer={peer}
       profileHref={profileHref}
-      emojis={REACTION_EMOJIS}
+      emojis={REACTION_FIGURE_EMOJIS}
       timeLabel={formatTime(message.time)}
       replyQuote={replyQuote}
       content={

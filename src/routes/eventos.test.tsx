@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   remove: vi.fn(),
+  conflicts: vi.fn(),
+  attend: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -22,17 +24,22 @@ vi.mock("@tanstack/react-router", () => ({
     useSearch: () => mocks.search,
   }),
 }));
-vi.mock("@/lib/api", () => ({
-  eventsApi: {
-    list: mocks.list,
-    setRecurrence: mocks.setRecurrence,
-    create: mocks.create,
-    attend: vi.fn(),
-    cancelAttendance: vi.fn(),
-    update: mocks.update,
-    remove: mocks.remove,
-  },
-}));
+vi.mock("@/lib/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/api")>();
+  return {
+    ...actual,
+    eventsApi: {
+      list: mocks.list,
+      setRecurrence: mocks.setRecurrence,
+      create: mocks.create,
+      attend: mocks.attend,
+      cancelAttendance: vi.fn(),
+      update: mocks.update,
+      remove: mocks.remove,
+    },
+    calendarApi: { conflicts: mocks.conflicts },
+  };
+});
 vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
 vi.mock("@/components/app-container", () => ({
   AppContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -269,6 +276,104 @@ describe("/eventos", () => {
     await open();
     expect(mocks.remove).toHaveBeenCalledTimes(2);
     expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  describe("alerta de conflito antes de confirmar presença", () => {
+    // O mesmo evento que o calendário guarda quando a presença é confirmada: título, começo e fim.
+    const entry = (title: string, cancelledAt: string | null = null) => ({
+      entry: {
+        id: `cal-${title}`,
+        scope: "SOCIAL" as const,
+        kind: "EVENT" as const,
+        title,
+        description: null,
+        startsAt: "2026-11-06T22:00:00Z",
+        endsAt: "2026-11-06T23:00:00Z",
+        timeZoneId: "America/Sao_Paulo",
+        allDay: false,
+        cancelledAt,
+      },
+      owner: true,
+      participation: null,
+    });
+
+    const attendButton = () =>
+      [...host.querySelectorAll("button")].find((b) => b.textContent === "Confirmar presença")!;
+
+    const open = async () => {
+      await act(async () => attendButton().click());
+      await settle();
+      await settle();
+    };
+
+    beforeEach(() => {
+      mocks.list.mockResolvedValue({ items: [event({})], nextCursor: null });
+      mocks.attend.mockResolvedValue({ status: "OK" });
+    });
+
+    it("avisa e só confirma depois do 'vou mesmo assim'", async () => {
+      mocks.conflicts.mockResolvedValue([entry("Reunião do núcleo")]);
+      await render();
+
+      await open();
+
+      expect(mocks.conflicts).toHaveBeenCalledWith({
+        from: "2026-11-06T22:00:00.000Z",
+        to: "2026-11-06T23:00:00.000Z",
+      });
+      const dialog = document.querySelector('[role="dialog"]')!;
+      expect(dialog.textContent).toContain("Outro compromisso nesse horário");
+      expect(dialog.textContent).toContain("Reunião do núcleo");
+      // O aviso não confirma sozinho: nada foi para o servidor enquanto o diálogo está aberto.
+      expect(mocks.attend).not.toHaveBeenCalled();
+
+      const cancel = [...dialog.querySelectorAll("button")].find(
+        (b) => b.textContent === "Deixa para depois",
+      )!;
+      await act(async () => cancel.click());
+      await settle();
+      expect(mocks.attend).not.toHaveBeenCalled();
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+
+      // Na segunda tentativa a pessoa decide seguir mesmo assim.
+      mocks.conflicts.mockResolvedValue([entry("Reunião do núcleo")]);
+      await open();
+      const confirm = [
+        ...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'),
+      ].find((b) => b.textContent === "Vou mesmo assim")!;
+      await act(async () => confirm.click());
+      await settle();
+      expect(mocks.attend).toHaveBeenCalledWith("ev-1");
+    });
+
+    it("confirma direto quando a agenda está livre", async () => {
+      mocks.conflicts.mockResolvedValue([]);
+      await render();
+
+      await open();
+
+      expect(mocks.attend).toHaveBeenCalledWith("ev-1");
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
+
+    it("compromisso cancelado não conta como conflito", async () => {
+      mocks.conflicts.mockResolvedValue([entry("Reunião cancelada", "2026-11-01T12:00:00Z")]);
+      await render();
+
+      await open();
+
+      expect(mocks.attend).toHaveBeenCalledWith("ev-1");
+    });
+
+    it("agenda fora do ar não impede a presença", async () => {
+      mocks.conflicts.mockRejectedValue(new Error("boom"));
+      await render();
+
+      await open();
+
+      expect(mocks.attend).toHaveBeenCalledWith("ev-1");
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
   });
 
   it("does not create a recurring event without a time", async () => {

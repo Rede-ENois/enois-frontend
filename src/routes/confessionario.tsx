@@ -22,6 +22,7 @@ import { PageHeader, useToast } from "@rede-enois/design-system/ui";
 import { z } from "zod";
 
 import { confessionarioApi } from "@/lib/api";
+import { getEnoisEmojiByCode } from "@/lib/emotes/enois-pack";
 import { requireAuth } from "@/lib/require-auth";
 
 import { AppContainer } from "@/components/app-container";
@@ -139,6 +140,8 @@ function ConfissaoCardAberta({
   aberto: boolean;
   onAbrir: (postId: string | null) => void;
 }) {
+  // A surpresa do confessionário é o Chocado do pacote É Nóis; sem o pacote, o DS fica no glifo.
+  const reactionIcons = { WOW: { src: getEnoisEmojiByCode("enois_wow")?.src ?? "" } };
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [denuncia, setDenuncia] = useState(false);
@@ -218,6 +221,7 @@ function ConfissaoCardAberta({
       <ConfessionarioCard
         post={post}
         commentsOpen={aberto}
+        reactionIcons={reactionIcons}
         comments={(comentarios.data?.items ?? []).map(paraComentario)}
         commentsState={estadoComentarios}
         onToggleComments={() => onAbrir(aberto ? null : post.id)}

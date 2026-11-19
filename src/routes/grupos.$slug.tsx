@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
 import type { GroupMember } from "@/types/application/group/group-member";
 import type { GroupPost } from "@/types/application/group/group-post";
@@ -819,14 +819,14 @@ export function GroupPostItem({
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-subtle">
         <ReactionPicker
-          emojis={REACTION_EMOJIS}
+          emojis={REACTION_FIGURE_EMOJIS}
           activeType={currentReaction}
           onReact={(type) => react.mutate(type)}
           buttonClassName="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-text-subtle transition hover:text-text-strong"
           buttonTitle={texts.groups.react}
         >
           {currentReaction ? (
-            <span aria-hidden="true">{REACTION_EMOJIS[currentReaction]}</span>
+            <span aria-hidden="true">{REACTION_FIGURE_EMOJIS[currentReaction]}</span>
           ) : (
             <Smile className="h-4 w-4" />
           )}

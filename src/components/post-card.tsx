@@ -390,6 +390,7 @@ function PostCardContainer({
             isQuestion={post.type === "QUESTION"}
             acceptedCommentId={post.acceptedCommentId ?? null}
             highlightCommentId={highlightCommentId}
+            liveRefresh={fullPost}
           />
         ) : null
       }

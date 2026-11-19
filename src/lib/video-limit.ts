@@ -43,7 +43,7 @@ export async function checkVideoLimit(file: File): Promise<VideoLimitResult> {
  * quando o navegador não decodifica o arquivo (contêiner desconhecido ou metadados corrompidos):
  * nesse caso quem decide é o servidor.
  */
-function readDurationSeconds(file: File): Promise<number | null> {
+export function readDurationSeconds(file: File): Promise<number | null> {
   if (typeof document === "undefined") {
     return Promise.resolve(null);
   }

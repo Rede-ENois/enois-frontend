@@ -129,8 +129,15 @@ export function useMediaUpload() {
   // o conjunto, qualquer falha vence (issue #880).
   const pending = useRef(0);
   const firstError = useRef<string | null>(null);
+  // Cancelamento: abortar o XHR encerra o PUT na metade; o erro sobe como os outros e o
+  // compositor volta ao estado editável sem publicar nada pela metade.
+  const controllerRef = useRef<AbortController | null>(null);
+  // Progresso por bytes do PUT em curso: o mesmo controller serve para abortar a partir de
+  // qualquer instância do hook (o store compartilha o flag entre barra e pílulas).
+  controllerRef.current = controllerRef.current ?? new AbortController();
   const settle = useCallback((error?: string) => {
     pending.current = Math.max(0, pending.current - 1);
+    if (pending.current === 0) controllerRef.current = null;
     if (error && firstError.current === null) {
       firstError.current = error;
     }
@@ -146,6 +153,14 @@ export function useMediaUpload() {
     firstError.current = null;
     setState({ status: "uploading", progress: 0 });
   }, []);
+
+  const cancel = useCallback(() => {
+    controllerRef.current?.abort();
+  }, []);
+
+  // Progresso de um conjunto de arquivos: bytes do arquivo i + arquivos já completos.
+  const progressFor = (i: number, total: number, fracao: number) =>
+    Math.round(((i + Math.min(1, Math.max(0, fracao))) / total) * 100);
 
   const upload = useCallback(
     async (rawFile: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
@@ -178,7 +193,13 @@ export function useMediaUpload() {
             "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
           );
         }
-        await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
+        await mediaApi.uploadToSignedUrl(
+          uploadUrl,
+          file,
+          uploadHeaders ?? {},
+          (fracao) => setState({ status: "uploading", progress: progressFor(0, 1, fracao) }),
+          controllerRef.current?.signal,
+        );
 
         settle();
         return { mediaId: id, cdnUrl };
@@ -225,7 +246,14 @@ export function useMediaUpload() {
               "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
             );
           }
-          await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
+          await mediaApi.uploadToSignedUrl(
+            uploadUrl,
+            file,
+            uploadHeaders ?? {},
+            (fracao) =>
+              setState({ status: "uploading", progress: progressFor(i, files.length, fracao) }),
+            controllerRef.current?.signal,
+          );
           results.push({ mediaId: id, cdnUrl });
           setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
         }
@@ -241,5 +269,5 @@ export function useMediaUpload() {
     [begin, settle],
   );
 
-  return { ...state, upload, uploadAll };
+  return { ...state, upload, uploadAll, cancel };
 }

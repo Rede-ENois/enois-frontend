@@ -29,6 +29,7 @@ import {
   subscriptionDoPush,
 } from "@/lib/push-navigation";
 import { registerServiceWorker } from "@/lib/pwa";
+import { useReactionPickerNav } from "@/lib/reactions/reaction-picker-nav";
 import { useEnoisReactionGlyphs } from "@/lib/reactions/use-enois-reaction-glyphs";
 import { hasSession, isProtectedPath, shouldLeaveLanding } from "@/lib/require-auth";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme-bootstrap";
@@ -223,6 +224,7 @@ function RootInsideProvider() {
   useThemeSync();
   useScrollDirection();
   useEnoisReactionGlyphs();
+  useReactionPickerNav();
 
   useEffect(() => {
     registerServiceWorker();
