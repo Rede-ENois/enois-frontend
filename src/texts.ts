@@ -1520,6 +1520,12 @@ export const texts = {
       imageProhibitedTitle: "Imagem ocultada",
       imageProhibitedMessage:
         "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      /** Réplica no feed profissional (#723): a mesma publicação, assinada pelo perfil profissional. */
+      crossPost: {
+        byType:
+          "Para ir também ao feed profissional, use um tipo profissional: insight, projeto, oportunidade, tutorial ou artigo.",
+        noProfile: "Sem perfil profissional ativo, a publicação não vai ao feed profissional.",
+      },
       /** Limites de vídeo (issue #656): a checagem local avisa antes de o upload sair. */
       videoLimitTitle: "Vídeo grande demais",
       videoLimitSize: (mb: number, minutes: number) =>
