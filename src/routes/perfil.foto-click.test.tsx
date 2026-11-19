@@ -2,6 +2,7 @@
 import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
