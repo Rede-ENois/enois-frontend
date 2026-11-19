@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 
+import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -22,7 +23,11 @@ vi.mock("@/lib/oauth-callback", () => ({
   oauthCallbackUrl: vi.fn(),
 }));
 vi.mock("@/lib/api/auth", () => ({ authApi: { pendingTwoFactor: mocks.challenge } }));
-vi.mock("./entrar", () => ({ TwoFactorForm: () => <p>Segundo fator solicitado</p> }));
+vi.mock("./entrar", () => ({
+  TwoFactorForm: ({ onDone }: { onDone: () => void }) => (
+    <button onClick={onDone}>Segundo fator solicitado</button>
+  ),
+}));
 const { Route } = await import("./auth.callback");
 const Callback = (Route as unknown as { options: { component: () => React.JSX.Element } }).options
   .component;
@@ -66,6 +71,33 @@ describe("retorno OAuth de conta suspensa e fator pendente", () => {
     expect(mocks.finish).not.toHaveBeenCalled();
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(host.textContent).not.toContain("suspensa");
+  });
+  it("mostra erro recuperável quando a conclusão do login falha após o segundo fator", async () => {
+    mocks.search = { status: "two_factor_required" };
+    mocks.challenge.mockResolvedValue({
+      challengeId: "challenge_sintetico",
+      method: "TOTP",
+      expiresAt: "2026-01-01T13:00:00Z",
+    });
+    mocks.finish.mockResolvedValue(null);
+    await render();
+    expect(mocks.finish).not.toHaveBeenCalled();
+    const completeFactor = [...host.querySelectorAll("button")].find(
+      (button) => button.textContent === "Segundo fator solicitado",
+    );
+    expect(completeFactor).toBeDefined();
+    await act(async () => completeFactor?.click());
+    expect(mocks.finish).toHaveBeenCalledOnce();
+    expect(host.querySelector("h1")?.textContent).toBe(texts.auth.social.callbackError);
+    expect(host.textContent).not.toContain("Segundo fator solicitado");
+    const enter = [...host.querySelectorAll("button")].find(
+      (button) => button.textContent === texts.common.enter,
+    );
+    expect(enter).toBeDefined();
+    expect(enter?.disabled).toBe(false);
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    await act(async () => enter?.click());
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/entrar", search: { tab: "login" } });
   });
   it("apresenta falha explícita para desafio indisponível", async () => {
     mocks.search = { status: "two_factor_required" };

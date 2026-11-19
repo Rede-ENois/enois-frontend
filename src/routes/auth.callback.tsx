@@ -37,6 +37,7 @@ function OAuthCallback() {
   const handled = useRef(false);
   const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
   const finish = useCallback(() => {
+    setChallenge(null);
     void finishOAuthLogin().then((result) => {
       if (result && "accessScope" in result)
         void navigate({ to: "/conta-suspensa", replace: true });
