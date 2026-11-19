@@ -335,18 +335,23 @@ export function Home() {
   // página anterior, e não passeando pelas abas).
   const { aba, compor } = Route.useSearch();
   const navigate = Route.useNavigate();
-  // Interface profissional: o início É o feed corporativo (publicações de trabalho). Na social,
-  // o feed corporativo não aparece.
+  // Interface profissional: o início É o feed corporativo (publicações de trabalho). O feed social
+  // continua a uma aba de distância, nas duas interfaces.
   const context = useInterfaceContext();
   const professional = context === "PROFESSIONAL";
-  // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado, "Tudo".
+  // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado,
+  // "Tudo" na social e "Corporativo" na profissional.
   const {
     tab,
     setTab,
     ready: tabReady,
+    socialTab: lastSocialTab,
   } = useFeedTab(aba, professional, (next) => {
-    void navigate({ search: { aba: next }, replace: true });
+    void navigate({ search: next === null ? {} : { aba: next }, replace: true });
   });
+
+  // Dentro do corporativo o seletor volta para a aba social em que a pessoa estava.
+  const otherFeed: HomeTab = professional ? lastSocialTab : "CORPORATE";
   const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
@@ -1509,53 +1514,55 @@ export function Home() {
 
           {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
               tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
-              escolhido e abre a lista. Na interface profissional o feed é um só (o corporativo):
-              o título diz isso no lugar do seletor. */}
-          {professional ? (
+              escolhido e abre a lista. A lista traz as duas familias — o corporativo na social e a
+              aba social na profissional —, porque o feed profissional só era alcançado pelo
+              perfil (#723). */}
+          {professional && (
             <h2 className="text-sm font-medium text-text-strong">{texts.feed.tabs.corporate}</h2>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
-
-              <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={texts.feed.tabs.openList}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
-                  >
-                    {TAB_LABELS[tab]}
-
-                    <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
-                  </button>
-                </PopoverTrigger>
-
-                <PopoverContent align="start" className="w-56 p-1">
-                  <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
-                    {HOME_TABS.filter((opcao) => opcao !== "CORPORATE").map((opcao) => (
-                      <button
-                        key={opcao}
-                        type="button"
-                        onClick={() => {
-                          setTab(opcao);
-                          setMenuTipoFeed(false);
-                        }}
-                        aria-pressed={opcao === tab}
-                        className={cn(
-                          "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                          opcao === tab
-                            ? "bg-primary-soft text-primary"
-                            : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                        )}
-                      >
-                        {TAB_LABELS[opcao]}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
           )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
+
+            <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={texts.feed.tabs.openList}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
+                >
+                  {TAB_LABELS[tab]}
+
+                  <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
+                </button>
+              </PopoverTrigger>
+
+              <PopoverContent align="start" className="w-56 p-1">
+                <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
+                  {HOME_TABS.map((opcao) => (
+                    <button
+                      key={opcao}
+                      type="button"
+                      onClick={() => {
+                        setTab(opcao);
+                        setMenuTipoFeed(false);
+                      }}
+                      aria-pressed={opcao === tab}
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
+                        opcao === tab
+                          ? "bg-primary-soft text-primary"
+                          : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                      )}
+                    >
+                      {opcao === "CORPORATE" && !professional
+                        ? texts.feed.tabs.corporateHint
+                        : TAB_LABELS[opcao]}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {tab === "ALL" && (
             /* Doze tipos em `flex-wrap` ocupavam QUATRO linhas no celular antes de qualquer
