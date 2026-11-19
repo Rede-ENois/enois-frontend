@@ -26,7 +26,7 @@ import { marketplaceApi, themesApi } from "@/lib/api";
 import { formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { useListingTheme } from "@/lib/marketplace/use-listing-theme";
 import { registerGalleryCollection } from "@/lib/theme/gallery-collections";
-import { useIsAuthenticated } from "@/lib/use-auth";
+import { useAuth, useIsAuthenticated } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 
 import { ThemeSellDialog } from "@/components/appearance/theme-sell-dialog";
@@ -368,6 +368,10 @@ function ListingDetailsDialog({
   buying,
   buyFailed,
   onBuy,
+  mine,
+  usingMine,
+  useMineFailed,
+  onUseMine,
 }: {
   listing: MarketplaceListingView;
   packageJson: string | null | undefined;
@@ -376,8 +380,23 @@ function ListingDetailsDialog({
   buying: boolean;
   buyFailed: boolean;
   onBuy: () => void;
+  /** O tema listado é meu: aplicar não passa por compra. */
+  mine: boolean;
+  usingMine?: boolean;
+  useMineFailed?: boolean;
+  onUseMine?: () => void;
 }) {
   const description = listing.description?.trim();
+  const actionFailed = mine ? useMineFailed : buyFailed;
+  const actionError = mine ? texts.marketplace.useMineError : texts.marketplace.buyError;
+  const actionDisabled = mine ? usingMine : buying;
+  const actionLabel = mine
+    ? usingMine
+      ? texts.marketplace.usingMine
+      : texts.marketplace.useMine
+    : buying
+      ? texts.marketplace.buying
+      : texts.marketplace.buy;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -421,16 +440,22 @@ function ListingDetailsDialog({
               {formatFaisca(listing.price)}
             </span>
 
-            <p className="mt-1 text-xs text-text-subtle">{texts.marketplace.escrowHint}</p>
+            <p className="mt-1 text-xs text-text-subtle">
+              {mine ? texts.marketplace.mineHint : texts.marketplace.escrowHint}
+            </p>
 
-            {buyFailed && (
+            {actionFailed && (
               <p role="alert" className="mt-2 text-xs text-destructive">
-                {texts.marketplace.buyError}
+                {actionError}
               </p>
             )}
 
-            <Button className="mt-3 w-full rounded-full" disabled={buying} onClick={onBuy}>
-              {buying ? texts.marketplace.buying : texts.marketplace.buy}
+            <Button
+              className="mt-3 w-full rounded-full"
+              disabled={actionDisabled}
+              onClick={mine ? onUseMine : onBuy}
+            >
+              {actionLabel}
             </Button>
           </div>
         </div>
@@ -449,7 +474,13 @@ function ListingCard({
 }) {
   const theme = useListingTheme(listing);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const setThemeCollection = usePreferencesStore((state) => state.setThemeCollection);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  // A listagem é minha: comprar o próprio tema é barrado pela API, então o card oferece
+  // aplicar o pacote direto (sem faíscas, sem escrow).
+  const mine = !!user && user.id === listing.sellerId;
   const buy = useMutation({
     mutationFn: () => marketplaceApi.buy(listing.id),
     onSuccess: (result) => {
@@ -458,6 +489,34 @@ function ListingCard({
       onBought(result.purchaseId);
     },
   });
+  const useMine = useMutation({
+    mutationFn: async () => {
+      await marketplaceApi.ownerDownload(listing.id);
+      return themesApi.get(listing.itemId);
+    },
+    onSuccess: (listed) => {
+      const collection = registerGalleryCollection({
+        id: listed.id,
+        name: listed.name,
+        description: "",
+        packageJson: listed.packageJson,
+        modeDefault: listed.modeDefault,
+      });
+      setThemeCollection(collection.id);
+      toast("Tema aplicado!", "success");
+      setDetailsOpen(false);
+    },
+  });
+  const actionFailed = mine ? useMine.isError : buy.isError;
+  const actionError = mine ? texts.marketplace.useMineError : texts.marketplace.buyError;
+  const actionPending = mine ? useMine.isPending : buy.isPending;
+  const actionLabel = mine
+    ? useMine.isPending
+      ? texts.marketplace.usingMine
+      : texts.marketplace.useMine
+    : buy.isPending
+      ? texts.marketplace.buying
+      : texts.marketplace.buy;
   const description = listing.description?.trim();
 
   return (
@@ -517,19 +576,19 @@ function ListingCard({
             {formatFaisca(listing.price)}
           </span>
 
-          {buy.isError && !detailsOpen && (
+          {actionFailed && !detailsOpen && (
             <p role="alert" className="text-xs text-destructive">
-              {texts.marketplace.buyError}
+              {actionError}
             </p>
           )}
 
           <Button
             size="sm"
             className="w-full rounded-full"
-            disabled={buy.isPending}
-            onClick={() => buy.mutate()}
+            disabled={actionPending}
+            onClick={() => (mine ? useMine.mutate() : buy.mutate())}
           >
-            {buy.isPending ? texts.marketplace.buying : texts.marketplace.buy}
+            {actionLabel}
           </Button>
         </div>
       </div>
@@ -542,6 +601,10 @@ function ListingCard({
         buying={buy.isPending}
         buyFailed={buy.isError}
         onBuy={() => buy.mutate()}
+        mine={mine}
+        usingMine={useMine.isPending}
+        useMineFailed={useMine.isError}
+        onUseMine={() => useMine.mutate()}
       />
     </li>
   );
