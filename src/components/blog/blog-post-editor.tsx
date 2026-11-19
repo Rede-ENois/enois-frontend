@@ -7,8 +7,16 @@ import { texts } from "@/texts";
 import type { BlogPost } from "@/types/application/blog/blog-post";
 import type { BlogPostFormat } from "@/types/application/blog/blog-post-format";
 import type { VlogAttachment } from "@/types/media-upload/vlog-attachment";
-import { Button, Input, MetaLine, Pill, useToast } from "@rede-enois/design-system/ui";
-import { ArrowLeft, Eye, PenLine } from "lucide-react";
+import {
+  Button,
+  Input,
+  Label,
+  MetaLine,
+  PageHeader,
+  Pill,
+  Select,
+  useToast,
+} from "@rede-enois/design-system/ui";
 
 import { blogsApi } from "@/lib/api/blogs";
 import { feedApi } from "@/lib/api/feed";
@@ -264,23 +272,14 @@ export function BlogPostEditor({
   return (
     <AppContainer>
       <div className="space-y-4">
-        <Link
-          to="/blogs"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-text-strong"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
+        <Link to="/blogs">{texts.blog.title}</Link>
 
-          <>{texts.blog.title}</>
-        </Link>
-
-        <h1 className="text-xl font-semibold tracking-tight text-text-strong">
-          {post ? texts.blog.editor.editPost : texts.blog.newPost}
-        </h1>
+        <PageHeader title={post ? texts.blog.editor.editPost : texts.blog.newPost} />
 
         {!post && (title || body) && draftSaved !== null && (
-          <p role="status" className="text-xs text-text-subtle">
+          <MetaLine>
             {draftSaved ? texts.blog.editor.draftSaved : texts.blog.editor.draftSaveError}
-          </p>
+          </MetaLine>
         )}
 
         <div className="space-y-3">
@@ -303,19 +302,7 @@ export function BlogPostEditor({
 
             {format === "MARKDOWN" && (
               <Pill active={preview} onClick={() => setPreview((current) => !current)} size="md">
-                {preview ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <PenLine className="h-3.5 w-3.5" aria-hidden />
-
-                    <>{texts.blog.editor.write}</>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Eye className="h-3.5 w-3.5" aria-hidden />
-
-                    <>{texts.blog.editor.preview}</>
-                  </span>
-                )}
+                {preview ? texts.blog.editor.write : texts.blog.editor.preview}
               </Pill>
             )}
           </div>
@@ -340,7 +327,7 @@ export function BlogPostEditor({
                 />
               )}
 
-              <p className="text-xs font-normal text-text-subtle">{texts.blog.editor.textHint}</p>
+              <MetaLine>{texts.blog.editor.textHint}</MetaLine>
             </div>
           ) : (
             <HtmlEditor
@@ -360,9 +347,7 @@ export function BlogPostEditor({
           )}
 
           <div className="space-y-2">
-            <MetaLine>{texts.blog.editor.mediaTitle}</MetaLine>
-
-            <MetaLine>{texts.blog.editor.mediaHint}</MetaLine>
+            <MetaLine>{`${texts.blog.editor.mediaTitle} · ${texts.blog.editor.mediaHint}`}</MetaLine>
 
             {/* A lista é de Pills: cada anexo é o próprio controle — o enviado sai por um clique
                 (remover), o que falhou se clica para tentar de novo. */}
@@ -390,12 +375,6 @@ export function BlogPostEditor({
             {mediaError && (
               <Pill key="media-error" size="sm" onClick={() => setMediaError(null)}>
                 {mediaError}
-              </Pill>
-            )}
-
-            {pendingAttachments && (
-              <Pill key="media-pending" size="sm">
-                {texts.blog.editor.mediaPending}
               </Pill>
             )}
 
@@ -429,22 +408,19 @@ export function BlogPostEditor({
           </div>
 
           {!post && (
-            <label className="flex items-start gap-2 text-xs font-normal text-text-subtle">
-              <input
-                type="checkbox"
-                checked={avisar}
-                onChange={(event) => setAvisar(event.target.checked)}
-                className="mt-0.5"
-              />
+            <Label htmlFor="blog-notify-subscribers">{texts.blog.editor.notifySubscribers}</Label>
+          )}
 
-              <span>
-                <span className="block font-medium text-text-strong">
-                  {texts.blog.editor.notifySubscribers}
-                </span>
+          {!post && (
+            <Select
+              id="blog-notify-subscribers"
+              value={avisar ? "sim" : "nao"}
+              onChange={(event) => setAvisar(event.target.value === "sim")}
+            >
+              <option value="sim">{texts.blog.editor.notifySubscribersHint}</option>
 
-                {texts.blog.editor.notifySubscribersHint}
-              </span>
-            </label>
+              <option value="nao">{texts.blog.editor.notifySubscribersNo}</option>
+            </Select>
           )}
 
           {error && <p className="text-xs text-destructive">{error}</p>}

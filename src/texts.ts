@@ -1880,7 +1880,8 @@ export const texts = {
       mediaPending: "Espere os anexos em envio terminarem para salvar.",
       notifySubscribers: "Avisar os assinantes por e-mail",
       notifySubscribersHint:
-        "Quem assina o seu blog recebe um e-mail com este post (além da notificação no app). Dá para desativar só para este post.",
+        "Avisar os assinantes: quem assina o seu blog recebe um e-mail com este post (além da notificação no app).",
+      notifySubscribersNo: "Avisar os assinantes: não, só publicar no app.",
       updated: "Post atualizado.",
       editPost: "Editar post",
       deletePost: "Excluir post",
