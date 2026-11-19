@@ -23,7 +23,7 @@ function readHead(file: File): Promise<ArrayBuffer | null> {
     reader.onload = () => resolve(reader.result as ArrayBuffer);
     // Sem os primeiros bytes não há o que consertar: o servidor decide com o tipo vazio.
     reader.onerror = () => resolve(null);
-    reader.readAsArrayBuffer(file.slice(0, 12));
+    reader.readAsArrayBuffer(file.slice(0, 256));
   });
 }
 
@@ -31,13 +31,18 @@ function withType(file: File, type: string): File {
   return new File([file], file.name, { type, lastModified: file.lastModified });
 }
 
-/** Assinaturas dos formatos que o servidor aceita: PNG, JPEG, GIF e WEBP. */
+/** Assinaturas dos formatos que o servidor aceita: PNG, JPEG, GIF, WEBP e SVG. */
 function sniffImageType(head: Uint8Array): string | null {
-  if (head.length < 12) return null;
-  const ascii = (from: number, to: number) => String.fromCharCode(...head.slice(from, to));
-  if (head[0] === 0x89 && ascii(1, 4) === "PNG") return "image/png";
-  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return "image/jpeg";
-  if (ascii(0, 3) === "GIF") return "image/gif";
-  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  if (head.length >= 12) {
+    const ascii = (from: number, to: number) => String.fromCharCode(...head.slice(from, to));
+    if (head[0] === 0x89 && ascii(1, 4) === "PNG") return "image/png";
+    if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return "image/jpeg";
+    if (ascii(0, 3) === "GIF") return "image/gif";
+    if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  }
+  const text = new TextDecoder("utf-8", { fatal: false }).decode(head).trimStart().toLowerCase();
+  if (text.startsWith("<svg") || (text.startsWith("<?xml") && text.includes("<svg"))) {
+    return "image/svg+xml";
+  }
   return null;
 }

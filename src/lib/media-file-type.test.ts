@@ -37,9 +37,16 @@ describe("normalizeImageType — tipo vindo da área de transferência", () => {
     expect((await normalizeImageType(file)).type).toBe("image/jpeg");
   });
 
-  it("descobre GIF e WEBP pela assinatura quando não há tipo", async () => {
+  it("descobre GIF, WEBP e SVG pela assinatura quando não há tipo", async () => {
     expect((await normalizeImageType(new File([GIF], "a", { type: "" }))).type).toBe("image/gif");
     expect((await normalizeImageType(new File([WEBP], "a", { type: "" }))).type).toBe("image/webp");
+    expect(
+      (
+        await normalizeImageType(
+          new File(['<svg xmlns="http://www.w3.org/2000/svg"/>'], "a.svg", { type: "" }),
+        )
+      ).type,
+    ).toBe("image/svg+xml");
   });
 
   it("não inventa tipo: arquivo sem tipo e sem assinatura conhecida segue como veio", async () => {

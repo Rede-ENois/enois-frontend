@@ -245,7 +245,7 @@ function BlogPostPage() {
           ref={commentsRef}
           className="scroll-mt-24 overflow-hidden rounded-2xl border border-border-soft bg-surface-card"
         >
-          <PostComments postId={post.id} postAuthorId={feedPost?.authorId ?? ""} />
+          <PostComments postId={post.id} postAuthorId={feedPost?.authorId ?? ""} liveRefresh />
         </section>
       </div>
 

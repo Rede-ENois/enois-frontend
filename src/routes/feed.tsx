@@ -1354,9 +1354,15 @@ export function Home() {
                     </span>
                   )}
                   {!publishError && upload.status === "uploading" && (
-                    <span className="text-xs font-normal text-text-subtle">
-                      {texts.feed.composer.uploadProgress(upload.progress)}
-                    </span>
+                    // Clicável: aborta o PUT em curso. O progresso agora vem dos bytes reais
+                    // enviados (XHR onprogress), não só da contagem de arquivos concluídos.
+                    <button
+                      type="button"
+                      onClick={upload.cancel}
+                      className="cursor-pointer text-xs font-normal text-text-subtle underline-offset-2 hover:underline"
+                    >
+                      {texts.feed.composer.uploadProgress(upload.progress)} · {texts.common.cancel}
+                    </button>
                   )}
                   <Button
                     type="button"
