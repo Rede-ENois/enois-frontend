@@ -52,6 +52,10 @@ export const marketplaceApi = {
       {},
     ),
 
+  /** Tema do próprio autor: sem compra e sem escrow (o pacote já é dele). */
+  ownerDownload: (listingId: string) =>
+    api.post<{ status: string }>(`/marketplace/${listingId}/owner-download`, {}),
+
   /** Confirmou que está tudo certo: libera para o criador (−10% de taxa). */
   confirm: (purchaseId: string) =>
     api.post<{ purchaseId: string; state: string }>(

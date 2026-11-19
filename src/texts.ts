@@ -1,3 +1,5 @@
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
@@ -31,6 +33,7 @@ export const texts = {
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
     tabRecent: "Recentes",
+    tabEnois: "É Nóis",
     tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
@@ -177,6 +180,16 @@ export const texts = {
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
       desabafos: { label: "Desabafos", description: "Um espaço acolhedor para desabafar" },
+      confessionario: { label: "Confessionário", description: "Histórias anônimas para contar" },
+      desafios: { label: "Desafios", description: "Convites da comunidade com reconhecimento" },
+      termometro: {
+        label: "Termômetro",
+        description: "O clima coletivo medido pelo que a comunidade publica",
+      },
+      papoReto: {
+        label: "Papo Reto",
+        description: "Os assuntos que a rede está conversando agora",
+      },
       murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
       colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
@@ -211,7 +224,7 @@ export const texts = {
     publishError: "Não foi possível publicar. Tente de novo.",
     rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
     restrictedError: "Sua conta está restrita e não pode publicar aqui.",
-    contentTooLongError: "O desabafo aceita no máximo 1000 caracteres.",
+    contentTooLongError: "O desabafo aceita no máximo 5000 caracteres.",
     removeDone: "Desabafo removido.",
     commentSuccess: "Acolhida enviada.",
     commentError: "Não foi possível acolher. Tente de novo.",
@@ -220,6 +233,73 @@ export const texts = {
     removeCommentDone: "Acolhida removida.",
     removeError: "Não foi possível remover. Tente de novo.",
     reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota do Confessionário orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  confessionario: {
+    seoTitle: "Confessionário · Énóis",
+    title: "Confessionário",
+    subtitle:
+      "Histórias anônimas para contar: experiências, situações constrangedoras e confissões. Ninguém fica sabendo quem contou — e nada daqui vai para o feed principal.",
+    publishSuccess: "História publicada.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    contentTooLongError: "A história aceita no máximo 5000 caracteres.",
+    removeDone: "História removida.",
+    commentSuccess: "Comentário enviado.",
+    commentError: "Não foi possível comentar. Tente de novo.",
+    commentTooLongError: "O comentário aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva um comentário antes de enviar.",
+    removeCommentDone: "Comentário removido.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota dos Desafios orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  desafios: {
+    seoTitle: "Desafios · Énóis",
+    title: "Desafios",
+    subtitle:
+      "Convites da comunidade: alguém convoca, a galera responde no mural e quem convocou encerra reconhecendo uma participação. Autoria nominal, sem ranking e sem prêmio.",
+    publishSuccess: "Desafio convocado.",
+    publishError: "Não foi possível convocar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 3000 caracteres.",
+    deadlineInvalidError: "O prazo precisa ser uma data futura (até 31 dias).",
+    removeDone: "Desafio removido.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    closeDone: "Desafio encerrado com reconhecimento.",
+    closeError: "Não foi possível encerrar. Tente de novo.",
+    participateSuccess: "Participação enviada.",
+    participateError: "Não foi possível participar. Tente de novo.",
+    contentTooLongError: "A participação aceita no máximo 2000 caracteres.",
+    contentEmptyError: "Escreva sua participação antes de enviar.",
+    closedError: "Este desafio não recebe mais participação.",
+    ownChallengeError: "Quem convocou não participa do próprio desafio.",
+    removeParticipacaoDone: "Participação removida.",
+    removeParticipacaoError: "Não foi possível remover a participação. Tente de novo.",
+    cheerError: "Não foi possível torcer. Tente de novo.",
+  },
+
+  /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  termometro: {
+    seoTitle: "Termômetro · Énóis",
+    title: "Termômetro",
+    subtitle:
+      "O clima coletivo da rede, medido a partir do que a comunidade já publicou. Ninguém responde nada aqui: o sistema lê o que é público e conta o conjunto. Só porcentagens, nunca quem escreveu.",
+    error: "Não foi possível abrir o Termômetro. Tente de novo.",
+  },
+
+  /** Textos que a rota do Papo Reto orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  papoReto: {
+    seoTitle: "Papo Reto · Énóis",
+    title: "Papo Reto",
+    subtitle:
+      "O que a rede está conversando, medido a partir do que já é público no feed. Ninguém responde nada aqui: o sistema lê os textos públicos e conta as expressões que nomeiam a conversa. Só assunto e contagem, nunca quem falou.",
+    error: "Não foi possível abrir o Papo Reto. Tente de novo.",
   },
 
   /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */
@@ -249,6 +329,14 @@ export const texts = {
     tirado: "Publicação tirada do mural.",
     naoAutorizado: "Só quem colou ou o dono do mural pode tirar a publicação.",
     naoEncontrado: "Esse mural não existe mais.",
+  },
+
+  /** Seletor "para onde vai este post", no menu do card (murais e coleções). */
+  postDestinos: {
+    acao: "Adicionar ao mural ou coleção",
+    colado: "Publicação colada no mural.",
+    guardado: "Publicação guardada na coleção.",
+    erro: "Não foi possível abrir os destinos. Tente de novo.",
   },
 
   /** Textos que a rota das Coleções orquestra (avisos e cabeçalho); o desenho vive no DS. */
@@ -453,6 +541,33 @@ export const texts = {
     editCommentError: "Não foi possível editar o comentário.",
     removeCommentTitle: "Remover comentário?",
     removeCommentDescription: "Ele some da publicação; a ação fica registrada na auditoria.",
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre este grupo. Excluir apaga o conteúdo junto; encerrar preserva o histórico.",
+      open: "Gerenciar membros",
+      delete: "Excluir grupo",
+      deleteTitle: "Excluir grupo?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}” com todo o conteúdo dele?`,
+      closeTitle: "Encerrar grupo?",
+      closeBody: (name: string) =>
+        `Encerrar “${name}”? O grupo sai da descoberta e não recebe novos membros; o conteúdo continua guardado.`,
+      deleted: (name: string) => `Grupo “${name}” excluído.`,
+      closed: (name: string) => `Grupo “${name}” encerrado. O conteúdo foi preservado.`,
+      deleteError: "Não foi possível excluir o grupo.",
+      closeError: "Não foi possível encerrar o grupo.",
+      removed: "Membro removido do grupo.",
+      removeError: "Não foi possível remover o membro.",
+      removedOwner: "Dono removido; o grupo passou para o membro mais antigo que ficou.",
+      roles: {
+        OWNER: "Dono",
+        ADMIN: "Administrador",
+        MODERATOR: "Moderador",
+        MEMBER: "Membro",
+      },
+      loadError: "Não foi possível carregar os membros.",
+    },
     removeCommentError: "Não foi possível remover o comentário.",
   },
 
@@ -1405,6 +1520,12 @@ export const texts = {
       imageProhibitedTitle: "Imagem ocultada",
       imageProhibitedMessage:
         "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      /** Réplica no feed profissional (#723): a mesma publicação, assinada pelo perfil profissional. */
+      crossPost: {
+        byType:
+          "Para ir também ao feed profissional, use um tipo profissional: insight, projeto, oportunidade, tutorial ou artigo.",
+        noProfile: "Sem perfil profissional ativo, a publicação não vai ao feed profissional.",
+      },
       /** Limites de vídeo (issue #656): a checagem local avisa antes de o upload sair. */
       videoLimitTitle: "Vídeo grande demais",
       videoLimitSize: (mb: number, minutes: number) =>
@@ -1446,6 +1567,7 @@ export const texts = {
       interacted: "Interações",
       projects: "Projetos",
       corporate: "Corporativo",
+      corporateHint: "Corporativo (feed profissional)",
       type: "Tipo de feed",
       openList: "Escolher o tipo de feed",
       allTypes: "Todos os tipos",
@@ -1527,35 +1649,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: {
-        LIKE: "👍",
-        LOVE: "❤️",
-        LAUGH: "😂",
-        ROFL: "🤣",
-        SKULL: "💀",
-        WOW: "😮",
-        SAD: "😢",
-        SOB: "😭",
-        CELEBRATE: "🎉",
-        SUPPORT: "💪",
-        INSIGHTFUL: "💡",
-        ANGRY: "😡",
-        DISGUST: "🤢",
-        SKEPTICAL: "🤨",
-        EYES: "👀",
-        NOTE: "📝",
-        FIRE: "🔥",
-        CLAP: "👏",
-        CLOWN: "🤡",
-        NAILS: "💅",
-        // Contextuais: cada um tem situação clara de uso (ver ReactionType no backend).
-        USEFUL: "🧰",
-        RELATABLE: "🫂",
-        HYPE: "🚀",
-        THANKS: "🙏",
-        VIBE: "✨",
-        SALUTE: "🫡",
-      },
+      emojis: REACTION_EMOJIS,
     },
     report: {
       title: "Denunciar post",
@@ -1564,6 +1658,7 @@ export const texts = {
       error: "Não foi possível enviar a denúncia. Tente de novo.",
     },
     reposted: "Republicado no seu perfil.",
+    repostedCommunity: "Republicado na comunidade.",
     alreadyReposted: "Você já republicou este post.",
     repostRemoved: "Republicação removida.",
     repostError: "Não foi possível republicar.",
@@ -1696,6 +1791,18 @@ export const texts = {
       error: "Não foi possível importar agora. Tente de novo.",
       readmeSaved: "Bio atualizada com o README.",
       readmeError: "Não foi possível ler o README agora.",
+      orgs: {
+        title: "Organizações",
+        hint: "Transforme uma organização do GitHub em empresa da comunidade, com os repositórios escolhidos como projetos dela.",
+        choose: "Escolha a organização",
+        /** O botão do aviso de sucesso leva à empresa importada. */
+        open: "Abrir empresa",
+      },
+      orgImported: (name: string, created: number) =>
+        created === 0
+          ? `Organização ${name} pronta, sem projetos novos.`
+          : `${name}: ${created === 1 ? "1 projeto importado" : `${created} projetos importados`}.`,
+      orgError: "Não foi possível importar a organização agora.",
     },
     sections: {
       about: "Sobre",
@@ -1779,9 +1886,21 @@ export const texts = {
       draftDiscardError: "Não foi possível excluir agora.",
       draftSaveError:
         "Não foi possível salvar o rascunho neste navegador. Mantenha esta página aberta.",
+      mediaTitle: "Fotos e vídeos",
+      mediaHint: "As fotos e vídeos escolhidos aqui sobem na hora e aparecem na leitura do texto.",
+      mediaAdd: "Anexar foto ou vídeo",
+      mediaPhoto: "Foto",
+      mediaVideo: "Vídeo",
+      mediaUploading: "Anexo de {{name}} enviando…",
+      mediaRemove: "Remover anexo {{index}}",
+      mediaRetry: "Tentar de novo",
+      mediaLimit: "Um post do blog aceita até 8 fotos e vídeos.",
+      mediaError: "O anexo não subiu. Tente de novo.",
+      mediaPending: "Espere os anexos em envio terminarem para salvar.",
       notifySubscribers: "Avisar os assinantes por e-mail",
       notifySubscribersHint:
-        "Quem assina o seu blog recebe um e-mail com este post (além da notificação no app). Dá para desativar só para este post.",
+        "Avisar os assinantes: quem assina o seu blog recebe um e-mail com este post (além da notificação no app).",
+      notifySubscribersNo: "Avisar os assinantes: não, só publicar no app.",
       updated: "Post atualizado.",
       editPost: "Editar post",
       deletePost: "Excluir post",
@@ -1811,6 +1930,10 @@ export const texts = {
     buy: "Comprar",
     buying: "Retendo faíscas…",
     buyError: "Não foi possível comprar agora. Confira seu saldo e tente de novo.",
+    useMine: "Usar meu tema",
+    usingMine: "Aplicando…",
+    useMineError: "Não foi possível aplicar o seu tema agora. Tente de novo.",
+    mineHint: "Este tema é seu: aplicar não cobra faíscas nem abre compra.",
   },
   projects: {
     seoTitle: "Projetos da comunidade · Énóis",
@@ -2089,6 +2212,15 @@ export const texts = {
       MODA: "Moda e estilo",
       POLITICA: "Política",
       RELIGIAO: "Religião",
+      DESABAFO: "Desabafo",
+      MEIO_AMBIENTE: "Meio ambiente",
+      ANIMAIS: "Animais",
+      CULINARIA: "Culinária",
+      JARDINAGEM: "Jardinagem",
+      ARTESANATO: "Artesanato",
+      HISTORIA: "História",
+      FILOSOFIA: "Filosofia",
+      IDIOMAS: "Idiomas",
     },
     memberCount: (count: number) => `${count} membro${count === 1 ? "" : "s"}`,
     participating: "Participando",
@@ -2114,6 +2246,22 @@ export const texts = {
       description:
         "A comunidade deixa de existir para todo mundo e os membros são desvinculados. Isso não pode ser desfeito.",
       confirm: "Excluir",
+    },
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre esta comunidade. Só admin vê esta área, e o backend recusa qualquer outro papel.",
+      open: "Gerenciar membros",
+      delete: "Excluir comunidade",
+      deleteTitle: "Excluir comunidade?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}”?`,
+      deleted: (name: string) => `Comunidade “${name}” excluída.`,
+      deleteError: "Não foi possível excluir a comunidade.",
+      removed: "Membro removido da comunidade.",
+      removeError: "Não foi possível remover o membro.",
+      roles: { ADMIN: "Administrador", MEMBER: "Membro" },
+      loadError: "Não foi possível carregar os membros.",
     },
     loadMore: "Carregar mais",
     create: {
@@ -2176,6 +2324,47 @@ export const texts = {
       action: "Pedir par com esse objetivo",
       noTopic: "Sem tema",
     },
+    proposals: {
+      title: "Propostas de par",
+      hint: "Encontramos alguém com o mesmo objetivo. Vejam se combinam: só viram par quando os dois aceitarem.",
+      deadline: (label: string) => `Até ${label} para responder`,
+      partnerAccepted: "já aceitou e escreveu o quebra-gelo dela",
+      partnerWaiting: "ainda não aceitou",
+      accept: "Aceitar",
+      accepting: "Aceitando…",
+      decline: "Recusar",
+      declined: "Proposta recusada. Você volta para a fila no mesmo lugar.",
+      acceptError: "Não foi possível aceitar agora. Tente de novo.",
+      declineError: "Não foi possível recusar agora. Tente de novo.",
+      active: "Os dois aceitaram: o par está de pé.",
+      icebreakerTitle: "Antes de fechar, conte por que esse objetivo agora",
+      icebreakerHint: "A outra pessoa só vê as suas respostas depois que aceitar também.",
+      required: "Obrigatória",
+      optional: "Opcional",
+      requiredError: "Responda a pergunta obrigatória para aceitar.",
+      partnerIcebreaker: "O quebra-gelo de",
+      myAccepted: "Você aceitou. Falta o aceite da outra pessoa para o par começar.",
+      noAnswer: "Sem resposta.",
+      fields: {
+        ice_why_now: {
+          question: "Por que esse objetivo agora?",
+          placeholder: "Ex.: quero trocar de área até o fim do ano.",
+        },
+        ice_weekly_time: {
+          question: "Quanto tempo por semana você pretende dedicar?",
+          options: ["Até 1 hora", "2 a 3 horas", "4 a 5 horas", "Mais de 5 horas"],
+        },
+        ice_follow_up: {
+          question: "Como prefere que a gente se acompanhe?",
+          options: ["Só pelo check-in daqui", "Também por mensagem", "Chamada de vez em quando"],
+        },
+        ice_more: {
+          question: "Algo mais?",
+          placeholder: "Um recado livre, se quiser.",
+        },
+      },
+    },
+    message: "Mandar mensagem",
   },
 
   events: {
@@ -2211,6 +2400,12 @@ export const texts = {
       notOwner: "Só quem criou o evento muda a repetição.",
       updateError: "Não foi possível mudar a repetição. Tente de novo.",
     },
+    conflictTitle: "Outro compromisso nesse horário",
+    conflictDescription: (when: string, what: string) =>
+      `No mesmo horário (${when}) já está na sua agenda: ${what}. Dá para confirmar mesmo assim — é só um aviso.`,
+    conflictsMany: (count: number, first: string) => `${first} e mais ${count - 1}`,
+    conflictConfirm: "Vou mesmo assim",
+    conflictCancel: "Deixa para depois",
     attendSuccess: "Presença confirmada.",
     attendError: "Não foi possível confirmar a presença.",
     cancelAttendanceSuccess: "Presença cancelada.",
@@ -2737,6 +2932,13 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    loadingReply: "Buscando a mensagem original...",
+    replyUnavailable: "A mensagem original não está disponível nesta conversa.",
+    replyNavigationError: "Não foi possível abrir a mensagem original. Tente novamente.",
+    encryptedMessage: "🔒 Mensagem cifrada",
+    messageDecryptError: "Não foi possível decifrar esta mensagem neste dispositivo.",
+    attachmentPreview: "Mensagem com mídia",
+    unknownAuthor: "Participante",
     /**
      * Inbox preview with its author: "Você" for the viewer (otherwise the peer seems to have
      * written it) and the sender's first name in groups (the row shows the group, not the author).

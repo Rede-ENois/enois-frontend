@@ -6,8 +6,9 @@ const LAST_FEED_TAB_KEY = "connect-grow-last-feed-tab";
 export const DEFAULT_FEED_TAB: HomeTab = "ALL";
 
 /**
- * Tabs worth remembering. "CORPORATE" is left out: it is not a choice, the professional interface
- * forces it, and saving it would send the social interface to a tab it does not have.
+ * Tabs worth remembering. "CORPORATE" is left out on purpose: it is the professional interface's
+ * default, so going back to it needs no memory, and saving it would reopen the SOCIAL interface on
+ * the professional feed.
  */
 const REMEMBERABLE_TABS: readonly HomeTab[] = [
   "ALL",

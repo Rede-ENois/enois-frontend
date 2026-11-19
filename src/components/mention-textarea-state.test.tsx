@@ -7,6 +7,7 @@ import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { abrirSeletor, botaoDoSeletor } from "./emotes/abrir-seletor.test-helper";
 import { MentionTextarea } from "./mention-textarea";
 
 vi.mock("@/lib/api", () => ({
@@ -121,11 +122,8 @@ async function selectMention() {
 }
 
 async function chooseEmote() {
-  const open = [...host.querySelectorAll("button")].find((button) =>
-    button.textContent?.includes(texts.emotes.button),
-  );
-  expect(open).toBeDefined();
-  await act(async () => open!.click());
+  expect(botaoDoSeletor(host)).not.toBeNull();
+  await act(async () => abrirSeletor(host));
   await settle();
   const emote = document.querySelector<HTMLButtonElement>('button[title="KEKW"]');
   expect(emote).not.toBeNull();

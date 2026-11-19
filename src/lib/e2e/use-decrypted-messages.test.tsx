@@ -40,8 +40,14 @@ function msg(overrides: Partial<Message> = {}): Message {
 
 let captured: { messages: Message[]; decrypting: boolean } = { messages: [], decrypting: true };
 
-function HookProbe({ messages }: { messages: Message[] }) {
-  captured = useDecryptedMessages(messages, "user_me");
+function HookProbe({
+  messages,
+  userId = "user_me",
+}: {
+  messages: Message[];
+  userId?: string | null;
+}) {
+  captured = useDecryptedMessages(messages, userId);
   return null;
 }
 
@@ -94,6 +100,28 @@ describe("useDecryptedMessages", () => {
 
     expect(captured.messages[0].text).toBe("🔒 Mensagem cifrada");
     expect(captured.decrypting).toBe(false);
+  });
+
+  it("decifra a citação E2E mesmo quando a resposta contém apenas mídia", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockResolvedValue("Trecho original fictício");
+    const messages = [
+      msg({
+        text: "",
+        mediaIds: ["media-ficticia"],
+        replyTo: {
+          id: "original",
+          from: "user_peer",
+          text: "cipher-original",
+          e2e: true,
+          iv: "iv-original",
+          encryptedKeys: { user_me: "chave-cifrada-ficticia" },
+        },
+      }),
+    ];
+    act(() => root.render(<HookProbe messages={messages} />));
+    await flush();
+    expect(captured.messages[0].replyTo?.text).toBe("Trecho original fictício");
   });
 
   it("decrypts e2e messages when keys exist", async () => {
@@ -152,13 +180,177 @@ describe("useDecryptedMessages", () => {
       Promise.resolve(`claro:${message.text}`),
     );
 
-    act(() => root.render(<HookProbe messages={[msg({ id: "m1", text: "a", e2e: true })]} />));
+    act(() =>
+      root.render(<HookProbe messages={[msg({ id: "m1", text: "a", e2e: true, iv: "iv" })]} />),
+    );
     await flush();
-    act(() => root.render(<HookProbe messages={[msg({ id: "m1", text: "b", e2e: true })]} />));
+    act(() =>
+      root.render(<HookProbe messages={[msg({ id: "m1", text: "b", e2e: true, iv: "iv" })]} />),
+    );
     await flush();
 
     expect(decryptReceived).toHaveBeenCalledTimes(2);
     expect(captured.messages[0].text).toBe("claro:b");
+  });
+
+  it("reutiliza o cache da citação ao paginar e ao carregar a original", async () => {
+    vi.useFakeTimers();
+    try {
+      hasLocalKeys.mockResolvedValue(true);
+      decryptReceived.mockResolvedValue("Trecho original fictício");
+      const original = msg({ id: "original", text: "cipher", e2e: true, iv: "iv" });
+      const reply = msg({
+        replyTo: { id: original.id, from: original.from, text: original.text, e2e: true, iv: "iv" },
+      });
+      act(() => root.render(<HookProbe messages={[reply]} />));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      expect(captured.messages[0].replyTo?.text).toBe("Trecho original fictício");
+      act(() => root.render(<HookProbe messages={[reply, msg({ id: "outra" })]} />));
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(captured.messages[0].replyTo?.text).toBe("Trecho original fictício");
+      act(() => root.render(<HookProbe messages={[original, reply]} />));
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(captured.messages[0].text).toBe("Trecho original fictício");
+      expect(captured.messages[1].replyTo?.text).toBe("Trecho original fictício");
+      expect(decryptReceived).toHaveBeenCalledOnce();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("aplica o teto da QA também à decifragem da original citada", async () => {
+    vi.useFakeTimers();
+    try {
+      hasLocalKeys.mockResolvedValue(true);
+      decryptReceived.mockImplementation(() => new Promise<string>(() => undefined));
+      act(() =>
+        root.render(
+          <HookProbe
+            messages={[
+              msg({
+                replyTo: { id: "original", from: "peer", text: "cipher", e2e: true, iv: "iv" },
+              }),
+            ]}
+          />,
+        ),
+      );
+      await act(() => vi.advanceTimersByTimeAsync(DECRYPT_TIMEOUT_MS));
+      expect(captured.decrypting).toBe(false);
+      expect(captured.messages[0].replyTo?.text).toBe(TIMEOUT_PLACEHOLDER);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("não reaproveita decifragem atrasada de outra conta no cache da citação", async () => {
+    vi.useFakeTimers();
+    try {
+      hasLocalKeys.mockResolvedValue(true);
+      let release: (text: string) => void = () => {};
+      decryptReceived.mockImplementationOnce(
+        () => new Promise<string>((resolve) => (release = resolve)),
+      );
+      decryptReceived.mockResolvedValue("Texto da conta atual");
+      const messages = [
+        msg({
+          replyTo: {
+            id: "original",
+            from: "user_peer",
+            text: "cipher-original",
+            e2e: true,
+            iv: "iv-original",
+          },
+        }),
+      ];
+      act(() => root.render(<HookProbe messages={messages} />));
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      act(() => root.render(<HookProbe messages={messages} userId="outra-conta" />));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+      expect(captured.messages[0].replyTo?.text).toBe("Texto da conta atual");
+      await act(async () => release("Texto da conta anterior"));
+      act(() => root.render(<HookProbe messages={[...messages]} userId="outra-conta" />));
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      expect(captured.messages[0].replyTo?.text).toBe("Texto da conta atual");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("decifragem que falha nao prende o lote: o item vira placeholder e os demais aparecem", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockImplementation((message: Message) =>
+      message.id === "quebrada"
+        ? Promise.reject(new Error("chave da conversa ausente"))
+        : Promise.resolve(`claro:${message.id}`),
+    );
+
+    const quebrada = msg({ id: "quebrada", text: "cipher", e2e: true, iv: "iv" });
+    const ok = msg({ id: "ok", text: "cipher", e2e: true, iv: "iv" });
+    act(() => root.render(<HookProbe messages={[quebrada, ok]} />));
+    await flush();
+
+    expect(captured.decrypting).toBe(false);
+    expect(captured.messages.find((m) => m.id === "quebrada")?.text).toBe(TIMEOUT_PLACEHOLDER);
+    expect(captured.messages.find((m) => m.id === "ok")?.text).toBe("claro:ok");
+  });
+
+  it("isola a rejeição da original citada sem prender a resposta nem as demais mensagens", async () => {
+    vi.useFakeTimers();
+    try {
+      hasLocalKeys.mockResolvedValue(true);
+      decryptReceived.mockImplementation((message: Message) =>
+        message.id === "original"
+          ? Promise.reject(new Error("envelope sintético inválido"))
+          : Promise.resolve(`claro:${message.id}`),
+      );
+      const reply = msg({
+        text: "Resposta fictícia",
+        replyTo: { id: "original", from: "peer", text: "cipher", e2e: true, iv: "iv" },
+      });
+      const ok = msg({ id: "ok", text: "cipher-ok", e2e: true, iv: "iv-ok" });
+      act(() => root.render(<HookProbe messages={[reply, ok]} />));
+      await act(() => vi.advanceTimersByTimeAsync(800));
+
+      expect(captured.decrypting).toBe(false);
+      expect(captured.messages[0].text).toBe("Resposta fictícia");
+      expect(captured.messages[0].replyTo?.text).toBe(TIMEOUT_PLACEHOLDER);
+      expect(captured.messages[1].text).toBe("claro:ok");
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("o cache de textos decifrados tem teto: as primeiras saem quando o teto enche", async () => {
+    hasLocalKeys.mockResolvedValue(true);
+    decryptReceived.mockImplementation((message: Message) =>
+      Promise.resolve(`claro:${message.id}`),
+    );
+
+    const primeiras = Array.from({ length: 600 }, (_, i) =>
+      msg({ id: `m${i}`, text: `cipher-${i}`, e2e: true, iv: "iv" }),
+    );
+    act(() => root.render(<HookProbe messages={primeiras} />));
+    await flush();
+    expect(decryptReceived).toHaveBeenCalledTimes(600);
+
+    // Chegam 200 novas: o teto (500) expulsa as mais antigas; m0 (a primeira de todas) sai,
+    // m599 (a última inserida) segue — e só quem saiu volta a passar pelo RSA.
+    const seguintes = Array.from({ length: 200 }, (_, i) =>
+      msg({ id: `n${i}`, text: `cipher-n${i}`, e2e: true, iv: "iv" }),
+    );
+    const antes = decryptReceived.mock.calls.length;
+    act(() => root.render(<HookProbe messages={[...seguintes, ...primeiras]} />));
+    await flush();
+
+    const decifradasDeNovo = decryptReceived.mock.calls
+      .slice(antes)
+      .map((call) => (call[0] as Message).id)
+      .filter((id) => id.startsWith("m"));
+    expect(decifradasDeNovo).toContain("m0");
+    expect(decifradasDeNovo).not.toContain("m599");
   });
 
   it("decifragem presa nao segura a thread: estoura o teto e vira placeholder", async () => {

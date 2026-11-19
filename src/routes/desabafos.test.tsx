@@ -49,7 +49,6 @@ vi.mock("@/lib/api", () => ({
     unreact: mocks.unreact,
   },
 }));
-vi.mock("@/lib/current-user", () => ({ useCurrentUser: () => ({ data: { id: "me" } }) }));
 vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
 vi.mock("@rede-enois/design-system/ui", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@rede-enois/design-system/ui")>();
@@ -75,33 +74,24 @@ const { Route } = await import("./desabafos");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 const DesabafosPage = (options as { component: () => React.JSX.Element }).component;
 
-const autoria = (id: string) => ({
-  id,
-  name: "Autora",
-  username: "autora",
-  avatar: null,
-  avatarFrame: null,
-  style: null,
-});
-
 const desabafo = (id: string, extra: Partial<DesabafoPostView> = {}): DesabafoPostView => ({
   id,
-  author: autoria("autora"),
   content: `Desabafo ${id}`,
   createdAt: "2026-11-01T12:00:00Z",
   reactions: 0,
   reactionSummary: {},
   myReaction: null,
   comments: 0,
+  mine: false,
   ...extra,
 });
 
 const acolhida = {
   id: "c-1",
   postId: "p-1",
-  author: autoria("outra"),
   content: "Estou aqui com você",
   createdAt: "2026-11-01T13:00:00Z",
+  mine: false,
 };
 
 // Frases do desenho que vivem no design system (mensagens padrão desabafos*).
@@ -196,6 +186,10 @@ describe("rota dos Desabafos", () => {
     expect(document.body.textContent).toContain(texts.desabafos.subtitle);
     expect(document.body.textContent).toContain("Desabafo p-1");
     expect(document.body.textContent).toContain("Desabafo p-2");
+    // ANONIMATO: nada de nome, @ ou avatar de quem desabafou — só o rótulo do desenho.
+    expect(document.body.textContent).toContain("Anônimo");
+    expect(document.body.textContent).not.toContain("Autora");
+    expect(document.body.textContent).not.toContain("@autora");
     expect(mocks.feed).toHaveBeenCalledWith(null);
 
     // Sem texto, publicar fica travado: desabafo é o texto.
@@ -292,15 +286,15 @@ describe("rota dos Desabafos", () => {
     expect(mocks.toast).toHaveBeenCalledWith(texts.desabafos.commentSuccess, "success");
   });
 
-  it("a autoria remove o próprio desabafo", async () => {
+  it("a marca mine do servidor libera remover o próprio desabafo", async () => {
     mocks.feed.mockResolvedValue({
-      items: [desabafo("p-1", { author: autoria("me") })],
+      items: [desabafo("p-1", { mine: true })],
       nextCursor: null,
     });
     await render();
 
     const remover = botaoPorRotulo(ds.removerDesabafo);
-    if (!remover) throw new Error("botão de remover não renderizado (não é a autoria?)");
+    if (!remover) throw new Error("botão de remover não renderizado (não é o próprio?)");
     await act(async () => remover.click());
     await settleMuito();
 
@@ -309,8 +303,8 @@ describe("rota dos Desabafos", () => {
   });
 
   it("quem escreveu a acolhida remove a própria", async () => {
-    // A acolhida na tela é MINHA (autoria "me"): o gesto de remover aparece só para quem escreveu.
-    mocks.comments.mockResolvedValue({ items: [{ ...acolhida, author: autoria("me") }] });
+    // A acolhida na tela é MINHA (mine do servidor): o gesto aparece só para quem escreveu.
+    mocks.comments.mockResolvedValue({ items: [{ ...acolhida, mine: true }] });
     await render();
     await abrirAcolhidas("p-1");
 

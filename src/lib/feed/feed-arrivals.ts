@@ -5,6 +5,8 @@ import type { PostView } from "@/types/application/feed/post-view";
 import type { HeldFeedPages } from "@/types/lib/feed/feed-arrivals";
 import type { FeedPages } from "@/types/lib/feed/feed-pages";
 
+import { withoutRepeatedPosts } from "./repeated-posts";
+
 /**
  * Below this the reader is far enough down that the top of the feed is out of sight: posts that
  * arrived there are announced instead of appearing on their own.
@@ -56,23 +58,19 @@ export function holdsFirstPage(
  * after it. While a refresh waits, the new first page stays in the query cache — the reader keeps
  * exactly the list they were reading.
  *
- * The pages after the first are the ones the refresh brought, and a post that arrived at the top
- * pushed the others down: the first of them repeats the last posts of the held page. They are dropped
- * here — the list is keyed by post id, and a repeated id would be measured as the same card twice.
+ * Each post shows up once, where it first appears (`withoutRepeatedPosts`). Ids repeat in two ways
+ * here: a refresh that brought posts to the top pushed the others down, so the page after the held
+ * one starts with posts the reader already has; and a pure repost carries the id of the original,
+ * which comes back a few pages later at its own date.
  */
 export function pagesWithHeldFirst(
   data: FeedPages | undefined,
   held: HeldFeedPages | null,
 ): PageResponse<PostView>[] {
   if (!data) return [];
-  if (held === null || held.pages.length === 0) return data.pages;
-  const seen = new Set(held.pages[0].items.map((post) => post.id));
-  const rest = data.pages.slice(1).map((page) => {
-    const items = page.items.filter((post) => !seen.has(post.id));
-    for (const post of items) seen.add(post.id);
-    return { ...page, items };
-  });
-  return [held.pages[0], ...rest];
+  const pages =
+    held === null || held.pages.length === 0 ? data.pages : [held.pages[0], ...data.pages.slice(1)];
+  return withoutRepeatedPosts(pages);
 }
 
 /**
@@ -111,25 +109,27 @@ export function useFeedArrivals(data: FeedPages | undefined, tab: string, scope:
   }, []);
 
   useEffect(() => {
-    if (held === null) return;
-    // Back at the top, the posts that arrived are what the reader is going to see anyway.
-    const onScroll = () => {
-      if (window.scrollY === 0) setHeld(null);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [held]);
-
-  useEffect(() => {
-    // A reordered ranking can wait without a single new post: there is nothing to announce then.
-    if (held === null || held.count === 0) {
+    if (held === null) {
       setNotice(false);
       return;
     }
-    const update = () => setNotice(window.scrollY > NEW_POSTS_NOTICE_SCROLL);
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    // A reordered ranking can wait without a single new post: there is nothing to announce then.
+    const announces = held.count > 0;
+    const noticeAt = (scrollY: number) => announces && scrollY > NEW_POSTS_NOTICE_SCROLL;
+    // One listener for both jobs: they were two, and every scroll event ran both.
+    const onScroll = () => {
+      // Back at the top, the posts that arrived are what the reader is going to see anyway. The
+      // notice goes in the same event, so React commits both at once.
+      if (window.scrollY === 0) {
+        setHeld(null);
+        setNotice(false);
+      } else {
+        setNotice(noticeAt(window.scrollY));
+      }
+    };
+    setNotice(noticeAt(window.scrollY));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [held]);
 
   return { pages: pagesWithHeldFirst(data, held), held, notice, release };

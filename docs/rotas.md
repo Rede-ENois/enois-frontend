@@ -38,6 +38,13 @@ Funcionalidades:
 - **Caption required with media:** the backend refuses a post without text (except PAGE), so "Publicar" stays disabled while the field is empty. With media attached and an empty field, the composer says so below the buttons ("Escreva uma legenda para publicar"); article and poll are left out, since there the field is the title or the question (`lib/feed/caption-required`).
 - **Rascunho persistido (V332):** enquanto a pessoa escreve, o compositor salva sozinho (1,5s depois da última mudança) em `PUT /feed/draft` — um rascunho por conta, o mesmo em qualquer dispositivo. Quem abre o feed com o compositor intocado recebe o rascunho de volta (`GET /feed/draft`), com tipo, texto, assunto, alternativas e extensões da enquete; quem já começou a escrever não é sobrescrito. O `ComposerDraftStatus` (DS) mostra "Rascunho salvo às HH:MM" com o botão "Descartar rascunho" (apaga o salvo no servidor e limpa o compositor). Publicar ou agendar apaga o rascunho (`DELETE /feed/draft`). A mídia anexada não entra no rascunho — os arquivos só sobem no momento de publicar, então quem retoma reanexa. Falha no autosave é silenciosa; as regras completas (tamanho, antiflood, enquete inteira) continuam valendo só na publicação.
 - **Feed infinito** de `PostCard` components
+- **Puxar para renovar:** consulta somente a primeira página e mantém as demais carregadas, sem
+  repetir no histórico os posts que subiram ao topo.
+- **Atualização do cache:** edições e contadores chegam mesmo quando a resposta mantém os mesmos
+  ids e quantidade. Respostas idênticas preservam referências pelo compartilhamento estrutural
+  do TanStack Query.
+- **Chave da consulta:** a listagem e a renovação de fundo usam `feedQueryKey`. Nas dúvidas,
+  Todas usa o filtro vazio, Abertas usa `false` e Resolvidas usa `true`.
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
   not move it). "Para você" is ordered by relevance, so the loaded posts newer than the marker go first,
@@ -47,6 +54,8 @@ Funcionalidades:
   `POST /feed/seen` goes once per visit with the newest loaded `createdAt` (`src/lib/feed/caught-up.ts`).
 - **Dúvidas:** no "Tudo", o filtro de tipo "Dúvidas" (`type=QUESTION`) mostra o `QuestionStatusFilter` (Todas, Abertas, Resolvidas → `resolved` omitido, `false`, `true`). Com o tipo Pergunta no compositor aparece o `QuestionComposerHint`. Quem perguntou marca a resposta de outra pessoa nos comentários (otimista, desfaz se a API recusar); a resposta aceita sobe para o topo da lista
 - **Right rail:** events (each with its `EventTicket`, amber when it is today, via `ingressoDeEvento`), today's games, connection suggestions, company prompt and the support card, all as `surface-card` soft tables. The old platform spaces card is gone: those rooms live in `/explorar`.
+  As consultas de eventos, sugestões, jogos e empresas são habilitadas no desktop, a partir de
+  `64rem`, e desabilitadas ao voltar para uma tela mais estreita.
 
 **Componentes auxiliares:**
 
@@ -176,9 +185,13 @@ Página pública (mostra layout mesmo sem auth, mas sem funcionalidade).
 
 - Hero com explicação do programa de mentoria
 - Grid de cards de mentores
+- Busca com espaços nas bordas removidos e consulta após 250 ms de pausa; trocar o termo consultado
+  cancela a busca anterior.
 - Card: avatar, nome, headline, especialidades, avaliação, sessões, preço, próximo horário
 - Dono do perfil pode editar/excluir mentoria
 - Dialog de cadastro como mentor (especialidades, preço)
+- Após o agendamento confirmado, invalida as consultas de sessões, horários, mentores e saldo
+  do diálogo.
 
 **Componentes auxiliares:**
 
@@ -500,6 +513,9 @@ fim da URL pública, tem namespace próprio no backend e pode ser diferente do `
 com ação própria (não espera o resto do formulário); o formato é validado em
 `src/lib/corporate/nametag.ts`, o mesmo do backend. Trocar o nametag muda o endereço público — o
 antigo deixa de responder — sem tocar no perfil social.
+
+Em grupos, o filtro dos grupos próprios é imediato. A busca no catálogo remove espaços nas bordas,
+espera 250 ms de pausa e cancela a consulta anterior quando o termo consultado muda.
 
 Em grupos, o dono pode selecionar um tópico e usar **Renomear tópico** para editar o nome
 pelo diálogo. O formulário aceita até 80 caracteres e usa o PATCH existente, mantendo a descrição,

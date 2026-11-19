@@ -55,6 +55,15 @@ describe("security headers", () => {
     expect(response.headers.get("cache-control")).toBe("public, max-age=86400");
   });
 
+  it("caches official enois emojis and reactions as immutable public assets", () => {
+    const response = withSecurityHeaders(
+      new Response("img", { headers: { "content-type": "image/webp" } }),
+      new Request("https://enois.ia.br/emojis/enois/like.webp"),
+      "n",
+    );
+    expect(response.headers.get("cache-control")).toBe("public, max-age=604800, immutable");
+  });
+
   it("adds nothing to responses without a decided policy", () => {
     const response = withSecurityHeaders(
       new Response('{"ok":true}', { headers: { "content-type": "application/json" } }),

@@ -19,11 +19,13 @@ import { Route as CarteiraRouteImport } from './routes/carteira'
 import { Route as ColagemRouteImport } from './routes/colagem'
 import { Route as ColecoesRouteImport } from './routes/colecoes'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
+import { Route as ConfessionarioRouteImport } from './routes/confessionario'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ContaSuspensaRouteImport } from './routes/conta-suspensa'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
 import { Route as DesabafosRouteImport } from './routes/desabafos'
+import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
 import { Route as EmpresasRouteImport } from './routes/empresas'
@@ -43,6 +45,7 @@ import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as ModeradorRouteImport } from './routes/moderador'
 import { Route as MuraisRouteImport } from './routes/murais'
+import { Route as PapoRetoRouteImport } from './routes/papo-reto'
 import { Route as ParDeEstudoRouteImport } from './routes/par-de-estudo'
 import { Route as PenalidadesRouteImport } from './routes/penalidades'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -60,6 +63,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SugestoesRouteImport } from './routes/sugestoes'
 import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as TermometroRouteImport } from './routes/termometro'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
@@ -148,6 +152,11 @@ const ComunidadesRoute = ComunidadesRouteImport.update({
   path: '/comunidades',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfessionarioRoute = ConfessionarioRouteImport.update({
+  id: '/confessionario',
+  path: '/confessionario',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContaRoute = ContaRouteImport.update({
   id: '/conta',
   path: '/conta',
@@ -171,6 +180,11 @@ const DenunciasRoute = DenunciasRouteImport.update({
 const DesabafosRoute = DesabafosRouteImport.update({
   id: '/desabafos',
   path: '/desabafos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesafiosRoute = DesafiosRouteImport.update({
+  id: '/desafios',
+  path: '/desafios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevelopersRoute = DevelopersRouteImport.update({
@@ -268,6 +282,11 @@ const MuraisRoute = MuraisRouteImport.update({
   path: '/murais',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PapoRetoRoute = PapoRetoRouteImport.update({
+  id: '/papo-reto',
+  path: '/papo-reto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParDeEstudoRoute = ParDeEstudoRouteImport.update({
   id: '/par-de-estudo',
   path: '/par-de-estudo',
@@ -351,6 +370,11 @@ const SugestoesRoute = SugestoesRouteImport.update({
 const SuporteRoute = SuporteRouteImport.update({
   id: '/suporte',
   path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermometroRoute = TermometroRouteImport.update({
+  id: '/termometro',
+  path: '/termometro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermosRoute = TermosRouteImport.update({
@@ -553,11 +577,13 @@ export interface FileRoutesByFullPath {
   '/colagem': typeof ColagemRoute
   '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
+  '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
   '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
+  '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -577,6 +603,7 @@ export interface FileRoutesByFullPath {
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
+  '/papo-reto': typeof PapoRetoRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -594,6 +621,7 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
+  '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
@@ -643,11 +671,13 @@ export interface FileRoutesByTo {
   '/colagem': typeof ColagemRoute
   '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
+  '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
   '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
+  '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -667,6 +697,7 @@ export interface FileRoutesByTo {
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
+  '/papo-reto': typeof PapoRetoRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -684,6 +715,7 @@ export interface FileRoutesByTo {
   '/sobre': typeof SobreRoute
   '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
+  '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
@@ -734,11 +766,13 @@ export interface FileRoutesById {
   '/colagem': typeof ColagemRoute
   '/colecoes': typeof ColecoesRouteWithChildren
   '/comunidades': typeof ComunidadesRouteWithChildren
+  '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
   '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
+  '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
   '/empresas': typeof EmpresasRoute
@@ -758,6 +792,7 @@ export interface FileRoutesById {
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
+  '/papo-reto': typeof PapoRetoRoute
   '/par-de-estudo': typeof ParDeEstudoRoute
   '/penalidades': typeof PenalidadesRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -775,6 +810,7 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/sugestoes': typeof SugestoesRoute
   '/suporte': typeof SuporteRoute
+  '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
   '/agenda/$entryId': typeof AgendaEntryIdRoute
@@ -826,11 +862,13 @@ export interface FileRouteTypes {
     | '/colagem'
     | '/colecoes'
     | '/comunidades'
+    | '/confessionario'
     | '/conta'
     | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
     | '/desabafos'
+    | '/desafios'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -850,6 +888,7 @@ export interface FileRouteTypes {
     | '/moderacao'
     | '/moderador'
     | '/murais'
+    | '/papo-reto'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -867,6 +906,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/sugestoes'
     | '/suporte'
+    | '/termometro'
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
@@ -916,11 +956,13 @@ export interface FileRouteTypes {
     | '/colagem'
     | '/colecoes'
     | '/comunidades'
+    | '/confessionario'
     | '/conta'
     | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
     | '/desabafos'
+    | '/desafios'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -940,6 +982,7 @@ export interface FileRouteTypes {
     | '/moderacao'
     | '/moderador'
     | '/murais'
+    | '/papo-reto'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -957,6 +1000,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/sugestoes'
     | '/suporte'
+    | '/termometro'
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
@@ -1006,11 +1050,13 @@ export interface FileRouteTypes {
     | '/colagem'
     | '/colecoes'
     | '/comunidades'
+    | '/confessionario'
     | '/conta'
     | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
     | '/desabafos'
+    | '/desafios'
     | '/developers'
     | '/diretrizes'
     | '/empresas'
@@ -1030,6 +1076,7 @@ export interface FileRouteTypes {
     | '/moderacao'
     | '/moderador'
     | '/murais'
+    | '/papo-reto'
     | '/par-de-estudo'
     | '/penalidades'
     | '/privacidade'
@@ -1047,6 +1094,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/sugestoes'
     | '/suporte'
+    | '/termometro'
     | '/termos'
     | '/vagas'
     | '/agenda/$entryId'
@@ -1097,11 +1145,13 @@ export interface RootRouteChildren {
   ColagemRoute: typeof ColagemRoute
   ColecoesRoute: typeof ColecoesRouteWithChildren
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
+  ConfessionarioRoute: typeof ConfessionarioRoute
   ContaRoute: typeof ContaRoute
   ContaSuspensaRoute: typeof ContaSuspensaRoute
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
   DesabafosRoute: typeof DesabafosRoute
+  DesafiosRoute: typeof DesafiosRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
   EmpresasRoute: typeof EmpresasRoute
@@ -1121,6 +1171,7 @@ export interface RootRouteChildren {
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
   MuraisRoute: typeof MuraisRouteWithChildren
+  PapoRetoRoute: typeof PapoRetoRoute
   ParDeEstudoRoute: typeof ParDeEstudoRoute
   PenalidadesRoute: typeof PenalidadesRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -1138,6 +1189,7 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   SugestoesRoute: typeof SugestoesRoute
   SuporteRoute: typeof SuporteRoute
+  TermometroRoute: typeof TermometroRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
   AgendaAssinaturaRoute: typeof AgendaAssinaturaRoute
@@ -1234,6 +1286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComunidadesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confessionario': {
+      id: '/confessionario'
+      path: '/confessionario'
+      fullPath: '/confessionario'
+      preLoaderRoute: typeof ConfessionarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conta': {
       id: '/conta'
       path: '/conta'
@@ -1267,6 +1326,13 @@ declare module '@tanstack/react-router' {
       path: '/desabafos'
       fullPath: '/desabafos'
       preLoaderRoute: typeof DesabafosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desafios': {
+      id: '/desafios'
+      path: '/desafios'
+      fullPath: '/desafios'
+      preLoaderRoute: typeof DesafiosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developers': {
@@ -1402,6 +1468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MuraisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/papo-reto': {
+      id: '/papo-reto'
+      path: '/papo-reto'
+      fullPath: '/papo-reto'
+      preLoaderRoute: typeof PapoRetoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/par-de-estudo': {
       id: '/par-de-estudo'
       path: '/par-de-estudo'
@@ -1519,6 +1592,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/suporte'
       preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termometro': {
+      id: '/termometro'
+      path: '/termometro'
+      fullPath: '/termometro'
+      preLoaderRoute: typeof TermometroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/termos': {
@@ -1949,11 +2029,13 @@ const rootRouteChildren: RootRouteChildren = {
   ColagemRoute: ColagemRoute,
   ColecoesRoute: ColecoesRouteWithChildren,
   ComunidadesRoute: ComunidadesRouteWithChildren,
+  ConfessionarioRoute: ConfessionarioRoute,
   ContaRoute: ContaRoute,
   ContaSuspensaRoute: ContaSuspensaRoute,
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
   DesabafosRoute: DesabafosRoute,
+  DesafiosRoute: DesafiosRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
   EmpresasRoute: EmpresasRoute,
@@ -1973,6 +2055,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
   MuraisRoute: MuraisRouteWithChildren,
+  PapoRetoRoute: PapoRetoRoute,
   ParDeEstudoRoute: ParDeEstudoRoute,
   PenalidadesRoute: PenalidadesRoute,
   PrivacidadeRoute: PrivacidadeRoute,
@@ -1990,6 +2073,7 @@ const rootRouteChildren: RootRouteChildren = {
   SobreRoute: SobreRoute,
   SugestoesRoute: SugestoesRoute,
   SuporteRoute: SuporteRoute,
+  TermometroRoute: TermometroRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
   AgendaAssinaturaRoute: AgendaAssinaturaRoute,

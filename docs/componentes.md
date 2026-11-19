@@ -39,6 +39,18 @@ The owned frames in the `Minhas molduras` tab of `/carteira` (`onlyOwned`). It l
 - Search, filters, `oldest`/`newest` order (`GET /loja?order=`), pagination of 12 and the frame
   preview come from the design system `FrameShop`
 
+## `CosmeticCatalog` (`src/components/wallet/cosmetic-catalog.tsx`)
+
+The seasonal cosmetics shop (`/carteira`), mounted by `CosmeticShop`. Besides the design system
+`CosmeticShopProps` it takes:
+
+- `bannerHtml?: CapaEmHtml` — the shopper's HTML profile cover. The preview card shows it through
+  the design system `ProfileCard` `bannerSlot`, with the same `BannerHtmlFrame` the profile route
+  uses, so the shop never previews a cover different from the real profile (#695). Without it the
+  card falls back to the uploaded photo or the theme gradient.
+
+`bannerHtmlSlot(profile)` in `src/lib/cosmetics.ts` builds that value.
+
 ## `ProfilePeek` (`src/components/profile/profile-peek.tsx`)
 
 The avatar or name of a person in a list opens a popover with the design system
@@ -94,6 +106,9 @@ Layout principal da aplicação. Envolve todo o conteúdo das páginas autentica
   dock carries Avisos.
 - Drawer lateral de navegação (mobile/tablet, < 1024px) com os mesmos links
 - Notices popover (`NotificationsPanel` from the DS, popover variant): unread rows first-class, read one, read all, accept/reject requests, and "Ver todos os avisos" to `/notificacoes`. Shares `useNotificationsPanel` with the full page.
+
+A leitura é otimista em todas as páginas; se o servidor recusa, os avisos afetados voltam ao estado
+anterior de leitura, preservando o conteúdo e as páginas recebidos durante a requisição.
 
 O limite da navegação é 1024px (`lg`): abaixo, hambúrguer/drawer; a partir, sidebar.
 
@@ -157,7 +172,9 @@ palpite (issue #532).
 
 ## `PostCard` (`src/components/post-card.tsx`)
 
-Card de post no feed, com todas as ações sociais.
+Card de post no feed, com todas as ações sociais. O corpo de artigo ausente na listagem é buscado
+quando o autor abre a edição. Artigos sem corpo e sem flag de spoiler antecipam a consulta para
+recuperar a flag; páginas continuam buscando o HTML necessário à prévia.
 
 **Props:** `{ post: PostView }`
 
@@ -169,6 +186,8 @@ Card de post no feed, com todas as ações sociais.
 - Resumo de reações com emojis
 - Tags
 - Ações: reagir (popover com 8 emojis), comentar, salvar, compartilhar, denunciar
+- Exclusão reversível: desfazer reinsere a resposta do servidor na posição original das páginas
+  ainda em cache, sem duplicar o post nem perder alterações feitas em outros posts.
 - Seção de comentários com replies encadeadas
 - Comentários enviados mantêm a ordem cronológica usada no carregamento, inclusive nas respostas; fixados e respostas aceitas preservam seu destaque.
 - Link previews + embeds de vídeo (YouTube, Vimeo, Dailymotion, Twitch)
@@ -177,6 +196,9 @@ A fileira `PostActions` repassa `post.reactionSummary` à view do design system:
 contador mostram até três tipos recebidos pelo post, do mais usado para o menos usado. Resumo
 `null` ou ausente preserva os emojis padrão; resumo vazio não mostra o botão de reações, mesmo
 quando o contador antigo ainda é positivo.
+
+Ao copiar ou compartilhar pelo menu do post, o navegador recebe a ação no clique. A contagem é
+atualizada em paralelo e não impede a cópia ou a abertura do compartilhamento nativo.
 
 Em `PostComments`, o seletor `selectCommentMentions` reutiliza uma lista vazia estável enquanto o
 estado do cartão não existe. A abertura da publicação não recria o snapshot a cada leitura; quando o
@@ -195,6 +217,10 @@ cartão é inicializado, o componente acompanha as menções normalmente e as pr
 - `linkifyText()` - Converte @menções e URLs em links
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
+
+## `PostComments` (`src/components/post/post-comments.tsx`)
+
+O frontend fornece o campo de texto, o rascunho, os anexos e o callback de envio ao `PostComments` do design system. O DS é responsável pelo layout responsivo, pela bandeja de ferramentas e pelo único botão de envio. O slot `composerField` contém apenas o campo, sem botão adicional ou CSS do frontend que reorganize a estrutura interna do DS. A validação compartilhada `canSend` permite texto ou mídia e impede envio enquanto há uma requisição em andamento. Upload, autenticação e chamadas à API continuam no frontend. A apresentação mobile depende da versão do DS que contém esse layout.
 
 ## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
 

@@ -28,10 +28,14 @@ const RAPID_CLICK_WINDOW_MS = 200;
 const lastSentAt = new Map<string, number>();
 const inFlight = new Set<string>();
 
+/** Última intenção descartada de cada post enquanto uma requisição estava em voo; executada no fim. */
+const queued = new Map<string, ReactionType>();
+
 /** Só para teste: zera a janela entre casos (o estado do módulo sobrevive a cada um). */
 export function resetReactionGuards(): void {
   lastSentAt.clear();
   inFlight.clear();
+  queued.clear();
 }
 
 /**
@@ -59,7 +63,14 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
   const toggle = async (type: ReactionType) => {
     if (!requireAuth()) return;
     const now = Date.now();
-    if (inFlight.has(postId)) return;
+    // Clique durante uma requisição em voo não é descartado: fica como última intenção e roda
+    // quando a atual terminar — descartar fazia a pessoa clicar várias vezes para desreagir e a
+    // tela não mudar (#1053). Só a última conta: alternar duas vezes durante o voo é um clique
+    // apressado, não dois gestos.
+    if (inFlight.has(postId)) {
+      queued.set(postId, type);
+      return;
+    }
     const previous = lastSentAt.get(postId);
     // Relógio para trás (troca de fuso, teste, aba suspensa) não pode travar o botão.
     if (previous !== undefined && now >= previous && now - previous < RAPID_CLICK_WINDOW_MS) return;
@@ -146,6 +157,9 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
           ...current,
           currentUserReaction: before.currentUserReaction ?? null,
           counters: before.counters ?? current.counters,
+          // O resumo também é otimista: sem restaurá-lo, a bolinha e o contador da reação que
+          // falhou ficavam pintados (ou sumiam, quando a soma zerava) até a revalidação chegar.
+          reactionSummary: before.reactionSummary ?? current.reactionSummary,
         }));
       } catch {
         // Sem cache para restaurar: o refetch abaixo alinha com o servidor.
@@ -165,6 +179,13 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
         predicate: (query) => !isUnseenFeedQuery(query.queryKey),
       });
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
+      // A intenção registrada durante o voo roda com o cache já revalidado; a janela de 200ms
+      // continua valendo (Date.now real), então toque acidental duplo continua filtrado.
+      const nextType = queued.get(postId);
+      if (nextType !== undefined) {
+        queued.delete(postId);
+        void toggle(nextType);
+      }
     }
   };
 

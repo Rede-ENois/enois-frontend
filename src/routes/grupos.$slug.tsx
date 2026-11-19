@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PROFILE_HTML_MAX_LENGTH } from "@/constants/profile";
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
 import type { GroupMember } from "@/types/application/group/group-member";
 import type { GroupPost } from "@/types/application/group/group-post";
@@ -50,7 +50,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { groupsApi } from "@/lib/api";
+import { groupsApi, moderationApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { useCurrentUser } from "@/lib/current-user";
 import { dataHora, hora } from "@/lib/date/format";
@@ -60,6 +60,7 @@ import { uploadComposerMedia } from "@/lib/upload-composer-media";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
+import { AdminEntityPanel } from "@/components/admin/admin-entity-panel";
 import { AppContainer } from "@/components/app-container";
 import { BannerHtmlFrame } from "@/components/banner-html-frame";
 import { TamoJuntoBar } from "@/components/calls/tamo-junto-bar";
@@ -96,6 +97,16 @@ function GrupoPage() {
   } = useQuery({
     queryKey: ["group", slug],
     queryFn: () => groupsApi.get(slug),
+  });
+
+  // Admin DA PLATAFORMA (users.is_admin), independente do papel local — inclusive para quem não
+  // participa do grupo. O backend é quem recusa; aqui só decidimos o que desenhar. Fica antes dos
+  // returns de carregando/erro: hook depois de return antecipado quebra a ordem entre renders.
+  const { data: platformMe } = useQuery({
+    queryKey: ["moderator", "me"],
+    queryFn: () => moderationApi.me(),
+    retry: false,
+    enabled: authenticated,
   });
 
   const invalidate = () => {
@@ -137,6 +148,8 @@ function GrupoPage() {
   }
 
   const canManage = group.viewerRole === "OWNER" || group.viewerRole === "ADMIN";
+  // Outra camada que a administração local do grupo: o admin da plataforma intervém mesmo de fora.
+  const isPlatformAdmin = platformMe?.admin === true;
 
   // Compartilhar por link: Web Share API quando existe (mobile), copiar para a área de
   // transferência como fallback. O grupo é acessível pelo link para quem não é membro —
@@ -267,6 +280,23 @@ function GrupoPage() {
             {group.joined ? <TamoJuntoBar groupId={group.id} /> : null}
           </div>
         </div>
+
+        {isPlatformAdmin && (
+          <AdminEntityPanel
+            kind="group"
+            entityId={group.id}
+            entityName={group.name}
+            onGone={(outcome) => {
+              toast(
+                outcome === "CLOSED"
+                  ? texts.groups.admin.closed(group.name)
+                  : texts.groups.admin.deleted(group.name),
+                "success",
+              );
+              invalidate();
+            }}
+          />
+        )}
 
         {canManage && <AdminPanel group={group} />}
 
@@ -789,14 +819,14 @@ export function GroupPostItem({
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-subtle">
         <ReactionPicker
-          emojis={REACTION_EMOJIS}
+          emojis={REACTION_FIGURE_EMOJIS}
           activeType={currentReaction}
           onReact={(type) => react.mutate(type)}
           buttonClassName="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-text-subtle transition hover:text-text-strong"
           buttonTitle={texts.groups.react}
         >
           {currentReaction ? (
-            <span aria-hidden="true">{REACTION_EMOJIS[currentReaction]}</span>
+            <span aria-hidden="true">{REACTION_FIGURE_EMOJIS[currentReaction]}</span>
           ) : (
             <Smile className="h-4 w-4" />
           )}

@@ -7,12 +7,14 @@ import type { LojaItem } from "@/types/application/loja/loja-item";
 import type { LojaLook } from "@/types/application/loja/loja-look";
 import type { AuthorNameStyle } from "@/types/application/profile/author-name-style";
 import type { Profile } from "@/types/application/profile/profile";
+import type { CapaEmHtml } from "@/types/components/wallet/capa-em-html";
 import { OFFICIAL_BADGE_ICONS, type ProfileCardData } from "@rede-enois/design-system/domain";
 
 import { walletQueries } from "@/lib/query-options/wallet";
 
 import { ApiError } from "./api-client";
 import { authorNameStyle } from "./profile-name-style";
+import { isApprovedSoundCloudEmbed } from "./soundcloud-embed";
 
 /** Free status icons anyone can pick; the others come from owned official badges. */
 export const FREE_STATUS_ICONS = ["cafe", "estrela", "coracao", "chip"] as const;
@@ -109,6 +111,18 @@ export function profileCardData(
     statusText: profile.statusText,
     statusIcon: profile.statusIcon,
   };
+}
+
+/**
+ * A capa em HTML de quem está comprando, ou `undefined` quando a capa é imagem/gradiente.
+ *
+ * A loja desenhava o cartão de prévia sem a faixa e por isso a capa mostrada ali nunca era a
+ * do perfil (#695). A montagem fica num só lugar para a loja e a rota do perfil não divergirem.
+ */
+export function bannerHtmlSlot(profile: Pick<Profile, "bannerHtml">): CapaEmHtml | undefined {
+  const html = profile.bannerHtml;
+  if (!html) return undefined;
+  return { html, allowSoundCloudPlayer: isApprovedSoundCloudEmbed(html) };
 }
 
 /** Everything a purchase, equip or event reward can change on screen. */

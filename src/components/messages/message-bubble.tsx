@@ -1,4 +1,5 @@
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { texts } from "@/texts";
 import type { MessageBubbleProps } from "@/types/routes/messages/message-bubble-props";
 import { MessageBubble as MessageBubbleView } from "@rede-enois/design-system/domain";
 
@@ -7,12 +8,22 @@ import { MediaGrid } from "@/components/post/media-grid";
 import { RichText } from "@/components/post/rich-text";
 
 /** Um balão da conversa: avatar do outro, texto, mídia, hora e reações. */
-export function MessageBubble({ message, peer, profileHref, isMe, ...props }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  currentUserId,
+  peer,
+  profileHref,
+  isMe,
+  ...props
+}: MessageBubbleProps) {
   const replyQuote = message.replyTo
     ? {
-        from: message.replyTo.from === message.from ? "Você" : (peer?.name ?? "..."),
-        text: message.replyTo.e2e ? "[Mensagem cifrada]" : message.replyTo.text,
-        isMe: message.replyTo.from === message.from,
+        from:
+          message.replyTo.from === currentUserId
+            ? texts.messages.you
+            : (peer?.name ?? texts.messages.unknownAuthor),
+        text: message.replyTo.text || texts.messages.attachmentPreview,
+        isMe: message.replyTo.from === currentUserId,
       }
     : null;
 
@@ -23,7 +34,7 @@ export function MessageBubble({ message, peer, profileHref, isMe, ...props }: Me
       isMe={isMe}
       peer={peer}
       profileHref={profileHref}
-      emojis={REACTION_EMOJIS}
+      emojis={REACTION_FIGURE_EMOJIS}
       timeLabel={formatTime(message.time)}
       replyQuote={replyQuote}
       content={

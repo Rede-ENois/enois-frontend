@@ -11,7 +11,7 @@
   },
   "src/components/blog/blog-post-editor.tsx": {
     "local/no-front-markup": {
-      "count": 37
+      "count": 22
     },
     "no-restricted-globals": {
       "count": 2
@@ -63,11 +63,6 @@
   "src/components/design-system-provider.tsx": {
     "local/no-front-markup": {
       "count": 1
-    }
-  },
-  "src/components/emotes/emote-picker-dialog.tsx": {
-    "local/no-front-markup": {
-      "count": 37
     }
   },
   "src/components/error-banner.tsx": {
@@ -138,15 +133,10 @@
   },
   "src/components/marketplace/marketplace-section.tsx": {
     "local/no-front-markup": {
-      "count": 205
+      "count": 197
     },
     "no-restricted-syntax": {
       "count": 6
-    }
-  },
-  "src/components/mention-textarea.tsx": {
-    "local/no-front-markup": {
-      "count": 8
     }
   },
   "src/components/mentoring/mentor-agenda-dialog.tsx": {

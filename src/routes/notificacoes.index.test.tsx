@@ -45,6 +45,8 @@ vi.mock("@rede-enois/design-system/domain", () => ({
 }));
 vi.mock("@rede-enois/design-system/ui", () => ({
   PullIndicator: () => <div data-testid="puxando" />,
+  // O painel agora avisa a falha de leitura com toast; o teste não exercita o erro.
+  useToast: () => ({ toast: vi.fn() }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

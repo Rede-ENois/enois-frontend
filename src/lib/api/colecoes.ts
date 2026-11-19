@@ -3,6 +3,7 @@ import type { ColecaoResumo } from "@/types/application/colecoes/colecao-resumo"
 import type { ColecoesPagina } from "@/types/application/colecoes/colecoes-pagina";
 import type { ColecoesPostsPagina } from "@/types/application/colecoes/colecoes-posts-pagina";
 import type { CriarColecaoInput } from "@/types/application/colecoes/criar-colecao-input";
+import type { MinhasColecoesPagina } from "@/types/application/colecoes/minhas-colecoes-pagina";
 
 import { api, buildQuery } from "../api-client";
 
@@ -24,6 +25,13 @@ export const colecoesApi = {
 
   remove: (colecaoId: string) =>
     api.delete<{ removed: boolean }>(`/colecoes/${encodeURIComponent(colecaoId)}`),
+
+  /**
+   * As minhas coleções na ótica de um post — alimenta o seletor "guardar em coleção" do card.
+   * `tem` diz se o post já está guardado; guardar uma coleção nova pede o post salvo antes.
+   */
+  minhas: (postId: string) =>
+    api.get<MinhasColecoesPagina>(`/colecoes/minhas${buildQuery({ postId })}`),
 
   posts: (colecaoId: string, cursor?: string | null, limit = 24) =>
     api.get<ColecoesPostsPagina>(

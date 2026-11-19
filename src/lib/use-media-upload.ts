@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { texts } from "@/texts";
 import type { UploadInput } from "@/types/media-upload/upload-input";
@@ -124,6 +124,44 @@ export class VideoLimitError extends Error {
 export function useMediaUpload() {
   const [state, setState] = useState<UploadState>({ status: "idle", progress: 0 });
 
+  // Chamadas simultâneas disputam um único estado: o status global só muda quando TODOS os
+  // envios em curso terminam, e uma falha não é apagada pelo sucesso de um irmão — terminado
+  // o conjunto, qualquer falha vence (issue #880).
+  const pending = useRef(0);
+  const firstError = useRef<string | null>(null);
+  // Cancelamento: abortar o XHR encerra o PUT na metade; o erro sobe como os outros e o
+  // compositor volta ao estado editável sem publicar nada pela metade.
+  const controllerRef = useRef<AbortController | null>(null);
+  // Progresso por bytes do PUT em curso: o mesmo controller serve para abortar a partir de
+  // qualquer instância do hook (o store compartilha o flag entre barra e pílulas).
+  controllerRef.current = controllerRef.current ?? new AbortController();
+  const settle = useCallback((error?: string) => {
+    pending.current = Math.max(0, pending.current - 1);
+    if (pending.current === 0) controllerRef.current = null;
+    if (error && firstError.current === null) {
+      firstError.current = error;
+    }
+    if (pending.current > 0) return;
+    const failed = firstError.current;
+    firstError.current = null;
+    if (failed) setState({ status: "error", progress: 0, error: failed });
+    else setState({ status: "done", progress: 100 });
+  }, []);
+
+  const begin = useCallback(() => {
+    pending.current += 1;
+    firstError.current = null;
+    setState({ status: "uploading", progress: 0 });
+  }, []);
+
+  const cancel = useCallback(() => {
+    controllerRef.current?.abort();
+  }, []);
+
+  // Progresso de um conjunto de arquivos: bytes do arquivo i + arquivos já completos.
+  const progressFor = (i: number, total: number, fracao: number) =>
+    Math.round(((i + Math.min(1, Math.max(0, fracao))) / total) * 100);
+
   const upload = useCallback(
     async (rawFile: File, purpose = "POST_IMAGE"): Promise<UploadResult> => {
       const file = await prepare(rawFile);
@@ -133,11 +171,11 @@ export function useMediaUpload() {
             MAX_MEDIA_BYTES / (1024 * 1024)
           }MB.`,
         );
-        setState({ status: "error", progress: 0, error: error.message });
+        settle(error.message);
         throw error;
       }
 
-      setState({ status: "uploading", progress: 0 });
+      begin();
 
       try {
         const fileName = genFileName(file);
@@ -155,67 +193,81 @@ export function useMediaUpload() {
             "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
           );
         }
-        await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
+        await mediaApi.uploadToSignedUrl(
+          uploadUrl,
+          file,
+          uploadHeaders ?? {},
+          (fracao) => setState({ status: "uploading", progress: progressFor(0, 1, fracao) }),
+          controllerRef.current?.signal,
+        );
 
-        setState({ status: "done", progress: 100 });
+        settle();
         return { mediaId: id, cdnUrl };
       } catch (caught) {
         const err = uploadError(caught);
         const msg = err instanceof Error ? err.message : "Upload falhou";
-        setState({ status: "error", progress: 0, error: msg });
+        settle(msg);
         throw err;
       }
     },
-    [],
+    [begin, settle],
   );
 
-  const uploadAll = useCallback(async (files: UploadInput[]): Promise<UploadResult[]> => {
-    if (files.length === 0) return [];
-    setState({ status: "uploading", progress: 0 });
+  const uploadAll = useCallback(
+    async (files: UploadInput[]): Promise<UploadResult[]> => {
+      if (files.length === 0) return [];
+      begin();
 
-    const results: UploadResult[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const { file: rawInput, purpose = "POST_IMAGE" } = files[i];
-      const file = await prepare(rawInput);
-      if (!isVideoFile(file) && file.size > MAX_MEDIA_BYTES) {
-        const error = new Error(
-          `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
-            MAX_MEDIA_BYTES / (1024 * 1024)
-          }MB.`,
-        );
-        setState({ status: "error", progress: 0, error: error.message });
-        throw error;
-      }
+      const results: UploadResult[] = [];
       try {
-        const fileName = genFileName(file);
-        const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
-          fileName,
-          mimeType: file.type,
-          size: file.size,
-          purpose,
-        });
-        // Mesma bifurcação do upload avulso: quem manda no caminho é o provedor que o servidor
-        // respondeu, não o formato da URL. Aqui subia sempre pelo ImageKit — com o storage em S3,
-        // o compositor (que usa este caminho para TODOS os anexos) falhava.
-        if (provider !== "S3") {
-          throw new Error(
-            "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
+        for (let i = 0; i < files.length; i++) {
+          const { file: rawInput, purpose = "POST_IMAGE" } = files[i];
+          const file = await prepare(rawInput);
+          if (!isVideoFile(file) && file.size > MAX_MEDIA_BYTES) {
+            const error = new Error(
+              `O arquivo "${file.name}" tem mais de ${MAX_MEDIA_BYTES / (1024 * 1024)}MB. O limite por arquivo é ${
+                MAX_MEDIA_BYTES / (1024 * 1024)
+              }MB.`,
+            );
+            throw error;
+          }
+          const fileName = genFileName(file);
+          const { id, cdnUrl, uploadUrl, provider, uploadHeaders } = await mediaApi.requestUpload({
+            fileName,
+            mimeType: file.type,
+            size: file.size,
+            purpose,
+          });
+          // Mesma bifurcação do upload avulso: quem manda no caminho é o provedor que o servidor
+          // respondeu, não o formato da URL. Aqui subia sempre pelo ImageKit — com o storage em S3,
+          // o compositor (que usa este caminho para TODOS os anexos) falhava.
+          if (provider !== "S3") {
+            throw new Error(
+              "O envio de mídia está temporariamente desativado enquanto o armazenamento é migrado.",
+            );
+          }
+          await mediaApi.uploadToSignedUrl(
+            uploadUrl,
+            file,
+            uploadHeaders ?? {},
+            (fracao) =>
+              setState({ status: "uploading", progress: progressFor(i, files.length, fracao) }),
+            controllerRef.current?.signal,
           );
+          results.push({ mediaId: id, cdnUrl });
+          setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
         }
-        await mediaApi.uploadToSignedUrl(uploadUrl, file, uploadHeaders ?? {});
-        results.push({ mediaId: id, cdnUrl });
-        setState((s) => ({ ...s, progress: Math.round(((i + 1) / files.length) * 100) }));
       } catch (caught) {
         const err = uploadError(caught);
         const msg = err instanceof Error ? err.message : "Upload falhou";
-        setState({ status: "error", progress: 0, error: msg });
+        settle(msg);
         throw err;
       }
-    }
+      settle();
+      return results;
+    },
+    [begin, settle],
+  );
 
-    setState({ status: "done", progress: 100 });
-    return results;
-  }, []);
-
-  return { ...state, upload, uploadAll };
+  return { ...state, upload, uploadAll, cancel };
 }

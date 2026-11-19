@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act } from "react";
+import type { ComponentProps } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -12,14 +13,35 @@ import { ApiError } from "@/lib/api-client";
 
 import { PostComments } from "./post-comments";
 
-const mocks = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), field: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  list: vi.fn(),
+  create: vi.fn(),
+  field: vi.fn(),
+  uploadAll: vi.fn(),
+  addImages: vi.fn(),
+  addFiles: vi.fn<(add: (files: File[]) => void) => void>(),
+}));
 vi.mock("@/lib/api", () => ({ commentsApi: mocks }));
 vi.mock("@/lib/use-auth", () => ({ useAuth: () => ({ requireAuth: () => true }) }));
 vi.mock("@/lib/use-lite-mode", () => ({ useLiteMode: () => false }));
-vi.mock("@/lib/use-media-upload", () => ({ useMediaUpload: () => ({}) }));
+vi.mock("@/lib/use-media-upload", () => ({
+  useMediaUpload: () => ({ uploadAll: mocks.uploadAll }),
+}));
 vi.mock("@/lib/feed/use-accepted-answer", () => ({
   useAcceptedAnswer: (_post: string, id: string | null) => ({ acceptedId: id }),
 }));
+// O campo de imagem do anexo vive no diálogo de mídia do design system: capturar o callback do
+// compositor permite entregar um arquivo nos testes sem abrir o diálogo.
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@rede-enois/design-system/domain")>();
+  return {
+    ...actual,
+    PostComments: (props: ComponentProps<typeof actual.PostComments>) => {
+      mocks.addFiles(props.onAddImages);
+      return <actual.PostComments {...props} />;
+    },
+  };
+});
 vi.mock("./gif-picker-dialog", () => ({ GifPickerDialog: () => null }));
 vi.mock("./comment-item", () => ({
   CommentItem: ({ comment }: { comment: CommentView }) => (
@@ -121,6 +143,81 @@ describe("card ainda não inicializado", () => {
     } finally {
       errors.mockRestore();
     }
+  });
+});
+
+describe("botão Comentar", () => {
+  it("envia anexo sem texto pelo mesmo fluxo de upload", async () => {
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+    mocks.uploadAll.mockResolvedValue([{ mediaId: "uploaded-image" }]);
+    mocks.create.mockResolvedValue(comment("new", 1));
+    const createUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:preview");
+    const revokeUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    try {
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" />
+          </QueryClientProvider>,
+        ),
+      );
+      await settle();
+      const file = new File(["image"], "image.png", { type: "image/png" });
+      // O campo de imagem vive no diálogo de mídia do design system: aqui o arquivo entra pelo
+      // mesmo callback que o compositor recebe dali.
+      await act(async () => mocks.addFiles.mock.calls.at(-1)![0]([file]));
+      const button = () => container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      expect(button().disabled).toBe(false);
+      await act(async () => button().click());
+      await settle();
+      expect(mocks.uploadAll).toHaveBeenCalledWith([{ file }]);
+      expect(mocks.create.mock.calls[0].slice(0, 5)).toEqual([
+        "post",
+        "",
+        null,
+        [],
+        ["uploaded-image"],
+      ]);
+    } finally {
+      createUrl.mockRestore();
+      revokeUrl.mockRestore();
+    }
+  });
+
+  it("habilita com texto, impede envio duplicado e usa o formulário existente", async () => {
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+    let finish!: (value: CommentView) => void;
+    mocks.create.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PostComments postId="post" postAuthorId="author" />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    const button = () => container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(button().textContent).toBe("Comentar");
+    expect(button().disabled).toBe(true);
+    await act(async () => usePostCardStore.getState().setDraft("post", "   "));
+    expect(button().disabled).toBe(true);
+    await act(async () => usePostCardStore.getState().setDraft("post", "Comentário"));
+    expect(button().disabled).toBe(false);
+    await act(async () => button().click());
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(mocks.create.mock.calls[0].slice(0, 3)).toEqual(["post", "Comentário", null]);
+    expect(button().disabled).toBe(true);
+    expect(button().textContent).toBe("Enviando...");
+    await act(async () => button().click());
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    await act(async () => finish(comment("new", 1)));
+    expect(button().textContent).toBe("Comentar");
+    expect(button().disabled).toBe(true);
   });
 });
 
@@ -370,5 +467,54 @@ describe("envio recusado não some com a conversa", () => {
     await send();
     expect(container.textContent).not.toContain("Não foi possível enviar o comentário.");
     expect(order()).toEqual(["root", "new"]);
+  });
+});
+
+describe("atualização automática na publicação aberta", () => {
+  it("atualiza comentários em segundo plano quando liveRefresh está ativo e não faz polling no feed", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.list
+        .mockResolvedValueOnce({ items: [comment("c1", 1)], nextCursor: null })
+        .mockResolvedValueOnce({ items: [comment("c2", 2), comment("c1", 1)], nextCursor: null });
+
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" liveRefresh />
+          </QueryClientProvider>,
+        ),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(order()).toEqual(["c1"]);
+      expect(mocks.list).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain("Atualização automática ativa");
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+      });
+      expect(mocks.list).toHaveBeenCalledTimes(2);
+      expect(order()).toEqual(["c1", "c2"]);
+      expect(container.textContent).toContain("Comentários atualizados às");
+      expect(container.textContent).toContain("(+1 novo)");
+
+      mocks.list.mockClear();
+      mocks.list.mockResolvedValue({ items: [comment("c1", 1)], nextCursor: null });
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <PostComments postId="post" postAuthorId="author" />
+          </QueryClientProvider>,
+        ),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      expect(mocks.list).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

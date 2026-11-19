@@ -1,4 +1,5 @@
 import type { CriarMuralInput } from "@/types/application/murais/criar-mural-input";
+import type { MeusMuraisPagina } from "@/types/application/murais/meus-murais-pagina";
 import type { MuraisContribuicoesPagina } from "@/types/application/murais/murais-contribuicoes-pagina";
 import type { MuraisPagina } from "@/types/application/murais/murais-pagina";
 import type { MuralContribuicao } from "@/types/application/murais/mural-contribuicao";
@@ -24,6 +25,12 @@ export const muraisApi = {
 
   remove: (muralId: string) =>
     api.delete<{ removed: boolean }>(`/murais/${encodeURIComponent(muralId)}`),
+
+  /**
+   * Os meus murais na ótica de um post — alimenta o seletor "adicionar ao mural" do card.
+   * Cada item diz se o post já está colado (`tem`), para o card nem tentar a cola duplicada.
+   */
+  meus: (postId: string) => api.get<MeusMuraisPagina>(`/murais/meus${buildQuery({ postId })}`),
 
   contributions: (muralId: string, cursor?: string | null, limit = 24) =>
     api.get<MuraisContribuicoesPagina>(
