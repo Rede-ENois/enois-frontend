@@ -76,9 +76,8 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
     quarantineReason: node.quarantineReason,
-    // O painel admin ainda não recebe a medição de tráfego; `null` diz "não medido", não zero.
-    trafficInMb: null,
-    trafficOutMb: null,
+    trafficInMb: node.trafficInMb,
+    trafficOutMb: node.trafficOutMb,
   };
 }
 
