@@ -1785,6 +1785,18 @@ export const texts = {
       error: "Não foi possível importar agora. Tente de novo.",
       readmeSaved: "Bio atualizada com o README.",
       readmeError: "Não foi possível ler o README agora.",
+      orgs: {
+        title: "Organizações",
+        hint: "Transforme uma organização do GitHub em empresa da comunidade, com os repositórios escolhidos como projetos dela.",
+        choose: "Escolha a organização",
+        /** O botão do aviso de sucesso leva à empresa importada. */
+        open: "Abrir empresa",
+      },
+      orgImported: (name: string, created: number) =>
+        created === 0
+          ? `Organização ${name} pronta, sem projetos novos.`
+          : `${name}: ${created === 1 ? "1 projeto importado" : `${created} projetos importados`}.`,
+      orgError: "Não foi possível importar a organização agora.",
     },
     sections: {
       about: "Sobre",
@@ -2306,6 +2318,47 @@ export const texts = {
       action: "Pedir par com esse objetivo",
       noTopic: "Sem tema",
     },
+    proposals: {
+      title: "Propostas de par",
+      hint: "Encontramos alguém com o mesmo objetivo. Vejam se combinam: só viram par quando os dois aceitarem.",
+      deadline: (label: string) => `Até ${label} para responder`,
+      partnerAccepted: "já aceitou e escreveu o quebra-gelo dela",
+      partnerWaiting: "ainda não aceitou",
+      accept: "Aceitar",
+      accepting: "Aceitando…",
+      decline: "Recusar",
+      declined: "Proposta recusada. Você volta para a fila no mesmo lugar.",
+      acceptError: "Não foi possível aceitar agora. Tente de novo.",
+      declineError: "Não foi possível recusar agora. Tente de novo.",
+      active: "Os dois aceitaram: o par está de pé.",
+      icebreakerTitle: "Antes de fechar, conte por que esse objetivo agora",
+      icebreakerHint: "A outra pessoa só vê as suas respostas depois que aceitar também.",
+      required: "Obrigatória",
+      optional: "Opcional",
+      requiredError: "Responda a pergunta obrigatória para aceitar.",
+      partnerIcebreaker: "O quebra-gelo de",
+      myAccepted: "Você aceitou. Falta o aceite da outra pessoa para o par começar.",
+      noAnswer: "Sem resposta.",
+      fields: {
+        ice_why_now: {
+          question: "Por que esse objetivo agora?",
+          placeholder: "Ex.: quero trocar de área até o fim do ano.",
+        },
+        ice_weekly_time: {
+          question: "Quanto tempo por semana você pretende dedicar?",
+          options: ["Até 1 hora", "2 a 3 horas", "4 a 5 horas", "Mais de 5 horas"],
+        },
+        ice_follow_up: {
+          question: "Como prefere que a gente se acompanhe?",
+          options: ["Só pelo check-in daqui", "Também por mensagem", "Chamada de vez em quando"],
+        },
+        ice_more: {
+          question: "Algo mais?",
+          placeholder: "Um recado livre, se quiser.",
+        },
+      },
+    },
+    message: "Mandar mensagem",
   },
 
   events: {

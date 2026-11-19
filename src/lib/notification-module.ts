@@ -38,7 +38,7 @@ export function moduleForNotification(kind: string, module?: NotificationModule)
   const normalized = kind.toLowerCase();
   if (MODULE_BY_KIND[normalized]) return MODULE_BY_KIND[normalized];
   if (normalized.startsWith("group_") || normalized.startsWith("new_group_")) return "GROUPS";
-  // STUDY_PAIR_MATCHED, _CHECKIN, _ENDED and _REMINDER.
+  // STUDY_PAIR_PROPOSED, _ACCEPTED, _DECLINED, _MATCHED, _CHECKIN, _ENDED and _REMINDER.
   if (normalized.startsWith("study_pair_")) return "STUDY_PAIRS";
   return null;
 }
