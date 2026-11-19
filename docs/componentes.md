@@ -230,12 +230,13 @@ Post do feed de um grupo, com reações, comentários e ações de moderação.
 ## `NewGroupComposer` (`src/components/messages/new-group-composer.tsx`)
 
 Aba "Novo grupo" de `/mensagens`: título, busca de pessoas (a mesma lista de `/rede`, via
-`networkApi.list`) e seleção múltipla. "Criar grupo" só liga com título de 3+ caracteres e ao menos
-uma pessoa marcada; a conversa nasce com `messagesApi.createConversation({ kind: "GROUP", title,
-participantIds })` e abre na tela. A trava síncrona (`creatingRef`) é a mesma do "abrir conversa":
-um segundo toque no mesmo tick criaria um grupo repetido, porque `isPending` só chega à tela no
-próximo render. A aba não aparece na caixa profissional, onde as conversas nascem dos fluxos de
-trabalho.
+`networkApi.list`) e seleção múltipla. A tela é a view `GroupComposer` do design system (importada de
+`@rede-enois/design-system/domain`); aqui ficam só a busca, a criação e o estado. "Criar grupo" só
+liga com título de 3+ caracteres e ao menos uma pessoa marcada; a conversa nasce com
+`messagesApi.createConversation({ kind: "GROUP", title, participantIds })` e abre na tela. A trava
+síncrona (`creatingRef`) é a mesma do "abrir conversa": um segundo toque no mesmo tick criaria um
+grupo repetido, porque `isPending` só chega à tela no próximo render. A aba não aparece na caixa
+profissional, onde as conversas nascem dos fluxos de trabalho.
 
 **Props:** `{ onCreated: (conversationId: string) => void }`
 

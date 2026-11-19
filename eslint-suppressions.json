@@ -184,11 +184,6 @@
       "count": 1
     }
   },
-  "src/components/messages/new-group-composer.tsx": {
-    "local/no-front-markup": {
-      "count": 21
-    }
-  },
   "src/components/micro-project-management.tsx": {
     "local/no-front-markup": {
       "count": 25

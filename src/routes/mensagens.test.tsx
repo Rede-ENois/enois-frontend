@@ -71,7 +71,10 @@ vi.mock("@/components/messages/conversation-thread", () => ({
 vi.mock("@/components/messages/e2e-setup-banner", () => ({
   E2eSetupBanner: () => <div data-testid="e2e" />,
 }));
-vi.mock("@rede-enois/design-system/domain", () => ({
+// O seletor de grupo é uma view do DS; o teste dirige a view real. Como o módulo também exporta
+// `UserAvatar`, o mock devolve os dois.
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@rede-enois/design-system/domain")>()),
   ConversationListSkeletons: () => <div data-testid="skeleton" />,
   UserAvatar: () => <span />,
 }));
@@ -187,9 +190,10 @@ describe("/mensagens — criar grupo", () => {
     for (let i = 0; i < 3; i++) await act(() => new Promise<void>((done) => setTimeout(done, 0)));
   };
   const byText = (pattern: RegExp) =>
-    Array.from(host.querySelectorAll("button")).find((button) =>
-      pattern.test(button.textContent ?? ""),
-    );
+    Array.from(host.querySelectorAll("button")).find((button) => {
+      const label = `${button.textContent ?? ""}${button.getAttribute("aria-label") ?? ""}`;
+      return pattern.test(label);
+    });
   const type = async (input: Element, value: string) => {
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value);
@@ -255,7 +259,9 @@ describe("/mensagens — criar grupo", () => {
     expect(person!.getAttribute("aria-pressed")).toBe("true");
 
     const create = byText(/^Criar grupo/);
-    expect(create!.textContent).toContain("(1)");
+    expect(create!.textContent, "o botão da view conta quantas pessoas estão marcadas").toContain(
+      "1",
+    );
     await act(async () => {
       create!.click();
       create!.click();

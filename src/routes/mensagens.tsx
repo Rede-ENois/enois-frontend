@@ -193,11 +193,6 @@ function Mensagens() {
     onError: (err) => toast(conversationErrorMessage(err), "error"),
   });
 
-  function openNewConversation() {
-    closeNewConversation();
-    if (!showSearch) setShowSearch(true);
-  }
-
   function closeNewConversation() {
     setShowGroup(false);
     setShowSearch(false);
@@ -290,9 +285,12 @@ function Mensagens() {
                     size="sm"
                     variant="outline"
                     className="rounded-full"
-                    onClick={openNewConversation}
+                    onClick={() => {
+                      if (showSearch) closeNewConversation();
+                      else setShowSearch(true);
+                    }}
                   >
-                    {showSearch || showGroup ? texts.messages.back : texts.messages.new}
+                    {showSearch ? texts.messages.back : texts.messages.new}
                   </Button>
                 )}
 
