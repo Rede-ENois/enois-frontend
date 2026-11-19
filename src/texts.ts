@@ -1595,6 +1595,45 @@ export const texts = {
     },
   },
 
+  /**
+   * Controles da administração da plataforma (`users.is_admin`). Só aparecem para quem
+   * `/moderation/me` diz que é admin; o backend recusa qualquer outro papel em `/admin/moderation/**`.
+   */
+  platformAdmin: {
+    /** Não é "moderador": moderador decide pela fila e pela votação; o admin age direto. */
+    title: "Painel administrativo",
+    open: "Ações administrativas",
+    post: {
+      remove: "Excluir postagem",
+      title: "Excluir postagem?",
+      description:
+        "A postagem sai do ar para todo mundo, com o conteúdo preservado para a auditoria. O motivo fica registrado com o seu nome.",
+      confirm: "Excluir postagem",
+      placeholder: "Por que esta postagem está sendo excluída? (mínimo 10 caracteres)",
+      tooShort: "Escreva pelo menos 10 caracteres.",
+      removed: "Postagem excluída.",
+      alreadyOffline: "Esta postagem já não estava no ar.",
+      notFound: "Postagem não encontrada.",
+      error: "Não foi possível excluir a postagem.",
+    },
+    profile: {
+      open: "Ações administrativas",
+      title: "Ações administrativas",
+      description:
+        "Advertências e sanções desta conta, aplicadas diretamente pela administração — sem votação. O motivo é obrigatório e fica no histórico.",
+      error: "Não foi possível carregar o histórico desta conta.",
+      warning: "Advertência registrada.",
+      sanction: "Sanção aplicada. A pessoa perde a sessão na hora.",
+      warningRevoked: "Advertência revogada.",
+      accountDeleted: "Conta excluída e anonimizada.",
+      accountDeleteError: "Não foi possível excluir a conta.",
+      actionError: "Não foi possível concluir a ação.",
+      historyEmpty: "Nenhuma advertência ou sanção nesta conta.",
+      reason: "Advertência",
+      sanctionReason: "Sanção",
+    },
+  },
+
   posts: {
     /** Cartão do link publicado no post: miniatura, título e o botão que abre a página inteira. */
     linkPreview: {
