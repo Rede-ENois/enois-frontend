@@ -53,10 +53,32 @@ describe("attachReactionPickerNav", () => {
 
     next?.click();
     expect(scrollBy).toHaveBeenCalledWith({ left: 204, behavior: "smooth" });
+
+    // Ao rolar para o meio, ambas as setas ficam habilitadas; clicar em prev rola para trás.
+    Object.defineProperty(grid, "scrollLeft", { value: 240, configurable: true });
+    grid.dispatchEvent(new Event("scroll"));
+    expect(prev?.disabled).toBe(false);
+    expect(next?.disabled).toBe(false);
+
+    prev?.click();
+    expect(scrollBy).toHaveBeenCalledWith({ left: -204, behavior: "smooth" });
+
+    // Ao chegar no fim, next desabilita e prev continua habilitado.
+    Object.defineProperty(grid, "scrollLeft", { value: 480, configurable: true });
+    grid.dispatchEvent(new Event("scroll"));
+    expect(prev?.disabled).toBe(false);
+    expect(next?.disabled).toBe(true);
   });
 
-  it("mantém a barra de navegação visível em dispositivos de toque (mobile)", () => {
+  it("mantém a barra visível, com foco e alvo tátil adequado no mobile", () => {
     const css = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
+    expect(css).toMatch(
+      /\[data-reaction-nav-bar\]\s*\{[^}]*display:\s*flex[^}]*justify-content:\s*space-between/s,
+    );
+    expect(css).toMatch(/\[data-reaction-nav\]:focus-visible\s*\{[^}]*outline:/s);
+    expect(css).toMatch(
+      /@media\s*\(hover:\s*none\)\s*and\s*\(pointer:\s*coarse\)\s*\{[^}]*\[data-reaction-nav\]\s*\{[^}]*min-width:\s*2\.5rem;\s*min-height:\s*2\.5rem;/s,
+    );
     expect(css).not.toMatch(
       /@media\s*\(hover:\s*none\)\s*and\s*\(pointer:\s*coarse\)\s*\{[^}]*\[data-reaction-nav-bar\]\s*\{\s*display:\s*none/s,
     );

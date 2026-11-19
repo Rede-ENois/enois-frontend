@@ -358,8 +358,8 @@ div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
 
 @media (hover: none) and (pointer: coarse) {
   [data-reaction-nav] {
-    min-width: 2.25rem;
-    min-height: 2.25rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
   }
 }
 
