@@ -17,6 +17,7 @@ import {
   HeartHandshake,
   Joystick,
   Lightbulb,
+  Megaphone,
   MessageCircle,
   Puzzle,
   ScrollText,
@@ -112,6 +113,15 @@ export const exploreItems: {
     color: "var(--table-6)",
     module: null,
     keywords: ["confessionario", "historias", "confissoes", "anonimo"],
+  },
+  {
+    section: "community",
+    href: "/desafios",
+    text: texts.explore.items.desafios,
+    icon: Megaphone,
+    color: "var(--table-3)",
+    module: null,
+    keywords: ["desafios", "convites", "participar", "reconhecimento"],
   },
   {
     section: "community",

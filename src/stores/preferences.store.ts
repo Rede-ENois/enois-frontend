@@ -1,3 +1,4 @@
+import { writeStorageLater } from "@/stores/batched-storage";
 import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
 import type { PreferencesState } from "@/types/stores/preferences-state";
 import type { PreferencesStorageValue } from "@/types/stores/preferences-storage-value";
@@ -176,9 +177,9 @@ const preferencesStorage = {
     });
   },
   setItem: (name: string, value: string) => {
-    localStorage.setItem(name, value);
-    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
-    localStorage.removeItem(LEGACY_SIDEBAR_STORAGE_KEY);
+    writeStorageLater(name, value);
+    writeStorageLater(LEGACY_THEME_STORAGE_KEY, null);
+    writeStorageLater(LEGACY_SIDEBAR_STORAGE_KEY, null);
   },
   removeItem: (name: string) => {
     localStorage.removeItem(name);

@@ -12,4 +12,7 @@ export type ReportTargetType =
   | "DESABAFO_COMMENT"
   // Confessionário do Explorar (histórias anônimas, tabelas próprias fora de posts).
   | "CONFESSIONARIO_POST"
-  | "CONFESSIONARIO_COMMENT";
+  | "CONFESSIONARIO_COMMENT"
+  // Desafios do Explorar (convites nominais com mural de participações, tabelas próprias).
+  | "DESAFIO_POST"
+  | "DESAFIO_PARTICIPACAO";

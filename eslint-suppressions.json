@@ -11,7 +11,7 @@
   },
   "src/components/blog/blog-post-editor.tsx": {
     "local/no-front-markup": {
-      "count": 37
+      "count": 22
     },
     "no-restricted-globals": {
       "count": 2

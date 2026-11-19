@@ -20,11 +20,21 @@ const mocks = vi.hoisted(() => ({
   createDraft: vi.fn(),
   saveDraftById: vi.fn(),
   discardDraftById: vi.fn(),
+  uploadAll: vi.fn(),
+  removeMedia: vi.fn(),
+}));
+let attachmentsIndex = 0;
+vi.mock("@/lib/use-media-upload", () => ({
+  useMediaUpload: () => ({
+    status: "idle",
+    uploadAll: (files: { file: File }[]) => mocks.uploadAll(files),
+  }),
 }));
 vi.mock("@/lib/current-user", () => ({ getCurrentUserId: () => mocks.userId }));
 vi.mock("@/lib/api/blogs", () => ({
   blogsApi: { publish: mocks.publish, editPost: mocks.edit, mine: mocks.mine },
 }));
+vi.mock("@/lib/api/media", () => ({ mediaApi: { delete: mocks.removeMedia, get: vi.fn() } }));
 vi.mock("@/lib/api/feed", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api/feed")>();
   return {
@@ -93,6 +103,7 @@ beforeEach(() => {
   mocks.createDraft.mockResolvedValue({ draft: { ...rascunhoServidor, id: "draft_srv_2" } });
   mocks.saveDraftById.mockResolvedValue({ draft: rascunhoServidor });
   mocks.discardDraftById.mockResolvedValue({ status: "DISCARDED" });
+  mocks.removeMedia.mockResolvedValue({ id: "media", status: "DELETED" });
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -241,6 +252,7 @@ describe("rascunhos de artigo do blog (lista no servidor)", () => {
       title: rascunhoServidor.content,
       body: rascunhoServidor.articleBody,
       format: "MARKDOWN",
+      mediaIds: [],
       notifySubscribers: true,
     });
     expect(mocks.discardDraftById).toHaveBeenCalledWith("draft_srv_1");
@@ -262,6 +274,7 @@ describe("rascunhos de artigo do blog (lista no servidor)", () => {
       title: "Já publicado",
       body: "Conteúdo publicado",
       bodyFormat: "MARKDOWN",
+      mediaIds: [],
       publishedAt: "",
       updatedAt: "",
     });
@@ -274,6 +287,158 @@ describe("rascunhos de artigo do blog (lista no servidor)", () => {
       title: "Título editado",
       body: "Conteúdo publicado",
       format: "MARKDOWN",
+      mediaIds: [],
     });
+  });
+});
+
+describe("fotos e vídeos no post do blog (vlog)", () => {
+  const arquivo = (name: string, type: string) => new File(["x"], name, { type });
+
+  const esperar = async () => {
+    for (let turn = 0; turn < 5; turn += 1) await act(async () => {});
+  };
+
+  const escolherArquivos = async (files: File[]) => {
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    expect(input).not.toBeNull();
+    Object.defineProperty(input, "files", { value: files, configurable: true });
+    await act(async () => {
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    for (let turn = 0; turn < 5; turn += 1) await act(async () => {});
+  };
+
+  // Cada teste define as próprias subidas; uma implementação que vaza de um teste para o outro
+  // fazia "uma falhou" passar com a resposta do teste anterior.
+  beforeEach(() => {
+    mocks.uploadAll.mockReset();
+    mocks.uploadAll.mockImplementation(async (files: { file: File }[]) =>
+      files.map(({ file }) => {
+        attachmentsIndex += 1;
+        return { mediaId: `media-${attachmentsIndex}`, cdnUrl: `/${file.name}` };
+      }),
+    );
+  });
+
+  it("sobe o anexo escolhido e publica com os ids das mídias", async () => {
+    await render();
+    await fill("input", "Meu vlog");
+    await fill("textarea", "Texto do vlog");
+    await escolherArquivos([arquivo("mutiracao.mp4", "video/mp4")]);
+
+    expect(mocks.uploadAll).toHaveBeenCalledTimes(1);
+    expect(container.textContent).toContain("mutiracao.mp4");
+
+    await click(texts.blog.editor.publish);
+    expect(mocks.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaIds: [`media-${attachmentsIndex}`] }),
+    );
+  });
+
+  it("bloqueia a publicação enquanto o anexo sobe", async () => {
+    let terminar: (value: { mediaId: string; cdnUrl: string }[]) => void = () => {};
+    mocks.uploadAll.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          terminar = resolve;
+        }),
+    );
+    await render();
+    await fill("input", "Meu vlog");
+    await fill("textarea", "Texto do vlog");
+    await escolherArquivos([arquivo("foto.jpg", "image/jpeg")]);
+
+    const publicar = [...container.querySelectorAll("button")].find(
+      (item) => item.textContent === texts.blog.editor.publish,
+    ) as HTMLButtonElement;
+    expect(publicar.disabled).toBe(true);
+    expect(container.textContent).toContain(
+      texts.blog.editor.mediaUploading.replace("{{name}}", "foto.jpg"),
+    );
+
+    await act(async () => terminar([{ mediaId: "media-sobe", cdnUrl: "/foto.jpg" }]));
+    expect(publicar.disabled).toBe(false);
+  });
+
+  it("remover o anexo tira a mídia do post", async () => {
+    await render();
+    await fill("input", "Meu vlog");
+    await fill("textarea", "Texto do vlog");
+    await escolherArquivos([arquivo("foto.jpg", "image/jpeg")]);
+    // O anexo enviado é o Pill com o nome do arquivo; clicar nele remove.
+    const remover = [...container.querySelectorAll("button")].find(
+      (item) => item.textContent === "foto.jpg",
+    );
+    expect(remover).not.toBeUndefined();
+    await act(async () => remover!.click());
+    await esperar();
+    expect(mocks.removeMedia).toHaveBeenCalledWith(`media-${attachmentsIndex}`);
+    await click(texts.blog.editor.publish);
+    expect(mocks.publish).toHaveBeenCalledWith(expect.objectContaining({ mediaIds: [] }));
+  });
+
+  it("anexo que falha na subida fica marcado e pode ser tentado de novo", async () => {
+    mocks.uploadAll.mockRejectedValueOnce(new Error("rede"));
+    await render();
+    await fill("input", "Meu vlog");
+    await fill("textarea", "Texto do vlog");
+    await escolherArquivos([arquivo("foto.jpg", "image/jpeg")]);
+
+    // A falha não some com o anexo: o Pill diz que dá para tentar, e publicar levaria o post sem
+    // a foto — então a tentativa é o caminho oferecido.
+    expect(container.textContent).toContain(texts.blog.editor.mediaRetry);
+    const publicar = [...container.querySelectorAll("button")].find(
+      (item) => item.textContent === texts.blog.editor.publish,
+    ) as HTMLButtonElement;
+
+    // A próxima subida (a da tentativa) vence; a primeira falhou no mock de cima.
+    mocks.uploadAll.mockImplementation(async () => [
+      { mediaId: "media-tentativa", cdnUrl: "/foto.jpg" },
+    ]);
+    const tentar = [...container.querySelectorAll("button")].find((item) =>
+      (item.textContent ?? "").includes(texts.blog.editor.mediaRetry),
+    );
+    await act(async () => tentar!.click());
+    await esperar();
+
+    expect(container.textContent).toContain("foto.jpg");
+    expect(publicar.disabled).toBe(false);
+    await click(texts.blog.editor.publish);
+    expect(mocks.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaIds: ["media-tentativa"] }),
+    );
+  });
+
+  it("um anexo que falha não derruba os outros que subiram", async () => {
+    mocks.uploadAll
+      .mockImplementationOnce(async () => [{ mediaId: "media-boa", cdnUrl: "/boa.jpg" }])
+      .mockImplementationOnce(async () => {
+        throw new Error("rede");
+      });
+    await render();
+    await escolherArquivos([arquivo("boa.jpg", "image/jpeg"), arquivo("ruim.jpg", "image/jpeg")]);
+    await esperar();
+
+    expect(container.textContent).toContain("boa.jpg");
+    expect(container.textContent).toContain(texts.blog.editor.mediaRetry);
+  });
+
+  it("editar um post com mídia mantém os ids sem subir de novo", async () => {
+    await render({
+      id: "post-vlog",
+      title: "Já publicado",
+      body: "Conteúdo publicado",
+      bodyFormat: "MARKDOWN",
+      mediaIds: ["media-antiga"],
+      publishedAt: "",
+      updatedAt: "",
+    });
+    await click(texts.blog.editor.savePost);
+    expect(mocks.uploadAll).not.toHaveBeenCalled();
+    expect(mocks.edit).toHaveBeenCalledWith(
+      "post-vlog",
+      expect.objectContaining({ mediaIds: ["media-antiga"] }),
+    );
   });
 });

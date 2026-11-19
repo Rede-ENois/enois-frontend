@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { texts } from "@/texts";
 import type { PapoIntervaloTimelineView } from "@/types/application/paporeto/papo-intervalo-view";
+import type { PapoPublicacaoRelacionadaView } from "@/types/application/paporeto/papo-publicacao-relacionada-view";
 import type { PapoAssuntoView } from "@/types/application/paporeto/papo-subject-view";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,6 +21,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   ranking: vi.fn(),
   timeline: vi.fn(),
+  publicacoes: vi.fn(),
   analise: vi.fn(),
 }));
 
@@ -30,7 +32,12 @@ vi.mock("@tanstack/react-router", () => ({
   }),
 }));
 vi.mock("@/lib/api", () => ({
-  papoRetoApi: { ranking: mocks.ranking, timeline: mocks.timeline, analise: mocks.analise },
+  papoRetoApi: {
+    ranking: mocks.ranking,
+    timeline: mocks.timeline,
+    publicacoes: mocks.publicacoes,
+    analise: mocks.analise,
+  },
 }));
 vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
 // O invólucro da página busca dados de sessão do runtime do servidor; aqui ele só emoldura.
@@ -61,6 +68,18 @@ const ranking: PapoAssuntoView[] = [
 const timeline: PapoIntervaloTimelineView[] = [
   { hora: "2026-11-18T17:00:00Z", falas: 2 },
   { hora: "2026-11-18T18:00:00Z", falas: 5 },
+];
+
+const publicacoes: PapoPublicacaoRelacionadaView[] = [
+  {
+    id: "post_1",
+    fonte: "POST",
+    texto: "bora de meetup de rust na sexta?",
+    autor: "Ana Lima",
+    handle: "ana.lima",
+    quando: "18/11/2026, 18:00",
+    href: "/post/post_1",
+  },
 ];
 
 // Frases do desenho que vivem no design system (mensagens padrão paporeto*).
@@ -100,9 +119,11 @@ describe("rota do Papo Reto", () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     mocks.ranking.mockReset();
     mocks.timeline.mockReset();
+    mocks.publicacoes.mockReset();
     mocks.analise.mockReset();
     mocks.ranking.mockResolvedValue(ranking);
     mocks.timeline.mockResolvedValue(timeline);
+    mocks.publicacoes.mockResolvedValue(publicacoes);
     mocks.analise.mockResolvedValue(87);
     host = document.createElement("div");
     document.body.append(host);
@@ -127,8 +148,9 @@ describe("rota do Papo Reto", () => {
     expect(document.body.textContent).toContain(ds.falasAnalisadas(87));
     expect(document.body.textContent).toContain("inteligencia artificial");
     expect(document.body.textContent).toContain(ds.statusEmergente);
-    // Assunto fechado não busca timeline: a série só chega quando o assunto abre.
+    // Assunto fechado não busca timeline nem publicações: as duas só chegam quando ele abre.
     expect(mocks.timeline).not.toHaveBeenCalled();
+    expect(mocks.publicacoes).not.toHaveBeenCalled();
     expect(document.body.querySelectorAll("[role=img]")).toHaveLength(0);
   });
 
@@ -143,6 +165,9 @@ describe("rota do Papo Reto", () => {
 
     expect(mocks.timeline).toHaveBeenCalledTimes(1);
     expect(mocks.timeline).toHaveBeenCalledWith("inteligencia artificial", "24h");
+    expect(mocks.publicacoes).toHaveBeenCalledTimes(1);
+    expect(mocks.publicacoes).toHaveBeenCalledWith("inteligencia artificial", "24h");
+    expect(document.body.textContent).toContain("bora de meetup de rust na sexta?");
     expect(document.body.querySelectorAll("[role=img]")).toHaveLength(1);
 
     const aba30d = [...document.body.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(
@@ -152,6 +177,7 @@ describe("rota do Papo Reto", () => {
     await settleMuito();
 
     expect(mocks.timeline).toHaveBeenCalledWith("inteligencia artificial", "30d");
+    expect(mocks.publicacoes).toHaveBeenCalledWith("inteligencia artificial", "30d");
   });
 
   it("fechar o assunto desliga a timeline sem recarregar o ranking", async () => {

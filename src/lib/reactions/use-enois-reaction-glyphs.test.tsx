@@ -74,4 +74,30 @@ describe("useEnoisReactionGlyphs", () => {
     });
     expect(pill?.getAttribute("data-enois-reaction-glyph")).toBeNull();
   });
+
+  it("substitui o emoji antigo no tooltip (title) das pílulas e do seletor pelo nome da reação", async () => {
+    function TooltipHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <div>
+          <button type="button" title="Remover reação 👍" aria-label="Remover reação 👍">
+            <span>👍</span>
+          </button>
+
+          <button type="button" data-reaction-emoji="LIKE" title="like">
+            👍
+          </button>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<TooltipHarness />);
+    });
+
+    const pillButton = host.querySelector('button[aria-label="Remover reação 👍"]');
+    const pickerButton = host.querySelector('button[data-reaction-emoji="LIKE"]');
+    expect(pillButton?.getAttribute("title")).toBe("Remover reação Joinha É Nóis");
+    expect(pickerButton?.getAttribute("title")).toBe("Joinha É Nóis");
+  });
 });

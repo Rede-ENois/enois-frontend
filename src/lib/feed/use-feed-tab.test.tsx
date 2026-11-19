@@ -109,16 +109,58 @@ describe("useFeedTab", () => {
     expect(goToTab).not.toHaveBeenCalled();
   });
 
-  it("forces Corporativo on the professional interface and never saves it", async () => {
+  it("opens the professional interface on Corporativo, without a URL tab", async () => {
     localStorage.setItem(KEY, "FOR_YOU");
-    await mount("ALL", true);
+    await mount(undefined, true);
+    expect(firstRender).toEqual({ tab: "CORPORATE", ready: true });
     expect(probe.tab).toBe("CORPORATE");
     expect(localStorage.getItem(KEY)).toBe("FOR_YOU");
   });
 
-  it("sends ?aba=CORPORATE on the social interface to the last tab", async () => {
+  it("keeps a forced Corporativo under a tab saved earlier in the session", async () => {
+    // O efeito que lê o navegador roda depois da primeira montagem; a padrão tem que continuar
+    // valendo até alguém escolher outra aba.
+    localStorage.setItem(KEY, "FOR_YOU");
+    await mount(undefined, true);
+    await act(async () => {});
+    expect(probe.tab).toBe("CORPORATE");
+  });
+
+  it("lets the professional interface switch to the social tab", async () => {
+    const rerender = await mount(undefined, true);
+    await act(async () => probe.setTab("TRENDING"));
+    expect(localStorage.getItem(KEY)).toBe("TRENDING");
+    expect(goToTab).toHaveBeenCalledWith("TRENDING");
+
+    await rerender("TRENDING");
+    expect(probe.tab).toBe("TRENDING");
+  });
+
+  it("drops ?aba= when the professional interface goes back to Corporativo", async () => {
+    await mount(undefined, true);
+    await act(async () => probe.setTab("CORPORATE"));
+    expect(goToTab).not.toHaveBeenCalled();
+
+    const rerender = await mount("TRENDING", true);
+    await act(async () => probe.setTab("CORPORATE"));
+    expect(goToTab).toHaveBeenCalledWith(null);
+
+    await rerender(undefined);
+    expect(probe.tab).toBe("CORPORATE");
+  });
+
+  it("opens Corporativo on the social interface, so the professional feed is reachable", async () => {
     localStorage.setItem(KEY, "TRENDING");
     await mount("CORPORATE");
-    expect(probe.tab).toBe("TRENDING");
+    expect(probe.tab).toBe("CORPORATE");
+    expect(localStorage.getItem(KEY)).toBe("TRENDING");
+  });
+
+  it("keeps ?aba=CORPORATE in the URL instead of reopening the saved tab", async () => {
+    // A aba está na URL do corporativo; tirar o `?aba=` da URL é o que faz o "voltar" cair em
+    // outra aba, então quem devolve para o social tem que levar a aba junto.
+    localStorage.setItem(KEY, "TRENDING");
+    await mount("CORPORATE");
+    expect(probe.tab).toBe("CORPORATE");
   });
 });
