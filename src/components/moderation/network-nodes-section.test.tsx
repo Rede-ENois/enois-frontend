@@ -232,7 +232,31 @@ const backendNode = {
   keyId: "nk_9",
   keyPrefix: "enk_nd_1_",
   keyUsed: true,
+  trafficInMb: 2048,
+  trafficOutMb: 512,
 };
+
+it("repassa o tráfego medido do nó ao painel de admin", async () => {
+  mocks.nodes.mockResolvedValue([backendNode]);
+  await render();
+
+  const view = propsOf().nodes[0];
+  expect(view.trafficInMb).toBe(2048);
+  expect(view.trafficOutMb).toBe(512);
+});
+
+/**
+ * O adapter copia campo por campo. Um nó que ainda não mede tráfego chega com `null` do backend,
+ * e o adapter tem de passar `null` — não `undefined`, que a view não distingue de "campo esquecido".
+ */
+it("nó sem medida de tráfego chega ao painel como null, não undefined", async () => {
+  mocks.nodes.mockResolvedValue([{ ...backendNode, trafficInMb: null, trafficOutMb: null }]);
+  await render();
+
+  const view = propsOf().nodes[0];
+  expect(view.trafficInMb).toBeNull();
+  expect(view.trafficOutMb).toBeNull();
+});
 
 it("formata o último contato e repassa a chave vigente do nó", async () => {
   mocks.nodes.mockResolvedValue([backendNode]);
