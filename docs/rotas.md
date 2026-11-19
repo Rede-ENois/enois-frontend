@@ -36,7 +36,15 @@ Funcionalidades:
 - **Topic is required** on every post published here (standalone posts): there is no "Sem assunto" option, and publish/schedule stay disabled until one is picked. The last topic used is preselected. The backend answers `400 TOPIC_REQUIRED` otherwise.
 - **Profile shortcuts:** the profile composer never publishes; it opens this composer. `?compor=ARTICLE` opens it in article mode; `?compor=MEDIA` attaches the photos/video picked on the profile (handed over in memory by `lib/composer-handoff`). Both params are dropped from the URL after use.
 - **Caption required with media:** the backend refuses a post without text (except PAGE), so "Publicar" stays disabled while the field is empty. With media attached and an empty field, the composer says so below the buttons ("Escreva uma legenda para publicar"); article and poll are left out, since there the field is the title or the question (`lib/feed/caption-required`).
+- **Rascunho persistido (V332):** enquanto a pessoa escreve, o compositor salva sozinho (1,5s depois da última mudança) em `PUT /feed/draft` — um rascunho por conta, o mesmo em qualquer dispositivo. Quem abre o feed com o compositor intocado recebe o rascunho de volta (`GET /feed/draft`), com tipo, texto, assunto, alternativas e extensões da enquete; quem já começou a escrever não é sobrescrito. O `ComposerDraftStatus` (DS) mostra "Rascunho salvo às HH:MM" com o botão "Descartar rascunho" (apaga o salvo no servidor e limpa o compositor). Publicar ou agendar apaga o rascunho (`DELETE /feed/draft`). A mídia anexada não entra no rascunho — os arquivos só sobem no momento de publicar, então quem retoma reanexa. Falha no autosave é silenciosa; as regras completas (tamanho, antiflood, enquete inteira) continuam valendo só na publicação.
 - **Feed infinito** de `PostCard` components
+- **Puxar para renovar:** consulta somente a primeira página e mantém as demais carregadas, sem
+  repetir no histórico os posts que subiram ao topo.
+- **Atualização do cache:** edições e contadores chegam mesmo quando a resposta mantém os mesmos
+  ids e quantidade. Respostas idênticas preservam referências pelo compartilhamento estrutural
+  do TanStack Query.
+- **Chave da consulta:** a listagem e a renovação de fundo usam `feedQueryKey`. Nas dúvidas,
+  Todas usa o filtro vazio, Abertas usa `false` e Resolvidas usa `true`.
 - **"Você está em dia" (only on "Para você"):** the first `FOR_YOU` page carries `lastSeenAt`; every
   other tab gets null and never calls `POST /feed/seen`. The value is kept for the visit (a refetch does
   not move it). "Para você" is ordered by relevance, so the loaded posts newer than the marker go first,
@@ -46,6 +54,8 @@ Funcionalidades:
   `POST /feed/seen` goes once per visit with the newest loaded `createdAt` (`src/lib/feed/caught-up.ts`).
 - **Dúvidas:** no "Tudo", o filtro de tipo "Dúvidas" (`type=QUESTION`) mostra o `QuestionStatusFilter` (Todas, Abertas, Resolvidas → `resolved` omitido, `false`, `true`). Com o tipo Pergunta no compositor aparece o `QuestionComposerHint`. Quem perguntou marca a resposta de outra pessoa nos comentários (otimista, desfaz se a API recusar); a resposta aceita sobe para o topo da lista
 - **Right rail:** events (each with its `EventTicket`, amber when it is today, via `ingressoDeEvento`), today's games, connection suggestions, company prompt and the support card, all as `surface-card` soft tables. The old platform spaces card is gone: those rooms live in `/explorar`.
+  As consultas de eventos, sugestões, jogos e empresas são habilitadas no desktop, a partir de
+  `64rem`, e desabilitadas ao voltar para uma tela mais estreita.
 
 **Componentes auxiliares:**
 
@@ -175,9 +185,13 @@ Página pública (mostra layout mesmo sem auth, mas sem funcionalidade).
 
 - Hero com explicação do programa de mentoria
 - Grid de cards de mentores
+- Busca com espaços nas bordas removidos e consulta após 250 ms de pausa; trocar o termo consultado
+  cancela a busca anterior.
 - Card: avatar, nome, headline, especialidades, avaliação, sessões, preço, próximo horário
 - Dono do perfil pode editar/excluir mentoria
 - Dialog de cadastro como mentor (especialidades, preço)
+- Após o agendamento confirmado, invalida as consultas de sessões, horários, mentores e saldo
+  do diálogo.
 
 **Componentes auxiliares:**
 
@@ -275,6 +289,65 @@ sobre o `NotificationPreferences` do design system.
   "Notificações e avisos" do diálogo "Uso saudável" (`src/components/healthy-usage/`), junto do
   interruptor de avisos; o menu da conta não repete essas opções.
 
+## `/colecoes` - Coleções (`src/routes/colecoes.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `ColecoesPage()`
+
+- Pastas privadas com os posts que o usuário salvou; entrada pelo Explorar
+- Lista de cartões (título, descrição, contagem) com "carregar mais"
+- Botão "Criar coleção" abre o diálogo do design system; criar salva e navega para a pasta
+- Recusas do servidor viram toast traduzido por código (`COLECAO_TITLE_TOO_LONG`, limite, restrição)
+
+## `/colecoes/:colecaoId` - Coleção aberta (`src/routes/colecoes.$colecaoId.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `ColecaoPage()`
+
+- A pasta (sempre sua): editar e remover no cabeçalho; remover apaga a pasta de verdade
+- Barra "Guardar" aceita link ou id do post salvo (extrai o id); recusas `NAO_SALVO`,
+  `JA_NA_COLECAO` e `POST_NOT_FOUND` aparecem na linha, traduzidas
+- Posts guardados rendem pelo card de sempre do feed; "Tirar da coleção" confirma e apaga só o elo
+- Coleção alheia (404) mostra o vazio traduzido
+
+## `/murais` - Murais (`src/routes/murais.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `MuraisPage()`
+
+- Coleções colaborativas do Explorar; lista de cartões (título, dono, contagem) com "carregar mais"
+- Botão "Criar mural" abre o diálogo do design system; criar salva e navega para o quadro
+
+## `/murais/:muralId` - Mural aberto (`src/routes/murais.$muralId.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `MuralPage()`
+
+- O quadro: dono edita/remove; barra "Colar" aceita link ou id de publicação existente
+- Publicações coladas rendem pelo card do feed (comentário e reação seguem lá); "Tirar" confirma
+- Denúncia confirmada derruba o quadro no backend; a tela mostra o vazio traduzido
+
+## `/desabafos` - Desabafos (`src/routes/desabafos.tsx`)
+
+**Auth:** Obrigatória
+
+**Componente:** `DesabafosPage()`
+
+- Feed de texto acolhedor do Explorar, quase um grupo: só dele e isolado — um desabafo não
+  aparece em `/feed`, no perfil, no diário ou na busca (tabelas próprias no backend, V333)
+- Compositor só de texto (1000 caracteres) do design system; publicar avisa e recarrega
+- Linha do tempo cronológica sem gamificação (sem pontos, sem ranking, sem destaque); reação
+  é contada, nunca nominada — a interface oferece as pílulas de apoio (LOVE ❤️, SUPPORT 💪),
+  uma por pessoa, trocável e removível
+- Card abre as acolhidas (comentários planos, resposta direta ao desabafo) no próprio card;
+  quem escreve remove o próprio texto ou a própria acolhida
+- Notificação de acolhida aponta para `/desabafos?post=<id>`: as acolhidas do desabafo avisado
+  abrem sozinhas; o parâmetro fica no endereço até a pessoa trocar de desabafo aberto
+
 ## `/salvos` - Posts Salvos (`src/routes/salvos.tsx`)
 
 **Auth:** Obrigatória
@@ -323,6 +396,11 @@ Página pública (qualquer um pode ver). Loader busca dados ou `notFound`.
 
 - `Section()` - Wrapper de seção do perfil
 - `RecommendationItem()` - Item de recomendação
+- `PerfilFotos()` - Galeria de fotos (aba MÍDIA): tira de miniaturas com visualizador e zoom
+- `PerfilDiario()` - Diário de atividade (aba DIARIO): linha do tempo unificada do que a pessoa
+  publicou, comentou e repostou, buscada de `/users/{username}/diario` por cursor. Os comentários
+  só entram na linha de quem é o dono (regra do backend, igual à aba de respostas); o clique num
+  evento abre `/post/$postId` (o próprio, em publicações; o original, em comentários e reposts).
 
 ## Tratamento de Erros por Rota
 
@@ -399,6 +477,11 @@ seguintes; aqui é o mapa completo.
 | `/projetos/painel`               | `projetos.painel.tsx`                            | Painel de projetos (criar/editar, fila de revisão).                                                                                          |
 | `/rede`                          | `rede.tsx`                                       | Minha rede (convites, sugestões e conexões).                                                                                                 |
 | `/responsavel`                   | `responsavel.tsx`                                | Fluxo de responsável parental (ECA).                                                                                                         |
+| `/colecoes`                      | `colecoes.tsx`                                   | Coleções pessoais (pastas de posts salvos).                                                                                                  |
+| `/colecoes/:colecaoId`           | `colecoes.$colecaoId.tsx`                        | Coleção aberta: guardar, tirar, editar, remover.                                                                                             |
+| `/murais`                        | `murais.tsx`                                     | Murais do Explorar (coleções colaborativas).                                                                                                 |
+| `/murais/:muralId`               | `murais.$muralId.tsx`                            | Mural aberto: colar, tirar, editar, remover.                                                                                                 |
+| `/desabafos`                     | `desabafos.tsx`                                  | Desabafos do Explorar: feed acolhedor de texto, só dele, fora do feed principal.                                                             |
 | `/salvos`                        | `salvos.tsx`                                     | Posts salvos.                                                                                                                                |
 | `/seguranca`                     | `seguranca.tsx`                                  | Segurança da conta: senha, 2FA, sessões, contas vinculadas.                                                                                  |
 | `/servicos`                      | `servicos.tsx`                                   | Catálogo de serviços (contratar).                                                                                                            |
@@ -430,6 +513,9 @@ fim da URL pública, tem namespace próprio no backend e pode ser diferente do `
 com ação própria (não espera o resto do formulário); o formato é validado em
 `src/lib/corporate/nametag.ts`, o mesmo do backend. Trocar o nametag muda o endereço público — o
 antigo deixa de responder — sem tocar no perfil social.
+
+Em grupos, o filtro dos grupos próprios é imediato. A busca no catálogo remove espaços nas bordas,
+espera 250 ms de pausa e cancela a consulta anterior quando o termo consultado muda.
 
 Em grupos, o dono pode selecionar um tópico e usar **Renomear tópico** para editar o nome
 pelo diálogo. O formulário aceita até 80 caracteres e usa o PATCH existente, mantendo a descrição,

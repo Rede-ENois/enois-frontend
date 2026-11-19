@@ -60,11 +60,14 @@ cliente. A decisão humana registra o revisor e o instante; não é apresentada 
 
 As views e a propriedade opcional `PanicModeSection.compact` dependem do design system em revisão.
 A prova histórica usou tarball da árvore de desenvolvimento, mantendo a versão-base do pacote.
-A composição atual preserva o manifesto e o lockfile da QA, com a referência `^0.35.0`; aguarda
-tarball reconciliado que contenha tanto o painel quanto os exports atuais da rede. O pacote antigo
-não foi instalado neste worktree. Não há caminho local nem versão futura inventada nos manifestos.
-Publicação de versão ou pré-versão pelo mantenedor, atualização coordenada do consumidor e
-instalação limpa continuam necessárias antes de liberar a integração. Não houve deploy.
+A preparação de 19/11/2026 incorpora por merge a QA
+`98435bc02f42e384c7e9a917e7ca70629a876716`, preservando seu manifesto e lockfile: referência
+`^0.41.4`, resolução `0.41.4`. Isso não comprova os exports do pacote publicado nem uma instalação
+limpa: as dependências físicas locais ainda contêm o tarball anterior, de versão-base `0.37.5`.
+O coordenador instalará o tarball final do painel antes dos gates dependentes do DS. Não há caminho
+local nem versão futura inventada nos manifestos. Publicação de versão ou pré-versão pelo mantenedor,
+atualização coordenada do consumidor e instalação limpa continuam necessárias antes de liberar a
+integração. Não houve deploy.
 
 ## Verificação
 
@@ -76,8 +79,10 @@ sem mudança do modo. A regressão de erro entre confirmações também usa a vi
 
 A prova de navegador utiliza o frontend real com API explicitamente simulada e dados fictícios.
 Ela não é integração com backend real nem validação de produção. Os resultados históricos e suas
-limitações ficam em `docs/proof/painel-admin/README.md`; a preparação atual, sem repetir aqueles
-gates, fica em `docs/proof/painel-admin/INTEGRACAO-QA.md`.
+limitações ficam em `docs/proof/painel-admin/README.md`; a preparação inicial e histórica fica em
+`docs/proof/painel-admin/INTEGRACAO-QA.md`. A reconciliação e os checks independentes de 19/11/2026
+estão em `docs/proof/painel-admin/CONTINUACAO-2026-11-19.md`, sem atribuir os gates históricos à
+composição atual.
 
 A rota legada continua extensa, mas foi reduzida pela extração da fila e navegação. As seções
 administrativas não envolvidas foram preservadas, sem uma refatoração visual geral do aplicativo.

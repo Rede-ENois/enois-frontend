@@ -2,6 +2,10 @@ import type { CommentView } from "@/types/application/comment/comment-view";
 
 export type CommentItemProps = {
   comment: CommentView;
+  /** Id da linha na DOM (`data-comment-id`), para a notificação rolar até o comentário. */
+  commentDomId?: string;
+  /** Realce temporário: o clique na notificação leva AO comentário, com anel por um instante. */
+  highlighted?: boolean;
   replyingTo?: CommentView["authorName"];
   /** Autor do post: ele também pode fixar qualquer comentário. */
   postAuthorId: string;

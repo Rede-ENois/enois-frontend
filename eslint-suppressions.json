@@ -11,10 +11,10 @@
   },
   "src/components/blog/blog-post-editor.tsx": {
     "local/no-front-markup": {
-      "count": 37
+      "count": 22
     },
     "no-restricted-globals": {
-      "count": 5
+      "count": 2
     },
     "no-restricted-syntax": {
       "count": 1
@@ -63,11 +63,6 @@
   "src/components/design-system-provider.tsx": {
     "local/no-front-markup": {
       "count": 1
-    }
-  },
-  "src/components/emotes/emote-picker-dialog.tsx": {
-    "local/no-front-markup": {
-      "count": 37
     }
   },
   "src/components/error-banner.tsx": {
@@ -138,15 +133,10 @@
   },
   "src/components/marketplace/marketplace-section.tsx": {
     "local/no-front-markup": {
-      "count": 205
+      "count": 197
     },
     "no-restricted-syntax": {
       "count": 6
-    }
-  },
-  "src/components/mention-textarea.tsx": {
-    "local/no-front-markup": {
-      "count": 8
     }
   },
   "src/components/mentoring/mentor-agenda-dialog.tsx": {
@@ -262,16 +252,6 @@
   "src/components/post/link-preview-card.tsx": {
     "local/no-front-markup": {
       "count": 25
-    }
-  },
-  "src/components/post/poll-card.tsx": {
-    "local/no-front-markup": {
-      "count": 27
-    }
-  },
-  "src/components/post/poll-composer.tsx": {
-    "local/no-front-markup": {
-      "count": 18
     }
   },
   "src/components/post/post-comments.tsx": {
@@ -502,7 +482,7 @@
   },
   "src/routes/comunidades.$communityId.canais.$channelId.tsx": {
     "local/no-front-markup": {
-      "count": 47
+      "count": 46
     }
   },
   "src/routes/comunidades.$communityId.tsx": {
@@ -719,7 +699,7 @@
   },
   "src/routes/servicos.tsx": {
     "local/no-front-markup": {
-      "count": 145
+      "count": 141
     }
   },
   "src/routes/silenciados.tsx": {
@@ -745,11 +725,6 @@
   "src/routes/termos.tsx": {
     "local/no-front-markup": {
       "count": 9
-    }
-  },
-  "src/routes/vagas.$jobId.candidaturas.tsx": {
-    "local/no-front-markup": {
-      "count": 74
     }
   },
   "src/routes/vagas.$jobId.tsx": {

@@ -3,14 +3,18 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
+import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
-import { PostActions as PostActionsView } from "@rede-enois/design-system/domain";
+import {
+  PostActions as PostActionsView,
+  PostDestinosDialog,
+} from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
 import { Copy, ExternalLink, MessageCircle } from "lucide-react";
 
-import { REACTION_EMOJIS, reactionsApi } from "@/lib/api";
+import { reactionsApi } from "@/lib/api";
 import { updatePostInQueryCache } from "@/lib/feed/post-query-cache";
 import {
   savedPostsQueryOptions,
@@ -18,6 +22,7 @@ import {
   syncSavedPostsCache,
 } from "@/lib/feed/saved-posts";
 import { prefersReducedMotion, readEconomicMode, readForceMotion } from "@/lib/lite-mode";
+import { usePostDestinos } from "@/lib/post-destinos/use-post-destinos";
 import { usePostReaction } from "@/lib/reactions/use-post-reaction";
 import { useAuth } from "@/lib/use-auth";
 import { useMountedOnce } from "@/lib/use-mounted-once";
@@ -67,7 +72,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   useEffect(() => {
     initializePostCard(post.id);
     return () => disposePostCard(post.id);
-  }, [disposePostCard, initializePostCard, post]);
+  }, [disposePostCard, initializePostCard, post.id]);
 
   const [saved, setSaved] = useState(false);
 
@@ -76,11 +81,12 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const { data: savedData } = useQuery({
     ...savedPostsQueryOptions(),
     enabled: !!user,
+    select: (data) => data.items.some((p) => p.id === post.id),
   });
 
   useEffect(() => {
-    if (savedData) {
-      setSaved(savedData.items.some((p) => p.id === post.id));
+    if (savedData !== undefined) {
+      setSaved(savedData);
     }
   }, [savedData, post.id]);
 
@@ -102,10 +108,16 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
     }
   };
 
+  // "Para onde vai este post": murais e coleções do próprio usuário, com a marca de onde o
+  // post já está. O salvar acima é compartilhado — guardar numa coleção salva antes, se preciso.
+  const destinos = usePostDestinos(post);
+  const destinosMounted = useMountedOnce(destinos.open);
+
   // Republicar copia o post para o feed da pessoa, creditando o autor original. Conteúdo de
   // comunidade/canal e os tipos que não viajam (página, artigo, blog, business, moment) ficam de fora.
   const canRepost =
-    !post.community && !["PAGE", "ARTICLE", "BLOG", "BUSINESS", "MOMENT"].includes(post.type);
+    !post.community &&
+    !["PAGE", "ARTICLE", "BLOG", "BUSINESS", "MOMENT", "INSTANTE"].includes(post.type);
   // O clique abre o diálogo, que oferece republicar direto ou com uma opinião (até 600).
   const [repostOpen, setRepostOpen] = useState(false);
   const repostMounted = useMountedOnce(repostOpen);
@@ -127,7 +139,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   const resolvePostUrl = () => shareUrl ?? `${window.location.origin}/post/${post.id}`;
 
   const handleCopyLink = async () => {
-    await trackShare();
+    void trackShare();
     try {
       await navigator.clipboard.writeText(resolvePostUrl());
       toast(texts.posts.shareCopied, "success");
@@ -137,7 +149,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
   };
 
   const handleNativeShare = async () => {
-    await trackShare();
+    void trackShare();
     try {
       await navigator.share({ url: resolvePostUrl() });
     } catch {
@@ -160,13 +172,14 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
 
   return (
     <PostActionsView
-      emojis={REACTION_EMOJIS}
+      emojis={REACTION_FIGURE_EMOJIS}
       reactionStatus={post.currentUserReaction ?? null}
       onReact={toggleReaction}
       // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.
       reactionPending={card?.reactionPending ?? false}
       motionAllowed={motionAllowed}
       reactionCount={reactionCount}
+      reactionSummary={post.reactionSummary ?? undefined}
       commentsCount={postCounters.comments}
       repostsCount={postCounters.reposts ?? 0}
       savesCount={postCounters.saves}
@@ -201,8 +214,25 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
       }
       onReport={() => setShowReport(post.id, true)}
       onSave={handleSave}
+      onDestinos={destinos.disponivel ? destinos.abrir : undefined}
       dialogs={
         <>
+          {destinosMounted && (
+            <PostDestinosDialog
+              open={destinos.open}
+              onOpenChange={destinos.onOpenChange}
+              postId={post.id}
+              murais={destinos.murais}
+              colecoes={destinos.colecoes}
+              carregando={destinos.carregando}
+              pendentes={destinos.pendentes}
+              erro={destinos.erro}
+              onColarNoMural={destinos.colarNoMural}
+              onGuardarNaColecao={(colecaoId) =>
+                destinos.guardarNaColecao(colecaoId, saved, setSaved)
+              }
+            />
+          )}
           {repostMounted && (
             <RepostDialog
               postId={post.id}

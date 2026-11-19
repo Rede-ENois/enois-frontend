@@ -26,7 +26,7 @@ import { marketplaceApi, themesApi } from "@/lib/api";
 import { formatFaisca, parseFaiscaInput } from "@/lib/faisca";
 import { useListingTheme } from "@/lib/marketplace/use-listing-theme";
 import { registerGalleryCollection } from "@/lib/theme/gallery-collections";
-import { useIsAuthenticated } from "@/lib/use-auth";
+import { useAuth, useIsAuthenticated } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 
 import { ThemeSellDialog } from "@/components/appearance/theme-sell-dialog";
@@ -273,6 +273,12 @@ function Miniatura({ packageJson }: { packageJson: string }) {
 }
 
 /** Amostra maior do item: um cartão de perfil/post com as cores reais do pacote. */
+/**
+ * Amostra de pré-visualização: um CARTÃO DE PERFIL de verdade com a paleta do tema (o que o
+ * comprador vê instalado), não barras abstratas — o relato era "não tem como pré-visualizar
+ * direito antes de comprar". Os textos são reais (não skeleton) para o tamanho de fonte do
+ * tema ficar honesto na amostra.
+ */
 function PreviewMock({ packageJson }: { packageJson: string }) {
   const p = paletteOf(packageJson);
 
@@ -283,42 +289,44 @@ function PreviewMock({ packageJson }: { packageJson: string }) {
         style={{ background: p.surface, borderColor: p.border }}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="h-10 w-10 shrink-0 rounded-full" style={{ background: p.primary }} />
+          <span
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-semibold"
+            style={{ background: p.primary, color: p.bg }}
+          >
+            MR
+          </span>
 
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="h-2.5 w-2/3 rounded-full" style={{ background: p.strong }} />
-            <div
-              className="h-2 w-1/2 rounded-full"
-              style={{ background: p.subtle, opacity: 0.55 }}
-            />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium" style={{ color: p.strong }}>
+              Marina Rocha
+            </p>
+
+            <span
+              className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+              style={{ background: p.subtle, opacity: 0.9, color: p.surface }}
+            >
+              Contribuinte
+            </span>
           </div>
         </div>
 
-        <div className="mt-4 space-y-2">
-          <div
-            className="h-2 w-full rounded-full"
-            style={{ background: p.subtle, opacity: 0.35 }}
-          />
-          <div
-            className="h-2 w-11/12 rounded-full"
-            style={{ background: p.subtle, opacity: 0.35 }}
-          />
-          <div className="h-2 w-3/5 rounded-full" style={{ background: p.subtle, opacity: 0.35 }} />
-        </div>
+        <p className="mt-3 text-sm" style={{ color: p.strong }}>
+          Esse detalhe do cache mudou minha semana.
+        </p>
 
         <div className="mt-4 flex items-center gap-2">
           <span
             className="rounded-full px-4 py-1.5 text-xs font-medium"
             style={{ background: p.primary, color: p.bg }}
           >
-            Botão
+            Publicar
           </span>
 
           <span
             className="rounded-full border px-4 py-1.5 text-xs font-medium"
             style={{ borderColor: p.border, color: p.strong }}
           >
-            Secundário
+            Cancelar
           </span>
         </div>
       </div>
@@ -360,6 +368,10 @@ function ListingDetailsDialog({
   buying,
   buyFailed,
   onBuy,
+  mine,
+  usingMine,
+  useMineFailed,
+  onUseMine,
 }: {
   listing: MarketplaceListingView;
   packageJson: string | null | undefined;
@@ -368,8 +380,23 @@ function ListingDetailsDialog({
   buying: boolean;
   buyFailed: boolean;
   onBuy: () => void;
+  /** O tema listado é meu: aplicar não passa por compra. */
+  mine: boolean;
+  usingMine?: boolean;
+  useMineFailed?: boolean;
+  onUseMine?: () => void;
 }) {
   const description = listing.description?.trim();
+  const actionFailed = mine ? useMineFailed : buyFailed;
+  const actionError = mine ? texts.marketplace.useMineError : texts.marketplace.buyError;
+  const actionDisabled = mine ? usingMine : buying;
+  const actionLabel = mine
+    ? usingMine
+      ? texts.marketplace.usingMine
+      : texts.marketplace.useMine
+    : buying
+      ? texts.marketplace.buying
+      : texts.marketplace.buy;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -413,16 +440,22 @@ function ListingDetailsDialog({
               {formatFaisca(listing.price)}
             </span>
 
-            <p className="mt-1 text-xs text-text-subtle">{texts.marketplace.escrowHint}</p>
+            <p className="mt-1 text-xs text-text-subtle">
+              {mine ? texts.marketplace.mineHint : texts.marketplace.escrowHint}
+            </p>
 
-            {buyFailed && (
+            {actionFailed && (
               <p role="alert" className="mt-2 text-xs text-destructive">
-                {texts.marketplace.buyError}
+                {actionError}
               </p>
             )}
 
-            <Button className="mt-3 w-full rounded-full" disabled={buying} onClick={onBuy}>
-              {buying ? texts.marketplace.buying : texts.marketplace.buy}
+            <Button
+              className="mt-3 w-full rounded-full"
+              disabled={actionDisabled}
+              onClick={mine ? onUseMine : onBuy}
+            >
+              {actionLabel}
             </Button>
           </div>
         </div>
@@ -441,7 +474,13 @@ function ListingCard({
 }) {
   const theme = useListingTheme(listing);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const setThemeCollection = usePreferencesStore((state) => state.setThemeCollection);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  // A listagem é minha: comprar o próprio tema é barrado pela API, então o card oferece
+  // aplicar o pacote direto (sem faíscas, sem escrow).
+  const mine = !!user && user.id === listing.sellerId;
   const buy = useMutation({
     mutationFn: () => marketplaceApi.buy(listing.id),
     onSuccess: (result) => {
@@ -450,6 +489,34 @@ function ListingCard({
       onBought(result.purchaseId);
     },
   });
+  const useMine = useMutation({
+    mutationFn: async () => {
+      await marketplaceApi.ownerDownload(listing.id);
+      return themesApi.get(listing.itemId);
+    },
+    onSuccess: (listed) => {
+      const collection = registerGalleryCollection({
+        id: listed.id,
+        name: listed.name,
+        description: "",
+        packageJson: listed.packageJson,
+        modeDefault: listed.modeDefault,
+      });
+      setThemeCollection(collection.id);
+      toast("Tema aplicado!", "success");
+      setDetailsOpen(false);
+    },
+  });
+  const actionFailed = mine ? useMine.isError : buy.isError;
+  const actionError = mine ? texts.marketplace.useMineError : texts.marketplace.buyError;
+  const actionPending = mine ? useMine.isPending : buy.isPending;
+  const actionLabel = mine
+    ? useMine.isPending
+      ? texts.marketplace.usingMine
+      : texts.marketplace.useMine
+    : buy.isPending
+      ? texts.marketplace.buying
+      : texts.marketplace.buy;
   const description = listing.description?.trim();
 
   return (
@@ -509,19 +576,19 @@ function ListingCard({
             {formatFaisca(listing.price)}
           </span>
 
-          {buy.isError && !detailsOpen && (
+          {actionFailed && !detailsOpen && (
             <p role="alert" className="text-xs text-destructive">
-              {texts.marketplace.buyError}
+              {actionError}
             </p>
           )}
 
           <Button
             size="sm"
             className="w-full rounded-full"
-            disabled={buy.isPending}
-            onClick={() => buy.mutate()}
+            disabled={actionPending}
+            onClick={() => (mine ? useMine.mutate() : buy.mutate())}
           >
-            {buy.isPending ? texts.marketplace.buying : texts.marketplace.buy}
+            {actionLabel}
           </Button>
         </div>
       </div>
@@ -534,6 +601,10 @@ function ListingCard({
         buying={buy.isPending}
         buyFailed={buy.isError}
         onBuy={() => buy.mutate()}
+        mine={mine}
+        usingMine={useMine.isPending}
+        useMineFailed={useMine.isError}
+        onUseMine={() => useMine.mutate()}
       />
     </li>
   );

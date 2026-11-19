@@ -117,6 +117,46 @@ describe("Reações rápidas de uma publicação", () => {
     vi.unstubAllGlobals();
   });
 
+  it("executa o clique feito durante o voo quando a requisição termina (#1053)", async () => {
+    const response = deferredResponse();
+    mocks.react.mockReturnValueOnce(response.promise);
+
+    // Primeira reação sai; o clique de remover acontece enquanto ela ainda está em voo (rede
+    // lenta). Antes ele era descartado em silêncio: a pessoa clicava várias vezes e nada mudava.
+    await act(async () => controls[0].toggle("LOVE"));
+    expect(statusOf(post.id)).toBe("LOVE");
+    now += 1_000;
+    await act(async () => {
+      controls[1].toggle("LOVE"); // em voo: fica enfileirado
+      response.resolve({ counters: post.counters });
+    });
+    // A intenção enfileirada roda com o cache já alinhado: a remoção vai ao servidor.
+    expect(mocks.removeReaction).toHaveBeenCalledTimes(1);
+    expect(statusOf(post.id)).toBeNull();
+    await act(async () => {});
+    expect(usePostCardStore.getState().cards[post.id].reactionPending).toBe(false);
+  });
+
+  it("cliques múltiplos em voo guardam só a última intenção", async () => {
+    const response = deferredResponse();
+    mocks.react.mockReturnValueOnce(response.promise);
+
+    await act(async () => controls[0].toggle("LOVE"));
+    now += 1_000;
+    await act(async () => {
+      controls[1].toggle("LOVE");
+      controls[0].toggle("WOW");
+      controls[1].toggle("WOW");
+      response.resolve({ counters: post.counters });
+    });
+
+    // Apenas a última (WOW) roda: era LOVES alternados que faziam a contagem dançar.
+    expect(mocks.removeReaction).not.toHaveBeenCalled();
+    expect(mocks.react).toHaveBeenLastCalledWith(post.id, "WOW");
+    await act(async () => {});
+    expect(statusOf(post.id)).toBe("WOW");
+  });
+
   it("aceita uma única ação antes de cancelar as leituras, mesmo entre duas instâncias", async () => {
     const response = deferredResponse();
     mocks.react.mockReturnValue(response.promise);
@@ -218,5 +258,47 @@ describe("Reações rápidas de uma publicação", () => {
     await act(async () => controls[1].toggle("WOW"));
     expect(mocks.react).toHaveBeenCalledTimes(2);
     expect(statusOf(post.id)).toBe("WOW");
+  });
+
+  it("restaura o resumo de reações quando a remoção falha", async () => {
+    const comReacao: PostView = {
+      ...post,
+      currentUserReaction: "LOVE",
+      counters: { ...post.counters, reactions: 1 },
+      reactionSummary: { LOVE: 1 },
+    };
+    // O card do feed lê do cache do feed: é ele que pinta a bolinha e o contador na tela.
+    const feedKey = ["feed", "ALL", "", ""] as const;
+    client.setQueryData(feedKey, {
+      pages: [{ items: [comReacao], nextCursor: null }],
+      pageParams: [null],
+    });
+    client.setQueryData<PostView>(["post", post.id], comReacao);
+    mocks.removeReaction.mockRejectedValueOnce(new Error("Falha simulada"));
+
+    await act(async () => controls[0].toggle("LOVE"));
+    await act(async () => {});
+
+    const doFeed = client.getQueryData<FeedPages>(feedKey)?.pages[0].items[0];
+    expect(doFeed?.currentUserReaction).toBe("LOVE");
+    expect(doFeed?.reactionSummary).toEqual({ LOVE: 1 });
+    const depois = client.getQueryData<PostView>(["post", post.id]);
+    expect(depois?.reactionSummary).toEqual({ LOVE: 1 });
+  });
+
+  it("restaura o resumo de reações quando a adição falha", async () => {
+    client.setQueryData<PostView>(["post", post.id], {
+      ...post,
+      counters: { ...post.counters, reactions: 1 },
+      reactionSummary: { LIKE: 1 },
+    });
+    mocks.react.mockRejectedValueOnce(new Error("Falha simulada"));
+
+    await act(async () => controls[0].toggle("WOW"));
+    await act(async () => {});
+
+    const depois = client.getQueryData<PostView>(["post", post.id]);
+    expect(depois?.currentUserReaction).toBeNull();
+    expect(depois?.reactionSummary).toEqual({ LIKE: 1 });
   });
 });

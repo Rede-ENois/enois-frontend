@@ -218,7 +218,10 @@ function ServiceRow({
         </p>
       </div>
 
-      <span className="shrink-0 rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-primary-text">
+      <span
+        title={price}
+        className="max-w-[45%] shrink-0 truncate rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-primary-text"
+      >
         {price}
       </span>
 

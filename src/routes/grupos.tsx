@@ -23,6 +23,7 @@ import { Camera, ChevronRight, Compass, Loader2, Plus, Search, Users } from "luc
 import { groupsApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { useIsAuthenticated } from "@/lib/use-auth";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { AppContainer } from "@/components/app-container";
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/grupos")({
  */
 function Grupos() {
   const [query, setQuery] = useState("");
+  const searchTerm = useDebouncedValue(query.trim(), 250);
   const [createOpen, setCreateOpen] = useState(false);
   const authenticated = useIsAuthenticated();
   const queryClient = useQueryClient();
@@ -64,8 +66,8 @@ function Grupos() {
     isLoading: isListLoading,
     isError: isListError,
   } = useQuery({
-    queryKey: ["groups", "list", query],
-    queryFn: () => groupsApi.list(query.trim() || undefined),
+    queryKey: ["groups", "list", searchTerm],
+    queryFn: ({ signal }) => groupsApi.list(searchTerm || undefined, undefined, undefined, signal),
     enabled: !isDetail,
   });
 
@@ -224,7 +226,7 @@ function Grupos() {
 
               {!isListLoading && !isListError && suggestedGroups.length === 0 && (
                 <p className="mt-4 text-xs text-text-subtle">
-                  {query.trim() ? texts.groups.discoverSearchEmpty : texts.groups.discoverEmpty}
+                  {searchTerm ? texts.groups.discoverSearchEmpty : texts.groups.discoverEmpty}
                 </p>
               )}
 

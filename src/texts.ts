@@ -1,3 +1,5 @@
+import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
 
@@ -31,6 +33,7 @@ export const texts = {
     button: "Figurinhas",
     searchPlaceholder: "Buscar figurinha",
     tabRecent: "Recentes",
+    tabEnois: "É Nóis",
     tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
@@ -118,6 +121,7 @@ export const texts = {
       professionalProfile: "Perfil profissional",
       explore: "Explorar",
       agenda: "Agenda",
+      roleplay: "Éroleplay",
     },
     context: { social: "Social", professional: "Profissional" },
   },
@@ -151,9 +155,11 @@ export const texts = {
   explore: {
     seoTitle: "Explorar · Énóis",
     sections: {
+      // A ordem das chaves é a ordem das seções no Explorar: Comunidade vem primeiro (é a
+      // casa do convívio), depois Brincar, Construir e Trabalho.
+      community: "Comunidade",
       play: "Brincar",
       build: "Construir",
-      community: "Comunidade",
       work: "Trabalho",
     },
     items: {
@@ -171,7 +177,195 @@ export const texts = {
       companies: { label: "Empresas", description: "Quem contrata e o que faz" },
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
       agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
+      roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
+      colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
+      desabafos: { label: "Desabafos", description: "Um espaço acolhedor para desabafar" },
+      confessionario: { label: "Confessionário", description: "Histórias anônimas para contar" },
+      desafios: { label: "Desafios", description: "Convites da comunidade com reconhecimento" },
+      termometro: {
+        label: "Termômetro",
+        description: "O clima coletivo medido pelo que a comunidade publica",
+      },
+      papoReto: {
+        label: "Papo Reto",
+        description: "Os assuntos que a rede está conversando agora",
+      },
+      murais: { label: "Murais", description: "Coleções colaborativas de publicações" },
+      colecoes: { label: "Coleções", description: "Pastas só suas com os posts que você salvou" },
     },
+  },
+
+  /** Textos que a rota da Colagem orquestra (avisos e cabeçalho); o desenho vive no DS. */
+  colagem: {
+    seoTitle: "Colagem · Énóis",
+    title: "Colagem",
+    subtitle: "Um mural vivo de fotografias: publique a sua e contribua na dos outros.",
+    publishSuccess: "Foto colada na Colagem.",
+    publishError: "Não foi possível colar a foto. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    captionTooLongError: "A legenda aceita no máximo 500 caracteres.",
+    commentSuccess: "Contribuição enviada.",
+    commentError: "Não foi possível contribuir. Tente de novo.",
+    commentTooLongError: "O comentário aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva um texto ou cole uma foto.",
+    replyBlocked: "Resposta a comentário fotográfico é só em texto.",
+    deletePhotoDone: "Foto removida da Colagem.",
+    deleteCommentDone: "Comentário removido.",
+  },
+
+  /** Textos que a rota dos Desabafos orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  desabafos: {
+    seoTitle: "Desabafos · Énóis",
+    title: "Desabafos",
+    subtitle:
+      "Um espaço acolhedor para desabafar: só texto, sem pressa e sem julgamento. Nada daqui vai para o feed principal.",
+    publishSuccess: "Desabafo publicado.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    contentTooLongError: "O desabafo aceita no máximo 5000 caracteres.",
+    removeDone: "Desabafo removido.",
+    commentSuccess: "Acolhida enviada.",
+    commentError: "Não foi possível acolher. Tente de novo.",
+    commentTooLongError: "A acolhida aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva uma acolhida antes de enviar.",
+    removeCommentDone: "Acolhida removida.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota do Confessionário orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  confessionario: {
+    seoTitle: "Confessionário · Énóis",
+    title: "Confessionário",
+    subtitle:
+      "Histórias anônimas para contar: experiências, situações constrangedoras e confissões. Ninguém fica sabendo quem contou — e nada daqui vai para o feed principal.",
+    publishSuccess: "História publicada.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    contentTooLongError: "A história aceita no máximo 5000 caracteres.",
+    removeDone: "História removida.",
+    commentSuccess: "Comentário enviado.",
+    commentError: "Não foi possível comentar. Tente de novo.",
+    commentTooLongError: "O comentário aceita no máximo 800 caracteres.",
+    commentEmptyError: "Escreva um comentário antes de enviar.",
+    removeCommentDone: "Comentário removido.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    reactionError: "Não foi possível reagir. Tente de novo.",
+  },
+
+  /** Textos que a rota dos Desafios orquestra (cabeçalho, avisos e erros); o desenho vive no DS. */
+  desafios: {
+    seoTitle: "Desafios · Énóis",
+    title: "Desafios",
+    subtitle:
+      "Convites da comunidade: alguém convoca, a galera responde no mural e quem convocou encerra reconhecendo uma participação. Autoria nominal, sem ranking e sem prêmio.",
+    publishSuccess: "Desafio convocado.",
+    publishError: "Não foi possível convocar. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode publicar aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 3000 caracteres.",
+    deadlineInvalidError: "O prazo precisa ser uma data futura (até 31 dias).",
+    removeDone: "Desafio removido.",
+    removeError: "Não foi possível remover. Tente de novo.",
+    closeDone: "Desafio encerrado com reconhecimento.",
+    closeError: "Não foi possível encerrar. Tente de novo.",
+    participateSuccess: "Participação enviada.",
+    participateError: "Não foi possível participar. Tente de novo.",
+    contentTooLongError: "A participação aceita no máximo 2000 caracteres.",
+    contentEmptyError: "Escreva sua participação antes de enviar.",
+    closedError: "Este desafio não recebe mais participação.",
+    ownChallengeError: "Quem convocou não participa do próprio desafio.",
+    removeParticipacaoDone: "Participação removida.",
+    removeParticipacaoError: "Não foi possível remover a participação. Tente de novo.",
+    cheerError: "Não foi possível torcer. Tente de novo.",
+  },
+
+  /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  termometro: {
+    seoTitle: "Termômetro · Énóis",
+    title: "Termômetro",
+    subtitle:
+      "O clima coletivo da rede, medido a partir do que a comunidade já publicou. Ninguém responde nada aqui: o sistema lê o que é público e conta o conjunto. Só porcentagens, nunca quem escreveu.",
+    error: "Não foi possível abrir o Termômetro. Tente de novo.",
+  },
+
+  /** Textos que a rota do Papo Reto orquestra (cabeçalho e avisos); o desenho vive no DS. */
+  papoReto: {
+    seoTitle: "Papo Reto · Énóis",
+    title: "Papo Reto",
+    subtitle:
+      "O que a rede está conversando, medido a partir do que já é público no feed. Ninguém responde nada aqui: o sistema lê os textos públicos e conta as expressões que nomeiam a conversa. Só assunto e contagem, nunca quem falou.",
+    error: "Não foi possível abrir o Papo Reto. Tente de novo.",
+  },
+
+  /** Textos que as rotas dos Murais orquestram (cabeçalho, avisos e erros); o desenho vive no DS. */
+  murais: {
+    seoTitle: "Murais · Énóis",
+    title: "Murais",
+    subtitle:
+      "Coleções colaborativas: qualquer pessoa cola publicações que já estão no feed — e elas continuam sendo elas mesmas.",
+    criar: "Criar mural",
+    criado: "Mural criado.",
+    editado: "Mural atualizado.",
+    removido: "Mural removido.",
+    erro: "Não foi possível carregar os murais. Tente de novo.",
+    erroCriar: "Não foi possível criar o mural. Tente de novo.",
+    erroEditar: "Não foi possível salvar as mudanças. Tente de novo.",
+    erroRemover: "Não foi possível remover o mural. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode fazer isso aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 500 caracteres.",
+    tituloObrigatorio: "Dê um título ao mural.",
+    colado: "Publicação colada no mural.",
+    erroColar: "Não foi possível colar a publicação. Tente de novo.",
+    jaNoMural: "Essa publicação já está neste mural.",
+    postNaoEncontrado: "Publicação não encontrada ou invisível para você.",
+    erroTirar: "Não foi possível tirar a publicação do mural. Tente de novo.",
+    tirado: "Publicação tirada do mural.",
+    naoAutorizado: "Só quem colou ou o dono do mural pode tirar a publicação.",
+    naoEncontrado: "Esse mural não existe mais.",
+  },
+
+  /** Seletor "para onde vai este post", no menu do card (murais e coleções). */
+  postDestinos: {
+    acao: "Adicionar ao mural ou coleção",
+    colado: "Publicação colada no mural.",
+    guardado: "Publicação guardada na coleção.",
+    erro: "Não foi possível abrir os destinos. Tente de novo.",
+  },
+
+  /** Textos que a rota das Coleções orquestra (avisos e cabeçalho); o desenho vive no DS. */
+  colecoes: {
+    seoTitle: "Coleções · Énóis",
+    title: "Coleções",
+    subtitle:
+      "Pastas só suas, com os posts que você salvou: guarde, organize e releia quando quiser.",
+    criar: "Criar coleção",
+    criado: "Coleção criada.",
+    editado: "Coleção atualizada.",
+    removido: "Coleção removida.",
+    erro: "Não foi possível abrir suas coleções. Tente de novo.",
+    erroCriar: "Não foi possível criar a coleção. Tente de novo.",
+    erroEditar: "Não foi possível salvar as mudanças. Tente de novo.",
+    erroRemover: "Não foi possível remover a coleção. Tente de novo.",
+    rateLimitError: "Calma lá! Aguarde um minuto e tente de novo.",
+    restrictedError: "Sua conta está restrita e não pode fazer isso aqui.",
+    titleTooLongError: "O título aceita no máximo 120 caracteres.",
+    descriptionTooLongError: "A descrição aceita no máximo 500 caracteres.",
+    tituloObrigatorio: "Dê um título à coleção.",
+    guardado: "Publicação guardada na coleção.",
+    erroGuardar: "Não foi possível guardar a publicação. Tente de novo.",
+    naoSalvo: "Salve a publicação no perfil antes de guardá-la numa coleção.",
+    jaNaColecao: "Essa publicação já está nesta coleção.",
+    postNaoEncontrado: "Publicação não encontrada ou invisível para você.",
+    erroTirar: "Não foi possível tirar a publicação da coleção. Tente de novo.",
+    tirado: "Publicação tirada da coleção.",
+    naoEncontrado: "Essa coleção não existe mais.",
   },
 
   /**
@@ -347,6 +541,33 @@ export const texts = {
     editCommentError: "Não foi possível editar o comentário.",
     removeCommentTitle: "Remover comentário?",
     removeCommentDescription: "Ele some da publicação; a ação fica registrada na auditoria.",
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre este grupo. Excluir apaga o conteúdo junto; encerrar preserva o histórico.",
+      open: "Gerenciar membros",
+      delete: "Excluir grupo",
+      deleteTitle: "Excluir grupo?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}” com todo o conteúdo dele?`,
+      closeTitle: "Encerrar grupo?",
+      closeBody: (name: string) =>
+        `Encerrar “${name}”? O grupo sai da descoberta e não recebe novos membros; o conteúdo continua guardado.`,
+      deleted: (name: string) => `Grupo “${name}” excluído.`,
+      closed: (name: string) => `Grupo “${name}” encerrado. O conteúdo foi preservado.`,
+      deleteError: "Não foi possível excluir o grupo.",
+      closeError: "Não foi possível encerrar o grupo.",
+      removed: "Membro removido do grupo.",
+      removeError: "Não foi possível remover o membro.",
+      removedOwner: "Dono removido; o grupo passou para o membro mais antigo que ficou.",
+      roles: {
+        OWNER: "Dono",
+        ADMIN: "Administrador",
+        MODERATOR: "Moderador",
+        MEMBER: "Membro",
+      },
+      loadError: "Não foi possível carregar os membros.",
+    },
     removeCommentError: "Não foi possível remover o comentário.",
   },
 
@@ -1238,6 +1459,8 @@ export const texts = {
     newPosts: "Novos posts",
     newPostsCount: (count: number) => (count === 1 ? "1 novo post" : `${count} novos posts`),
     empty: "Sem publicações por enquanto. As da sua rede aparecem aqui.",
+    emptyInteracted:
+      "Você ainda não interagiu com nada. O que você comentar, reagir ou guardar aparece aqui.",
     composer: {
       removeMedia: "Remover mídia",
       topic: "Assunto",
@@ -1268,8 +1491,11 @@ export const texts = {
         tutorial: "Tutorial",
         review: "Avaliação",
         divertido: "Divertido",
+        complaint: "Reclamação",
         moment: "Momento",
         momentHint: "O momento some em 24 horas.",
+        instante: "Instante",
+        instanteHint: "O instante some em 1 hora.",
         poll: "Enquete",
         pollHint: "O campo de cima é a pergunta. Abaixo, de 2 a 6 alternativas.",
       },
@@ -1294,6 +1520,12 @@ export const texts = {
       imageProhibitedTitle: "Imagem ocultada",
       imageProhibitedMessage:
         "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      /** Réplica no feed profissional (#723): a mesma publicação, assinada pelo perfil profissional. */
+      crossPost: {
+        byType:
+          "Para ir também ao feed profissional, use um tipo profissional: insight, projeto, oportunidade, tutorial ou artigo.",
+        noProfile: "Sem perfil profissional ativo, a publicação não vai ao feed profissional.",
+      },
       /** Limites de vídeo (issue #656): a checagem local avisa antes de o upload sair. */
       videoLimitTitle: "Vídeo grande demais",
       videoLimitSize: (mb: number, minutes: number) =>
@@ -1335,6 +1567,7 @@ export const texts = {
       interacted: "Interações",
       projects: "Projetos",
       corporate: "Corporativo",
+      corporateHint: "Corporativo (feed profissional)",
       type: "Tipo de feed",
       openList: "Escolher o tipo de feed",
       allTypes: "Todos os tipos",
@@ -1375,21 +1608,10 @@ export const texts = {
     mediaSpoiler: {
       badge: "SPOILER",
     },
-    /** Enquete: o voto é único e definitivo — a tela diz isso antes e depois de votar. */
+    /** Enquete: os rótulos e estados são do design system; o app só trata os erros da escrita. */
     poll: {
-      optionsLabel: "Alternativas",
-      optionPlaceholder: (position: number) => `Alternativa ${position}`,
-      addOption: "Adicionar alternativa",
-      removeOption: "Remover alternativa",
-      hint: "De 2 a 6 alternativas, até 120 caracteres cada.",
-      vote: "Votar",
-      voting: "Registrando voto…",
-      votes: (total: number) => (total === 1 ? "1 voto" : `${total} votos`),
-      noVotes: "Nenhum voto ainda",
-      yourVote: "Seu voto",
-      locked: "O voto não pode ser alterado.",
       error: "Não foi possível registrar o voto.",
-      alreadyVoted: "Você já votou nesta enquete.",
+      closedError: "O prazo desta enquete terminou.",
     },
     /** Fixar UM post no topo do feed da comunidade/grupo (a administração faz isso). */
     pin: {
@@ -1427,28 +1649,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: {
-        LIKE: "👍",
-        LOVE: "❤️",
-        LAUGH: "😂",
-        ROFL: "🤣",
-        SKULL: "💀",
-        WOW: "😮",
-        SAD: "😢",
-        SOB: "😭",
-        CELEBRATE: "🎉",
-        SUPPORT: "💪",
-        INSIGHTFUL: "💡",
-        ANGRY: "😡",
-        DISGUST: "🤢",
-        SKEPTICAL: "🤨",
-        EYES: "👀",
-        NOTE: "📝",
-        FIRE: "🔥",
-        CLAP: "👏",
-        CLOWN: "🤡",
-        NAILS: "💅",
-      },
+      emojis: REACTION_EMOJIS,
     },
     report: {
       title: "Denunciar post",
@@ -1457,6 +1658,7 @@ export const texts = {
       error: "Não foi possível enviar a denúncia. Tente de novo.",
     },
     reposted: "Republicado no seu perfil.",
+    repostedCommunity: "Republicado na comunidade.",
     alreadyReposted: "Você já republicou este post.",
     repostRemoved: "Republicação removida.",
     repostError: "Não foi possível republicar.",
@@ -1589,12 +1791,25 @@ export const texts = {
       error: "Não foi possível importar agora. Tente de novo.",
       readmeSaved: "Bio atualizada com o README.",
       readmeError: "Não foi possível ler o README agora.",
+      orgs: {
+        title: "Organizações",
+        hint: "Transforme uma organização do GitHub em empresa da comunidade, com os repositórios escolhidos como projetos dela.",
+        choose: "Escolha a organização",
+        /** O botão do aviso de sucesso leva à empresa importada. */
+        open: "Abrir empresa",
+      },
+      orgImported: (name: string, created: number) =>
+        created === 0
+          ? `Organização ${name} pronta, sem projetos novos.`
+          : `${name}: ${created === 1 ? "1 projeto importado" : `${created} projetos importados`}.`,
+      orgError: "Não foi possível importar a organização agora.",
     },
     sections: {
       about: "Sobre",
       skills: "Habilidades",
       goals: "Objetivos profissionais",
       recentPosts: "Publicações recentes",
+      photos: "Fotos",
       availability: "Status atual",
       recommend: "Recomendar",
       recommendations: "Depoimentos",
@@ -1666,12 +1881,26 @@ export const texts = {
       publish: "Publicar",
       savePost: "Salvar",
       published: "Post publicado. Quem segue seu blog foi avisado.",
-      draftSaved: "Rascunho salvo neste navegador.",
+      draftSaved: "Rascunho salvo na sua conta.",
+      draftDiscarded: "Rascunho excluído.",
+      draftDiscardError: "Não foi possível excluir agora.",
       draftSaveError:
         "Não foi possível salvar o rascunho neste navegador. Mantenha esta página aberta.",
+      mediaTitle: "Fotos e vídeos",
+      mediaHint: "As fotos e vídeos escolhidos aqui sobem na hora e aparecem na leitura do texto.",
+      mediaAdd: "Anexar foto ou vídeo",
+      mediaPhoto: "Foto",
+      mediaVideo: "Vídeo",
+      mediaUploading: "Anexo de {{name}} enviando…",
+      mediaRemove: "Remover anexo {{index}}",
+      mediaRetry: "Tentar de novo",
+      mediaLimit: "Um post do blog aceita até 8 fotos e vídeos.",
+      mediaError: "O anexo não subiu. Tente de novo.",
+      mediaPending: "Espere os anexos em envio terminarem para salvar.",
       notifySubscribers: "Avisar os assinantes por e-mail",
       notifySubscribersHint:
-        "Quem assina o seu blog recebe um e-mail com este post (além da notificação no app). Dá para desativar só para este post.",
+        "Avisar os assinantes: quem assina o seu blog recebe um e-mail com este post (além da notificação no app).",
+      notifySubscribersNo: "Avisar os assinantes: não, só publicar no app.",
       updated: "Post atualizado.",
       editPost: "Editar post",
       deletePost: "Excluir post",
@@ -1701,6 +1930,10 @@ export const texts = {
     buy: "Comprar",
     buying: "Retendo faíscas…",
     buyError: "Não foi possível comprar agora. Confira seu saldo e tente de novo.",
+    useMine: "Usar meu tema",
+    usingMine: "Aplicando…",
+    useMineError: "Não foi possível aplicar o seu tema agora. Tente de novo.",
+    mineHint: "Este tema é seu: aplicar não cobra faíscas nem abre compra.",
   },
   projects: {
     seoTitle: "Projetos da comunidade · Énóis",
@@ -1979,6 +2212,15 @@ export const texts = {
       MODA: "Moda e estilo",
       POLITICA: "Política",
       RELIGIAO: "Religião",
+      DESABAFO: "Desabafo",
+      MEIO_AMBIENTE: "Meio ambiente",
+      ANIMAIS: "Animais",
+      CULINARIA: "Culinária",
+      JARDINAGEM: "Jardinagem",
+      ARTESANATO: "Artesanato",
+      HISTORIA: "História",
+      FILOSOFIA: "Filosofia",
+      IDIOMAS: "Idiomas",
     },
     memberCount: (count: number) => `${count} membro${count === 1 ? "" : "s"}`,
     participating: "Participando",
@@ -2004,6 +2246,22 @@ export const texts = {
       description:
         "A comunidade deixa de existir para todo mundo e os membros são desvinculados. Isso não pode ser desfeito.",
       confirm: "Excluir",
+    },
+    admin: {
+      title: "Administração da plataforma",
+      description:
+        "Decisões da administração da plataforma sobre esta comunidade. Só admin vê esta área, e o backend recusa qualquer outro papel.",
+      open: "Gerenciar membros",
+      delete: "Excluir comunidade",
+      deleteTitle: "Excluir comunidade?",
+      deleteBody: (name: string) =>
+        `Esta é uma ação administrativa da plataforma e não pode ser desfeita: excluir “${name}”?`,
+      deleted: (name: string) => `Comunidade “${name}” excluída.`,
+      deleteError: "Não foi possível excluir a comunidade.",
+      removed: "Membro removido da comunidade.",
+      removeError: "Não foi possível remover o membro.",
+      roles: { ADMIN: "Administrador", MEMBER: "Membro" },
+      loadError: "Não foi possível carregar os membros.",
     },
     loadMore: "Carregar mais",
     create: {
@@ -2066,6 +2324,47 @@ export const texts = {
       action: "Pedir par com esse objetivo",
       noTopic: "Sem tema",
     },
+    proposals: {
+      title: "Propostas de par",
+      hint: "Encontramos alguém com o mesmo objetivo. Vejam se combinam: só viram par quando os dois aceitarem.",
+      deadline: (label: string) => `Até ${label} para responder`,
+      partnerAccepted: "já aceitou e escreveu o quebra-gelo dela",
+      partnerWaiting: "ainda não aceitou",
+      accept: "Aceitar",
+      accepting: "Aceitando…",
+      decline: "Recusar",
+      declined: "Proposta recusada. Você volta para a fila no mesmo lugar.",
+      acceptError: "Não foi possível aceitar agora. Tente de novo.",
+      declineError: "Não foi possível recusar agora. Tente de novo.",
+      active: "Os dois aceitaram: o par está de pé.",
+      icebreakerTitle: "Antes de fechar, conte por que esse objetivo agora",
+      icebreakerHint: "A outra pessoa só vê as suas respostas depois que aceitar também.",
+      required: "Obrigatória",
+      optional: "Opcional",
+      requiredError: "Responda a pergunta obrigatória para aceitar.",
+      partnerIcebreaker: "O quebra-gelo de",
+      myAccepted: "Você aceitou. Falta o aceite da outra pessoa para o par começar.",
+      noAnswer: "Sem resposta.",
+      fields: {
+        ice_why_now: {
+          question: "Por que esse objetivo agora?",
+          placeholder: "Ex.: quero trocar de área até o fim do ano.",
+        },
+        ice_weekly_time: {
+          question: "Quanto tempo por semana você pretende dedicar?",
+          options: ["Até 1 hora", "2 a 3 horas", "4 a 5 horas", "Mais de 5 horas"],
+        },
+        ice_follow_up: {
+          question: "Como prefere que a gente se acompanhe?",
+          options: ["Só pelo check-in daqui", "Também por mensagem", "Chamada de vez em quando"],
+        },
+        ice_more: {
+          question: "Algo mais?",
+          placeholder: "Um recado livre, se quiser.",
+        },
+      },
+    },
+    message: "Mandar mensagem",
   },
 
   events: {
@@ -2101,6 +2400,12 @@ export const texts = {
       notOwner: "Só quem criou o evento muda a repetição.",
       updateError: "Não foi possível mudar a repetição. Tente de novo.",
     },
+    conflictTitle: "Outro compromisso nesse horário",
+    conflictDescription: (when: string, what: string) =>
+      `No mesmo horário (${when}) já está na sua agenda: ${what}. Dá para confirmar mesmo assim — é só um aviso.`,
+    conflictsMany: (count: number, first: string) => `${first} e mais ${count - 1}`,
+    conflictConfirm: "Vou mesmo assim",
+    conflictCancel: "Deixa para depois",
     attendSuccess: "Presença confirmada.",
     attendError: "Não foi possível confirmar a presença.",
     cancelAttendanceSuccess: "Presença cancelada.",
@@ -2627,6 +2932,13 @@ export const texts = {
     openError: "Não foi possível abrir a conversa. Tente novamente.",
     selectConversation: "Selecione uma conversa ou comece uma nova para exibir as mensagens",
     sendError: "Não foi possível enviar a mensagem. Tente de novo.",
+    loadingReply: "Buscando a mensagem original...",
+    replyUnavailable: "A mensagem original não está disponível nesta conversa.",
+    replyNavigationError: "Não foi possível abrir a mensagem original. Tente novamente.",
+    encryptedMessage: "🔒 Mensagem cifrada",
+    messageDecryptError: "Não foi possível decifrar esta mensagem neste dispositivo.",
+    attachmentPreview: "Mensagem com mídia",
+    unknownAuthor: "Participante",
     /**
      * Inbox preview with its author: "Você" for the viewer (otherwise the peer seems to have
      * written it) and the sender's first name in groups (the row shows the group, not the author).
@@ -2861,6 +3173,8 @@ export const texts = {
       "Restrições ativas na sua conta e o andamento dos seus recursos. A decisão final é sempre de uma pessoa do time.",
     empty: "Nenhuma penalidade na sua conta.",
     emptyHint: "Isto não é um histórico de elogios — é só o que de fato restringiu a conta.",
+    loadError: "Não foi possível consultar suas penalidades.",
+    retry: "Tentar novamente",
     type: {
       RESTRICTION: "Restrição",
       SUSPENDED: "Suspensão",
@@ -2889,6 +3203,9 @@ export const texts = {
     bannedNotice: "Sua conta está banida após revisão do recurso. Se precisar, fale com o suporte.",
     suspendedNotice:
       "Sua conta está suspensa: você não entra nem publica até recorrer ou o prazo terminar.",
+    reasonLine: (reason: string) => `Motivo: ${reason}`,
+    dueLine: (due: string) =>
+      `Revisável até ${due}. Sem recurso aceito até lá, a suspensão vira banimento.`,
     moderationTitle: "Moderação · recursos",
     moderationDescription:
       "Fila de recursos de penalidade automática. Aprovar remove a restrição; negar converte em banimento (sessões revogadas).",
@@ -3074,8 +3391,29 @@ export const texts = {
       apiRequested: "Requisição enfileirada para o nó.",
       /** Rota ilegível no payload da tarefa: a linha diz o que sabe, sem inventar destino. */
       apiRequestUnknownRoute: "(rota não informada)",
+      /**
+       * Falha que não é do servidor (rede, 5xx sem corpo): sem isso o quadro apareceria vazio, como
+       * se o nó não tivesse medido nada.
+       */
+      observabilityError: "Não foi possível ler o quadro deste servidor.",
       profilesSaved: "Perfis do nó atualizados.",
       actionError: "Não foi possível concluir a ação.",
+      provisionOwnerNotFound: (username: string) =>
+        `A conta @${username} não foi encontrada. Confira o nome de usuário.`,
+      provisionFailed: "Não foi possível gerar o token de provisionamento.",
+      /**
+       * Os perfis que um nó pode receber, na ordem em que a tela os oferece. A chave é o valor que
+       * o backend valida; o texto é o que o admin lê.
+       */
+      profileLabels: {
+        NODE_EDGE: "Borda",
+        NODE_WORKER: "Trabalho assíncrono",
+        NODE_MEDIA: "Mídia",
+        NODE_READ_REPLICA: "Réplica de leitura",
+        NODE_API: "API",
+        NODE_LOCAL: "Local",
+        NODE_EMERGENCY: "Emergência",
+      },
     },
     identityRelease: {
       saved: "Regras da rodada salvas.",
@@ -3262,6 +3600,65 @@ export const texts = {
       done: (username: string, type: "RESTRICTION" | "BAN") =>
         `@${username} punido com ${type === "BAN" ? "banimento" : "restrição"}.`,
       error: "Não foi possível aplicar a punição.",
+    },
+    direct: {
+      title: "Ações diretas de administração",
+      description: (alvo: string) =>
+        `Decisões de administrador sobre ${alvo}, sem votação: a advertência fica no histórico da conta; o banimento derruba as sessões e impede novo login; remoção de publicação não depende de denúncia.`,
+      reasonLabel: "Motivo (mínimo 10 caracteres)",
+      reasonPlaceholder: "Explique o motivo com pelo menos 10 caracteres.",
+      reasonTooShort: "O motivo precisa de pelo menos 10 caracteres.",
+      warn: "Advertir",
+      ban: "Banir",
+      banPermanent: "Banir permanentemente",
+      confirmTitle: "Confirmar ação",
+      confirmWarn: (alvo: string) =>
+        `Registrar advertência em ${alvo}? A pessoa é avisada e vê a advertência no histórico da conta.`,
+      confirmBan: (alvo: string) =>
+        `Banir ${alvo}? As sessões caem na hora e a conta não consegue entrar de novo.`,
+      confirmBanPermanent: (alvo: string) =>
+        `Banir ${alvo} PERMANENTEMENTE, sem caminho de recurso? As sessões caem e a conta não volta.`,
+      confirmReason: (motivo: string) => `Motivo registrado: “${motivo}”.`,
+      confirm: "Confirmar",
+      cancel: "Cancelar",
+      warnDone: (ativas: number) =>
+        ativas === 1
+          ? "Advertência registrada: a conta tem 1 advertência ativa."
+          : `Advertência registrada: a conta tem ${ativas} advertências ativas.`,
+      warnError: "Não foi possível advertir (motivo de 10 a 2000 caracteres).",
+      banDone: "Banimento aplicado: sessões derrubadas e login bloqueado.",
+      banPermanentDone: "Banimento permanente aplicado: sessões derrubadas e login bloqueado.",
+      banError: "Não foi possível banir a conta.",
+      activeWarnings: (n: number) => `${n} advertência(s) ativa(s) nesta conta.`,
+      historyTitle: "Histórico administrativo",
+      historyEmpty: "Nenhuma advertência ou sanção registrada nesta conta.",
+      kindWarning: "Advertência",
+      active: "ativa",
+      inactive: "inativa",
+      rowKind: (kind: "WARNING" | "SANCTION", type: string) => {
+        if (kind === "WARNING") return "Advertência";
+        if (type === "RESTRICTION") return "Restrição";
+        if (type === "SUSPENDED") return "Suspensão";
+        if (type === "PERMABAN") return "Banimento permanente";
+        return "Banimento";
+      },
+      historyWhen: (data: string) => data,
+      historyWhenWithDue: (data: string, prazo: string) => `${data} · vira banimento em ${prazo}`,
+      revoke: "Revogar advertência",
+      revokeReasonLabel: "Motivo da revogação",
+      revokeReasonPlaceholder: "Explique por que a advertência está sendo revista.",
+      revokeConfirm: "Revogar",
+      revokeDone: "Advertência revogada: sai do que conta para a escalada e fica no histórico.",
+      revokeError: "Não foi possível revogar a advertência.",
+      postRemove: "Remover publicação",
+      postRemoveTitle: "Remover esta publicação (administração)",
+      postRemoveBody:
+        "A publicação sai do ar na hora, com motivo registrado e auditoria. O autor não é banido por esta ação.",
+      postRemoveConfirm: "Remover",
+      postRemoved: "Publicação removida.",
+      postAlreadyOffline: "A publicação já estava fora do ar.",
+      postNotFound: "Publicação não encontrada.",
+      postError: "Não foi possível remover a publicação.",
     },
     penalties: {
       title: "Penalidades aplicadas",
@@ -3712,6 +4109,7 @@ export const texts = {
     pageHeading: "Publicação",
     seoDescription: "Publicação no Énóis.",
     back: "Voltar",
+    backToCommunity: "Voltar para a comunidade",
     notFound: "Publicação não encontrada.",
   },
 
@@ -4112,6 +4510,146 @@ export const texts = {
         "Rede social feita por gente, com conversas, trabalho, brincadeira e vizinhança no mesmo lugar. Sem anúncios, sem planos pagos e sem nada prendendo você.",
       ogDescription: "Construa relações de verdade, não apenas conexões.",
     },
+  },
+
+  roleplay: {
+    seoTitle: "Éroleplay · Énóis",
+    title: "Éroleplay",
+    subtitle:
+      "Campanhas de RPG de mesa e RPG textual. O sistema de regras é escolha da mesa — a plataforma não impõe nenhum.",
+    searchPlaceholder: "Buscar campanha...",
+    loading: "Carregando campanhas...",
+    empty: "Nenhuma campanha pública encontrada.",
+    loadError: "Não foi possível carregar as campanhas.",
+    myCampaigns: "Suas campanhas",
+    myCampaignsEmpty: "Você ainda não participa de nenhuma campanha.",
+    create: "Criar campanha",
+    createTitle: "Nova campanha",
+    createDescription: "Dê um nome, descreva o mundo e escolha o sistema de regras da mesa.",
+    name: "Nome da campanha",
+    namePlaceholder: "Ex.: A Sombra sobre Valdria",
+    description: "Descrição",
+    descriptionPlaceholder: "O que esperar dessa mesa?",
+    setting: "Ambientação",
+    settingPlaceholder: "O mundo onde a história acontece.",
+    systemLabel: "Sistema de regras",
+    visibilityLabel: "Quem pode ver",
+    visibilityPublic: "Pública — aparece na descoberta",
+    visibilityPrivate: "Privada — só com convite",
+    createAction: "Criar campanha",
+    creating: "Criando...",
+    createError: "Não foi possível criar a campanha.",
+    members: (count: number) => `${count} ${count === 1 ? "participante" : "participantes"}`,
+    systemD20: "D20",
+    systemD100: "D100",
+    systemCustom: "Próprio",
+    join: "Entrar",
+    requestJoin: "Pedir para entrar",
+    pending: "Pedido pendente",
+    joinError: "Não foi possível entrar na campanha.",
+    notFound: "Campanha não encontrada.",
+    master: "Mestre",
+    player: "Jogador",
+    visitor: "Visitante",
+    archive: "Arquivar campanha",
+    archiveConfirm:
+      "Arquivar encerra a campanha: ela sai da descoberta e recusa novas entradas. Continuar?",
+    archived: "Campanha arquivada.",
+    tabTable: "Mesa",
+    tabSheet: "Ficha",
+    tabDice: "Dados",
+    tabChat: "Chat",
+    tabWorld: "Mundo",
+    // Mesa
+    tables: "Mesas",
+    tablesEmpty: "O mestre ainda não abriu mesa.",
+    createTable: "Abrir mesa",
+    tableName: "Nome da mesa",
+    tableNamePlaceholder: "Ex.: Sesão de sexta",
+    joinVoice: "Entrar na voz",
+    sit: "Ocupar lugar",
+    stand: "Liberar lugar",
+    scene: "Cena",
+    scenePlaceholder: "O que está acontecendo agora na mesa?",
+    sceneSave: "Salvar cena",
+    turnOrder: "Ordem de iniciativa",
+    activeTurn: "Vez de",
+    noTurn: "Ninguém na vez",
+    advanceTurn: "Passar a vez",
+    clearTurn: "Zerar vez",
+    seatTaken: "Lugar ocupado",
+    // Ficha
+    mySheet: "Minha ficha",
+    sheetName: "Nome do personagem",
+    sheetEmpty: "Você ainda não preencheu sua ficha nesta campanha.",
+    sheetBoard: "Fichas abertas ao grupo",
+    sheetBoardEmpty: "Ninguém abriu campos ao grupo ainda.",
+    saveSheet: "Salvar ficha",
+    sheetSaved: "Ficha salva.",
+    sheetError: "Não foi possível salvar a ficha.",
+    privateField: "Privado",
+    masterOnly: "Só o mestre",
+    campaignField: "Campanha",
+    publishSheet: "Publicar na biblioteca",
+    unpublishSheet: "Retirar da biblioteca",
+    published: "Publicada na biblioteca.",
+    unpublished: "Retirada da biblioteca.",
+    publishError: "Não foi possível publicar a ficha.",
+    derived: "Calculados pelo sistema",
+    // Dados
+    rollExpression: "O que rolar",
+    rollPlaceholder: "Ex.: 2d6+3",
+    rollLabel: "Rótulo (opcional)",
+    rollLabelPlaceholder: "Ex.: ataque com espada longa",
+    roll: "Rolar",
+    rolling: "Rolando...",
+    rollError: "Não foi possível rolar.",
+    history: "Histórico",
+    dice: "dados",
+    pendingRequests: "Pedidos do mestre",
+    noRequests: "Nenhum pedido pendente.",
+    answer: "Responder rolando",
+    requestRoll: "Pedir rolagem",
+    requestRollHint: "Escolha um jogador e a expressão que ele deve rolar.",
+    rollRequested: "Pedido enviado.",
+    // Chat
+    channelIc: "Na cena (IC)",
+    channelOoc: "Mesa (OOC)",
+    messagePlaceholderIc: "Fale na voz do personagem...",
+    messagePlaceholderOoc: "Coordene a mesa...",
+    send: "Enviar",
+    pinned: "Fixados pelo mestre",
+    pin: "Fixar",
+    unpin: "Desfixar",
+    emptyChat: "Nenhuma mensagem ainda.",
+    loadMore: "Carregar anteriores",
+    // Mundo
+    world: "Atlas do mundo",
+    worldEmpty: "O atlas está vazio. Registre o que a mesa descobriu.",
+    addEntry: "Registrar",
+    editEntry: "Editar",
+    deleteEntry: "Apagar",
+    entryKind: "Tipo",
+    kindLOCALE: "Local",
+    kindCHARACTER: "Personagem (NPC)",
+    kindITEM: "Item",
+    kindPLOT: "Pista / rumor",
+    kindLORE: "História do mundo",
+    entryTitle: "Título",
+    entryTitlePlaceholder: "Ex.: Taverna do Grifo Dourado",
+    entryBody: "Descrição",
+    entryTags: "Marcas (separadas por vírgula)",
+    entrySheetLink: "Ficha vinculada (opcional)",
+    entrySaved: "Registro salvo.",
+    entryDeleted: "Registro apagado.",
+    entryError: "Não foi possível salvar o registro.",
+    linkedSheet: "Vinculada a",
+    // Biblioteca
+    library: "Biblioteca de personagens",
+    librarySubtitle:
+      "Fichas publicadas pelas mesas da rede. O que aparece aqui é o que o dono do personagem abriu.",
+    libraryEmpty: "Nenhuma ficha publicada ainda.",
+    librarySearchPlaceholder: "Buscar por personagem ou sistema...",
   },
 
   pwa: {

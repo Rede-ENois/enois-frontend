@@ -26,6 +26,9 @@ export function HtmlEditor({
           innerPadding={innerPadding}
           // A prévia é uma janela do editor (área fixa): aqui a rolagem de dentro é o esperado.
           autoHeight={false}
+          // Janela de leitura: o primeiro filho do autor é conteúdo de página, não faixa — esticá-lo
+          // empurrava o resto do post para fora do quadro.
+          stretchFirstChild={false}
         />
       }
     />

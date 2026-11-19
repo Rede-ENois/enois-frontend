@@ -54,12 +54,13 @@ import {
   X,
 } from "lucide-react";
 
-import { ApiError, communitiesApi, feedApi } from "@/lib/api";
+import { ApiError, communitiesApi, feedApi, moderationApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
 import { refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
 import { isProhibitedContent } from "@/lib/media-moderation";
 import { mediaPreviewUrl } from "@/lib/media-preview-url";
+import { croppedFile } from "@/lib/media/cropped-file";
 import { buildShareTags } from "@/lib/open-graph";
 import { communityQueries } from "@/lib/query-options/communities";
 import { uploadComposerMedia } from "@/lib/upload-composer-media";
@@ -68,6 +69,7 @@ import { cityStateErrorCode, useCityState } from "@/lib/use-city-state";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { cn } from "@/lib/utils";
 
+import { AdminEntityPanel } from "@/components/admin/admin-entity-panel";
 import { AppContainer } from "@/components/app-container";
 import { CommunityChannels } from "@/components/communities/community-channels";
 import { CommunityFavoriteButton } from "@/components/community-favorite-button";
@@ -143,6 +145,8 @@ function CommunityDetail() {
   const upload = useMediaUpload();
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const pageMode = postType === "PAGE";
   const articleMode = postType === "ARTICLE";
@@ -177,6 +181,21 @@ function CommunityDetail() {
     queryFn: () => communitiesApi.getMembers(community.id),
   });
 
+  const members = membersData?.items ?? [];
+  const isCommunityAdmin = currentUser
+    ? members.some((member) => member.role === "ADMIN" && member.userId === currentUser.id)
+    : false;
+
+  // Admin DA PLATAFORMA (users.is_admin) — outra coisa que "admin da comunidade". Só este recebe a
+  // área de gerenciamento; o backend recusa a chamada de qualquer outro, mesmo pela API direta.
+  // Fica antes dos returns de carregando/erro: hook depois de return antecipado quebra a ordem.
+  const { data: platformMe } = useQuery({
+    queryKey: ["moderator", "me"],
+    queryFn: () => moderationApi.me(),
+    retry: false,
+    enabled: Boolean(currentUser) && !isCommunityAdmin,
+  });
+
   const { data: feedData } = useQuery({
     queryKey: ["community", community.id, "feed"],
     queryFn: () => communitiesApi.getFeed(community.id),
@@ -189,7 +208,6 @@ function CommunityDetail() {
     queryFn: () => communitiesApi.pinned(community.id).catch(() => null),
   });
 
-  const members = membersData?.items ?? [];
   const posts = feedData?.items ?? [];
   const orderedPosts = pinnedPost
     ? [pinnedPost, ...posts.filter((p) => p.id !== pinnedPost.id)]
@@ -284,7 +302,7 @@ function CommunityDetail() {
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
       });
     } catch (error) {
@@ -357,8 +375,9 @@ function CommunityDetail() {
   };
 
   const isMember = live.joined;
+  const isAdmin = isCommunityAdmin;
   const admins = members.filter((m) => m.role === "ADMIN");
-  const isAdmin = currentUser ? admins.some((a) => a.userId === currentUser.id) : false;
+  const isPlatformAdmin = platformMe?.admin === true && !isAdmin;
 
   const togglePin = useMutation({
     mutationFn: (post: PostView) =>
@@ -526,6 +545,18 @@ function CommunityDetail() {
           </div>
         </div>
 
+        {isPlatformAdmin && (
+          <AdminEntityPanel
+            kind="community"
+            entityId={live.id}
+            entityName={live.name}
+            onGone={() => {
+              toast(texts.communities.admin.deleted(live.name), "success");
+              navigate({ to: "/comunidades" });
+            }}
+          />
+        )}
+
         <ConfirmDialog
           open={leaveOpen}
           onOpenChange={setLeaveOpen}
@@ -650,7 +681,16 @@ function CommunityDetail() {
               </div>
             )}
 
-            {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+            {pollMode && (
+              <PollComposer
+                options={pollOptions}
+                onChange={setPollOptions}
+                multipleChoice={pollMultipleChoice}
+                onMultipleChoiceChange={setPollMultipleChoice}
+                endsAt={pollEndsAt}
+                onEndsAtChange={setPollEndsAt}
+              />
+            )}
 
             <div
               data-composer-toolbar=""
@@ -924,10 +964,7 @@ function EditCommunityForm({ community, onClose }: EditCommunityFormProps) {
   const handleCropComplete = useCallback(
     async (blob: Blob) => {
       const upload = cropPurpose === "COVER" ? coverUpload : avatarUpload;
-      const result = await upload.upload(
-        new File([blob], "crop.jpg", { type: "image/jpeg" }),
-        cropPurpose!,
-      );
+      const result = await upload.upload(croppedFile(blob), cropPurpose!);
       if (cropPurpose === "COVER") setCover(result.cdnUrl);
       else setAvatar(result.cdnUrl);
       if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);

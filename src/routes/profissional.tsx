@@ -13,6 +13,7 @@ import { corporateApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { isValidNametag, nametagPath, normalizeNametag } from "@/lib/corporate/nametag";
 import { writeStoredContext } from "@/lib/interface-context";
+import { croppedFile } from "@/lib/media/cropped-file";
 import { requireAuth } from "@/lib/require-auth";
 import { useIsAuthenticated } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
@@ -642,7 +643,7 @@ function Profissional() {
           aspect={crop.purpose === "AVATAR" ? 1 : 3}
           title={crop.purpose === "AVATAR" ? texts.profile.cropAvatar : texts.profile.cropCover}
           onCropComplete={async (blob) => {
-            await uploadImage(new File([blob], "crop.jpg", { type: "image/jpeg" }), crop.purpose);
+            await uploadImage(croppedFile(blob), crop.purpose);
             closeCrop();
           }}
         />

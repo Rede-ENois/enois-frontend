@@ -26,6 +26,8 @@ import type { MediaItem } from "@/types/routes/feed/media-item";
 import {
   ApoieCard,
   CaughtUpDivider,
+  ComposerCrossPost,
+  ComposerDraftStatus,
   ComposerLauncher,
   PostCardSkeletons,
   QuestionComposerHint,
@@ -85,10 +87,16 @@ import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scro
 import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
+import { crossPostFailureMessage, crossPostsToCorporate } from "@/lib/feed/cross-post";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
+import { keepPostsById } from "@/lib/feed/keep-posts-by-id";
 import { normalizePollOptions } from "@/lib/feed/poll-options";
-import { feedRefreshOptions, refreshFeedFirstPage } from "@/lib/feed/post-query-cache";
+import {
+  feedQueryKey,
+  feedRefreshOptions,
+  refreshFeedFirstPage,
+} from "@/lib/feed/post-query-cache";
 import { useFeedTab } from "@/lib/feed/use-feed-tab";
 import {
   effectiveIdentity,
@@ -156,6 +164,7 @@ const POST_TYPE_FILTERS = [
   { value: "DIVERTIDO", label: "Diversão" },
   { value: "ARTICLE", label: "Artigos" },
   { value: "POLL", label: "Enquetes" },
+  { value: "COMPLAINT", label: "Reclamações" },
 ] as const;
 
 export const Route = createFileRoute("/feed")({
@@ -236,7 +245,7 @@ const RESOLVED_FILTER: Record<QuestionStatus, boolean | undefined> = {
 function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady = true) {
   const authenticated = useIsAuthenticated();
   return useInfiniteQuery({
-    queryKey: ["feed", tab, typeFilter ?? "", resolved ?? ""],
+    queryKey: feedQueryKey(tab, typeFilter, resolved),
     queryFn: ({ pageParam }): Promise<FeedPage> =>
       tab === "CORPORATE"
         ? feedApi.corporate(pageParam ?? null, FEED_PAGE_SIZE)
@@ -245,6 +254,10 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
     staleTime: 20_000,
+    // Post novo no topo nao invalida os objetos dos posts que nao mudaram: o memo do PostCard
+    // deixa os outros de fora. Sem isso, replaceEqualDeep compara por posicao e cada card
+    // re-renderiza quando alguem publica.
+    structuralSharing: keepPostsById,
     // O feed não se renova sozinho: quem mantém a lista em dia é a varredura de `feed-live.ts`,
     // uma página por vez, sem trocar o que está na tela (ver `feedRefreshOptions`).
     ...feedRefreshOptions(tab),
@@ -261,23 +274,23 @@ function useProfile() {
   });
 }
 
-function useSuggestions() {
+function useSuggestions(enabled: boolean) {
   const authenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["network", "suggestions"],
     // Busca um lote maior: o "ver outras" gira entre os 4 primeiros sem pedir de novo.
     queryFn: () => networkApi.suggestions(12),
-    enabled: authenticated,
+    enabled: authenticated && enabled,
     staleTime: 120_000,
   });
 }
 
-function useEvents() {
+function useEvents(enabled: boolean) {
   const authenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["events"],
     queryFn: () => eventsApi.list(),
-    enabled: authenticated,
+    enabled: authenticated && enabled,
     staleTime: 120_000,
   });
 }
@@ -311,22 +324,36 @@ export function Home() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const authenticated = useIsAuthenticated();
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(min-width: 64rem)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   // A aba vem da URL; trocar de aba REPLACES o histórico (o "voltar" continua voltando para a
   // página anterior, e não passeando pelas abas).
   const { aba, compor } = Route.useSearch();
   const navigate = Route.useNavigate();
-  // Interface profissional: o início É o feed corporativo (publicações de trabalho). Na social,
-  // o feed corporativo não aparece.
+  // Interface profissional: o início É o feed corporativo (publicações de trabalho). O feed social
+  // continua a uma aba de distância, nas duas interfaces.
   const context = useInterfaceContext();
   const professional = context === "PROFESSIONAL";
-  // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado, "Tudo".
+  // Sem `?aba=` a tela reabre na última aba escolhida (guardada no navegador); sem nada guardado,
+  // "Tudo" na social e "Corporativo" na profissional.
   const {
     tab,
     setTab,
     ready: tabReady,
+    socialTab: lastSocialTab,
   } = useFeedTab(aba, professional, (next) => {
-    void navigate({ search: { aba: next }, replace: true });
+    void navigate({ search: next === null ? {} : { aba: next }, replace: true });
   });
+
+  // Dentro do corporativo o seletor volta para a aba social em que a pessoa estava.
+  const otherFeed: HomeTab = professional ? lastSocialTab : "CORPORATE";
   const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
@@ -340,7 +367,6 @@ export function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch: feedRefetch,
   } = useFeed(
     tab,
     tab === "ALL" ? typeFilter : undefined,
@@ -353,12 +379,16 @@ export function Home() {
   // refazer a consulta (que traria todas as páginas e reescreveria o topo embaixo de quem lê).
   useFeedLiveRefresh({
     queryClient,
-    queryKey: ["feed", tab, tab === "ALL" ? typeFilter : "", questionsFeed ? questionStatus : ""],
+    queryKey: feedQueryKey(
+      tab,
+      tab === "ALL" ? typeFilter : undefined,
+      questionsFeed ? RESOLVED_FILTER[questionStatus] : undefined,
+    ),
     enabled: authenticated && tabReady,
   });
   const { data: profile } = useProfile();
-  const { data: suggestions } = useSuggestions();
-  const { data: eventsData } = useEvents();
+  const { data: suggestions } = useSuggestions(isDesktop);
+  const { data: eventsData } = useEvents(isDesktop);
   const {
     data: corporate,
     isError: corporateError,
@@ -415,13 +445,36 @@ export function Home() {
   const [schedulingOpen, setSchedulingOpen] = useState(false);
   const [scheduleAt, setScheduleAt] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  // Publicar também no feed profissional (#723): a mesma publicação sai como BUSINESS assinada
+  // pelo perfil profissional. A oferta só existe fora da interface profissional (lá tudo já vai
+  // para o feed corporativo), com o perfil ativo, e para os tipos que pertencem aos dois feeds.
+  const [crossPost, setCrossPostState] = useState(true);
+  const [crossPostError, setCrossPostError] = useState<string | null>(null);
+  // Marcar a oferta tira o aviso de "sem perfil profissional": a próxima tentativa é nova.
+  const setCrossPost = (v: boolean) => {
+    setCrossPostState(v);
+    setCrossPostError(null);
+  };
+  const crossPostAvailable =
+    !professional && corporateState === "ACTIVE" && postType !== "BUSINESS";
+  const crossPostByType = crossPostsToCorporate(postType, true);
+  const crossPosting = crossPostAvailable && crossPostByType && crossPost;
   // A identidade ativa manda no tipo: profissional publica BUSINESS (destino: feed
-  // corporativo); voltar para social tira o BUSINESS da seleção.
+  // corporativo) e, voltando para social, a seleção fica em INSIGHT. A publicação já saiu com
+  // o tipo que a pessoa escolheu: trocar a identidade não reescreve a seleção de quem escreve.
+  const postTypeSelecionado = useRef(postType);
+  postTypeSelecionado.current = postType;
   useEffect(() => {
     if (identity === "CORPORATE") {
       setPostType("BUSINESS");
     } else {
-      setPostType((current) => (current === "BUSINESS" ? "INSIGHT" : current));
+      setPostType((current) =>
+        current === "BUSINESS"
+          ? postTypeSelecionado.current === "BUSINESS"
+            ? "INSIGHT"
+            : postTypeSelecionado.current
+          : current,
+      );
     }
   }, [identity]);
 
@@ -438,6 +491,8 @@ export function Home() {
   const articleMode = postType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
   const pollMode = postType === "POLL";
   const availableTypes =
     identity === "CORPORATE"
@@ -450,8 +505,16 @@ export function Home() {
   const publishingRef = useRef(false);
   const upload = useMediaUpload();
 
+  // Resultado da publicação: o post criado, e o erro cru para saber o que explicar (sem perfil
+  // profissional ativo não há como mandar a publicação ao feed profissional).
   const createPost = useMutation({
-    mutationFn: (data: CreatePostInput) => feedApi.create(data),
+    mutationFn: async (data: CreatePostInput) => {
+      try {
+        return { post: await feedApi.create(data), failure: null };
+      } catch (error) {
+        return { post: null, failure: error };
+      }
+    },
     onSuccess: () => {
       // O post novo entra no topo: confere a primeira página de cada feed na tela, sem refazer as
       // páginas que a pessoa já carregou.
@@ -466,6 +529,114 @@ export function Home() {
     staleTime: 60_000,
   });
   const scheduledList = scheduledQuery.data ?? [];
+
+  // Rascunho do compositor (V332): um por conta, em qualquer dispositivo. Salva sozinho
+  // enquanto a pessoa escreve; publicar, agendar ou descartar apaga.
+  const draftQuery = useQuery({
+    queryKey: ["feed", "draft"],
+    queryFn: () => feedApi.draft(),
+    enabled: authenticated && !composerLocked,
+  });
+  const [rascunhoSalvoEm, setRascunhoSalvoEm] = useState<string | null>(null);
+
+  // Restaurar o rascunho do servidor UMA vez, e só se o compositor está intocado aqui — quem
+  // já começou a escrever não é sobrescrito pelo que veio de outro dispositivo. Mídia anexada
+  // não faz parte do rascunho (os arquivos só sobem ao publicar): quem restaurar reanexa.
+  const rascunhoRestauradoRef = useRef(false);
+  useEffect(() => {
+    const salvo = draftQuery.data?.draft;
+    if (!salvo || rascunhoRestauradoRef.current) return;
+    rascunhoRestauradoRef.current = true;
+    const compositorIntacto =
+      draft.trim() === "" &&
+      media.length === 0 &&
+      pageHtml === "" &&
+      articleBody === "" &&
+      normalizePollOptions(pollOptions).length === 0;
+    if (!compositorIntacto) return;
+    setPostType(salvo.type as PostView["type"]);
+    setDraft(salvo.content ?? "");
+    setPageHtml(salvo.pageHtml ?? "");
+    setArticleBody(salvo.articleBody ?? "");
+    if (salvo.topic) setTopic(salvo.topic);
+    if (salvo.pollOptions.length > 0) setPollOptions([...salvo.pollOptions]);
+    setPollMultipleChoice(salvo.pollMultipleChoice);
+    setPollEndsAt(salvo.pollEndsAt ? valorDeDataLocal(new Date(salvo.pollEndsAt)) : undefined);
+    setMentionedUserIds(salvo.mentionedUserIds);
+    setComposerOpen(true);
+    setRascunhoSalvoEm(salvo.updatedAt);
+    // Regravar o que acabou de chegar é escrita à toa: o primeiro autosave depois da
+    // restauração é pulado; a próxima mudança de verdade salva.
+    pularAutosaveRef.current = true;
+    // Roda uma vez, quando o rascunho chega (a guarda do ref impede repetição).
+  }, [draftQuery.data]);
+
+  // Autosave: 1,5s depois da última mudança, o estado do compositor viaja para o servidor.
+  // Mesma régua mínima do backend: só salva quando há algo para restaurar. Falha no autosave
+  // é silenciosa — a pessoa segue escrevendo, e o rascunho anterior continua lá.
+  const pularAutosaveRef = useRef(false);
+  const saveDraftMutation = useMutation({
+    mutationFn: (data: Parameters<typeof feedApi.saveDraft>[0]) => feedApi.saveDraft(data),
+    onSuccess: (resposta) => setRascunhoSalvoEm(resposta.draft.updatedAt),
+  });
+  useEffect(() => {
+    if (!authenticated || composerLocked) return;
+    const temConteudo =
+      (pageMode ? pageHtml.trim() !== "" : draft.trim() !== "") ||
+      (articleMode && articleBody.trim() !== "") ||
+      (pollMode && normalizePollOptions(pollOptions).length > 0);
+    if (!temConteudo) return;
+    const id = setTimeout(() => {
+      if (pularAutosaveRef.current) {
+        pularAutosaveRef.current = false;
+        return;
+      }
+      saveDraftMutation.mutate({
+        type: postType,
+        content: pageMode ? "" : draft,
+        ...(pageMode ? { pageHtml } : {}),
+        ...(articleMode ? { articleBody } : {}),
+        ...(topic ? { topic } : {}),
+        ...(pollMode ? { pollOptions: normalizePollOptions(pollOptions) } : {}),
+        ...(pollMode ? { pollMultipleChoice } : {}),
+        ...(pollMode && pollEndsAt ? { pollEndsAt: new Date(pollEndsAt).toISOString() } : {}),
+        ...(pageMode ? {} : { mentionedUserIds }),
+      });
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [
+    authenticated,
+    composerLocked,
+    draft,
+    postType,
+    pageMode,
+    pageHtml,
+    articleMode,
+    articleBody,
+    pollMode,
+    pollOptions,
+    pollMultipleChoice,
+    pollEndsAt,
+    topic,
+    mentionedUserIds,
+  ]);
+
+  /** Descartar apaga o rascunho salvo E limpa o compositor: começar de novo é isso. */
+  const descartarRascunho = () => {
+    setRascunhoSalvoEm(null);
+    void feedApi.discardDraft().catch(() => {});
+    setDraft("");
+    setMentionedUserIds([]);
+    setPostType("INSIGHT");
+    setMedia([]);
+    setMediaSpoiler(false);
+    setPageHtml("");
+    setArticleBody("");
+    setPollOptions(["", ""]);
+    setPollMultipleChoice(false);
+    setPollEndsAt(undefined);
+    setSchedulingOpen(false);
+  };
 
   const schedulePost = useMutation({
     mutationFn: (data: Parameters<typeof feedApi.schedule>[0]) => feedApi.schedule(data),
@@ -525,6 +696,8 @@ export function Home() {
       setDraft("");
       setMentionedUserIds([]);
       setPostType("INSIGHT");
+      // Publicou: a próxima publicação parte de nova escolha (a oferta vem marcada de novo).
+      postTypeSelecionado.current = "INSIGHT";
       setMedia([]);
       setMediaSpoiler(false);
       setPageHtml("");
@@ -532,6 +705,9 @@ export function Home() {
       setPollOptions(["", ""]);
       setScheduleAt("");
       setSchedulingOpen(false);
+      // Agendou: o rascunho não tem mais o que guardar.
+      setRascunhoSalvoEm(null);
+      void feedApi.discardDraft().catch(() => {});
     } catch {
       // o motivo já foi para o publishError pelo onError da mutation
     }
@@ -539,6 +715,24 @@ export function Home() {
 
   // O mínimo do input datetime-local é AGORA+1min (o backend recusa mais perto que isso).
   const minScheduleAt = valorDeDataLocal(new Date(Date.now() + 60_000));
+
+  /**
+   * Depois de publicar de fato: se a publicação foi ao feed profissional, a lista corporativa na
+   * tela também confere a primeira página (o refresh da publicação cobre o feed em que ela está).
+   */
+  const handlePublished = async (postId: string | null, corporate: boolean) => {
+    if (!corporate) return;
+    try {
+      const linked = await authApi.oauthProviders();
+      if (postId && linked.some((l) => l.provider === "LINKEDIN")) {
+        setLinkedinUrl(`${texts.siteUrl}/post/${postId}`);
+      }
+    } catch {
+      // sem a checagem, simplesmente não oferta — a publicação no énois já aconteceu
+    }
+    const key = feedQueryKey("CORPORATE", undefined, undefined);
+    void queryClient.invalidateQueries({ queryKey: key });
+  };
 
   const publishPost = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -559,38 +753,32 @@ export function Home() {
     publishingRef.current = true;
     const formData = new FormData(event.currentTarget);
     setPublishError(null);
+    // Publicação replicada sai como BUSINESS: é o tipo que o perfil profissional assina e o que
+    // o feed corporativo lista (#723).
+    const replicada = crossPostsToCorporate(postType, crossPost);
     try {
       let mediaIds: string[] = [];
       if (!pageMode && media.length > 0) {
         mediaIds = await uploadComposerMedia(media, upload.uploadAll);
       }
-      const created = await createPost.mutateAsync({
+      const result = await createPost.mutateAsync({
         content: pageMode ? "" : content,
-        type: postType,
+        type: replicada ? "BUSINESS" : postType,
         mediaIds,
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
-        ...(pollMode ? { pollOptions: options } : {}),
+        ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         topic,
         website: String(formData.get("website") ?? ""),
       });
-      // "Também no LinkedIn": só para publicações da identidade PROFISSIONAL (o perfil pessoal
-      // nunca compartilha no LinkedIn). Com o LinkedIn vinculado, oferece o diálogo oficial com o
-      // link público do post (o OG preview completa o resto). A publicação via API do LinkedIn
-      // exige aprovação no programa de parceiros; o diálogo oficial já funciona para qualquer conta.
-      try {
-        const postId = (created as { id?: string })?.id;
-        if (postId && postType === "BUSINESS") {
-          const linked = await authApi.oauthProviders();
-          if (linked.some((l) => l.provider === "LINKEDIN")) {
-            setLinkedinUrl(`${texts.siteUrl}/post/${postId}`);
-          }
-        }
-      } catch {
-        // sem a checagem, simplesmente não oferta — a publicação no énois já aconteceu
+      if (result.failure !== null) {
+        throw result.failure;
       }
+      const created = result.post;
+      // "Também no LinkedIn": só para publicações da identidade PROFISSIONAL (o perfil pessoal
+      // nunca compartilha no LinkedIn), replicadas no feed profissional inclusive.
       setDraft("");
       setMentionedUserIds([]);
       setPostType("INSIGHT");
@@ -599,8 +787,21 @@ export function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      // Publicou: o rascunho não tem mais o que guardar.
+      setRascunhoSalvoEm(null);
+      void feedApi.discardDraft().catch(() => {});
+      void handlePublished(created?.id ?? null, postType === "BUSINESS" || replicada);
     } catch (err) {
-      setPublishError(err instanceof Error ? err.message : texts.feed.composer.publishError);
+      // Replicar sem perfil profissional ativo: a oferta desmarcou (o post segue no feed social
+      // ao enviar de novo); qualquer outro erro fica na mensagem da publicação.
+      if (replicada && crossPostFailureMessage(err)) {
+        setCrossPost(false);
+        setCrossPostError(crossPostFailureMessage(err));
+      }
+      setPublishError(
+        crossPostFailureMessage(err) ??
+          (err instanceof Error ? err.message : texts.feed.composer.publishError),
+      );
     } finally {
       publishingRef.current = false;
     }
@@ -714,9 +915,19 @@ export function Home() {
 
   // Puxar para renovar no topo, em toque: renova SÓ a lista do feed — o gesto é sobre o que está
   // na tela, não sobre o aplicativo. O indicador de renovação é o mesmo da busca automática.
+  const [refreshingFeed, setRefreshingFeed] = useState(false);
+  const refreshingFeedRef = useRef(false);
   const pullToRefresh = usePullToRefresh(
-    useCallback(() => void feedRefetch(), [feedRefetch]),
-    feedFetching && !isFetchingNextPage,
+    useCallback(() => {
+      if (refreshingFeedRef.current) return;
+      refreshingFeedRef.current = true;
+      setRefreshingFeed(true);
+      void refreshFeedFirstPage(queryClient).finally(() => {
+        refreshingFeedRef.current = false;
+        setRefreshingFeed(false);
+      });
+    }, [queryClient]),
+    (feedFetching && !isFetchingNextPage) || refreshingFeed,
   );
 
   useEffect(() => {
@@ -900,13 +1111,34 @@ export function Home() {
                     maxLength={postContentLimit(postType)}
                     toolbar
                     onPasteImages={addMediaFiles}
+                    /* Ctrl+Enter publica: o atalho passa pelo mesmo submit do formulário (honeypot
+                       e guarda de reentrada incluídos), não por um caminho próprio. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 )}
               </div>
 
+              {crossPostAvailable && (
+                <ComposerCrossPost
+                  checked={crossPost}
+                  onChange={setCrossPost}
+                  unavailableReason={crossPostByType ? null : texts.feed.composer.crossPost.byType}
+                  error={crossPostError}
+                />
+              )}
+
               {postType === "QUESTION" && <QuestionComposerHint className="mt-2 pl-14" />}
 
-              {pollMode && <PollComposer options={pollOptions} onChange={setPollOptions} />}
+              {pollMode && (
+                <PollComposer
+                  options={pollOptions}
+                  onChange={setPollOptions}
+                  multipleChoice={pollMultipleChoice}
+                  onMultipleChoiceChange={setPollMultipleChoice}
+                  endsAt={pollEndsAt}
+                  onEndsAtChange={setPollEndsAt}
+                />
+              )}
 
               {pageMode && (
                 <div className="mt-3 overflow-hidden rounded-2xl border border-border-soft bg-surface-1 p-3">
@@ -946,6 +1178,9 @@ export function Home() {
                     className="min-h-[220px] rounded-lg border border-border-soft bg-transparent px-3 py-2 text-sm text-text-strong"
                     rows={8}
                     toolbar
+                    /* Mesmo atalho do campo de cima: escrever o artigo inteiro sem sair do
+                       teclado. */
+                    onSubmitShortcut={() => composerRef.current?.requestSubmit()}
                   />
                 </div>
               )}
@@ -1177,6 +1412,8 @@ export function Home() {
                   </div>
                 )}
 
+                <ComposerDraftStatus salvoEm={rascunhoSalvoEm} onDescartar={descartarRascunho} />
+
                 {/* `ml-auto`: quando não cabe na mesma linha das opções, o Publicar desce e continua
                   alinhado à direita, onde a pessoa procura — antes caía à esquerda, solto. */}
                 <div className="ml-auto flex items-center gap-2">
@@ -1188,9 +1425,15 @@ export function Home() {
                     </span>
                   )}
                   {!publishError && upload.status === "uploading" && (
-                    <span className="text-xs font-normal text-text-subtle">
-                      {texts.feed.composer.uploadProgress(upload.progress)}
-                    </span>
+                    // Clicável: aborta o PUT em curso. O progresso agora vem dos bytes reais
+                    // enviados (XHR onprogress), não só da contagem de arquivos concluídos.
+                    <button
+                      type="button"
+                      onClick={upload.cancel}
+                      className="cursor-pointer text-xs font-normal text-text-subtle underline-offset-2 hover:underline"
+                    >
+                      {texts.feed.composer.uploadProgress(upload.progress)} · {texts.common.cancel}
+                    </button>
                   )}
                   <Button
                     type="button"
@@ -1343,53 +1586,55 @@ export function Home() {
 
           {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
               tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
-              escolhido e abre a lista. Na interface profissional o feed é um só (o corporativo):
-              o título diz isso no lugar do seletor. */}
-          {professional ? (
+              escolhido e abre a lista. A lista traz as duas familias — o corporativo na social e a
+              aba social na profissional —, porque o feed profissional só era alcançado pelo
+              perfil (#723). */}
+          {professional && (
             <h2 className="text-sm font-medium text-text-strong">{texts.feed.tabs.corporate}</h2>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
-
-              <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={texts.feed.tabs.openList}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
-                  >
-                    {TAB_LABELS[tab]}
-
-                    <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
-                  </button>
-                </PopoverTrigger>
-
-                <PopoverContent align="start" className="w-56 p-1">
-                  <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
-                    {HOME_TABS.filter((opcao) => opcao !== "CORPORATE").map((opcao) => (
-                      <button
-                        key={opcao}
-                        type="button"
-                        onClick={() => {
-                          setTab(opcao);
-                          setMenuTipoFeed(false);
-                        }}
-                        aria-pressed={opcao === tab}
-                        className={cn(
-                          "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                          opcao === tab
-                            ? "bg-primary-soft text-primary"
-                            : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                        )}
-                      >
-                        {TAB_LABELS[opcao]}
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
           )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
+
+            <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={texts.feed.tabs.openList}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
+                >
+                  {TAB_LABELS[tab]}
+
+                  <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
+                </button>
+              </PopoverTrigger>
+
+              <PopoverContent align="start" className="w-56 p-1">
+                <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
+                  {HOME_TABS.map((opcao) => (
+                    <button
+                      key={opcao}
+                      type="button"
+                      onClick={() => {
+                        setTab(opcao);
+                        setMenuTipoFeed(false);
+                      }}
+                      aria-pressed={opcao === tab}
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
+                        opcao === tab
+                          ? "bg-primary-soft text-primary"
+                          : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
+                      )}
+                    >
+                      {opcao === "CORPORATE" && !professional
+                        ? texts.feed.tabs.corporateHint
+                        : TAB_LABELS[opcao]}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {tab === "ALL" && (
             /* Doze tipos em `flex-wrap` ocupavam QUATRO linhas no celular antes de qualquer
@@ -1434,7 +1679,7 @@ export function Home() {
 
             {feedLoading && <PostCardSkeletons />}
 
-            {!feedLoading && feedFetching && !isFetchingNextPage && (
+            {!feedLoading && ((feedFetching && !isFetchingNextPage) || refreshingFeed) && (
               <div
                 role="status"
                 className="pointer-events-none absolute inset-x-0 -top-8 z-10 flex justify-center"
@@ -1450,7 +1695,7 @@ export function Home() {
                 contínuo e ao soltar vira o "Atualizando..." de cima. Sem isso o gesto parecia
                 não fazer nada — e, sem o overscroll do documento bloqueado, o Chrome assumia
                 o gesto e recarregava a página inteira. */}
-            {pullToRefresh.pulling && !feedFetching && (
+            {pullToRefresh.pulling && !feedFetching && !refreshingFeed && (
               <PullIndicator pull={pullToRefresh.pull} trigger={pullToRefresh.trigger} />
             )}
 
@@ -1464,7 +1709,11 @@ export function Home() {
                   </Fragment>
                 ))}
 
-              {!feedLoading && feedPosts.length === 0 && <EmptyState title={texts.feed.empty} />}
+              {!feedLoading && feedPosts.length === 0 && (
+                <EmptyState
+                  title={tab === "INTERACTED" ? texts.feed.emptyInteracted : texts.feed.empty}
+                />
+              )}
 
               <InfiniteScroll
                 hasMore={Boolean(hasNextPage)}
@@ -1540,7 +1789,7 @@ export function Home() {
               </Link>
             </div>
           )}
-          <TodayGamesCard />
+          <TodayGamesCard enabled={isDesktop} />
 
           {suggestionList.length > 0 && (
             <div className="surface-card p-4 sm:p-5">
@@ -1613,7 +1862,7 @@ export function Home() {
             </div>
           )}
 
-          <CompanyPromptCard />
+          <CompanyPromptCard enabled={isDesktop} />
           <ApoieCard />
         </aside>
       </div>

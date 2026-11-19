@@ -83,3 +83,26 @@ describe("usesBareEmoteCodes", () => {
     expect(usesBareEmoteCodes("not a date")).toBe(false);
   });
 });
+
+describe("pacote de emojis personalizados É Nóis", () => {
+  it("substitui emojis Unicode reais mantendo retrocompatibilidade mesmo com catálogo vazio", () => {
+    const empty = new Map<string, string>();
+    expect(applyEmotes("Boa demais 👍 😂 ❤️", empty)).toBe(
+      "Boa demais ![👍](/emojis/enois/like.webp) ![😂](/emojis/enois/joy.webp) ![❤️](/emojis/enois/love.webp)",
+    );
+  });
+
+  it("aceita variações Unicode sem selector FE0F e sequências compostas", () => {
+    const empty = new Map<string, string>();
+    expect(applyEmotes("❤ 🏴‍☠️", empty)).toBe(
+      "![❤](/emojis/enois/love.webp) ![🏴‍☠️](/emojis/enois/pirate.webp)",
+    );
+  });
+
+  it("substitui códigos :enois_*: e preserva emojis dentro de código", () => {
+    const empty = new Map<string, string>();
+    expect(applyEmotes("Olha :enois_rebel: mas `👍`\n```\n👍\n```\nficam intactos", empty)).toBe(
+      "Olha ![enois_rebel](/emojis/enois/rebel.webp) mas `👍`\n```\n👍\n```\nficam intactos",
+    );
+  });
+});

@@ -17,8 +17,8 @@ import { api, buildQuery } from "../api-client";
  * pedidos) exige ser membro — e quem decide é o backend, não a tela.
  */
 export const groupsApi = {
-  list: (query?: string, cursor?: string | null, limit = 20) =>
-    api.get<PageResponse<GroupView>>(`/groups${buildQuery({ query, cursor, limit })}`),
+  list: (query?: string, cursor?: string | null, limit = 20, signal?: AbortSignal) =>
+    api.get<PageResponse<GroupView>>(`/groups${buildQuery({ query, cursor, limit })}`, { signal }),
 
   mine: (limit = 50) => api.get<PageResponse<GroupView>>(`/groups/mine${buildQuery({ limit })}`),
 

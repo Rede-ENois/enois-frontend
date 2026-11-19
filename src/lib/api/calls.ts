@@ -51,6 +51,8 @@ export const callsApi = {
   cancel: (callId: string) => api.post<CallView>(`/calls/${callId}/cancel`),
   /** Autoriza a entrada e devolve a credencial da sala. */
   join: (callId: string) => api.post<CallJoin>(`/calls/${callId}/join`),
+  /** Sinal de vida de quem está na sala: mantém a presença contada e a sala ao vivo. */
+  presence: (callId: string) => api.post<CallView>(`/calls/${callId}/presence`),
   leave: (callId: string) => api.post<CallView>(`/calls/${callId}/leave`),
   end: (callId: string) => api.post<CallView>(`/calls/${callId}/end`),
   /** A tela perdeu a mídia: fecha explicitamente em vez de ficar pendurada. */

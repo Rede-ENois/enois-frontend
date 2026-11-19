@@ -3141,7 +3141,6 @@ nenhum fluxo de produto (o valor é o mesmo teto de lote que o resto do módulo 
 
 ---
 
-
 ## EXECUÇÃO 38
 
 ### 2026-11-13T22:00-03:00 — Fase 11: a11y além dos estados de erro (contraste medido, foco e teclado)
@@ -3158,12 +3157,12 @@ branch do #855 (execução 37), ainda sem revisão — sem ele os docs da 37 nã
 `src/lib/theme/color.ts` (WCAG, composição alfa para os tintes), nos dois temas e nas superfícies
 reais onde cada par aparece. Quatro defeitos acima do limite:
 
-| par | antes | depois (novo valor) |
-| --- | --- | --- |
-| `text-destructive` sobre o próprio tinte `bg-destructive/10` (claro) | 3,80:1 | 5,03:1 |
-| `bg-destructive` + `text-destructive-foreground` — toast de erro (escuro) | 3,20:1 | 7,45:1 |
-| `--text-date` sobre `surface-2` (dock mobile) | 4,29:1 | 4,98:1 |
-| anéis de seleção `ring-primary/40` (visão semana) | 1,86:1 | 3,85:1 |
+| par                                                                       | antes  | depois (novo valor) |
+| ------------------------------------------------------------------------- | ------ | ------------------- |
+| `text-destructive` sobre o próprio tinte `bg-destructive/10` (claro)      | 3,80:1 | 5,03:1              |
+| `bg-destructive` + `text-destructive-foreground` — toast de erro (escuro) | 3,20:1 | 7,45:1              |
+| `--text-date` sobre `surface-2` (dock mobile)                             | 4,29:1 | 4,98:1              |
+| anéis de seleção `ring-primary/40` (visão semana)                         | 1,86:1 | 3,85:1              |
 
 **Unidade 1 — contraste AA nos dois temas (DS, `07961ff`).** `--destructive` passa a
 `oklch(0.48 0.2 25)` no claro e `oklch(0.74 0.14 25)` no escuro, com `--destructive-foreground`
@@ -3493,7 +3492,7 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
   escondido quando a entrada tem origem — origem não pode fundar série (409). PR
   enois-design-system#227, **mergeado**. O campo chega ao pacote pelo release 0.34.0
   (enois-design-system#229, **mergeado**, tag `v0.34.0` publicada pelo workflow `CI and Publish`,
-  run `43533084578`, job *Publish to GitHub Packages* verde).
+  run `43533084578`, job _Publish to GitHub Packages_ verde).
 - **(B) Front, cliente:** `calendarApi.startSeries(entryId, recurrence)` e
   `calendarApi.stopSeries(entryId)`; tipos `CalendarRecurrence` (`NONE|WEEKLY|BIWEEKLY|MONTHLY`) e
   `RecurringCadence` (`Exclude<…, "NONE">`); `CalendarEntryView` ganhou `seriesId` e `recurrence`.
@@ -3518,7 +3517,7 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
    salvar", porque o salvamento deu certo.
 3. **Edição por diferença.** `changeSeries` decide `stopSeries` quando a escolha é NENHUMA e
    `startSeries` nos outros casos, e o `onSuccess` da `update` só dispara se `values.recurrence !==
-   current`. `savePending` soma `update.isPending || changeSeries.isPending`, então o botão não destrava
+current`. `savePending` soma `update.isPending || changeSeries.isPending`, então o botão não destrava
    entre as duas chamadas.
 4. **Texto morto removido.** `errorSeriesStop` chegou a ser criado e nunca foi usado; saiu antes do
    commit (Q7).
@@ -3534,7 +3533,7 @@ DS e fica como próxima unidade. Fase 7 e fase 10 seguem paradas na mesma decis�
 
 - Front `npx tsc --noEmit` → **exit 0**.
 - Front `npx vitest run src/lib/api/calendar.test.ts src/routes/agenda.test.tsx
-  src/routes/agenda.$entryId.test.tsx` → **48/48**. Os três casos de cadência em `agenda.test.tsx`:
+src/routes/agenda.$entryId.test.tsx` → **48/48**. Os três casos de cadência em `agenda.test.tsx`:
   salvar com cadência cria o compromisso e começa a série sobre o id devolvido; sem cadência não há
   segunda chamada; se a série falha, o compromisso já criado não some.
 - Front `npx eslint` nos arquivos de cadência → **0 erros** (5 avisos
@@ -3620,7 +3619,6 @@ sem os mantenedores. (2) Conferir se o `main` do DS foi reconciliado. (3) Varrer
 semântica do vínculo Épapo/Tamo Junto e credencial OAuth dos provedores. (2) Conferir se o `main`
 do DS foi reconciliado. (3) Varrer a §4 atrás de linha "A construir" que ainda tenha unidade própria.
 
-
 ## Execução 45 — 2026-11-14 (~06:30–08:30) — corridas do motor de agenda decididas pelo banco
 
 **BLOCO.** Fase 11 (revisão geral), três unidades no mesmo PR de backend. Origem: auditoria da
@@ -3633,7 +3631,7 @@ três de concorrência/correção, um por unidade.
    leitura (`slot.available()` → `saveSlot(slot.book())`): duas inscrições correndo juntas liam o
    mesmo "disponível" e as duas reservavam, cada uma retendo faísca. Agora a decisão é do banco:
    `SpringDataMentorSlotJpaRepository.bookIfFree` (`UPDATE ... SET available = false WHERE id = ?
-   AND available = true`, `@Modifying`), exposto por `MentorRepository.bookSlotIfFree`. Quem
+AND available = true`, `@Modifying`), exposto por `MentorRepository.bookSlotIfFree`. Quem
    alcança zero linhas recebe `409 SLOT_UNAVAILABLE` antes de qualquer retenção.
 2. **U2 — lembrete pedido de novo não voltava a valer.** `CalendarReminderService.setForReader`
    devolvia a linha existente mesmo resolvida (`sentAt` preenchido): a tela mostrava lembrete
@@ -3695,3 +3693,293 @@ unidades restantes da auditoria (menor prioridade): `IllegalArgumentException` c
 respondendo `409 CONFLICT_DUPLICATE` opaco; transação única no laço do `deliverDue`; `UNTIL`
 flutuante do `.ics` preso a fuso fixo; vazamento de `sourceType`/`sourceId` a participante que
 recusou. (3) Reconferir PRs e o `main` do DS.
+
+## Execução 46 — 2026-11-14 (~15:00–17:00) — os achados restantes da auditoria viram contrato próprio
+
+**BLOCO.** Fechamento da auditoria da fase 11 sobre a base da execução 45 mergeada (`8953fc3f`), com
+as quatro unidades que ficaram de fora do PR #714.
+
+**UNIDADES.**
+
+1. **U1 — `CalendarSourceService.upsert`: fuso desconhecido é 400, não 500.** O domínio lança
+   `IllegalArgumentException` de `zoneOf` e escapava cru como erro de servidor. Agora o serviço
+   traduz para `ApiException(400, "INVALID_CALENDAR_ENTRY", ...)` (o mesmo contrato da criação de
+   entrada).
+2. **U2 — reagendamento de ocorrência de série sobre irmã: `409 CALENDAR_SERIES_SLOT_TAKEN` antes do
+   banco.** O `update` consulta `entries.findBySeriesAndStart(seriesId, start)` e recusa com código
+   próprio antes do `save`; antes o índice único `uq_calendar_series_start` estourava e a pessoa lia
+   o `CONFLICT_DUPLICATE` genérico ("Este registro ja existe"), sem saber de qual horário.
+3. **U3 — worker de lembretes: transação por lembrete, marca de falha fora do rollback.** O
+   `deliverDue` tinha `@Transactional` no laço inteiro: uma exceção do meio do lote descartava o
+   envio dos que já saíram e não deixava marca de falha. Agora cada lembrete roda na própria
+   `TransactionTemplate` (construtor recebe `PlatformTransactionManager`) e a falha é gravada com
+   `markFailed` **fora** da transação que voltou — a marca sobrevive ao rollback.
+4. **U4 — convidado (recusado inclusive) não vê a origem.** `CalendarEntryView.from(entry, withSource)`:
+   `sourceType`/`sourceId` só vão para o dono (`AgendaItemView`/`AgendaDetailView` passam
+   `item.owner()`); a origem é bookkeeping entre módulos e o id é interno de outro módulo.
+
+**ARQUIVOS.** `calendar/application/CalendarSourceService.java`; `calendar/application/CalendarCommandService.java`;
+`calendar/application/CalendarReminderService.java`; `calendar/adapters/in/web/CalendarEntryController.java`;
+testes: `CalendarSourceServiceTests` (+1), `CalendarReminderQueryTests` (novo, +1), `CalendarSeriesAndSourceApiTests` (novo, +2).
+
+**PROVA Q0 (falha no código antigo, provada em worktree limpo de `8953fc3f` com só os testes novos):**
+U1 — teste espera `ApiException` 400/INVALID_CALENDAR_ENTRY e o antigo deixa subir
+`IllegalArgumentException` (500). U2 — `expected:<CALENDAR_SERIES_SLOT_TAKEN> but was:<CONFLICT_DUPLICATE>`.
+U4 — `$.entry.sourceType expected:<null> but: was "ICS"`. U3 — o teste nem compila no antigo (o
+construtor com `PlatformTransactionManager` é parte da mudança); no novo, um lembrete quebrado no
+meio do lote não impede o outro (`sent == 1`) e a marca de falha (`attempts == 1`, `lastError`
+preenchido) sobrevive.
+
+**TESTES EXECUTADOS.** Suíte pertinente de 7 classes: **46 testes, 0 falhas, 0 erros**
+(CalendarSourceServiceTests 8, CalendarReminderQueryTests 3, CalendarSeriesAndSourceApiTests 2,
+CalendarReminderServiceTests 17, CalendarSeriesPersistenceTests 3, CalendarRecurrenceServiceTests 7,
+CalendarDetailAndPendingInvitationsApiTests 6). Suíte inteira disparada na árvore final; resultado a
+publicar na PR quando fechar.
+
+**PRs.** enois-backend#717 (as 4 unidades + provas). Docs: esta PR (depende de #717).
+
+**BLOQUEIOS.** Nenhum novo. Fase 7 (semântica Épapo/Tamo Junto) e fase 10 (credencial OAuth de
+provedor) seguem externas. DS `main` continua defasado do `qa` no 0.34.0.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana das PRs #717 (backend) e da docs. (2) `UNTIL`
+flutuante do `.ics` preso a fuso fixo — único achado da auditoria ainda aberto, menor prioridade.
+(3) Reconferir PRs, o `main` do DS e fases externas.
+
+## Execução 47 — 2026-11-14 (~19:30–21:30) — o limite da série importada vira dado, não variável
+
+**BLOCO.** Último achado da auditoria da fase 11 (o `UNTIL` flutuante do `.ics` preso a fuso fixo),
+que na implementação revelou um problema maior: o limite não sobrevivia ao import.
+
+**UNIDADES.**
+
+1. **U1 — o limite persiste (V322).** O `UNTIL` do arquivo só vivia na variável local do import: a
+   materialização respeitava, mas a marca de ponta ficava aberta e o worker de extensão voltava a
+   crescer a série para além do que o arquivo dizia. Nova coluna `series_until` em
+   `calendar_entries` (aditiva, nula por padrão), gravada pela fundadora e por cada ocorrência.
+2. **U2 — `UNTIL` no fuso do evento.** `CalendarRule.parse(rrule, zone)`: o valor flutuante (sem
+   `Z`) e o só-data resolvem no fuso do evento, não no `America/Sao_Paulo` fixo do servidor; o
+   `UNTIL` em UTC continua absoluto. Só-data é meia-noite de parede, inclusiva pelo RFC 5545.
+3. **U3 — o worker respeita o fim.** `materialize` e `extend` param no limite; a ponta de série
+   limitada nasce **fechada** (e `extend` fecha a que encontrar aberta), para o worker não reabrir
+   a série encerrada a cada ciclo. Ocorrência adotada sem limite recebe o da série. `stop` apaga o
+   limite junto (a entrada vira compromisso único de verdade).
+
+**ARQUIVOS.** `db/migration/V322__calendar_series_until.sql`; `domain/CalendarEntry.java`;
+`application/CalendarRule.java`; `application/CalendarRecurrenceService.java`;
+`application/CalendarIcsService.java`; `adapters/out/persistence/CalendarEntryJpaEntity.java`;
+teste novo: `CalendarSeriesLimitTests` (5).
+
+**PROVA Q0.** Os 5 testes novos **nem compilam na `qa` limpa** (`b4ac5ab7`, com #717 mergeado):
+`seriesUntil()`/`limitSeries(...)` não existem — o recurso não está lá. Falha vista durante o
+desenvolvimento (coluna presente, ponta ainda aberta): `Expecting value to be false but was true`
+na ponta de 15/12 em `theWorkerNeverReopensALimitedSeries`; e a contagem de ocorrências com só-data
+errada provava o fuso (`UNTIL=20261208` em São Paulo não inclui a ocorrência de 08/12 19h —
+meia-noite é antes dela).
+
+**TESTES EXECUTADOS.** Suíte pertinente de 6 classes: **56 testes, 0 falhas, 0 erros**
+(SeriesLimit 5, SeriesPersistence 3, IcsRecurrence 6, IcsService 24, IcsApi 11,
+RecurrenceService 7). Suíte inteira disparada na árvore final; resultado a publicar na PR.
+
+**PRs.** enois-backend#724 (as 3 unidades + prova). Docs: esta PR (depende de #724).
+
+**BLOQUEIOS.** Nenhum novo. Auditoria da fase 11 encerrada — nenhum achado restante. Fase 7
+(semântica Épapo/Tamo Junto) e fase 10 (credencial OAuth) seguem externas. DS `main` segue
+defasado do `qa` no mesmo 0.34.0.
+
+**PRÓXIMA EXECUÇÃO (proposta).** (1) Revisão humana das PRs #724 (backend) e desta docs. (2) Com a
+auditoria encerrada e as fases 7/10 paradas em decisão externa, varrer o inventário da §4 e a
+seção 12: se nada restar executável, a próxima rodada prepara o encerramento do cronjob.
+
+## Execução 48 — 2026-11-15 (~11:20–11:45) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Primeira rodada depois do estado terminal. A regra de encerramento manda não trabalhar
+quando o bloco de estado diz `PROJECT_STATUS=COMPLETED`, e diz que o `CRONJOB_STATUS=DISABLED` só
+vale quando todos os critérios da seção 12 estão comprovados. Os dois lados foram reconferidos
+nesta rodada antes de parar.
+
+**O QUE FOI FEITO (verificação, não código).**
+
+1. `git fetch` + leitura do bloco de estado na `origin/qa` do front (`578c0c89`, PR #894
+   mergeado): `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=47`,
+   `COMPLETED_AT=2026-11-15T02:00:00-03:00`, com o relatório final na seção 13 do roadmap.
+2. Critérios da seção 12 reconferidos contra o roadmap na `qa`: fases 0–11 entregues (7 e 10
+   paradas em decisão externa, com encaminhamento escrito no relatório final), suítes verdes na
+   árvore final (gates da CI em enois-backend#724), inventário da §4 sem "A construir" exceto a
+   credencial OAuth, docs atualizadas, PRs listados na seção 7, nenhum placeholder. O relatório
+   final declara `COMPLETED_AT` e lista os bloqueios externos remanescentes (credencial OAuth,
+   semântica de reuniões/workshops, Épapo/Tamo Junto por fora).
+3. Varredura de PRs abertos com `calendar` nos três repositórios: nenhum.
+4. Uma unidade candidata chegou a ser iniciada nesta rodada (selo de cadência nas superfícies de
+   leitura do DS: `recurrence` em `CalendarEntryDetailData` + marcador no detalhe e na linha da
+   lista). O projeto já encerrado não tem onde receber nova funcionalidade: o rascunho foi
+   descartado sem PR, e o achado fica registrado aqui como sugestão para retomada futura, se a
+   mantenedora reabrir o projeto.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada. Typecheck do DS rodou
+verde no rascunho antes do descarte (não é prova de entrega, a entrega não existiu).
+
+**PRs.** Só esta PR de docs (log + estado do roadmap abaixo). Nenhum PR de código.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado. Se uma execução futura rodar por engano,
+deve confirmar o estado terminal e registrar uma linha como esta, sem abrir PR de código.
+
+## Execução 49 — 2026-11-15 (~09:30–09:45) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Segunda rodada depois do estado terminal. A regra de encerramento manda não trabalhar
+quando o bloco de estado diz `PROJECT_STATUS=COMPLETED`; a rodada anterior (48) já tinha
+registrado essa confirmação. Esta rodada reconferiu e deixou a prova mais completa.
+
+**O QUE FOI FEITO (verificação, não código).**
+
+1. `git fetch origin qa` e leitura do bloco de estado na `origin/qa` do front (`578c0c89`, PR #894
+   mergeado): `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=47`,
+   `COMPLETED_AT=2026-11-15T02:00:00-03:00`, com o relatório final na seção 13 do roadmap.
+2. Log de execuções na `qa`: o último bloco é a Execução 47 (a 48 e esta 49 estão só na branch da
+   PR de docs, ainda não mergeada).
+3. Varredura de PRs abertos com `calendar` nos três repositórios: front #895 (esta PR de docs),
+   backend nenhum, design system nenhum. Nenhum PR de código em aberto.
+4. A trava de concorrência estava ausente; foi criada no início da rodada e removida no fim.
+5. A automação continua marcada como ativa no agendador do workspace. O desligamento do cronjob é
+   feito pelo estado textual (`CRONJOB_STATUS=DISABLED`) na resposta final da rodada, não por
+   ferramenta local: o `CronList` disponível aqui só lista e cria automação.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Só a PR de docs #895 (log + estado do roadmap), que já existia desde a rodada 48 — a
+regra de não abrir PR duplicado manda empurrar nesta mesma PR. Nenhum PR de código.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final (credencial OAuth do provedor externo,
+semântica de reuniões/workshops, Épapo/Tamo Junto por fora) seguem externos à equipe.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado. Qualquer execução futura que rodar por
+engano deve apenas reconferir o estado terminal e registrar uma linha como esta, sem abrir PR de
+código.
+
+## Execução 50 — 2026-11-15 (~09:45–09:55) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Terceira rodada depois do estado terminal. A regra de encerramento manda não trabalhar
+quando o bloco de estado diz `PROJECT_STATUS=COMPLETED`; as rodadas 48 e 49 já haviam registrado
+essa confirmação. Esta rodada reconferiu os mesmos pontos e empurrou na PR de docs que já existe.
+
+**O QUE FOI FEITO (verificação, não código).**
+
+1. `git fetch enois qa` e leitura do bloco de estado na `qa` do front (`578c0c89`, PR #894
+   mergeado): `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=47` (as execuções
+   48 e 49 só existem na PR de docs #895, ainda sem revisão humana),
+   `ULTIMA_ATUALIZACAO=2026-11-15T02:00:00-03:00`.
+2. Varredura de PRs abertos com `calendar` nos três repositórios: front #895 (PR de docs, recebe
+   esta rodada), backend nenhum, design system nenhum. Nenhum PR de código em aberto.
+3. Trava de concorrência ausente no início; criada e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Só a PR de docs #895. Nenhum PR de código.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
+por engano devem apenas reconferir o estado terminal e registrar uma linha como esta, sem abrir
+PR de código.
+
+## Execução 51 — 2026-11-15 (~09:55–10:05) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Quarta rodada depois do estado terminal. Mesma confirmação das rodadas 48 a 50: o
+bloco de estado na `qa` continua `PROJECT_STATUS=COMPLETED` / `CRONJOB_STATUS=DISABLED`, e a PR
+de docs #895 continua aberta sem revisão humana (0 reviews), agora com as execuções 48 a 50
+empurradas nela.
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa` (`578c0c89` no topo); varredura de PRs abertos
+com `calendar` nos três repositórios: só a #895 (docs). Trava de concorrência criada no início e
+removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Nenhum novo: a rodada não adiciona conteúdo além desta linha. As execuções 48–49–50 já
+estão na #895; abrir outra PR para repetir a confirmação seria PR duplicada.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). O padrão desta linha basta
+para qualquer execução futura que rodar por engano: reconferir o estado e registrar, sem PR.
+
+## Execução 52 — 2026-11-15 (~11:15–11:25) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Quinta rodada depois do estado terminal. Bloco de estado na `qa` inalterado
+(`578c0c89`: `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`); a PR de docs #895 segue
+aberta sem revisão humana (0 reviews), com as execuções 48 a 51.
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`; varredura de PRs abertos com `calendar` nos
+três repositórios: só a #895 (docs). Trava de concorrência criada no início e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Nenhum novo, pelo mesmo motivo das rodadas 50 e 51: repetir confirmação em outra PR
+seria duplicação. A #895 aguarda revisão humana para poder entrar na `qa`.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
+por engano devem apenas reconferir o estado e registrar uma linha, sem PR de código.
+
+## Execução 53 — 2026-11-15 (~12:15–12:25) — confirmação do encerramento, nenhuma unidade
+
+**BLOCO.** Sexta rodada depois do estado terminal. Nada mudou: `qa` no topo `578c0c89` com
+`PROJECT_STATUS=COMPLETED` / `CRONJOB_STATUS=DISABLED`; PRs abertos com `calendar` nos três
+repositórios: só a docs #895, sem revisão humana (0 reviews).
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`; varredura das três PRs. Trava de concorrência
+criada no início e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Nenhum novo (duplicação). A #895 continua aguardando revisão humana.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48).
+
+## Execução 54 — 2026-11-15 (~13:15–13:30) — confirmação do encerramento em branch nova
+
+**BLOCO.** Sétima rodada depois do estado terminal, e a primeira depois que a PR #895 foi
+**mergeada com revisão humana** na `qa` (`50eb6b7b`): as confirmações das execuções 48 a 53
+entraram na linha oficial. O bloco de estado continua `PROJECT_STATUS=COMPLETED` /
+`CRONJOB_STATUS=DISABLED`, agora com `EXECUCAO=53`.
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`; varredura de PRs abertos com `calendar` nos
+três repositórios: backend e design system zerados, front sem nenhuma nova (a #895 foi mergeada e
+saiu da lista). Trava de concorrência criada no início e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** Esta rodada abre PR própria (docs), porque a #895 já foi mergeada e receber push nela
+não é mais possível. Escopo idêntico ao das rodadas 50 a 53: apenas esta linha de confirmação e
+o bump de estado no roadmap.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). O número de execuções
+pós-terminal cresce porque o agendador do workspace continua disparando a cada 10 minutos; o
+desligamento do cronjob é feito pelo estado textual (`CRONJOB_STATUS=DISABLED`) na resposta da
+rodada, não por ferramenta local disponível aqui.
+
+## Execução 55 — 2026-11-15 (~15:15–15:30) — confirmação do encerramento em branch nova
+
+**BLOCO.** Oitava rodada depois do estado terminal. A PR #899 (Execução 54) foi **mergeada com
+revisão humana** e a `qa` andou (`267326ce`, que traz também um conserto alheio de calendário não
+relacionado). Bloco de estado: `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`,
+`EXECUCAO=54`.
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`; varredura de PRs abertos com `calendar` nos
+três repositórios: nenhuma. Trava de concorrência criada no início e removida no fim.
+
+**TESTES.** Nenhum executado: não houve mudança de código nesta rodada.
+
+**PRs.** PR própria (docs), porque a #899 já foi mergeada. Escopo idêntico às rodadas 50 a 54:
+esta linha e o bump de estado no roadmap.
+
+**BLOQUEIOS.** Nenhum novo. Os três do relatório final seguem externos.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
+por engano devem apenas reconferir o estado e registrar uma linha, sem PR de código.

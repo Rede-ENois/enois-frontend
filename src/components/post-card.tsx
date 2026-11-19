@@ -52,6 +52,7 @@ function PostCardContainer({
   post,
   feedTab,
   fullPost = false,
+  highlightCommentId = null,
   pinned = false,
   onTogglePin,
   pinPending = false,
@@ -97,7 +98,8 @@ function PostCardContainer({
   const { data: pagePost, isLoading: pageLoading } = useQuery({
     queryKey: ["post", post.id],
     queryFn: () => feedApi.get(post.id),
-    enabled: needsPage || needsArticleBody,
+    enabled:
+      needsPage || (needsArticleBody && (post.mediaSpoiler == null || (isOwner && editOpen))),
   });
   const pageHtml = post.pageHtml ?? pagePost?.pageHtml ?? "";
   const articleBody = post.articleBody ?? pagePost?.articleBody ?? "";
@@ -161,6 +163,7 @@ function PostCardContainer({
     mutationFn: () => feedApi.delete(post.id),
     onSuccess: () => {
       setDeleteOpen(false);
+      const restoreInCache = removePostFromFeedCache(queryClient, post.id);
       // Exclusão é lógica: dá para desfazer de verdade, então o aviso traz a ação.
       toast(texts.posts.owner.deleted, "success", {
         label: texts.posts.owner.undo,
@@ -168,13 +171,12 @@ function PostCardContainer({
           feedApi
             .restore(post.id)
             .then((restored) => {
-              updatePostInQueryCache(queryClient, post.id, () => restored);
+              restoreInCache(restored);
               toast(texts.posts.owner.edited);
             })
             .catch(() => toast(texts.posts.owner.error, "error"));
         },
       });
-      removePostFromFeedCache(queryClient, post.id);
       queryClient.invalidateQueries({ queryKey: savedPostsQueryOptions().queryKey });
       // Na pagina do post unico, o conteudo some: volta para o feed em vez de ficar num "nao encontrado".
       if (typeof window !== "undefined" && window.location.pathname.startsWith("/post/")) {
@@ -296,6 +298,9 @@ function PostCardContainer({
               innerPadding={false}
               // Janela, não faixa: a altura vem do contêiner e o excedente rola dentro do quadro.
               autoHeight={false}
+              // Idem: o primeiro filho é conteúdo de página — esticá-lo empurrava o resto da página
+              // para fora do quadro, como na prévia do editor.
+              stretchFirstChild={false}
             />
           }
         />
@@ -384,6 +389,8 @@ function PostCardContainer({
             postAuthorId={post.authorId}
             isQuestion={post.type === "QUESTION"}
             acceptedCommentId={post.acceptedCommentId ?? null}
+            highlightCommentId={highlightCommentId}
+            liveRefresh={fullPost}
           />
         ) : null
       }

@@ -2,8 +2,13 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import type { PostView } from "@/types/application/feed/post-view";
 import type { FeedPages } from "@/types/lib/feed/feed-pages";
+import type { HomeTab } from "@/types/routes/feed/home-tab";
 
 import { fetchFirstPage, mergeRows } from "../query-first-page";
+
+export function feedQueryKey(tab: HomeTab, typeFilter?: string, resolved?: boolean) {
+  return ["feed", tab, typeFilter ?? "", resolved ?? ""] as const;
+}
 
 /**
  * Aba "Ainda não vi": o servidor deixa de mandar o post assim que ele tem reação ou comentário
@@ -58,8 +63,12 @@ export async function refreshFeedFirstPage(queryClient: QueryClient): Promise<vo
         if (!current || !Array.isArray(current.pages) || current.pages.length === 0) return current;
         const [first, ...older] = current.pages;
         const items = mergeRows(fresh.items, first.items);
-        if (items.length === first.items.length) return current;
-        return { ...current, pages: [{ ...first, items }, ...older] };
+        const freshIds = new Set(fresh.items.map((post) => post.id));
+        const olderPages = older.map((page) => {
+          const items = page.items.filter((post) => !freshIds.has(post.id));
+          return items.length === page.items.length ? page : { ...page, items };
+        });
+        return { ...current, pages: [{ ...first, items }, ...olderPages] };
       });
     }),
   );
@@ -67,9 +76,10 @@ export async function refreshFeedFirstPage(queryClient: QueryClient): Promise<vo
 
 /**
  * Apagou (ou o post saiu do feed): some de todas as páginas carregadas, sem pedir nada ao servidor.
- * A exclusão é lógica e reversível, então o post volta pelo mesmo caminho quando a pessoa desfaz.
+ * O retorno desfaz a remoção sem substituir os dados atuais dos outros posts.
  */
-export function removePostFromFeedCache(queryClient: QueryClient, postId: string): void {
+export function removePostFromFeedCache(queryClient: QueryClient, postId: string) {
+  const snapshot = queryClient.getQueriesData<FeedPages>({ queryKey: ["feed"] });
   queryClient.setQueriesData<FeedPages>({ queryKey: ["feed"] }, (current) => {
     if (!current || !Array.isArray(current.pages)) return current;
     let changed = false;
@@ -81,6 +91,75 @@ export function removePostFromFeedCache(queryClient: QueryClient, postId: string
     });
     return changed ? { ...current, pages } : current;
   });
+
+  return (restored: PostView) => {
+    updatePostInQueryCache(queryClient, postId, () => restored);
+    for (const [key, saved] of snapshot) {
+      queryClient.setQueryData<FeedPages>(key, (current) => {
+        if (!current || !Array.isArray(current.pages)) return current;
+        if (current.pages.some((page) => page.items.some((p) => p.id === postId))) return current;
+        const pages = current.pages.map((page, index) => {
+          const oldPage = saved?.pages?.[saved.pageParams.indexOf(current.pageParams[index])];
+          const position = oldPage?.items.findIndex((post) => post.id === postId) ?? -1;
+          if (position < 0) return page;
+          return {
+            ...page,
+            items: mergeRows([...page.items.slice(0, position), restored], page.items),
+          };
+        });
+        return { ...current, pages };
+      });
+    }
+  };
+}
+
+function isMatchingPost(value: unknown, postId: string): value is PostView {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as {
+    id?: unknown;
+    counters?: unknown;
+    type?: unknown;
+    items?: unknown;
+    pages?: unknown;
+  };
+  if (candidate.id !== postId) return false;
+  if (Array.isArray(candidate.items) || Array.isArray(candidate.pages)) return false;
+  return (
+    (typeof candidate.counters === "object" && candidate.counters !== null) ||
+    typeof candidate.type === "string" ||
+    "authorId" in candidate
+  );
+}
+
+function updatePostEntry(
+  entry: unknown,
+  postId: string,
+  update: (post: PostView) => PostView,
+): { next: unknown; changed: boolean } {
+  if (isMatchingPost(entry, postId)) {
+    return { next: update(entry), changed: true };
+  }
+  if (entry && typeof entry === "object" && "post" in entry) {
+    const wrapper = entry as { post: unknown };
+    if (isMatchingPost(wrapper.post, postId)) {
+      return { next: { ...wrapper, post: update(wrapper.post) }, changed: true };
+    }
+  }
+  return { next: entry, changed: false };
+}
+
+function updateItemsArray(
+  items: unknown[],
+  postId: string,
+  update: (post: PostView) => PostView,
+): { next: unknown[]; changed: boolean } {
+  let changed = false;
+  const next = items.map((item) => {
+    const result = updatePostEntry(item, postId, update);
+    if (result.changed) changed = true;
+    return result.next;
+  });
+  return { next: changed ? next : items, changed };
 }
 
 export function updatePostInQueryCache(
@@ -88,22 +167,41 @@ export function updatePostInQueryCache(
   postId: string,
   update: (post: PostView) => PostView,
 ) {
-  // O prefixo `["feed"]` alcança também as consultas vizinhas que não são páginas de feed
-  // (`["feed","scheduled"]` guarda uma lista simples). Sem esta checagem, `pages` vinha
-  // indefinido e o `.map` estourava DENTRO da atualização otimista — o efeito era a ação
-  // morrer antes de falar com o servidor. Só mexe em quem realmente tem páginas.
-  queryClient.setQueriesData<FeedPages>({ queryKey: ["feed"] }, (current) => {
-    if (!current || !Array.isArray(current.pages)) return current;
-    return {
-      ...current,
-      pages: current.pages.map((page) => ({
-        ...page,
-        items: page.items.map((post) => (post.id === postId ? update(post) : post)),
-      })),
-    };
-  });
+  // Atualiza o post em qualquer consulta em cache (feed principal, comunidades, canais, salvos,
+  // coleções, murais, perfil corporativo ou post isolado), preservando a referência quando nada mudou.
+  queryClient.setQueriesData<unknown>({}, (current: unknown) => {
+    if (!current || typeof current !== "object") return current;
 
-  queryClient.setQueryData<PostView>(["post", postId], (post) =>
-    post && post.id === postId ? update(post) : post,
-  );
+    if (isMatchingPost(current, postId)) {
+      return update(current);
+    }
+
+    const record = current as { pages?: unknown; items?: unknown };
+
+    if (Array.isArray(record.pages)) {
+      let pagesChanged = false;
+      const pages = record.pages.map((page) => {
+        if (
+          !page ||
+          typeof page !== "object" ||
+          !Array.isArray((page as { items?: unknown }).items)
+        ) {
+          return page;
+        }
+        const pageObj = page as { items: unknown[] };
+        const { next, changed } = updateItemsArray(pageObj.items, postId, update);
+        if (!changed) return page;
+        pagesChanged = true;
+        return { ...pageObj, items: next };
+      });
+      return pagesChanged ? { ...record, pages } : current;
+    }
+
+    if (Array.isArray(record.items)) {
+      const { next, changed } = updateItemsArray(record.items, postId, update);
+      return changed ? { ...record, items: next } : current;
+    }
+
+    return current;
+  });
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -8,33 +8,36 @@ import type { NetworkApiRequest } from "@/types/application/network/network-api-
 import type { NetworkAuditRecord } from "@/types/application/network/network-audit-record";
 import type { NetworkDashboard } from "@/types/application/network/network-dashboard";
 import type { NetworkNode } from "@/types/application/network/network-node";
+import type { NetworkNodeObservability as NetworkNodeObservabilityApi } from "@/types/application/network/network-node-observability";
 import type {
   NetworkDashboardData,
   NetworkNodeApiRequest,
   NetworkNodeData,
   NetworkNodeDetailData,
   NetworkNodeHistoryEntry,
+  NetworkNodeObservabilityPanel,
 } from "@rede-enois/design-system/domain";
 import { NetworkNodesSection as NetworkNodesSectionView } from "@rede-enois/design-system/domain";
 import { useToast } from "@rede-enois/design-system/ui";
 
-import { ApiError, adminNetworkApi } from "@/lib/api";
+import { ApiError, adminNetworkApi, profileApi } from "@/lib/api";
 import { dataHora } from "@/lib/date/format";
 
 const QUERY_KEY = ["admin", "network", "nodes"];
 const DASHBOARD_KEY = ["admin", "network", "dashboard"];
 const ROUTES_KEY = ["admin", "network", "api-routes"];
 
-/** Os perfis que um nó pode receber — o mesmo conjunto que o backend valida. */
-const PROFILES = [
-  "NODE_EDGE",
-  "NODE_WORKER",
-  "NODE_MEDIA",
-  "NODE_READ_REPLICA",
-  "NODE_API",
-  "NODE_LOCAL",
-  "NODE_EMERGENCY",
-];
+/**
+ * Os perfis que um nó pode receber — o mesmo conjunto que o backend valida, na ordem em que a
+ * tela os oferece. Os rótulos vêm de `texts`; aqui só se monta a opção que o design system espera.
+ */
+const PROFILE_OPTIONS = Object.entries(texts.moderator.network.profileLabels).map(
+  ([id, label]) => ({ id, label }),
+);
+const PROFILES = PROFILE_OPTIONS.map((profile) => profile.id);
+
+/** 404 da conta dona vira erro de formulário: o admin corrige o @ e tenta de novo, sem toast. */
+class ProvisionOwnerNotFoundError extends Error {}
 
 /** A fotografia da rede na forma que a faixa do design system espera. */
 function dashboardView(dashboard: NetworkDashboard): NetworkDashboardData {
@@ -73,6 +76,27 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
     quarantineReason: node.quarantineReason,
+    // O painel mostra o tráfego medido (#336): sem repassar, o nó aparecia sem os números.
+    trafficInMb: node.trafficInMb,
+    trafficOutMb: node.trafficOutMb,
+  };
+}
+
+/**
+ * O quadro ao vivo na forma que a view do design system espera. Datas passam por `dataHora` (o fuso
+ * do app, sempre o mesmo no servidor e no navegador); o resto é o contrato, sem reescrita.
+ */
+function observabilityView(panel: NetworkNodeObservabilityApi): NetworkNodeObservabilityPanel {
+  return {
+    nodeId: panel.nodeId,
+    generatedAt: dataHora(panel.generatedAt),
+    series: panel.series.map((sample) => ({
+      ...sample,
+      sampledAt: dataHora(sample.sampledAt),
+    })),
+    console: panel.console.map((line) => ({ ...line, at: dataHora(line.at) })),
+    summary: panel.summary,
+    consoleLevels: panel.consoleLevels,
   };
 }
 
@@ -86,6 +110,12 @@ export function NetworkNodesSection() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [issuedKey, setIssuedKey] = useState<(IssuedNodeKey & { nodeId: string }) | null>(null);
+  const [issuedProvisionToken, setIssuedProvisionToken] = useState<{
+    token: string;
+    expiresAt: string;
+  } | null>(null);
+  /** Fechar o diálogo durante a emissão descarta a resposta que chegar depois. */
+  const provisionAttempt = useRef(0);
   const [openNodeId, setOpenNodeId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({
@@ -121,6 +151,55 @@ export function NetworkNodesSection() {
       refresh();
     },
     onError,
+  });
+
+  /**
+   * O token de provisionamento cria o nó; a conta dona é resolvida aqui porque o design system não
+   * fala com a rede. O nó só aparece na lista depois do enroll — por isso não há refresh aqui.
+   */
+  const provisionToken = useMutation({
+    mutationFn: async ({
+      serverName,
+      ownerUsername,
+      profiles,
+    }: {
+      serverName: string;
+      ownerUsername: string;
+      profiles: string[];
+    }) => {
+      const attempt = ++provisionAttempt.current;
+      const username = ownerUsername.trim().replace(/^@/, "");
+      if (!username) {
+        throw new ProvisionOwnerNotFoundError(
+          texts.moderator.network.provisionOwnerNotFound(username),
+        );
+      }
+
+      let owner;
+      try {
+        owner = await profileApi.get(username);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          throw new ProvisionOwnerNotFoundError(
+            texts.moderator.network.provisionOwnerNotFound(username),
+          );
+        }
+        throw error;
+      }
+
+      const issued = await adminNetworkApi.provisionToken({
+        displayName: serverName,
+        ownerUserId: owner.id,
+        profiles,
+      });
+
+      return { ...issued, attempt };
+    },
+    onSuccess: ({ attempt, ...issued }) => {
+      if (attempt === provisionAttempt.current) {
+        setIssuedProvisionToken(issued);
+      }
+    },
   });
 
   const revokeKey = useMutation({
@@ -228,6 +307,36 @@ export function NetworkNodesSection() {
     retry: false,
   });
 
+  /**
+   * O quadro ao vivo do nó aberto. O ponto é do minuto e o nó empurra no heartbeat (a cada 30 s),
+   * então reler de minuto em minuto basta: reler antes disso devolve a mesma janela. Em segundo
+   * plano não relê — quem não está olhando não precisa do quadro, e o nó já foi medido de qualquer
+   * forma.
+   */
+  const {
+    data: observability,
+    isLoading: observabilityLoading,
+    error: observabilityError,
+    refetch: refetchObservability,
+    isFetching: observabilityFetching,
+  } = useQuery({
+    queryKey: ["admin", "network", "observability", openNodeId],
+    queryFn: () => adminNetworkApi.observability(openNodeId!),
+    enabled: openNodeId !== null,
+    retry: false,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+  });
+
+  /** Erro de leitura aparece na seção; a rede cair não pode parecer que o nó está sem dados. */
+  const observabilityErrorText = observabilityError
+    ? observabilityError instanceof ApiError
+      ? observabilityError.message
+      : texts.moderator.network.observabilityError
+    : null;
+
+  const observabilityRefreshedAt = observability ? dataHora(observability.generatedAt) : null;
+
   const detail: NetworkNodeDetailData | null = openNode
     ? {
         node: nodeView(openNode),
@@ -258,6 +367,17 @@ export function NetworkNodesSection() {
       dateLabel: dataHora(record.createdAt),
     }));
 
+  /**
+   * O diálogo mostra o erro no formulário, onde o admin está: erro de conta é específico; falha de
+   * rede/servidor mantém a mensagem da API; o resto vira a mensagem genérica, sem "Failed to fetch".
+   */
+  const provisionError = provisionToken.error
+    ? provisionToken.error instanceof ProvisionOwnerNotFoundError ||
+      provisionToken.error instanceof ApiError
+      ? provisionToken.error.message
+      : texts.moderator.network.provisionFailed
+    : null;
+
   return (
     <NetworkNodesSectionView
       dashboard={dashboard ? dashboardView(dashboard) : null}
@@ -265,6 +385,13 @@ export function NetworkNodesSection() {
         detail,
         history: historyView(history),
         historyLoading: openNodeId !== null && history === undefined,
+        observability: {
+          panel: observability ? observabilityView(observability) : null,
+          loading: observabilityLoading || observabilityFetching,
+          error: observabilityErrorText,
+          onRefresh: () => void refetchObservability(),
+          refreshedAtLabel: observabilityRefreshedAt,
+        },
         onSaveCapacity: (body) => {
           if (openNodeId) capacity.mutate({ nodeId: openNodeId, body });
         },
@@ -297,6 +424,23 @@ export function NetworkNodesSection() {
       statusPending={changeStatus.isPending}
       issuedKey={issuedKey}
       onDismissIssuedKey={() => setIssuedKey(null)}
+      provisionToken={{
+        onProvision: (input) => provisionToken.mutate(input),
+        provisionPending: provisionToken.isPending,
+        issuedToken: issuedProvisionToken
+          ? {
+              token: issuedProvisionToken.token,
+              expiresAtLabel: dataHora(issuedProvisionToken.expiresAt),
+            }
+          : null,
+        onDismissToken: () => {
+          provisionAttempt.current += 1;
+          setIssuedProvisionToken(null);
+          provisionToken.reset();
+        },
+        provisionError,
+        profileOptions: PROFILE_OPTIONS,
+      }}
     />
   );
 }

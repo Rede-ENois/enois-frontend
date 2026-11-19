@@ -1,3 +1,4 @@
+import { writeStorageLater } from "@/stores/batched-storage";
 import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
 import type { PreferencesState } from "@/types/stores/preferences-state";
 import type { PreferencesStorageValue } from "@/types/stores/preferences-storage-value";
@@ -153,6 +154,7 @@ const preferencesStorage = {
           parsed.state.displayNameFont = normalizeNameFont(parsed.state.displayNameFont);
           parsed.state.displayNameColor = normalizeNameColor(parsed.state.displayNameColor);
           parsed.state.displayNameTheme = normalizeNameTheme(parsed.state.displayNameTheme);
+          parsed.state.revealSensitiveMedia = parsed.state.revealSensitiveMedia === true;
         }
 
         return JSON.stringify(parsed);
@@ -175,9 +177,9 @@ const preferencesStorage = {
     });
   },
   setItem: (name: string, value: string) => {
-    localStorage.setItem(name, value);
-    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
-    localStorage.removeItem(LEGACY_SIDEBAR_STORAGE_KEY);
+    writeStorageLater(name, value);
+    writeStorageLater(LEGACY_THEME_STORAGE_KEY, null);
+    writeStorageLater(LEGACY_SIDEBAR_STORAGE_KEY, null);
   },
   removeItem: (name: string) => {
     localStorage.removeItem(name);
@@ -202,6 +204,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       displayNameFont: null,
       displayNameColor: null,
       displayNameTheme: null,
+      revealSensitiveMedia: false,
 
       setTheme: (theme: Theme) => set({ theme }),
       setThemeSettings: (themeSettings: ThemeSettings) =>
@@ -233,6 +236,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       setDisplayNameFont: (displayNameFont) => set({ displayNameFont }),
       setDisplayNameColor: (displayNameColor) => set({ displayNameColor }),
       setDisplayNameTheme: (displayNameTheme) => set({ displayNameTheme }),
+      setRevealSensitiveMedia: (revealSensitiveMedia) => set({ revealSensitiveMedia }),
       toggleSidebar: () =>
         set((state) => ({
           sidebarCollapsed: !state.sidebarCollapsed,
@@ -255,6 +259,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         displayNameFont: state.displayNameFont,
         displayNameColor: state.displayNameColor,
         displayNameTheme: state.displayNameTheme,
+        revealSensitiveMedia: state.revealSensitiveMedia,
       }),
       skipHydration: true,
     },

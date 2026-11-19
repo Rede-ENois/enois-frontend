@@ -71,6 +71,7 @@ const NO_REFERRER_PATHS = ["/auth/callback", "/auth/reset", "/auth/verify"];
 function cacheControlFor(pathname: string, contentType: string): string | null {
   if (contentType.includes("text/html")) return "no-store";
   if (pathname === "/sw.js" || pathname === "/service-worker.js") return "no-cache";
+  if (pathname.startsWith("/emojis/enois/")) return "public, max-age=604800, immutable";
   return null;
 }
 
