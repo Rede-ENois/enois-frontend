@@ -264,11 +264,6 @@
       "count": 24
     }
   },
-  "src/components/profile/github-org-import.tsx": {
-    "local/no-front-markup": {
-      "count": 39
-    }
-  },
   "src/components/profile/profile-city-dialog.tsx": {
     "local/no-front-markup": {
       "count": 6

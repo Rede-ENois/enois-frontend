@@ -15,16 +15,18 @@ const mocks = vi.hoisted(() => ({
   orgs: vi.fn(),
   orgRepos: vi.fn(),
   importOrg: vi.fn(),
+  dialog: null as null | Record<string, unknown>,
 }));
 
 vi.mock("@rede-enois/design-system/ui", () => ({
-  Button: ({ children, ...props }: { children?: React.ReactNode }) => (
-    <button {...props}>{children}</button>
-  ),
-  Pill: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
-  Dialog: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-  DialogContent: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   useToast: () => ({ toast: mocks.toast }),
+}));
+// O diálogo é do DS (e tem testes próprios lá); aqui o que importa é o que o app passa para ele.
+vi.mock("@rede-enois/design-system/domain", () => ({
+  GithubOrgImportDialog: (props: Record<string, unknown>) => {
+    mocks.dialog = props;
+    return null;
+  },
 }));
 vi.mock("@/lib/api", async () => ({
   ApiError: (await import("@/lib/api-client")).ApiError,
@@ -62,11 +64,25 @@ describe("GithubOrgImport", () => {
       await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
     }
   };
-  const button = (label: string) =>
-    [...host.querySelectorAll("button")].find((item) => item.textContent === label)!;
+  const dialog = () =>
+    mocks.dialog! as {
+      title: string;
+      orgs: { items: { login: string }[] };
+      repos: { rows: { fullName: string }[] };
+      selectedOrg: string | null;
+      activeOrg: { login: string } | null;
+      selected: string[];
+      importing: boolean;
+      onSelectOrg: (login: string) => void;
+      onToggle: (fullName: string) => void;
+      onSelectAll: () => void;
+      onClear: () => void;
+      onImport: () => void;
+    };
 
   beforeEach(async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    mocks.dialog = null;
     mocks.toast.mockReset();
     mocks.orgs.mockReset().mockResolvedValue([
       {
@@ -99,18 +115,25 @@ describe("GithubOrgImport", () => {
     vi.unstubAllGlobals();
   });
 
-  it("lists the org repos and imports only what was picked", async () => {
-    expect(host.textContent).toContain("Organizações");
+  it("passes the orgs and the chosen repos to the dialog", async () => {
     expect(mocks.orgRepos).toHaveBeenCalledWith("enois-lab");
-    expect(button("Importar 0 projetos").hasAttribute("disabled")).toBe(true);
+    expect(dialog().title).toBe("Organizações");
+    expect(dialog().orgs.items.map((org) => org.login)).toEqual(["enois-lab"]);
+    expect(dialog().selectedOrg).toBe("enois-lab");
+    expect(dialog().activeOrg?.login).toBe("enois-lab");
+    expect(dialog().repos.rows.map((row) => row.fullName)).toEqual([
+      "enois-lab/alfa",
+      "enois-lab/beta",
+    ]);
+    expect(dialog().selected).toEqual([]);
+  });
 
-    await act(async () =>
-      host.querySelector<HTMLInputElement>('[aria-label="enois-lab/alfa"]')!.click(),
-    );
-    expect(host.textContent).toContain("Importar 1 projeto");
-
+  it("imports only what was picked", async () => {
     mocks.importOrg.mockResolvedValue({ slug: "enois-lab", name: "ENois Lab", created: 1 });
-    await act(async () => button("Importar 1 projeto").click());
+    await act(async () => dialog().onToggle("enois-lab/alfa"));
+    expect(dialog().selected).toEqual(["enois-lab/alfa"]);
+
+    await act(async () => dialog().onImport());
     await settle();
 
     expect(mocks.importOrg).toHaveBeenCalledWith("enois-lab", ["enois-lab/alfa"]);
@@ -121,27 +144,40 @@ describe("GithubOrgImport", () => {
     );
   });
 
-  it("marks every repo with the select-all button", async () => {
-    await act(async () => button("Marcar todos").click());
-    await act(async () => button("Importar 2 projetos").click());
+  it("marks every repo with select all and clears them", async () => {
+    await act(async () => dialog().onSelectAll());
+    expect(dialog().selected).toEqual(["enois-lab/alfa", "enois-lab/beta"]);
+    await act(async () => dialog().onClear());
+    expect(dialog().selected).toEqual([]);
+
+    await act(async () => dialog().onSelectAll());
+    await act(async () => dialog().onImport());
     await settle();
     expect(mocks.importOrg).toHaveBeenCalledWith("enois-lab", ["enois-lab/alfa", "enois-lab/beta"]);
   });
 
   it("surfaces the server reason when the import is refused", async () => {
     mocks.importOrg.mockRejectedValue(new ApiError(403, "ORG_NAO_MEMBRO", "Você não é membro."));
-    await act(async () => button("Marcar todos").click());
-    await act(async () => button("Importar 2 projetos").click());
+    await act(async () => dialog().onSelectAll());
+    await act(async () => dialog().onImport());
     await settle();
     expect(mocks.toast).toHaveBeenCalledWith("Você não é membro.", "error");
   });
 
   it("renders nothing when the GitHub link has no organization", async () => {
-    mocks.orgs.mockResolvedValue([]);
-    await act(async () => {
-      await client.invalidateQueries();
-    });
+    await act(async () => root.unmount());
+    client.clear();
+    mocks.orgs.mockReset().mockResolvedValue([]);
+    mocks.dialog = null;
+    root = createRoot(host);
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <GithubOrgImport open onOpenChange={() => {}} username="ada" />
+        </QueryClientProvider>,
+      ),
+    );
     await settle();
-    expect(host.textContent).toBe("");
+    expect(mocks.dialog).toBeNull();
   });
 });
