@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { flushStorageWrites } from "./batched-storage";
 import { usePreferencesStore } from "./preferences.store";
 
 // O store resolve o storage na importação: o stub precisa existir antes do módulo carregar.
@@ -20,7 +21,7 @@ vi.hoisted(() => {
 describe("store de preferências", () => {
   beforeEach(() => {
     const valores = new Map<string, string>();
-    vi.stubGlobal("window", {});
+    vi.stubGlobal("window", { addEventListener: () => {} });
     vi.stubGlobal("localStorage", {
       getItem: (key: string) => valores.get(key) ?? null,
       setItem: (key: string, value: string) => valores.set(key, value),
@@ -60,6 +61,7 @@ describe("store de preferências", () => {
     usePreferencesStore.setState({ revealSensitiveMedia: false });
 
     usePreferencesStore.getState().setRevealSensitiveMedia(true);
+    flushStorageWrites();
 
     const salvo = JSON.parse(localStorage.getItem("connect-grow-preferences") ?? "{}") as {
       state?: { revealSensitiveMedia?: boolean };
