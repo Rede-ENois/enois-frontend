@@ -30,4 +30,10 @@ export type NetworkNode = {
   declaredMemoryMb: number;
   declaredDiskMb: number;
   declaredBandwidthMbps: number;
+  /**
+   * Tráfego acumulado que o próprio nó mediu, em MiB (brief §8.2). `null` = o runtime não mede,
+   * nunca zero: zero afirma "não transferiu nada".
+   */
+  trafficInMb: number | null;
+  trafficOutMb: number | null;
 };
