@@ -712,6 +712,12 @@ export const texts = {
     login: {
       title: "Bem-vindo de volta.",
       subtitle: "Continue de onde parou.",
+      /** `sessao=encerrada`: a sessão caiu de propósito (troca de senha ou de e-mail), não por tempo. */
+      sessionEnded: {
+        title: "Sua sessão foi encerrada",
+        description:
+          "Por segurança, a conta sai de todos os aparelhos quando a senha ou o e-mail muda. Entre com os dados de agora.",
+      },
     },
     social: {
       google: "Continuar com Google",
