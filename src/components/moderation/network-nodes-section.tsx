@@ -76,6 +76,9 @@ function nodeView(node: NetworkNode): NetworkNodeData {
     latencyMs: node.latencyMs,
     failureStreak: node.failureStreak,
     quarantineReason: node.quarantineReason,
+    // O painel mostra o tráfego medido (#336): sem repassar, o nó aparecia sem os números.
+    trafficInMb: node.observedBytesInMb,
+    trafficOutMb: node.observedBytesOutMb,
   };
 }
 

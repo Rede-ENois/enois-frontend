@@ -225,6 +225,8 @@ const backendNode = {
   latencyMs: 120,
   failureStreak: 0,
   quarantineReason: null,
+  observedBytesInMb: 120,
+  observedBytesOutMb: 340,
   declaredCpuCores: 4,
   declaredMemoryMb: 8192,
   declaredDiskMb: 51200,

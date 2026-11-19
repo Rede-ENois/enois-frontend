@@ -25,6 +25,12 @@ export type NetworkNode = {
   failureStreak: number;
   /** Motivo da quarentena vigente; `null` fora dela. */
   quarantineReason: string | null;
+  /**
+   * Tráfego medido pelo próprio nó (heartbeat), em MB; `null` = runtime que não mede (nó anterior à
+   * medida), nunca zero — zero afirmaria "não transferiu nada".
+   */
+  observedBytesInMb: number | null;
+  observedBytesOutMb: number | null;
   /** O que o participante cede — o valor vigente que a tela de capacidade edita. */
   declaredCpuCores: number;
   declaredMemoryMb: number;
