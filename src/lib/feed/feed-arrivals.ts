@@ -109,25 +109,27 @@ export function useFeedArrivals(data: FeedPages | undefined, tab: string, scope:
   }, []);
 
   useEffect(() => {
-    if (held === null) return;
-    // Back at the top, the posts that arrived are what the reader is going to see anyway.
-    const onScroll = () => {
-      if (window.scrollY === 0) setHeld(null);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [held]);
-
-  useEffect(() => {
-    // A reordered ranking can wait without a single new post: there is nothing to announce then.
-    if (held === null || held.count === 0) {
+    if (held === null) {
       setNotice(false);
       return;
     }
-    const update = () => setNotice(window.scrollY > NEW_POSTS_NOTICE_SCROLL);
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    // A reordered ranking can wait without a single new post: there is nothing to announce then.
+    const announces = held.count > 0;
+    const noticeAt = (scrollY: number) => announces && scrollY > NEW_POSTS_NOTICE_SCROLL;
+    // One listener for both jobs: they were two, and every scroll event ran both.
+    const onScroll = () => {
+      // Back at the top, the posts that arrived are what the reader is going to see anyway. The
+      // notice goes in the same event, so React commits both at once.
+      if (window.scrollY === 0) {
+        setHeld(null);
+        setNotice(false);
+      } else {
+        setNotice(noticeAt(window.scrollY));
+      }
+    };
+    setNotice(noticeAt(window.scrollY));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [held]);
 
   return { pages: pagesWithHeldFirst(data, held), held, notice, release };
