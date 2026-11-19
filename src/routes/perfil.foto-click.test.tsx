@@ -32,7 +32,7 @@ vi.mock("@tanstack/react-router", () => ({
     }),
   }),
   useNavigate: () => () => undefined,
-  Link: (props: Record<string, unknown>) => <a>{props.children}</a>,
+  Link: (props: Record<string, React.ReactNode>) => <a>{props.children}</a>,
   notFound: () => undefined,
 }));
 vi.mock("@/lib/use-auth", () => ({
@@ -162,7 +162,7 @@ describe("o botão de trocar a foto no perfil", () => {
     expect(input).not.toBeNull();
 
     // O clique do botão dispara o mesmo input que o menu usa: o fluxo de recorte/upload é um só.
-    const abrir = vi.spyOn(input!, "click").mockImplementation(() => undefined);
+    const abrir = vi.spyOn(input as HTMLInputElement, "click").mockImplementation(() => undefined);
     await act(async () => (botao[0] as HTMLButtonElement).click());
     await settle();
     expect(abrir).toHaveBeenCalled();
