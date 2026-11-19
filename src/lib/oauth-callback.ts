@@ -43,6 +43,9 @@ export async function finishOAuthLogin(): Promise<OAuthLoginResult> {
       markSanctionAccess();
       return { accessScope: "SANCTIONS_ONLY" };
     }
+    if (error instanceof ApiError && [400, 401, 403].includes(error.status)) {
+      clearSession();
+    }
     return null;
   }
 }

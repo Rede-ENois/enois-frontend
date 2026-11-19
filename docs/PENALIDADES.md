@@ -49,6 +49,7 @@ A página `/conta-suspensa` usa a mesma consulta autorizada, sem depender do ind
 - Login por senha, segundo fator, confirmação de e-mail e retorno OAuth respeitam o escopo confirmado pelo servidor.
 - OAuth com fator pendente consulta o desafio do cookie por `/auth/2fa/challenge` antes de concluir o login; essa etapa não revela suspensão.
 - Após confirmar o segundo fator, uma falha na conclusão do retorno OAuth mostra erro e a ação **Entrar**, sem manter o formulário já concluído.
+- Recusa explícita de `/auth/me` no retorno OAuth descarta os indicadores locais de sessão; indisponibilidade de rede ou do servidor não é convertida em recusa de autenticação.
 - `ACCOUNT_SUSPENDED` e `SESSION_RESTRICTED` confirmados pelo servidor encaminham para a página específica. Erro de rede, CSRF ou um 401 genérico não são interpretados como suspensão.
 - Um 401 na consulta limitada pede nova entrada, sem preservar dados da decisão como sucesso atual.
 - O recurso envia texto aparado, impede duplicação durante o envio e reconcilia seu estado com o servidor. Pendência aparece como **Recurso em análise**.

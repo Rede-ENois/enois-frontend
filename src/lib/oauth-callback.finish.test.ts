@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "./api-client";
 import { finishOAuthLogin } from "./oauth-callback";
 
 const deps = vi.hoisted(() => ({
@@ -45,4 +46,28 @@ describe("finishOAuthLogin", () => {
     await expect(finishOAuthLogin()).resolves.toBeNull();
     expect(deps.renewSession).not.toHaveBeenCalled();
   });
+
+  it.each([400, 401, 403])(
+    "descarta o estado local quando /auth/me recusa explicitamente (%s)",
+    async (status) => {
+      deps.me.mockRejectedValue(
+        new ApiError(status, "AUTH_REFUSED", "Recusa sintética", "/auth/me"),
+      );
+      await expect(finishOAuthLogin()).resolves.toBeNull();
+      expect(deps.clearSession).toHaveBeenCalledOnce();
+      expect(deps.storeSession).not.toHaveBeenCalled();
+      expect(deps.renewSession).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([0, 500])(
+    "não transforma indisponibilidade de /auth/me em sessão recusada (%s)",
+    async (status) => {
+      deps.me.mockRejectedValue(new ApiError(status, "UNAVAILABLE", "Falha sintética", "/auth/me"));
+      await expect(finishOAuthLogin()).resolves.toBeNull();
+      expect(deps.clearSession).not.toHaveBeenCalled();
+      expect(deps.storeSession).not.toHaveBeenCalled();
+      expect(deps.renewSession).not.toHaveBeenCalled();
+    },
+  );
 });
