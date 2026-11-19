@@ -387,6 +387,16 @@ function ListingDetailsDialog({
   onUseMine?: () => void;
 }) {
   const description = listing.description?.trim();
+  const actionFailed = mine ? useMineFailed : buyFailed;
+  const actionError = mine ? texts.marketplace.useMineError : texts.marketplace.buyError;
+  const actionDisabled = mine ? usingMine : buying;
+  const actionLabel = mine
+    ? usingMine
+      ? texts.marketplace.usingMine
+      : texts.marketplace.useMine
+    : buying
+      ? texts.marketplace.buying
+      : texts.marketplace.buy;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -430,39 +440,23 @@ function ListingDetailsDialog({
               {formatFaisca(listing.price)}
             </span>
 
-            {mine ? (
-              <>
-                <p className="mt-1 text-xs text-text-subtle">{texts.marketplace.mineHint}</p>
+            <p className="mt-1 text-xs text-text-subtle">
+              {mine ? texts.marketplace.mineHint : texts.marketplace.escrowHint}
+            </p>
 
-                {useMineFailed && (
-                  <p role="alert" className="mt-2 text-xs text-destructive">
-                    {texts.marketplace.useMineError}
-                  </p>
-                )}
-
-                <Button
-                  className="mt-3 w-full rounded-full"
-                  disabled={usingMine}
-                  onClick={onUseMine}
-                >
-                  {usingMine ? texts.marketplace.usingMine : texts.marketplace.useMine}
-                </Button>
-              </>
-            ) : (
-              <>
-                <p className="mt-1 text-xs text-text-subtle">{texts.marketplace.escrowHint}</p>
-
-                {buyFailed && (
-                  <p role="alert" className="mt-2 text-xs text-destructive">
-                    {texts.marketplace.buyError}
-                  </p>
-                )}
-
-                <Button className="mt-3 w-full rounded-full" disabled={buying} onClick={onBuy}>
-                  {buying ? texts.marketplace.buying : texts.marketplace.buy}
-                </Button>
-              </>
+            {actionFailed && (
+              <p role="alert" className="mt-2 text-xs text-destructive">
+                {actionError}
+              </p>
             )}
+
+            <Button
+              className="mt-3 w-full rounded-full"
+              disabled={actionDisabled}
+              onClick={mine ? onUseMine : onBuy}
+            >
+              {actionLabel}
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -513,6 +507,16 @@ function ListingCard({
       setDetailsOpen(false);
     },
   });
+  const actionFailed = mine ? useMine.isError : buy.isError;
+  const actionError = mine ? texts.marketplace.useMineError : texts.marketplace.buyError;
+  const actionPending = mine ? useMine.isPending : buy.isPending;
+  const actionLabel = mine
+    ? useMine.isPending
+      ? texts.marketplace.usingMine
+      : texts.marketplace.useMine
+    : buy.isPending
+      ? texts.marketplace.buying
+      : texts.marketplace.buy;
   const description = listing.description?.trim();
 
   return (
@@ -572,41 +576,20 @@ function ListingCard({
             {formatFaisca(listing.price)}
           </span>
 
-          {mine ? (
-            <>
-              {useMine.isError && !detailsOpen && (
-                <p role="alert" className="text-xs text-destructive">
-                  {texts.marketplace.useMineError}
-                </p>
-              )}
-
-              <Button
-                size="sm"
-                className="w-full rounded-full"
-                disabled={useMine.isPending}
-                onClick={() => useMine.mutate()}
-              >
-                {useMine.isPending ? texts.marketplace.usingMine : texts.marketplace.useMine}
-              </Button>
-            </>
-          ) : (
-            <>
-              {buy.isError && !detailsOpen && (
-                <p role="alert" className="text-xs text-destructive">
-                  {texts.marketplace.buyError}
-                </p>
-              )}
-
-              <Button
-                size="sm"
-                className="w-full rounded-full"
-                disabled={buy.isPending}
-                onClick={() => buy.mutate()}
-              >
-                {buy.isPending ? texts.marketplace.buying : texts.marketplace.buy}
-              </Button>
-            </>
+          {actionFailed && !detailsOpen && (
+            <p role="alert" className="text-xs text-destructive">
+              {actionError}
+            </p>
           )}
+
+          <Button
+            size="sm"
+            className="w-full rounded-full"
+            disabled={actionPending}
+            onClick={() => (mine ? useMine.mutate() : buy.mutate())}
+          >
+            {actionLabel}
+          </Button>
         </div>
       </div>
 
