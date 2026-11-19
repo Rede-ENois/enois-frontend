@@ -19,6 +19,7 @@ export { roleplayApi, WORLD_KINDS } from "./roleplay";
 export { colagemApi } from "./colagem";
 export { desabafosApi } from "./desabafos";
 export { confessionarioApi } from "./confessionario";
+export { desafiosApi } from "./desafios";
 export { termometroApi } from "./termometro";
 export { papoRetoApi } from "./papo-reto";
 export { muraisApi } from "./murais";
