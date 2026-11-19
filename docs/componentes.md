@@ -363,6 +363,11 @@ Hook para detectar breakpoint mobile (< 768px).
 
 ## Componentes UI (shadcn/ui)
 
+Os campos de texto do app usam os componentes de formulário de `@rede-enois/design-system/ui`
+(as alternativas da enquete já são o `EnqueteComposer` do DS e o compositor de canal, o `Textarea`).
+A tipografia de formulário pertence ao DS: não há regra global de tamanho de fonte no frontend
+para evitar o zoom automático do iOS ao focar um campo.
+
 46 componentes em `src/components/ui/` gerados pelo shadcn:
 
 | Componente     | Descrição                                                               |
