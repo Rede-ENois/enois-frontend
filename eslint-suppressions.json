@@ -11,7 +11,7 @@
   },
   "src/components/blog/blog-post-editor.tsx": {
     "local/no-front-markup": {
-      "count": 60
+      "count": 37
     },
     "no-restricted-globals": {
       "count": 2
@@ -452,7 +452,7 @@
   },
   "src/routes/blog.$username_.$postId.tsx": {
     "local/no-front-markup": {
-      "count": 40
+      "count": 38
     }
   },
   "src/routes/blogs.tsx": {

@@ -309,7 +309,10 @@ describe("fotos e vídeos no post do blog (vlog)", () => {
     for (let turn = 0; turn < 5; turn += 1) await act(async () => {});
   };
 
+  // Cada teste define as próprias subidas; uma implementação que vaza de um teste para o outro
+  // fazia "uma falhou" passar com a resposta do teste anterior.
   beforeEach(() => {
+    mocks.uploadAll.mockReset();
     mocks.uploadAll.mockImplementation(async (files: { file: File }[]) =>
       files.map(({ file }) => {
         attachmentsIndex += 1;
@@ -350,7 +353,9 @@ describe("fotos e vídeos no post do blog (vlog)", () => {
       (item) => item.textContent === texts.blog.editor.publish,
     ) as HTMLButtonElement;
     expect(publicar.disabled).toBe(true);
-    expect(container.textContent).toContain(texts.blog.editor.mediaUploading);
+    expect(container.textContent).toContain(
+      texts.blog.editor.mediaUploading.replace("{{name}}", "foto.jpg"),
+    );
 
     await act(async () => terminar([{ mediaId: "media-sobe", cdnUrl: "/foto.jpg" }]));
     expect(publicar.disabled).toBe(false);
@@ -361,11 +366,11 @@ describe("fotos e vídeos no post do blog (vlog)", () => {
     await fill("input", "Meu vlog");
     await fill("textarea", "Texto do vlog");
     await escolherArquivos([arquivo("foto.jpg", "image/jpeg")]);
-    // Pelo nome acessível (o texto do botão é o nome do arquivo, não o aria-label).
-    const remover = container.querySelector<HTMLButtonElement>(
-      `button[aria-label="${texts.blog.editor.mediaRemove(0)}"]`,
+    // O anexo enviado é o Pill com o nome do arquivo; clicar nele remove.
+    const remover = [...container.querySelectorAll("button")].find(
+      (item) => item.textContent === "foto.jpg",
     );
-    expect(remover).not.toBeNull();
+    expect(remover).not.toBeUndefined();
     await act(async () => remover!.click());
     await esperar();
     expect(mocks.removeMedia).toHaveBeenCalledWith(`media-${attachmentsIndex}`);
@@ -373,14 +378,50 @@ describe("fotos e vídeos no post do blog (vlog)", () => {
     expect(mocks.publish).toHaveBeenCalledWith(expect.objectContaining({ mediaIds: [] }));
   });
 
-  it("anexo que falha na subida sai do post com aviso, em vez de sumir calado", async () => {
+  it("anexo que falha na subida fica marcado e pode ser tentado de novo", async () => {
     mocks.uploadAll.mockRejectedValueOnce(new Error("rede"));
     await render();
+    await fill("input", "Meu vlog");
+    await fill("textarea", "Texto do vlog");
     await escolherArquivos([arquivo("foto.jpg", "image/jpeg")]);
-    expect(container.querySelector("[role='alert']")?.textContent).toBe(
-      texts.blog.editor.mediaError,
+
+    // A falha não some com o anexo: o Pill diz que dá para tentar, e publicar levaria o post sem
+    // a foto — então a tentativa é o caminho oferecido.
+    expect(container.textContent).toContain(texts.blog.editor.mediaRetry);
+    const publicar = [...container.querySelectorAll("button")].find(
+      (item) => item.textContent === texts.blog.editor.publish,
+    ) as HTMLButtonElement;
+
+    // A próxima subida (a da tentativa) vence; a primeira falhou no mock de cima.
+    mocks.uploadAll.mockImplementation(async () => [
+      { mediaId: "media-tentativa", cdnUrl: "/foto.jpg" },
+    ]);
+    const tentar = [...container.querySelectorAll("button")].find((item) =>
+      (item.textContent ?? "").includes(texts.blog.editor.mediaRetry),
     );
-    expect(container.textContent).not.toContain("foto.jpg");
+    await act(async () => tentar!.click());
+    await esperar();
+
+    expect(container.textContent).toContain("foto.jpg");
+    expect(publicar.disabled).toBe(false);
+    await click(texts.blog.editor.publish);
+    expect(mocks.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaIds: ["media-tentativa"] }),
+    );
+  });
+
+  it("um anexo que falha não derruba os outros que subiram", async () => {
+    mocks.uploadAll
+      .mockImplementationOnce(async () => [{ mediaId: "media-boa", cdnUrl: "/boa.jpg" }])
+      .mockImplementationOnce(async () => {
+        throw new Error("rede");
+      });
+    await render();
+    await escolherArquivos([arquivo("boa.jpg", "image/jpeg"), arquivo("ruim.jpg", "image/jpeg")]);
+    await esperar();
+
+    expect(container.textContent).toContain("boa.jpg");
+    expect(container.textContent).toContain(texts.blog.editor.mediaRetry);
   });
 
   it("editar um post com mídia mantém os ids sem subir de novo", async () => {

@@ -1868,16 +1868,16 @@ export const texts = {
       draftSaveError:
         "Não foi possível salvar o rascunho neste navegador. Mantenha esta página aberta.",
       mediaTitle: "Fotos e vídeos",
-      mediaHint:
-        "Até 8 arquivos. O vídeo vira o vlog do post: quem abre vê o vídeo e lê o texto embaixo.",
+      mediaHint: "As fotos e vídeos escolhidos aqui sobem na hora e aparecem na leitura do texto.",
       mediaAdd: "Anexar foto ou vídeo",
       mediaPhoto: "Foto",
       mediaVideo: "Vídeo",
-      mediaUploading: "Enviando o anexo…",
-      mediaRemove: (index: number) => `Remover o anexo ${index + 1}`,
+      mediaUploading: "Anexo de {{name}} enviando…",
+      mediaRemove: "Remover anexo {{index}}",
+      mediaRetry: "Tentar de novo",
       mediaLimit: "Um post do blog aceita até 8 fotos e vídeos.",
       mediaError: "O anexo não subiu. Tente de novo.",
-      mediaPending: "Espere os anexos terminarem de subir para salvar.",
+      mediaPending: "Espere os anexos em envio terminarem para salvar.",
       notifySubscribers: "Avisar os assinantes por e-mail",
       notifySubscribersHint:
         "Quem assina o seu blog recebe um e-mail com este post (além da notificação no app). Dá para desativar só para este post.",
