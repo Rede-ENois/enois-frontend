@@ -712,6 +712,12 @@ export const texts = {
     login: {
       title: "Bem-vindo de volta.",
       subtitle: "Continue de onde parou.",
+      /** `sessao=encerrada`: a sessão caiu de propósito (troca de senha ou de e-mail), não por tempo. */
+      sessionEnded: {
+        title: "Sua sessão foi encerrada",
+        description:
+          "Por segurança, a conta sai de todos os aparelhos quando a senha ou o e-mail muda. Entre com os dados de agora.",
+      },
     },
     social: {
       google: "Continuar com Google",
@@ -1520,6 +1526,12 @@ export const texts = {
       imageProhibitedTitle: "Imagem ocultada",
       imageProhibitedMessage:
         "Este arquivo foi identificado como conteúdo sexual e não pode ser publicado. Se houve engano, fale com a moderação.",
+      /** Réplica no feed profissional (#723): a mesma publicação, assinada pelo perfil profissional. */
+      crossPost: {
+        byType:
+          "Para ir também ao feed profissional, use um tipo profissional: insight, projeto, oportunidade, tutorial ou artigo.",
+        noProfile: "Sem perfil profissional ativo, a publicação não vai ao feed profissional.",
+      },
       /** Limites de vídeo (issue #656): a checagem local avisa antes de o upload sair. */
       videoLimitTitle: "Vídeo grande demais",
       videoLimitSize: (mb: number, minutes: number) =>
@@ -1561,6 +1573,7 @@ export const texts = {
       interacted: "Interações",
       projects: "Projetos",
       corporate: "Corporativo",
+      corporateHint: "Corporativo (feed profissional)",
       type: "Tipo de feed",
       openList: "Escolher o tipo de feed",
       allTypes: "Todos os tipos",
@@ -1585,6 +1598,45 @@ export const texts = {
       cta: "Criar página",
       dismiss: "Fechar",
       contextSwitch: "Modo profissional: empresas, vagas e serviços.",
+    },
+  },
+
+  /**
+   * Controles da administração da plataforma (`users.is_admin`). Só aparecem para quem
+   * `/moderation/me` diz que é admin; o backend recusa qualquer outro papel em `/admin/moderation/**`.
+   */
+  platformAdmin: {
+    /** Não é "moderador": moderador decide pela fila e pela votação; o admin age direto. */
+    title: "Painel administrativo",
+    open: "Ações administrativas",
+    post: {
+      remove: "Excluir postagem",
+      title: "Excluir postagem?",
+      description:
+        "A postagem sai do ar para todo mundo, com o conteúdo preservado para a auditoria. O motivo fica registrado com o seu nome.",
+      confirm: "Excluir postagem",
+      placeholder: "Por que esta postagem está sendo excluída? (mínimo 10 caracteres)",
+      tooShort: "Escreva pelo menos 10 caracteres.",
+      removed: "Postagem excluída.",
+      alreadyOffline: "Esta postagem já não estava no ar.",
+      notFound: "Postagem não encontrada.",
+      error: "Não foi possível excluir a postagem.",
+    },
+    profile: {
+      open: "Ações administrativas",
+      title: "Ações administrativas",
+      description:
+        "Advertências e sanções desta conta, aplicadas diretamente pela administração — sem votação. O motivo é obrigatório e fica no histórico.",
+      error: "Não foi possível carregar o histórico desta conta.",
+      warning: "Advertência registrada.",
+      sanction: "Sanção aplicada. A pessoa perde a sessão na hora.",
+      warningRevoked: "Advertência revogada.",
+      accountDeleted: "Conta excluída e anonimizada.",
+      accountDeleteError: "Não foi possível excluir a conta.",
+      actionError: "Não foi possível concluir a ação.",
+      historyEmpty: "Nenhuma advertência ou sanção nesta conta.",
+      reason: "Advertência",
+      sanctionReason: "Sanção",
     },
   },
 
@@ -1784,6 +1836,18 @@ export const texts = {
       error: "Não foi possível importar agora. Tente de novo.",
       readmeSaved: "Bio atualizada com o README.",
       readmeError: "Não foi possível ler o README agora.",
+      orgs: {
+        title: "Organizações",
+        hint: "Transforme uma organização do GitHub em empresa da comunidade, com os repositórios escolhidos como projetos dela.",
+        choose: "Escolha a organização",
+        /** O botão do aviso de sucesso leva à empresa importada. */
+        open: "Abrir empresa",
+      },
+      orgImported: (name: string, created: number) =>
+        created === 0
+          ? `Organização ${name} pronta, sem projetos novos.`
+          : `${name}: ${created === 1 ? "1 projeto importado" : `${created} projetos importados`}.`,
+      orgError: "Não foi possível importar a organização agora.",
     },
     sections: {
       about: "Sobre",
@@ -1867,9 +1931,21 @@ export const texts = {
       draftDiscardError: "Não foi possível excluir agora.",
       draftSaveError:
         "Não foi possível salvar o rascunho neste navegador. Mantenha esta página aberta.",
+      mediaTitle: "Fotos e vídeos",
+      mediaHint: "As fotos e vídeos escolhidos aqui sobem na hora e aparecem na leitura do texto.",
+      mediaAdd: "Anexar foto ou vídeo",
+      mediaPhoto: "Foto",
+      mediaVideo: "Vídeo",
+      mediaUploading: "Anexo de {{name}} enviando…",
+      mediaRemove: "Remover anexo {{index}}",
+      mediaRetry: "Tentar de novo",
+      mediaLimit: "Um post do blog aceita até 8 fotos e vídeos.",
+      mediaError: "O anexo não subiu. Tente de novo.",
+      mediaPending: "Espere os anexos em envio terminarem para salvar.",
       notifySubscribers: "Avisar os assinantes por e-mail",
       notifySubscribersHint:
-        "Quem assina o seu blog recebe um e-mail com este post (além da notificação no app). Dá para desativar só para este post.",
+        "Avisar os assinantes: quem assina o seu blog recebe um e-mail com este post (além da notificação no app).",
+      notifySubscribersNo: "Avisar os assinantes: não, só publicar no app.",
       updated: "Post atualizado.",
       editPost: "Editar post",
       deletePost: "Excluir post",
@@ -2293,6 +2369,47 @@ export const texts = {
       action: "Pedir par com esse objetivo",
       noTopic: "Sem tema",
     },
+    proposals: {
+      title: "Propostas de par",
+      hint: "Encontramos alguém com o mesmo objetivo. Vejam se combinam: só viram par quando os dois aceitarem.",
+      deadline: (label: string) => `Até ${label} para responder`,
+      partnerAccepted: "já aceitou e escreveu o quebra-gelo dela",
+      partnerWaiting: "ainda não aceitou",
+      accept: "Aceitar",
+      accepting: "Aceitando…",
+      decline: "Recusar",
+      declined: "Proposta recusada. Você volta para a fila no mesmo lugar.",
+      acceptError: "Não foi possível aceitar agora. Tente de novo.",
+      declineError: "Não foi possível recusar agora. Tente de novo.",
+      active: "Os dois aceitaram: o par está de pé.",
+      icebreakerTitle: "Antes de fechar, conte por que esse objetivo agora",
+      icebreakerHint: "A outra pessoa só vê as suas respostas depois que aceitar também.",
+      required: "Obrigatória",
+      optional: "Opcional",
+      requiredError: "Responda a pergunta obrigatória para aceitar.",
+      partnerIcebreaker: "O quebra-gelo de",
+      myAccepted: "Você aceitou. Falta o aceite da outra pessoa para o par começar.",
+      noAnswer: "Sem resposta.",
+      fields: {
+        ice_why_now: {
+          question: "Por que esse objetivo agora?",
+          placeholder: "Ex.: quero trocar de área até o fim do ano.",
+        },
+        ice_weekly_time: {
+          question: "Quanto tempo por semana você pretende dedicar?",
+          options: ["Até 1 hora", "2 a 3 horas", "4 a 5 horas", "Mais de 5 horas"],
+        },
+        ice_follow_up: {
+          question: "Como prefere que a gente se acompanhe?",
+          options: ["Só pelo check-in daqui", "Também por mensagem", "Chamada de vez em quando"],
+        },
+        ice_more: {
+          question: "Algo mais?",
+          placeholder: "Um recado livre, se quiser.",
+        },
+      },
+    },
+    message: "Mandar mensagem",
   },
 
   events: {

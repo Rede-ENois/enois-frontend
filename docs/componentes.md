@@ -218,6 +218,10 @@ cartão é inicializado, o componente acompanha as menções normalmente e as pr
 - `MediaGrid()` - Grid de mídia com fullscreen para imagens e player para vídeo
 - `formatTime()` - Formata timestamp relativo
 
+## `PostComments` (`src/components/post/post-comments.tsx`)
+
+O frontend fornece o campo de texto, o rascunho, os anexos e o callback de envio ao `PostComments` do design system. O DS é responsável pelo layout responsivo, pela bandeja de ferramentas e pelo único botão de envio. O slot `composerField` contém apenas o campo, sem botão adicional ou CSS do frontend que reorganize a estrutura interna do DS. A validação compartilhada `canSend` permite texto ou mídia e impede envio enquanto há uma requisição em andamento. Upload, autenticação e chamadas à API continuam no frontend. A apresentação mobile depende da versão do DS que contém esse layout.
+
 ## `GroupPostItem` (`src/routes/grupos.$slug.tsx`)
 
 Post do feed de um grupo, com reações, comentários e ações de moderação.
@@ -371,6 +375,11 @@ Hook para detectar breakpoint mobile (< 768px).
 **Retorno:** `boolean`
 
 ## Componentes UI (shadcn/ui)
+
+Os campos de texto do app usam os componentes de formulário de `@rede-enois/design-system/ui`
+(as alternativas da enquete já são o `EnqueteComposer` do DS e o compositor de canal, o `Textarea`).
+A tipografia de formulário pertence ao DS: não há regra global de tamanho de fonte no frontend
+para evitar o zoom automático do iOS ao focar um campo.
 
 46 componentes em `src/components/ui/` gerados pelo shadcn:
 

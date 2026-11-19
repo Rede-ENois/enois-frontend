@@ -89,7 +89,11 @@ describe("PostActions: reações reais da publicação", () => {
       );
     });
 
-    expect(network).not.toHaveBeenCalled();
+    // O card não pede nada além de "esta sessão é admin?" — que decide se a remoção administrativa
+    // é montada. Qualquer outra chamada do card continua sendo um erro.
+    const calls = network.mock.calls as unknown as string[][];
+    const urls = calls.map((call) => String(call[0]));
+    expect(urls.filter((url) => !url.includes("/moderation/me"))).toEqual([]);
   };
 
   const reactionButton = () => host.querySelector('button[aria-label^="Ver quem reagiu ("]');

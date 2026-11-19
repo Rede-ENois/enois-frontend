@@ -9,7 +9,7 @@ import type { PostView } from "@/types/application/feed/post-view";
 import type { MediaItem } from "@/types/routes/feed/media-item";
 import { ComposerMediaPicker } from "@rede-enois/design-system/domain";
 import { InfiniteScroll } from "@rede-enois/design-system/patterns";
-import { Button } from "@rede-enois/design-system/ui";
+import { Button, Textarea } from "@rede-enois/design-system/ui";
 import { ArrowLeft, Hash, Lock } from "lucide-react";
 
 import { communitiesApi, feedApi } from "@/lib/api";
@@ -220,14 +220,14 @@ function ChannelPage() {
 
         {authenticated && joined && (
           <form onSubmit={submit} className="surface-card p-5">
-            <textarea
+            <Textarea
               aria-label={texts.channelPage.composerPlaceholder}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder={texts.channelPage.composerPlaceholder}
               maxLength={1200}
               rows={3}
-              className="w-full resize-y rounded-2xl border border-border bg-muted/40 px-3 py-2 text-sm font-normal outline-none transition focus:border-primary"
+              className="resize-y rounded-2xl border-border bg-muted/40"
             />
             <ComposerMediaPicker
               items={media.flatMap((item) => {
