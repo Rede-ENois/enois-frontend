@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { COMMENT_COUNTER_FROM, COMMENT_MAX_LENGTH } from "@/constants/post-content-limits";
 import { selectCommentMentions, usePostCardStore } from "@/stores/post-card.store";
@@ -37,11 +38,14 @@ const PAGE_SIZE = 20;
 export function PostComments({
   postId,
   postAuthorId,
+  commento,
   isQuestion = false,
   acceptedCommentId = null,
 }: {
   postId: string;
   postAuthorId: string;
+  /** ID do comentário alvo de uma notificação: rola até ele quando a lista carregar. */
+  commento?: string;
   /** QUESTION post: the asker can mark one answer, which goes to the top. */
   isQuestion?: boolean;
   acceptedCommentId?: string | null;
@@ -50,6 +54,7 @@ export function PostComments({
   const lite = useLiteMode();
   const pageSize = litePageSize(PAGE_SIZE, lite);
   const { requireAuth } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [comments, setComments] = useState<CommentView[]>([]);
   const draft = usePostCardStore((state) => state.cards[postId]?.draft ?? "");
@@ -160,6 +165,24 @@ export function PostComments({
     void loadFirstPage();
   }, [loadFirstPage]);
 
+  // Notificação de comentário/resposta: depois da lista carregar, rola até o comentário alvo.
+  // O parâmetro some da URL após o scroll para não repetir em recarregamentos.
+  useEffect(() => {
+    if (!commento || loading) return;
+    const el = document.getElementById(`comment-${commento}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      navigate({
+        search: (previous) => {
+          const next = { ...previous };
+          delete next.commento;
+          return next;
+        },
+        replace: true,
+      });
+    }
+  }, [commento, loading, shownComments.length, navigate]);
+
   const loadMore = async () => {
     if (!cursor || loadingMore) return;
     setLoadingMore(true);
@@ -260,23 +283,25 @@ export function PostComments({
       onRetry={loadFirstPage}
       onLoadMore={loadMore}
       renderComment={(comment, replyingTo) => (
-        <CommentItem
-          key={comment.id}
-          comment={comment}
-          replyingTo={replyingTo}
-          postAuthorId={postAuthorId}
-          onPinChanged={() => void loadFirstPage()}
-          onDeleted={handleCommentDeleted}
-          acceptance={
-            isQuestion
-              ? {
-                  pending: acceptedAnswer.pending,
-                  onAccept: () => acceptedAnswer.accept(comment.id),
-                  onUnaccept: acceptedAnswer.unaccept,
-                }
-              : undefined
-          }
-        />
+        <div id={`comment-${comment.id}`}>
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            replyingTo={replyingTo}
+            postAuthorId={postAuthorId}
+            onPinChanged={() => void loadFirstPage()}
+            onDeleted={handleCommentDeleted}
+            acceptance={
+              isQuestion
+                ? {
+                    pending: acceptedAnswer.pending,
+                    onAccept: () => acceptedAnswer.accept(comment.id),
+                    onUnaccept: acceptedAnswer.unaccept,
+                  }
+                : undefined
+            }
+          />
+        </div>
       )}
       replyToId={replyToId}
       onCancelReply={() => setReplyToId(postId, null)}

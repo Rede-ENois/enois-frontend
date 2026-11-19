@@ -18,7 +18,9 @@ import { PostCard } from "@/components/post-card";
 import { RichText } from "@/components/post/rich-text";
 
 export const Route = createFileRoute("/post/$postId")({
-  validateSearch: (search: Record<string, unknown>): { feedTab?: HomeTab; reacoes?: true } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { feedTab?: HomeTab; reacoes?: true; commento?: string } => ({
     // A grouped reaction notification ("Ana e mais 14 pessoas reagiram") opens the list of who
     // reacted, one by one.
     reacoes:
@@ -31,6 +33,11 @@ export const Route = createFileRoute("/post/$postId")({
       search.feedTab === "PROJECTS" ||
       search.feedTab === "CORPORATE"
         ? search.feedTab
+        : undefined,
+    // Notificação de comentário/resposta: direciona para o comentário específico (ex: ?commento=comment_123)
+    commento:
+      typeof search.commento === "string" && search.commento.length > 0
+        ? search.commento
         : undefined,
   }),
   // Sem `beforeLoad: requireAuth`: o post e o destino do link compartilhado e precisa abrir para
@@ -110,7 +117,7 @@ export const Route = createFileRoute("/post/$postId")({
 
 function PostDetail() {
   const { postId } = Route.useParams();
-  const { feedTab, reacoes } = Route.useSearch();
+  const { feedTab, reacoes, commento } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
   const setShowReactions = usePostCardStore((state) => state.setShowReactions);
@@ -139,6 +146,8 @@ function PostDetail() {
     });
   }, [reacoes, loaded, postId, setShowReactions, navigate]);
 
+  // Notificação de comentário/resposta: passa o id do comentário alvo para o componente de
+  // comentários, que faz o scroll quando a lista carregar.
   return (
     <AppContainer>
       <h1 className="sr-only">{texts.post.pageHeading}</h1>
@@ -181,7 +190,12 @@ function PostDetail() {
           <>
             {/* Keyed by post: going from one post to another (a notification while reading) gets a
                 fresh card, not the previous one's comments and edit drafts. */}
-            <PostCard key={post.id} post={post} fullPost />
+            <PostCard
+              key={post.id}
+              post={post}
+              fullPost
+              commento={commento}
+            />
 
             {/* Artigo: o corpo vem so na leitura do post unico (a listagem traz o resumo), entao e
                 aqui que ele aparece — na mesma largura de leitura do resto. */}

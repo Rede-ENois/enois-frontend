@@ -12,6 +12,9 @@ export type PostCardProps = {
    */
   fullPost?: boolean;
 
+  /** ID do comentário alvo de uma notificação: rola até ele quando a lista carregar. */
+  commento?: string;
+
   /** É o post fixado no topo da comunidade (mostra o selo "Fixado"). */
   pinned?: boolean;
 

@@ -52,6 +52,7 @@ function PostCardContainer({
   post,
   feedTab,
   fullPost = false,
+  commento,
   pinned = false,
   onTogglePin,
   pinPending = false,
@@ -386,6 +387,7 @@ function PostCardContainer({
           <PostComments
             postId={post.id}
             postAuthorId={post.authorId}
+            commento={commento}
             isQuestion={post.type === "QUESTION"}
             acceptedCommentId={post.acceptedCommentId ?? null}
           />
