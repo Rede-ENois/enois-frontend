@@ -83,6 +83,20 @@ a execução final usou o ambiente canônico de testes, sem alteração de códi
 prova exigiu foco emulado para concluir animações de saída. Um seletor do harness foi corrigido para
 o rótulo real do botão. Nenhuma dessas correções alterou código produtivo.
 
+### Auditoria HTTP da rodada final
+
+A auditoria encontrou respostas 404 na primeira fixture para consultas auxiliares do shell: perfil,
+idade e comunidades. Ao completar esses contratos, a hidratação do perfil revelou também a consulta
+do perfil profissional. As rodadas incompletas foram preservadas como provas limitadas, não como
+validação HTTP limpa de toda a tela.
+
+A fixture final passou a responder os cinco contratos conforme os DTOs reais, sem alterar o produto.
+**As mesmas 44 verificações do aplicativo foram repetidas e aprovadas**, em todos os tamanhos/temas
+anteriores. O registro HTTP da rodada final não contém 4xx nem falha não prevista; há somente os
+503 deliberados nos cenários de fila, ação administrativa e pânico. As capturas abaixo pertencem a
+essa rodada completa. Os reruns não são somados como casos novos. Código, dependências e build
+permanecem os já exercitados; este complemento altera somente documentação e imagens.
+
 ### Capturas do aplicativo compilado
 
 Todas as pessoas, alvos e decisões são fictícios. São capturas reais do frontend com **API simulada**,
