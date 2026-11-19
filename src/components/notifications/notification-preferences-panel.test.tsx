@@ -82,6 +82,8 @@ const PREFS = {
   pushGroups: true,
   pushJobs: true,
   pushSystem: true,
+  muteReactions: false,
+  mutePostComments: false,
   updatedAt: null,
 };
 
@@ -130,6 +132,8 @@ describe("preferências de notificação: contêiner", () => {
       pushGroups: true,
       pushJobs: true,
       pushSystem: true,
+      muteReactions: false,
+      mutePostComments: false,
     });
     expect(view().pushEnabled).toBe(false);
     // O botão de ligar do design system saiu: o interruptor "Avisos neste aparelho" é o dono.

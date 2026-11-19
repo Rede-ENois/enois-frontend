@@ -118,6 +118,8 @@ export function NotificationPreferencesPanel() {
                 pushGroups: data.pushGroups,
                 pushJobs: data.pushJobs,
                 pushSystem: data.pushSystem,
+                muteReactions: data.muteReactions,
+                mutePostComments: data.mutePostComments,
               }
             : null
         }
