@@ -190,6 +190,7 @@ export const REACTION_EMOJI_ASSETS: Record<ReactionType, string> = {
 };
 
 const EMOJI_BY_SRC = new Map(ENOIS_CUSTOM_EMOJIS.map((item) => [item.src, item.unicode]));
+const LABEL_BY_SRC = new Map(ENOIS_CUSTOM_EMOJIS.map((item) => [item.src, item.label]));
 
 /** Emoji da figura apontada por `REACTION_EMOJI_ASSETS`, ou erro se o pacote não tiver um. */
 function figureEmoji(type: ReactionType): string {
@@ -209,4 +210,12 @@ function figureEmoji(type: ReactionType): string {
  */
 export const REACTION_FIGURE_EMOJIS: Record<ReactionType, string> = Object.fromEntries(
   (Object.keys(REACTION_EMOJI_ASSETS) as ReactionType[]).map((type) => [type, figureEmoji(type)]),
+) as Record<ReactionType, string>;
+
+/** Rótulo legível (em português) de cada reação oficial para tooltips de hover. */
+export const REACTION_EMOJI_LABELS: Record<ReactionType, string> = Object.fromEntries(
+  (Object.keys(REACTION_EMOJI_ASSETS) as ReactionType[]).map((type) => [
+    type,
+    LABEL_BY_SRC.get(REACTION_EMOJI_ASSETS[type]) ?? type.toLowerCase(),
+  ]),
 ) as Record<ReactionType, string>;
