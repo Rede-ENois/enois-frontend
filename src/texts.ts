@@ -1561,6 +1561,7 @@ export const texts = {
       interacted: "Interações",
       projects: "Projetos",
       corporate: "Corporativo",
+      corporateHint: "Corporativo (feed profissional)",
       type: "Tipo de feed",
       openList: "Escolher o tipo de feed",
       allTypes: "Todos os tipos",
