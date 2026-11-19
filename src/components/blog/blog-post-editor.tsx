@@ -8,7 +8,7 @@ import type { BlogPost } from "@/types/application/blog/blog-post";
 import type { BlogPostFormat } from "@/types/application/blog/blog-post-format";
 import type { VlogAttachment } from "@/types/media-upload/vlog-attachment";
 import { Button, Input, MetaLine, Pill, useToast } from "@rede-enois/design-system/ui";
-import { ArrowLeft, Eye, ImageUp, PenLine, X } from "lucide-react";
+import { ArrowLeft, Eye, PenLine } from "lucide-react";
 
 import { blogsApi } from "@/lib/api/blogs";
 import { feedApi } from "@/lib/api/feed";
@@ -156,7 +156,7 @@ export function BlogPostEditor({
   }, [post, draftId, title, body, format, avisar]);
 
   // Só conta como "ainda subindo" o anexo sem mídia e sem falha: o que falhou está parado até
-  // alguém tentar de novo, e travar a publicação nele sem explicação escondia o erro.
+  // alguém tentar de novo.
   const pendingAttachments = attachments.some(
     (attachment) => !attachment.media && !attachment.uploadError,
   );
@@ -194,8 +194,6 @@ export function BlogPostEditor({
   const canPublish =
     title.trim().length > 0 && body.trim().length > 0 && !publish.isPending && !pendingAttachments;
 
-  // O anexo sobe assim que é escolhido: ao salvar, o post só guarda os ids. Falha na subida deixa
-  // o anexo marcado para remover e tentar de novo, em vez de ir embora sem aviso.
   /**
    * Sobe UM anexo. O `uploadAll` para no primeiro arquivo que falha e perde a referência do que já
    * subiu; um por vez, cada anexo tem o próprio estado — o que falhou fica marcado para tentar de
@@ -223,9 +221,8 @@ export function BlogPostEditor({
   };
 
   const retry = (target: VlogAttachment) => {
-    // Nova tentativa = anexo novo: o estado `uploadError` fez o papel de remarcar o objeto, e a
-    // atualização dele no estado é assíncrona — subir o objeto antigo fazia a resposta do upload
-    // não achar a linha e o anexo ficar "enviando" para sempre.
+    // Nova tentativa = anexo novo: o objeto que falhou já foi para o estado, e mutar o mesmo não
+    // remarcaria a linha — a resposta do upload não achava o anexo e ele ficava "enviando" sempre.
     const attempt: VlogAttachment = { ...target, media: null, uploadError: null };
     setAttachments((current) =>
       current.map((attachment) => (attachment === target ? attempt : attachment)),
