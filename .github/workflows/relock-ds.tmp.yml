@@ -1,0 +1,41 @@
+name: relock-ds (temporário)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  relock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/cross-post
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: "@rede-enois"
+      - name: Remove the design-system entry from the lockfile
+        run: |
+          node -e "
+            const fs = require('fs');
+            const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+            delete lock.packages['node_modules/@rede-enois/design-system'];
+            fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
+          "
+      - name: Re-resolve the lockfile against the published package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Commit the relocked file
+        run: |
+          git config user.name "melissa"
+          git config user.email "amelissariver@gmail.com"
+          git add package-lock.json
+          git commit -m "chore(deps): relock do design system 0.41.4" || echo "lockfile sem mudança"
+          git push
