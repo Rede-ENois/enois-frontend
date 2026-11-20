@@ -27,7 +27,8 @@ export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
           <AppSidebar />
         </AppLayout.Sidebar>
 
-        <AppLayout.Main>{children}</AppLayout.Main>
+        {/* Espaço entre os blocos da página: sem ele, cabeçalho, barra de ações e grade encostam. */}
+        <AppLayout.Main gap="md">{children}</AppLayout.Main>
       </AppLayout.Content>
 
       <AppLayout.Navigation>

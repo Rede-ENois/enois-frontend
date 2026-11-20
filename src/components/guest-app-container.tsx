@@ -14,7 +14,7 @@ export function GuestAppContainer({ children }: WithRequiredChildren) {
       <AdminNoticeBanner />
 
       <AppLayout.Content>
-        <AppLayout.Main>{children}</AppLayout.Main>
+        <AppLayout.Main gap="md">{children}</AppLayout.Main>
       </AppLayout.Content>
     </AppLayout>
   );
