@@ -3001,6 +3001,7 @@ export const texts = {
       services: "Serviços",
       archived: "Arquivadas",
     },
+    newGroup: "Novo grupo",
     selectMode: "Selecionar",
     cancelSelection: "Cancelar",
     selectAll: "Selecionar tudo",
