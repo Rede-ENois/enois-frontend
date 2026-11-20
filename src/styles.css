@@ -730,6 +730,24 @@ span.rounded-full:has(> [data-enois-reaction-glyph]) {
   --enois-reaction-img: url("/emojis/enois/salute.svg");
 }
 
+/* Mantém o toggle "Publicar também no feed profissional" e o texto sempre na mesma linha. */
+label[for="also-professional"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-basis: 100%;
+  padding-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+}
+
+label[for="also-professional"] > button {
+  flex-shrink: 0;
+}
+
 /*
  * Acessibilidade tipográfica em publicações, reposts citados e comentários.
  *

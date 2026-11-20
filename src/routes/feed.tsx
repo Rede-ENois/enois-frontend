@@ -1337,17 +1337,14 @@ export function Home() {
                     />
                   )}
                   {showAlsoProfessional && (
-                    <>
+                    <Label htmlFor="also-professional">
                       <Switch
                         id="also-professional"
                         checked={alsoProfessional}
                         onCheckedChange={setAlsoProfessional}
                       />
-
-                      <Label htmlFor="also-professional">
-                        {texts.feed.composer.alsoProfessional}
-                      </Label>
-                    </>
+                      {texts.feed.composer.alsoProfessional}
+                    </Label>
                   )}
                 </div>
 
