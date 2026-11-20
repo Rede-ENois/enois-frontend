@@ -14,6 +14,8 @@ export type CreatePostInput = Pick<PostView, "type" | "content"> &
     pollMultipleChoice?: boolean;
     /** Prazo de encerramento da enquete (só `POLL`), ISO-8601; ausente = sem prazo. */
     pollEndsAt?: string;
+    /** Publica também no feed profissional (exige perfil profissional ativo). */
+    alsoCorporate?: boolean;
     /** Honeypot — humano nunca vê nem preenche; bot que preenche é banido no backend. */
     website?: string;
   };

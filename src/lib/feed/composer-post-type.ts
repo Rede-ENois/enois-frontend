@@ -22,3 +22,12 @@ export function resolveFeedPostType(
     ? postType
     : ((allowed[0]?.id as PostView["type"] | undefined) ?? "INSIGHT");
 }
+
+/** O checkbox de espelhar no feed profissional só aparece na identidade social com perfil ativo. */
+export function canCrossPostToProfessional(
+  identity: "SOCIAL" | "CORPORATE",
+  corporateState: "LOADING" | "ACTIVE" | "NOT_READY" | "ERROR",
+  pageMode: boolean,
+): boolean {
+  return identity === "SOCIAL" && corporateState === "ACTIVE" && !pageMode;
+}

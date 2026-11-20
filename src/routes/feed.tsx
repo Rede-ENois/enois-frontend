@@ -48,6 +48,7 @@ import {
   EmptyState,
   EventTicket,
   Input,
+  Label,
   LoadingState,
   Pill,
   PillRow,
@@ -55,6 +56,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   PullIndicator,
+  Switch,
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
@@ -86,7 +88,11 @@ import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scro
 import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
-import { availableFeedPostTypes, resolveFeedPostType } from "@/lib/feed/composer-post-type";
+import {
+  availableFeedPostTypes,
+  canCrossPostToProfessional,
+  resolveFeedPostType,
+} from "@/lib/feed/composer-post-type";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { keepPostsById } from "@/lib/feed/keep-posts-by-id";
@@ -452,6 +458,11 @@ export function Home() {
   const availableTypes = availableFeedPostTypes(identity);
   const resolvedPostType = resolveFeedPostType(identity, postType);
   const pageMode = resolvedPostType === "PAGE";
+  const [alsoProfessional, setAlsoProfessional] = useState(false);
+  const showAlsoProfessional = canCrossPostToProfessional(identity, corporateState, pageMode);
+  useEffect(() => {
+    if (!showAlsoProfessional) setAlsoProfessional(false);
+  }, [showAlsoProfessional]);
   // Qualquer trabalho em andamento mantém o compositor inteiro aberto (rascunho, mídia, tipo
   // diferente do de repouso). BUSINESS é o repouso da identidade profissional: contá-lo prendia
   // o compositor expandido para sempre e o launcher nunca aparecia.
@@ -597,6 +608,7 @@ export function Home() {
     setPollOptions(["", ""]);
     setPollMultipleChoice(false);
     setPollEndsAt(undefined);
+    setAlsoProfessional(false);
     setSchedulingOpen(false);
   };
 
@@ -663,6 +675,7 @@ export function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      setAlsoProfessional(false);
       setScheduleAt("");
       setSchedulingOpen(false);
       // Agendou: o rascunho não tem mais o que guardar.
@@ -708,6 +721,7 @@ export function Home() {
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
         ...(pollMode ? { pollOptions: options, pollMultipleChoice, pollEndsAt } : {}),
+        ...(showAlsoProfessional && alsoProfessional ? { alsoCorporate: true } : {}),
         mentionedUserIds: pageMode ? [] : mentionedUserIds,
         topic,
         website: String(formData.get("website") ?? ""),
@@ -735,6 +749,7 @@ export function Home() {
       setPageHtml("");
       setArticleBody("");
       setPollOptions(["", ""]);
+      setAlsoProfessional(false);
       // Publicou: o rascunho não tem mais o que guardar.
       setRascunhoSalvoEm(null);
       void feedApi.discardDraft().catch(() => {});
@@ -1320,6 +1335,19 @@ export function Home() {
                       active={mediaSpoiler}
                       onClick={() => setMediaSpoiler((active) => !active)}
                     />
+                  )}
+                  {showAlsoProfessional && (
+                    <>
+                      <Switch
+                        id="also-professional"
+                        checked={alsoProfessional}
+                        onCheckedChange={setAlsoProfessional}
+                      />
+
+                      <Label htmlFor="also-professional">
+                        {texts.feed.composer.alsoProfessional}
+                      </Label>
+                    </>
                   )}
                 </div>
 

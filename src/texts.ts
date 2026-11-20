@@ -1515,6 +1515,7 @@ export const texts = {
         "Sem ele, não dá para saber como a publicação sairia. Confira a conexão e tente de novo.",
       professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
+      alsoProfessional: "Publicar também no feed profissional",
     },
     personalizeFeed: "Personalizar feed",
     tabs: {
