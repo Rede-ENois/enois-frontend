@@ -71,7 +71,10 @@ vi.mock("@/components/messages/conversation-thread", () => ({
 vi.mock("@/components/messages/e2e-setup-banner", () => ({
   E2eSetupBanner: () => <div data-testid="e2e" />,
 }));
-vi.mock("@rede-enois/design-system/domain", () => ({
+// O seletor de grupo é uma view do DS; o teste dirige a view real. Como o módulo também exporta
+// `UserAvatar`, o mock devolve os dois.
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@rede-enois/design-system/domain")>()),
   ConversationListSkeletons: () => <div data-testid="skeleton" />,
   UserAvatar: () => <span />,
 }));
@@ -172,5 +175,134 @@ describe("/mensagens — abrir conversa pela busca", () => {
 
     await act(async () => pending());
     await settle();
+  });
+});
+
+describe("/mensagens — criar grupo", () => {
+  let root: Root;
+  let host: HTMLDivElement;
+  let client: QueryClient;
+  let created: (id: string) => void;
+
+  const settle = async () => {
+    // O formulário de grupo reorganiza a árvore no primeiro toque; esperar dois tiques deixa o
+    // React terminar antes de o teste olhar o DOM.
+    for (let i = 0; i < 3; i++) await act(() => new Promise<void>((done) => setTimeout(done, 0)));
+  };
+  const byText = (pattern: RegExp) =>
+    Array.from(host.querySelectorAll("button")).find((button) => {
+      const label = `${button.textContent ?? ""}${button.getAttribute("aria-label") ?? ""}`;
+      return pattern.test(label);
+    });
+  const type = async (input: Element, value: string) => {
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await settle();
+  };
+
+  beforeEach(async () => {
+    mocks.listConversations.mockReset().mockResolvedValue({ items: [], nextCursor: null });
+    mocks.archivedConversations.mockReset().mockResolvedValue({ items: [], nextCursor: null });
+    mocks.getConversation.mockReset().mockResolvedValue(null);
+    mocks.unreadCount.mockReset().mockResolvedValue({ count: 0 });
+    mocks.authMe.mockReset().mockResolvedValue({ hasPassword: true, id: "me" });
+    mocks.networkList
+      .mockReset()
+      .mockResolvedValue({ items: [{ id: "u1", name: "Fulana", avatar: null }] });
+    mocks.createConversation.mockReset().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          created = () => resolve({ id: "g1" });
+        }),
+    );
+
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true, writable: true });
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <Mensagens />
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+  });
+
+  afterEach(async () => {
+    await act(async () => root.unmount());
+    host.remove();
+    client.clear();
+  });
+
+  // O botão de view que abre o grupo; aqui ele é só o gatilho da montagem do formulário.
+  const openGroup = () => {
+    const trigger = Array.from(host.querySelectorAll("button")).find(
+      (button) => button.dataset.newGroup !== undefined,
+    );
+    expect(trigger, "o botão de novo grupo deveria estar na tela").toBeTruthy();
+    return trigger!;
+  };
+
+  it("cria a conversa de grupo com título e as pessoas marcadas, uma vez só", async () => {
+    await act(async () => openGroup().click());
+    await settle();
+
+    const inputs = Array.from(host.querySelectorAll("input"));
+    expect(inputs.length, "título e busca do grupo deveriam abrir").toBe(2);
+    await type(inputs[0], "Jogatina");
+    await type(inputs[1], "Ful");
+
+    const person = byText(/Fulana/);
+    expect(person, "a pessoa buscada deveria aparecer no seletor").toBeTruthy();
+    await act(async () => person!.click());
+    await settle();
+    expect(person!.getAttribute("aria-pressed")).toBe("true");
+
+    const create = byText(/^Criar grupo/);
+    expect(create!.textContent, "o botão da view conta quantas pessoas estão marcadas").toContain(
+      "1",
+    );
+    await act(async () => {
+      create!.click();
+      create!.click();
+    });
+    await settle();
+
+    expect(mocks.createConversation).toHaveBeenCalledTimes(1);
+    expect(mocks.createConversation).toHaveBeenCalledWith({
+      kind: "GROUP",
+      title: "Jogatina",
+      participantIds: ["u1"],
+    });
+
+    await act(async () => created("g1"));
+    await settle();
+    expect(mocks.getConversation, "o grupo criado deveria abrir na tela").toHaveBeenCalledWith(
+      "g1",
+    );
+  });
+
+  it("sem título ou sem ninguém marcado, o botão de criar não liga", async () => {
+    await act(async () => openGroup().click());
+    await settle();
+
+    const inputs = Array.from(host.querySelectorAll("input"));
+    const create = () => byText(/^Criar grupo/)!;
+    expect(create().disabled, "sem título e sem gente o botão está desligado").toBe(true);
+
+    await type(inputs[0], "Jogatina");
+    expect(create().disabled, "só com título ainda falta gente").toBe(true);
+
+    await type(inputs[1], "Ful");
+    await act(async () => byText(/Fulana/)!.click());
+    await settle();
+    expect(create().disabled).toBe(false);
   });
 });

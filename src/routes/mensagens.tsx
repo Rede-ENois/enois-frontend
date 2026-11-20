@@ -35,6 +35,8 @@ import { SaciSpot } from "@/components/events/saci-spot";
 import { ConversationItem } from "@/components/messages/conversation-item";
 import { ConversationThread } from "@/components/messages/conversation-thread";
 import { E2eSetupBanner } from "@/components/messages/e2e-setup-banner";
+import { NewGroupButton } from "@/components/messages/new-group-button";
+import { NewGroupComposer } from "@/components/messages/new-group-composer";
 
 export const Route = createFileRoute("/mensagens")({
   beforeLoad: requireAuth,
@@ -79,6 +81,7 @@ function Mensagens() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [showGroup, setShowGroup] = useState(false);
   // Cada interface tem a sua caixa: a social é de pessoas e grupos; a profissional separa
   // candidaturas, propostas de freela e contratações de serviço. O servidor filtra por contexto,
   // então a paginação e o contador já vêm só da caixa certa.
@@ -185,12 +188,17 @@ function Mensagens() {
       messagesApi.createConversation({ kind: "DIRECT", participantIds: [participantId] }),
     onSuccess: (conv) => {
       setActiveId(conv.id);
-      setShowSearch(false);
-      setSearchQuery("");
+      closeNewConversation();
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err) => toast(conversationErrorMessage(err), "error"),
   });
+
+  function closeNewConversation() {
+    setShowGroup(false);
+    setShowSearch(false);
+    setSearchQuery("");
+  }
 
   const restoreSelected = useMutation({
     mutationFn: () => messagesApi.unhideConversations(Array.from(selected)),
@@ -284,10 +292,26 @@ function Mensagens() {
                   </Button>
                 )}
 
+                {!professional && !showSearch && (
+                  <NewGroupButton
+                    onClick={() => {
+                      closeNewConversation();
+                      setShowGroup(true);
+                    }}
+                  />
+                )}
+
                 <SaciSpot spot="mensagens" />
               </div>
             </div>
-            {showSearch && !professional ? (
+            {showGroup && !professional ? (
+              <NewGroupComposer
+                onCreated={(id) => {
+                  setActiveId(id);
+                  closeNewConversation();
+                }}
+              />
+            ) : showSearch && !professional ? (
               <div className="space-y-3">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

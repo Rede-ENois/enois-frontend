@@ -31,6 +31,14 @@ export function attachReactionPickerNav(root: ParentNode = document): void {
     const bar = document.createElement("div");
     bar.setAttribute(NAV_ATTR, "true");
 
+    const hint = document.createElement("span");
+    hint.setAttribute("data-reaction-nav-hint", "true");
+    hint.setAttribute("aria-hidden", "true");
+    hint.textContent = "Mais reações";
+
+    const actions = document.createElement("div");
+    actions.setAttribute("data-reaction-nav-actions", "true");
+
     const prev = createNavButton("prev", "Reações anteriores");
     const next = createNavButton("next", "Próximas reações");
 
@@ -43,9 +51,13 @@ export function attachReactionPickerNav(root: ParentNode = document): void {
     });
     grid.addEventListener("scroll", () => updateNavButtons(grid, prev, next), { passive: true });
 
-    bar.append(prev, next);
+    actions.append(prev, next);
+    bar.append(hint, actions);
     popover.append(bar);
     updateNavButtons(grid, prev, next);
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => updateNavButtons(grid, prev, next));
+    }
   }
 }
 

@@ -69,6 +69,7 @@ import {
   Trophy,
 } from "lucide-react";
 
+import { useIsPlatformAdmin } from "@/lib/admin/use-is-platform-admin";
 import {
   ApiError,
   contributorSealsApi,
@@ -96,6 +97,7 @@ import { useAuth } from "@/lib/use-auth";
 import { useMediaUpload } from "@/lib/use-media-upload";
 import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
+import { AdminProfilePanel } from "@/components/admin/admin-profile-panel";
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
 import { ProfileLookDialog } from "@/components/appearance/profile-look-dialog";
@@ -483,6 +485,10 @@ function Profile() {
     publicLook: user.profileLook,
   });
   const themeMode = usePreferencesStore((state) => state.theme);
+  // Admin da plataforma no perfil de OUTRA pessoa: advertir, sancionar e ler o histórico da conta.
+  // No próprio perfil o bloco nem aparece — o backend recusa punir a si mesmo.
+  const isPlatformAdmin = useIsPlatformAdmin();
+  const showAdminPanel = isPlatformAdmin && !isOwnProfile;
 
   return (
     <AppContainer>
@@ -504,6 +510,8 @@ function Profile() {
           />
 
           <h1 className="sr-only">{user.name}</h1>
+
+          {showAdminPanel && <AdminProfilePanel username={user.username} />}
 
           <ProfileCard
             profile={{ ...profileCardData(user, renderedNameStyle), bio: null }}
