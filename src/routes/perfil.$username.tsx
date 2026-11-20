@@ -98,6 +98,7 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 import { useProfessionalIdentity } from "@/lib/use-professional-identity";
 
 import { AdminProfilePanel } from "@/components/admin/admin-profile-panel";
+import { ApoiadorSeal } from "@/components/apoiador-seal";
 import { AppContainer } from "@/components/app-container";
 import { AppearanceDialog } from "@/components/appearance/appearance-dialog";
 import { ProfileLookDialog } from "@/components/appearance/profile-look-dialog";
@@ -619,7 +620,10 @@ function Profile() {
                   )}
                 </p>
 
-                <ProfileSeals username={user.username} />
+                <div className="mt-2 space-y-2">
+                  <ApoiadorSeal username={user.username} />
+                  <ProfileSeals username={user.username} />
+                </div>
 
                 {isOwnProfile && <VerifiedContributorPrompt />}
               </div>

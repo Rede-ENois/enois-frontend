@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { DoacaoCopiaECola } from "@/types/application/doacoes/doacao-copia-e-cola";
 import { PIX_KEY, pixCopiaECola } from "@rede-enois/design-system/domain";
-import { Button, useToast } from "@rede-enois/design-system/ui";
-import { GithubIcon } from "@rede-enois/design-system/ui";
+import { Button, GithubIcon, useToast } from "@rede-enois/design-system/ui";
 import {
+  BadgeCheck,
   Check,
   Copy,
   ExternalLink,
@@ -18,6 +20,10 @@ import {
   Users,
 } from "lucide-react";
 import QRCode from "qrcode";
+
+import { doacoesApi } from "@/lib/api";
+import { formatBrlCents } from "@/lib/faisca";
+import { useAuth } from "@/lib/use-auth";
 
 import { AppContainer } from "@/components/app-container";
 
@@ -194,29 +200,19 @@ const OUTRAS_FORMAS = [
 
 function Apoiar() {
   const { toast } = useToast();
-  const [qr, setQr] = useState<string | null>(null);
-  const [copiado, setCopiado] = useState(false);
+  const { isAuthenticated, isLoading: sessaoCarregando } = useAuth();
+  const [anonimoQr, setAnonimoQr] = useState<string | null>(null);
 
+  // O copia e cola estático é o caminho de quem chega sem sessão (e o primeiro paint do logado).
   useEffect(() => {
     QRCode.toDataURL(pixCopiaECola(), {
       width: 360,
       margin: 1,
       color: { dark: "#0b0d12", light: "#ffffff" },
     })
-      .then(setQr)
-      .catch(() => setQr(null));
+      .then(setAnonimoQr)
+      .catch(() => setAnonimoQr(null));
   }, []);
-
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(PIX_KEY);
-      setCopiado(true);
-      toast(textsApoie.copiadoAviso, "success");
-      setTimeout(() => setCopiado(false), 4000);
-    } catch {
-      toast(textsApoie.copiarErro, "error");
-    }
-  };
 
   const compartilhar = async () => {
     const url = `${texts.siteUrl}/apoiar`;
@@ -240,71 +236,14 @@ function Apoiar() {
   return (
     <AppContainer>
       <div className="mx-auto w-full max-w-2xl space-y-5">
-        {/* Capa */}
-        <section className="surface-card overflow-hidden">
-          <div className="h-28 sm:h-36" style={{ background: "var(--gradient-primary)" }} />
-
-          <div className="px-5 pb-6 sm:px-8">
-            <p className="-mt-6 inline-flex items-center gap-2 rounded-full bg-surface-card px-3 py-1.5 text-sm font-semibold text-primary shadow-soft">
-              <Heart className="h-4 w-4" />
-
-              <>{textsApoie.badge}</>
-            </p>
-
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
-              {textsApoie.titulo}
-            </h1>
-
-            <p className="mt-2 text-base font-medium text-text-strong">{textsApoie.chamada}</p>
-
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-subtle">
-              {textsApoie.subtitulo}
-            </p>
-          </div>
-        </section>
+        <SecaoCapa />
 
         {/* Pix */}
-        <section id="pix" className="surface-card p-5 sm:p-6">
-          <h2 className="text-base font-medium text-text-strong">{textsApoie.pixTitulo}</h2>
-
-          <p className="mt-1 text-sm text-text-subtle">{textsApoie.pixDescricao}</p>
-
-          <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <div className="rounded-xl bg-white p-2 shadow-soft">
-              {qr ? (
-                <img
-                  src={qr}
-                  alt="QR Code Pix do Apoie o Énóis"
-                  className="h-40 w-40 sm:h-44 sm:w-44"
-                />
-              ) : (
-                <div className="h-40 w-40 animate-pulse rounded bg-muted sm:h-44 sm:w-44" />
-              )}
-            </div>
-
-            <div className="w-full min-w-0 space-y-3 sm:flex-1">
-              <div className="rounded-lg bg-muted px-3 py-2">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
-                  {textsApoie.chaveRotulo}
-                </p>
-
-                <p className="break-all font-mono text-sm text-text-strong">{PIX_KEY}</p>
-              </div>
-
-              <Button className="w-full gap-2 rounded-full sm:w-auto" onClick={copiar}>
-                {copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-
-                <>{copiado ? textsApoie.copiado : textsApoie.copiar}</>
-              </Button>
-
-              <p className="text-xs text-text-subtle">{textsApoie.pixAviso}</p>
-            </div>
-          </div>
-
-          <p className="mt-4 border-t border-border-soft pt-3 text-xs text-text-subtle">
-            {textsApoie.pixSemObrigacao}
-          </p>
-        </section>
+        {isAuthenticated ? (
+          <DoacaoLogada sessaoCarregando={sessaoCarregando} />
+        ) : (
+          <DoacaoAnonima anonimoQr={anonimoQr} />
+        )}
 
         {/* Por que apoiar */}
         <section className="space-y-3">
@@ -428,6 +367,334 @@ function Apoiar() {
   );
 }
 
+function SecaoCapa() {
+  return (
+    <section className="surface-card overflow-hidden">
+      <div className="h-28 sm:h-36" style={{ background: "var(--gradient-primary)" }} />
+
+      <div className="px-5 pb-6 sm:px-8">
+        <p className="-mt-6 inline-flex items-center gap-2 rounded-full bg-surface-card px-3 py-1.5 text-sm font-semibold text-primary shadow-soft">
+          <Heart className="h-4 w-4" />
+
+          <>{textsApoie.badge}</>
+        </p>
+
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-text-strong sm:text-3xl">
+          {textsApoie.titulo}
+        </h1>
+
+        <p className="mt-2 text-base font-medium text-text-strong">{textsApoie.chamada}</p>
+
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-subtle">
+          {textsApoie.subtitulo}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/** Quem chega sem sessão: a chave Pix estática, sem valor, como sempre foi. */
+function DoacaoAnonima({ anonimoQr }: { anonimoQr: string | null }) {
+  const { toast } = useToast();
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(PIX_KEY);
+      setCopiado(true);
+      toast(textsApoie.copiadoAviso, "success");
+      setTimeout(() => setCopiado(false), 4000);
+    } catch {
+      toast(textsApoie.copiarErro, "error");
+    }
+  };
+
+  return (
+    <section id="pix" className="surface-card p-5 sm:p-6">
+      <h2 className="text-base font-medium text-text-strong">{textsApoie.pixTitulo}</h2>
+
+      <p className="mt-1 text-sm text-text-subtle">{textsApoie.pixDescricao}</p>
+
+      <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+        <div className="rounded-xl bg-white p-2 shadow-soft">
+          {anonimoQr ? (
+            <img
+              src={anonimoQr}
+              alt="QR Code Pix do Apoie o Énóis"
+              className="h-40 w-40 sm:h-44 sm:w-44"
+            />
+          ) : (
+            <div className="h-40 w-40 animate-pulse rounded bg-muted sm:h-44 sm:w-44" />
+          )}
+        </div>
+
+        <div className="w-full min-w-0 space-y-3 sm:flex-1">
+          <div className="rounded-lg bg-muted px-3 py-2">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
+              {textsApoie.chaveRotulo}
+            </p>
+
+            <p className="break-all font-mono text-sm text-text-strong">{PIX_KEY}</p>
+          </div>
+
+          <Button className="w-full gap-2 rounded-full sm:w-auto" onClick={copiar}>
+            {copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+
+            <>{copiado ? textsApoie.copiado : textsApoie.copiar}</>
+          </Button>
+
+          <p className="text-xs text-text-subtle">{textsApoie.pixAviso}</p>
+        </div>
+      </div>
+
+      <p className="mt-4 border-t border-border-soft pt-3 text-xs text-text-subtle">
+        {textsApoie.pixSemObrigacao}
+      </p>
+
+      <p className="mt-2 text-xs text-text-subtle">
+        Entrou na conta?{" "}
+        <Link to="/entrar" className="font-medium text-primary hover:underline">
+          {textsApoie.entrarParaSelo}
+        </Link>
+      </p>
+    </section>
+  );
+}
+
+/** O montante da doação, em centavos, dentro do que o servidor aceita. */
+const VALORES_RAPIDOS = [500, 1000, 2500, 5000, 10000] as const;
+
+/**
+ * Quem está logado: um copia e cola só dele, com o valor escolhido, e o comprovante que vira selo.
+ * O código é pedido ao servidor (o txid é dele, não do navegador) e mostra a validade: o extrato do
+ * recebedor sai no dia seguinte, então a doação que não for confirmada aparece na fila.
+ */
+function DoacaoLogada({ sessaoCarregando }: { sessaoCarregando: boolean }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [valor, setValor] = useState<number>(2500);
+  const [qr, setQr] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+  const [comprovante, setComprovante] = useState("");
+  const [confirmado, setConfirmado] = useState(false);
+
+  const minhas = useQuery({
+    queryKey: ["doacoes", "minhas"],
+    queryFn: () => doacoesApi.mine(),
+    enabled: !sessaoCarregando,
+    staleTime: 30_000,
+  });
+
+  const selo = minhas.data?.selo;
+
+  const abrir = useMutation({
+    mutationFn: (centavos: number) => doacoesApi.open(centavos),
+    onSuccess: (data) => {
+      setConfirmado(false);
+      setComprovante("");
+      void queryClient.invalidateQueries({ queryKey: ["doacoes", "minhas"] });
+      return data;
+    },
+    onError: () => toast(textsApoie.erroAbrir, "error"),
+  });
+
+  const codigo: DoacaoCopiaECola | null = abrir.data ?? null;
+
+  useEffect(() => {
+    if (!codigo) {
+      setQr(null);
+      return;
+    }
+    QRCode.toDataURL(codigo.pixCopyAndPaste, {
+      width: 360,
+      margin: 1,
+      color: { dark: "#0b0d12", light: "#ffffff" },
+    })
+      .then(setQr)
+      .catch(() => setQr(null));
+  }, [codigo]);
+
+  const confirmar = useMutation({
+    mutationFn: () => doacoesApi.confirm(codigo!.id, comprovante),
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ["doacoes", "minhas"] });
+      if (data.doacao.status === "CONFIRMADA") {
+        setConfirmado(true);
+        toast(textsApoie.seloGanho, "success");
+      } else {
+        toast(textsApoie.jaDecidida, "success");
+      }
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : textsApoie.erroComprovante;
+      toast(message, "error");
+    },
+  });
+
+  const copiar = async () => {
+    if (!codigo) return;
+    try {
+      await navigator.clipboard.writeText(codigo.pixCopyAndPaste);
+      setCopiado(true);
+      toast(textsApoie.copiarCodigoAviso, "success");
+      setTimeout(() => setCopiado(false), 4000);
+    } catch {
+      toast(textsApoie.copiarErro, "error");
+    }
+  };
+
+  return (
+    <section id="pix" className="surface-card space-y-4 p-5 sm:p-6">
+      <div>
+        <h2 className="text-base font-medium text-text-strong">{textsApoie.pixTitulo}</h2>
+
+        <p className="mt-1 text-sm text-text-subtle">
+          {selo?.apoiador ? textsApoie.pixDescricaoApoiador : textsApoie.pixDescricaoLogado}
+        </p>
+      </div>
+
+      {selo?.apoiador && (
+        <p className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-sm font-medium text-primary">
+          <BadgeCheck className="h-4 w-4" aria-hidden />
+          {textsApoie.seloAtivo} ({selo.confirmedCount})
+        </p>
+      )}
+
+      {!codigo ? (
+        <div className="space-y-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-text-subtle">
+            {textsApoie.escolherValor}
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {VALORES_RAPIDOS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setValor(v)}
+                aria-pressed={valor === v}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                  valor === v
+                    ? "border-primary bg-primary-soft text-primary"
+                    : "border-border-soft text-text-strong hover:border-primary"
+                }`}
+              >
+                {formatBrlCents(v)}
+              </button>
+            ))}
+          </div>
+
+          <label className="block space-y-1">
+            <span className="text-xs text-text-subtle">{textsApoie.valorOutro}</span>
+
+            <input
+              type="number"
+              inputMode="decimal"
+              min={1}
+              max={5000}
+              step="0.01"
+              defaultValue=""
+              onChange={(e) => {
+                const reais = Number.parseFloat(e.target.value.replace(",", "."));
+                if (Number.isFinite(reais)) setValor(Math.round(reais * 100));
+              }}
+              className="w-full rounded-lg border border-border-soft bg-surface-1 px-3 py-2 text-sm text-text-strong"
+            />
+          </label>
+
+          <Button
+            className="w-full gap-2 rounded-full sm:w-auto"
+            onClick={() => abrir.mutate(valor)}
+            disabled={abrir.isPending}
+          >
+            {abrir.isPending
+              ? textsApoie.gerandoCodigo
+              : textsApoie.gerarCodigo(formatBrlCents(valor))}
+          </Button>
+
+          <p className="text-xs text-text-subtle">{textsApoie.semObrigacaoSelo}</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+            <div className="rounded-xl bg-white p-2 shadow-soft">
+              {qr ? (
+                <img
+                  src={qr}
+                  alt="QR Code Pix da sua doação"
+                  className="h-40 w-40 sm:h-44 sm:w-44"
+                />
+              ) : (
+                <div className="h-40 w-40 animate-pulse rounded bg-muted sm:h-44 sm:w-44" />
+              )}
+            </div>
+
+            <div className="w-full min-w-0 space-y-3 sm:flex-1">
+              <div className="rounded-lg bg-muted px-3 py-2">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-text-subtle">
+                  {textsApoie.valor}
+                </p>
+
+                <p className="text-sm font-semibold text-text-strong">
+                  {formatBrlCents(codigo.amountCents)}
+                </p>
+              </div>
+
+              <Button className="w-full gap-2 rounded-full sm:w-auto" onClick={copiar}>
+                {copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+
+                <>{copiado ? textsApoie.copiado : textsApoie.copiarCodigo}</>
+              </Button>
+
+              <p className="text-xs text-text-subtle">{textsApoie.validadeCodigo}</p>
+            </div>
+          </div>
+
+          <div className="space-y-2 border-t border-border-soft pt-4">
+            <label className="block space-y-1">
+              <span className="text-sm font-medium text-text-strong">
+                {textsApoie.comprovanteTitulo}
+              </span>
+
+              <span className="block text-xs text-text-subtle">{textsApoie.comprovanteAjuda}</span>
+
+              <textarea
+                value={comprovante}
+                onChange={(e) => setComprovante(e.target.value)}
+                rows={5}
+                maxLength={20000}
+                placeholder={textsApoie.comprovantePlaceholder}
+                className="w-full rounded-lg border border-border-soft bg-surface-1 px-3 py-2 font-mono text-xs text-text-strong"
+              />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                className="gap-2 rounded-full"
+                onClick={() => confirmar.mutate()}
+                disabled={confirmar.isPending || comprovante.trim().length === 0}
+              >
+                {confirmar.isPending ? textsApoie.confirmando : textsApoie.confirmarSelo}
+              </Button>
+
+              <Button variant="outline" className="rounded-full" onClick={() => abrir.reset()}>
+                {textsApoie.mudarValor}
+              </Button>
+            </div>
+
+            {confirmado && (
+              <p className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+                <BadgeCheck className="h-4 w-4" aria-hidden />
+                {textsApoie.seloAtivo}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 const textsApoie = {
   badge: "Projeto comunitário",
   titulo: "Apoie o Énóis",
@@ -438,6 +705,35 @@ const textsApoie = {
   pixTitulo: "Ajude a manter o Énóis de pé",
   pixDescricao:
     "Escaneie o QR Code ou copie a chave e cole no aplicativo do seu banco. Você escolhe o valor.",
+  pixDescricaoLogado:
+    "Com a sua conta, o QR Code é só seu: escolha o valor, pague e cole o comprovante para receber o selo de apoiador.",
+  pixDescricaoApoiador:
+    "Você já é apoiador. Se quiser doar de novo, é o mesmo caminho: escolha o valor, pague e cole o comprovante.",
+  entrarParaSelo: "entrar para receber o selo de apoiador",
+  escolherValor: "Valor da doação",
+  valorOutro: "Ou digite outro valor (R$)",
+  gerandoCodigo: "Gerando seu código…",
+  gerarCodigo: (valor: string) => `Gerar QR Code de ${valor}`,
+  semObrigacaoSelo:
+    "O código vale 36 horas. Você pode doar de novo quando quiser; o selo não é assinatura.",
+  valor: "Valor",
+  copiarCodigo: "Copiar Pix copia e cola",
+  copiarCodigoAviso: "Pix copia e cola copiado — cola no app do banco!",
+  validadeCodigo:
+    "Pague exatamente esse valor. O extrato do recebedor sai no dia seguinte; se a confirmação não chegar, a doação aparece na fila do extrato.",
+  comprovanteTitulo: "Já pagou? Cole o comprovante",
+  comprovanteAjuda:
+    "Abra o extrato do seu banco, copie a linha do Pix desta doação e cole aqui. Ela precisa trazer o valor e o identificador fim a fim.",
+  comprovantePlaceholder:
+    "Ex.: 13/11/2026 Pix recebido R$ 25,00 ID: E12345678202611131200abcdefghijk",
+  confirmarSelo: "Confirmar e receber o selo",
+  confirmando: "Conferindo…",
+  mudarValor: "Mudar o valor",
+  seloAtivo: "Apoiador",
+  seloGanho: "Selo de apoiador ativo. Obrigado por manter o Énóis de pé!",
+  jaDecidida: "Essa doação já estava decidida — confira o seu selo no perfil.",
+  erroAbrir: "Não deu para gerar o código agora. Tente de novo.",
+  erroComprovante: "Não deu para conferir o comprovante. Tente de novo.",
   chaveRotulo: "Chave Pix (CNPJ)",
   copiar: "Copiar chave Pix",
   copiado: "Copiado!",

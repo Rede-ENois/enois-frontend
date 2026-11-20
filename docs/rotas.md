@@ -419,7 +419,7 @@ seguintes; aqui é o mapa completo.
 
 | Rota                             | Arquivo                                          | Descrição                                                                                                                                    |
 | -------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/apoiar`                        | `apoiar.tsx`                                     | Página de apoio com Pix (BR Code gerado no cliente) e carta do manifesto.                                                                    |
+| `/apoiar`                        | `apoiar.tsx`                                     | Apoio com Pix: sem sessão, a chave estática (BR Code no cliente); com sessão, o QR da doação (txid do servidor) e o comprovante que vira selo de apoiador. |
 | `/auth/callback`                 | `auth.callback.tsx`                              | Callback de OAuth (Google/Apple/LinkedIn) e 2FA federado.                                                                                    |
 | `/auth/redefinir`                | `auth.reset.tsx`                                 | Redefinição de senha por token de e-mail.                                                                                                    |
 | `/auth/verificar`                | `auth.verify.tsx`                                | Verificação de e-mail do cadastro (token do link).                                                                                           |
