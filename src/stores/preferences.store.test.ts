@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { flushStorageWrites } from "./batched-storage";
 import { usePreferencesStore } from "./preferences.store";
 
 // O store resolve o storage na importação: o stub precisa existir antes do módulo carregar.
@@ -20,7 +21,7 @@ vi.hoisted(() => {
 describe("store de preferências", () => {
   beforeEach(() => {
     const valores = new Map<string, string>();
-    vi.stubGlobal("window", {});
+    vi.stubGlobal("window", { addEventListener: () => {} });
     vi.stubGlobal("localStorage", {
       getItem: (key: string) => valores.get(key) ?? null,
       setItem: (key: string, value: string) => valores.set(key, value),
@@ -31,9 +32,10 @@ describe("store de preferências", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("reidrata a preferência de revelar mídia sensível salva como verdadeiro", async () => {
-    // O setState grava no storage (middleware de persistência): semear depois dele,
-    // senão a gravação do próprio estado apaga o valor montado para o teste.
+    // O setState enfileira a gravacao (writeStorageLater): flush antes de semear o disco,
+    // senao o getItem le o pendente em vez do valor semeado para o teste.
     usePreferencesStore.setState({ revealSensitiveMedia: false });
+    flushStorageWrites();
     localStorage.setItem(
       "connect-grow-preferences",
       JSON.stringify({ state: { revealSensitiveMedia: true }, version: 0 }),
@@ -46,6 +48,7 @@ describe("store de preferências", () => {
 
   it("volta ao padrão (velada) quando o valor salvo não é booleano", async () => {
     usePreferencesStore.setState({ revealSensitiveMedia: true });
+    flushStorageWrites();
     localStorage.setItem(
       "connect-grow-preferences",
       JSON.stringify({ state: { revealSensitiveMedia: "sim" }, version: 0 }),
@@ -60,6 +63,7 @@ describe("store de preferências", () => {
     usePreferencesStore.setState({ revealSensitiveMedia: false });
 
     usePreferencesStore.getState().setRevealSensitiveMedia(true);
+    flushStorageWrites();
 
     const salvo = JSON.parse(localStorage.getItem("connect-grow-preferences") ?? "{}") as {
       state?: { revealSensitiveMedia?: boolean };

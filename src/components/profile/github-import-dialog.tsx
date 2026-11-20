@@ -13,11 +13,13 @@ import { dataCurta } from "@/lib/date/format";
 import { profileQueries } from "@/lib/query-options/profiles";
 
 import { SandboxedHtmlFrame } from "@/components/post/sandboxed-html-frame";
+import { GithubOrgImport } from "@/components/profile/github-org-import";
 
 /**
  * Importação do GitHub para o perfil: os repositórios públicos viram cards de projeto (com o
  * link apontando para o repositório) e o README do perfil vira a bio em HTML. O handle vem do
- * vínculo verificado; o corpo só escolhe quais repositórios entram.
+ * vínculo verificado; o corpo só escolhe quais repositórios entram. As organizações de que a
+ * pessoa é membro vão num bloco à parte (ver GithubOrgImport).
  */
 export function GithubImportDialog({ open, onOpenChange, username }: GithubImportDialogProps) {
   const queryClient = useQueryClient();
@@ -78,40 +80,43 @@ export function GithubImportDialog({ open, onOpenChange, username }: GithubImpor
   const rows = repos.data ?? [];
 
   return (
-    <GithubImportDialogView
-      open={open}
-      onOpenChange={onOpenChange}
-      notLinked={notLinked}
-      securityHref="/seguranca"
-      repos={{
-        loading: repos.isLoading,
-        error: repos.isError,
-        rows: rows.map((repo) => ({
-          ...repo,
-          updatedAtLabel: repo.updatedAt ? dataCurta(repo.updatedAt) : null,
-        })),
-      }}
-      selected={selected}
-      onToggle={(fullName) =>
-        setSelected((current) =>
-          current.includes(fullName)
-            ? current.filter((item) => item !== fullName)
-            : [...current, fullName],
-        )
-      }
-      onSelectAll={() => setSelected(rows.map((repo) => repo.fullName))}
-      onClear={() => setSelected([])}
-      importing={importProjects.isPending}
-      onImport={() => importProjects.mutate()}
-      readme={{
-        loading: readme.isLoading,
-        missing: readmeMissing,
-        data: readme.data ?? null,
-        error: readme.isError && !readmeMissing,
-      }}
-      usingReadme={importReadme.isPending}
-      onUseReadme={() => importReadme.mutate()}
-      renderHtmlFrame={(props) => <SandboxedHtmlFrame {...props} />}
-    />
+    <>
+      <GithubImportDialogView
+        open={open}
+        onOpenChange={onOpenChange}
+        notLinked={notLinked}
+        securityHref="/seguranca"
+        repos={{
+          loading: repos.isLoading,
+          error: repos.isError,
+          rows: rows.map((repo) => ({
+            ...repo,
+            updatedAtLabel: repo.updatedAt ? dataCurta(repo.updatedAt) : null,
+          })),
+        }}
+        selected={selected}
+        onToggle={(fullName) =>
+          setSelected((current) =>
+            current.includes(fullName)
+              ? current.filter((item) => item !== fullName)
+              : [...current, fullName],
+          )
+        }
+        onSelectAll={() => setSelected(rows.map((repo) => repo.fullName))}
+        onClear={() => setSelected([])}
+        importing={importProjects.isPending}
+        onImport={() => importProjects.mutate()}
+        readme={{
+          loading: readme.isLoading,
+          missing: readmeMissing,
+          data: readme.data ?? null,
+          error: readme.isError && !readmeMissing,
+        }}
+        usingReadme={importReadme.isPending}
+        onUseReadme={() => importReadme.mutate()}
+        renderHtmlFrame={(props) => <SandboxedHtmlFrame {...props} />}
+      />
+      <GithubOrgImport open={open} onOpenChange={onOpenChange} username={username} />
+    </>
   );
 }

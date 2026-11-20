@@ -135,6 +135,13 @@ export const moderationApi = {
     }),
 
   /** Histórico administrativo da conta: advertências e sanções, mais recente primeiro. */
+  /** Exclusão administrativa da conta: mesma anonimização da auto-exclusão, sem a senha. */
+  adminDeleteAccount: (username: string, reason: string) =>
+    api.post<{ userId: string; username: string; outcome: "DELETED" }>(
+      `/admin/moderation/users/${encodeURIComponent(username)}/delete`,
+      { reason },
+    ),
+
   adminUserHistory: (username: string, limit = 50) =>
     api.get<AdminHistoryView>(
       `/admin/moderation/users/${encodeURIComponent(username)}/history?limit=${limit}`,

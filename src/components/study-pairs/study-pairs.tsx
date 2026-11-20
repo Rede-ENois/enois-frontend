@@ -1,18 +1,23 @@
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 
 import { POST_TOPICS } from "@/constants/community-topics";
 import { texts } from "@/texts";
 import {
+  type StudyPairIcebreakerAnswers,
+  StudyPairProposals,
   type StudyPairRequestInput,
   type StudyPairSaveStatus,
   type StudyPairsErrorCode,
   StudyPairsView,
 } from "@rede-enois/design-system/domain";
-import { Button, useToast } from "@rede-enois/design-system/ui";
+import { Button, PillRow, useToast } from "@rede-enois/design-system/ui";
 
-import { studyPairsApi } from "@/lib/api";
+import { ApiError, messagesApi, studyPairsApi } from "@/lib/api";
+import { conversationErrorMessage } from "@/lib/conversation-error";
+import { toIcebreakerField, toStudyPairProposal } from "@/lib/study-pairs/proposal";
 import { studyPairsErrorCode, toStudyPair, topicLabel } from "@/lib/study-pairs/to-study-pair";
 import { useReenableModule } from "@/lib/use-personalization";
 
@@ -32,11 +37,16 @@ export function StudyPairs() {
   const { toast } = useToast();
   const [requestError, setRequestError] = useState<StudyPairsErrorCode | null>(null);
   const [checkinStatus, setCheckinStatus] = useState<Record<string, StudyPairSaveStatus>>({});
+  const [proposalError, setProposalError] = useState<{
+    id: string;
+    message: string;
+  } | null>(null);
 
   const me = useQuery({ queryKey: ME_KEY, queryFn: () => studyPairsApi.me() });
   // Chips are a nice-to-have: a failure just hides them.
   const popular = useQuery({ queryKey: POPULAR_KEY, queryFn: () => studyPairsApi.popularGoals() });
 
+  const navigate = useNavigate();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["study-pairs"] });
 
   const request = useMutation({
@@ -85,10 +95,69 @@ export function StudyPairs() {
     onError: () => toast(texts.studyPairs.endError, "error"),
   });
 
+  const openConversation = useMutation({
+    mutationFn: (userId: string) => messagesApi.openDirect(userId),
+    onSuccess: (conversation) => {
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      void navigate({ to: "/mensagens", search: { conversation: conversation.id } });
+    },
+    onError: (error) => toast(conversationErrorMessage(error), "error"),
+  });
+  const openingPartnerId = openConversation.isPending ? openConversation.variables : null;
+
+  // As perguntas do quebra-gelo vêm do catálogo do servidor; sem catálogo a proposta ainda
+  // aparece, só o formulário do aceite espera.
+  const proposals = me.data?.proposals ?? [];
+  const icebreakers = useQuery({
+    queryKey: ["study-pairs", "icebreakers"],
+    queryFn: () => studyPairsApi.icebreakers(),
+    enabled: proposals.some((proposal) => !proposal.myAccepted),
+    staleTime: 30 * 60_000,
+    retry: false,
+  });
+  const acceptProposal = useMutation({
+    mutationFn: ({ id, answers }: { id: string; answers: StudyPairIcebreakerAnswers }) =>
+      studyPairsApi.accept(id, answers),
+    onMutate: () => setProposalError(null),
+    onSuccess: ({ pairActive }) => {
+      void refresh();
+      if (pairActive) toast(texts.studyPairs.proposals.active, "success");
+    },
+    onError: (error, { id }) =>
+      setProposalError({
+        id,
+        message: error instanceof ApiError ? error.message : texts.studyPairs.proposals.acceptError,
+      }),
+  });
+  const declineProposal = useMutation({
+    mutationFn: (id: string) => studyPairsApi.decline(id),
+    onMutate: () => setProposalError(null),
+    onSuccess: () => {
+      void refresh();
+      toast(texts.studyPairs.proposals.declined);
+    },
+    onError: (error, id) =>
+      setProposalError({
+        id,
+        message:
+          error instanceof ApiError ? error.message : texts.studyPairs.proposals.declineError,
+      }),
+  });
+
   const data = me.data;
 
   return (
     <div className="space-y-4">
+      <StudyPairProposals
+        proposals={proposals.map(toStudyPairProposal)}
+        fields={(icebreakers.data?.items ?? []).map(toIcebreakerField)}
+        fieldsLoading={icebreakers.isLoading}
+        acceptingId={acceptProposal.isPending ? acceptProposal.variables.id : null}
+        decliningId={declineProposal.isPending ? declineProposal.variables : null}
+        errors={proposalError ? { [proposalError.id]: proposalError.message } : {}}
+        onAccept={(id, answers) => acceptProposal.mutate({ id, answers })}
+        onDecline={(id) => declineProposal.mutate(id)}
+      />
       <GoalSearch
         disabled={request.isPending}
         onRequest={(goal, topic) => request.mutate({ goal, topic })}
@@ -131,6 +200,24 @@ export function StudyPairs() {
         onEndPair={(pairId) => endPair.mutate(pairId)}
         endingPairId={endPair.isPending ? endPair.variables : null}
       />
+      {/* O par ativo sai do ritual semanal para a conversa: abre a conversa direta com a pessoa. */}
+      {(data?.pairs ?? []).length > 0 && (
+        <PillRow label={texts.studyPairs.message}>
+          {(data?.pairs ?? []).map((pair) => (
+            <Button
+              key={pair.id}
+              type="button"
+              size="sm"
+              variant="outline"
+              aria-label={`${texts.studyPairs.message}: ${pair.partner.name}`}
+              disabled={openingPartnerId !== null}
+              onClick={() => openConversation.mutate(pair.partner.id)}
+            >
+              {texts.studyPairs.message}
+            </Button>
+          ))}
+        </PillRow>
+      )}
     </div>
   );
 }

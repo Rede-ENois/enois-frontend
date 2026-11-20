@@ -16,6 +16,8 @@ import { StudyPairs } from "./study-pairs";
 const mocks = vi.hoisted(() => ({
   props: null as null | StudyPairsViewProps,
   toast: vi.fn(),
+  navigate: vi.fn(),
+  openDirect: vi.fn(),
   prefs: { getPersonalization: vi.fn(), setPersonalization: vi.fn() },
   api: {
     me: vi.fn(),
@@ -23,6 +25,9 @@ const mocks = vi.hoisted(() => ({
     search: vi.fn(),
     request: vi.fn(),
     cancelRequest: vi.fn(),
+    accept: vi.fn(),
+    decline: vi.fn(),
+    icebreakers: vi.fn(),
     checkin: vi.fn(),
     end: vi.fn(),
   },
@@ -33,13 +38,25 @@ vi.mock("@rede-enois/design-system/domain", () => ({
     mocks.props = props;
     return null;
   },
+  // O componente de propostas tem os próprios testes no DS; aqui só o canal de dados importa.
+  StudyPairProposals: () => null,
 }));
 vi.mock("@rede-enois/design-system/ui", () => ({
   useToast: () => ({ toast: mocks.toast }),
   Button: (props: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} />,
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
+  PillRow: ({ label, children }: { label: string; children?: React.ReactNode }) => (
+    <div role="group" aria-label={label}>
+      {children}
+    </div>
+  ),
 }));
-vi.mock("@/lib/api", () => ({ studyPairsApi: mocks.api, preferencesApi: mocks.prefs }));
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => mocks.navigate }));
+vi.mock("@/lib/api", () => ({
+  studyPairsApi: mocks.api,
+  preferencesApi: mocks.prefs,
+  messagesApi: { openDirect: mocks.openDirect },
+}));
 
 const me: MyStudyPairs = {
   openRequest: null,
@@ -70,6 +87,8 @@ describe("StudyPairs container", () => {
   beforeEach(async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     mocks.toast.mockReset();
+    mocks.navigate.mockReset();
+    mocks.openDirect.mockReset();
     Object.values(mocks.api).forEach((fn) => fn.mockReset());
     Object.values(mocks.prefs).forEach((fn) => fn.mockReset());
     mocks.api.me.mockResolvedValue(me);
@@ -198,5 +217,33 @@ describe("StudyPairs container", () => {
 
     expect(mocks.toast).toHaveBeenCalledWith(expect.any(String), "error");
     expect(props().endingPairId).toBeNull();
+  });
+
+  it("opens the direct conversation with the partner from the active pair", async () => {
+    mocks.openDirect.mockResolvedValue({ id: "conv_1" });
+
+    const botao = [...host.querySelectorAll("button")].find(
+      (b) => b.textContent === texts.studyPairs.message,
+    );
+    await act(async () => botao!.click());
+    await settle();
+    await settle();
+
+    expect(mocks.openDirect).toHaveBeenCalledWith("partner");
+    expect(mocks.navigate).toHaveBeenCalledWith({
+      to: "/mensagens",
+      search: { conversation: "conv_1" },
+    });
+  });
+
+  it("warns when the conversation cannot be opened", async () => {
+    mocks.openDirect.mockRejectedValue(new Error("offline"));
+    const botao = [...host.querySelectorAll("button")].find(
+      (b) => b.textContent === texts.studyPairs.message,
+    );
+    await act(async () => botao!.click());
+    await settle();
+
+    expect(mocks.toast).toHaveBeenCalledWith(expect.any(String), "error");
   });
 });

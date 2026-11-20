@@ -60,6 +60,7 @@ export function PostComments({
   postAuthorId,
   isQuestion = false,
   acceptedCommentId = null,
+  highlightCommentId = null,
   liveRefresh = false,
 }: {
   postId: string;
@@ -67,6 +68,8 @@ export function PostComments({
   /** QUESTION post: the asker can mark one answer, which goes to the top. */
   isQuestion?: boolean;
   acceptedCommentId?: string | null;
+  /** Comentário a abrir em destaque (notificação de comentário). */
+  highlightCommentId?: string | null;
   /** Ativo apenas na publicação aberta (/post/:id ou blog) para não fazer polling nos cards do feed. */
   liveRefresh?: boolean;
 }) {
@@ -76,6 +79,19 @@ export function PostComments({
   const { requireAuth } = useAuth();
   const queryClient = useQueryClient();
   const [comments, setComments] = useState<CommentView[]>([]);
+  // Notificação de comentário (issue #1022): quando as linhas estão na tela, rola até O comentário
+  // e o realça por um instante. O anel some sozinho; a rolagem é o que leva o olhar.
+  const [highlighting, setHighlighting] = useState(false);
+  const hasComments = comments.length > 0;
+  useEffect(() => {
+    if (!highlightCommentId || !hasComments) return;
+    const row = document.querySelector(`[data-comment-id="${highlightCommentId}"]`);
+    if (!row) return; // comentário em página ainda não carregada: sem linha, sem rolagem.
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+    setHighlighting(true);
+    const timer = window.setTimeout(() => setHighlighting(false), 2400);
+    return () => window.clearTimeout(timer);
+  }, [highlightCommentId, hasComments]);
   const commentsRef = useRef<CommentView[]>(comments);
   commentsRef.current = comments;
   const draft = usePostCardStore((state) => state.cards[postId]?.draft ?? "");
@@ -251,9 +267,11 @@ export function PostComments({
     }
   };
 
+  const canSend = Boolean(draft.trim()) || media.length > 0;
+
   const submit = async (website: string): Promise<boolean> => {
     const content = draft.trim();
-    if (!content || sending) return false;
+    if (!canSend || sending) return false;
     // Comentar e uma acao: sem sessao (link compartilhado aberto por outra pessoa) vai para o login.
     if (!requireAuth()) return false;
 
@@ -363,6 +381,8 @@ export function PostComments({
           <CommentItem
             key={comment.id}
             comment={comment}
+            commentDomId={comment.id}
+            highlighted={highlighting && highlightCommentId === comment.id}
             replyingTo={replyingTo}
             postAuthorId={postAuthorId}
             onPinChanged={() => void loadFirstPage()}
@@ -425,7 +445,7 @@ export function PostComments({
             }
           />
         )}
-        canSend={Boolean(draft.trim()) || media.length > 0}
+        canSend={canSend}
         sending={sending}
         onSubmit={submit}
         onOpenGifPicker={() => setGifOpen(true)}

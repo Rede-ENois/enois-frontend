@@ -25,6 +25,9 @@ describe("moduleForNotification", () => {
   it("study pair notifications belong to STUDY_PAIRS", () => {
     for (const kind of [
       "STUDY_PAIR_MATCHED",
+      "STUDY_PAIR_PROPOSED",
+      "STUDY_PAIR_ACCEPTED",
+      "STUDY_PAIR_DECLINED",
       "STUDY_PAIR_CHECKIN",
       "STUDY_PAIR_ENDED",
       "STUDY_PAIR_REMINDER",
@@ -50,6 +53,14 @@ describe("moduleForNotification", () => {
   it("hides the real event and job kinds (the old keys never matched them)", () => {
     expect(isNotificationHidden({ kind: "EVENT_NEXT_OCCURRENCE" }, new Set(["EVENTS"]))).toBe(true);
     expect(isNotificationHidden({ kind: "JOB_APPLICATION_STATUS" }, new Set(["JOBS"]))).toBe(true);
+  });
+
+  it("keeps community project notices in the disabled project module", () => {
+    expect(moduleForNotification("NEW_COMMUNITY_PROJECT")).toBe("COMMUNITY_PROJECTS");
+    expect(
+      isNotificationHidden({ kind: "NEW_COMMUNITY_PROJECT" }, new Set(["COMMUNITY_PROJECTS"])),
+    ).toBe(true);
+    expect(isNotificationHidden({ kind: "NEW_COMMUNITY_PROJECT" }, new Set(["JOBS"]))).toBe(false);
   });
 
   it("trusts the module the backend resolved", () => {

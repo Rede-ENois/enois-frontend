@@ -41,6 +41,18 @@ describe("navigateToHref", () => {
     });
   });
 
+  it("abre o projeto publicado e preserva o catálogo para o link sem identificador", () => {
+    expect(resolve("/projetos/ada-ficticia/projeto-exemplo")).toHaveBeenCalledWith({
+      to: "/projetos/$username/$projectSlug",
+      params: { username: "ada-ficticia", projectSlug: "projeto-exemplo" },
+    });
+    expect(resolve("/api/projetos/ada-ficticia/projeto-exemplo")).toHaveBeenCalledWith({
+      to: "/projetos/$username/$projectSlug",
+      params: { username: "ada-ficticia", projectSlug: "projeto-exemplo" },
+    });
+    expect(resolve("/projetos")).toHaveBeenCalledWith({ to: "/projetos" });
+  });
+
   it("mantém as rotas que já existiam", () => {
     expect(resolve("/feed/posts/abc")).toHaveBeenCalledWith({
       to: "/post/$postId",
