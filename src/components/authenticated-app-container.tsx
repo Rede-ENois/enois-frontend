@@ -11,8 +11,14 @@ import { NavigationDrawer } from "./navigation-drawer";
 import { AdminNoticeBanner } from "./notices/admin-notice";
 
 export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
-  useCurrentUser();
+  const conta = useCurrentUser();
   usePresenceHeartbeat();
+
+  // Abrir a página antes da conta chegar fazia o detalhe de rota buscar cedo, receber 401 sem o
+  // cookie ainda posto, desistir na repetição e cair no vazio — o mesmo da tela de item
+  // inexistente (#994, #996, #997). Quem está sem sessão também fica aqui; quem manda essa pessoa
+  // para o login é o guard de rota.
+  const esperandoConta = conta.isPending;
 
   return (
     <AppLayout>
@@ -27,7 +33,7 @@ export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
           <AppSidebar />
         </AppLayout.Sidebar>
 
-        <AppLayout.Main>{children}</AppLayout.Main>
+        <AppLayout.Main>{esperandoConta ? null : children}</AppLayout.Main>
       </AppLayout.Content>
 
       <AppLayout.Navigation>
