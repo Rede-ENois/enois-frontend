@@ -241,10 +241,17 @@ describe("/mensagens — criar grupo", () => {
     client.clear();
   });
 
+  // O botão de view que abre o grupo; aqui ele é só o gatilho da montagem do formulário.
+  const openGroup = () => {
+    const trigger = Array.from(host.querySelectorAll("button")).find(
+      (button) => button.dataset.newGroup !== undefined,
+    );
+    expect(trigger, "o botão de novo grupo deveria estar na tela").toBeTruthy();
+    return trigger!;
+  };
+
   it("cria a conversa de grupo com título e as pessoas marcadas, uma vez só", async () => {
-    const openGroup = byText(/novo grupo/i);
-    expect(openGroup, "o botão de novo grupo deveria estar na tela").toBeTruthy();
-    await act(async () => openGroup!.click());
+    await act(async () => openGroup().click());
     await settle();
 
     const inputs = Array.from(host.querySelectorAll("input"));
@@ -283,7 +290,7 @@ describe("/mensagens — criar grupo", () => {
   });
 
   it("sem título ou sem ninguém marcado, o botão de criar não liga", async () => {
-    await act(async () => byText(/novo grupo/i)!.click());
+    await act(async () => openGroup().click());
     await settle();
 
     const inputs = Array.from(host.querySelectorAll("input"));

@@ -35,6 +35,7 @@ import { SaciSpot } from "@/components/events/saci-spot";
 import { ConversationItem } from "@/components/messages/conversation-item";
 import { ConversationThread } from "@/components/messages/conversation-thread";
 import { E2eSetupBanner } from "@/components/messages/e2e-setup-banner";
+import { NewGroupButton } from "@/components/messages/new-group-button";
 import { NewGroupComposer } from "@/components/messages/new-group-composer";
 
 export const Route = createFileRoute("/mensagens")({
@@ -285,28 +286,19 @@ function Mensagens() {
                     size="sm"
                     variant="outline"
                     className="rounded-full"
-                    onClick={() => {
-                      if (showSearch) closeNewConversation();
-                      else setShowSearch(true);
-                    }}
+                    onClick={() => setShowSearch(!showSearch)}
                   >
                     {showSearch ? texts.messages.back : texts.messages.new}
                   </Button>
                 )}
 
-                {/* Combinar um grupo é conversa social, como a DM nova. */}
-                {!professional && !showSearch && !showGroup && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
+                {!professional && !showSearch && (
+                  <NewGroupButton
                     onClick={() => {
                       closeNewConversation();
                       setShowGroup(true);
                     }}
-                  >
-                    {texts.messages.newGroup}
-                  </Button>
+                  />
                 )}
 
                 <SaciSpot spot="mensagens" />
