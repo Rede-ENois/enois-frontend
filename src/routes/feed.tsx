@@ -86,6 +86,7 @@ import { canReachScroll, clearFeedScroll, readFeedScroll } from "@/lib/feed-scro
 import { captionRequired } from "@/lib/feed/caption-required";
 import { carriesCaughtUp, caughtUpOrder, useMarkFeedSeen } from "@/lib/feed/caught-up";
 import { composerExpanded as composerExpandedWith } from "@/lib/feed/composer-expanded";
+import { availableFeedPostTypes, resolveFeedPostType } from "@/lib/feed/composer-post-type";
 import { useFeedArrivals } from "@/lib/feed/feed-arrivals";
 import { useFeedLiveRefresh } from "@/lib/feed/feed-live";
 import { keepPostsById } from "@/lib/feed/keep-posts-by-id";
@@ -448,7 +449,9 @@ export function Home() {
     }
   }, [identity]);
 
-  const pageMode = postType === "PAGE";
+  const availableTypes = availableFeedPostTypes(identity);
+  const resolvedPostType = resolveFeedPostType(identity, postType);
+  const pageMode = resolvedPostType === "PAGE";
   // Qualquer trabalho em andamento mantém o compositor inteiro aberto (rascunho, mídia, tipo
   // diferente do de repouso). BUSINESS é o repouso da identidade profissional: contá-lo prendia
   // o compositor expandido para sempre e o launcher nunca aparecia.
@@ -456,19 +459,16 @@ export function Home() {
     open: composerOpen,
     draft,
     mediaCount: media.length,
-    postType,
+    postType: resolvedPostType,
   });
-  const articleMode = postType === "ARTICLE";
+  const articleMode = resolvedPostType === "ARTICLE";
   // Enquete: o campo de cima vira o título e as alternativas são o que se vota.
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
   const [pollEndsAt, setPollEndsAt] = useState<string | undefined>(undefined);
-  const pollMode = postType === "POLL";
-  const availableTypes =
-    identity === "CORPORATE"
-      ? POST_TYPES.filter((option) => option.id === "BUSINESS")
-      : POST_TYPES.filter((option) => option.id !== "BUSINESS");
-  const currentType = availableTypes.find((option) => option.id === postType) ?? availableTypes[0];
+  const pollMode = resolvedPostType === "POLL";
+  const currentType =
+    availableTypes.find((option) => option.id === resolvedPostType) ?? availableTypes[0];
   const fileRef = useRef<HTMLInputElement>(null);
   // Guarda de reentrada da publicação (ver `publishPost`): um ref, não estado — o segundo envio
   // precisa ser descartado na hora, sem esperar um novo render.
@@ -516,7 +516,7 @@ export function Home() {
       articleBody === "" &&
       normalizePollOptions(pollOptions).length === 0;
     if (!compositorIntacto) return;
-    setPostType(salvo.type as PostView["type"]);
+    setPostType(resolveFeedPostType(identity, salvo.type as PostView["type"]));
     setDraft(salvo.content ?? "");
     setPageHtml(salvo.pageHtml ?? "");
     setArticleBody(salvo.articleBody ?? "");
@@ -554,7 +554,7 @@ export function Home() {
         return;
       }
       saveDraftMutation.mutate({
-        type: postType,
+        type: resolvedPostType,
         content: pageMode ? "" : draft,
         ...(pageMode ? { pageHtml } : {}),
         ...(articleMode ? { articleBody } : {}),
@@ -641,7 +641,7 @@ export function Home() {
         });
       }
       await schedulePost.mutateAsync({
-        type: postType,
+        type: resolvedPostType,
         content: pageMode ? "" : finalContent,
         mediaIds,
         mediaSpoiler,
@@ -702,7 +702,7 @@ export function Home() {
       }
       const created = await createPost.mutateAsync({
         content: pageMode ? "" : content,
-        type: postType,
+        type: resolvedPostType,
         mediaIds,
         mediaSpoiler,
         ...(pageMode ? { pageHtml } : {}),
@@ -718,7 +718,7 @@ export function Home() {
       // exige aprovação no programa de parceiros; o diálogo oficial já funciona para qualquer conta.
       try {
         const postId = (created as { id?: string })?.id;
-        if (postId && postType === "BUSINESS") {
+        if (postId && resolvedPostType === "BUSINESS") {
           const linked = await authApi.oauthProviders();
           if (linked.some((l) => l.provider === "LINKEDIN")) {
             setLinkedinUrl(`${texts.siteUrl}/post/${postId}`);
@@ -1281,7 +1281,7 @@ export function Home() {
                   <div>
                     <PostTypePicker
                       options={availableTypes}
-                      value={postType}
+                      value={resolvedPostType}
                       onChange={(id) => setPostType(id as PostView["type"])}
                     />
 

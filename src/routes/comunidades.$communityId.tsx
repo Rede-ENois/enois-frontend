@@ -698,7 +698,7 @@ function CommunityDetail() {
             >
               <div className="flex flex-wrap items-center gap-1.5">
                 <PostTypePicker
-                  options={POST_TYPES}
+                  options={POST_TYPES.filter((option) => option.id !== "BUSINESS")}
                   value={postType}
                   onChange={(id) => setPostType(id as PostView["type"])}
                 />
