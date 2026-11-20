@@ -92,7 +92,7 @@ describe("campo de edição do comentário", () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={client}>
-          <CommentItem comment={item} />
+          <CommentItem comment={item} postAuthorId="author-1" />
         </QueryClientProvider>,
       );
     });
