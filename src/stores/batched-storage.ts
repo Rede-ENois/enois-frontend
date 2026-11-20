@@ -54,6 +54,18 @@ function installFlushListeners() {
   });
 }
 
+/**
+ * O valor pendente de uma chave, se houver. O getItem do storage precisa consultar aqui antes do
+ * disco: entre o set() e o flush, o localStorage ainda tem o valor anterior, e uma leitura nesse
+ * intervalo (persist.rehydrate, por exemplo) leria dado velho e sobrescreveria a escolha em memoria.
+ *
+ * Retorna `{ value }` quando ha escrita pendente (value pode ser null, que eh remocao), ou
+ * `undefined` quando nao ha nada na fila pra essa chave.
+ */
+export function readPending(key: string): { value: string | null } | undefined {
+  return pending.has(key) ? { value: pending.get(key)! } : undefined;
+}
+
 /** Agenda a gravacao de value em key (null remove a chave). */
 export function writeStorageLater(key: string, value: string | null): void {
   pending.set(key, value);

@@ -1,4 +1,4 @@
-import { writeStorageLater } from "@/stores/batched-storage";
+import { readPending, writeStorageLater } from "@/stores/batched-storage";
 import type { ProfileNameTheme } from "@/types/application/cosmetics/profile-name-theme";
 import type { PreferencesState } from "@/types/stores/preferences-state";
 import type { PreferencesStorageValue } from "@/types/stores/preferences-storage-value";
@@ -116,7 +116,10 @@ function normalizeThemeCollection(value: unknown): string | null {
 
 const preferencesStorage = {
   getItem: (name: string) => {
-    const stored = localStorage.getItem(name);
+    // Uma escrita pendente vence o disco: sem isso, persist.rehydrate() entre o set() e o flush
+    // leria o valor velho e sobrescreveria a escolha que o usuario acabou de fazer.
+    const queued = readPending(name);
+    const stored = queued !== undefined ? queued.value : localStorage.getItem(name);
     if (stored !== null) {
       try {
         const parsed = JSON.parse(stored) as PreferencesStorageValue;
@@ -182,7 +185,7 @@ const preferencesStorage = {
     writeStorageLater(LEGACY_SIDEBAR_STORAGE_KEY, null);
   },
   removeItem: (name: string) => {
-    localStorage.removeItem(name);
+    writeStorageLater(name, null);
   },
 };
 
