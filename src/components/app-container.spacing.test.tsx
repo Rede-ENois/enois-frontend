@@ -19,6 +19,30 @@ vi.mock("@/components/mobile-dock", () => ({ MobileDock: () => null }));
 vi.mock("@/components/navigation-drawer", () => ({ NavigationDrawer: () => null }));
 vi.mock("@/components/notices/admin-notice", () => ({ AdminNoticeBanner: () => null }));
 
+const GAP_CLASS = "space-y-4";
+
+// `gap` chega da casca e vira a classe do `main` (feita no design system, #366); aqui só o pedido
+// é registrado, o resultado visual é provado no teste do próprio DS.
+vi.mock("@rede-enois/design-system/patterns", () => {
+  const slot =
+    (name: string) =>
+    ({ children }: { children?: React.ReactNode }) => <div data-slot={name}>{children}</div>;
+  const Main = ({ children, gap }: { children?: React.ReactNode; gap?: string }) => (
+    <main data-gap={gap ?? "none"} className={gap === "md" ? GAP_CLASS : undefined}>
+      {children}
+    </main>
+  );
+  return {
+    AppLayout: Object.assign(slot("root"), {
+      Header: slot("header"),
+      Content: slot("content"),
+      Sidebar: slot("sidebar"),
+      Main,
+      Navigation: slot("navigation"),
+    }),
+  };
+});
+
 const { AppContainer } = await import("./app-container");
 
 describe("casca do app", () => {
@@ -51,6 +75,7 @@ describe("casca do app", () => {
     const main = host.querySelector("main");
     expect(main).not.toBeNull();
     // O espaço vem do `gap` do Main do design system, não de um wrapper de markup na casca.
-    expect(main?.className.split(/\s+/)).toContain("space-y-4");
+    expect(main?.getAttribute("data-gap")).toBe("md");
+    expect(main?.className.split(/\s+/)).toContain(GAP_CLASS);
   });
 });
