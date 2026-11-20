@@ -51,3 +51,20 @@ function ownHost(): string | null {
     return null;
   }
 }
+
+/**
+ * Caminho interno de um link escrito no texto (o router abre na mesma aba); `null` para o resto,
+ * que abre em outra aba.
+ *
+ * So conta http(s):// e caminho de uma barra: `enois.ia.br/x` sem esquema eh lido como caminho
+ * relativo por `absoluteLinkUrl`, e `#secao` eh ancora da propria pagina. Caminho que comeca
+ * com `//` apontaria para outro site quando usado sozinho como endereco.
+ */
+export function appPathOf(href: string): string | null {
+  const trimmed = href.trim();
+  if (!/^(https?:\/\/|\/(?![/\\]))/i.test(trimmed)) return null;
+  const absolute = absoluteLinkUrl(trimmed);
+  if (!absolute || new URL(absolute).hash) return null;
+  const path = internalPathOf(absolute);
+  return path && !/^\/[/\\]/.test(path) ? path : null;
+}
