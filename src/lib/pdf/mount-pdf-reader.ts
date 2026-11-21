@@ -3,6 +3,7 @@ import type { PdfLayoutMode } from "@/types/pdf/pdf-layout-mode";
 import type { PdfLoader } from "@/types/pdf/pdf-loader";
 import type { PdfPageLike } from "@/types/pdf/pdf-page-like";
 import type { PdfReadingTone } from "@/types/pdf/pdf-reading-tone";
+import type { PdfZoomMode } from "@/types/pdf/pdf-zoom-mode";
 
 import { loadPdfDocument } from "./load-pdf-document";
 
@@ -56,7 +57,7 @@ export function mountPdfReader(
   let pdfDoc: PdfDocumentLike | null = null;
   let currentPage = 1;
   let totalPages = 0;
-  let fitWidth = true;
+  let zoomMode: PdfZoomMode = "fit";
   let manualScale = 1;
   let tone: PdfReadingTone = "normal";
   let layoutMode: PdfLayoutMode = "paged";
@@ -79,8 +80,13 @@ export function mountPdfReader(
   zoomStatus.textContent = "Largura";
   const zoomInBtn = makeButton("Aumentar zoom", "+", ["data-pdf-control", "zoom-in"]);
   const fitBtn = makeButton("Ajustar à largura", "Ajustar", ["data-pdf-control", "fit"]);
+  const comfortBtn = makeButton("Modo texto confortável para celular", "Leitura", [
+    "data-pdf-control",
+    "comfort",
+  ]);
   fitBtn.setAttribute("aria-pressed", "true");
-  zoomGroup.append(zoomOutBtn, zoomStatus, zoomInBtn, fitBtn);
+  comfortBtn.setAttribute("aria-pressed", "false");
+  zoomGroup.append(zoomOutBtn, zoomStatus, zoomInBtn, fitBtn, comfortBtn);
 
   const toneGroup = document.createElement("div");
   toneGroup.setAttribute("data-pdf-group", "tone");
@@ -197,27 +203,41 @@ export function mountPdfReader(
     pageInput.max = String(Math.max(1, totalPages));
     pageInput.value = String(currentPage);
     pageTotal.textContent = totalPages > 0 ? `de ${totalPages}` : "de —";
-    fitBtn.setAttribute("aria-pressed", String(fitWidth));
-    zoomStatus.textContent = fitWidth ? "Largura" : `${Math.round(manualScale * 100)}%`;
-    zoomOutBtn.disabled = !fitWidth && manualScale <= MIN_ZOOM + 0.01;
-    zoomInBtn.disabled = !fitWidth && manualScale >= MAX_ZOOM - 0.01;
+    fitBtn.setAttribute("aria-pressed", String(zoomMode === "fit"));
+    comfortBtn.setAttribute("aria-pressed", String(zoomMode === "comfort"));
+    if (zoomMode === "fit") {
+      zoomStatus.textContent = "Largura";
+    } else if (zoomMode === "comfort") {
+      zoomStatus.textContent = "Leitura";
+    } else {
+      zoomStatus.textContent = `${Math.round(manualScale * 100)}%`;
+    }
+    zoomOutBtn.disabled = zoomMode === "manual" && manualScale <= MIN_ZOOM + 0.01;
+    zoomInBtn.disabled = zoomMode === "manual" && manualScale >= MAX_ZOOM - 0.01;
     syncToneButtons();
     syncLayoutButtons();
   };
 
   const renderCanvasPage = async (page: PdfPageLike, targetCanvas: HTMLCanvasElement) => {
     const baseViewport = page.getViewport({ scale: 1 });
-    const availableWidth = Math.max(260, stage.clientWidth - 24);
-    const computedScale = fitWidth
-      ? Math.max(0.45, Math.min(2.4, availableWidth / Math.max(1, baseViewport.width)))
-      : manualScale;
+    const availableWidth = Math.max(260, stage.clientWidth - 16);
+    const fitScale = availableWidth / Math.max(1, baseViewport.width);
 
-    if (fitWidth) {
+    let computedScale = manualScale;
+    if (zoomMode === "fit") {
+      computedScale = Math.max(0.45, Math.min(2.4, fitScale));
       manualScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, computedScale));
+    } else if (zoomMode === "comfort") {
+      const isMobileStage = availableWidth < 600;
+      const comfortTarget = isMobileStage
+        ? Math.max(fitScale * 1.38, 0.95)
+        : Math.max(fitScale * 1.15, 1.1);
+      computedScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, comfortTarget));
+      manualScale = computedScale;
     }
 
     const viewport = page.getViewport({ scale: computedScale });
-    const dpr = Math.min(2.5, Math.max(1, window.devicePixelRatio || 1));
+    const dpr = Math.min(2.5, Math.max(1.5, window.devicePixelRatio || 1));
 
     targetCanvas.width = Math.max(1, Math.floor(viewport.width * dpr));
     targetCanvas.height = Math.max(1, Math.floor(viewport.height * dpr));
@@ -326,23 +346,47 @@ export function mountPdfReader(
   });
 
   zoomOutBtn.addEventListener("click", () => {
-    fitWidth = false;
+    zoomMode = "manual";
     manualScale = Math.max(MIN_ZOOM, Number((manualScale - ZOOM_STEP).toFixed(2)));
     syncControls();
     void renderCurrentView();
   });
 
   zoomInBtn.addEventListener("click", () => {
-    fitWidth = false;
+    zoomMode = "manual";
     manualScale = Math.min(MAX_ZOOM, Number((manualScale + ZOOM_STEP).toFixed(2)));
     syncControls();
     void renderCurrentView();
   });
 
   fitBtn.addEventListener("click", () => {
-    fitWidth = true;
+    zoomMode = "fit";
     syncControls();
     void renderCurrentView();
+  });
+
+  comfortBtn.addEventListener("click", () => {
+    zoomMode = "comfort";
+    syncControls();
+    void renderCurrentView();
+  });
+
+  let lastTapTime = 0;
+  stage.addEventListener("pointerup", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("button") || target?.closest("a") || target?.closest("input")) {
+      return;
+    }
+    if (event.button !== 0) return;
+    const now = Date.now();
+    if (now - lastTapTime < 350) {
+      zoomMode = zoomMode === "comfort" ? "fit" : "comfort";
+      syncControls();
+      void renderCurrentView();
+      lastTapTime = 0;
+    } else {
+      lastTapTime = now;
+    }
   });
 
   (Object.keys(toneButtons) as PdfReadingTone[]).forEach((key) => {
@@ -382,7 +426,7 @@ export function mountPdfReader(
   let resizeObserver: ResizeObserver | null = null;
   if (typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => {
-      if (fitWidth && pdfDoc && !disposed) {
+      if (zoomMode !== "manual" && pdfDoc && !disposed) {
         void renderCurrentView();
       }
     });

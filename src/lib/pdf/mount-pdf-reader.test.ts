@@ -79,6 +79,54 @@ describe("mountPdfReader", () => {
     expect(fakePdf.destroy).toHaveBeenCalled();
   });
 
+  it("suporta alternância entre modo de leitura confortável (Leitura) e ajuste à largura", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const fakePdf = createFakePdf(2);
+
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      setTransform: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+
+    const cleanup = mountPdfReader(host, {
+      url: "https://cdn.example.com/artigo.pdf",
+      fileName: "artigo.pdf",
+      loadPdf: async () => fakePdf,
+    });
+
+    await vi.waitFor(() => {
+      expect(host.querySelector("[data-pdf-zoom-label]")?.textContent).toBe("Largura");
+    });
+
+    const fitBtn = host.querySelector<HTMLButtonElement>('[data-pdf-control="fit"]')!;
+    const comfortBtn = host.querySelector<HTMLButtonElement>('[data-pdf-control="comfort"]')!;
+    const zoomStatus = host.querySelector<HTMLElement>("[data-pdf-zoom-label]")!;
+    const stage = host.querySelector<HTMLElement>("[data-pdf-stage]")!;
+
+    expect(fitBtn.getAttribute("aria-pressed")).toBe("true");
+    expect(comfortBtn.getAttribute("aria-pressed")).toBe("false");
+
+    // Ativa modo conforto de leitura (Leitura)
+    comfortBtn.click();
+    expect(comfortBtn.getAttribute("aria-pressed")).toBe("true");
+    expect(fitBtn.getAttribute("aria-pressed")).toBe("false");
+    expect(zoomStatus.textContent).toBe("Leitura");
+
+    // Volta para Ajustar
+    fitBtn.click();
+    expect(fitBtn.getAttribute("aria-pressed")).toBe("true");
+    expect(comfortBtn.getAttribute("aria-pressed")).toBe("false");
+    expect(zoomStatus.textContent).toBe("Largura");
+
+    // Double tap no stage alterna para modo conforto
+    stage.dispatchEvent(new MouseEvent("pointerup", { button: 0, bubbles: true }));
+    stage.dispatchEvent(new MouseEvent("pointerup", { button: 0, bubbles: true }));
+    expect(comfortBtn.getAttribute("aria-pressed")).toBe("true");
+    expect(zoomStatus.textContent).toBe("Leitura");
+
+    cleanup();
+  });
+
   it("exibe fallback com links diretos quando o PDF falha ao carregar", async () => {
     const host = document.createElement("div");
     document.body.append(host);
