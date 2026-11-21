@@ -21,6 +21,12 @@ describe("contentSecurityPolicy", () => {
     const policy = contentSecurityPolicy("n");
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).toContain("object-src 'none'");
+    expect(policy).not.toContain("http://localhost:*");
+  });
+
+  it("allows localhost connect-src only without a nonce (dev server)", () => {
+    const policy = contentSecurityPolicy(null);
+    expect(policy).toContain("http://localhost:* http://127.0.0.1:*");
   });
 });
 
