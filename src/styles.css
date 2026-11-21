@@ -763,6 +763,222 @@ span.rounded-full:has(> [data-enois-reaction-glyph]) {
 }
 
 /*
+ * Leitor de PDF confortável e responsivo (mobile e desktop)
+ */
+[data-pdf-card-trigger] {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  min-height: 3rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.875rem;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border-soft);
+  color: var(--color-text-strong);
+  text-align: left;
+  white-space: normal;
+}
+
+[data-pdf-card-trigger]:hover {
+  background: var(--color-surface-2);
+}
+
+[data-pdf-reader-dialog] {
+  width: calc(100vw - 1rem) !important;
+  max-width: 64rem !important;
+  height: 92dvh !important;
+  max-height: 92dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  padding: 0.875rem !important;
+  overflow: hidden !important;
+}
+
+@media (min-width: 640px) {
+  [data-pdf-reader-dialog] {
+    width: calc(100vw - 3rem) !important;
+    padding: 1.25rem !important;
+  }
+}
+
+[data-pdf-reader-root] {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 0.625rem;
+}
+
+[data-pdf-toolbar] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border-soft);
+}
+
+[data-pdf-group] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+[data-pdf-toolbar] button,
+[data-pdf-action],
+[data-pdf-footer] button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface-card);
+  color: var(--color-text-strong);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+
+[data-pdf-toolbar] button:hover:not(:disabled),
+[data-pdf-action]:hover,
+[data-pdf-footer] button:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+
+[data-pdf-toolbar] button[aria-pressed="true"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+[data-pdf-toolbar] button:disabled,
+[data-pdf-footer] button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+[data-pdf-toolbar] button:focus-visible,
+[data-pdf-action]:focus-visible,
+[data-pdf-footer] button:focus-visible,
+[data-pdf-page-input]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+[data-pdf-zoom-label] {
+  min-width: 3.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-pdf-stage] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface-2);
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-pdf-stage][data-pdf-tone="sepia"] {
+  background: color-mix(in srgb, var(--color-surface-2) 70%, rgb(214 188 140));
+}
+
+[data-pdf-stage][data-pdf-tone="dark"] {
+  background: rgb(18 15 24);
+}
+
+[data-pdf-page-frame] {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-table);
+  background: rgb(255 255 255);
+}
+
+[data-pdf-stage][data-pdf-tone="sepia"] [data-pdf-canvas] {
+  filter: sepia(0.28) brightness(0.96) contrast(0.98);
+}
+
+[data-pdf-stage][data-pdf-tone="dark"] [data-pdf-canvas] {
+  filter: invert(0.9) hue-rotate(180deg) contrast(0.95);
+}
+
+[data-pdf-status],
+[data-pdf-fallback] {
+  margin: auto;
+  max-width: 26rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-subtle);
+}
+
+[data-pdf-fallback-actions] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+}
+
+[data-pdf-footer] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+[data-pdf-page-info] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-subtle);
+}
+
+[data-pdf-page-input] {
+  width: 3.5rem;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface-1);
+  color: var(--color-text-strong);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  [data-pdf-toolbar] button,
+  [data-pdf-action],
+  [data-pdf-footer] button {
+    min-height: 2.625rem;
+    min-width: 2.625rem;
+  }
+}
+
+/*
  * Acessibilidade tipográfica em publicações, reposts citados e comentários.
  *
  * O design system usa 15px no corpo do post no mobile e 14px (text-sm) no conteúdo de reposts
