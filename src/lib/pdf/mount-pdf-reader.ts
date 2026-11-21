@@ -1,5 +1,7 @@
 import type { PdfDocumentLike } from "@/types/pdf/pdf-document-like";
+import type { PdfLayoutMode } from "@/types/pdf/pdf-layout-mode";
 import type { PdfLoader } from "@/types/pdf/pdf-loader";
+import type { PdfPageLike } from "@/types/pdf/pdf-page-like";
 import type { PdfReadingTone } from "@/types/pdf/pdf-reading-tone";
 
 import { loadPdfDocument } from "./load-pdf-document";
@@ -57,7 +59,10 @@ export function mountPdfReader(
   let fitWidth = true;
   let manualScale = 1;
   let tone: PdfReadingTone = "normal";
+  let layoutMode: PdfLayoutMode = "paged";
+  let renderGeneration = 0;
   let activeRenderCancel: (() => void) | null = null;
+  let continuousFrames: HTMLElement[] = [];
 
   const root = document.createElement("div");
   root.setAttribute("data-pdf-reader-root", "true");
@@ -88,15 +93,28 @@ export function mountPdfReader(
   };
   toneGroup.append(toneButtons.normal, toneButtons.sepia, toneButtons.dark);
 
+  const layoutGroup = document.createElement("div");
+  layoutGroup.setAttribute("data-pdf-group", "layout");
+  layoutGroup.setAttribute("role", "group");
+  layoutGroup.setAttribute("aria-label", "Modo de exibição das páginas");
+  const layoutButtons: Record<PdfLayoutMode, HTMLButtonElement> = {
+    paged: makeButton("Leitura paginada", "Paginado", ["data-pdf-layout-btn", "paged"]),
+    continuous: makeButton("Leitura contínua sem paginação", "Contínuo", [
+      "data-pdf-layout-btn",
+      "continuous",
+    ]),
+  };
+  layoutGroup.append(layoutButtons.paged, layoutButtons.continuous);
+
   const linkGroup = document.createElement("div");
   linkGroup.setAttribute("data-pdf-group", "links");
   const downloadLink = makeActionLink(url, "Baixar PDF", "Baixar", fileName);
   const openTabLink = makeActionLink(url, "Abrir em nova aba", "Abrir ↗");
   linkGroup.append(downloadLink, openTabLink);
 
-  toolbar.append(zoomGroup, toneGroup, linkGroup);
+  toolbar.append(zoomGroup, toneGroup, layoutGroup, linkGroup);
 
-  // Palco rolável central com o canvas da página.
+  // Palco rolável central com o canvas da página (ou lista contínua de páginas).
   const stage = document.createElement("div");
   stage.setAttribute("data-pdf-stage", "true");
   stage.setAttribute("data-pdf-tone", tone);
@@ -112,6 +130,10 @@ export function mountPdfReader(
   frame.append(canvas);
   frame.hidden = true;
 
+  const continuousList = document.createElement("div");
+  continuousList.setAttribute("data-pdf-continuous-list", "true");
+  continuousList.hidden = true;
+
   const fallback = document.createElement("div");
   fallback.setAttribute("data-pdf-fallback", "true");
   fallback.hidden = true;
@@ -126,7 +148,7 @@ export function mountPdfReader(
   );
   fallback.append(fallbackText, fallbackActions);
 
-  stage.append(statusBanner, frame, fallback);
+  stage.append(statusBanner, frame, continuousList, fallback);
 
   // Barra inferior: paginação ergonômica para polegar (mobile) e teclado (desktop).
   const footer = document.createElement("div");
@@ -162,6 +184,12 @@ export function mountPdfReader(
     stage.setAttribute("data-pdf-tone", tone);
   };
 
+  const syncLayoutButtons = () => {
+    (Object.keys(layoutButtons) as PdfLayoutMode[]).forEach((key) => {
+      layoutButtons[key].setAttribute("aria-pressed", String(layoutMode === key));
+    });
+  };
+
   const syncControls = () => {
     prevBtn.disabled = totalPages === 0 || currentPage <= 1;
     nextBtn.disabled = totalPages === 0 || currentPage >= totalPages;
@@ -174,18 +202,10 @@ export function mountPdfReader(
     zoomOutBtn.disabled = !fitWidth && manualScale <= MIN_ZOOM + 0.01;
     zoomInBtn.disabled = !fitWidth && manualScale >= MAX_ZOOM - 0.01;
     syncToneButtons();
+    syncLayoutButtons();
   };
 
-  const renderPage = async (pageNum: number) => {
-    if (!pdfDoc || disposed) return;
-    if (activeRenderCancel) {
-      activeRenderCancel();
-      activeRenderCancel = null;
-    }
-
-    const page = await pdfDoc.getPage(pageNum);
-    if (disposed) return;
-
+  const renderCanvasPage = async (page: PdfPageLike, targetCanvas: HTMLCanvasElement) => {
     const baseViewport = page.getViewport({ scale: 1 });
     const availableWidth = Math.max(260, stage.clientWidth - 24);
     const computedScale = fitWidth
@@ -199,33 +219,90 @@ export function mountPdfReader(
     const viewport = page.getViewport({ scale: computedScale });
     const dpr = Math.min(2.5, Math.max(1, window.devicePixelRatio || 1));
 
-    canvas.width = Math.max(1, Math.floor(viewport.width * dpr));
-    canvas.height = Math.max(1, Math.floor(viewport.height * dpr));
-    canvas.style.width = `${Math.floor(viewport.width)}px`;
-    canvas.style.height = `${Math.floor(viewport.height)}px`;
+    targetCanvas.width = Math.max(1, Math.floor(viewport.width * dpr));
+    targetCanvas.height = Math.max(1, Math.floor(viewport.height * dpr));
+    targetCanvas.style.width = `${Math.floor(viewport.width)}px`;
+    targetCanvas.style.height = `${Math.floor(viewport.height)}px`;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = targetCanvas.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const task = page.render({ canvas, canvasContext: ctx, viewport });
+    const task = page.render({ canvas: targetCanvas, canvasContext: ctx, viewport });
     activeRenderCancel = () => task.cancel?.();
     await task.promise;
-    if (disposed) return;
-
     activeRenderCancel = null;
+  };
+
+  const renderPaged = async (pageNum: number, generation: number) => {
+    if (!pdfDoc || disposed) return;
+    continuousList.hidden = true;
+    continuousList.replaceChildren();
+    continuousFrames = [];
+
+    const page = await pdfDoc.getPage(pageNum);
+    if (disposed || generation !== renderGeneration) return;
+
+    await renderCanvasPage(page, canvas);
+    if (disposed || generation !== renderGeneration) return;
+
     statusBanner.hidden = true;
     frame.hidden = false;
     stage.scrollTop = 0;
   };
 
+  const renderContinuous = async (generation: number) => {
+    if (!pdfDoc || disposed) return;
+    frame.hidden = true;
+    continuousList.replaceChildren();
+    continuousFrames = [];
+
+    const items: Array<{ pageNum: number; pageCanvas: HTMLCanvasElement }> = [];
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      const pageFrame = document.createElement("div");
+      pageFrame.setAttribute("data-pdf-page-frame", "true");
+      pageFrame.setAttribute("data-pdf-page-number", String(pageNum));
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.setAttribute("data-pdf-canvas", "true");
+      pageFrame.append(pageCanvas);
+      continuousList.append(pageFrame);
+      continuousFrames.push(pageFrame);
+      items.push({ pageNum, pageCanvas });
+    }
+    statusBanner.hidden = true;
+    continuousList.hidden = false;
+
+    for (const item of items) {
+      if (disposed || generation !== renderGeneration) return;
+      const page = await pdfDoc.getPage(item.pageNum);
+      if (disposed || generation !== renderGeneration) return;
+      await renderCanvasPage(page, item.pageCanvas);
+    }
+  };
+
+  const renderCurrentView = () => {
+    if (!pdfDoc || disposed) return;
+    if (activeRenderCancel) {
+      activeRenderCancel();
+      activeRenderCancel = null;
+    }
+    const generation = ++renderGeneration;
+    if (layoutMode === "continuous") {
+      return renderContinuous(generation);
+    }
+    return renderPaged(currentPage, generation);
+  };
+
   const goToPage = (next: number) => {
     if (totalPages <= 0) return;
     const clamped = Math.max(1, Math.min(totalPages, next));
-    if (clamped === currentPage && !frame.hidden) return;
     currentPage = clamped;
     syncControls();
-    void renderPage(currentPage);
+    if (layoutMode === "continuous") {
+      continuousFrames[clamped - 1]?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      return;
+    }
+    void renderCurrentView();
   };
 
   prevBtn.addEventListener("click", () => goToPage(currentPage - 1));
@@ -244,26 +321,35 @@ export function mountPdfReader(
     fitWidth = false;
     manualScale = Math.max(MIN_ZOOM, Number((manualScale - ZOOM_STEP).toFixed(2)));
     syncControls();
-    void renderPage(currentPage);
+    void renderCurrentView();
   });
 
   zoomInBtn.addEventListener("click", () => {
     fitWidth = false;
     manualScale = Math.min(MAX_ZOOM, Number((manualScale + ZOOM_STEP).toFixed(2)));
     syncControls();
-    void renderPage(currentPage);
+    void renderCurrentView();
   });
 
   fitBtn.addEventListener("click", () => {
     fitWidth = true;
     syncControls();
-    void renderPage(currentPage);
+    void renderCurrentView();
   });
 
   (Object.keys(toneButtons) as PdfReadingTone[]).forEach((key) => {
     toneButtons[key].addEventListener("click", () => {
       tone = key;
       syncToneButtons();
+    });
+  });
+
+  (Object.keys(layoutButtons) as PdfLayoutMode[]).forEach((key) => {
+    layoutButtons[key].addEventListener("click", () => {
+      if (layoutMode === key) return;
+      layoutMode = key;
+      syncLayoutButtons();
+      void renderCurrentView();
     });
   });
 
@@ -289,7 +375,7 @@ export function mountPdfReader(
   if (typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => {
       if (fitWidth && pdfDoc && !disposed) {
-        void renderPage(currentPage);
+        void renderCurrentView();
       }
     });
     resizeObserver.observe(stage);
@@ -307,7 +393,7 @@ export function mountPdfReader(
       totalPages = Math.max(1, doc.numPages);
       currentPage = 1;
       syncControls();
-      return renderPage(1);
+      return renderCurrentView();
     })
     .catch((err) => {
       console.warn("[pdf-reader] failed to render PDF preview", err);

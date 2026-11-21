@@ -43,7 +43,7 @@ export function PdfReaderDialog({
           <DialogTitle>{resolvedTitle}</DialogTitle>
 
           <DialogDescription>
-            Use as setas para mudar de página, ajuste o zoom ou alterne o modo de leitura.
+            Alterne entre leitura paginada ou contínua, ajuste o zoom ou escolha o modo de conforto.
           </DialogDescription>
         </DialogHeader>
       </DialogContent>

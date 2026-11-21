@@ -66,6 +66,15 @@ describe("mountPdfReader", () => {
     expect(stage.getAttribute("data-pdf-tone")).toBe("dark");
     expect(dark.getAttribute("aria-pressed")).toBe("true");
 
+    const continuousBtn = host.querySelector<HTMLButtonElement>(
+      '[data-pdf-layout-btn="continuous"]',
+    )!;
+    continuousBtn.click();
+    expect(continuousBtn.getAttribute("aria-pressed")).toBe("true");
+    await vi.waitFor(() => {
+      expect(host.querySelectorAll("[data-pdf-continuous-list] canvas")).toHaveLength(3);
+    });
+
     cleanup();
     expect(fakePdf.destroy).toHaveBeenCalled();
   });
