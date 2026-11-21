@@ -1,0 +1,6 @@
+
+# O eslint le o arquivo direto do checkout. O `* text=auto` do repo normaliza o fim de linha
+# ao converter e o guarda de CRLF reescreve o arquivo de trabalho; entao a leitura do baseline
+# depende do conteudo que o checkout deixou, e do sistema que o deixou. Abaixo do padrao `-text`,
+# o arquivo entra e sai da arvore byte a byte, e o eslint o encontra em qualquer runner.
+eslint-suppressions.json -text
