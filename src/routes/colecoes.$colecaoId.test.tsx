@@ -9,6 +9,8 @@ import type { ColecaoResumo } from "@/types/application/colecoes/colecao-resumo"
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api-client";
+
 /**
  * A rota de uma coleção: a pasta abre com cabeçalho e posts guardados (o card do feed rende cada
  * um), guardar aceita link OU id e extrai o identificador, recusa do servidor aparece na linha
@@ -228,9 +230,71 @@ describe("rota de uma coleção", () => {
   });
 
   it("coleção que não existe mais mostra o vazio traduzido", async () => {
-    mocks.get.mockRejectedValue({ code: "COLECAO_NOT_FOUND" });
+    mocks.get.mockRejectedValue(new ApiError(404, "COLECAO_NOT_FOUND", "Coleção não encontrada."));
     await render();
 
     expect(document.body.textContent).toContain(texts.colecoes.naoEncontrado);
+  });
+
+  it("falha de leitura não vira 'não encontrado': a pessoa vê o erro e tenta de novo", async () => {
+    mocks.get.mockRejectedValueOnce(
+      new ApiError(0, "SESSION_CHECK_UNAVAILABLE", "Não foi possível confirmar sua sessão."),
+    );
+    await render();
+
+    expect(document.body.textContent).toContain(texts.colecoes.erroLeitura);
+    expect(document.body.textContent).not.toContain(texts.colecoes.naoEncontrado);
+    expect(botoes(texts.colecoes.tentarDeNovo).length).toBe(1);
+
+    mocks.get.mockResolvedValue(colecao());
+    await act(async () => botoes(texts.colecoes.tentarDeNovo)[0].click());
+    await settleMuito();
+
+    expect(document.body.textContent).toContain("card-do-feed:post_1");
+  });
+
+  const remover = async () => {
+    await act(async () => botoes(ds.remover)[0].click());
+    await settleMuito();
+    const dialogo = document.body.querySelector("[role='dialog']")!;
+    await act(async () =>
+      [...dialogo.querySelectorAll("button")]
+        .find((botao) => botao.textContent?.trim() === ds.remover)!
+        .click(),
+    );
+    await settleMuito();
+  };
+
+  it("remover a coleção apaga no servidor, avisa e volta para a lista", async () => {
+    mocks.remove.mockResolvedValue({ removed: true });
+    await render();
+
+    await remover();
+
+    expect(mocks.remove).toHaveBeenCalledWith("c-1");
+    expect(mocks.toast).toHaveBeenCalledWith(texts.colecoes.removido, "success");
+    expect(mocks.navigate).toHaveBeenCalled();
+  });
+
+  it("coleção que já sumiu: remover avisa sucesso e volta, em vez de dizer que falhou", async () => {
+    mocks.remove.mockRejectedValue(
+      new ApiError(404, "COLECAO_NOT_FOUND", "Coleção não encontrada."),
+    );
+    await render();
+
+    await remover();
+
+    expect(mocks.toast).toHaveBeenCalledWith(texts.colecoes.removido, "success");
+    expect(mocks.navigate).toHaveBeenCalled();
+  });
+
+  it("recusa de verdade ao remover fica com o aviso de erro e a tela na coleção", async () => {
+    mocks.remove.mockRejectedValue(new ApiError(500, "INTERNAL", "erro"));
+    await render();
+
+    await remover();
+
+    expect(mocks.toast).toHaveBeenCalledWith(texts.colecoes.erroRemover, "error");
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 });

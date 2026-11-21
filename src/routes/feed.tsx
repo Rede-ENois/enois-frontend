@@ -128,6 +128,7 @@ import { MentionTextarea } from "@/components/mention-textarea";
 import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { NightRestReminder } from "@/components/night-rest-reminder";
 import { PostCard } from "@/components/post-card";
+import { PdfAttachmentCard } from "@/components/post/pdf-attachment-card";
 import { PollComposer } from "@/components/post/poll-composer";
 import { ProfilePeek } from "@/components/profile/profile-peek";
 
@@ -432,7 +433,9 @@ export function Home() {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const mediaReady = media.every(
     (item) =>
-      item.type !== "image" || (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
+      item.type !== "image" ||
+      item.file.type === "application/pdf" ||
+      (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
   );
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [conductLessonOpen, setConductLessonOpen] = useState(false);
@@ -813,14 +816,15 @@ export function Home() {
     for (const file of files) {
       const isVideo = file.type.startsWith("video/");
       const isImage = file.type.startsWith("image/");
-      if (!isVideo && !isImage) continue;
+      const isPdf = file.type === "application/pdf";
+      if (!isVideo && !isImage && !isPdf) continue;
 
       const hasExistingImages = media.some((m) => m.type === "image");
       const hasExistingVideo = media.some((m) => m.type === "video");
 
       if (isVideo && (hasExistingImages || hasExistingVideo || media.length >= 1)) break;
-      if (isImage && hasExistingVideo) break;
-      if (isImage && media.length >= 4) break;
+      if ((isImage || isPdf) && hasExistingVideo) break;
+      if ((isImage || isPdf) && media.length >= 4) break;
 
       const preview = URL.createObjectURL(file);
       const item: MediaItem = {
@@ -1021,7 +1025,7 @@ export function Home() {
             <input
               ref={fileRef}
               type="file"
-              accept="image/*,video/*"
+              accept="image/*,video/*,application/pdf"
               multiple
               className="hidden"
               onChange={handleMediaSelect}
@@ -1204,11 +1208,19 @@ export function Home() {
                               active={mediaSpoiler}
                               label={texts.posts.mediaSpoiler.badge}
                             >
-                              <img
-                                src={previewUrl}
-                                alt=""
-                                className={`h-48 w-full object-cover bg-surface-1 ${item.moderationStatus === "prohibited" ? "scale-105 blur-lg" : ""}`}
-                              />
+                              {item.file.type === "application/pdf" && previewUrl ? (
+                                <PdfAttachmentCard
+                                  url={previewUrl}
+                                  title={item.file.name}
+                                  file={item.file}
+                                />
+                              ) : (
+                                <img
+                                  src={previewUrl}
+                                  alt=""
+                                  className={`h-48 w-full object-cover bg-surface-1 ${item.moderationStatus === "prohibited" ? "scale-105 blur-lg" : ""}`}
+                                />
+                              )}
                             </SpoilerPreview>
 
                             {item.moderationStatus === "prohibited" && (

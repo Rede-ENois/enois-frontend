@@ -6,6 +6,7 @@ import { EnoisProvider, type LinkProps } from "@rede-enois/design-system";
 
 import { isOwnMediaUrl, resolveCdnUrl, withImageKitOriginal } from "@/lib/api/media";
 import { clearFeedScroll } from "@/lib/feed-scroll-restoration";
+import { appPathOf } from "@/lib/link-preview/paths";
 
 /** Design system links navigate through the router; anything outside the app stays a plain anchor. */
 function RouterLink({ href, onClick, ...props }: LinkProps) {
@@ -49,6 +50,7 @@ export function DesignSystemProvider({ children, resolveMediaUrl }: DesignSystem
       resolveMediaUrl={resolveMediaUrl ?? resolveCdnUrl}
       resolveMediaOriginalUrl={withImageKitOriginal}
       isOwnMediaUrl={isOwnMediaUrl}
+      appPathOf={appPathOf}
       revealSensitiveMedia={revealSensitiveMedia}
     >
       {children}

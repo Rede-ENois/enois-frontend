@@ -52,6 +52,11 @@ vi.mock("@/lib/api", async (importOriginal) => {
     },
   };
 });
+// A casca segura o conteúdo até a conta chegar; aqui a conta é a do mock, já pronta.
+vi.mock("@/lib/current-user", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/current-user")>()),
+  useCurrentUser: () => ({ data: { id: "u1" }, isPending: false }),
+}));
 vi.mock("@/lib/use-auth", () => ({
   useAuth: () => ({ requireAuth: () => true, user: null }),
   useIsAuthenticated: () => true,

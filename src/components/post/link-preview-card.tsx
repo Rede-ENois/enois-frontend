@@ -7,8 +7,10 @@ import type { LinkPreviewCardProps } from "@/types/components/post/link-preview-
 import { resolveCdnUrl } from "@/lib/api/media";
 import { absoluteLinkUrl, internalPathOf } from "@/lib/link-preview/paths";
 import { linkPreviewQueryOptions } from "@/lib/link-preview/query";
+import { isPdfUrl } from "@/lib/pdf/pdf-url";
 
 import { domainOf, labelOf, safeImageUrl, targetOf } from "./link-preview-card.helpers";
+import { PdfAttachmentCard } from "./pdf-attachment-card";
 
 /**
  * O cartão de um link publicado num post ou comentário.
@@ -26,6 +28,10 @@ export function LinkPreviewCard({ url, compact = false }: LinkPreviewCardProps) 
   });
 
   if (!absolute) return null;
+
+  if (isPdfUrl(absolute)) {
+    return <PdfAttachmentCard url={absolute} title={previewData?.title?.trim() ?? null} />;
+  }
 
   const preview = previewData ?? null;
 

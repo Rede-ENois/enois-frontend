@@ -1,7 +1,13 @@
 import { texts } from "@/texts";
 import { describe, expect, it, vi } from "vitest";
 
-import { mediaApi, mediaUploadResponseError, resolveCdnUrl, withImageKitOriginal } from "./media";
+import {
+  mediaApi,
+  mediaUploadResponseError,
+  resolveCdnUrl,
+  resolveUploadTarget,
+  withImageKitOriginal,
+} from "./media";
 
 describe("mediaUploadResponseError", () => {
   it("preserves the API code and maps the moderation message", () => {
@@ -74,6 +80,27 @@ describe("withImageKitOriginal", () => {
 
   it("resolveCdnUrl não duplica a barra em caminho relativo", () => {
     expect(resolveCdnUrl("/a/b.png")).not.toContain("//a/b");
+  });
+
+  it("resolveCdnUrl normaliza URL de storage em localhost para caminho relativo em dev", () => {
+    const originalWindow = globalThis.window;
+    try {
+      vi.stubGlobal("window", {
+        location: { href: "http://localhost:5173/feed", hostname: "localhost" },
+      });
+      expect(resolveCdnUrl("http://localhost:8082/api/storage/uploads/media_123/doc.pdf")).toBe(
+        "/api/storage/uploads/media_123/doc.pdf",
+      );
+      expect(resolveCdnUrl("http://127.0.0.1:8081/storage/uploads/media_123/doc.pdf")).toBe(
+        "/api/storage/uploads/media_123/doc.pdf",
+      );
+    } finally {
+      if (originalWindow === undefined) {
+        vi.unstubAllGlobals();
+      } else {
+        vi.stubGlobal("window", originalWindow);
+      }
+    }
   });
 });
 
@@ -163,6 +190,83 @@ describe("uploadToSignedUrl", () => {
     await vi.waitFor(() => expect(request.body).toBe(arquivo));
     request.responde(422, JSON.stringify({ code: "MEDIA_TOO_LARGE", message: "grande" }));
     await expect(promessa).rejects.toMatchObject({ status: 422, code: "MEDIA_TOO_LARGE" });
+    vi.unstubAllGlobals();
+  });
+
+  it("redireciona upload assinado de storage local para rota relativa com credenciais", async () => {
+    let openedMethod = "";
+    let openedUrl = "";
+    const request = fakeXhr();
+    request.open = (method: string, url: string) => {
+      request.opened = true;
+      openedMethod = method;
+      openedUrl = url;
+    };
+    vi.stubGlobal("XMLHttpRequest", function () {
+      return request;
+    });
+    vi.stubGlobal("window", {
+      location: {
+        href: "http://localhost:5173/feed",
+        hostname: "localhost",
+        origin: "http://localhost:5173",
+      },
+      localStorage: { getItem: () => null, setItem: () => {} },
+    });
+
+    const promessa = mediaApi.uploadToSignedUrl(
+      "http://localhost:8082/api/storage/uploads/media_test/file.pdf",
+      arquivo,
+      { "Content-Type": "application/pdf" },
+    );
+
+    await vi.waitFor(() => expect(request.body).toBe(arquivo));
+    expect(openedMethod).toBe("PUT");
+    expect(openedUrl).toBe("/api/storage/uploads/media_test/file.pdf");
+    expect(request.withCredentials).toBe(true);
+    expect(request.requestHeaders["X-CSRF-Protection"]).toBe("1");
+    expect(request.requestHeaders["Content-Type"]).toBe("application/pdf");
+
+    request.responde(200, "OK");
+    await promessa;
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("resolveUploadTarget", () => {
+  it("mantém bucket externo inalterado e sem flag toApi", () => {
+    vi.stubGlobal("window", {
+      location: {
+        href: "http://localhost:5173/feed",
+        hostname: "localhost",
+        origin: "http://localhost:5173",
+      },
+      localStorage: { getItem: () => null, setItem: () => {} },
+    });
+    const result = resolveUploadTarget("https://s3.amazonaws.com/bucket/uploads/file.pdf");
+    expect(result).toEqual({
+      uploadUrl: "https://s3.amazonaws.com/bucket/uploads/file.pdf",
+      toApi: false,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("reescreve URL local para proxy da API com toApi ativo em ambiente dev", () => {
+    vi.stubGlobal("window", {
+      location: {
+        href: "http://localhost:5173/feed",
+        hostname: "localhost",
+        origin: "http://localhost:5173",
+      },
+      localStorage: { getItem: () => null, setItem: () => {} },
+    });
+    const result = resolveUploadTarget(
+      "http://localhost:8082/api/storage/uploads/media_f626af52/file.pdf",
+    );
+    expect(result).toEqual({
+      uploadUrl: "/api/storage/uploads/media_f626af52/file.pdf",
+      toApi: true,
+    });
     vi.unstubAllGlobals();
   });
 });

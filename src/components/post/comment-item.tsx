@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { COMMENT_MAX_LENGTH } from "@/constants/post-content-limits";
 import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
@@ -218,7 +219,7 @@ export function CommentItem({
           value={value}
           onChange={(next) => onChange(next)}
           rows={3}
-          maxLength={1024}
+          maxLength={COMMENT_MAX_LENGTH}
           className="rounded-lg border border-border-soft bg-surface-card px-3 py-2 text-sm font-normal"
           toolbar
           onSubmitShortcut={submit}
