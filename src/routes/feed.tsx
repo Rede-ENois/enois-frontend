@@ -433,7 +433,9 @@ export function Home() {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const mediaReady = media.every(
     (item) =>
-      item.type !== "image" || (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
+      item.type !== "image" ||
+      item.file.type === "application/pdf" ||
+      (item.moderationStatus === "allowed" && Boolean(item.mediaId)),
   );
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [conductLessonOpen, setConductLessonOpen] = useState(false);

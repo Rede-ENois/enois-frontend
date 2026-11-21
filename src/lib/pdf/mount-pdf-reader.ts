@@ -7,14 +7,19 @@ const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.2;
 
 async function defaultPdfLoader(url: string): Promise<PdfDocumentLike> {
-  const pdfjs = await import("pdfjs-dist");
-  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-      "pdfjs-dist/build/pdf.worker.min.mjs",
-      import.meta.url,
-    ).toString();
+  const [pdfjs, workerMod, response] = await Promise.all([
+    import("pdfjs-dist"),
+    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+    fetch(url),
+  ]);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
   }
-  const task = pdfjs.getDocument({ url, withCredentials: false });
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
+  }
+  const data = new Uint8Array(await response.arrayBuffer());
+  const task = pdfjs.getDocument({ data });
   return (await task.promise) as unknown as PdfDocumentLike;
 }
 
