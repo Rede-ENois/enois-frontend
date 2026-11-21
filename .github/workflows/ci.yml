@@ -36,6 +36,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Diagnóstico do baseline (temporário)
+        run: |
+          ls -la eslint-suppressions.json
+          node -e "const d=require('./eslint-suppressions.json');console.log('entradas',Object.keys(d).length);console.log('apoiar',JSON.stringify(d['src/routes/apoiar.tsx']))"
+          npx eslint --version
+          npx eslint --print-config src/routes/apoiar.tsx | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const d=JSON.parse(s);console.log('regras',JSON.stringify(Object.fromEntries(Object.entries(d.rules).filter(([k])=>k.includes('front-markup')||k==='no-restricted-syntax'))));console.log('linterOptions',JSON.stringify(d.linterOptions))})"
+
       # A divida que travava estes passos foi paga (o lint e o typecheck passam limpos
       # nas duas linhas), entao eles rodam aqui de verdade: sem o typecheck, um campo que a
       # API devolve nulo passa e quebra no navegador.
