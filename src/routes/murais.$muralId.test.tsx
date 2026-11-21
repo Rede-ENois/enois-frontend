@@ -9,6 +9,8 @@ import type { MuralResumo } from "@/types/application/murais/mural-resumo";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api-client";
+
 /**
  * A rota de um mural: o quadro abre com cabeçalho e publicações coladas (o card do feed rende
  * cada uma), colar aceita link OU id e extrai o identificador, recusa do servidor aparece na
@@ -261,9 +263,20 @@ describe("rota de um mural", () => {
   });
 
   it("mural que não existe mais mostra o vazio traduzido", async () => {
-    mocks.get.mockRejectedValue({ code: "MURAL_NOT_FOUND" });
+    mocks.get.mockRejectedValue(new ApiError(404, "MURAL_NOT_FOUND", "Mural não encontrado."));
     await render();
 
     expect(document.body.textContent).toContain(texts.murais.naoEncontrado);
+  });
+
+  it("falha de leitura não vira 'não encontrado': a pessoa vê o erro e tenta de novo", async () => {
+    mocks.get.mockRejectedValueOnce(
+      new ApiError(0, "SESSION_CHECK_UNAVAILABLE", "Não foi possível confirmar sua sessão."),
+    );
+    await render();
+
+    expect(document.body.textContent).toContain(texts.murais.erroLeitura);
+    expect(document.body.textContent).not.toContain(texts.murais.naoEncontrado);
+    expect(botoes(texts.murais.tentarDeNovo).length).toBe(1);
   });
 });
