@@ -1,0 +1,400 @@
+{
+  "checks": [
+    {
+      "name": "success",
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.253898089042012,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "success",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "empty",
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.532788482472978,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "empty",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "error",
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.532788482472978,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "error",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "recuperacao-consulta",
+      "width": 1280
+    },
+    {
+      "name": "long",
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.253898089042012,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "long",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "loading",
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.532788482472978,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "loading",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "modo-panico-inativo-recolhido-sem-mutacao",
+      "width": 1280
+    },
+    {
+      "name": "filtros-combinados-vazio-limpeza",
+      "width": 1280
+    },
+    {
+      "name": "cancelamento-devolve-foco-ao-botao",
+      "width": 1280
+    },
+    {
+      "name": "confirmacao",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "confirmacao-cancelamento-punicao-unica-refetch-foco",
+      "width": 1280,
+      "writes": [
+        {
+          "path": "/api/admin/reports/denuncia_ficticia_1/penalize",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "name": "erro-acao",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "falha-punicao-e-nova-tentativa",
+      "width": 1280
+    },
+    {
+      "name": "navegacao-aba-url-reload",
+      "width": 1280
+    },
+    {
+      "name": "conflito-409-reconcilia-sem-falso-sucesso",
+      "width": 1280
+    },
+    {
+      "name": "modo-panico-ativo-permanece-visivel",
+      "width": 1280
+    },
+    {
+      "name": "erro-modo-panico",
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.253898089042012,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "erro-modo-panico",
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "erro-modo-panico-recupera-sem-mutacao",
+      "width": 1280
+    },
+    {
+      "name": "erro-nao-contamina-confirmacao-nova",
+      "width": 1280
+    },
+    {
+      "name": "voto-encerra-caso-e-preserva-foco",
+      "width": 1280
+    },
+    {
+      "name": "moderador-sem-punicao-direta-voto-preservado",
+      "width": 1280
+    },
+    {
+      "name": "success",
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.253898089042012,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "success",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "empty",
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.532788482472978,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "empty",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "error",
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.532788482472978,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "error",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "recuperacao-consulta",
+      "width": 390
+    },
+    {
+      "name": "long",
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.253898089042012,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "long",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "loading",
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.532788482472978,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "loading",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "modo-panico-inativo-recolhido-sem-mutacao",
+      "width": 390
+    },
+    {
+      "name": "filtros-combinados-vazio-limpeza",
+      "width": 390
+    },
+    {
+      "name": "cancelamento-devolve-foco-ao-botao",
+      "width": 390
+    },
+    {
+      "name": "confirmacao",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "confirmacao-cancelamento-punicao-unica-refetch-foco",
+      "width": 390,
+      "writes": [
+        {
+          "path": "/api/admin/reports/denuncia_ficticia_1/penalize",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "name": "erro-acao",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "falha-punicao-e-nova-tentativa",
+      "width": 390
+    },
+    {
+      "name": "navegacao-aba-url-reload",
+      "width": 390
+    },
+    {
+      "name": "conflito-409-reconcilia-sem-falso-sucesso",
+      "width": 390
+    },
+    {
+      "name": "modo-panico-ativo-permanece-visivel",
+      "width": 390
+    },
+    {
+      "name": "erro-modo-panico",
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "minimumContrast": 6.253898089042012,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "erro-modo-panico",
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "minimumContrast": 6.364776219225387,
+      "contrastFailures": [],
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "erro-modo-panico-recupera-sem-mutacao",
+      "width": 390
+    },
+    {
+      "name": "erro-nao-contamina-confirmacao-nova",
+      "width": 390
+    },
+    {
+      "name": "voto-encerra-caso-e-preserva-foco",
+      "width": 390
+    },
+    {
+      "name": "moderador-sem-punicao-direta-voto-preservado",
+      "width": 390
+    }
+  ]
+}

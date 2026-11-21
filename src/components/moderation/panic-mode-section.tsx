@@ -11,7 +11,7 @@ import { moderationApi } from "@/lib/api";
  * botão (e o login) ficam fora do bloqueio, senão não haveria como desligar. O estado é
  * compartilhado entre os pods pelo backend.
  */
-export function PanicModeSection() {
+export function PanicModeSection({ compact = false }: { compact?: boolean }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -32,9 +32,12 @@ export function PanicModeSection() {
 
   return (
     <PanicModeSectionView
+      compact={compact}
       active={status.data?.active ?? false}
       envLocked={status.data?.envLocked ?? false}
-      loading={status.isLoading}
+      loading={status.isPending}
+      error={status.isError}
+      onRetry={() => void status.refetch()}
       pending={toggle.isPending}
       onActivate={() => toggle.mutate(true)}
       onDeactivate={() => toggle.mutate(false)}
