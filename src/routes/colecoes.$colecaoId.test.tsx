@@ -252,4 +252,49 @@ describe("rota de uma coleção", () => {
 
     expect(document.body.textContent).toContain("card-do-feed:post_1");
   });
+
+  const remover = async () => {
+    await act(async () => botoes(ds.remover)[0].click());
+    await settleMuito();
+    const dialogo = document.body.querySelector("[role='dialog']")!;
+    await act(async () =>
+      [...dialogo.querySelectorAll("button")]
+        .find((botao) => botao.textContent?.trim() === ds.remover)!
+        .click(),
+    );
+    await settleMuito();
+  };
+
+  it("remover a coleção apaga no servidor, avisa e volta para a lista", async () => {
+    mocks.remove.mockResolvedValue({ removed: true });
+    await render();
+
+    await remover();
+
+    expect(mocks.remove).toHaveBeenCalledWith("c-1");
+    expect(mocks.toast).toHaveBeenCalledWith(texts.colecoes.removido, "success");
+    expect(mocks.navigate).toHaveBeenCalled();
+  });
+
+  it("coleção que já sumiu: remover avisa sucesso e volta, em vez de dizer que falhou", async () => {
+    mocks.remove.mockRejectedValue(
+      new ApiError(404, "COLECAO_NOT_FOUND", "Coleção não encontrada."),
+    );
+    await render();
+
+    await remover();
+
+    expect(mocks.toast).toHaveBeenCalledWith(texts.colecoes.removido, "success");
+    expect(mocks.navigate).toHaveBeenCalled();
+  });
+
+  it("recusa de verdade ao remover fica com o aviso de erro e a tela na coleção", async () => {
+    mocks.remove.mockRejectedValue(new ApiError(500, "INTERNAL", "erro"));
+    await render();
+
+    await remover();
+
+    expect(mocks.toast).toHaveBeenCalledWith(texts.colecoes.erroRemover, "error");
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
 });
