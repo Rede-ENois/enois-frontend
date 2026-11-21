@@ -1,4 +1,7 @@
-/** Sancao como o usuario a ve (GET /me/sanctions). */
+import type { SanctionDeadline } from "./sanction-deadline";
+import type { SanctionEvidence } from "./sanction-evidence";
+
+/** Sanção como o titular a vê (GET /me/sanctions). */
 export type SanctionView = {
   id: string;
   userId: string;
@@ -8,6 +11,9 @@ export type SanctionView = {
   status: "ACTIVE" | "REMOVED";
   createdAt: string;
   removedAt: string | null;
-  /** Prazo de revisão da suspensão ativa (quando vira ban se não houver recurso aceito). */
-  dueAt: string | null;
+  deadline: SanctionDeadline;
+  evidence: SanctionEvidence;
+  canAppeal: boolean;
+  /** Campo de compatibilidade da QA; a apresentação usa o significado explícito de deadline. */
+  dueAt?: string | null;
 };

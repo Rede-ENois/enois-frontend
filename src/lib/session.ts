@@ -1,3 +1,4 @@
+import { hasSanctionAccess } from "@/stores/sanction-access.store";
 import type { SessionPayload } from "@/types/application/auth/session-payload";
 
 import { setAuthHint } from "./auth-hint";
@@ -9,7 +10,7 @@ const LEGACY_TOKEN_KEYS = ["session_token", "refresh_token"] as const;
 
 export function hasSessionFlag(): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem(SESSION_FLAG_KEY) === "1";
+  return localStorage.getItem(SESSION_FLAG_KEY) === "1" && !hasSanctionAccess();
 }
 
 /**

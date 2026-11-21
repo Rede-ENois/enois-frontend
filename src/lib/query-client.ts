@@ -1,5 +1,7 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
 
+import { invalidateSanctionSession, isSanctionAccessEvent } from "@/stores/sanction-access.store";
+
 import { SESSION_FLAG_KEY, isSessionKeyEvent } from "./session-key";
 
 let browserQueryClient: QueryClient | null = null;
@@ -40,7 +42,13 @@ export function registerBrowserQueryClient(queryClient: QueryClient) {
     if (event.storageArea !== localStorage) return;
     const sessionFlipped =
       event.key === SESSION_FLAG_KEY && (event.oldValue === null) !== (event.newValue === null);
-    if (event.key === null || isSessionKeyEvent(event) || sessionFlipped) {
+    if (
+      event.key === null ||
+      isSessionKeyEvent(event) ||
+      isSanctionAccessEvent(event) ||
+      sessionFlipped
+    ) {
+      invalidateSanctionSession();
       void queryClient.resetQueries();
     }
   });
@@ -55,5 +63,7 @@ export function getBrowserQueryClient() {
  * inteira: o que é privado some e o que está na tela é buscado de novo com a sessão nova.
  */
 export function resetSessionScopedData() {
+  if (typeof window === "undefined") return;
+  invalidateSanctionSession();
   void browserQueryClient?.resetQueries();
 }

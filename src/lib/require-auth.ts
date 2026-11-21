@@ -1,5 +1,7 @@
 import { redirect } from "@tanstack/react-router";
 
+import { hasSanctionAccess } from "@/stores/sanction-access.store";
+
 import { hasSessionFlag } from "./session";
 
 /**
@@ -31,6 +33,7 @@ const PROTECTED_ROUTES = [
   "/bloqueados",
   "/seguranca",
   "/conta",
+  "/penalidades",
   "/notificacoes",
   "/explorar",
   // A Colagem pede sessão na leitura (espaço de convivência): deep link também cai no login.
@@ -69,6 +72,7 @@ export function shouldLeaveLanding(
 /** Usado no `beforeLoad` das rotas: redireciona para o login quando nao ha sessao no cliente. */
 export function requireAuth() {
   if (typeof window === "undefined") return;
+  if (hasSanctionAccess()) throw redirect({ to: "/conta-suspensa" });
   if (!hasSessionFlag()) {
     throw redirect({ to: "/entrar", search: { tab: "login" } });
   }

@@ -32,6 +32,7 @@ import { z } from "zod";
 import { ApiError, authApi, clearSession } from "@/lib/api";
 import { anoAtual } from "@/lib/date/format";
 import { hasMinAge } from "@/lib/min-age";
+import { acceptAuthSession } from "@/lib/moderation/auth-access";
 import { landingPathForStoredUser } from "@/lib/onboarding";
 import { ogMetas } from "@/lib/seo";
 import { storeSession } from "@/lib/session";
@@ -643,6 +644,7 @@ function EmailPendingScreen({ email }: { email: string }) {
 }
 
 function LoginForm({ onDone, onForgot }: LoginFormProps) {
+  const navigate = useNavigate();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
@@ -670,7 +672,6 @@ function LoginForm({ onDone, onForgot }: LoginFormProps) {
     setErrors({});
     setFormError(null);
     setLoading(true);
-    clearSession();
     try {
       const result = await authApi.login({
         email: parsed.data.email,
@@ -690,7 +691,10 @@ function LoginForm({ onDone, onForgot }: LoginFormProps) {
         return;
       }
 
-      storeSession(result);
+      if (acceptAuthSession(result) === "SANCTIONS_ONLY") {
+        void navigate({ to: "/conta-suspensa", replace: true });
+        return;
+      }
       // E2E: sincroniza as chaves locais com o servidor (fire-and-forget).
       // Compara a chave publica local com a do servidor: se diferem, restaura do backup.
       // Garante que todos os devices usem o mesmo keypair sem re-configurar.
@@ -810,7 +814,7 @@ function LoginForm({ onDone, onForgot }: LoginFormProps) {
  * Segundo passo do login: código do aplicativo authenticator ou o código enviado por e-mail.
  * O backend devolve `method`, então a tela já sabe o que pedir (e oferece reenviar só no caso do e-mail).
  */
-function TwoFactorForm({
+export function TwoFactorForm({
   challenge,
   onDone,
 }: {
@@ -818,6 +822,7 @@ function TwoFactorForm({
   onDone: () => void;
 }) {
   const [code, setCode] = useState("");
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [resent, setResent] = useState(false);
@@ -830,7 +835,10 @@ function TwoFactorForm({
     setLoading(true);
     try {
       const result = await authApi.verifyTwoFactor(challenge.challengeId, code.trim());
-      storeSession(result);
+      if (acceptAuthSession(result) === "SANCTIONS_ONLY") {
+        void navigate({ to: "/conta-suspensa", replace: true });
+        return;
+      }
       onDone();
     } catch (err) {
       if (err instanceof ApiError && err.code === "TOO_MANY_ATTEMPTS") {

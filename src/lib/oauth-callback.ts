@@ -1,6 +1,7 @@
-import type { AuthUser } from "@/types/application/auth/auth-user";
+import { clearSanctionAccess, markSanctionAccess } from "@/stores/sanction-access.store";
+import type { OAuthLoginResult } from "@/types/application/auth/oauth-login-result";
 
-import { apiUrl, renewSession } from "./api-client";
+import { ApiError, apiUrl, clearSession, renewSession } from "./api-client";
 import { authApi } from "./api/auth";
 import { storeSession } from "./session";
 
@@ -25,12 +26,26 @@ export function oauthCallbackUrl(provider: string, code: string, state: string):
  * when the session did not hold (me failed or the refresh was refused), so the page shows the
  * login error instead of entering the app.
  */
-export async function finishOAuthLogin(): Promise<AuthUser | null> {
+export async function finishOAuthLogin(): Promise<OAuthLoginResult> {
   try {
     const user = await authApi.me();
+    clearSession();
+    clearSanctionAccess();
     storeSession({ user });
     return (await renewSession()) !== "refused" ? user : null;
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      error.status === 403 &&
+      ["ACCOUNT_SUSPENDED", "SESSION_RESTRICTED"].includes(error.code ?? "")
+    ) {
+      clearSession();
+      markSanctionAccess();
+      return { accessScope: "SANCTIONS_ONLY" };
+    }
+    if (error instanceof ApiError && [400, 401, 403].includes(error.status)) {
+      clearSession();
+    }
     return null;
   }
 }

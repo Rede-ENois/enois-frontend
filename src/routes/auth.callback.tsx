@@ -1,18 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { TwoFactorChallenge } from "@/types/application/auth/two-factor-challenge";
 import { Button } from "@rede-enois/design-system/ui";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
+import { authApi } from "@/lib/api/auth";
 import { finishOAuthLogin, oauthCallbackUrl } from "@/lib/oauth-callback";
 import { landingPathFor } from "@/lib/onboarding";
+
+import { TwoFactorForm } from "./entrar";
 
 const searchSchema = z.object({
   /** Cancelamento ou falha devolvidos pelo provedor (ver finishOAuthError no backend). */
   error: z.string().optional(),
+  status: z.string().optional(),
   provider: z.string().optional(),
   /** Chegam quando o redirect_uri registrado no provedor aponta para esta página (LinkedIn). */
   code: z.string().optional(),
@@ -30,6 +35,16 @@ function OAuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const handled = useRef(false);
+  const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
+  const finish = useCallback(() => {
+    setChallenge(null);
+    void finishOAuthLogin().then((result) => {
+      if (result && "accessScope" in result)
+        void navigate({ to: "/conta-suspensa", replace: true });
+      else if (result) void navigate({ to: landingPathFor(result), replace: true });
+      else setError(texts.auth.social.callbackError);
+    });
+  }, [navigate]);
 
   useEffect(() => {
     // O efeito roda duas vezes em dev (StrictMode); a troca é idempotente, mas evitamos repetir.
@@ -52,18 +67,26 @@ function OAuthCallback() {
       return;
     }
 
-    void finishOAuthLogin().then((user) => {
-      if (user) void navigate({ to: landingPathFor(user), replace: true });
-      else setError(texts.auth.social.callbackError);
-    });
-  }, [search, navigate]);
+    if (search.status === "two_factor_required") {
+      void authApi
+        .pendingTwoFactor()
+        .then((pending) => {
+          setChallenge({ ...pending, twoFactorRequired: true });
+        })
+        .catch(() => setError(texts.auth.social.callbackError));
+      return;
+    }
+    finish();
+  }, [search, finish]);
 
   return (
     <div className="grid min-h-screen place-items-center px-6">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <img src="/brand/mark-primary.svg" alt="Énóis" width="44" height="44" />
 
-        {error ? (
+        {challenge ? (
+          <TwoFactorForm challenge={challenge} onDone={finish} />
+        ) : error ? (
           <>
             <h1 className="mt-4 text-lg font-semibold tracking-tight">{error}</h1>
 
