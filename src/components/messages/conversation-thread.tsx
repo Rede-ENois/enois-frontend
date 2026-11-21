@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   type InfiniteData,
@@ -13,11 +13,16 @@ import { Link } from "@tanstack/react-router";
 import { texts } from "@/texts";
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { Message } from "@/types/application/message/message";
+import {
+  allTopicsInDesignSystem,
+  topicTextsMatchDesignSystem,
+} from "@/types/routes/messages/app-topic-messages";
 import type { ConversationThreadProps } from "@/types/routes/messages/conversation-thread-props";
 import type { SendMessageInput } from "@/types/routes/messages/send-message-input";
 import {
   type ConversationSendValues,
   ConversationThread as ConversationThreadView,
+  GroupAdminSection,
 } from "@rede-enois/design-system/domain";
 import { Button, useToast } from "@rede-enois/design-system/ui";
 import { Briefcase, Lock } from "lucide-react";
@@ -36,6 +41,8 @@ import { useMediaUpload } from "@/lib/use-media-upload";
 
 import { ConversationCallBar } from "../calls/conversation-call-bar";
 import { MessageBubble } from "./message-bubble";
+import { useGroupAdmin } from "./use-group-admin";
+import { useGroupTopics } from "./use-group-topics";
 import { useReplyNavigation } from "./use-reply-navigation";
 
 /** Tamanho que o app sempre usou; em modo lite cada página vem maior (menos idas ao servidor). */
@@ -65,6 +72,17 @@ export function ConversationThread({
     from: string;
     text: string;
   } | null>(null);
+  const isGroup = conversation.kind === "GROUP";
+  // Tópico aberto no grupo: `null` é a conversa inteira. Trocar de conversa volta para a
+  // conversa inteira — o tópico de um grupo não existe no outro.
+  const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+  useEffect(() => setActiveTopicId(null), [conversation.id]);
+  const topics = useGroupTopics(conversation.id, isGroup);
+  const group = useGroupAdmin(conversation.id, currentUserId, isGroup);
+  // O painel é do grupo com administração: conversa que não é grupo, ou que o backend ainda não
+  // trata como grupo (grupo de comunidade), não tem o que mostrar. A gestão dos tópicos segue o
+  // mesmo aval; a fileira dos tópicos é de todo mundo do grupo.
+  const showGroupAdmin = isGroup && group.panel !== undefined;
 
   // Paginado por cursor: a primeira pagina so traz as mensagens mais recentes — sem carregar as
   // anteriores as de semanas atras ficavam inalcancaveis.
@@ -311,8 +329,40 @@ export function ConversationThread({
       peer={peer}
       profileHref={profileHref}
       onBack={onBack}
+      // A tela guarda o texto dos tópicos: se o DS pedir uma chave que o app não tem, o typecheck para.
+      {...{ topicTextsMatchDesignSystem, allTopicsInDesignSystem }}
+      // Tópicos só no grupo: a conversa de duas pessoas não tem assunto, e a fileira não entra.
+      topics={isGroup ? topics.topics : undefined}
+      activeTopicId={activeTopicId}
+      onSelectTopic={setActiveTopicId}
+      topicsManager={showGroupAdmin && group.canManage}
+      topicsLoading={isGroup && topics.loading}
+      topicsError={topics.error}
+      topicsPending={topics.pending}
+      onCreateTopic={topics.onCreateTopic}
+      onRenameTopic={topics.onRenameTopic}
+      onArchiveTopic={topics.onArchiveTopic}
+      onReorderTopics={topics.onReorderTopics}
       banner={
         <div className="flex flex-col gap-2">
+          {showGroupAdmin ? (
+            <GroupAdminSection
+              groupTitle={conversation.title ?? texts.messages.group.panelTitle}
+              participants={group.participants}
+              isOwner={group.isOwner}
+              canManage={group.canManage}
+              pending={group.pending}
+              error={group.error}
+              onSearchCandidates={group.onSearchCandidates}
+              candidates={group.candidates}
+              candidatesLoading={group.candidatesLoading}
+              onAddMembers={group.onAddMembers}
+              onPromote={group.onPromote}
+              onDemote={group.onDemote}
+              onRemove={group.onRemove}
+            />
+          ) : null}
+
           {/* Só conversa de duas pessoas liga: grupo não cabe num telefone de dois lados. Em
               conversa profissional o banner também aparece — a chamada é entre as pessoas. */}
           {isDirect ? <ConversationCallBar conversationId={conversation.id} /> : null}

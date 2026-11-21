@@ -1,6 +1,9 @@
 import type { PageResponse } from "@/types/application/api/page-response";
 import type { Conversation } from "@/types/application/message/conversation";
 import type { CreateConversationInput } from "@/types/application/message/create-conversation-input";
+import type { GroupParticipantView } from "@/types/application/message/group-panel";
+import type { GroupPanelView } from "@/types/application/message/group-panel-view";
+import type { GroupTopic } from "@/types/application/message/group-topic";
 import type { Message } from "@/types/application/message/message";
 import type { InterfaceContext } from "@rede-enois/design-system/domain";
 
@@ -24,9 +27,15 @@ export const messagesApi = {
   getConversation: (conversationId: string) =>
     api.get<Conversation>(`/conversations/${conversationId}`),
 
-  listMessages: (conversationId: string, cursor?: string | null, limit = 50) =>
+  /** `topicId` restringe a página ao tópico do grupo; sem ele, a conversa inteira. */
+  listMessages: (
+    conversationId: string,
+    cursor?: string | null,
+    limit = 50,
+    topicId?: string | null,
+  ) =>
     api.get<PageResponse<Message>>(
-      `/conversations/${conversationId}/messages${buildQuery({ cursor, limit })}`,
+      `/conversations/${conversationId}/messages${buildQuery({ cursor, limit, topicId })}`,
     ),
 
   sendMessage: (
@@ -36,6 +45,7 @@ export const messagesApi = {
     mediaSpoiler = false,
     e2e?: { ciphertext: string; iv: string; encryptedKeys: Record<string, string> },
     replyToId?: string,
+    topicId?: string | null,
   ) =>
     api.post<Message>(`/conversations/${conversationId}/messages`, {
       text: e2e ? e2e.ciphertext : text,
@@ -43,6 +53,55 @@ export const messagesApi = {
       mediaSpoiler,
       ...(e2e ? { e2e: true, iv: e2e.iv, encryptedKeys: JSON.stringify(e2e.encryptedKeys) } : {}),
       ...(replyToId ? { replyToId } : {}),
+      ...(topicId ? { topicId } : {}),
+    }),
+
+  // --- painel do grupo: quem participa, o papel de cada um e o que só o dono faz ---
+
+  /** Papel e identidade de cada participante; `myRole` diz o que a pessoa pode fazer. */
+  groupPanel: (conversationId: string) =>
+    api.get<GroupPanelView>(`/conversations/${conversationId}/group/participants`),
+
+  addParticipant: (conversationId: string, userId: string) =>
+    api.post<GroupParticipantView>(`/conversations/${conversationId}/group/participants`, {
+      userId,
+    }),
+
+  removeParticipant: (conversationId: string, userId: string) =>
+    api.delete<{ status: string }>(`/conversations/${conversationId}/group/participants/${userId}`),
+
+  /** Promove a administrador (`ADMIN`) ou volta a membro (`MEMBER`). Só o dono muda papel. */
+  changeParticipantRole: (conversationId: string, userId: string, role: "ADMIN" | "MEMBER") =>
+    api.patch<GroupParticipantView>(
+      `/conversations/${conversationId}/group/participants/${userId}`,
+      { role },
+    ),
+
+  /** Chave de cada mensagem antiga já cifrada para a chave pública da pessoa nova. */
+  grantHistoryKeys: (conversationId: string, userId: string, keys: Record<string, string>) =>
+    api.post<{ granted: number }>(
+      `/conversations/${conversationId}/group/participants/${userId}/history-keys`,
+      { keys },
+    ),
+
+  // --- tópicos dentro do grupo (criar, renomear, arquivar e ordenar é do dono/admin) ---
+
+  listGroupTopics: (conversationId: string) =>
+    api.get<PageResponse<GroupTopic>>(`/conversations/${conversationId}/group/topics`),
+
+  createGroupTopic: (conversationId: string, name: string) =>
+    api.post<GroupTopic>(`/conversations/${conversationId}/group/topics`, { name }),
+
+  renameGroupTopic: (conversationId: string, topicId: string, name: string) =>
+    api.patch<GroupTopic>(`/conversations/${conversationId}/group/topics/${topicId}`, { name }),
+
+  archiveGroupTopic: (conversationId: string, topicId: string) =>
+    api.post<GroupTopic>(`/conversations/${conversationId}/group/topics/${topicId}/archive`),
+
+  /** A lista inteira numa nova ordem: precisa conter todos os tópicos, uma vez cada. */
+  reorderGroupTopics: (conversationId: string, topicIds: string[]) =>
+    api.post<PageResponse<GroupTopic>>(`/conversations/${conversationId}/group/topics/reorder`, {
+      topicIds,
     }),
 
   /** Reage a uma mensagem (o backend alterna: mesmo emoji remove). */

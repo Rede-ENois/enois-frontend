@@ -150,3 +150,46 @@ async function decryptWithConversationKey(
   }
   return await decryptMessage(message.text, message.iv!, key);
 }
+
+/**
+ * Concessão de histórico: a AES key de cada mensagem antiga do grupo, já cifrada para a chave
+ * pública de quem entrou depois. Só entram as mensagens cujo mapa ainda não tem a pessoa — as que
+ * já têm ela abre do mesmo jeito, e o servidor não conta de novo.
+ *
+ * Mensagem cujo texto não abre neste aparelho (sem cópia da chave para quem concede, sem chave
+ * local) fica de fora: é o mesmo limite de ler o histórico antigo, e a concessão não pode falhar
+ * por inteiro por causa dela.
+ */
+export async function historyKeysFor(
+  messages: Message[],
+  currentUserId: string,
+  recipientId: string,
+): Promise<Record<string, string>> {
+  // O backend devolve as chaves como JSON em texto na coluna: só o mapa serve para procurar quem
+  // ainda não tem a de uma mensagem (o texto do servidor abre na decifra, mas não indexa aqui).
+  const pending = messages.filter((msg) => {
+    const keys = msg.encryptedKeys;
+    return (
+      msg.e2e && keys !== null && typeof keys === "object" && !Object.hasOwn(keys, recipientId)
+    );
+  });
+  if (pending.length === 0) return {};
+  const [recipientKey, myPrivateKeys] = await Promise.all([
+    e2eApi.userPublicKey(recipientId).then((view) => view.publicKey),
+    getAllPrivateKeys(),
+  ]);
+  if (!recipientKey || myPrivateKeys.length === 0) return {};
+  const recipientPublicKey = await importPublicKey(recipientKey);
+  const keys: Record<string, string> = {};
+  for (const msg of pending) {
+    const wrappedForMe =
+      msg.encryptedKeys && typeof msg.encryptedKeys === "object"
+        ? msg.encryptedKeys[currentUserId]
+        : undefined;
+    if (!wrappedForMe) continue;
+    const aesKey = await unwrapForMe(wrappedForMe, myPrivateKeys);
+    if (!aesKey) continue;
+    keys[msg.id] = await encryptForRecipient(await exportSymmetricKey(aesKey), recipientPublicKey);
+  }
+  return keys;
+}

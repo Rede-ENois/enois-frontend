@@ -24,4 +24,6 @@ export type Message = {
   replyToId?: string | null;
   /** Dados da mensagem citada (preview do backend). */
   replyTo?: MessageReply | null;
+  /** Tópico do grupo em que a mensagem foi enviada; ausente nas mensagens sem tópico. */
+  topicId?: string | null;
 };

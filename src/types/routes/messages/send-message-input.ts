@@ -8,4 +8,6 @@ export type SendMessageInput = {
   mediaSpoiler?: boolean;
   e2e?: { ciphertext: string; iv: string; encryptedKeys: Record<string, string> };
   replyToId?: string;
+  /** Tópico aberto no momento do envio; a mensagem entra nele (sem tópico, na conversa). */
+  topicId?: string | null;
 };

@@ -3021,6 +3021,53 @@ export const texts = {
     businessDirectError: "Não foi possível abrir a conversa profissional. Tente novamente.",
     requireProfessionalProfile:
       "Ative o seu perfil profissional para iniciar uma conversa de trabalho.",
+    /** Painel do grupo; o `group-admin` do DS fala sozinho — aqui ficam só os avisos do app. */
+    group: {
+      panelTitle: "Administração do grupo",
+      pendingTitle: "Carregando o grupo",
+      removed: (name: string) => `${name} saiu do grupo.`,
+      removeError: "Não foi possível remover. Tente novamente.",
+      promoteDone: "Agora é administrador.",
+      demoteDone: "Agora é membro.",
+      roleError: "Não foi possível mudar o papel. Tente novamente.",
+      added: (name: string) => `${name} entrou no grupo.`,
+      addError: "Não foi possível adicionar. Tente novamente.",
+      /**
+       * Concessão de histórico: a chave das mensagens antigas vai junto com a entrada. Falhar não
+       * desfaz a entrada — a pessoa continua no grupo.
+       */
+      historyFailed:
+        "Entrou no grupo, mas não foi possível liberar o histórico antigo. Peça a chave a quem administra.",
+      unknownName: "Participante",
+    },
+    /** Mesmas chaves do `groupTopics` do DS: é o que as views de tópico leem para falar. */
+    groupTopics: {
+      title: "Tópicos",
+      empty: "Nenhum tópico ainda. Os tópicos separam os assuntos dentro do grupo.",
+      name: "Nome do tópico",
+      namePlaceholder: "Ex.: Jogatinas de sexta",
+      create: "Criar tópico",
+      rename: (name: string) => `Renomear o tópico ${name}`,
+      save: "Salvar nome",
+      cancel: "Cancelar",
+      archive: (name: string) => `Arquivar o tópico ${name}`,
+      confirmArchive: (name: string) =>
+        `Arquivar ${name}? As mensagens continuam guardadas, mas ninguém manda mais nele.`,
+      confirmArchiveAction: "Arquivar",
+      archived: "Arquivado",
+      close: "Fechar",
+      allTopics: "Todos os assuntos",
+      moveUp: (name: string) => `Mover o tópico ${name} para cima`,
+      moveDown: (name: string) => `Mover o tópico ${name} para baixo`,
+      historyNote: "As conversas de antes de os tópicos existirem ficam em Todos os assuntos.",
+      errors: {
+        generic: "Algo deu errado. Tente de novo.",
+        nameTaken: "Já existe um tópico com esse nome.",
+        invalidName: "O nome do tópico precisa ter de 1 a 60 caracteres.",
+        tooManyTopics: "O grupo atingiu o limite de tópicos.",
+        notManager: "Só o dono e os administradores mexem nos tópicos.",
+      },
+    },
   },
 
   developersChrome: {
