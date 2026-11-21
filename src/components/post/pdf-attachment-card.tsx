@@ -11,7 +11,15 @@ import { PdfReaderDialog } from "./pdf-reader-dialog";
  * Cartão de anexo/link PDF em publicações e comentários: abre o leitor interativo do app em vez
  * de quebrar como imagem ou jogar a pessoa para uma aba crua no celular.
  */
-export function PdfAttachmentCard({ url, title }: { url: string; title?: string | null }) {
+export function PdfAttachmentCard({
+  url,
+  title,
+  file,
+}: {
+  url: string;
+  title?: string | null;
+  file?: File;
+}) {
   const [open, setOpen] = useState(false);
   const label = title?.trim() || pdfFileNameOf(url);
 
@@ -30,7 +38,7 @@ export function PdfAttachmentCard({ url, title }: { url: string; title?: string 
         <BookOpen aria-hidden="true" />
       </Button>
 
-      <PdfReaderDialog open={open} onOpenChange={setOpen} url={url} title={label} />
+      <PdfReaderDialog open={open} onOpenChange={setOpen} url={url} title={label} file={file} />
     </>
   );
 }

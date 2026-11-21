@@ -1209,7 +1209,11 @@ export function Home() {
                               label={texts.posts.mediaSpoiler.badge}
                             >
                               {item.file.type === "application/pdf" && previewUrl ? (
-                                <PdfAttachmentCard url={previewUrl} title={item.file.name} />
+                                <PdfAttachmentCard
+                                  url={previewUrl}
+                                  title={item.file.name}
+                                  file={item.file}
+                                />
                               ) : (
                                 <img
                                   src={previewUrl}

@@ -6,19 +6,20 @@ const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.2;
 
-async function defaultPdfLoader(url: string): Promise<PdfDocumentLike> {
-  const [pdfjs, workerMod, response] = await Promise.all([
+async function defaultPdfLoader(url: string, file?: File): Promise<PdfDocumentLike> {
+  const [pdfjs, workerMod, data] = await Promise.all([
     import("pdfjs-dist/legacy/build/pdf.mjs"),
     import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url"),
-    fetch(url),
+    file
+      ? file.arrayBuffer().then((buf) => new Uint8Array(buf))
+      : fetch(url).then(async (response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return new Uint8Array(await response.arrayBuffer());
+        }),
   ]);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
     pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
   }
-  const data = new Uint8Array(await response.arrayBuffer());
   const task = pdfjs.getDocument({ data });
   return (await task.promise) as unknown as PdfDocumentLike;
 }
@@ -61,9 +62,9 @@ function makeActionLink(
  */
 export function mountPdfReader(
   host: HTMLElement,
-  options: { url: string; fileName: string; loadPdf?: PdfLoader },
+  options: { url: string; fileName: string; file?: File; loadPdf?: PdfLoader },
 ): () => void {
-  const { url, fileName, loadPdf = defaultPdfLoader } = options;
+  const { url, fileName, file, loadPdf = defaultPdfLoader } = options;
 
   let disposed = false;
   let pdfDoc: PdfDocumentLike | null = null;
@@ -312,7 +313,7 @@ export function mountPdfReader(
 
   syncControls();
 
-  void loadPdf(url)
+  void loadPdf(url, file)
     .then((doc) => {
       if (disposed) {
         void doc.destroy?.();
