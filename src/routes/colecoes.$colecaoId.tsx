@@ -122,8 +122,16 @@ function ColecaoAberta({ colecao }: { colecao: Awaited<ReturnType<typeof colecoe
       void queryClient.invalidateQueries({ queryKey: ["colecoes"] });
       void navigate({ to: "/colecoes" });
     },
-    onError: () => {
-      toast(texts.colecoes.erroRemover, "error");
+    // Coleção que já sumiu não é falha: o que a pessoa pediu — a pasta fora da lista — já é
+    // verdade; avisar erro aqui mandaria procurar um problema que não existe.
+    onError: (erro) => {
+      if (!quadroAusente(erro)) {
+        toast(texts.colecoes.erroRemover, "error");
+        return;
+      }
+      toast(texts.colecoes.removido, "success");
+      void queryClient.invalidateQueries({ queryKey: ["colecoes"] });
+      void navigate({ to: "/colecoes" });
     },
   });
 
