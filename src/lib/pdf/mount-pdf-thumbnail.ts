@@ -84,7 +84,14 @@ export function mountPdfThumbnail(
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+      try {
+        await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+      } catch (error: unknown) {
+        if ((error as { name?: string })?.name === "RenderingCancelledException") {
+          return;
+        }
+        throw error;
+      }
       if (disposed) return;
 
       fallbackBadge.hidden = true;

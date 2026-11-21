@@ -230,8 +230,16 @@ export function mountPdfReader(
 
     const task = page.render({ canvas: targetCanvas, canvasContext: ctx, viewport });
     activeRenderCancel = () => task.cancel?.();
-    await task.promise;
-    activeRenderCancel = null;
+    try {
+      await task.promise;
+    } catch (error: unknown) {
+      if ((error as { name?: string })?.name === "RenderingCancelledException") {
+        return;
+      }
+      throw error;
+    } finally {
+      activeRenderCancel = null;
+    }
   };
 
   const renderPaged = async (pageNum: number, generation: number) => {
