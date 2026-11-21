@@ -8,8 +8,8 @@ const ZOOM_STEP = 0.2;
 
 async function defaultPdfLoader(url: string): Promise<PdfDocumentLike> {
   const [pdfjs, workerMod, response] = await Promise.all([
-    import("pdfjs-dist"),
-    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+    import("pdfjs-dist/legacy/build/pdf.mjs"),
+    import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url"),
     fetch(url),
   ]);
   if (!response.ok) {
@@ -223,7 +223,7 @@ export function mountPdfReader(
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const task = page.render({ canvasContext: ctx, viewport });
+    const task = page.render({ canvas, canvasContext: ctx, viewport });
     activeRenderCancel = () => task.cancel?.();
     await task.promise;
     if (disposed) return;
@@ -324,7 +324,8 @@ export function mountPdfReader(
       syncControls();
       return renderPage(1);
     })
-    .catch(() => {
+    .catch((err) => {
+      console.warn("[pdf-reader] failed to render PDF preview", err);
       if (disposed) return;
       statusBanner.hidden = true;
       frame.hidden = true;
