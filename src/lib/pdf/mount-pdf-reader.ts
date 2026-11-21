@@ -3,13 +3,19 @@ import type { PdfLayoutMode } from "@/types/pdf/pdf-layout-mode";
 import type { PdfLoader } from "@/types/pdf/pdf-loader";
 import type { PdfPageLike } from "@/types/pdf/pdf-page-like";
 import type { PdfReadingTone } from "@/types/pdf/pdf-reading-tone";
+import type { PdfTextBlock } from "@/types/pdf/pdf-text-block";
 import type { PdfZoomMode } from "@/types/pdf/pdf-zoom-mode";
 
+import { extractPdfPageBlocks } from "./extract-pdf-page-blocks";
 import { loadPdfDocument } from "./load-pdf-document";
 
 const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.2;
+
+const MIN_TEXT_SCALE = 0.85;
+const MAX_TEXT_SCALE = 1.75;
+const TEXT_SCALE_STEP = 0.15;
 
 function makeButton(label: string, text: string, attr?: [string, string]): HTMLButtonElement {
   const btn = document.createElement("button");
@@ -43,9 +49,10 @@ function makeActionLink(
 }
 
 /**
- * Monta o leitor interativo de PDF dentro do elemento hospedeiro com zoom, ajuste à largura,
- * paginação acessível, modos de conforto visual (Original, Sépia, Noturno) e fallback caso o
- * servidor externo bloqueie CORS.
+ * Monta o leitor interativo de PDF dentro do elemento hospedeiro com modo de leitura fluida
+ * mobile-first (extrai e estrutura o conteúdo em títulos, parágrafos e listas como apps de
+ * leitura), visualização da folha original, ajuste de fonte/zoom, modos de conforto visual
+ * (Original, Sépia, Noturno) e fallback caso o servidor externo bloqueie CORS.
  */
 export function mountPdfReader(
   host: HTMLElement,
@@ -57,8 +64,9 @@ export function mountPdfReader(
   let pdfDoc: PdfDocumentLike | null = null;
   let currentPage = 1;
   let totalPages = 0;
-  let zoomMode: PdfZoomMode = "fit";
+  let zoomMode: PdfZoomMode = "comfort";
   let manualScale = 1;
+  let textScale = 1;
   let tone: PdfReadingTone = "normal";
   let layoutMode: PdfLayoutMode = "paged";
   let renderGeneration = 0;
@@ -68,25 +76,28 @@ export function mountPdfReader(
   const root = document.createElement("div");
   root.setAttribute("data-pdf-reader-root", "true");
 
-  // Barra superior: zoom, ajuste à largura, tom de leitura e download/nova aba.
+  // Barra superior: zoom/fonte, modo leitura fluida vs folha original, tom e download.
   const toolbar = document.createElement("div");
   toolbar.setAttribute("data-pdf-toolbar", "true");
 
   const zoomGroup = document.createElement("div");
   zoomGroup.setAttribute("data-pdf-group", "zoom");
-  const zoomOutBtn = makeButton("Diminuir zoom", "−", ["data-pdf-control", "zoom-out"]);
+  const zoomOutBtn = makeButton("Diminuir texto ou zoom", "−", ["data-pdf-control", "zoom-out"]);
   const zoomStatus = document.createElement("span");
   zoomStatus.setAttribute("data-pdf-zoom-label", "true");
-  zoomStatus.textContent = "Largura";
-  const zoomInBtn = makeButton("Aumentar zoom", "+", ["data-pdf-control", "zoom-in"]);
-  const fitBtn = makeButton("Ajustar à largura", "Ajustar", ["data-pdf-control", "fit"]);
-  const comfortBtn = makeButton("Modo texto confortável para celular", "Leitura", [
+  zoomStatus.textContent = "Leitura";
+  const zoomInBtn = makeButton("Aumentar texto ou zoom", "+", ["data-pdf-control", "zoom-in"]);
+  const comfortBtn = makeButton("Modo leitura fluida adaptada para celular", "Leitura", [
     "data-pdf-control",
     "comfort",
   ]);
-  fitBtn.setAttribute("aria-pressed", "true");
-  comfortBtn.setAttribute("aria-pressed", "false");
-  zoomGroup.append(zoomOutBtn, zoomStatus, zoomInBtn, fitBtn, comfortBtn);
+  const fitBtn = makeButton("Visualizar folha original ajustada à largura", "Ajustar", [
+    "data-pdf-control",
+    "fit",
+  ]);
+  comfortBtn.setAttribute("aria-pressed", "true");
+  fitBtn.setAttribute("aria-pressed", "false");
+  zoomGroup.append(zoomOutBtn, zoomStatus, zoomInBtn, comfortBtn, fitBtn);
 
   const toneGroup = document.createElement("div");
   toneGroup.setAttribute("data-pdf-group", "tone");
@@ -120,7 +131,7 @@ export function mountPdfReader(
 
   toolbar.append(zoomGroup, toneGroup, layoutGroup, linkGroup);
 
-  // Palco rolável central com o canvas da página (ou lista contínua de páginas).
+  // Palco rolável central com modo leitura fluida (reflow) ou canvas da folha original.
   const stage = document.createElement("div");
   stage.setAttribute("data-pdf-stage", "true");
   stage.setAttribute("data-pdf-tone", tone);
@@ -128,6 +139,10 @@ export function mountPdfReader(
   const statusBanner = document.createElement("p");
   statusBanner.setAttribute("data-pdf-status", "true");
   statusBanner.textContent = "Carregando documento…";
+
+  const reflowSlot = document.createElement("div");
+  reflowSlot.setAttribute("data-pdf-reflow-slot", "true");
+  reflowSlot.hidden = true;
 
   const frame = document.createElement("div");
   frame.setAttribute("data-pdf-page-frame", "true");
@@ -154,7 +169,7 @@ export function mountPdfReader(
   );
   fallback.append(fallbackText, fallbackActions);
 
-  stage.append(statusBanner, frame, continuousList, fallback);
+  stage.append(statusBanner, reflowSlot, frame, continuousList, fallback);
 
   // Barra inferior: paginação ergonômica para polegar (mobile) e teclado (desktop).
   const footer = document.createElement("div");
@@ -196,6 +211,13 @@ export function mountPdfReader(
     });
   };
 
+  const applyTextScaleToRenderedArticles = () => {
+    const contents = stage.querySelectorAll<HTMLElement>("[data-pdf-reader-content]");
+    contents.forEach((node) => {
+      node.style.fontSize = `calc(1.0625rem * ${textScale})`;
+    });
+  };
+
   const syncControls = () => {
     prevBtn.disabled = totalPages === 0 || currentPage <= 1;
     nextBtn.disabled = totalPages === 0 || currentPage >= totalPages;
@@ -208,12 +230,18 @@ export function mountPdfReader(
     if (zoomMode === "fit") {
       zoomStatus.textContent = "Largura";
     } else if (zoomMode === "comfort") {
-      zoomStatus.textContent = "Leitura";
+      zoomStatus.textContent =
+        Math.abs(textScale - 1) < 0.01 ? "Leitura" : `Texto ${Math.round(textScale * 100)}%`;
     } else {
       zoomStatus.textContent = `${Math.round(manualScale * 100)}%`;
     }
-    zoomOutBtn.disabled = zoomMode === "manual" && manualScale <= MIN_ZOOM + 0.01;
-    zoomInBtn.disabled = zoomMode === "manual" && manualScale >= MAX_ZOOM - 0.01;
+    if (zoomMode === "comfort") {
+      zoomOutBtn.disabled = textScale <= MIN_TEXT_SCALE + 0.01;
+      zoomInBtn.disabled = textScale >= MAX_TEXT_SCALE - 0.01;
+    } else {
+      zoomOutBtn.disabled = zoomMode === "manual" && manualScale <= MIN_ZOOM + 0.01;
+      zoomInBtn.disabled = zoomMode === "manual" && manualScale >= MAX_ZOOM - 0.01;
+    }
     syncToneButtons();
     syncLayoutButtons();
   };
@@ -262,6 +290,106 @@ export function mountPdfReader(
     }
   };
 
+  const extractBlocksFromPage = async (
+    page: PdfPageLike,
+    pageNum: number,
+  ): Promise<PdfTextBlock[]> => {
+    if (typeof page.getTextContent !== "function") {
+      return [];
+    }
+    try {
+      const textContent = await page.getTextContent();
+      return extractPdfPageBlocks(textContent?.items ?? [], pageNum);
+    } catch {
+      return [];
+    }
+  };
+
+  const buildReflowArticle = (
+    page: PdfPageLike,
+    pageNum: number,
+    blocks: PdfTextBlock[],
+  ): HTMLElement => {
+    const article = document.createElement("article");
+    article.setAttribute("data-pdf-reader-article", "true");
+    article.setAttribute("data-pdf-page-number", String(pageNum));
+
+    const header = document.createElement("div");
+    header.setAttribute("data-pdf-reader-header", "true");
+
+    const badge = document.createElement("span");
+    badge.setAttribute("data-pdf-reader-badge", "true");
+    badge.textContent = `Página ${pageNum} de ${totalPages}`;
+
+    const toggleOriginalBtn = makeButton(
+      "Alternar visualização da folha original desta página",
+      "Ver folha original",
+      ["data-pdf-toggle-original", String(pageNum)],
+    );
+    toggleOriginalBtn.setAttribute("aria-expanded", "false");
+    header.append(badge, toggleOriginalBtn);
+
+    const content = document.createElement("div");
+    content.setAttribute("data-pdf-reader-content", "true");
+    content.style.fontSize = `calc(1.0625rem * ${textScale})`;
+
+    let currentList: HTMLUListElement | null = null;
+    for (const block of blocks) {
+      if (block.kind === "list-item") {
+        if (!currentList) {
+          currentList = document.createElement("ul");
+          currentList.setAttribute("data-pdf-block", "list");
+          content.append(currentList);
+        }
+        const li = document.createElement("li");
+        li.setAttribute("data-pdf-block", "list-item");
+        li.textContent = block.text;
+        currentList.append(li);
+        continue;
+      }
+
+      currentList = null;
+      if (block.kind === "heading") {
+        const h2 = document.createElement("h2");
+        h2.setAttribute("data-pdf-block", "heading");
+        h2.textContent = block.text;
+        content.append(h2);
+      } else if (block.kind === "subheading") {
+        const h3 = document.createElement("h3");
+        h3.setAttribute("data-pdf-block", "subheading");
+        h3.textContent = block.text;
+        content.append(h3);
+      } else {
+        const p = document.createElement("p");
+        p.setAttribute("data-pdf-block", "paragraph");
+        p.textContent = block.text;
+        content.append(p);
+      }
+    }
+
+    const originalPreview = document.createElement("div");
+    originalPreview.setAttribute("data-pdf-original-preview", "true");
+    originalPreview.hidden = true;
+    const previewCanvas = document.createElement("canvas");
+    previewCanvas.setAttribute("data-pdf-canvas", "true");
+    originalPreview.append(previewCanvas);
+
+    let previewRendered = false;
+    toggleOriginalBtn.addEventListener("click", () => {
+      const showing = originalPreview.hidden;
+      originalPreview.hidden = !showing;
+      toggleOriginalBtn.setAttribute("aria-expanded", String(showing));
+      toggleOriginalBtn.textContent = showing ? "Ocultar folha original" : "Ver folha original";
+      if (showing && !previewRendered) {
+        previewRendered = true;
+        void renderCanvasPage(page, previewCanvas);
+      }
+    });
+
+    article.append(header, content, originalPreview);
+    return article;
+  };
+
   const renderPaged = async (pageNum: number, generation: number) => {
     if (!pdfDoc || disposed) return;
     continuousList.hidden = true;
@@ -270,6 +398,22 @@ export function mountPdfReader(
 
     const page = await pdfDoc.getPage(pageNum);
     if (disposed || generation !== renderGeneration) return;
+
+    if (zoomMode === "comfort") {
+      const blocks = await extractBlocksFromPage(page, pageNum);
+      if (disposed || generation !== renderGeneration) return;
+      if (blocks.length > 0) {
+        frame.hidden = true;
+        reflowSlot.replaceChildren(buildReflowArticle(page, pageNum, blocks));
+        statusBanner.hidden = true;
+        reflowSlot.hidden = false;
+        stage.scrollTop = 0;
+        return;
+      }
+    }
+
+    reflowSlot.hidden = true;
+    reflowSlot.replaceChildren();
 
     await renderCanvasPage(page, canvas);
     if (disposed || generation !== renderGeneration) return;
@@ -282,29 +426,47 @@ export function mountPdfReader(
   const renderContinuous = async (generation: number) => {
     if (!pdfDoc || disposed) return;
     frame.hidden = true;
+    reflowSlot.hidden = true;
+    reflowSlot.replaceChildren();
     continuousList.replaceChildren();
     continuousFrames = [];
 
-    const items: Array<{ pageNum: number; pageCanvas: HTMLCanvasElement }> = [];
+    const slots: Array<{ pageNum: number; container: HTMLElement }> = [];
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      const pageFrame = document.createElement("div");
-      pageFrame.setAttribute("data-pdf-page-frame", "true");
-      pageFrame.setAttribute("data-pdf-page-number", String(pageNum));
-      const pageCanvas = document.createElement("canvas");
-      pageCanvas.setAttribute("data-pdf-canvas", "true");
-      pageFrame.append(pageCanvas);
-      continuousList.append(pageFrame);
-      continuousFrames.push(pageFrame);
-      items.push({ pageNum, pageCanvas });
+      const slot = document.createElement("div");
+      slot.setAttribute("data-pdf-continuous-slot", String(pageNum));
+      slot.style.width = "100%";
+      slot.style.display = "flex";
+      slot.style.justifyContent = "center";
+      continuousList.append(slot);
+      continuousFrames.push(slot);
+      slots.push({ pageNum, container: slot });
     }
     statusBanner.hidden = true;
     continuousList.hidden = false;
 
-    for (const item of items) {
+    for (const item of slots) {
       if (disposed || generation !== renderGeneration) return;
       const page = await pdfDoc.getPage(item.pageNum);
       if (disposed || generation !== renderGeneration) return;
-      await renderCanvasPage(page, item.pageCanvas);
+
+      if (zoomMode === "comfort") {
+        const blocks = await extractBlocksFromPage(page, item.pageNum);
+        if (disposed || generation !== renderGeneration) return;
+        if (blocks.length > 0) {
+          item.container.replaceChildren(buildReflowArticle(page, item.pageNum, blocks));
+          continue;
+        }
+      }
+
+      const pageFrame = document.createElement("div");
+      pageFrame.setAttribute("data-pdf-page-frame", "true");
+      pageFrame.setAttribute("data-pdf-page-number", String(item.pageNum));
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.setAttribute("data-pdf-canvas", "true");
+      pageFrame.append(pageCanvas);
+      item.container.replaceChildren(pageFrame);
+      await renderCanvasPage(page, pageCanvas);
     }
   };
 
@@ -346,6 +508,12 @@ export function mountPdfReader(
   });
 
   zoomOutBtn.addEventListener("click", () => {
+    if (zoomMode === "comfort" && stage.querySelector("[data-pdf-reader-content]")) {
+      textScale = Math.max(MIN_TEXT_SCALE, Number((textScale - TEXT_SCALE_STEP).toFixed(2)));
+      applyTextScaleToRenderedArticles();
+      syncControls();
+      return;
+    }
     zoomMode = "manual";
     manualScale = Math.max(MIN_ZOOM, Number((manualScale - ZOOM_STEP).toFixed(2)));
     syncControls();
@@ -353,6 +521,12 @@ export function mountPdfReader(
   });
 
   zoomInBtn.addEventListener("click", () => {
+    if (zoomMode === "comfort" && stage.querySelector("[data-pdf-reader-content]")) {
+      textScale = Math.min(MAX_TEXT_SCALE, Number((textScale + TEXT_SCALE_STEP).toFixed(2)));
+      applyTextScaleToRenderedArticles();
+      syncControls();
+      return;
+    }
     zoomMode = "manual";
     manualScale = Math.min(MAX_ZOOM, Number((manualScale + ZOOM_STEP).toFixed(2)));
     syncControls();
@@ -367,6 +541,7 @@ export function mountPdfReader(
 
   comfortBtn.addEventListener("click", () => {
     zoomMode = "comfort";
+    textScale = 1;
     syncControls();
     void renderCurrentView();
   });
@@ -374,7 +549,12 @@ export function mountPdfReader(
   let lastTapTime = 0;
   stage.addEventListener("pointerup", (event) => {
     const target = event.target as HTMLElement | null;
-    if (target?.closest("button") || target?.closest("a") || target?.closest("input")) {
+    if (
+      target?.closest("button") ||
+      target?.closest("a") ||
+      target?.closest("input") ||
+      target?.closest("[data-pdf-reader-content]")
+    ) {
       return;
     }
     if (event.button !== 0) return;
@@ -426,7 +606,12 @@ export function mountPdfReader(
   let resizeObserver: ResizeObserver | null = null;
   if (typeof ResizeObserver !== "undefined") {
     resizeObserver = new ResizeObserver(() => {
-      if (zoomMode !== "manual" && pdfDoc && !disposed) {
+      if (
+        zoomMode !== "manual" &&
+        pdfDoc &&
+        !disposed &&
+        !stage.querySelector("[data-pdf-reader-article]")
+      ) {
         void renderCurrentView();
       }
     });
@@ -452,6 +637,7 @@ export function mountPdfReader(
       if (disposed) return;
       statusBanner.hidden = true;
       frame.hidden = true;
+      reflowSlot.hidden = true;
       fallback.hidden = false;
     });
 
