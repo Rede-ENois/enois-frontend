@@ -10,10 +10,11 @@ import {
   MuralFormulario,
   MuralQuadro,
 } from "@rede-enois/design-system/domain";
-import { EmptyState, PageHeader, useToast } from "@rede-enois/design-system/ui";
+import { Button, EmptyState, PageHeader, useToast } from "@rede-enois/design-system/ui";
 
 import { muraisApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
+import { quadroAusente } from "@/lib/detalhe-de-quadro";
 import { mensagemDeErroMural as mensagemDeErro } from "@/lib/murais-helpers";
 import { postIdDoElo } from "@/lib/post-links";
 import { requireAuth } from "@/lib/require-auth";
@@ -45,11 +46,32 @@ function MuralPage() {
     );
   }
 
-  if (quadro.isError || !quadro.data) {
+  if (quadro.isError) {
+    // Só o 404 é "não existe mais": sessão que não chegou e servidor fora do ar ganham o erro com
+    // recarga, senão a pessoa vai procurar um problema que não é dela.
+    const missing = quadroAusente(quadro.error);
     return (
       <AppContainer>
         <PageHeader title={texts.murais.title} description={texts.murais.subtitle} />
-        <EmptyState title={texts.murais.naoEncontrado} />
+
+        <EmptyState
+          title={missing ? texts.murais.naoEncontrado : texts.murais.erroLeitura}
+          description={missing ? undefined : texts.murais.erroLeituraHint}
+        >
+          {!missing && (
+            <Button variant="outline" size="sm" onClick={() => void quadro.refetch()}>
+              {texts.murais.tentarDeNovo}
+            </Button>
+          )}
+        </EmptyState>
+      </AppContainer>
+    );
+  }
+
+  if (!quadro.data) {
+    return (
+      <AppContainer>
+        <PageHeader title={texts.murais.title} description={texts.murais.subtitle} />
       </AppContainer>
     );
   }
