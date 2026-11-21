@@ -2,27 +2,11 @@ import type { PdfDocumentLike } from "@/types/pdf/pdf-document-like";
 import type { PdfLoader } from "@/types/pdf/pdf-loader";
 import type { PdfReadingTone } from "@/types/pdf/pdf-reading-tone";
 
+import { loadPdfDocument } from "./load-pdf-document";
+
 const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.2;
-
-async function defaultPdfLoader(url: string, file?: File): Promise<PdfDocumentLike> {
-  const [pdfjs, workerMod, data] = await Promise.all([
-    import("pdfjs-dist/legacy/build/pdf.mjs"),
-    import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url"),
-    file
-      ? file.arrayBuffer().then((buf) => new Uint8Array(buf))
-      : fetch(url).then(async (response) => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return new Uint8Array(await response.arrayBuffer());
-        }),
-  ]);
-  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-    pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
-  }
-  const task = pdfjs.getDocument({ data });
-  return (await task.promise) as unknown as PdfDocumentLike;
-}
 
 function makeButton(label: string, text: string, attr?: [string, string]): HTMLButtonElement {
   const btn = document.createElement("button");
@@ -64,7 +48,7 @@ export function mountPdfReader(
   host: HTMLElement,
   options: { url: string; fileName: string; file?: File; loadPdf?: PdfLoader },
 ): () => void {
-  const { url, fileName, file, loadPdf = defaultPdfLoader } = options;
+  const { url, fileName, file, loadPdf = loadPdfDocument } = options;
 
   let disposed = false;
   let pdfDoc: PdfDocumentLike | null = null;
