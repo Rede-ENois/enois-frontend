@@ -33,7 +33,7 @@ export function AuthenticatedAppContainer({ children }: WithRequiredChildren) {
           <AppSidebar />
         </AppLayout.Sidebar>
 
-        <AppLayout.Main>{esperandoConta ? null : children}</AppLayout.Main>
+        <AppLayout.Main gap="md">{esperandoConta ? null : children}</AppLayout.Main>
       </AppLayout.Content>
 
       <AppLayout.Navigation>
