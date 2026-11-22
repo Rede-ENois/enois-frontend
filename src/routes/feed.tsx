@@ -62,9 +62,11 @@ import {
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowUp,
   BarChart3,
+  BookOpen,
   Briefcase,
   Calendar,
   CalendarClock,
@@ -77,12 +79,20 @@ import {
   FileText,
   Film,
   Flame,
+  FolderGit2,
   GraduationCap,
+  HelpCircle,
   Image,
   Layers,
+  Lightbulb,
   Loader2,
   MessageSquare,
+  Newspaper,
   RefreshCw,
+  SlidersHorizontal,
+  Smile,
+  Sparkles,
+  Star,
   UserPlus,
   X,
 } from "lucide-react";
@@ -192,6 +202,21 @@ const POST_TYPE_FILTERS = [
   { value: "POLL", label: "Enquetes" },
   { value: "COMPLAINT", label: "Reclamações" },
 ] as const;
+
+const POST_TYPE_ICONS: Record<string, typeof Sparkles> = {
+  "": Sparkles,
+  INSIGHT: Lightbulb,
+  QUESTION: HelpCircle,
+  PROJECT: FolderGit2,
+  NEWS: Newspaper,
+  TUTORIAL: BookOpen,
+  OPPORTUNITY: Briefcase,
+  REVIEW: Star,
+  DIVERTIDO: Smile,
+  ARTICLE: FileText,
+  POLL: BarChart3,
+  COMPLAINT: AlertCircle,
+};
 
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,
@@ -1642,7 +1667,7 @@ export function Home() {
                     : (TAB_LABELS[opcao] ?? opcao);
 
                 return (
-                  <TabsTrigger key={opcao} value={opcao} className="gap-2">
+                  <TabsTrigger key={opcao} value={opcao}>
                     <Icon className="h-4 w-4" aria-hidden="true" />
 
                     <>{label}</>
@@ -1653,17 +1678,24 @@ export function Home() {
           </Tabs>
 
           {tab === "ALL" && (
-            <PillRow label={texts.feed.tabs.type} className="pb-1">
-              {POST_TYPE_FILTERS.map((f) => (
-                <Pill
-                  key={f.value}
-                  size="sm"
-                  active={typeFilter === f.value}
-                  onClick={() => setTypeFilter(f.value)}
-                >
-                  <>{f.label}</>
-                </Pill>
-              ))}
+            <PillRow label={texts.feed.tabs.type} className="feed-type-pills">
+              {POST_TYPE_FILTERS.map((f) => {
+                const Icon = POST_TYPE_ICONS[f.value] ?? Sparkles;
+                const active = typeFilter === f.value;
+
+                return (
+                  <Pill
+                    key={f.value}
+                    size="sm"
+                    active={active}
+                    onClick={() => setTypeFilter(f.value)}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+
+                    <>{f.label}</>
+                  </Pill>
+                );
+              })}
             </PillRow>
           )}
 
