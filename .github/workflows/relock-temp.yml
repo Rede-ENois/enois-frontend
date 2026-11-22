@@ -1,0 +1,50 @@
+# Descartável: regenera o package-lock.json com o design system já publicado, usando o
+# GITHUB_TOKEN do CI (que tem read:packages). Sem esse token o lock não é regenerável aqui.
+name: relock temp
+
+on:
+  push:
+    branches: [chore/relock-ds-0-43-1-clean]
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  relock:
+    if: "!contains(github.event.head_commit.message, '[skip relock]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chore/relock-ds-0-43-1-clean
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+
+      - name: Regenerar o lock
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install "@rede-enois/design-system@0.43.1" --save --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Conferir que o lock ficou na versão pedida
+        run: |
+          node -e '
+            const lock = require("./package-lock.json");
+            const e = lock.packages["node_modules/@rede-enois/design-system"];
+            if (!e || e.version !== "0.43.1") throw new Error("lock fora da 0.43.1: " + JSON.stringify(e));
+            if (!e.resolved || !e.integrity) throw new Error("faltou resolved/integrity");
+            console.log("lock ok:", e.version, e.resolved);
+          '
+
+      - name: Commitar o lock
+        run: |
+          git config user.name "relock"
+          git config user.email "relock@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(deps): lock com o design system 0.43.1 [skip relock]"
+          git push origin HEAD:chore/relock-ds-0-43-1-clean
