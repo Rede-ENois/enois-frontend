@@ -1,0 +1,105 @@
+// @vitest-environment jsdom
+/**
+ * Gera a marcação da prova visual do #1100: monta o `RichText` de verdade do app (o mesmo
+ * componente da tela) em seis cenários e grava o HTML em `/tmp/prova-1100/corpo.html`.
+ *
+ * Não entra na suíte: copie para `src/prova-1100.test.tsx` e rode `npx vitest run
+ * src/prova-1100.test.tsx`; depois apague a cópia. O CSS e as capturas entram por fora, como o
+ * README ao lado descreve.
+ */
+import { act } from "react";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { EnoisProvider } from "@rede-enois/design-system";
+import { type Root, createRoot } from "react-dom/client";
+import { it, vi } from "vitest";
+
+import { isOwnMediaUrl } from "@/lib/api/media";
+
+import { RichText } from "@/components/post/rich-text";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const SAIDA = process.env.PROVA_1100_SAIDA ?? "/tmp/prova-1100";
+
+/** Caminhos do proxy, na forma que `GET /emotes/index` devolve. */
+const ENTRADAS = {
+  KEKW: "/emotes/image/BTTV/abc123?variant=full",
+  catJAM: "/emotes/image/FFZ/9?variant=full&a=1",
+};
+
+const CENARIOS: { titulo: string; conteudo: string; escrito?: string }[] = [
+  {
+    titulo: "frase com a figurinha no meio (:KEKW:)",
+    conteudo:
+      "Levei o KEKW do catálogo para o meio da frase e o texto continua correndo na mesma linha, sem moldura e sem bloco — é exatamente assim que o comentário deve ler.",
+  },
+  { titulo: "parágrafo só com a figurinha (:KEKW:)", conteudo: ":KEKW:" },
+  { titulo: "parágrafo só com a figurinha da É Nóis (👍)", conteudo: "👍" },
+  {
+    titulo: "figurinha da É Nóis no meio da frase (👍)",
+    conteudo: "Fui de 👍 na primeira reunião do time e ninguém entendeu nada, mas valeu.",
+  },
+  {
+    titulo: "texto anterior ao prefixo, código solto (KEKW)",
+    conteudo: "Fui de KEKW na primeira vez.",
+    escrito: "2026-10-30T12:00:00Z",
+  },
+  {
+    titulo: "frase sem figurinha (controle)",
+    conteudo:
+      "Levei o catálogo para o meio da frase e o texto continua correndo na mesma linha, sem moldura e sem bloco — é exatamente assim que o comentário deve ler.",
+  },
+];
+
+function fakeFetch(input: RequestInfo | URL) {
+  const url = new URL(String(input), "http://localhost");
+  const body = url.pathname.endsWith("/emotes/index")
+    ? { entries: ENTRADAS, generatedAt: "2026-10-29T00:00:00Z" }
+    : { code: undefined, message: undefined };
+  const texto = JSON.stringify(body);
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: "OK",
+    headers: new Headers({ "content-type": "application/json" }),
+    text: async () => texto,
+    json: async () => body,
+  });
+}
+
+it("grava a marcação dos cenários", async () => {
+  const { mkdirSync, writeFileSync } = await import("node:fs");
+  (globalThis as { localStorage: Storage }).localStorage.clear();
+  vi.stubGlobal("fetch", vi.fn(fakeFetch));
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root: Root = createRoot(host);
+
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={client}>
+        <EnoisProvider isOwnMediaUrl={isOwnMediaUrl}>
+          {CENARIOS.map((c) => (
+            <section key={c.titulo} data-titulo={c.titulo}>
+              <RichText content={c.conteudo} {...(c.escrito ? { writtenAt: c.escrito } : {})} />
+            </section>
+          ))}
+        </EnoisProvider>
+      </QueryClientProvider>,
+    );
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
+  mkdirSync(SAIDA, { recursive: true });
+  const corpo = host.innerHTML
+    .replaceAll('src="/api/', 'src="./public/')
+    .replaceAll('src="/', 'src="./public/');
+  writeFileSync(`${SAIDA}/corpo.html`, corpo);
+  act(() => root.unmount());
+  vi.unstubAllGlobals();
+});
