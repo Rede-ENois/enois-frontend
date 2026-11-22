@@ -305,7 +305,7 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
-    staleTime: 60_000,
+    staleTime: 20_000,
     // Post novo no topo nao invalida os objetos dos posts que nao mudaram: o memo do PostCard
     // deixa os outros de fora. Sem isso, replaceEqualDeep compara por posicao e cada card
     // re-renderiza quando alguem publica.
@@ -1658,8 +1658,8 @@ export function Home() {
             <h2 className="text-sm font-semibold text-text-strong">{texts.feed.tabs.corporate}</h2>
           )}
 
-          <Tabs value={tab} onValueChange={(val) => setTab(val as HomeTab)} className="w-full">
-            <TabsList className="scrollbar-hide flex w-full justify-start overflow-x-auto">
+          <Tabs value={tab} onValueChange={(val) => setTab(val as HomeTab)}>
+            <TabsList>
               {HOME_TABS.map((opcao) => {
                 const Icon = TAB_ICONS[opcao] ?? Layers;
                 const label =
@@ -1669,7 +1669,7 @@ export function Home() {
 
                 return (
                   <TabsTrigger key={opcao} value={opcao}>
-                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    <Icon size={16} aria-hidden="true" />
 
                     <>{label}</>
                   </TabsTrigger>
@@ -1679,7 +1679,7 @@ export function Home() {
           </Tabs>
 
           {tab === "ALL" && (
-            <PillRow label={texts.feed.tabs.type} className="feed-type-pills">
+            <PillRow label={texts.feed.tabs.type}>
               {POST_TYPE_FILTERS.map((f) => {
                 const Icon = POST_TYPE_ICONS[f.value] ?? Sparkles;
                 const active = typeFilter === f.value;
@@ -1691,7 +1691,7 @@ export function Home() {
                     active={active}
                     onClick={() => setTypeFilter(f.value)}
                   >
-                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <Icon size={14} aria-hidden="true" />
 
                     <>{f.label}</>
                   </Pill>
@@ -1710,7 +1710,7 @@ export function Home() {
                 type="button"
                 data-new-posts
                 onClick={arrivals.release}
-                className="fixed left-1/2 top-20 z-50 -translate-x-1/2 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg hover:brightness-110 active:scale-95 sm:top-24"
+                className="fixed left-1/2 top-20 z-50 animate-[slide-down_0.4s_ease-out_forwards] rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:brightness-110 active:scale-95 sm:top-24"
               >
                 <span className="flex items-center gap-1.5">
                   <ArrowUp className="h-3.5 w-3.5 animate-bounce" />

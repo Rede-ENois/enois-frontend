@@ -1,0 +1,36 @@
+{
+  "results": [
+    {
+      "name": "feed-social-1280",
+      "width": 1280,
+      "overflowX": 0,
+      "tabsCount": 0,
+      "pillsCount": 0,
+      "activeTab": null
+    },
+    {
+      "name": "feed-social-390",
+      "width": 390,
+      "overflowX": 0,
+      "tabsCount": 0,
+      "pillsCount": 0,
+      "activeTab": null
+    },
+    {
+      "name": "feed-prof-1280",
+      "width": 1280,
+      "overflowX": 0,
+      "tabsCount": 0,
+      "pillsCount": 0,
+      "activeTab": null
+    },
+    {
+      "name": "feed-prof-390",
+      "width": 390,
+      "overflowX": 0,
+      "tabsCount": 0,
+      "pillsCount": 0,
+      "activeTab": null
+    }
+  ]
+}
