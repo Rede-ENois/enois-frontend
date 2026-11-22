@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import type { DoacaoCopiaECola } from "@/types/application/doacoes/doacao-copia-e-cola";
-import { PIX_KEY, pixCopiaECola } from "@rede-enois/design-system/domain";
+import { ApoieWise, PIX_KEY, pixCopiaECola } from "@rede-enois/design-system/domain";
 import { Button, GithubIcon, useToast } from "@rede-enois/design-system/ui";
 import {
   BadgeCheck,
@@ -245,6 +245,9 @@ function Apoiar() {
           <DoacaoAnonima anonimoQr={anonimoQr} />
         )}
 
+        {/* De fora do Brasil: a Wise recebe, mas não devolve o comprovante que o selo exige. */}
+        <ApoieWise href={WISE_URL} />
+
         {/* Por que apoiar */}
         <section className="space-y-3">
           <h2 className="text-base font-medium text-text-strong">{textsApoie.porQue}</h2>
@@ -461,6 +464,21 @@ function DoacaoAnonima({ anonimoQr }: { anonimoQr: string | null }) {
   );
 }
 
+/** Página de pagamento do projeto na Wise (doação em dólar, de fora do Brasil). */
+const WISE_URL = "https://wise.com/pay/me/melissam4712";
+
+/**
+ * O QR é desenhado com a cor do texto forte do tema (violeta bem escuro no claro, quase preto no
+ * escuro) sobre branco fixo — o contraste que a câmera do banco espera, em qualquer um dos temas.
+ */
+function corDoQr(elemento: Element | null) {
+  return (
+    getComputedStyle(elemento ?? document.documentElement)
+      .getPropertyValue("--text-strong")
+      .trim() || "#0b0d12"
+  );
+}
+
 /** O montante da doação, em centavos, dentro do que o servidor aceita. */
 const VALORES_RAPIDOS = [500, 1000, 2500, 5000, 10000] as const;
 
@@ -470,6 +488,7 @@ const VALORES_RAPIDOS = [500, 1000, 2500, 5000, 10000] as const;
  * recebedor sai no dia seguinte, então a doação que não for confirmada aparece na fila.
  */
 function DoacaoLogada({ sessaoCarregando }: { sessaoCarregando: boolean }) {
+  const cartao = useRef<HTMLElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [valor, setValor] = useState<number>(2500);
@@ -508,7 +527,7 @@ function DoacaoLogada({ sessaoCarregando }: { sessaoCarregando: boolean }) {
     QRCode.toDataURL(codigo.pixCopyAndPaste, {
       width: 360,
       margin: 1,
-      color: { dark: "#0b0d12", light: "#ffffff" },
+      color: { dark: corDoQr(cartao.current), light: "#ffffff" },
     })
       .then(setQr)
       .catch(() => setQr(null));
@@ -544,7 +563,7 @@ function DoacaoLogada({ sessaoCarregando }: { sessaoCarregando: boolean }) {
   };
 
   return (
-    <section id="pix" className="surface-card space-y-4 p-5 sm:p-6">
+    <section ref={cartao} id="pix" className="surface-card space-y-4 p-5 sm:p-6">
       <div>
         <h2 className="text-base font-medium text-text-strong">{textsApoie.pixTitulo}</h2>
 
