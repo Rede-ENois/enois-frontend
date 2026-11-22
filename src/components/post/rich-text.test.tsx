@@ -179,4 +179,26 @@ describe("RichText com figurinhas", () => {
     expect(imagem).toContain("rounded-xl");
     expect(imagem).not.toContain("enois-figurinha");
   });
+
+  describe("texto escrito antes do prefixo `:` (#1100)", () => {
+    // Texto antigo guarda o código solto (`KEKW`); o mesmo código vira imagem tanto pelo índice do
+    // catálogo quanto pelo pacote É Nóis, e as duas chegadas precisam do mesmo desenho.
+    const ANTES_DO_PREFIXO = "2026-10-30T12:00:00Z";
+
+    it("a figurinha do catálogo sai na classe da figurinha", async () => {
+      const html = await render("oi KEKW", ANTES_DO_PREFIXO);
+      const imagem = html.match(/<img[^>]*>/)?.[0] ?? "";
+
+      expect(imagem).toContain(`src="${apiUrl(KEKW)}"`);
+      expect(imagem).toContain("enois-figurinha");
+    });
+
+    it("a figurinha da É Nóis sai na classe da figurinha", async () => {
+      const html = await render("que orgulho 👍", ANTES_DO_PREFIXO);
+      const imagem = html.match(/<img[^>]*>/)?.[0] ?? "";
+
+      expect(imagem).toContain("/emojis/enois/");
+      expect(imagem).toContain("enois-figurinha");
+    });
+  });
 });
