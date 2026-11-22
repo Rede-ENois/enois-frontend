@@ -209,7 +209,9 @@ describe("rota /agenda", () => {
       mocks.pendingInvitations.mockRejectedValue(new Error("offline"));
       await render();
 
-      expect(host.textContent).toContain("Almoço");
+      // No mês a célula mostra a posição e guarda o título no nome acessível (#1109).
+      const compromisso = host.querySelector('a[href="/agenda/cal_1"]');
+      expect(compromisso?.getAttribute("aria-label")).toContain("Almoço");
     });
 
     it("responder aceita o convite e recarrega a lista", async () => {
@@ -337,6 +339,70 @@ describe("rota /agenda", () => {
       expect(mocks.startSeries).toHaveBeenCalledWith("cal_novo", "MONTHLY");
       // A frase do erro é a da série, não a da gravação: o compromisso existe, a repetição não.
       expect(document.body.textContent).toContain("Não foi possível repetir o compromisso");
+    });
+  });
+
+  describe("mês no celular (#1109)", () => {
+    let root: Root;
+    let client: QueryClient;
+
+    const settle = () => act(() => new Promise<void>((done) => setTimeout(done, 0)));
+
+    /**
+     * Abre a tela no mês de novembro de 2026. O período vem da data do sistema, que é fixa aqui:
+     * sem isso o teste dependia de que mês fosse hoje.
+     */
+    const renderMes = async () => {
+      const host = document.createElement("div");
+      document.body.append(host);
+      root = createRoot(host);
+      await act(async () =>
+        root.render(
+          <QueryClientProvider client={client}>
+            <AgendaPage />
+          </QueryClientProvider>,
+        ),
+      );
+      await settle();
+      return host;
+    };
+
+    beforeEach(() => {
+      vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-11-18T12:00:00Z"));
+      mocks.list.mockReset();
+      mocks.conflicts.mockReset();
+      mocks.pendingInvitations.mockReset();
+      mocks.respond.mockReset();
+      mocks.create.mockReset();
+      mocks.startSeries.mockReset();
+      mocks.stopSeries.mockReset();
+      client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    });
+
+    afterEach(async () => {
+      await act(async () => root.unmount());
+      document.body.innerHTML = "";
+      client.clear();
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    });
+
+    it("o mês mostra o compromisso como posição no dia, não como título truncado", async () => {
+      mocks.list.mockResolvedValue([{ entry, owner: true, participation: "GOING" }]);
+      mocks.conflicts.mockResolvedValue([]);
+      mocks.pendingInvitations.mockResolvedValue([]);
+      const host = await renderMes();
+
+      expect(host.textContent, "o mês não foi desenhado").toContain("novembro");
+      const link = [...host.querySelectorAll("a")].find(
+        (anchor) => anchor.getAttribute("href") === "/agenda/cal_1",
+      );
+      expect(link, "o compromisso do dia não aparece na grade do mês").toBeDefined();
+      // O ponto numerado mantém o título no nome acessível e não repete o texto na célula.
+      expect(link!.textContent?.trim()).toBe("1");
+      expect(link!.getAttribute("aria-label")).toContain("Almoço");
     });
   });
 });
