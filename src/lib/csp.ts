@@ -20,6 +20,7 @@ export const CSP_NONCE_HEADER = "x-enois-csp-nonce";
  */
 export function contentSecurityPolicy(nonce: string | null): string {
   const inlineScripts = nonce ? `'nonce-${nonce}'` : "'unsafe-inline'";
+  const devConnect = nonce ? "" : " http://localhost:* http://127.0.0.1:*";
   return [
     "default-src 'self'",
     `script-src 'self' ${inlineScripts} https://challenges.cloudflare.com`,
@@ -27,7 +28,7 @@ export function contentSecurityPolicy(nonce: string | null): string {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
     "media-src 'self' https: blob:",
-    "connect-src 'self' https: wss: https://challenges.cloudflare.com",
+    `connect-src 'self' https: wss: https://challenges.cloudflare.com${devConnect}`,
     "frame-src https:",
     "frame-ancestors 'none'",
     "object-src 'none'",
