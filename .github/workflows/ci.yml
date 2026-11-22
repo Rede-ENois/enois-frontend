@@ -36,6 +36,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # O `npm ci` sai com 0 mesmo quando instala só uma parte do lock (já aconteceu: 493 pacotes
+      # de 599, sem o design system), e aí o typecheck reprova código que usa o pacote. A guarda
+      # falha aqui, com o motivo, em vez de lá.
+      - name: Guarda da instalação
+        run: npm ls --all > /tmp/arvore.txt 2>&1 || { tail -40 /tmp/arvore.txt; exit 1; }
+
       - name: Diagnóstico do baseline (temporário)
         run: |
           ls -la eslint-suppressions.json
