@@ -5,8 +5,12 @@ import type { PostView } from "@/types/application/feed/post-view";
 import { MediaGrid as MediaGridView } from "@rede-enois/design-system/domain";
 
 import { mediaApi } from "@/lib/api";
+import { resolveCdnUrl } from "@/lib/api/media";
 import { autoplayVideoRef } from "@/lib/feed/video-autoplay";
+import { isPdfMedia } from "@/lib/pdf/pdf-url";
 import { useLiteMode } from "@/lib/use-lite-mode";
+
+import { PdfAttachmentCard } from "./pdf-attachment-card";
 
 /**
  * Grade de mídias do post: usa as mídias que já vieram com o post (com tamanho, para o card nascer
@@ -40,13 +44,24 @@ export function MediaGrid({
     .filter((media) => media?.cdnUrl)
     .map((media) => media!);
 
+  const pdfItems = items.filter(isPdfMedia);
+  const mediaItems = items.filter((item) => !isPdfMedia(item));
+
   return (
-    <MediaGridView
-      items={items}
-      compact={compact}
-      mediaSpoiler={mediaSpoiler}
-      lite={lite}
-      registerVideoRef={autoplayVideoRef}
-    />
+    <>
+      {mediaItems.length > 0 && (
+        <MediaGridView
+          items={mediaItems}
+          compact={compact}
+          mediaSpoiler={mediaSpoiler}
+          lite={lite}
+          registerVideoRef={autoplayVideoRef}
+        />
+      )}
+      {pdfItems.map((pdf) => {
+        const pdfUrl = resolveCdnUrl(pdf.cdnUrl);
+        return pdfUrl ? <PdfAttachmentCard key={pdf.id} url={pdfUrl} /> : null;
+      })}
+    </>
   );
 }

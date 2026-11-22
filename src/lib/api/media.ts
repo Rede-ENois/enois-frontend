@@ -26,8 +26,61 @@ export function mediaUploadResponseError(status: number, body: string, path: str
 export function resolveCdnUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
   const cleaned = url.replace(/%2F/g, "/");
+  if (typeof window !== "undefined" && import.meta.env.DEV) {
+    try {
+      const parsed = new URL(cleaned, window.location.href);
+      const isLocal =
+        parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+      if (
+        isLocal &&
+        (parsed.pathname.startsWith("/api/storage/") || parsed.pathname.startsWith("/storage/"))
+      ) {
+        return parsed.pathname.startsWith("/api/") ? parsed.pathname : `/api${parsed.pathname}`;
+      }
+    } catch {
+      // Caminho relativo ou URL opaca: segue para os fallbacks comuns.
+    }
+  }
   if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) return cleaned;
   return `${IMAGEKIT_URL_ENDPOINT}${cleaned.startsWith("/") ? "" : "/"}${cleaned}`;
+}
+
+export function resolveUploadTarget(signedUrl: string): { uploadUrl: string; toApi: boolean } {
+  if (typeof window === "undefined") {
+    return { uploadUrl: signedUrl, toApi: false };
+  }
+
+  try {
+    const parsed = new URL(signedUrl, window.location.href);
+    const apiOrigin = new URL(apiUrl("/"), window.location.href).origin;
+    const isStoragePath =
+      parsed.pathname.startsWith("/api/storage/") || parsed.pathname.startsWith("/storage/");
+    const isLocal =
+      parsed.hostname === "localhost" ||
+      parsed.hostname === "127.0.0.1" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
+    const toApi =
+      parsed.origin === apiOrigin || (isStoragePath && (isLocal || Boolean(import.meta.env.DEV)));
+
+    if (toApi && isStoragePath && (isLocal || Boolean(import.meta.env.DEV))) {
+      const storagePath = parsed.pathname.startsWith("/api/")
+        ? parsed.pathname.slice(4)
+        : parsed.pathname;
+      return {
+        uploadUrl: `${apiUrl(storagePath)}${parsed.search}`,
+        toApi: true,
+      };
+    }
+
+    return { uploadUrl: signedUrl, toApi };
+  } catch {
+    return { uploadUrl: signedUrl, toApi: false };
+  }
 }
 
 /**
@@ -127,16 +180,11 @@ export const mediaApi = {
     onProgress?: (fracao: number) => void,
     signal?: AbortSignal,
   ) => {
-    // Only the API's own storage gateway gets the session cookies and CSRF header: a bucket URL
-    // signed by AWS would refuse a credentialed CORS request.
-    const toApi =
-      typeof window !== "undefined" &&
-      new URL(signedUrl, window.location.href).origin ===
-        new URL(apiUrl("/"), window.location.href).origin;
+    const { uploadUrl, toApi } = resolveUploadTarget(signedUrl);
 
     const resposta = await new Promise<{ status: number; body: string }>((resolve, reject) => {
       const request = new XMLHttpRequest();
-      request.open("PUT", signedUrl, true);
+      request.open("PUT", uploadUrl, true);
       request.withCredentials = toApi;
       for (const [nome, valor] of Object.entries(
         toApi ? { ...headers, ...sessionHeaders() } : headers,
@@ -156,14 +204,18 @@ export const mediaApi = {
       request.onload = () =>
         resolve({ status: request.status, body: request.responseText.slice(0, 4096) });
       request.onerror = () =>
-        reject(new Error(`Upload falhou: falha de rede ao falar com ${new URL(signedUrl).host}`));
+        reject(
+          new Error(
+            `Upload falhou: falha de rede ao falar com ${new URL(uploadUrl, window.location.href).host}`,
+          ),
+        );
       request.onabort = () => reject(new DOMException("Envio cancelado.", "AbortError"));
       request.send(file);
     });
 
     if (resposta.status < 200 || resposta.status >= 300) {
       if (toApi) {
-        const path = new URL(signedUrl, window.location.href).pathname;
+        const path = new URL(uploadUrl, window.location.href).pathname;
         throw mediaUploadResponseError(resposta.status, resposta.body, path);
       }
       throw new Error(`Upload falhou: ${resposta.status} ${resposta.body}`);
