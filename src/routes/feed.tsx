@@ -2,6 +2,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useRef,
@@ -304,7 +305,7 @@ function useFeed(tab: HomeTab, typeFilter?: string, resolved?: boolean, tabReady
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: authenticated && tabReady,
-    staleTime: 20_000,
+    staleTime: 60_000,
     // Post novo no topo nao invalida os objetos dos posts que nao mudaram: o memo do PostCard
     // deixa os outros de fora. Sem isso, replaceEqualDeep compara por posicao e cada card
     // re-renderiza quando alguem publica.
@@ -352,7 +353,7 @@ function useEvents(enabled: boolean) {
  * do topo, o React vê um tipo de elemento diferente ali e remonta o `PostCard`, perdendo estado
  * local (comentários abertos) sempre que uma publicação nova chega (issue #743).
  */
-export function FeedPostRow({
+export const FeedPostRow = memo(function FeedPostRow({
   post,
   index,
   feedTab,
@@ -368,7 +369,7 @@ export function FeedPostRow({
       <PostCard post={post} feedTab={feedTab} />
     </div>
   );
-}
+});
 
 // Exportada para o teste da guarda de duplo envio; a rota continua montando pelo Route.
 export function Home() {
