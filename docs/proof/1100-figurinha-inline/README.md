@@ -38,5 +38,6 @@ horizontalmente em nenhuma delas (`estoura: false` em todos os cenários medidos
 - `antes-1280.png` / `depois-1280.png` — no desktop, a frase da É Nóis caía em três linhas.
 - `antes-390.png` / `depois-390.png` — no telefone, o joinha ocupava quase uma tela.
 
-A captura usa o CSS do design system já com a classe. Enquanto o front não puxar `^0.43.2` com a
-classe, a tela continua com o desenho antigo — é por isso que a prop e a versão sobem juntas.
+A captura usa o CSS do design system já com a classe. Ela chegou publicada na **0.43.1**, e é essa
+a versão do lock desta branch — por isso a prop e a versão sobem juntas. (A 0.43.2 nunca existiu: o
+`main` do design system está em 0.43.0.)
