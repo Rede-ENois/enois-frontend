@@ -21,6 +21,23 @@ const CATJAM = "/emotes/image/FFZ/9?variant=full&a=1";
 let indiceFora = false;
 
 /**
+ * O mapa que o leitor recebe. Com ele o leitor sabe que o texto entre dois-pontos é figurinha e a
+ * desenha no tamanho do texto; sem ele, a imagem sai como mídia anexada (issue #1100).
+ */
+let mapaRecebido: Record<string, { url: string; alt: string }> | undefined;
+
+vi.mock("@rede-enois/design-system/domain", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@rede-enois/design-system/domain")>();
+  return {
+    ...real,
+    RichText: (props: Parameters<typeof real.RichText>[0]) => {
+      mapaRecebido = props.inlineStickers;
+      return <real.RichText {...props} />;
+    },
+  };
+});
+
+/**
  * O texto só conhece o índice do NOSSO backend; aqui um `fetch` falso devolve a mesma forma, então
  * o caminho testado é o de verdade (busca, índice, troca do código e desenho do RichText).
  */
@@ -57,6 +74,7 @@ let host: HTMLDivElement;
 
 beforeEach(() => {
   indiceFora = false;
+  mapaRecebido = undefined;
   // O índice é guardado no `localStorage`: sem limpar, uma cópia de outro teste vazaria para cá.
   window.localStorage.clear();
   vi.stubGlobal("fetch", vi.fn(fakeFetch));
@@ -94,6 +112,18 @@ async function render(content: string, writtenAt?: string) {
 }
 
 describe("RichText com figurinhas", () => {
+  it("o leitor recebe o mapa das figurinhas do catálogo e do pacote (#1100)", async () => {
+    await render("oi :KEKW: e :catJAM:, que orgulho 👍");
+
+    const mapa = mapaRecebido ?? {};
+    expect(mapa.KEKW?.url).toBe(apiUrl(KEKW));
+    expect(mapa.catJAM?.url).toBe(apiUrl(CATJAM));
+    // O pacote É Nóis também vira figurinha pelo código, não só pelo emoji.
+    expect(mapa.enois_like?.url).toContain("/emojis/enois/");
+    expect(mapa.enois_like?.alt).toBe("enois_like");
+    expect(mapa.inexistente).toBeUndefined();
+  });
+
   it("desenha a figurinha no meio da frase", async () => {
     const html = await render("oi :KEKW: tudo bem?");
 
