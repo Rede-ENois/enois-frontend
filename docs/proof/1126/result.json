@@ -3,34 +3,202 @@
     {
       "name": "feed-social-1280",
       "width": 1280,
+      "sha": "25ab3b3025e9d5802b854125f54d4a5ea8fc8b8cbbbb8ef1098890ad1132c6d7",
+      "url": "/feed",
       "overflowX": 0,
-      "tabsCount": 0,
-      "pillsCount": 0,
-      "activeTab": null
+      "overflowElements": [
+        {
+          "tag": "BUTTON",
+          "className": "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border ",
+          "role": null,
+          "right": 1310
+        },
+        {
+          "tag": "BUTTON",
+          "className": "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border ",
+          "role": null,
+          "right": 1407
+        },
+        {
+          "tag": "svg",
+          "className": "",
+          "role": null,
+          "right": 1343
+        },
+        {
+          "tag": "path",
+          "className": "",
+          "role": null,
+          "right": 1341
+        },
+        {
+          "tag": "path",
+          "className": "",
+          "role": null,
+          "right": 1341
+        }
+      ],
+      "tabsCount": 6,
+      "tabs": ["Tudo", "Para você", "Ainda não vi", "Em Alta", "Interações", "Corporativo"],
+      "activeTab": "Tudo",
+      "pillsCount": 12,
+      "pillsList": [
+        "Todos os tipos",
+        "Insights",
+        "Dúvidas",
+        "Projetos",
+        "Notícias",
+        "Tutoriais",
+        "Oportunidades",
+        "Avaliações",
+        "Diversão",
+        "Artigos",
+        "Enquetes",
+        "Reclamações"
+      ],
+      "pillsRowScrolls": true,
+      "pillsRowScrollWidth": 1366,
+      "pillsRowClientWidth": 614,
+      "visiblePillsCount": 8,
+      "visiblePills": [
+        "Todos os tipos",
+        "Insights",
+        "Dúvidas",
+        "Projetos",
+        "Notícias",
+        "Tutoriais",
+        "Oportunidades",
+        "Avaliações"
+      ]
     },
     {
       "name": "feed-social-390",
       "width": 390,
-      "overflowX": 0,
-      "tabsCount": 0,
-      "pillsCount": 0,
-      "activeTab": null
+      "sha": "a78f0ea763ad570049b8f50d22b2365a3578503d6d1e933d4d4340422514563b",
+      "url": "/feed",
+      "overflowX": 231,
+      "overflowElements": [
+        {
+          "tag": "BUTTON",
+          "className": "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-normal text-",
+          "role": "tab",
+          "right": 396
+        },
+        {
+          "tag": "BUTTON",
+          "className": "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-normal text-",
+          "role": "tab",
+          "right": 506
+        },
+        {
+          "tag": "svg",
+          "className": "",
+          "role": null,
+          "right": 428
+        },
+        {
+          "tag": "path",
+          "className": "",
+          "role": null,
+          "right": 427
+        },
+        {
+          "tag": "BUTTON",
+          "className": "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-normal text-",
+          "role": "tab",
+          "right": 621
+        }
+      ],
+      "tabsCount": 6,
+      "tabs": ["Tudo", "Para você", "Ainda não vi", "Em Alta", "Interações", "Corporativo"],
+      "activeTab": "Tudo",
+      "pillsCount": 12,
+      "pillsList": [
+        "Todos os tipos",
+        "Insights",
+        "Dúvidas",
+        "Projetos",
+        "Notícias",
+        "Tutoriais",
+        "Oportunidades",
+        "Avaliações",
+        "Diversão",
+        "Artigos",
+        "Enquetes",
+        "Reclamações"
+      ],
+      "pillsRowScrolls": true,
+      "pillsRowScrollWidth": 1389,
+      "pillsRowClientWidth": 390,
+      "visiblePillsCount": 3,
+      "visiblePills": ["Todos os tipos", "Insights", "Dúvidas"]
     },
     {
       "name": "feed-prof-1280",
       "width": 1280,
+      "sha": "1f13cd9f5e18736ef6d9846b1e743e869a66bc2dfee0f397f9df48ce7da7c3a8",
+      "url": "/feed?aba=CORPORATE",
       "overflowX": 0,
-      "tabsCount": 0,
+      "overflowElements": [],
+      "tabsCount": 6,
+      "tabs": ["Tudo", "Para você", "Ainda não vi", "Em Alta", "Interações", "Corporativo"],
+      "activeTab": "Corporativo",
       "pillsCount": 0,
-      "activeTab": null
+      "pillsList": [],
+      "pillsRowScrolls": false,
+      "pillsRowScrollWidth": 0,
+      "pillsRowClientWidth": 0,
+      "visiblePillsCount": 0,
+      "visiblePills": []
     },
     {
       "name": "feed-prof-390",
       "width": 390,
-      "overflowX": 0,
-      "tabsCount": 0,
+      "sha": "3130eeaed0b091f45f36a4ce2126af71457751f072920f7ab42e7280d5bbb292",
+      "url": "/feed?aba=CORPORATE",
+      "overflowX": 231,
+      "overflowElements": [
+        {
+          "tag": "BUTTON",
+          "className": "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-normal text-",
+          "role": "tab",
+          "right": 396
+        },
+        {
+          "tag": "BUTTON",
+          "className": "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-normal text-",
+          "role": "tab",
+          "right": 506
+        },
+        {
+          "tag": "svg",
+          "className": "",
+          "role": null,
+          "right": 428
+        },
+        {
+          "tag": "path",
+          "className": "",
+          "role": null,
+          "right": 427
+        },
+        {
+          "tag": "BUTTON",
+          "className": "flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-normal text-",
+          "role": "tab",
+          "right": 621
+        }
+      ],
+      "tabsCount": 6,
+      "tabs": ["Tudo", "Para você", "Ainda não vi", "Em Alta", "Interações", "Corporativo"],
+      "activeTab": "Corporativo",
       "pillsCount": 0,
-      "activeTab": null
+      "pillsList": [],
+      "pillsRowScrolls": false,
+      "pillsRowScrollWidth": 0,
+      "pillsRowClientWidth": 0,
+      "visiblePillsCount": 0,
+      "visiblePills": []
     }
   ]
 }
