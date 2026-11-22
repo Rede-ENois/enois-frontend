@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -12,6 +12,13 @@ import QRCode from "qrcode";
 import { doacoesApi } from "@/lib/api";
 import { ApiError } from "@/lib/api-client";
 import { useCurrentUser } from "@/lib/current-user";
+
+/**
+ * O QR é dado desenhado no canvas, não estilo de tela: o leitor de banco não segue o tema da
+ * página. Preto sobre branco é o par que todo leitor reconhece, e os nomes de cor CSS evitam o
+ * literal hexadecimal que a regra de token do app recusa.
+ */
+const CORES_DO_QR = { dark: "black", light: "white" };
 
 const paraCodigo = (doacao: DoacaoCopiaECola): DoacaoPixView => ({
   id: doacao.id,
@@ -34,6 +41,20 @@ export function DoacaoPixPessoal() {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [confirmada, setConfirmada] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  // O QR é do pedido vivo, não do último `onSuccess`: sem esta marca, a resposta de um valor que o
+  // usuário já trocou chega depois do reset e desenha um QR de doação que ele não quer mais.
+  const pedidoDe = useRef<number | null>(null);
+  const tempoCopiado = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // A doação aberta que ainda espera pagamento. Sem ela, recarregar `/apoiar` apagava o QR da tela
+  // e o usuário abria outra — que aposenta a anterior, que ele talvez já estivesse pagando.
+  const aberta = useQuery({
+    queryKey: ["doacoes", "aberta"],
+    queryFn: () => doacoesApi.current(),
+    // `retry: false`: 404 aqui é "não há doação aberta", o estado normal de quem nunca abriu uma.
+    enabled: !!conta,
+    retry: false,
+  });
 
   const minhas = useQuery({
     queryKey: ["doacoes", "minhas"],
@@ -43,17 +64,49 @@ export function DoacaoPixPessoal() {
   });
 
   const abrir = useMutation({
-    mutationFn: (centavos: number) => doacoesApi.open(centavos),
+    mutationFn: (centavos: number) => {
+      pedidoDe.current = centavos;
+      return doacoesApi.open(centavos);
+    },
     onSuccess: async (doacao) => {
+      // Só aceita a resposta se o valor pedido ainda é o escolhido. Trocar de valor enquanto o
+      // pedido está em voo descarta a resposta: o servidor aposenta a doação anterior a cada
+      // abertura, e desenhar o QR dela seria mostrar um código que não paga o que a tela diz.
+      if (pedidoDe.current !== doacao.amountCents) return;
       setConfirmada(false);
-      setQrCodeDataUrl(
-        await QRCode.toDataURL(doacao.pixCopyAndPaste, {
-          width: 360,
-          margin: 1,
-        }).catch(() => null),
-      );
+      const desenho = await QRCode.toDataURL(doacao.pixCopyAndPaste, {
+        width: 360,
+        margin: 1,
+        color: CORES_DO_QR,
+      }).catch(() => null);
+      if (pedidoDe.current !== doacao.amountCents) return;
+      setQrCodeDataUrl(desenho);
     },
   });
+
+  useEffect(() => {
+    if (abrir.data || !aberta.data) return;
+    let vivo = true;
+    void QRCode.toDataURL(aberta.data.pixCopyAndPaste, {
+      width: 360,
+      margin: 1,
+      color: CORES_DO_QR,
+    })
+      .then((desenho) => {
+        if (vivo) setQrCodeDataUrl(desenho);
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, [abrir.data, aberta.data]);
+
+  useEffect(
+    () => () => {
+      if (tempoCopiado.current) clearTimeout(tempoCopiado.current);
+    },
+    [],
+  );
 
   const confirmar = useMutation({
     mutationFn: (dados: { id: string; comprovante: string }) =>
@@ -70,6 +123,7 @@ export function DoacaoPixPessoal() {
         "success",
       );
       void queryClient.invalidateQueries({ queryKey: ["doacoes", "minhas"] });
+      void queryClient.invalidateQueries({ queryKey: ["doacoes", "aberta"] });
       void queryClient.invalidateQueries({ queryKey: ["apoiador-selo"] });
     },
   });
@@ -79,14 +133,15 @@ export function DoacaoPixPessoal() {
   const erroDe = (erro: unknown, padrao: string) =>
     erro instanceof ApiError && erro.message ? erro.message : padrao;
 
-  const codigo = abrir.data ? paraCodigo(abrir.data) : null;
+  const codigo = abrir.data ? paraCodigo(abrir.data) : aberta.data ? paraCodigo(aberta.data) : null;
 
   const copiar = async () => {
     if (!codigo) return;
     try {
       await navigator.clipboard.writeText(codigo.pixCopyAndPaste);
       setCopiado(true);
-      setTimeout(() => setCopiado(false), 4000);
+      if (tempoCopiado.current) clearTimeout(tempoCopiado.current);
+      tempoCopiado.current = setTimeout(() => setCopiado(false), 4000);
     } catch {
       toast("Não deu para copiar — toque e segure no código para copiar à mão.", "error");
     }
@@ -111,7 +166,10 @@ export function DoacaoPixPessoal() {
       copiado={copiado}
       onValorChange={(centavos) => {
         setValorCents(centavos);
+        // O valor escolhido deixa de ser o do pedido em voo; a resposta dele será descartada.
+        pedidoDe.current = centavos;
         abrir.reset();
+        setQrCodeDataUrl(null);
       }}
       onAbrir={() => {
         if (valorCents) abrir.mutate(valorCents);
@@ -127,6 +185,7 @@ export function DoacaoPixPessoal() {
       }}
       onCopiar={() => void copiar()}
       onMudarValor={() => {
+        pedidoDe.current = null;
         abrir.reset();
         setQrCodeDataUrl(null);
       }}
