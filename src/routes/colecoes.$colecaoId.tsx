@@ -9,10 +9,11 @@ import {
   ColecaoPostCartao,
   ColecaoQuadro,
 } from "@rede-enois/design-system/domain";
-import { EmptyState, PageHeader, useToast } from "@rede-enois/design-system/ui";
+import { Button, EmptyState, PageHeader, useToast } from "@rede-enois/design-system/ui";
 
 import { colecoesApi } from "@/lib/api";
 import { mensagemDeErroColecao } from "@/lib/colecoes-helpers";
+import { quadroAusente } from "@/lib/detalhe-de-quadro";
 import { postIdDoElo } from "@/lib/post-links";
 import { requireAuth } from "@/lib/require-auth";
 
@@ -46,11 +47,32 @@ function ColecaoPage() {
     );
   }
 
-  if (quadro.isError || !quadro.data) {
+  if (quadro.isError) {
+    // Só o 404 é "não existe mais": sessão que não chegou e servidor fora do ar ganham o erro com
+    // recarga, senão a pessoa vai procurar um problema que não é dela.
+    const missing = quadroAusente(quadro.error);
     return (
       <AppContainer>
         <PageHeader title={texts.colecoes.title} description={texts.colecoes.subtitle} />
-        <EmptyState title={texts.colecoes.naoEncontrado} />
+
+        <EmptyState
+          title={missing ? texts.colecoes.naoEncontrado : texts.colecoes.erroLeitura}
+          description={missing ? undefined : texts.colecoes.erroLeituraHint}
+        >
+          {!missing && (
+            <Button variant="outline" size="sm" onClick={() => void quadro.refetch()}>
+              {texts.colecoes.tentarDeNovo}
+            </Button>
+          )}
+        </EmptyState>
+      </AppContainer>
+    );
+  }
+
+  if (!quadro.data) {
+    return (
+      <AppContainer>
+        <PageHeader title={texts.colecoes.title} description={texts.colecoes.subtitle} />
       </AppContainer>
     );
   }
@@ -100,8 +122,16 @@ function ColecaoAberta({ colecao }: { colecao: Awaited<ReturnType<typeof colecoe
       void queryClient.invalidateQueries({ queryKey: ["colecoes"] });
       void navigate({ to: "/colecoes" });
     },
-    onError: () => {
-      toast(texts.colecoes.erroRemover, "error");
+    // Coleção que já sumiu não é falha: o que a pessoa pediu — a pasta fora da lista — já é
+    // verdade; avisar erro aqui mandaria procurar um problema que não existe.
+    onError: (erro) => {
+      if (!quadroAusente(erro)) {
+        toast(texts.colecoes.erroRemover, "error");
+        return;
+      }
+      toast(texts.colecoes.removido, "success");
+      void queryClient.invalidateQueries({ queryKey: ["colecoes"] });
+      void navigate({ to: "/colecoes" });
     },
   });
 

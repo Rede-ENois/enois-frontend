@@ -329,6 +329,9 @@ export const texts = {
     tirado: "Publicação tirada do mural.",
     naoAutorizado: "Só quem colou ou o dono do mural pode tirar a publicação.",
     naoEncontrado: "Esse mural não existe mais.",
+    erroLeitura: "Não foi possível abrir o mural. Tente de novo.",
+    erroLeituraHint: "O mural não sumiu: a resposta do servidor não chegou.",
+    tentarDeNovo: "Tentar de novo",
   },
 
   /** Seletor "para onde vai este post", no menu do card (murais e coleções). */
@@ -366,6 +369,9 @@ export const texts = {
     erroTirar: "Não foi possível tirar a publicação da coleção. Tente de novo.",
     tirado: "Publicação tirada da coleção.",
     naoEncontrado: "Essa coleção não existe mais.",
+    erroLeitura: "Não foi possível abrir a coleção. Tente de novo.",
+    erroLeituraHint: "A coleção não sumiu: a resposta do servidor não chegou.",
+    tentarDeNovo: "Tentar de novo",
   },
 
   /**
@@ -1556,6 +1562,7 @@ export const texts = {
         "Sem ele, não dá para saber como a publicação sairia. Confira a conexão e tente de novo.",
       professionalLoadErrorRetry: "Tentar de novo",
       corporateDestination: (name: string) => `Publicando como ${name}, no feed profissional.`,
+      alsoProfessional: "Publicar também no feed profissional",
     },
     personalizeFeed: "Personalizar feed",
     tabs: {

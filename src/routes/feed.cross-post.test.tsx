@@ -211,13 +211,16 @@ describe("publicar também no feed profissional", () => {
     localStorage.clear();
   });
 
-  it("com a oferta marcada, a publicação sai como BUSINESS", async () => {
+  it("nasce desmarcada e, quando marcada, a publicação sai como BUSINESS", async () => {
     await mount();
     expect(host.textContent).toContain("Publicar também no feed profissional");
     await act(async () =>
       host.querySelector<HTMLButtonElement>('[data-testid="pick-type"]')!.click(),
     );
     await write("novo projeto");
+    // O espelho no feed profissional é uma escolha: ninguém cai nele sem pedir.
+    expect(checkbox()?.checked).toBe(false);
+    await act(async () => checkbox()!.click());
     expect(checkbox()?.checked).toBe(true);
 
     await submit();
@@ -229,13 +232,13 @@ describe("publicar também no feed profissional", () => {
     });
   });
 
-  it("desmarcada, a publicação fica no tipo do feed social", async () => {
+  it("desmarcada (o padrão), a publicação fica no tipo do feed social", async () => {
     await mount();
     await act(async () =>
       host.querySelector<HTMLButtonElement>('[data-testid="pick-type"]')!.click(),
     );
     await write("novo projeto");
-    await act(async () => checkbox()!.click());
+    expect(checkbox()?.checked).toBe(false);
 
     await submit();
 
@@ -249,6 +252,8 @@ describe("publicar também no feed profissional", () => {
     );
     await mount();
     await write("insight do dia");
+    // A recusa acontece para quem pediu o espelho: é ele que desmarca e explica.
+    await act(async () => checkbox()!.click());
 
     await submit();
 
