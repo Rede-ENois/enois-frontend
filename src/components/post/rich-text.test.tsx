@@ -157,11 +157,14 @@ describe("RichText com figurinhas", () => {
     expect(html).toContain("kekw");
   });
 
-  it("new text: a bare code is just a word (#556)", async () => {
-    const html = await render("oi KEKW", "2026-11-10T12:00:00Z");
+  it("código solto colado a outra palavra continua texto, também no texto antigo (#556)", async () => {
+    const novo = await render("o KEKWzão não é figurinha", "2026-11-10T12:00:00Z");
+    const antigo = await render("o KEKWzão não é figurinha", "2026-10-30T12:00:00Z");
 
-    expect(html).not.toContain("<img");
-    expect(html).toContain("oi KEKW");
+    for (const html of [novo, antigo]) {
+      expect(html).not.toContain("<img");
+      expect(html).toContain("KEKWzão");
+    }
   });
 
   it("text written before the colon prefix keeps its bare-code stickers", async () => {
