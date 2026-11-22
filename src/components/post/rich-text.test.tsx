@@ -154,4 +154,29 @@ describe("RichText com figurinhas", () => {
     expect(html).not.toContain("<img");
     expect(html).toContain("<strong");
   });
+
+  it("a figurinha do catálogo sai na classe da figurinha, não como mídia anexada (#1100)", async () => {
+    const html = await render("oi :KEKW: tudo bem?");
+    const imagem = html.match(/<img[^>]*>/)?.[0] ?? "";
+
+    expect(imagem).toContain("enois-figurinha");
+    expect(imagem).not.toContain("rounded-xl");
+  });
+
+  it("a figurinha da É Nóis sai na classe da figurinha (#1100)", async () => {
+    const html = await render("que orgulho 👍");
+    const imagem = html.match(/<img[^>]*>/)?.[0] ?? "";
+
+    expect(imagem).toContain("/emojis/enois/");
+    expect(imagem).toContain("enois-figurinha");
+    expect(imagem).not.toContain("rounded-xl");
+  });
+
+  it("imagem anexada de verdade continua com o desenho de mídia", async () => {
+    const html = await render("olha isso ![foto](/media/abc/123.png)");
+    const imagem = html.match(/<img[^>]*>/)?.[0] ?? "";
+
+    expect(imagem).toContain("rounded-xl");
+    expect(imagem).not.toContain("enois-figurinha");
+  });
 });
