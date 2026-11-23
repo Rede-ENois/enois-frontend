@@ -20,6 +20,7 @@ import {
 import QRCode from "qrcode";
 
 import { AppContainer } from "@/components/app-container";
+import { DoacaoPixPessoal } from "@/components/doacao-pix-pessoal";
 
 export const Route = createFileRoute("/apoiar")({
   head: () => ({
@@ -201,6 +202,7 @@ function Apoiar() {
     QRCode.toDataURL(pixCopiaECola(), {
       width: 360,
       margin: 1,
+      // O QR precisa de contraste próprio: o leitor de banco não segue o tema da página.
       color: { dark: "#0b0d12", light: "#ffffff" },
     })
       .then(setQr)
@@ -262,6 +264,8 @@ function Apoiar() {
             </p>
           </div>
         </section>
+
+        <DoacaoPixPessoal />
 
         {/* Pix */}
         <section id="pix" className="surface-card p-5 sm:p-6">

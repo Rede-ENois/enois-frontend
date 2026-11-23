@@ -41,6 +41,7 @@ export { noticesApi } from "./notices";
 export { releaseNotesApi } from "./release-notes";
 export { sealsApi } from "./seals";
 export { contributorSealsApi } from "./contributor-seals";
+export { doacoesApi } from "./doacoes";
 export { companiesApi } from "./companies";
 export { gamesApi } from "./games";
 export { projectsApi } from "./projects";

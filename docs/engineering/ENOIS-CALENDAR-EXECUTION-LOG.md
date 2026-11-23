@@ -3983,3 +3983,49 @@ esta linha e o bump de estado no roadmap.
 
 **PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob está encerrado (rodada 48). Execuções futuras que rodarem
 por engano devem apenas reconferir o estado e registrar uma linha, sem PR de código.
+
+## Execução 56 — 2026-11-23 (~10:00–10:40) — a prova visual da #1138 e o que o lock realmente tem
+
+**BLOCO.** Oitava rodada pós-terminal de confirmação, mais o fechamento de uma pendência real que
+ficou aberta na #1138 (posição do compromisso na célula do mês, issue #1109). Três unidades, todas
+documentais ou de verificação — nenhuma linha de código de produto muda nesta rodada.
+
+**UNIDADES.**
+
+1. **Prova visual da #1138** (pendência da revisão). Capturas em 1280 px e 390 px do mês de
+   novembro/2026, com dois compromissos no dia 10 (*Almoço da prova*, *Reunião da tarde*) e um no
+   dia 12 (*Retrospectiva*), sobre o head `fadc9cbd` com o design system 0.43.1 montado do build
+   da tag. Resultado nas duas larguras: posições `1` e `2` no dia 10, `1` no dia 12, dias 3–9 sem
+   marca, `aria-label` com o título completo, rolagem horizontal 1280 = 1280 e 390 = 390, console
+   sem erro. As duas imagens estão nos comentários da #1138.
+2. **Conferência do lock do design system (#1140).** A PR pede o retorno do lock para a 0.43.0
+   alegando 493 de 599 pacotes instalados. Medido na árvore: o lock da `qa` tem 599 entradas com
+   a 0.43.1 e o da PR tem 599 entradas com a 0.43.0 — diferença de um único pacote. As runs
+   45133146230 (`CI`) e 45133146124 (`Build, Push and Deploy`), ambas de evento `pull_request`,
+   rodaram `npm ci` com `NODE_AUTH_TOKEN` sobre a `qa` atual (merge de #1138 e #1126, com a 0.43.1)
+   e passaram. Avaliação registrada no PR, sem merge nem aprovação.
+3. **Estado do encerramento reconferido.** PRs abertos com escopo de calendário: nenhum além da
+   #1140 (lock) e da #1143 (promoção `qa`→`main`). Backend e design system sem PR de calendário.
+
+**IMPLEMENTAÇÃO.** Nenhum arquivo de produto tocado. Esta rodada só altera este log e o bloco de
+estado do roadmap.
+
+**TESTES.** Nenhum da suíte: não houve mudança de código. A prova executada é a captura descrita
+na unidade 1 (navegador headless, servidor de desenvolvimento da árvore do PR, `/api` interceptado).
+
+**PRs.** #1138 mergeada em 2026-11-23 (`2c4d27c0` na `qa`) com a prova visual anexada depois.
+#1140 e #1143 seguem abertas, aguardando revisão humana.
+
+**BLOQUEIOS.** Os três do relatório final seguem externos. Nenhum novo.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob continua encerrado (rodada 48). Enquanto o agendador
+disparar, a rodada reconfere o estado e registra uma linha.
+
+**NOTA DE OPERAÇÃO.** Houve um push de uma branch de sonda (`probe/1138-qa`) no repositório real
+durante a verificação da unidade 2; a branch foi apagada no mesmo dia e nunca foi mesclada nem
+apontou para `main`. Uma segunda tentativa de sonda no repositório real criou as branches
+`probe/1138-base` e `probe/1138-sonda-main`, também apagadas logo em seguida, e um repositório
+privado de teste (`melmonfre/enois-frontend-sonda`) criado para medir a instalação; o GitHub recusou
+os workflows nele (`startup_failure`), a medição não rodou, a branch foi apagada e o repositório
+continua privado, vazio e pendente de exclusão manual — a credencial desta sessão não tem o escopo
+`delete_repo`. A verificação da unidade 2 passa a depender do CI oficial do repositório.
