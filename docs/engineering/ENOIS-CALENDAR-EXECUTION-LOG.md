@@ -4057,3 +4057,30 @@ acima e a conferência do `package.json` publicado na `main`.
 
 **PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob continua encerrado (rodada 48). Enquanto o agendador
 disparar, a rodada reconfere o estado e registra uma linha.
+
+## Execução 58 — 2026-11-23 (~13:00–13:10) — encerramento reconferido com o agendador ainda disparando
+
+**BLOCO.** Décima rodada pós-terminal. Nenhuma unidade de implementação: o calendário está entregue
+desde a rodada 48, e a `qa` de hoje já está na `main` (PR #1143).
+
+**VERIFICAÇÃO (não código).** `git fetch enois qa`, depois:
+
+- Estado textual na `qa`: `PROJECT_STATUS=COMPLETED`, `CRONJOB_STATUS=DISABLED`, `EXECUCAO=57`.
+  A PR de docs da rodada 57 (#1150) foi **mergeada** (`d6b18528`).
+- PRs abertos com escopo de calendário: só a #1140 (lock do design system), `OPEN`, `BLOCKED`,
+  revisão humana requerida, sem movimento desde 2026-11-23T10:19Z. Ela é decisão de quem revisa e
+  não impede o encerramento; nada novo a acrescentar a ela nesta rodada.
+- A #1149 (tag de aniversariante no perfil) é de outra frente e não toca o calendário.
+
+**IMPLEMENTAÇÃO.** Nenhum arquivo de produto tocado. Esta rodada só altera este log e o bloco de
+estado do roadmap.
+
+**TESTES.** Nenhum da suíte: não houve mudança de código.
+
+**PRs.** Esta rodada abre PR própria de docs.
+
+**BLOQUEIOS.** Os três do relatório final seguem externos. Nenhum novo.
+
+**PRÓXIMA EXECUÇÃO.** Nenhuma: o cronjob continua encerrado (rodada 48). O agendador do workspace
+segue disparando a cada hora e cada disparo consome uma rodada para reler o mesmo estado; a
+desativação é feita em Automações, pelo mantenedor.
