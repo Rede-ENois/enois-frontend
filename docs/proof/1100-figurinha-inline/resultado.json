@@ -1,0 +1,150 @@
+[
+  {
+    "nome": "antes-1280",
+    "width": 1280,
+    "paragrafos": [
+      {
+        "titulo": "frase com a figurinha no meio (:KEKW:)",
+        "altura": 76,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha (:KEKW:)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha da É Nóis (👍)",
+        "altura": 256,
+        "imagem": 256
+      },
+      {
+        "titulo": "figurinha da É Nóis no meio da frase (👍)",
+        "altura": 304,
+        "imagem": 256
+      },
+      {
+        "titulo": "texto anterior ao prefixo, código solto (KEKW)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "frase sem figurinha (controle)",
+        "altura": 48,
+        "imagem": null
+      }
+    ],
+    "estoura": false
+  },
+  {
+    "nome": "depois-1280",
+    "width": 1280,
+    "paragrafos": [
+      {
+        "titulo": "frase com a figurinha no meio (:KEKW:)",
+        "altura": 76,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha (:KEKW:)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha da É Nóis (👍)",
+        "altura": 97,
+        "imagem": 88
+      },
+      {
+        "titulo": "figurinha da É Nóis no meio da frase (👍)",
+        "altura": 121,
+        "imagem": 88
+      },
+      {
+        "titulo": "texto anterior ao prefixo, código solto (KEKW)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "frase sem figurinha (controle)",
+        "altura": 48,
+        "imagem": null
+      }
+    ],
+    "estoura": false
+  },
+  {
+    "nome": "antes-390",
+    "width": 390,
+    "paragrafos": [
+      {
+        "titulo": "frase com a figurinha no meio (:KEKW:)",
+        "altura": 100,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha (:KEKW:)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha da É Nóis (👍)",
+        "altura": 256,
+        "imagem": 256
+      },
+      {
+        "titulo": "figurinha da É Nóis no meio da frase (👍)",
+        "altura": 328,
+        "imagem": 256
+      },
+      {
+        "titulo": "texto anterior ao prefixo, código solto (KEKW)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "frase sem figurinha (controle)",
+        "altura": 96,
+        "imagem": null
+      }
+    ],
+    "estoura": false
+  },
+  {
+    "nome": "depois-390",
+    "width": 390,
+    "paragrafos": [
+      {
+        "titulo": "frase com a figurinha no meio (:KEKW:)",
+        "altura": 100,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha (:KEKW:)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "parágrafo só com a figurinha da É Nóis (👍)",
+        "altura": 97,
+        "imagem": 88
+      },
+      {
+        "titulo": "figurinha da É Nóis no meio da frase (👍)",
+        "altura": 121,
+        "imagem": 88
+      },
+      {
+        "titulo": "texto anterior ao prefixo, código solto (KEKW)",
+        "altura": 28,
+        "imagem": 28
+      },
+      {
+        "titulo": "frase sem figurinha (controle)",
+        "altura": 96,
+        "imagem": null
+      }
+    ],
+    "estoura": false
+  }
+]
