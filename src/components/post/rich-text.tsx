@@ -29,34 +29,6 @@ function mapaDeFigurinhas(index: Map<string, string>): Record<string, EditorStic
 }
 
 /**
- * O desenho da figurinha no meio do texto. O catálogo da rede, o pacote É Nóis e os emojis Unicode
- * que o pacote cobre saem todos como imagem no endereço do próprio app, e é por isso que o tamanho
- * vem por classe e não pelo desenho de anexo: no comentário a mesma figurinha estava saindo no
- * tamanho da mídia anexada, empurrando a altura da frase (issue #1100).
- */
-const CLASSE_DA_FIGURINHA = "enois-figurinha";
-
-/** Endereços do pacote É Nóis: a figurinha que o próprio app publica. */
-const ENDERECOS_ENOIS = new Set(ENOIS_CUSTOM_EMOJIS.map((emoji) => emoji.src));
-
-/** Endereços de figurinha que texto antigo ainda guarda (o catálogo de hoje sai do nosso backend). */
-const CDN_DE_FIGURINHA = /^https:\/\/cdn\.(betterttv\.net|frankerfacez\.com)\//;
-
-/**
- * Endereço de figurinha: o catálogo do backend, o pacote É Nóis ou o CDN de onde texto antigo veio.
- * A comparação é sobre o endereço ANTES de passar pelo `resolveMediaUrl` do app — o resolvedor
- * manda caminho relativo para o CDN de mídia, e figurinha é endereço do próprio app, não mídia
- * anexada. Imagem anexada de verdade (foto, print) não casa com nenhum dos três e segue com o
- * desenho de mídia, que é o de antes.
- */
-function ehFigurinha(url: string, ehMidiaNossa: (url: string) => boolean): boolean {
-  return (
-    ehMidiaNossa(url) &&
-    (/\/emotes\/image\//.test(url) || ENDERECOS_ENOIS.has(url) || CDN_DE_FIGURINHA.test(url))
-  );
-}
-
-/**
  * Renderiza a formatação leve (markdown) de todo campo de texto que não é HTML. A menção abre o
  * perfil e o marcador `{{media:<id>}}` vira a mídia carregada pelo app.
  *
@@ -82,7 +54,6 @@ export function RichText({ writtenAt, ...props }: PostRichTextProps & { writtenA
       renderMedia={(mediaId, mediaSpoiler) => (
         <InlineMedia mediaId={mediaId} mediaSpoiler={mediaSpoiler} />
       )}
-      figurinha={{ classe: CLASSE_DA_FIGURINHA, ehFigurinha }}
     />
   );
 }
