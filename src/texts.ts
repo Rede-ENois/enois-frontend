@@ -332,6 +332,11 @@ export const texts = {
     erroLeitura: "Não foi possível abrir o mural. Tente de novo.",
     erroLeituraHint: "O mural não sumiu: a resposta do servidor não chegou.",
     tentarDeNovo: "Tentar de novo",
+    compartilharLinkCopiado: "Link do mural copiado.",
+    compartilharErroCopiar: "Não foi possível copiar o link. Tente de novo.",
+    compartilharMenuCopiar: "Copiar link",
+    compartilharMenuEnviar: "Enviar via chat",
+    compartilharMenuAparelho: "Compartilhar via...",
   },
 
   /** Seletor "para onde vai este post", no menu do card (murais e coleções). */

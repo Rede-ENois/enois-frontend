@@ -252,6 +252,26 @@ describe("rota de um mural", () => {
     expect(mocks.toast).toHaveBeenCalledWith(texts.murais.editado, "success");
   });
 
+  it("quem abre o mural tem o menu de compartilhar com os três itens", async () => {
+    await render();
+
+    expect(document.body.querySelector('button[aria-label="Compartilhar mural"]')).not.toBeNull();
+    // Só o quadro recebe o menu; as ações do card do feed (publicações coladas) não o mostram.
+    expect(document.body.querySelectorAll('button[aria-label="Compartilhar mural"]')).toHaveLength(
+      1,
+    );
+    await act(async () => {
+      document.body
+        .querySelector<HTMLButtonElement>('button[aria-label="Compartilhar mural"]')!
+        .click();
+    });
+
+    const itens = [...document.body.querySelectorAll("button")].map((b) => b.textContent?.trim());
+    expect(itens).toContain(texts.murais.compartilharMenuCopiar);
+    expect(itens).toContain(texts.murais.compartilharMenuEnviar);
+    expect(itens).toContain(texts.murais.compartilharMenuAparelho);
+  });
+
   it("quem não é dono não vê as ações do quadro", async () => {
     mocks.get.mockResolvedValue(mural({ owner: autoria("outro", "Outro") }));
     await render();
