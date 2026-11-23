@@ -1658,8 +1658,10 @@ export function Home() {
             <h2 className="text-sm font-semibold text-text-strong">{texts.feed.tabs.corporate}</h2>
           )}
 
+          {/* No celular as seis abas viram duas linhas de três, na ordem de HOME_TABS, e nenhuma
+            fica escondida; do sm para cima continuam numa linha. */}
           <Tabs value={tab} onValueChange={(val) => setTab(val as HomeTab)}>
-            <TabsList>
+            <TabsList rows="wrap">
               {HOME_TABS.map((opcao) => {
                 const Icon = TAB_ICONS[opcao] ?? Layers;
                 const label =
