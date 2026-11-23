@@ -34,7 +34,7 @@
     "@tanstack/router-plugin": "1.169.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "lucide-react": "^1.57.0",
+    "lucide-react": "^1.77.0",
     "pdfjs-dist": "^6.5.438",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
