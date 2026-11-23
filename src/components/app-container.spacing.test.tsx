@@ -51,6 +51,8 @@ describe("casca do app", () => {
     const main = host.querySelector("main");
     expect(main).not.toBeNull();
     // O espaço vem do `gap` do Main do design system, não de um wrapper de markup na casca.
-    expect(main?.className.split(/\s+/)).toContain("space-y-4");
+    const classes = main?.className.split(/\s+/) ?? [];
+    expect(classes).toContain("flex-col");
+    expect(classes).toContain("gap-4");
   });
 });
