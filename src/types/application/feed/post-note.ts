@@ -12,4 +12,6 @@ export type PostNote = {
   authorBadges: string[];
   authorStyle?: AuthorNameStyle | null;
   authorContributor?: AuthorContributorTag | null;
+  /** Tag "Aniversariante" quando a pessoa faz aniversário hoje; ausente = não faz. */
+  authorBirthdayToday?: boolean;
 };

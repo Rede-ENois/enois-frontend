@@ -37,6 +37,8 @@ export type Profile = {
   openToWork: boolean;
   /** Selo "Humanidade Comprovada": verificação de identidade aprovada (Didit); ausente em leituras antigas. */
   humanityVerified?: boolean;
+  /** Tag "Aniversariante": a pessoa faz aniversário hoje (dia de Brasília); ausente = não faz. */
+  birthdayToday?: boolean;
   /** Preferencia da conta: mostrar a secao de ranking no perfil (padrao true). */
   showRanking?: boolean;
   isMentor: boolean;
