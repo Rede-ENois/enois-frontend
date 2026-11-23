@@ -81,6 +81,14 @@ export function DoacaoPixPessoal() {
       }).catch(() => null);
       if (pedidoDe.current !== doacao.amountCents) return;
       setQrCodeDataUrl(desenho);
+      // A doação anterior foi aposentada ao abrir esta: a retomada não pode ressuscitá-la.
+      void queryClient.invalidateQueries({ queryKey: ["doacoes", "aberta"] });
+    },
+    onError: () => {
+      // Abrir falhou: a doação que a tela mostrava foi aposentada pelo servidor ao tentar abrir a
+      // nova. Desenhar o QR e o código da anterior com a faixa de erro seria oferecer um código
+      // que não paga mais nada; limpa para a tela não mentir sobre o que ainda vale.
+      setQrCodeDataUrl(null);
     },
   });
 
@@ -133,7 +141,15 @@ export function DoacaoPixPessoal() {
   const erroDe = (erro: unknown, padrao: string) =>
     erro instanceof ApiError && erro.message ? erro.message : padrao;
 
-  const codigo = abrir.data ? paraCodigo(abrir.data) : aberta.data ? paraCodigo(aberta.data) : null;
+  // Quando abrir a doação falha, `abrir.data` guarda o último sucesso — uma doação que o servidor
+  // já aposentou. Com erro na tela, não mostra código nenhum: o antigo não paga mais o valor atual.
+  const codigo = abrir.isError
+    ? null
+    : abrir.data
+      ? paraCodigo(abrir.data)
+      : aberta.data
+        ? paraCodigo(aberta.data)
+        : null;
 
   const copiar = async () => {
     if (!codigo) return;

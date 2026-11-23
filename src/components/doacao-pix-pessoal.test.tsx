@@ -152,4 +152,41 @@ describe("DoacaoPixPessoal", () => {
       pixCopyAndPaste: "00020128...",
     });
   });
+
+  it("open que falha depois de um sucesso não deixa QR/código da doação anterior na tela", async () => {
+    // Primeiro open dá certo (R$ 5); uma segunda abertura do MESMO valor falha. Sem trocar o
+    // valor, não há reset — o `abrir.data` de R$ 5 e o QR dele continuam na tela se a falha não
+    // os limpar, e o servidor já aposentou a doação de R$ 5 ao tentar abrir a nova.
+    mocks.open
+      .mockResolvedValueOnce({ id: "d5", amountCents: 500, pixCopyAndPaste: "00020125..." })
+      .mockRejectedValueOnce(new Error("servidor indisponível"));
+    await renderizar();
+
+    await act(async () => {
+      (estado.props?.onValorChange as (c: number) => void)(500);
+    });
+    await act(async () => {
+      (estado.props?.onAbrir as () => void)();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    // O QR de R$ 5 está na tela.
+    expect(estado.props?.codigo).not.toBeNull();
+    expect(estado.props?.qrCodeDataUrl).not.toBeNull();
+
+    // Abre de novo, mesmo valor: agora falha, sem `onValorChange` para resetar.
+    await act(async () => {
+      (estado.props?.onAbrir as () => void)();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // A doação de R$ 5 foi aposentada ao tentar abrir a nova: a tela não pode mostrar o
+    // QR/código antigos com a faixa de erro em cima.
+    expect(estado.props?.erro).toBeTruthy();
+    expect(estado.props?.codigo).toBeNull();
+    expect(estado.props?.qrCodeDataUrl).toBeNull();
+  });
 });
