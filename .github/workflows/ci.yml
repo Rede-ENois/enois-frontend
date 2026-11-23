@@ -36,11 +36,30 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # O `npm ci` sai com 0 mesmo quando instala só uma parte do lock (já aconteceu: 493 pacotes
-      # de 599, sem o design system), e aí o typecheck reprova código que usa o pacote. A guarda
-      # falha aqui, com o motivo, em vez de lá.
+      # O `npm ci` sai com 0 mesmo quando deixa de instalar uma dependência DIRETA do projeto
+      # (já aconteceu: o design system, e aí o typecheck reprova o código que usa o pacote, longe
+      # da causa). A guarda confere as dependências diretas da raiz e falha aqui, nomeando a que
+      # faltou — em vez de deixar o erro aparecer como falha de tipo lá na frente.
+      #
+      # `npm ls --all` sozinho não serve para isso: a árvore traz centenas de `missing` de pacotes
+      # `optional`/`peer` de outros pacotes (nada a ver com a instalação do projeto) e o motivo real
+      # se perde no meio. O filtro é só nas `dependencies` da raiz — as que o `package.json` pede e
+      # o `npm ci` tinha de instalar.
       - name: Guarda da instalação
-        run: npm ls --all > /tmp/arvore.txt 2>&1 || { tail -40 /tmp/arvore.txt; exit 1; }
+        run: |
+          npm ls --all --json > /tmp/arvore.json 2>/dev/null || true
+          node -e '
+            const arvore = require("/tmp/arvore.json");
+            const raiz = arvore.dependencies ?? {};
+            const faltando = Object.entries(raiz)
+              .filter(([, no]) => no.missing)
+              .map(([nome]) => nome);
+            if (faltando.length) {
+              console.error("Dependências diretas ausentes após o npm ci: " + faltando.join(", "));
+              process.exit(1);
+            }
+            console.log("Instalação íntegra: todas as dependências diretas presentes.");
+          '
 
       - name: Diagnóstico do baseline (temporário)
         run: |
