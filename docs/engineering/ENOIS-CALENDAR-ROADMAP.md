@@ -35,8 +35,13 @@ três repositórios); nenhuma unidade entregue.
 Execução 55 (2026-11-15): oitava rodada pós-terminal — a PR #899 foi mergeada com revisão
 humana (`267326ce`) e o encerramento foi reconferido de novo (estado inalterado, PRs zeradas nos
 três repositórios); nenhuma unidade entregue.
-EXECUCAO=55
-ULTIMA_ATUALIZACAO=2026-11-15T15:30:00-03:00
+Execução 56 (2026-11-23): a prova visual da #1138 foi produzida e anexada (1280 e 390, posições
+`1` e `2` no mesmo dia, dia sem compromisso, console limpo, sem scroll horizontal) e o lock do
+design system foi conferido contra a alegação do #1140 (599 entradas nos dois lados; `npm ci` com
+a 0.43.1 verde em duas runs de `pull_request`). A #1138 foi mergeada na `qa` (`2c4d27c0`). Estado
+terminal mantido; PRs abertos: #1140 (lock) e #1143 (promoção `qa`→`main`).
+EXECUCAO=56
+ULTIMA_ATUALIZACAO=2026-11-23T10:40:00-03:00
 ```
 
 ---
