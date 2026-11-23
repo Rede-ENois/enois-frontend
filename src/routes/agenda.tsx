@@ -375,6 +375,9 @@ function AgendaPage() {
           }
           period={period}
           onPeriodChange={(nextPeriod) => go({ view, period: nextPeriod, scope })}
+          // No mês a célula é estreita: o título truncado cabia em duas letras, então o dia mostra
+          // a posição do compromisso (o título continua no nome acessível) — issue #1109.
+          cellLayout="points"
           // O compromisso abre o detalhe; sem isto o clique não leva a lugar nenhum.
           itemHref={(id) => `/agenda/${id}`}
           items={items}
