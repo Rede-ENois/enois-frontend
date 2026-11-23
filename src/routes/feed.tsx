@@ -2,6 +2,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   Fragment,
+  memo,
   useCallback,
   useEffect,
   useRef,
@@ -56,12 +57,17 @@ import {
   PopoverContent,
   PopoverTrigger,
   PullIndicator,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   useToast,
 } from "@rede-enois/design-system/ui";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowUp,
   BarChart3,
+  BookOpen,
   Briefcase,
   Calendar,
   CalendarClock,
@@ -69,13 +75,25 @@ import {
   ChevronRight,
   Clock,
   Code2,
+  Compass,
   EyeOff,
   FileText,
   Film,
+  Flame,
+  FolderGit2,
   GraduationCap,
+  HelpCircle,
   Image,
+  Layers,
+  Lightbulb,
   Loader2,
+  MessageSquare,
+  Newspaper,
   RefreshCw,
+  SlidersHorizontal,
+  Smile,
+  Sparkles,
+  Star,
   UserPlus,
   X,
 } from "lucide-react";
@@ -153,6 +171,23 @@ const TAB_LABELS: Record<HomeTab, string> = {
   FUN: texts.feed.tabs.fun,
 };
 
+const TAB_ICONS: Record<HomeTab, typeof Layers> = {
+  ALL: Layers,
+  FOR_YOU: Compass,
+  UNSEEN: Clock,
+  TRENDING: Flame,
+  INTERACTED: MessageSquare,
+  CORPORATE: Briefcase,
+  FOLLOWING: Compass,
+  RECENT: MessageSquare,
+  PROJECTS: Layers,
+  NEWS: Layers,
+  TUTORIALS: Layers,
+  OPPORTUNITIES: Briefcase,
+  REVIEWS: MessageSquare,
+  FUN: Flame,
+};
+
 /** Tipos de post para o filtro do feed "Tudo". */
 const POST_TYPE_FILTERS = [
   { value: "", label: texts.feed.tabs.allTypes },
@@ -168,6 +203,21 @@ const POST_TYPE_FILTERS = [
   { value: "POLL", label: "Enquetes" },
   { value: "COMPLAINT", label: "Reclamações" },
 ] as const;
+
+const POST_TYPE_ICONS: Record<string, typeof Sparkles> = {
+  "": Sparkles,
+  INSIGHT: Lightbulb,
+  QUESTION: HelpCircle,
+  PROJECT: FolderGit2,
+  NEWS: Newspaper,
+  TUTORIAL: BookOpen,
+  OPPORTUNITY: Briefcase,
+  REVIEW: Star,
+  DIVERTIDO: Smile,
+  ARTICLE: FileText,
+  POLL: BarChart3,
+  COMPLAINT: AlertCircle,
+};
 
 export const Route = createFileRoute("/feed")({
   beforeLoad: requireAuth,
@@ -303,7 +353,7 @@ function useEvents(enabled: boolean) {
  * do topo, o React vê um tipo de elemento diferente ali e remonta o `PostCard`, perdendo estado
  * local (comentários abertos) sempre que uma publicação nova chega (issue #743).
  */
-export function FeedPostRow({
+export const FeedPostRow = memo(function FeedPostRow({
   post,
   index,
   feedTab,
@@ -319,7 +369,7 @@ export function FeedPostRow({
       <PostCard post={post} feedTab={feedTab} />
     </div>
   );
-}
+});
 
 // Exportada para o teste da guarda de duplo envio; a rota continua montando pelo Route.
 export function Home() {
@@ -356,7 +406,6 @@ export function Home() {
 
   // Dentro do corporativo o seletor volta para a aba social em que a pessoa estava.
   const otherFeed: HomeTab = professional ? lastSocialTab : "CORPORATE";
-  const [menuTipoFeed, setMenuTipoFeed] = useState(false);
   const [menuTopic, setMenuTopic] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
   const [questionStatus, setQuestionStatus] = useState<QuestionStatus>("all");
@@ -935,7 +984,16 @@ export function Home() {
   );
 
   useEffect(() => {
-    const updateScrollTopVisibility = () => setShowScrollTop(window.scrollY > 400);
+    let ticking = false;
+    const updateScrollTopVisibility = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowScrollTop(window.scrollY > 400);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
 
     updateScrollTopVisibility();
     window.addEventListener("scroll", updateScrollTopVisibility, { passive: true });
@@ -1596,74 +1654,49 @@ export function Home() {
             </section>
           )}
 
-          {/* Tipo de feed: as opcoes ficam recolhidas atras do botao (sao muitas e ocupavam
-              tres linhas na tela). A legenda diz do que se trata; o botao mostra o que esta
-              escolhido e abre a lista. A lista traz as duas familias — o corporativo na social e a
-              aba social na profissional —, porque o feed profissional só era alcançado pelo
-              perfil (#723). */}
           {professional && (
-            <h2 className="text-sm font-medium text-text-strong">{texts.feed.tabs.corporate}</h2>
+            <h2 className="text-sm font-semibold text-text-strong">{texts.feed.tabs.corporate}</h2>
           )}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-normal text-text-subtle">{texts.feed.tabs.type}</span>
 
-            <Popover open={menuTipoFeed} onOpenChange={setMenuTipoFeed}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={texts.feed.tabs.openList}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-surface-card px-3 py-1.5 text-sm font-normal text-text-strong transition hover:border-primary hover:text-primary"
-                >
-                  {TAB_LABELS[tab]}
+          <Tabs value={tab} onValueChange={(val) => setTab(val as HomeTab)}>
+            <TabsList>
+              {HOME_TABS.map((opcao) => {
+                const Icon = TAB_ICONS[opcao] ?? Layers;
+                const label =
+                  opcao === "CORPORATE" && !professional
+                    ? texts.feed.tabs.corporate
+                    : (TAB_LABELS[opcao] ?? opcao);
 
-                  <ChevronDown className="h-3.5 w-3.5 text-text-subtle" />
-                </button>
-              </PopoverTrigger>
+                return (
+                  <TabsTrigger key={opcao} value={opcao}>
+                    <Icon size={16} aria-hidden="true" />
 
-              <PopoverContent align="start" className="w-56 p-1">
-                <div className="flex max-h-80 flex-col gap-0.5 overflow-y-auto">
-                  {HOME_TABS.map((opcao) => (
-                    <button
-                      key={opcao}
-                      type="button"
-                      onClick={() => {
-                        setTab(opcao);
-                        setMenuTipoFeed(false);
-                      }}
-                      aria-pressed={opcao === tab}
-                      className={cn(
-                        "rounded-lg px-3 py-2 text-left text-sm font-normal transition",
-                        opcao === tab
-                          ? "bg-primary-soft text-primary"
-                          : "text-text-subtle hover:bg-surface-2 hover:text-text-strong",
-                      )}
-                    >
-                      {opcao === "CORPORATE" && !professional
-                        ? texts.feed.tabs.corporateHint
-                        : TAB_LABELS[opcao]}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                    <>{label}</>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
 
           {tab === "ALL" && (
-            /* Doze tipos em `flex-wrap` ocupavam QUATRO linhas no celular antes de qualquer
-               post — a primeira dobra era so filtro. O PillRow rola para o lado (o mesmo gesto
-               dos filtros do feed), ocupa UMA linha e nada fica cortado nem escondido: os
-               tipos continuam todos alcancaveis. */
-            <PillRow label={texts.feed.tabs.type} className="pb-2">
-              {POST_TYPE_FILTERS.map((f) => (
-                <Pill
-                  key={f.value}
-                  size="sm"
-                  active={typeFilter === f.value}
-                  onClick={() => setTypeFilter(f.value)}
-                >
-                  <>{f.label}</>
-                </Pill>
-              ))}
+            <PillRow label={texts.feed.tabs.type}>
+              {POST_TYPE_FILTERS.map((f) => {
+                const Icon = POST_TYPE_ICONS[f.value] ?? Sparkles;
+                const active = typeFilter === f.value;
+
+                return (
+                  <Pill
+                    key={f.value}
+                    size="sm"
+                    active={active}
+                    onClick={() => setTypeFilter(f.value)}
+                  >
+                    <Icon size={14} aria-hidden="true" />
+
+                    <>{f.label}</>
+                  </Pill>
+                );
+              })}
             </PillRow>
           )}
 

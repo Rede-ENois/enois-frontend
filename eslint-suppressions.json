@@ -535,7 +535,7 @@
   },
   "src/routes/feed.tsx": {
     "local/no-front-markup": {
-      "count": 211
+      "count": 198
     },
     "no-restricted-globals": {
       "count": 4
