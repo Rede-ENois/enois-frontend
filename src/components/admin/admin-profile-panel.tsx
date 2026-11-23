@@ -139,9 +139,9 @@ export function AdminProfilePanel({ username }: { username: string }) {
           return false;
         }
       }}
-      onSanction={async (type, reason) => {
+      onSanction={async (punishment, reason) => {
         try {
-          await sanction.mutateAsync({ type: type === "WARN" ? "BAN" : type, reason });
+          await sanction.mutateAsync({ type: punishment.type, reason });
           return true;
         } catch {
           return false;
