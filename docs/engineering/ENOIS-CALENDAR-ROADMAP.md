@@ -44,8 +44,11 @@ Execução 57 (2026-11-23): encerramento reconferido depois da promoção — a 
 (PR #1143, `a95146b8`, 08:24 -03) com a #1138 e a #1126; a `main` pede o design system `^0.43.1`.
 PRs abertos: só o #1140 (lock), sem movimento desde a avaliação da rodada 56. Nenhuma unidade
 entregue.
-EXECUCAO=57
-ULTIMA_ATUALIZACAO=2026-11-23T12:30:00-03:00
+Execução 58 (2026-11-23): encerramento reconferido; a PR de docs da rodada 57 (#1150) foi
+mergeada (`d6b18528`). PRs abertos com escopo de calendário: só o #1140 (lock), sem movimento desde
+10:19Z. Nenhuma unidade entregue.
+EXECUCAO=58
+ULTIMA_ATUALIZACAO=2026-11-23T13:10:00-03:00
 ```
 
 ---
