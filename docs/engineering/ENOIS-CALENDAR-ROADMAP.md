@@ -47,8 +47,11 @@ entregue.
 Execução 58 (2026-11-23): encerramento reconferido; a PR de docs da rodada 57 (#1150) foi
 mergeada (`d6b18528`). PRs abertos com escopo de calendário: só o #1140 (lock), sem movimento desde
 10:19Z. Nenhuma unidade entregue.
-EXECUCAO=58
-ULTIMA_ATUALIZACAO=2026-11-23T13:10:00-03:00
+Execução 59 (2026-11-23): encerramento reconferido; a PR de docs da rodada 58 (#1151) foi
+mergeada (`141551e1`) e a promoção `qa`→`main` das rodadas 56–58 está aberta na #1152. PRs abertos
+com escopo de calendário: só o #1140 (lock), sem movimento desde 10:19Z. Nenhuma unidade entregue.
+EXECUCAO=59
+ULTIMA_ATUALIZACAO=2026-11-23T15:50:00-03:00
 ```
 
 ---
