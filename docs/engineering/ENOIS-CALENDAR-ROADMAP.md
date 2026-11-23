@@ -40,8 +40,18 @@ Execução 56 (2026-11-23): a prova visual da #1138 foi produzida e anexada (128
 design system foi conferido contra a alegação do #1140 (599 entradas nos dois lados; `npm ci` com
 a 0.43.1 verde em duas runs de `pull_request`). A #1138 foi mergeada na `qa` (`2c4d27c0`). Estado
 terminal mantido; PRs abertos: #1140 (lock) e #1143 (promoção `qa`→`main`).
-EXECUCAO=56
-ULTIMA_ATUALIZACAO=2026-11-23T10:40:00-03:00
+Execução 57 (2026-11-23): encerramento reconferido depois da promoção — a `qa` foi para a `main`
+(PR #1143, `a95146b8`, 08:24 -03) com a #1138 e a #1126; a `main` pede o design system `^0.43.1`.
+PRs abertos: só o #1140 (lock), sem movimento desde a avaliação da rodada 56. Nenhuma unidade
+entregue.
+Execução 58 (2026-11-23): encerramento reconferido; a PR de docs da rodada 57 (#1150) foi
+mergeada (`d6b18528`). PRs abertos com escopo de calendário: só o #1140 (lock), sem movimento desde
+10:19Z. Nenhuma unidade entregue.
+Execução 59 (2026-11-23): encerramento reconferido; a PR de docs da rodada 58 (#1151) foi
+mergeada (`141551e1`) e a promoção `qa`→`main` das rodadas 56–58 está aberta na #1152. PRs abertos
+com escopo de calendário: só o #1140 (lock), sem movimento desde 10:19Z. Nenhuma unidade entregue.
+EXECUCAO=59
+ULTIMA_ATUALIZACAO=2026-11-23T15:50:00-03:00
 ```
 
 ---
