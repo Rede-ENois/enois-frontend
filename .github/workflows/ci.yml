@@ -1,10 +1,15 @@
 name: CI
 
+# DECISÃO (2026-11-24, dona do projeto): a suíte roda SÓ no pre-merge (pull_request).
+# `qa` e `main` são branches protegidas — nelas só entra merge de PR, então o código que chega
+# no push já passou pelo gate do PR e repetir a suíte é redundante. O push é caminho de deploy;
+# o build-and-push.yml também não roda teste.
+#
+# `main` continua no gatilho de pull_request porque a promoção qa→main também é um PR e o
+# check `verificar` é exigido na proteção das duas branches.
 on:
   pull_request:
     # A linha do dia a dia e a `qa`: sem ela, os PRs da equipe entravam sem rodar teste nenhum.
-    branches: [main, qa]
-  push:
     branches: [main, qa]
 
 permissions:
@@ -21,6 +26,7 @@ concurrency:
 jobs:
   verificar:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Baixar o código
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -60,16 +66,6 @@ jobs:
             }
             console.log("Instalação íntegra: todas as dependências diretas presentes.");
           '
-
-      - name: Diagnóstico do baseline (temporário)
-        run: |
-          ls -la eslint-suppressions.json
-          node -e "const d=require('./eslint-suppressions.json');console.log('entradas',Object.keys(d).length);console.log('apoiar',JSON.stringify(d['src/routes/apoiar.tsx']))"
-          npx eslint --version
-          npx eslint --print-config src/routes/apoiar.tsx | node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const d=JSON.parse(s);console.log('regras',JSON.stringify(Object.fromEntries(Object.entries(d.rules).filter(([k])=>k.includes('front-markup')||k==='no-restricted-syntax'))));console.log('linterOptions',JSON.stringify(d.linterOptions))})"
-          npx eslint . > /tmp/lint.txt 2>&1 || true
-          grep -c "no-front-markup" /tmp/lint.txt || true
-          sed -n '1,40p' /tmp/lint.txt
 
       # A divida que travava estes passos foi paga (o lint e o typecheck passam limpos
       # nas duas linhas), entao eles rodam aqui de verdade: sem o typecheck, um campo que a
