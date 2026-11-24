@@ -23,6 +23,8 @@ import {
   ScrollText,
   ShoppingBag,
   Thermometer,
+  UserCheck,
+  Users,
   Wrench,
 } from "lucide-react";
 
@@ -247,5 +249,23 @@ export const exploreItems: {
     color: "var(--table-2)",
     module: "MENTORING",
     notifies: "MENTORING",
+  },
+  {
+    section: "work",
+    href: "/bancos-de-talentos",
+    text: texts.explore.items.talentBanks,
+    icon: Users,
+    color: "var(--table-4)",
+    module: null,
+    keywords: ["banco de talentos", "recrutador", "vagas", "candidatos", "inscricao"],
+  },
+  {
+    section: "work",
+    href: "/minhas-inscricoes",
+    text: texts.explore.items.myTalentEnrollments,
+    icon: UserCheck,
+    color: "var(--table-6)",
+    module: null,
+    keywords: ["minhas inscricoes", "consentimento", "revogar", "banco de talentos"],
   },
 ];

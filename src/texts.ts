@@ -176,6 +176,14 @@ export const texts = {
       services: { label: "Serviços", description: "Contrate quem é da comunidade" },
       companies: { label: "Empresas", description: "Quem contrata e o que faz" },
       mentoring: { label: "Mentoria", description: "Aprenda com quem já fez" },
+      talentBanks: {
+        label: "Banco de Talentos",
+        description: "Bancas de recrutadores da comunidade",
+      },
+      myTalentEnrollments: {
+        label: "Minhas inscrições",
+        description: "Onde você se inscreveu e o que autorizou",
+      },
       agenda: { label: "Agenda", description: "Seus compromissos sociais e profissionais" },
       roleplay: { label: "Éroleplay", description: "Campanhas de RPG de mesa e textual" },
       colagem: { label: "Colagem", description: "O feed fotográfico da comunidade" },
@@ -282,6 +290,48 @@ export const texts = {
     removeParticipacaoDone: "Participação removida.",
     removeParticipacaoError: "Não foi possível remover a participação. Tente de novo.",
     cheerError: "Não foi possível torcer. Tente de novo.",
+  },
+
+  /** Textos das rotas do Banco de Talentos (vitrine, inscrição e painel do recrutador). */
+  talentBanks: {
+    seoTitle: "Banco de Talentos · Énóis",
+    showcaseTitle: "Banco de Talentos",
+    showcaseSubtitle:
+      "Bancas de recrutadores da comunidade: quem procura, com que finalidade e o que pede em troca. A vitrine nunca mostra quem se inscreveu — a inscrição é uma decisão de cada pessoa.",
+    showcaseError: "Não foi possível abrir o Banco de Talentos. Tente de novo.",
+    showcaseEmpty: "Nenhuma banca publicada ainda.",
+    loadMore: "Carregar mais bancas",
+    retry: "Tentar de novo",
+    bankError: "Não foi possível abrir esta banca. Tente de novo.",
+    enrollSuccess: "Inscrição confirmada: o recrutador vê só o que você autorizou.",
+    enrollError: "Não foi possível confirmar sua inscrição. Tente de novo.",
+    enrollRequestError: "Não foi possível registrar sua inscrição. Tente de novo.",
+    revokeDone: "Inscrição revogada. O recrutador não vê mais os seus dados.",
+    revokeError: "Não foi possível revogar a inscrição. Tente de novo.",
+    eraseDone: "Dados apagados. O registro do consentimento foi mantido.",
+    eraseError: "Não foi possível apagar os dados. Tente de novo.",
+    myEnrollmentsTitle: "Minhas inscrições",
+    myEnrollmentsSubtitle:
+      "Onde você se inscreveu e o que autorizou. Dá para revogar ou pedir a exclusão a qualquer momento.",
+    myEnrollmentsError: "Não foi possível carregar suas inscrições. Tente de novo.",
+    recruiterTitle: "Meu banco de talentos",
+    recruiterSubtitle:
+      "O banco que você publica: a finalidade, as condições de tratamento e as informações que pede. Quem se inscreve vê tudo isso antes de autorizar.",
+    recruiterModeOff: "Ative o modo recrutador no seu perfil para abrir o seu banco de talentos.",
+    recruiterError: "Não foi possível carregar seu banco. Tente de novo.",
+    recruiterNotFound: "Você ainda não criou o seu banco de talentos.",
+    saveDone: "Banco atualizado.",
+    saveError: "Não foi possível salvar o banco. Tente de novo.",
+    createDone: "Banco criado.",
+    visibilityDone: "Visibilidade atualizada.",
+    candidatesError: "Não foi possível carregar os inscritos. Tente de novo.",
+    candidateError: "Não foi possível abrir a ficha. Tente de novo.",
+    closeDone: "Inscrição encerrada.",
+    closeError: "Não foi possível encerrar a inscrição. Tente de novo.",
+    resumeError: "Não foi possível baixar o currículo. Tente de novo.",
+    openShowcase: "Ver o Banco de Talentos",
+    openPanel: "Abrir meu banco de talentos",
+    openProfile: "Ir para o meu perfil",
   },
 
   /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */

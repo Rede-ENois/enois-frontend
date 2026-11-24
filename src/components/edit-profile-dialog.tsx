@@ -67,7 +67,8 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
   // A página entrega o perfil público, que não traz a data de nascimento, de propósito: ela só
   // existe na projeção do dono (/me).
   const { data: me } = useCurrentUser();
-  const profile = { ...publicProfile, birthDate: me?.birthDate };
+  // O modo recrutador mora na conta e chega em `/me`: é ele que abre o banco de talentos.
+  const profile = { ...publicProfile, birthDate: me?.birthDate, isRecruiter: me?.isRecruiter };
 
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -201,6 +202,7 @@ export function EditProfileDialog({ profile: publicProfile, open, onOpenChange }
           : [],
         openToWork: values.openToWork,
         isMentor: values.isMentor,
+        isRecruiter: values.isRecruiter,
       });
       return null;
     } catch (err) {
