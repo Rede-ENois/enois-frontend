@@ -1,0 +1,117 @@
+name: Seguir release do design system
+
+# DECISÃO (2026-11-24, dona do projeto): cada versão publicada pelo design system chega aqui
+# sozinha, como um commit de lock na `qa`. O design system agora publica a cada merge na main
+# (workflow "Release automatica" de lá), e a publicação dispara `repository_dispatch` do tipo
+# `ds-release` com a versão. Este workflow instala essa versão exata, confere o lock e faz o push —
+# o build da `qa` (build-and-push.yml) segue sozinho, como qualquer outro push. O PR qa→main
+# continua sendo o único caminho até produção.
+#
+# O pacote @rede-enois/design-system mora no GitHub Packages, e nesta execução o GITHUB_TOKEN não
+# alcança o pacote de outro repositório: por isso o secret DS_RELEASE_TOKEN (um PAT fine-grained
+# com escrita em contents) autentica o push na `qa` — um push do GITHUB_TOKEN não dispararia o
+# workflow do build. A LEITURA do pacote fica com o GITHUB_TOKEN padrão (permissão `packages:
+# read` abaixo), que já alcança o pacote de outro repo da mesma organização; o DS_RELEASE_TOKEN
+# não tem `read:packages`, e usá-lo no npm é o que faz o `npm ci` falhar com 403.
+# Nunca use esse token em `pull_request`.
+#
+# O lock precisa guardar `version` e `resolved` com o sha: sem eles o Docker responde 405.
+
+on:
+  repository_dispatch:
+    types: [ds-release]
+
+permissions:
+  contents: read
+  packages: read
+
+# Dois releases seguidos que cheguem quase juntos: o segundo espera o primeiro e parte do lock
+# que ele deixou.
+concurrency:
+  group: seguir-release-ds
+  cancel-in-progress: false
+
+jobs:
+  relock:
+    name: Lock do design system na qa
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa
+          token: ${{ secrets.DS_RELEASE_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: "@rede-enois"
+
+      - name: Regenerar o lock na versão publicada
+        env:
+          # A leitura do pacote é com o GITHUB_TOKEN (permissão `packages: read`): o
+          # DS_RELEASE_TOKEN serve para o push na qa e não tem `read:packages`.
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DESIGN_SYSTEM_VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          set -euo pipefail
+
+          versao="$DESIGN_SYSTEM_VERSION"
+          atual="$(node -p "require('./package.json').dependencies['@rede-enois/design-system']")"
+          atual="${atual#^}"
+
+          # A versão publicada tem que ser mais nova que a da qa: igual ou mais velha é um atraso
+          # da fila ou um reenvio do evento. Só as releases estáveis disparam este workflow (a
+          # prerelease do design system é tag à parte), então versão de entrada com `-` é estranha:
+          # ela para aqui em vez de entrar no lock.
+          sobe() {
+            printf '%s\n%s\n' "$atual" "$1" | sort -V -C
+          }
+
+          if ! [[ "$versao" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [ "$atual" = "$versao" ] || ! sobe "$versao"; then
+            echo "A qa já está em $atual; nada a fazer com $versao."
+            exit 0
+          fi
+
+          npm install "@rede-enois/design-system@$versao" --save --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Conferir o lock
+        env:
+          DESIGN_SYSTEM_VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          set -euo pipefail
+
+          node -e '
+            const versao = process.env.DESIGN_SYSTEM_VERSION;
+            const pkg = require("./package.json");
+            const lock = require("./package-lock.json");
+            const faixa = pkg.dependencies["@rede-enois/design-system"];
+            const entrada = lock.packages["node_modules/@rede-enois/design-system"];
+            const resolved = entrada?.resolved ?? "";
+            if (faixa !== "^" + versao) throw new Error(`package.json fora de ^${versao}: ${faixa}`);
+            if (entrada?.version !== versao) throw new Error(`lock fora de ${versao}: ${resolved}`);
+            if (!resolved.includes("/" + versao + "/") || !entrada?.integrity) {
+              throw new Error(`lock sem resolved/integrity da ${versao}: ${resolved}`);
+            }
+            console.log("lock ok:", entrada.version, resolved);
+          '
+
+      - name: Commit do lock na qa
+        env:
+          DESIGN_SYSTEM_VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "Nada a commitar."
+            exit 0
+          fi
+
+          git config user.name "design-system"
+          git config user.email "design-system@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(deps): design system ${DESIGN_SYSTEM_VERSION} [skip relock]"
+          git push origin HEAD:qa
