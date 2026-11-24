@@ -26,6 +26,7 @@ export { muraisApi } from "./murais";
 export { colecoesApi } from "./colecoes";
 export { jobsApi } from "./jobs";
 export { recruitmentApi } from "./recruitment";
+export { talentBanksApi } from "./talent-banks";
 export { eventsApi } from "./events";
 export { calendarApi } from "./calendar";
 export { mentorsApi } from "./mentors";

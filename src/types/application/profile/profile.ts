@@ -42,6 +42,8 @@ export type Profile = {
   /** Preferencia da conta: mostrar a secao de ranking no perfil (padrao true). */
   showRanking?: boolean;
   isMentor: boolean;
+  /** Modo recrutador ligado: abre o banco de talentos próprio. Só vem na leitura do dono. */
+  isRecruiter?: boolean;
   connectionsCount?: number;
   followersCount?: number;
   reputation?: number;

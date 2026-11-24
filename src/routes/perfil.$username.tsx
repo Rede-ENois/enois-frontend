@@ -655,6 +655,16 @@ function Profile() {
                       }
                     />
                     <EditProfileDialog profile={user} open={editOpen} onOpenChange={setEditOpen} />
+                    {/* Modo recrutador ligado: o painel do banco de talentos fica a um clique. */}
+                    {me?.isRecruiter && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void navigate({ to: "/recrutador/bancos" })}
+                      >
+                        {texts.talentBanks.openPanel}
+                      </Button>
+                    )}
                     <ProfileResumeDialog
                       open={resumeOpen}
                       onOpenChange={setResumeOpen}
