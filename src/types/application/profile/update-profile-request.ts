@@ -21,6 +21,7 @@ export type UpdateProfileRequest = Partial<
     | "externalLinks"
     | "openToWork"
     | "isMentor"
+    | "isRecruiter"
     | "birthDate"
     | "aka"
     | "resumeUrl"
