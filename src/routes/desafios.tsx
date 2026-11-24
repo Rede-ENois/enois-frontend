@@ -9,8 +9,8 @@ import type { DesafioView } from "@/types/application/desafios/desafio-view";
 import {
   DesafiosCard,
   DesafiosComposer,
+  DesafiosDetalhe,
   DesafiosFeed,
-  DesafiosParticipacoes,
 } from "@rede-enois/design-system/domain";
 import type {
   DesafioView as DesafioCardView,
@@ -141,9 +141,9 @@ function DesafiosPublicacao() {
 }
 
 /**
- * O card de um desafio: quando aberto, o mural de participações desenha logo abaixo — o
- * desafio do aviso abre sozinho. Remover (e a denúncia de quem vê) fica no card; encerrar com
- * reconhecimento mora no mural.
+ * O card de um desafio com o detalhe aberto: o card fica na linha do tempo e o desafio escolhido
+ * abre em tela cheia, sobre a página — o do aviso abre sozinho. Remover (e a denúncia de quem
+ * vê) fica no card; encerrar com reconhecimento mora no detalhe.
  */
 function DesafioCardAberta({
   desafio,
@@ -247,27 +247,32 @@ function DesafioCardAberta({
       <DesafiosCard
         desafio={desafio}
         timeLeft={tempoRestante(desafio)}
-        onOpen={() => onAbrir(aberto ? null : desafio.id)}
+        onOpen={() => onAbrir(desafio.id)}
         onRemove={() => void remover.mutateAsync()}
         onReport={() => setDenuncia(true)}
       />
 
-      {aberto && (
-        <DesafiosParticipacoes
-          desafio={desafio}
-          state={estadoMural}
-          participacoes={(mural.data?.items ?? []).map(paraParticipacao)}
-          onParticipate={async (entrada) => {
-            await participar.mutateAsync(entrada.content);
-          }}
-          onCheer={(participacaoId) => torcer.mutate(participacaoId)}
-          onUncheer={(participacaoId) => destorcer.mutate(participacaoId)}
-          onRemoveParticipacao={(participacaoId) =>
-            void removerParticipacao.mutateAsync(participacaoId)
-          }
-          onClose={(destaqueId) => encerrar.mutate(destaqueId)}
-        />
-      )}
+      {/* Abrir é idempotente: o card atrás não alterna mais o desafio, e a camada só fecha pelo
+          próprio gesto (Escape, o X ou o clique no fundo), que cai em `onAbrir(null)`. */}
+      <DesafiosDetalhe
+        open={aberto}
+        onOpenChange={(proximoAberto) => {
+          if (!proximoAberto) onAbrir(null);
+        }}
+        timeLeft={tempoRestante(desafio)}
+        desafio={desafio}
+        state={estadoMural}
+        participacoes={(mural.data?.items ?? []).map(paraParticipacao)}
+        onParticipate={async (entrada) => {
+          await participar.mutateAsync(entrada.content);
+        }}
+        onCheer={(participacaoId) => torcer.mutate(participacaoId)}
+        onUncheer={(participacaoId) => destorcer.mutate(participacaoId)}
+        onRemoveParticipacao={(participacaoId) =>
+          void removerParticipacao.mutateAsync(participacaoId)
+        }
+        onClose={(destaqueId) => encerrar.mutate(destaqueId)}
+      />
 
       {/* Denúncia de qualquer alvo: o mesmo formulário e os mesmos alvos do resto da plataforma. */}
       <ReportDialog
