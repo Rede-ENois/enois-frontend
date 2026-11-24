@@ -1,6 +1,11 @@
 import { useState } from "react";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
@@ -10,6 +15,7 @@ import { Button, PageHeader, useToast } from "@rede-enois/design-system/ui";
 import { colecoesApi } from "@/lib/api";
 import { mensagemDeErroColecao as mensagemDeErro } from "@/lib/colecoes-helpers";
 import { requireAuth } from "@/lib/require-auth";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 import { AppContainer } from "@/components/app-container";
 
@@ -27,12 +33,15 @@ export const Route = createFileRoute("/colecoes")({
 function ColecoesPage() {
   const navigate = useNavigate();
   const [criando, setCriando] = useState(false);
+  const [busca, setBusca] = useState("");
+  const termo = useDebouncedValue(busca.trim(), 300);
 
   const lista = useInfiniteQuery({
-    queryKey: ["colecoes"],
-    queryFn: ({ pageParam }) => colecoesApi.list(pageParam),
+    queryKey: ["colecoes", termo],
+    queryFn: ({ pageParam }) => colecoesApi.list(pageParam, termo || undefined),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
+    placeholderData: keepPreviousData,
   });
 
   const colecoes = lista.data?.pages.flatMap((page) => page.items) ?? [];
@@ -54,6 +63,7 @@ function ColecoesPage() {
         colecoes={colecoes}
         state={estado}
         onOpen={(colecaoId) => void navigate({ to: "/colecoes/$colecaoId", params: { colecaoId } })}
+        busca={{ valor: busca, aoMudar: setBusca }}
         hasMore={lista.hasNextPage ?? false}
         loadingMore={lista.isFetchingNextPage}
         onLoadMore={() => void lista.fetchNextPage()}

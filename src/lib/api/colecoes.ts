@@ -13,8 +13,9 @@ import { api, buildQuery } from "../api-client";
  * da coleção nunca apaga o post nem o salva. A tela só traduz.
  */
 export const colecoesApi = {
-  list: (cursor?: string | null, limit = 24) =>
-    api.get<ColecoesPagina>(`/colecoes${buildQuery({ cursor, limit })}`),
+  /** `search` filtra no servidor por título e descrição, só entre as suas coleções. */
+  list: (cursor?: string | null, search?: string, limit = 24) =>
+    api.get<ColecoesPagina>(`/colecoes${buildQuery({ cursor, search, limit })}`),
 
   get: (colecaoId: string) => api.get<ColecaoResumo>(`/colecoes/${encodeURIComponent(colecaoId)}`),
 
