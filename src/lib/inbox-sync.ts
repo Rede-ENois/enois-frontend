@@ -16,7 +16,8 @@ import { fetchFirstPage, mergeRows } from "./query-first-page";
  *
  * Aqui a revalidação vai só onde o aviso aponta, e só a primeira página: mudar a conversa X não
  * muda o histórico antigo de X nem as conversas que ninguém tocou. Consulta sem observador (tela
- * que não está aberta) não é buscada — ela será carregada do zero quando a tela abrir.
+ * que não está aberta) não é buscada — ela será carregada do zero quando a tela abrir. A única
+ * exceção é a lista paginada por posição (ver `needsFullRefresh`).
  */
 
 const MESSAGES_KEY = "messages";
@@ -51,8 +52,26 @@ async function refreshFirstPage(queryClient: QueryClient, query: Query): Promise
   });
 }
 
+/**
+ * Consulta cujo cursor é uma POSIÇÃO na ordem (`meta.positionCursor`, a lista de avisos não lidos
+ * primeiro) e que já tem mais de uma página carregada. Ali a exceção à regra "só a primeira página"
+ * é obrigatória: quando um aviso carregado muda de grupo (é lido) ou chega um novo, as linhas
+ * seguintes andam uma posição e o cursor da cauda passa a apontar para a linha errada — renovando
+ * só o topo, "Carregar mais" pulava um aviso não lido. Refazer as páginas em sequência recalcula
+ * os cursores a partir das respostas novas.
+ */
+function needsFullRefresh(query: Query): boolean {
+  const pages = (query.state.data as { pages: unknown[] }).pages;
+  return query.options.meta?.positionCursor === true && pages.length > 1;
+}
+
 function refreshPaged(queryClient: QueryClient, queryKey: readonly unknown[]): Promise<unknown>[] {
-  return pagedQueries(queryClient, queryKey).map((query) => refreshFirstPage(queryClient, query));
+  return pagedQueries(queryClient, queryKey).map((query) =>
+    // Falha de rede aqui é igual à de `refreshFirstPage`: o cache fica como estava, sem rejeitar.
+    needsFullRefresh(query)
+      ? query.fetch().catch(() => undefined)
+      : refreshFirstPage(queryClient, query),
+  );
 }
 
 /**

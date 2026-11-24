@@ -286,7 +286,7 @@ mostram os códigos `CITY_STATE_INCOMPLETE`, `INVALID_STATE` e `CITY_TOO_LONG` e
 
 | Método | Endpoint                        | Descrição                                                                                                                     |
 | ------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/notifications`                | Listar notificações                                                                                                           |
+| GET    | `/notifications`                | Listar notificações; `unreadFirst=true`: não lidas primeiro, cursor de posição `o:<n>` (aba "Novas")                          |
 | GET    | `/notifications/unread-summary` | Unread total, per module (`byModule`) and per community (`byCommunity`), plus `eventsToday`: behind the menu and dock signals |
 | POST   | `/notifications/{id}/read`      | Marcar como lida                                                                                                              |
 | POST   | `/notifications/read-all`       | Marcar todas como lidas                                                                                                       |

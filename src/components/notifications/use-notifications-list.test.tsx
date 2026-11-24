@@ -3,6 +3,7 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import type { NoticeListTestPage } from "@/types/components/notifications/notice-list-test-page";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -30,6 +31,26 @@ const PAGE = {
   ],
   nextCursor: null,
 };
+
+function notice(id: string, read: boolean, createdAt: string) {
+  return { id, read, kind: "reaction", createdAt };
+}
+
+/** Responde cada lista pelo 4º argumento, uma página por chamada, na ordem dada. */
+function serveLists(pages: { unreadFirst: NoticeListTestPage[]; recent: NoticeListTestPage[] }) {
+  const queues = { unreadFirst: [...pages.unreadFirst], recent: [...pages.recent] };
+  mocks.list.mockImplementation(
+    async (
+      _cursor: string | null,
+      _limit: number,
+      _context: string,
+      options?: { unreadFirst?: boolean },
+    ) => {
+      const queue = options?.unreadFirst ? queues.unreadFirst : queues.recent;
+      return queue.length > 1 ? queue.shift() : queue[0];
+    },
+  );
+}
 
 /** The bell (in the header) and the whole page (the dock's Avisos) mount side by side. */
 function Bell({ onList }: { onList: (state: ReturnType<typeof useNotificationsList>) => void }) {
@@ -85,18 +106,21 @@ describe("lista de avisos compartilhada", () => {
     await flush();
   };
 
-  it("o sino e a página dividem um único fetch da mesma lista", async () => {
+  it("o sino e a página dividem um único fetch de cada lista", async () => {
     // Antes: o sino usava ["notifications", ctx] com limit=20 e a página
     // ["notifications","page",ctx] com limit=30 — duas chaves, duas chamadas na mesma carga, e a
-    // página nunca aproveitava o cache do sino. Agora as duas montagens resolvem a MESMA consulta.
+    // página nunca aproveitava o cache do sino. Agora as duas montagens resolvem as MESMAS
+    // consultas: uma chamada da lista recente e uma da lista de não lidos primeiro, nada mais.
     // O stream fica aberto para a recarga periódica não entrar na contagem: o que este teste prende
     // é a deduplicação das duas montagens, não o polling (que tem teste próprio).
     mocks.live.mockReturnValue(true);
     await render();
 
-    expect(mocks.list).toHaveBeenCalledTimes(1);
-    // Dez por página: a lista carrega aos poucos, como o feed e as mensagens.
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    // Dez por página: a lista carrega aos poucos, como o feed e as mensagens. A lista recente vai
+    // sem opção nenhuma, exatamente como antes.
     expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL");
+    expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL", { unreadFirst: true });
     expect(page.items).toHaveLength(1);
     expect(page.items[0].id).toBe("n1");
   });
@@ -170,16 +194,150 @@ describe("lista de avisos compartilhada", () => {
     expect(mocks.list.mock.calls.length).toBeGreaterThan(afterRender);
   });
 
+  it("traz o aviso não lido que a lista recente empurrou para a página seguinte", async () => {
+    // Issue #1147: dez mensagens lidas mais novas enchiam a página 1 da lista recente e a reação
+    // não lida ficava na página 2, nunca carregada: o sino contava 1 e "Novas" ficava vazia.
+    mocks.live.mockReturnValue(true);
+    const readMessages = Array.from({ length: 10 }, (_, i) => ({
+      id: `m${i}`,
+      read: true,
+      kind: "new_message",
+      createdAt: `2026-11-02T10:${String(10 + i).padStart(2, "0")}:00Z`,
+    }));
+    const reaction = {
+      id: "r1",
+      read: false,
+      kind: "reaction",
+      createdAt: "2026-11-02T09:00:00Z",
+    };
+    mocks.list.mockImplementation(
+      async (
+        _cursor: string | null,
+        _limit: number,
+        _context: string,
+        options?: { unreadFirst?: boolean },
+      ) =>
+        options?.unreadFirst
+          ? { items: [reaction], nextCursor: null }
+          : { items: readMessages, nextCursor: "2026-11-02T10:10:00Z" },
+    );
+
+    await render();
+
+    expect(page.items).toContainEqual(reaction);
+  });
+
+  it("com dez ou mais não lidos, o Histórico continua recebendo os lidos recentes", async () => {
+    // Trocar a lista inteira para `unreadFirst=true` deixaria a página 1 só com não lidos: o
+    // Histórico ficaria vazio e, sem linhas, o painel nem mostra "Carregar mais".
+    mocks.live.mockReturnValue(true);
+    const unread = Array.from({ length: 10 }, (_, i) =>
+      notice(`u${i}`, false, `2026-11-03T10:${10 + i}:00Z`),
+    );
+    const read = Array.from({ length: 10 }, (_, i) =>
+      notice(`h${i}`, true, `2026-11-02T10:${10 + i}:00Z`),
+    );
+    serveLists({
+      unreadFirst: [{ items: unread, nextCursor: "o:10" }],
+      recent: [{ items: read, nextCursor: "2026-11-02T10:10:00Z" }],
+    });
+
+    await render();
+
+    expect(page.items.filter((item) => !item.read)).toHaveLength(10);
+    expect(page.items.filter((item) => item.read)).toHaveLength(10);
+  });
+
+  it("une as duas listas: um aviso por id, lido vence, do mais novo ao mais velho", async () => {
+    mocks.live.mockReturnValue(true);
+    serveLists({
+      unreadFirst: [
+        {
+          items: [
+            notice("a", false, "2026-11-02T12:00:00Z"),
+            notice("same", false, "2026-11-02T11:00:00Z"),
+            notice("c", false, "2026-11-02T09:00:00Z"),
+          ],
+          nextCursor: null,
+        },
+      ],
+      recent: [
+        {
+          items: [
+            notice("same", true, "2026-11-02T11:00:00Z"),
+            notice("b", true, "2026-11-02T10:00:00Z"),
+          ],
+          nextCursor: null,
+        },
+      ],
+    });
+
+    await render();
+
+    expect(page.items.map((item) => [item.id, item.read])).toEqual([
+      ["a", false],
+      ["same", true],
+      ["b", true],
+      ["c", false],
+    ]);
+    expect(page.latest.map((item) => item.id)).toEqual(["a", "same", "b", "c"]);
+  });
+
+  it("carregar mais avança cada lista pelo próprio cursor e só a que tem próxima página", async () => {
+    mocks.live.mockReturnValue(true);
+    serveLists({
+      unreadFirst: [
+        { items: [notice("u1", false, "2026-11-02T09:00:00Z")], nextCursor: "o:10" },
+        { items: [notice("u2", false, "2026-11-01T09:00:00Z")], nextCursor: null },
+      ],
+      recent: [{ items: [notice("r1", true, "2026-11-02T10:00:00Z")], nextCursor: null }],
+    });
+    await render();
+    expect(page.hasNextPage).toBe(true);
+
+    await act(async () => {
+      await page.fetchNextPage();
+    });
+    await flush();
+
+    expect(mocks.list).toHaveBeenCalledTimes(3);
+    expect(mocks.list).toHaveBeenLastCalledWith("o:10", 10, "SOCIAL", { unreadFirst: true });
+    expect(page.items.map((item) => item.id)).toEqual(["r1", "u1", "u2"]);
+    expect(page.hasNextPage).toBe(false);
+  });
+
+  it("carregar mais na lista recente pede o cursor de instante sem a opção de não lidos", async () => {
+    mocks.live.mockReturnValue(true);
+    serveLists({
+      unreadFirst: [{ items: [], nextCursor: null }],
+      recent: [
+        { items: [notice("r1", true, "2026-11-02T10:00:00Z")], nextCursor: "2026-11-02T10:00:00Z" },
+        { items: [notice("r0", true, "2026-11-01T10:00:00Z")], nextCursor: null },
+      ],
+    });
+    await render();
+
+    await act(async () => {
+      await page.fetchNextPage();
+    });
+    await flush();
+
+    expect(mocks.list).toHaveBeenCalledTimes(3);
+    expect(mocks.list).toHaveBeenLastCalledWith("2026-11-02T10:00:00Z", 10, "SOCIAL");
+    expect(page.items.map((item) => item.id)).toEqual(["r1", "r0"]);
+  });
+
   it("não consulta enquanto o stream entrega os avisos", async () => {
     mocks.live.mockReturnValue(true);
     await render();
-    expect(mocks.list).toHaveBeenCalledTimes(1);
+    // Uma chamada de cada lista na montagem.
+    expect(mocks.list).toHaveBeenCalledTimes(2);
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
     });
     await flush();
 
-    expect(mocks.list).toHaveBeenCalledTimes(1);
+    expect(mocks.list).toHaveBeenCalledTimes(2);
   });
 });
