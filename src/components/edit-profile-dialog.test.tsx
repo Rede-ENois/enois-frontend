@@ -70,6 +70,7 @@ vi.mock("@rede-enois/design-system/domain", () => ({
               goalsText: "",
               openToWork: false,
               isMentor: false,
+              isRecruiter: false,
               showRanking: true,
               aka: "",
               badges: [],
