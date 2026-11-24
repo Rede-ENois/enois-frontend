@@ -27,6 +27,11 @@ export function usesBareEmoteCodes(writtenAt: string | undefined): boolean {
   return Number.isFinite(time) && time < BARE_EMOTE_CODES_UNTIL;
 }
 
+/** Código que o leitor do design system reconhece como figurinha: sempre entre dois-pontos. */
+function codigoDeFigurinha(code: string): string {
+  return `:${code}:`;
+}
+
 function resolveEmoteUrl(code: string, index: Map<string, string>): string | undefined {
   return index.get(code) ?? getEnoisEmojiByCode(code)?.src;
 }
@@ -41,7 +46,7 @@ function replaceColonCodes(text: string, index: Map<string, string>): string {
 const TOKEN_BOUNDARY = /^([([{'"*_~]*)(.*?)([)\]}>.,;:!?'"*_~]*)$/;
 
 function marca(code: string, url: string): string {
-  return `![${code}](${url})`;
+  return `![${codigoDeFigurinha(code)}](${url})`;
 }
 
 function replaceToken(piece: string, index: Map<string, string>): string {
