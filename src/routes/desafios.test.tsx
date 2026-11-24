@@ -125,6 +125,7 @@ const ds = {
   torcer: "Torcer",
   escolherDestaque: "Reconhecer e encerrar com essa",
   encerrar: "Encerrar desafio",
+  fecharDetalhe: "Fechar",
 };
 
 describe("rota dos Desafios", () => {
@@ -268,6 +269,46 @@ describe("rota dos Desafios", () => {
     expect(document.body.textContent).toContain("Participação pa-1");
     // A torcida é contada, nunca nominada: pílula com número, sem lista de quem torceu.
     expect(document.body.querySelector(`button[aria-label="${ds.torcer}"]`)).toBeTruthy();
+  });
+
+  it("abrir o convite abre o desafio em tela cheia e o toque de novo não fecha nem volta", async () => {
+    await render();
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
+    const abrir = [...document.body.querySelectorAll("button")].find((botao) =>
+      botao.textContent?.includes("Desafio d-1"),
+    );
+    if (!abrir) throw new Error("convite não renderizado");
+    await act(async () => abrir.click());
+    await settleMuito();
+
+    const detalhe = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    if (!detalhe) throw new Error("o desafio não abriu em tela cheia");
+    // A camada é a janela inteira, não um bloco embutido embaixo do card.
+    expect(detalhe.className).toContain("w-screen");
+    expect(detalhe.className).toContain("h-dvh");
+    expect(mocks.participacoes).toHaveBeenCalledWith("d-1");
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/desafios", search: { desafio: "d-1" } });
+
+    // O mesmo toque de novo não alterna: o desafio continua aberto (antes, o segundo toque
+    // fechava o mural e a tela parecia entrar em loop).
+    await act(async () => abrir.click());
+    await settleMuito();
+    expect(document.body.querySelector('[role="dialog"]')).toBeTruthy();
+
+    const fechar = [...document.body.querySelectorAll("button")].find((botao) =>
+      botao.textContent?.includes(ds.fecharDetalhe),
+    );
+    if (!fechar) throw new Error("botão de fechar do desafio não renderizado");
+    await act(async () => fechar.click());
+    await settleMuito();
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    expect(mocks.navigate).toHaveBeenLastCalledWith({
+      to: "/desafios",
+      search: { desafio: undefined },
+    });
   });
 
   it("participar manda o texto e refetcha o mural", async () => {
