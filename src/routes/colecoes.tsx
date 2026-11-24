@@ -6,7 +6,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useMatchRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { ColecaoFormulario, ColecoesLista } from "@rede-enois/design-system/domain";
@@ -27,8 +27,17 @@ import { AppContainer } from "@/components/app-container";
 export const Route = createFileRoute("/colecoes")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.colecoes.seoTitle }] }),
-  component: ColecoesPage,
+  component: ColecoesRota,
 });
+
+/**
+ * A listagem é MÃE da página da coleção (`/colecoes/{id}`): sem devolver o filho pelo `Outlet`, o
+ * roteador desenha a lista no lugar da coleção e clicar num cartão só troca o endereço.
+ */
+function ColecoesRota() {
+  const matchRoute = useMatchRoute();
+  return matchRoute({ to: "/colecoes", fuzzy: false }) ? <ColecoesPage /> : <Outlet />;
+}
 
 function ColecoesPage() {
   const navigate = useNavigate();
