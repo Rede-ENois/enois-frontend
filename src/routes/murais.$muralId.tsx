@@ -11,6 +11,7 @@ import {
   MuralQuadro,
 } from "@rede-enois/design-system/domain";
 import { Button, EmptyState, PageHeader, useToast } from "@rede-enois/design-system/ui";
+import { Copy, ExternalLink, MessageCircle } from "lucide-react";
 
 import { muraisApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
@@ -173,6 +174,38 @@ function MuralAberto({
     },
   });
 
+  const urlDoMural = () =>
+    typeof window === "undefined"
+      ? `/murais/${mural.id}`
+      : `${window.location.origin}/murais/${mural.id}`;
+
+  const copiarLink = async () => {
+    try {
+      await navigator.clipboard.writeText(urlDoMural());
+      toast(texts.murais.compartilharLinkCopiado, "success");
+    } catch {
+      toast(texts.murais.compartilharErroCopiar, "error");
+    }
+  };
+
+  const enviarPeloChat = async () => {
+    try {
+      await navigator.clipboard.writeText(urlDoMural());
+      toast(texts.murais.compartilharLinkCopiado, "success");
+      void navigate({ to: "/mensagens" });
+    } catch {
+      toast(texts.murais.compartilharErroCopiar, "error");
+    }
+  };
+
+  const compartilharNoAparelho = () => {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      void navigator.share({ url: urlDoMural() }).catch(() => undefined);
+      return;
+    }
+    void copiarLink();
+  };
+
   return (
     <>
       <MuralQuadro
@@ -188,6 +221,21 @@ function MuralAberto({
         }}
         colando={colar.isPending}
         colarErro={colarErro}
+        compartilhar={
+          <>
+            <Button variant="ghost" size="sm" onClick={() => void enviarPeloChat()}>
+              <MessageCircle /> {texts.murais.compartilharMenuEnviar}
+            </Button>
+
+            <Button variant="ghost" size="sm" onClick={() => void copiarLink()}>
+              <Copy /> {texts.murais.compartilharMenuCopiar}
+            </Button>
+
+            <Button variant="ghost" size="sm" onClick={compartilharNoAparelho}>
+              <ExternalLink /> {texts.murais.compartilharMenuAparelho}
+            </Button>
+          </>
+        }
       >
         {contribuicoes.map((contribuicao) => (
           <MuralContribuicaoCartao
