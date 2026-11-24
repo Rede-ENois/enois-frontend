@@ -7,10 +7,13 @@ name: Seguir release do design system
 # o build da `qa` (build-and-push.yml) segue sozinho, como qualquer outro push. O PR qa→main
 # continua sendo o único caminho até produção.
 #
-# O pacote @rede-enois/design-system mora no GitHub Packages, e o GITHUB_TOKEN desta execução
-# não consegue ler o pacote de outro repositório: por isso o secret DS_RELEASE_TOKEN (um PAT com
-# leitura de pacotes e escrita em contents), que também é a autenticação do push no repositório —
-# um push do GITHUB_TOKEN não dispararia o workflow do build. Nunca use esse token em `pull_request`.
+# O pacote @rede-enois/design-system mora no GitHub Packages, e nesta execução o GITHUB_TOKEN não
+# alcança o pacote de outro repositório: por isso o secret DS_RELEASE_TOKEN (um PAT fine-grained
+# com escrita em contents) autentica o push na `qa` — um push do GITHUB_TOKEN não dispararia o
+# workflow do build. A LEITURA do pacote fica com o GITHUB_TOKEN padrão (permissão `packages:
+# read` abaixo), que já alcança o pacote de outro repo da mesma organização; o DS_RELEASE_TOKEN
+# não tem `read:packages`, e usá-lo no npm é o que faz o `npm ci` falhar com 403.
+# Nunca use esse token em `pull_request`.
 #
 # O lock precisa guardar `version` e `resolved` com o sha: sem eles o Docker responde 405.
 
@@ -20,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 # Dois releases seguidos que cheguem quase juntos: o segundo espera o primeiro e parte do lock
 # que ele deixou.
@@ -47,7 +51,9 @@ jobs:
 
       - name: Regenerar o lock na versão publicada
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.DS_RELEASE_TOKEN }}
+          # A leitura do pacote é com o GITHUB_TOKEN (permissão `packages: read`): o
+          # DS_RELEASE_TOKEN serve para o push na qa e não tem `read:packages`.
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DESIGN_SYSTEM_VERSION: ${{ github.event.client_payload.version }}
         run: |
           set -euo pipefail
