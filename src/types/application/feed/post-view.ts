@@ -20,6 +20,8 @@ export type PostView = {
   authorContributor?: AuthorContributorTag | null;
   /** Selo "Humanidade Comprovada" do autor (em lote, uma consulta por página). */
   authorHumanityVerified?: boolean;
+  /** Tag "Aniversariante" quando o autor faz aniversário hoje; ausente = não faz. */
+  authorBirthdayToday?: boolean;
   /** Notas de rodapé aprovadas (verificação da comunidade); vazio = nenhuma. */
   communityNotes?: PostNote[] | null;
   /** Nota do próprio leitor neste post (em análise/negada/aprovada). */

@@ -13,8 +13,9 @@ import { api, buildQuery } from "../api-client";
  * sempre; tirar do mural nunca apaga o post. O backend manda nas regras; a tela só traduz.
  */
 export const muraisApi = {
-  list: (cursor?: string | null, limit = 24) =>
-    api.get<MuraisPagina>(`/murais${buildQuery({ cursor, limit })}`),
+  /** `search` filtra no servidor por título e descrição; vazio é a lista inteira. */
+  list: (cursor?: string | null, search?: string, limit = 24) =>
+    api.get<MuraisPagina>(`/murais${buildQuery({ cursor, search, limit })}`),
 
   get: (muralId: string) => api.get<MuralResumo>(`/murais/${encodeURIComponent(muralId)}`),
 

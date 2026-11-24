@@ -14,6 +14,7 @@ import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-pur
 import type { RecommendationItemProps } from "@/types/routes/profile/recommendation-item-props";
 import type { SectionProps } from "@/types/routes/profile/section-props";
 import {
+  BirthdaySeal,
   ContributorTag,
   DiarioLinhaTempo,
   EMPTY_PROFILE_LOOK,
@@ -567,6 +568,9 @@ function Profile() {
                 {/* Selo "Humanidade Comprovada": so quando o backend confirma a verificacao. */}
                 {user.humanityVerified && <HumanitySeal variant="full" />}
 
+                {/* Tag "Aniversariante": só no dia (o backend confere a data de nascimento). */}
+                {user.birthdayToday && <BirthdaySeal />}
+
                 {isContributor && <ContributorTag color={user.contributorTagColor} />}
 
                 {user.headline && (
@@ -651,6 +655,16 @@ function Profile() {
                       }
                     />
                     <EditProfileDialog profile={user} open={editOpen} onOpenChange={setEditOpen} />
+                    {/* Modo recrutador ligado: o painel do banco de talentos fica a um clique. */}
+                    {me?.isRecruiter && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void navigate({ to: "/recrutador/bancos" })}
+                      >
+                        {texts.talentBanks.openPanel}
+                      </Button>
+                    )}
                     <ProfileResumeDialog
                       open={resumeOpen}
                       onOpenChange={setResumeOpen}

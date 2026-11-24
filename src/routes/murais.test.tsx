@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   navigate: vi.fn(),
   toast: vi.fn(),
+  detalheAberto: vi.fn(() => false),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -28,6 +29,9 @@ vi.mock("@tanstack/react-router", () => ({
     options,
   }),
   useNavigate: () => mocks.navigate,
+  // O roteador pergunta se o caminho é exatamente a listagem; em teste a resposta vem de fora.
+  useMatchRoute: () => (opts: { to: string }) => (mocks.detalheAberto() ? false : opts),
+  Outlet: () => <div data-testid="rota-filha" />,
 }));
 vi.mock("@/lib/api", () => ({
   muraisApi: {
@@ -48,6 +52,8 @@ vi.mock("@/components/app-container", () => ({
 const { Route } = await import("./murais");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 const MuraisPage = (options as { component: () => React.JSX.Element }).component;
+/** A listagem é mãe do detalhe: com o filho aberto, o `Outlet` é quem desenha. */
+const Pagina = () => (mocks.detalheAberto() ? <div data-testid="rota-filha" /> : <MuraisPage />);
 
 // Frases do desenho que vivem no design system (mensagens padrão murais*).
 const ds = {
@@ -58,6 +64,8 @@ const ds = {
   salvar: "Salvar",
   abrirMural: "Abrir mural",
   contagem: (n: number) => `${n} publicações`,
+  buscar: "Buscar pelo título ou pela descrição",
+  semResultado: (termo: string) => `Nenhum mural com o termo "${termo}".`,
 };
 
 const mural = (id: string, extra: Partial<MuralResumo> = {}): MuralResumo => ({
@@ -92,7 +100,7 @@ describe("rota dos Murais (lista)", () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={client}>
-          <MuraisPage />
+          <Pagina />
         </QueryClientProvider>,
       );
     });
@@ -118,6 +126,7 @@ describe("rota dos Murais (lista)", () => {
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     Object.values(mocks).forEach((mock) => mock.mockReset());
+    mocks.detalheAberto.mockReturnValue(false);
     mocks.list.mockResolvedValue({ items: [mural("m-1"), mural("m-2")], nextCursor: null });
     mocks.create.mockResolvedValue(mural("m-novo"));
     mocks.navigate.mockReturnValue(undefined);
@@ -141,7 +150,15 @@ describe("rota dos Murais (lista)", () => {
     expect(document.body.textContent).toContain("Mural m-1");
     expect(document.body.textContent).toContain("Dona");
     expect(document.body.textContent).toContain(ds.contagem(2));
-    expect(mocks.list).toHaveBeenCalledWith(null);
+    expect(mocks.list).toHaveBeenCalledWith(null, undefined);
+  });
+
+  it("com o mural aberto pelo endereço, a listagem sai da frente e o quadro desenha", async () => {
+    mocks.detalheAberto.mockReturnValue(true);
+    await render();
+
+    expect(document.body.querySelector("[data-testid='rota-filha']")).not.toBeNull();
+    expect(document.body.textContent).not.toContain("Mural m-1");
   });
 
   it("sem nenhum mural, o vazio do DS fala", async () => {
@@ -149,6 +166,45 @@ describe("rota dos Murais (lista)", () => {
     await render();
 
     expect(document.body.textContent).toContain("Nenhum mural por aqui ainda");
+  });
+
+  it("a busca só vai ao servidor depois da pausa, e o termo aparado filtra", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await render();
+      expect(mocks.list).toHaveBeenCalledWith(null, undefined);
+
+      const campo = document.body.querySelector<HTMLInputElement>("input[type='search']")!;
+      expect(campo.placeholder).toBe(ds.buscar);
+      await digitar(campo, "  feira ");
+      await settle();
+      expect(mocks.list).toHaveBeenCalledTimes(1);
+
+      mocks.list.mockResolvedValue({ items: [mural("m-feira")], nextCursor: null });
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      await settleMuito();
+
+      expect(mocks.list).toHaveBeenLastCalledWith(null, "feira");
+      expect(document.body.textContent).toContain("Mural m-feira");
+      expect(document.body.textContent).not.toContain("Mural m-1");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("busca sem resultado diz o termo, não o vazio geral", async () => {
+    await render();
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+
+    const campo = document.body.querySelector<HTMLInputElement>("input[type='search']")!;
+    await digitar(campo, "vôlei");
+    await act(() => new Promise<void>((done) => setTimeout(done, 350)));
+    await settleMuito();
+
+    expect(document.body.textContent).toContain(ds.semResultado("vôlei"));
+    expect(document.body.textContent).not.toContain("Nenhum mural por aqui ainda");
   });
 
   it("abrir um cartão navega para a página do mural", async () => {

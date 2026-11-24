@@ -305,6 +305,13 @@ a troca por imagem acontece na leitura (`useEmoteText` dentro do `RichText`), en
   03/11/2026) também troca o código solto, para post antigo continuar como o autor viu: quem desenha
   passa a data do texto em `RichText writtenAt` (post, comentário, mensagem, post e comentário de
   grupo, artigo e post de blog). Sem `writtenAt` (bio, descrições), só vale `:codigo:`.
+- **A chave do mapa é o código COM os dois-pontos** (`:KEKW:`): é o leitor do design system que
+  troca a figurinha, e a chave solta casaria a palavra comum que também é código — o `Pedro` voltava
+  como figurinha (#1149).
+- **O endereço da figurinha segue a origem dela:** o catálogo do backend vai pelo `apiUrl`
+  (`/emotes/image/...` sai do proxy da API), mas o pacote É Nóis é do APP (`/emojis/...`) e fica no
+  caminho relativo — montar esse com `apiUrl` mandava o `<img>` para o host da API, que responde
+  vazio nesse caminho, e a figurinha aparecia como o texto alternativo dela ("enois_like").
 
 - **Catálogo:** é do BACKEND, não do navegador. O backend fala com o BTTV e o FrankerFaceZ de 3 em 3
   horas, junta tudo em memória e serve três rotas: `GET /emotes?page&limit&q` (página do seletor),

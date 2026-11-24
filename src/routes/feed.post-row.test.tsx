@@ -144,4 +144,20 @@ describe("FeedPostRow", () => {
       expect(props.virtualized).toBeUndefined();
     }
   });
+
+  it("repassa a tag Aniversariante do autor para o card (o card desenha junto ao nome)", async () => {
+    const aniversariante = { ...makePost("post_a"), authorBirthdayToday: true };
+    const comum = makePost("post_b");
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <FeedPostRow post={aniversariante} index={0} feedTab="ALL" firstPostRef={vi.fn()} />
+          <FeedPostRow post={comum} index={1} feedTab="ALL" firstPostRef={vi.fn()} />
+        </QueryClientProvider>,
+      ),
+    );
+
+    expect(mocks.cards.get("post_a")?.post.authorBirthdayToday).toBe(true);
+    expect(mocks.cards.get("post_b")?.post.authorBirthdayToday).toBeUndefined();
+  });
 });

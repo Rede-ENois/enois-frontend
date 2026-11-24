@@ -20,6 +20,8 @@ export type CommentView = {
   authorContributor?: AuthorContributorTag | null;
   /** Selo "Humanidade Comprovada" do autor (em lote, uma consulta por página). */
   authorHumanityVerified?: boolean;
+  /** Tag "Aniversariante" quando o autor faz aniversário hoje; ausente = não faz. */
+  authorBirthdayToday?: boolean;
   /** Todos os emblemas (até 5), na ordem escolhida. */
   authorBadges?: string[] | null;
   parentCommentId: string | null;

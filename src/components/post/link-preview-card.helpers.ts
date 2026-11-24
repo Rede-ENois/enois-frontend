@@ -5,12 +5,20 @@ import { resolveCdnUrl } from "@/lib/api/media";
 const SAFE_IMAGE_PROTOCOLS = new Set(["http:", "https:"]);
 
 /**
+ * Caminho no PRÓPRIO host: uma barra só. `//host` e `/\host` já apontam para outra origem — o
+ * navegador lê a barra invertida como barra.
+ */
+function isOwnPath(value: string): boolean {
+  return value.startsWith("/") && !/^\/[/\\]/.test(value);
+}
+
+/**
  * A imagem do cartão, ou `null` para não desenhar nada.
  *
  * O endereço vem do `og:image` de um site de fora — dado de terceiro. O backend já o resolveu
  * contra a página e recusou o que não é http(s); aqui a mesma porta é fechada de novo porque a URL
- * atravessa o resolver de CDN do app: a casa usa caminho relativo, e nada além de http(s) chega ao
- * `src` (data:, javascript: e afins viram `null`, não uma imagem).
+ * atravessa o resolver de CDN do app: a casa usa caminho relativo, e do lado de cá só sai http(s)
+ * ou caminho do próprio app (data:, javascript: e afins viram `null`, não uma imagem).
  */
 export function safeImageUrl(raw: string | null): string | null {
   const value = raw?.trim();
@@ -21,6 +29,10 @@ export function safeImageUrl(raw: string | null): string | null {
   if (!value.startsWith("/") && !/^https?:\/\//i.test(value)) return null;
   const resolved = resolveCdnUrl(value);
   if (!resolved) return null;
+  // Caminho do próprio app — a miniatura de um link interno é `/api/media/{id}`, que quem serve é a
+  // nossa API. Relativo não passa pelo `new URL` (não tem origem para comparar) e não precisa:
+  // já está no nosso host.
+  if (isOwnPath(resolved)) return resolved;
   try {
     return SAFE_IMAGE_PROTOCOLS.has(new URL(resolved).protocol) ? resolved : null;
   } catch {

@@ -1,7 +1,12 @@
 import { useState } from "react";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { Outlet, createFileRoute, useMatchRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { MuraisLista, MuralFormulario } from "@rede-enois/design-system/domain";
@@ -11,6 +16,7 @@ import { z } from "zod";
 import { muraisApi } from "@/lib/api";
 import { mensagemDeErroMural as mensagemDeErro } from "@/lib/murais-helpers";
 import { requireAuth } from "@/lib/require-auth";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 import { AppContainer } from "@/components/app-container";
 
@@ -22,18 +28,30 @@ import { AppContainer } from "@/components/app-container";
 export const Route = createFileRoute("/murais")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.murais.seoTitle }] }),
-  component: MuraisPage,
+  component: MuraisRota,
 });
+
+/**
+ * A listagem é MÃE do quadro do mural (`/murais/{id}`): sem devolver o filho pelo `Outlet`, o
+ * roteador desenha a lista no lugar do quadro e clicar num cartão só troca o endereço.
+ */
+function MuraisRota() {
+  const matchRoute = useMatchRoute();
+  return matchRoute({ to: "/murais", fuzzy: false }) ? <MuraisPage /> : <Outlet />;
+}
 
 function MuraisPage() {
   const navigate = useNavigate();
   const [criando, setCriando] = useState(false);
+  const [busca, setBusca] = useState("");
+  const termo = useDebouncedValue(busca.trim(), 300);
 
   const lista = useInfiniteQuery({
-    queryKey: ["murais"],
-    queryFn: ({ pageParam }) => muraisApi.list(pageParam),
+    queryKey: ["murais", termo],
+    queryFn: ({ pageParam }) => muraisApi.list(pageParam, termo || undefined),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
+    placeholderData: keepPreviousData,
   });
 
   const murais = lista.data?.pages.flatMap((page) => page.items) ?? [];
@@ -55,6 +73,7 @@ function MuraisPage() {
         murais={murais}
         state={estado}
         onOpen={(muralId) => void navigate({ to: "/murais/$muralId", params: { muralId } })}
+        busca={{ valor: busca, aoMudar: setBusca }}
         hasMore={lista.hasNextPage ?? false}
         loadingMore={lista.isFetchingNextPage}
         onLoadMore={() => void lista.fetchNextPage()}

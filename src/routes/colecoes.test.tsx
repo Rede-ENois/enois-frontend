@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   navigate: vi.fn(),
   toast: vi.fn(),
+  detalheAberto: vi.fn(() => false),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -28,6 +29,9 @@ vi.mock("@tanstack/react-router", () => ({
     options,
   }),
   useNavigate: () => mocks.navigate,
+  // O roteador pergunta se o caminho é exatamente a listagem; em teste a resposta vem de fora.
+  useMatchRoute: () => (opts: { to: string }) => (mocks.detalheAberto() ? false : opts),
+  Outlet: () => <div data-testid="rota-filha" />,
 }));
 vi.mock("@/lib/api", () => ({
   colecoesApi: {
@@ -48,9 +52,13 @@ vi.mock("@/components/app-container", () => ({
 const { Route } = await import("./colecoes");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 const ColecoesPage = (options as { component: () => React.JSX.Element }).component;
+/** A listagem é mãe do detalhe: com o filho aberto, o `Outlet` é quem desenha. */
+const Pagina = () => (mocks.detalheAberto() ? <div data-testid="rota-filha" /> : <ColecoesPage />);
 
 // Frases do desenho que vivem no design system (mensagens padrão colecoes*).
 const ds = {
+  buscar: "Buscar pelo título ou pela descrição",
+  semResultado: (termo: string) => `Nenhuma coleção com o termo "${termo}".`,
   criarTitulo: "Criar coleção",
   salvar: "Salvar",
   abrirColecao: "Abrir coleção",
@@ -81,7 +89,7 @@ describe("rota das Coleções (lista)", () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={client}>
-          <ColecoesPage />
+          <Pagina />
         </QueryClientProvider>,
       );
     });
@@ -107,6 +115,7 @@ describe("rota das Coleções (lista)", () => {
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     Object.values(mocks).forEach((mock) => mock.mockReset());
+    mocks.detalheAberto.mockReturnValue(false);
     mocks.list.mockResolvedValue({ items: [colecao("c-1"), colecao("c-2")], nextCursor: null });
     mocks.create.mockResolvedValue(colecao("c-novo"));
     mocks.navigate.mockReturnValue(undefined);
@@ -130,7 +139,15 @@ describe("rota das Coleções (lista)", () => {
     expect(document.body.textContent).toContain("Coleção c-1");
     expect(document.body.textContent).toContain("Descrição do c-1");
     expect(document.body.textContent).toContain(ds.contagem(2));
-    expect(mocks.list).toHaveBeenCalledWith(null);
+    expect(mocks.list).toHaveBeenCalledWith(null, undefined);
+  });
+
+  it("com a coleção aberta pelo endereço, a listagem sai da frente e a coleção desenha", async () => {
+    mocks.detalheAberto.mockReturnValue(true);
+    await render();
+
+    expect(document.body.querySelector("[data-testid='rota-filha']")).not.toBeNull();
+    expect(mocks.list).not.toHaveBeenCalled();
   });
 
   it("sem nenhuma coleção, o vazio do DS fala", async () => {
@@ -138,6 +155,43 @@ describe("rota das Coleções (lista)", () => {
     await render();
 
     expect(document.body.textContent).toContain("Nenhuma coleção ainda");
+  });
+
+  it("a busca só vai ao servidor depois da pausa, e o termo aparado filtra", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await render();
+      expect(mocks.list).toHaveBeenCalledWith(null, undefined);
+
+      const campo = document.body.querySelector<HTMLInputElement>("input[type='search']")!;
+      expect(campo.placeholder).toBe(ds.buscar);
+      await digitar(campo, "  receitas ");
+      await settle();
+      expect(mocks.list).toHaveBeenCalledTimes(1);
+
+      mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      await settleMuito();
+
+      expect(mocks.list).toHaveBeenLastCalledWith(null, "receitas");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("busca sem resultado diz o termo, não o vazio geral", async () => {
+    await render();
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+
+    const campo = document.body.querySelector<HTMLInputElement>("input[type='search']")!;
+    await digitar(campo, "vôlei");
+    await act(() => new Promise<void>((done) => setTimeout(done, 350)));
+    await settleMuito();
+
+    expect(document.body.textContent).toContain(ds.semResultado("vôlei"));
+    expect(document.body.textContent).not.toContain("Nenhuma coleção ainda");
   });
 
   it("abrir um cartão navega para a página da coleção", async () => {

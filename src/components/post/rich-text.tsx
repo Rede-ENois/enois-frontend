@@ -6,7 +6,7 @@ import {
   RichText as RichTextView,
 } from "@rede-enois/design-system/domain";
 
-import { apiUrl } from "@/lib/api-client";
+import { emoteImageUrl } from "@/lib/emotes/api";
 import { ENOIS_CUSTOM_EMOJIS } from "@/lib/emotes/enois-pack";
 import { useEmoteIndex, useEmoteText } from "@/lib/emotes/use-emotes";
 
@@ -15,15 +15,21 @@ import { InlineMedia } from "./inline-media";
 /**
  * O mapa que o leitor consulta por código (issue #1100). O índice do backend já chega com o host
  * da API (`emoteIndex` aplica `apiUrl` ao caminho do proxy), então ele entra como está — prefixar de
- * novo dava `/api/api/emotes/...`. O pacote É Nóis sai como caminho do app e só precisa do prefixo.
+ * novo dava `/api/api/emotes/...`. O pacote É Nóis é do próprio app (`/emojis/...`) e passa pelo
+ * mesmo montador de endereço, que deixa o caminho do app como ele é.
  */
 function mapaDeFigurinhas(index: Map<string, string>): Record<string, EditorSticker> {
+  // Só o código entre dois-pontos é figurinha (issue #1149): a chave solta faria o leitor trocar
+  // toda palavra que também é código ("Pedro") por imagem.
   const mapa: Record<string, EditorSticker> = {};
   for (const [code, url] of index) {
-    mapa[code] = { url, alt: code };
+    mapa[`:${code}:`] = { url, alt: code };
   }
+  // `emoteImageUrl` (e não `apiUrl`): o `/emojis/...` do pacote é servido pelo APP. Mandá-lo para o
+  // host da API — que responde 200 sem corpo nesse caminho — deixava a figurinha do pacote sem
+  // imagem, com o texto alternativo ("enois_like") aparecendo no lugar dela.
   for (const emoji of ENOIS_CUSTOM_EMOJIS) {
-    mapa[emoji.code] = { url: apiUrl(emoji.src), alt: emoji.code };
+    mapa[`:${emoji.code}:`] = { url: emoteImageUrl(emoji.src), alt: emoji.code };
   }
   return mapa;
 }
