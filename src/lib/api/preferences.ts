@@ -65,10 +65,10 @@ export const preferencesApi = {
         error instanceof ApiError &&
         (error.status === 413 || error.code === "IMPORT_TOO_LARGE")
       ) {
-        throw new Error(texts.errors.knownCodes.IMPORT_TOO_LARGE);
+        throw new Error(texts.errors.knownCodes.IMPORT_TOO_LARGE, { cause: error });
       }
-      if (error instanceof ApiError && error.code) throw new Error(error.message);
-      throw new Error("Não foi possível ler o arquivo do LinkedIn.");
+      if (error instanceof ApiError && error.code) throw new Error(error.message, { cause: error });
+      throw new Error("Não foi possível ler o arquivo do LinkedIn.", { cause: error });
     }
   },
 
