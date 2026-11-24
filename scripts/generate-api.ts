@@ -24,7 +24,7 @@ const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const specPath = resolve(root, "specs/openapi.json");
 
 const bruto = await readFile(specPath, "utf8").catch(() => "");
-let documento = false;
+let documento: boolean;
 try {
   documento = eDocumentoDeOpenApi(JSON.parse(bruto));
 } catch {
