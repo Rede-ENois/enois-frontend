@@ -57,6 +57,8 @@ const Pagina = () => (mocks.detalheAberto() ? <div data-testid="rota-filha" /> :
 
 // Frases do desenho que vivem no design system (mensagens padrão colecoes*).
 const ds = {
+  buscar: "Buscar pelo título ou pela descrição",
+  semResultado: (termo: string) => `Nenhuma coleção com o termo "${termo}".`,
   criarTitulo: "Criar coleção",
   salvar: "Salvar",
   abrirColecao: "Abrir coleção",
@@ -137,7 +139,7 @@ describe("rota das Coleções (lista)", () => {
     expect(document.body.textContent).toContain("Coleção c-1");
     expect(document.body.textContent).toContain("Descrição do c-1");
     expect(document.body.textContent).toContain(ds.contagem(2));
-    expect(mocks.list).toHaveBeenCalledWith(null);
+    expect(mocks.list).toHaveBeenCalledWith(null, undefined);
   });
 
   it("com a coleção aberta pelo endereço, a listagem sai da frente e a coleção desenha", async () => {
@@ -153,6 +155,43 @@ describe("rota das Coleções (lista)", () => {
     await render();
 
     expect(document.body.textContent).toContain("Nenhuma coleção ainda");
+  });
+
+  it("a busca só vai ao servidor depois da pausa, e o termo aparado filtra", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      await render();
+      expect(mocks.list).toHaveBeenCalledWith(null, undefined);
+
+      const campo = document.body.querySelector<HTMLInputElement>("input[type='search']")!;
+      expect(campo.placeholder).toBe(ds.buscar);
+      await digitar(campo, "  receitas ");
+      await settle();
+      expect(mocks.list).toHaveBeenCalledTimes(1);
+
+      mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+      await settleMuito();
+
+      expect(mocks.list).toHaveBeenLastCalledWith(null, "receitas");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("busca sem resultado diz o termo, não o vazio geral", async () => {
+    await render();
+    mocks.list.mockResolvedValue({ items: [], nextCursor: null });
+
+    const campo = document.body.querySelector<HTMLInputElement>("input[type='search']")!;
+    await digitar(campo, "vôlei");
+    await act(() => new Promise<void>((done) => setTimeout(done, 350)));
+    await settleMuito();
+
+    expect(document.body.textContent).toContain(ds.semResultado("vôlei"));
+    expect(document.body.textContent).not.toContain("Nenhuma coleção ainda");
   });
 
   it("abrir um cartão navega para a página da coleção", async () => {

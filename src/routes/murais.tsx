@@ -1,6 +1,11 @@
 import { useState } from "react";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Outlet, createFileRoute, useMatchRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
@@ -11,6 +16,7 @@ import { z } from "zod";
 import { muraisApi } from "@/lib/api";
 import { mensagemDeErroMural as mensagemDeErro } from "@/lib/murais-helpers";
 import { requireAuth } from "@/lib/require-auth";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 import { AppContainer } from "@/components/app-container";
 
@@ -37,12 +43,15 @@ function MuraisRota() {
 function MuraisPage() {
   const navigate = useNavigate();
   const [criando, setCriando] = useState(false);
+  const [busca, setBusca] = useState("");
+  const termo = useDebouncedValue(busca.trim(), 300);
 
   const lista = useInfiniteQuery({
-    queryKey: ["murais"],
-    queryFn: ({ pageParam }) => muraisApi.list(pageParam),
+    queryKey: ["murais", termo],
+    queryFn: ({ pageParam }) => muraisApi.list(pageParam, termo || undefined),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
+    placeholderData: keepPreviousData,
   });
 
   const murais = lista.data?.pages.flatMap((page) => page.items) ?? [];
@@ -64,6 +73,7 @@ function MuraisPage() {
         murais={murais}
         state={estado}
         onOpen={(muralId) => void navigate({ to: "/murais/$muralId", params: { muralId } })}
+        busca={{ valor: busca, aoMudar: setBusca }}
         hasMore={lista.hasNextPage ?? false}
         loadingMore={lista.isFetchingNextPage}
         onLoadMore={() => void lista.fetchNextPage()}
