@@ -116,11 +116,14 @@ describe("RichText com figurinhas", () => {
     await render("oi :KEKW: e :catJAM:, que orgulho 👍");
 
     const mapa = mapaRecebido ?? {};
-    expect(mapa.KEKW?.url).toBe(apiUrl(KEKW));
-    expect(mapa.catJAM?.url).toBe(apiUrl(CATJAM));
+    // Só o código entre dois-pontos é figurinha: o mapa não tem a chave solta, porque o leitor
+    // casaria a palavra comum que também é código.
+    expect(mapa[":KEKW:"]?.url).toBe(apiUrl(KEKW));
+    expect(mapa[":catJAM:"]?.url).toBe(apiUrl(CATJAM));
+    expect(mapa.KEKW).toBeUndefined();
     // O pacote É Nóis também vira figurinha pelo código, não só pelo emoji.
-    expect(mapa.enois_like?.url).toContain("/emojis/enois/");
-    expect(mapa.enois_like?.alt).toBe("enois_like");
+    expect(mapa[":enois_like:"]?.url).toContain("/emojis/enois/");
+    expect(mapa[":enois_like:"]?.alt).toBe("enois_like");
     expect(mapa.inexistente).toBeUndefined();
   });
 
