@@ -61,9 +61,24 @@ describe("withImageKitOriginal", () => {
   });
 
   it("mantém o caminho de figurinha do próprio backend intacto", () => {
-    const url = "/emotes/image/abc";
+    // O caminho do proxy é servido pela API, não pelo CDN. Com o prefixo do CDN o endereço responde
+    // 404 e a figurinha aparece como o texto alternativo dela ("enois_like" no meio da frase).
+    const url = "/api/emotes/image/BTTV/abc123?variant=full";
 
-    expect(withImageKitOriginal(url)).toContain("/emotes/image/abc");
+    expect(withImageKitOriginal(url)).toBe(url);
+    expect(resolveCdnUrl(url)).toBe(url);
+  });
+
+  it("mantém intacto o arquivo do build, como o pacote de figurinhas do É Nóis", () => {
+    const url = "/emojis/enois/like.webp";
+
+    expect(resolveCdnUrl(url)).toBe(url);
+    expect(withImageKitOriginal(url)).toBe(url);
+    expect(resolveCdnUrl(url)).not.toContain("imagekit.io");
+  });
+
+  it("ainda manda para o CDN o caminho relativo que é do CDN", () => {
+    expect(resolveCdnUrl("/a/b.png")).toMatch(/^https?:\/\/\S*\/a\/b\.png$/);
   });
 
   it("ainda troca a entrega do ImageKit pelo original", () => {
