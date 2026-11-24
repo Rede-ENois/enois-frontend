@@ -7,6 +7,19 @@ import { ApiError, api, apiUrl, sessionHeaders } from "../api-client";
 const IMAGEKIT_URL_ENDPOINT =
   import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT ?? "https://ik.imagekit.io/socialcoisa";
 
+/**
+ * Prefixos de caminho que ESTE app serve: a API (o proxy das figurinhas mora nela) e os arquivos do
+ * build (`public/`, onde fica o pacote É Nóis). Nenhum dos dois existe como chave de objeto no CDN:
+ * mandar o caminho para lá troca uma imagem que carrega por um endereço que responde 404, e o
+ * navegador pinta só o texto alternativo — era assim que a figurinha virava a palavra `enois_like`
+ * no meio da frase.
+ */
+const APP_SERVED_PREFIXES = ["/api/", "/emojis/"];
+
+function isAppServedPath(path: string): boolean {
+  return APP_SERVED_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
 export function mediaUploadResponseError(status: number, body: string, path: string): ApiError {
   let payload: { code?: string; message?: string } | null = null;
   try {
@@ -45,6 +58,7 @@ export function resolveCdnUrl(url: string | null | undefined): string | undefine
     }
   }
   if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) return cleaned;
+  if (isAppServedPath(cleaned)) return cleaned;
   return `${IMAGEKIT_URL_ENDPOINT}${cleaned.startsWith("/") ? "" : "/"}${cleaned}`;
 }
 

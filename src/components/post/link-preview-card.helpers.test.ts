@@ -64,9 +64,16 @@ describe("safeImageUrl", () => {
     expect(safeImageUrl("https://exemplo.com/capa.png")).toBe("https://exemplo.com/capa.png");
   });
 
-  it("resolves a media path of this app through the CDN", () => {
-    expect(safeImageUrl("/api/media/1")).toContain("https://");
-    expect(safeImageUrl("/api/media/1")).toContain("/api/media/1");
+  it("deixa o caminho de mídia do próprio app como está", () => {
+    // A miniatura de um link interno é `/api/media/{id}`, e quem serve é a nossa API: com o endereço
+    // do CDN na frente esse caminho responde 404 e o cartão fica com uma imagem quebrada.
+    expect(safeImageUrl("/api/media/1")).toBe("/api/media/1");
+  });
+
+  it("ainda resolve pelo CDN o caminho relativo que é do CDN", () => {
+    expect(safeImageUrl("/uploads/media_1/foto.png")).toMatch(
+      /^https?:\/\/\S*\/uploads\/media_1\/foto\.png$/,
+    );
   });
 
   it("refuses an image address that is not http(s)", () => {

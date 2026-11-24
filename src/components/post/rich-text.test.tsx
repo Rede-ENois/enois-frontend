@@ -8,7 +8,7 @@ import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiUrl } from "@/lib/api-client";
-import { isOwnMediaUrl } from "@/lib/api/media";
+import { isOwnMediaUrl, resolveCdnUrl, withImageKitOriginal } from "@/lib/api/media";
 
 import { RichText } from "./rich-text";
 
@@ -96,7 +96,13 @@ async function render(content: string, writtenAt?: string) {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={client}>
-        <EnoisProvider isOwnMediaUrl={isOwnMediaUrl}>
+        {/* Os MESMOS adapters do app: com os padrões do leitor o caminho da figurinha nunca passa
+            pelo resolvedor de mídia, e o teste deixa de mostrar o que o produto faz. */}
+        <EnoisProvider
+          isOwnMediaUrl={isOwnMediaUrl}
+          resolveMediaUrl={resolveCdnUrl}
+          resolveMediaOriginalUrl={withImageKitOriginal}
+        >
           <RichText content={content} writtenAt={writtenAt} />
         </EnoisProvider>
       </QueryClientProvider>,
@@ -121,10 +127,27 @@ describe("RichText com figurinhas", () => {
     expect(mapa[":KEKW:"]?.url).toBe(apiUrl(KEKW));
     expect(mapa[":catJAM:"]?.url).toBe(apiUrl(CATJAM));
     expect(mapa.KEKW).toBeUndefined();
-    // O pacote É Nóis também vira figurinha pelo código, não só pelo emoji.
-    expect(mapa[":enois_like:"]?.url).toContain("/emojis/enois/");
+    // O pacote É Nóis também vira figurinha pelo código, não só pelo emoji — e o endereço é o do
+    // APP (`/emojis/...`), não o da API: no host da API esse caminho responde sem corpo, e a
+    // figurinha do pacote aparecia como o texto alternativo dela ("enois_like") no meio da frase.
+    expect(mapa[":enois_like:"]?.url).toBe("/emojis/enois/like.webp");
     expect(mapa[":enois_like:"]?.alt).toBe("enois_like");
     expect(mapa.inexistente).toBeUndefined();
+  });
+
+  it("a figurinha do pacote É Nóis sai do app, e não do host da API nem do CDN", async () => {
+    const html = await render("oi :enois_like: tudo bem?");
+    const src = /<img[^>]*src="([^"]+)"/.exec(html)?.[1];
+
+    expect(src).toBe("/emojis/enois/like.webp");
+    expect(html).not.toContain("/api/emojis/");
+    // O leitor pede o endereço "original" de toda figurinha do mapa, e o resolvedor do app entende
+    // caminho relativo como caminho de CDN: o pacote tem que sair como é, senão vira um endereço
+    // que não tem o arquivo e a figurinha aparece só como o texto alternativo ("enois_like").
+    expect(html).not.toContain("imagekit.io");
+    // Sai como imagem no meio da frase, não como link nem como texto solto.
+    expect(html).toContain('alt="enois_like"');
+    expect(html).not.toContain("<a ");
   });
 
   it("desenha a figurinha no meio da frase", async () => {
