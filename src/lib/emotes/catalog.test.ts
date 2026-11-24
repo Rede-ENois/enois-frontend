@@ -7,8 +7,8 @@ const KEKW = "/emotes/image/BTTV/abc?variant=full";
 const CATJAM = "/emotes/image/FFZ/1?variant=full&a=1";
 
 const index = emoteIndex({ KEKW, catJAM: CATJAM });
-const IMG_KEKW = `![KEKW](${emoteImageUrl(KEKW)})`;
-const IMG_CATJAM = `![catJAM](${emoteImageUrl(CATJAM)})`;
+const IMG_KEKW = `![:KEKW:](${emoteImageUrl(KEKW)})`;
+const IMG_CATJAM = `![:catJAM:](${emoteImageUrl(CATJAM)})`;
 
 describe("emoteIndex", () => {
   it("vira o caminho do proxy em endereço da API", () => {
@@ -102,7 +102,7 @@ describe("pacote de emojis personalizados É Nóis", () => {
   it("substitui códigos :enois_*: e preserva emojis dentro de código", () => {
     const empty = new Map<string, string>();
     expect(applyEmotes("Olha :enois_rebel: mas `👍`\n```\n👍\n```\nficam intactos", empty)).toBe(
-      "Olha ![enois_rebel](/emojis/enois/rebel.webp) mas `👍`\n```\n👍\n```\nficam intactos",
+      "Olha ![:enois_rebel:](/emojis/enois/rebel.webp) mas `👍`\n```\n👍\n```\nficam intactos",
     );
   });
 });

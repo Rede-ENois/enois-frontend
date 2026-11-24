@@ -18,12 +18,14 @@ import { InlineMedia } from "./inline-media";
  * novo dava `/api/api/emotes/...`. O pacote É Nóis sai como caminho do app e só precisa do prefixo.
  */
 function mapaDeFigurinhas(index: Map<string, string>): Record<string, EditorSticker> {
+  // Só o código entre dois-pontos é figurinha (issue #1149): a chave solta faria o leitor trocar
+  // toda palavra que também é código ("Pedro") por imagem.
   const mapa: Record<string, EditorSticker> = {};
   for (const [code, url] of index) {
-    mapa[code] = { url, alt: code };
+    mapa[`:${code}:`] = { url, alt: code };
   }
   for (const emoji of ENOIS_CUSTOM_EMOJIS) {
-    mapa[emoji.code] = { url: apiUrl(emoji.src), alt: emoji.code };
+    mapa[`:${emoji.code}:`] = { url: apiUrl(emoji.src), alt: emoji.code };
   }
   return mapa;
 }
