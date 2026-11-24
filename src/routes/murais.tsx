@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useMatchRoute, useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
 import { MuraisLista, MuralFormulario } from "@rede-enois/design-system/domain";
@@ -22,8 +22,17 @@ import { AppContainer } from "@/components/app-container";
 export const Route = createFileRoute("/murais")({
   beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: texts.murais.seoTitle }] }),
-  component: MuraisPage,
+  component: MuraisRota,
 });
+
+/**
+ * A listagem é MÃE do quadro do mural (`/murais/{id}`): sem devolver o filho pelo `Outlet`, o
+ * roteador desenha a lista no lugar do quadro e clicar num cartão só troca o endereço.
+ */
+function MuraisRota() {
+  const matchRoute = useMatchRoute();
+  return matchRoute({ to: "/murais", fuzzy: false }) ? <MuraisPage /> : <Outlet />;
+}
 
 function MuraisPage() {
   const navigate = useNavigate();
