@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as ApoiarRouteImport } from './routes/apoiar'
+import { Route as BancosDeTalentosRouteImport } from './routes/bancos-de-talentos'
 import { Route as BlogsRouteImport } from './routes/blogs'
 import { Route as BloqueadosRouteImport } from './routes/bloqueados'
 import { Route as BoasVindasRouteImport } from './routes/boas-vindas'
@@ -41,6 +42,7 @@ import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as MensagensRouteImport } from './routes/mensagens'
 import { Route as MentoriaRouteImport } from './routes/mentoria'
 import { Route as MeusServicosRouteImport } from './routes/meus-servicos'
+import { Route as MinhasInscricoesRouteImport } from './routes/minhas-inscricoes'
 import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as ModeradorRouteImport } from './routes/moderador'
 import { Route as MuraisRouteImport } from './routes/murais'
@@ -71,6 +73,7 @@ import { Route as AgendaDisponibilidadeRouteImport } from './routes/agenda_.disp
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
+import { Route as BancosDeTalentosBankIdRouteImport } from './routes/bancos-de-talentos.$bankId'
 import { Route as BlogUsernameRouteImport } from './routes/blog.$username'
 import { Route as CallCallIdRouteImport } from './routes/call.$callId'
 import { Route as ColecoesColecaoIdRouteImport } from './routes/colecoes.$colecaoId'
@@ -90,6 +93,7 @@ import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_
 import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
 import { Route as ProjetosUsernameRouteImport } from './routes/projetos.$username'
 import { Route as ProjetosPainelRouteImport } from './routes/projetos.painel'
+import { Route as RecrutadorBancosRouteImport } from './routes/recrutador.bancos'
 import { Route as RoleplaySlugRouteImport } from './routes/roleplay.$slug'
 import { Route as VagasJobIdRouteImport } from './routes/vagas.$jobId'
 import { Route as VagasMinhasRouteImport } from './routes/vagas.minhas'
@@ -100,6 +104,7 @@ import { Route as GamesUsernameGameSlugRouteImport } from './routes/games.$usern
 import { Route as ProjetosUsernameProjectSlugRouteImport } from './routes/projetos.$username.$projectSlug'
 import { Route as VagasJobIdCandidaturasRouteImport } from './routes/vagas.$jobId.candidaturas'
 import { Route as ComunidadesCommunityIdCanaisChannelIdRouteImport } from './routes/comunidades.$communityId.canais.$channelId'
+import { Route as RecrutadorBancosBankIdEnrollmentIdRouteImport } from './routes/recrutador.bancos.$bankId.$enrollmentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -114,6 +119,11 @@ const AgendaRoute = AgendaRouteImport.update({
 const ApoiarRoute = ApoiarRouteImport.update({
   id: '/apoiar',
   path: '/apoiar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BancosDeTalentosRoute = BancosDeTalentosRouteImport.update({
+  id: '/bancos-de-talentos',
+  path: '/bancos-de-talentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogsRoute = BlogsRouteImport.update({
@@ -259,6 +269,11 @@ const MentoriaRoute = MentoriaRouteImport.update({
 const MeusServicosRoute = MeusServicosRouteImport.update({
   id: '/meus-servicos',
   path: '/meus-servicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinhasInscricoesRoute = MinhasInscricoesRouteImport.update({
+  id: '/minhas-inscricoes',
+  path: '/minhas-inscricoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModeracaoRoute = ModeracaoRouteImport.update({
@@ -411,6 +426,11 @@ const AuthVerifyRoute = AuthVerifyRouteImport.update({
   path: '/auth/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BancosDeTalentosBankIdRoute = BancosDeTalentosBankIdRouteImport.update({
+  id: '/$bankId',
+  path: '/$bankId',
+  getParentRoute: () => BancosDeTalentosRoute,
+} as any)
 const BlogUsernameRoute = BlogUsernameRouteImport.update({
   id: '/blog/$username',
   path: '/blog/$username',
@@ -507,6 +527,11 @@ const ProjetosPainelRoute = ProjetosPainelRouteImport.update({
   path: '/projetos/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecrutadorBancosRoute = RecrutadorBancosRouteImport.update({
+  id: '/recrutador/bancos',
+  path: '/recrutador/bancos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoleplaySlugRoute = RoleplaySlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -559,11 +584,18 @@ const ComunidadesCommunityIdCanaisChannelIdRoute =
     path: '/canais/$channelId',
     getParentRoute: () => ComunidadesCommunityIdRoute,
   } as any)
+const RecrutadorBancosBankIdEnrollmentIdRoute =
+  RecrutadorBancosBankIdEnrollmentIdRouteImport.update({
+    id: '/$bankId/$enrollmentId',
+    path: '/$bankId/$enrollmentId',
+    getParentRoute: () => RecrutadorBancosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRouteWithChildren
   '/apoiar': typeof ApoiarRoute
+  '/bancos-de-talentos': typeof BancosDeTalentosRouteWithChildren
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
@@ -593,6 +625,7 @@ export interface FileRoutesByFullPath {
   '/mensagens': typeof MensagensRoute
   '/mentoria': typeof MentoriaRoute
   '/meus-servicos': typeof MeusServicosRoute
+  '/minhas-inscricoes': typeof MinhasInscricoesRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
@@ -623,6 +656,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/bancos-de-talentos/$bankId': typeof BancosDeTalentosBankIdRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
   '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
@@ -639,6 +673,7 @@ export interface FileRoutesByFullPath {
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/recrutador/bancos': typeof RecrutadorBancosRouteWithChildren
   '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
@@ -652,11 +687,13 @@ export interface FileRoutesByFullPath {
   '/projetos/$username/$projectSlug': typeof ProjetosUsernameProjectSlugRoute
   '/vagas/$jobId/candidaturas': typeof VagasJobIdCandidaturasRoute
   '/comunidades/$communityId/canais/$channelId': typeof ComunidadesCommunityIdCanaisChannelIdRoute
+  '/recrutador/bancos/$bankId/$enrollmentId': typeof RecrutadorBancosBankIdEnrollmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRouteWithChildren
   '/apoiar': typeof ApoiarRoute
+  '/bancos-de-talentos': typeof BancosDeTalentosRouteWithChildren
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
@@ -686,6 +723,7 @@ export interface FileRoutesByTo {
   '/mensagens': typeof MensagensRoute
   '/mentoria': typeof MentoriaRoute
   '/meus-servicos': typeof MeusServicosRoute
+  '/minhas-inscricoes': typeof MinhasInscricoesRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
@@ -716,6 +754,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/bancos-de-talentos/$bankId': typeof BancosDeTalentosBankIdRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
   '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
@@ -732,6 +771,7 @@ export interface FileRoutesByTo {
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/recrutador/bancos': typeof RecrutadorBancosRouteWithChildren
   '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
@@ -745,12 +785,14 @@ export interface FileRoutesByTo {
   '/projetos/$username/$projectSlug': typeof ProjetosUsernameProjectSlugRoute
   '/vagas/$jobId/candidaturas': typeof VagasJobIdCandidaturasRoute
   '/comunidades/$communityId/canais/$channelId': typeof ComunidadesCommunityIdCanaisChannelIdRoute
+  '/recrutador/bancos/$bankId/$enrollmentId': typeof RecrutadorBancosBankIdEnrollmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRouteWithChildren
   '/apoiar': typeof ApoiarRoute
+  '/bancos-de-talentos': typeof BancosDeTalentosRouteWithChildren
   '/blogs': typeof BlogsRoute
   '/bloqueados': typeof BloqueadosRoute
   '/boas-vindas': typeof BoasVindasRoute
@@ -780,6 +822,7 @@ export interface FileRoutesById {
   '/mensagens': typeof MensagensRoute
   '/mentoria': typeof MentoriaRoute
   '/meus-servicos': typeof MeusServicosRoute
+  '/minhas-inscricoes': typeof MinhasInscricoesRoute
   '/moderacao': typeof ModeracaoRouteWithChildren
   '/moderador': typeof ModeradorRoute
   '/murais': typeof MuraisRouteWithChildren
@@ -810,6 +853,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/bancos-de-talentos/$bankId': typeof BancosDeTalentosBankIdRoute
   '/blog/$username': typeof BlogUsernameRoute
   '/call/$callId': typeof CallCallIdRoute
   '/colecoes/$colecaoId': typeof ColecoesColecaoIdRoute
@@ -826,6 +870,7 @@ export interface FileRoutesById {
   '/profissional_/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
   '/projetos/painel': typeof ProjetosPainelRoute
+  '/recrutador/bancos': typeof RecrutadorBancosRouteWithChildren
   '/roleplay/$slug': typeof RoleplaySlugRoute
   '/vagas/$jobId': typeof VagasJobIdRouteWithChildren
   '/vagas/minhas': typeof VagasMinhasRoute
@@ -839,6 +884,7 @@ export interface FileRoutesById {
   '/projetos/$username/$projectSlug': typeof ProjetosUsernameProjectSlugRoute
   '/vagas/$jobId/candidaturas': typeof VagasJobIdCandidaturasRoute
   '/comunidades/$communityId/canais/$channelId': typeof ComunidadesCommunityIdCanaisChannelIdRoute
+  '/recrutador/bancos/$bankId/$enrollmentId': typeof RecrutadorBancosBankIdEnrollmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -846,6 +892,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/apoiar'
+    | '/bancos-de-talentos'
     | '/blogs'
     | '/bloqueados'
     | '/boas-vindas'
@@ -875,6 +922,7 @@ export interface FileRouteTypes {
     | '/mensagens'
     | '/mentoria'
     | '/meus-servicos'
+    | '/minhas-inscricoes'
     | '/moderacao'
     | '/moderador'
     | '/murais'
@@ -905,6 +953,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
+    | '/bancos-de-talentos/$bankId'
     | '/blog/$username'
     | '/call/$callId'
     | '/colecoes/$colecaoId'
@@ -921,6 +970,7 @@ export interface FileRouteTypes {
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/recrutador/bancos'
     | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
@@ -934,11 +984,13 @@ export interface FileRouteTypes {
     | '/projetos/$username/$projectSlug'
     | '/vagas/$jobId/candidaturas'
     | '/comunidades/$communityId/canais/$channelId'
+    | '/recrutador/bancos/$bankId/$enrollmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/agenda'
     | '/apoiar'
+    | '/bancos-de-talentos'
     | '/blogs'
     | '/bloqueados'
     | '/boas-vindas'
@@ -968,6 +1020,7 @@ export interface FileRouteTypes {
     | '/mensagens'
     | '/mentoria'
     | '/meus-servicos'
+    | '/minhas-inscricoes'
     | '/moderacao'
     | '/moderador'
     | '/murais'
@@ -998,6 +1051,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
+    | '/bancos-de-talentos/$bankId'
     | '/blog/$username'
     | '/call/$callId'
     | '/colecoes/$colecaoId'
@@ -1014,6 +1068,7 @@ export interface FileRouteTypes {
     | '/profissional/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/recrutador/bancos'
     | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
@@ -1027,11 +1082,13 @@ export interface FileRouteTypes {
     | '/projetos/$username/$projectSlug'
     | '/vagas/$jobId/candidaturas'
     | '/comunidades/$communityId/canais/$channelId'
+    | '/recrutador/bancos/$bankId/$enrollmentId'
   id:
     | '__root__'
     | '/'
     | '/agenda'
     | '/apoiar'
+    | '/bancos-de-talentos'
     | '/blogs'
     | '/bloqueados'
     | '/boas-vindas'
@@ -1061,6 +1118,7 @@ export interface FileRouteTypes {
     | '/mensagens'
     | '/mentoria'
     | '/meus-servicos'
+    | '/minhas-inscricoes'
     | '/moderacao'
     | '/moderador'
     | '/murais'
@@ -1091,6 +1149,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/reset'
     | '/auth/verify'
+    | '/bancos-de-talentos/$bankId'
     | '/blog/$username'
     | '/call/$callId'
     | '/colecoes/$colecaoId'
@@ -1107,6 +1166,7 @@ export interface FileRouteTypes {
     | '/profissional_/$username'
     | '/projetos/$username'
     | '/projetos/painel'
+    | '/recrutador/bancos'
     | '/roleplay/$slug'
     | '/vagas/$jobId'
     | '/vagas/minhas'
@@ -1120,12 +1180,14 @@ export interface FileRouteTypes {
     | '/projetos/$username/$projectSlug'
     | '/vagas/$jobId/candidaturas'
     | '/comunidades/$communityId/canais/$channelId'
+    | '/recrutador/bancos/$bankId/$enrollmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRouteWithChildren
   ApoiarRoute: typeof ApoiarRoute
+  BancosDeTalentosRoute: typeof BancosDeTalentosRouteWithChildren
   BlogsRoute: typeof BlogsRoute
   BloqueadosRoute: typeof BloqueadosRoute
   BoasVindasRoute: typeof BoasVindasRoute
@@ -1155,6 +1217,7 @@ export interface RootRouteChildren {
   MensagensRoute: typeof MensagensRoute
   MentoriaRoute: typeof MentoriaRoute
   MeusServicosRoute: typeof MeusServicosRoute
+  MinhasInscricoesRoute: typeof MinhasInscricoesRoute
   ModeracaoRoute: typeof ModeracaoRouteWithChildren
   ModeradorRoute: typeof ModeradorRoute
   MuraisRoute: typeof MuraisRouteWithChildren
@@ -1193,6 +1256,7 @@ export interface RootRouteChildren {
   ProfissionalUsernameRoute: typeof ProfissionalUsernameRoute
   ProjetosUsernameRoute: typeof ProjetosUsernameRouteWithChildren
   ProjetosPainelRoute: typeof ProjetosPainelRoute
+  RecrutadorBancosRoute: typeof RecrutadorBancosRouteWithChildren
   NotificacoesIndexRoute: typeof NotificacoesIndexRoute
   PerfilIndexRoute: typeof PerfilIndexRoute
   ProjetosIndexRoute: typeof ProjetosIndexRoute
@@ -1222,6 +1286,13 @@ declare module '@tanstack/react-router' {
       path: '/apoiar'
       fullPath: '/apoiar'
       preLoaderRoute: typeof ApoiarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bancos-de-talentos': {
+      id: '/bancos-de-talentos'
+      path: '/bancos-de-talentos'
+      fullPath: '/bancos-de-talentos'
+      preLoaderRoute: typeof BancosDeTalentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blogs': {
@@ -1425,6 +1496,13 @@ declare module '@tanstack/react-router' {
       path: '/meus-servicos'
       fullPath: '/meus-servicos'
       preLoaderRoute: typeof MeusServicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minhas-inscricoes': {
+      id: '/minhas-inscricoes'
+      path: '/minhas-inscricoes'
+      fullPath: '/minhas-inscricoes'
+      preLoaderRoute: typeof MinhasInscricoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moderacao': {
@@ -1637,6 +1715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bancos-de-talentos/$bankId': {
+      id: '/bancos-de-talentos/$bankId'
+      path: '/$bankId'
+      fullPath: '/bancos-de-talentos/$bankId'
+      preLoaderRoute: typeof BancosDeTalentosBankIdRouteImport
+      parentRoute: typeof BancosDeTalentosRoute
+    }
     '/blog/$username': {
       id: '/blog/$username'
       path: '/blog/$username'
@@ -1770,6 +1855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjetosPainelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recrutador/bancos': {
+      id: '/recrutador/bancos'
+      path: '/recrutador/bancos'
+      fullPath: '/recrutador/bancos'
+      preLoaderRoute: typeof RecrutadorBancosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/roleplay/$slug': {
       id: '/roleplay/$slug'
       path: '/$slug'
@@ -1840,6 +1932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComunidadesCommunityIdCanaisChannelIdRouteImport
       parentRoute: typeof ComunidadesCommunityIdRoute
     }
+    '/recrutador/bancos/$bankId/$enrollmentId': {
+      id: '/recrutador/bancos/$bankId/$enrollmentId'
+      path: '/$bankId/$enrollmentId'
+      fullPath: '/recrutador/bancos/$bankId/$enrollmentId'
+      preLoaderRoute: typeof RecrutadorBancosBankIdEnrollmentIdRouteImport
+      parentRoute: typeof RecrutadorBancosRoute
+    }
   }
 }
 
@@ -1853,6 +1952,17 @@ const AgendaRouteChildren: AgendaRouteChildren = {
 
 const AgendaRouteWithChildren =
   AgendaRoute._addFileChildren(AgendaRouteChildren)
+
+interface BancosDeTalentosRouteChildren {
+  BancosDeTalentosBankIdRoute: typeof BancosDeTalentosBankIdRoute
+}
+
+const BancosDeTalentosRouteChildren: BancosDeTalentosRouteChildren = {
+  BancosDeTalentosBankIdRoute: BancosDeTalentosBankIdRoute,
+}
+
+const BancosDeTalentosRouteWithChildren =
+  BancosDeTalentosRoute._addFileChildren(BancosDeTalentosRouteChildren)
 
 interface ColecoesRouteChildren {
   ColecoesColecaoIdRoute: typeof ColecoesColecaoIdRoute
@@ -1998,10 +2108,23 @@ const ProjetosUsernameRouteChildren: ProjetosUsernameRouteChildren = {
 const ProjetosUsernameRouteWithChildren =
   ProjetosUsernameRoute._addFileChildren(ProjetosUsernameRouteChildren)
 
+interface RecrutadorBancosRouteChildren {
+  RecrutadorBancosBankIdEnrollmentIdRoute: typeof RecrutadorBancosBankIdEnrollmentIdRoute
+}
+
+const RecrutadorBancosRouteChildren: RecrutadorBancosRouteChildren = {
+  RecrutadorBancosBankIdEnrollmentIdRoute:
+    RecrutadorBancosBankIdEnrollmentIdRoute,
+}
+
+const RecrutadorBancosRouteWithChildren =
+  RecrutadorBancosRoute._addFileChildren(RecrutadorBancosRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRouteWithChildren,
   ApoiarRoute: ApoiarRoute,
+  BancosDeTalentosRoute: BancosDeTalentosRouteWithChildren,
   BlogsRoute: BlogsRoute,
   BloqueadosRoute: BloqueadosRoute,
   BoasVindasRoute: BoasVindasRoute,
@@ -2031,6 +2154,7 @@ const rootRouteChildren: RootRouteChildren = {
   MensagensRoute: MensagensRoute,
   MentoriaRoute: MentoriaRoute,
   MeusServicosRoute: MeusServicosRoute,
+  MinhasInscricoesRoute: MinhasInscricoesRoute,
   ModeracaoRoute: ModeracaoRouteWithChildren,
   ModeradorRoute: ModeradorRoute,
   MuraisRoute: MuraisRouteWithChildren,
@@ -2069,6 +2193,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfissionalUsernameRoute: ProfissionalUsernameRoute,
   ProjetosUsernameRoute: ProjetosUsernameRouteWithChildren,
   ProjetosPainelRoute: ProjetosPainelRoute,
+  RecrutadorBancosRoute: RecrutadorBancosRouteWithChildren,
   NotificacoesIndexRoute: NotificacoesIndexRoute,
   PerfilIndexRoute: PerfilIndexRoute,
   ProjetosIndexRoute: ProjetosIndexRoute,

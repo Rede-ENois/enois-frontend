@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   create: vi.fn(),
   navigate: vi.fn(),
   toast: vi.fn(),
+  detalheAberto: vi.fn(() => false),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -28,6 +29,9 @@ vi.mock("@tanstack/react-router", () => ({
     options,
   }),
   useNavigate: () => mocks.navigate,
+  // O roteador pergunta se o caminho é exatamente a listagem; em teste a resposta vem de fora.
+  useMatchRoute: () => (opts: { to: string }) => (mocks.detalheAberto() ? false : opts),
+  Outlet: () => <div data-testid="rota-filha" />,
 }));
 vi.mock("@/lib/api", () => ({
   colecoesApi: {
@@ -48,6 +52,8 @@ vi.mock("@/components/app-container", () => ({
 const { Route } = await import("./colecoes");
 const options = (Route as unknown as { options: Record<string, unknown> }).options;
 const ColecoesPage = (options as { component: () => React.JSX.Element }).component;
+/** A listagem é mãe do detalhe: com o filho aberto, o `Outlet` é quem desenha. */
+const Pagina = () => (mocks.detalheAberto() ? <div data-testid="rota-filha" /> : <ColecoesPage />);
 
 // Frases do desenho que vivem no design system (mensagens padrão colecoes*).
 const ds = {
@@ -81,7 +87,7 @@ describe("rota das Coleções (lista)", () => {
     await act(async () => {
       root.render(
         <QueryClientProvider client={client}>
-          <ColecoesPage />
+          <Pagina />
         </QueryClientProvider>,
       );
     });
@@ -107,6 +113,7 @@ describe("rota das Coleções (lista)", () => {
   beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     Object.values(mocks).forEach((mock) => mock.mockReset());
+    mocks.detalheAberto.mockReturnValue(false);
     mocks.list.mockResolvedValue({ items: [colecao("c-1"), colecao("c-2")], nextCursor: null });
     mocks.create.mockResolvedValue(colecao("c-novo"));
     mocks.navigate.mockReturnValue(undefined);
@@ -131,6 +138,14 @@ describe("rota das Coleções (lista)", () => {
     expect(document.body.textContent).toContain("Descrição do c-1");
     expect(document.body.textContent).toContain(ds.contagem(2));
     expect(mocks.list).toHaveBeenCalledWith(null);
+  });
+
+  it("com a coleção aberta pelo endereço, a listagem sai da frente e a coleção desenha", async () => {
+    mocks.detalheAberto.mockReturnValue(true);
+    await render();
+
+    expect(document.body.querySelector("[data-testid='rota-filha']")).not.toBeNull();
+    expect(mocks.list).not.toHaveBeenCalled();
   });
 
   it("sem nenhuma coleção, o vazio do DS fala", async () => {
