@@ -63,7 +63,7 @@
     "eslint-plugin-react-refresh": "^0.5.8",
     "globals": "^17.14.0",
     "jsdom": "^31.0.1",
-    "lint-staged": "^17.6.0",
+    "lint-staged": "^17.6.1",
     "nitro": "3.0.260603-beta",
     "orval": "^8.22.0",
     "prettier": "^3.9.10",
