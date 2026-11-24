@@ -49,7 +49,9 @@ export function ApplyJobDialog({ job, children }: { job: Job; children: ReactNod
     try {
       return await resumeImportApi.prefillApplication(job.id, file);
     } catch (err) {
-      throw new Error(err instanceof ApiError ? err.message : texts.errors.unexpected);
+      throw new Error(err instanceof ApiError ? err.message : texts.errors.unexpected, {
+        cause: err,
+      });
     }
   };
 
