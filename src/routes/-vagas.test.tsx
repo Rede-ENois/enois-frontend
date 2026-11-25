@@ -8,6 +8,7 @@ import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildJobFilters } from "@/lib/job-filters";
+import { converterPaginacao } from "@/lib/jobs-paginacao";
 
 (globalThis as unknown as { __dbg?: number }).__dbg = 1;
 
@@ -44,7 +45,7 @@ vi.mock("@/components/create-external-job-dialog", () => ({
   CreateExternalJobDialog: () => null,
 }));
 
-const { JobsListPage, converterPaginacao } = await import("./vagas");
+const { JobsListPage } = await import("./vagas");
 
 describe("/vagas — filtros da aba de plataformas externas", () => {
   let root: Root;
@@ -145,9 +146,16 @@ describe("/vagas — filtros da aba de plataformas externas", () => {
     // A vaga que já estava na lista (b) não entra duas vezes.
     expect(segunda.jobs.map((job) => job.id)).toEqual(["a", "b", "c"]);
     // De novo com a mesma página (cache): a mesma lista, sem render extra.
-    expect(converterPaginacao(segunda, "enois", "pagina-2", { items: [vaga("c")] })).toBe(segunda);
+    expect(
+      converterPaginacao(segunda, "enois", "pagina-2", {
+        items: [vaga("c")],
+        nextCursor: null,
+      }),
+    ).toBe(segunda);
     // Filtro diferente: a lista recomeça na primeira página dele.
-    expect(converterPaginacao(segunda, "outro", null, { items: [vaga("z")] })).toEqual({
+    expect(
+      converterPaginacao(segunda, "outro", null, { items: [vaga("z")], nextCursor: null }),
+    ).toEqual({
       chave: "outro",
       jobs: [vaga("z")],
       cursor: null,

@@ -21,6 +21,7 @@ import type { CreateJobInput } from "@/types/application/job/create-job-input";
 import type { Job } from "@/types/application/job/job";
 import type { JobApplicationFieldInput } from "@/types/application/job/job-application-field-input";
 import type { JobReportReason } from "@/types/application/job/job-report-reason";
+import type { Paginacao } from "@/types/application/job/paginacao";
 import type { CreateJobDialogProps } from "@/types/routes/jobs/create-job-dialog-props";
 import type { ReportJobDialogProps } from "@/types/routes/jobs/report-job-dialog-props";
 import { JobCardSkeletons } from "@rede-enois/design-system/domain";
@@ -69,6 +70,7 @@ import { useCurrentUser } from "@/lib/current-user";
 import { dataCurta } from "@/lib/date/format";
 import { EXTERNAL_JOB_TYPES, buildJobFilters } from "@/lib/job-filters";
 import { canCreateJob, missingReputationToCreateJob } from "@/lib/job-permissions";
+import { converterPaginacao } from "@/lib/jobs-paginacao";
 import { companyQueries } from "@/lib/query-options/companies";
 import { requireAuth } from "@/lib/require-auth";
 import { safeHref } from "@/lib/safe-url";
@@ -85,40 +87,6 @@ export const Route = createFileRoute("/vagas")({
   head: () => ({ meta: [{ title: texts.jobs.seoTitle }] }),
   component: Vagas,
 });
-
-type PaginaDeVagas = { items?: Job[]; nextCursor?: string | null };
-
-// A lista mostrada: a qual busca (`chave`) e a qual página (`cursor`) ela pertence, e as vagas.
-type Paginacao = { chave: string; jobs: Job[]; cursor: string | null };
-
-// Soma a página que acabou de chegar na lista: a primeira (de uma busca nova) começa a lista e as
-// de "carregar mais" entram no fim. Devolve a mesma referência quando nada muda.
-export function converterPaginacao(
-  anterior: Paginacao,
-  chave: string,
-  cursor: string | null,
-  resposta: PaginaDeVagas,
-): Paginacao {
-  const itens = resposta.items ?? [];
-  if (anterior.chave !== chave) {
-    return cursor === null ? { chave, jobs: itens, cursor: null } : anterior;
-  }
-  const mesmasVagas =
-    anterior.jobs.length === itens.length &&
-    anterior.jobs.every((job, i) => job.id === itens[i].id);
-  if (anterior.cursor === cursor && mesmasVagas) return anterior;
-  // A mesma página com o mesmo cursor (cache, refetch): a lista não muda. O estado guarda o
-  // cursor de onde a resposta veio, então é ele que a busca do render atual vai usar.
-  if (anterior.cursor === cursor) return anterior;
-  return {
-    chave,
-    jobs:
-      cursor === null
-        ? itens
-        : [...anterior.jobs, ...itens.filter((job) => !anterior.jobs.some((j) => j.id === job.id))],
-    cursor,
-  };
-}
 
 const SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-transparent bg-muted px-3 py-2 text-sm font-normal text-text-strong outline-none focus-visible:ring-1 focus-visible:ring-ring";
