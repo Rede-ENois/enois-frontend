@@ -28,6 +28,7 @@ import { Route as DesabafosRouteImport } from './routes/desabafos'
 import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
+import { Route as DocumentosRouteImport } from './routes/documentos'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as EventosRouteImport } from './routes/eventos'
@@ -68,6 +69,7 @@ import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as TermometroRouteImport } from './routes/termometro'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
+import { Route as AdminDocumentosRouteImport } from './routes/admin.documentos'
 import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
 import { Route as AgendaAssinaturaRouteImport } from './routes/agenda_.assinatura'
 import { Route as AgendaDisponibilidadeRouteImport } from './routes/agenda_.disponibilidade'
@@ -200,6 +202,11 @@ const DevelopersRoute = DevelopersRouteImport.update({
 const DiretrizesRoute = DiretrizesRouteImport.update({
   id: '/diretrizes',
   path: '/diretrizes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentosRoute = DocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmpresasRoute = EmpresasRouteImport.update({
@@ -400,6 +407,11 @@ const TermosRoute = TermosRouteImport.update({
 const VagasRoute = VagasRouteImport.update({
   id: '/vagas',
   path: '/vagas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
+  id: '/admin/documentos',
+  path: '/admin/documentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgendaEntryIdRoute = AgendaEntryIdRouteImport.update({
@@ -617,6 +629,7 @@ export interface FileRoutesByFullPath {
   '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/documentos': typeof DocumentosRoute
   '/empresas': typeof EmpresasRoute
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
@@ -657,6 +670,7 @@ export interface FileRoutesByFullPath {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda/assinatura': typeof AgendaAssinaturaRoute
   '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
@@ -716,6 +730,7 @@ export interface FileRoutesByTo {
   '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/documentos': typeof DocumentosRoute
   '/empresas': typeof EmpresasRoute
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
@@ -756,6 +771,7 @@ export interface FileRoutesByTo {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda/assinatura': typeof AgendaAssinaturaRoute
   '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
@@ -816,6 +832,7 @@ export interface FileRoutesById {
   '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/documentos': typeof DocumentosRoute
   '/empresas': typeof EmpresasRoute
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
@@ -856,6 +873,7 @@ export interface FileRoutesById {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda_/assinatura': typeof AgendaAssinaturaRoute
   '/agenda_/disponibilidade': typeof AgendaDisponibilidadeRoute
@@ -917,6 +935,7 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/developers'
     | '/diretrizes'
+    | '/documentos'
     | '/empresas'
     | '/entrar'
     | '/eventos'
@@ -957,6 +976,7 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda/assinatura'
     | '/agenda/disponibilidade'
@@ -1016,6 +1036,7 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/developers'
     | '/diretrizes'
+    | '/documentos'
     | '/empresas'
     | '/entrar'
     | '/eventos'
@@ -1056,6 +1077,7 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda/assinatura'
     | '/agenda/disponibilidade'
@@ -1115,6 +1137,7 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/developers'
     | '/diretrizes'
+    | '/documentos'
     | '/empresas'
     | '/entrar'
     | '/eventos'
@@ -1155,6 +1178,7 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda_/assinatura'
     | '/agenda_/disponibilidade'
@@ -1215,6 +1239,7 @@ export interface RootRouteChildren {
   DesafiosRoute: typeof DesafiosRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
+  DocumentosRoute: typeof DocumentosRoute
   EmpresasRoute: typeof EmpresasRoute
   EntrarRoute: typeof EntrarRoute
   EventosRoute: typeof EventosRoute
@@ -1255,6 +1280,7 @@ export interface RootRouteChildren {
   TermometroRoute: typeof TermometroRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
+  AdminDocumentosRoute: typeof AdminDocumentosRoute
   AgendaAssinaturaRoute: typeof AgendaAssinaturaRoute
   AgendaDisponibilidadeRoute: typeof AgendaDisponibilidadeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1411,6 +1437,13 @@ declare module '@tanstack/react-router' {
       path: '/diretrizes'
       fullPath: '/diretrizes'
       preLoaderRoute: typeof DiretrizesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documentos': {
+      id: '/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof DocumentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/empresas': {
@@ -1691,6 +1724,13 @@ declare module '@tanstack/react-router' {
       path: '/vagas'
       fullPath: '/vagas'
       preLoaderRoute: typeof VagasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/documentos': {
+      id: '/admin/documentos'
+      path: '/admin/documentos'
+      fullPath: '/admin/documentos'
+      preLoaderRoute: typeof AdminDocumentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agenda/$entryId': {
@@ -2160,6 +2200,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesafiosRoute: DesafiosRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
+  DocumentosRoute: DocumentosRoute,
   EmpresasRoute: EmpresasRoute,
   EntrarRoute: EntrarRoute,
   EventosRoute: EventosRoute,
@@ -2200,6 +2241,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermometroRoute: TermometroRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
+  AdminDocumentosRoute: AdminDocumentosRoute,
   AgendaAssinaturaRoute: AgendaAssinaturaRoute,
   AgendaDisponibilidadeRoute: AgendaDisponibilidadeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
