@@ -33,6 +33,7 @@ const PROTECTED_ROUTES = [
   "/conta",
   "/notificacoes",
   "/explorar",
+  "/wrapped",
   // A Colagem pede sessão na leitura (espaço de convivência): deep link também cai no login.
   "/colagem",
   "/par-de-estudo",

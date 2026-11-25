@@ -4894,6 +4894,15 @@ export const texts = {
     librarySearchPlaceholder: "Buscar por personagem ou sistema...",
   },
 
+  /** A rota do Énóis Wrapped: só o que a rota orquestra; desenho e texto da experiência vêm do DS. */
+  wrapped: {
+    seoTitle: "Seu Énóis Wrapped · Énóis",
+    title: "Seu Énóis Wrapped",
+    subtitle: "A sua retrospectiva do ano no Énóis.",
+    shareTitle: "Meu Énóis Wrapped",
+    shareCopied: "Card copiado. Cole onde quiser.",
+  },
+
   pwa: {
     themeColor: "#6746f5",
     /** Descrição do manifesto do PWA: é a frase que o navegador mostra ao convidar a instalar. */
