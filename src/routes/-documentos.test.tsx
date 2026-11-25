@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 // A pista de sessão é função de servidor/cliente do router: no jsdom ela tenta ler o cookie do
-// servidor. "Sem sessão" é o padrão dos testes; quem quer logado troca o `idAtual`.
+// servidor. "Sem sessão" é o padrão dos testes; quem quer logado troca `sessao.logado`.
 vi.mock("@/lib/auth-hint", () => ({
   AUTH_HINT_COOKIE: "enois_auth",
   setAuthHint: () => {},
@@ -30,7 +30,9 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const sessao = { logado: true };
-vi.mock("@/lib/current-user", () => ({ getCurrentUserId: () => (sessao.logado ? "u_1" : null) }));
+// Mesmo indicador de sessão que a página usa: a flag local (`session_active`), não o cache
+// da query `["me"]` — ele só existe depois de `/me` responder e não diz se há sessão.
+vi.mock("@/lib/use-auth", () => ({ isAuthenticated: () => sessao.logado }));
 
 const aceitar = vi.fn(async (id: string) => ({
   id: "aceite_1",
@@ -151,6 +153,15 @@ describe("Meus documentos", () => {
 
   it("sem sessão a página é só leitura", async () => {
     sessao.logado = false;
+    await renderizar();
+
+    expect(host.textContent).toContain(texts.documentos.pendenciaIr);
+    expect(botao(texts.documentos.aceitar)).toBeUndefined();
+  });
+
+  it("sem sessão, usuário que ficou no cache de /me não vira visitante logado", async () => {
+    sessao.logado = false;
+    client.setQueryData(["me"], { id: "u_1", nome: "Alguém" });
     await renderizar();
 
     expect(host.textContent).toContain(texts.documentos.pendenciaIr);

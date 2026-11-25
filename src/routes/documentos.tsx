@@ -10,9 +10,9 @@ import type { DocumentoLegalPendente } from "@rede-enois/design-system/domain";
 import { DocumentoLegalMeus } from "@rede-enois/design-system/domain";
 
 import { ApiError } from "@/lib/api-client";
-import { getCurrentUserId } from "@/lib/current-user";
 import { documentosApi } from "@/lib/documentos";
 import { ogMetas } from "@/lib/seo";
+import { isAuthenticated } from "@/lib/use-auth";
 
 import { LegalLayout } from "@/components/legal-layout";
 import { RichText } from "@/components/post/rich-text";
@@ -47,7 +47,7 @@ function vinheta(item: DocumentoResumo): string {
  * nada; sem sessão, a mesma leitura vem do endpoint público.
  */
 function Documentos() {
-  const logado = !!getCurrentUserId();
+  const logado = isAuthenticated();
   const client = useQueryClient();
 
   const situacao = useQuery({
