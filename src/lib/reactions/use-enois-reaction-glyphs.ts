@@ -1,10 +1,16 @@
 import { useEffect } from "react";
 
 import {
+  PURPLE_HEART_EMOJI,
+  PURPLE_HEART_LABEL,
   REACTION_EMOJIS,
   REACTION_EMOJI_LABELS,
   REACTION_FIGURE_EMOJIS,
 } from "@/constants/reaction-emojis";
+import {
+  type AnyReactionType,
+  PURPLE_HEART_REACTION,
+} from "@/types/application/reaction/any-reaction-type";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 const VARIATION_SELECTOR = /\uFE0F/g;
@@ -20,9 +26,15 @@ const IGNORED_ANCESTOR_SELECTOR =
  * tipo, e aí quem manda é a figura — não o primeiro tipo que registrou aquele símbolo. Sem a segunda
  * passada, a pílula do ROFL (estrela, emoji de apoio do VIBE) seria pintada com o ícone do VIBE.
  */
-const EMOJI_TO_REACTION_TYPE = new Map<string, ReactionType>();
+const EMOJI_TO_REACTION_TYPE = new Map<string, AnyReactionType>();
 
-function registrar(glyph: string, type: ReactionType, sobrescrever: boolean): void {
+/** O coração roxo não é uma das 76 expressões: entra pela fileira, com o próprio emoji e nome. */
+const REACTION_LABELS: Record<string, string> = {
+  ...REACTION_EMOJI_LABELS,
+  [PURPLE_HEART_REACTION]: PURPLE_HEART_LABEL,
+};
+
+function registrar(glyph: string, type: AnyReactionType, sobrescrever: boolean): void {
   const chaves = [glyph, glyph.replace(VARIATION_SELECTOR, "")].filter(Boolean);
   for (const chave of chaves) {
     if (sobrescrever || !EMOJI_TO_REACTION_TYPE.has(chave)) {
@@ -37,8 +49,12 @@ for (const [type, glyph] of Object.entries(REACTION_EMOJIS) as [ReactionType, st
 for (const [type, glyph] of Object.entries(REACTION_FIGURE_EMOJIS) as [ReactionType, string][]) {
   registrar(glyph, type, true);
 }
+// Por último: 💜 é o emoji da figura do coração roxo e não pode ser tomado por outra reação.
+registrar(PURPLE_HEART_EMOJI, PURPLE_HEART_REACTION, true);
 
-export function resolveReactionTypeFromGlyph(text: string | null | undefined): ReactionType | null {
+export function resolveReactionTypeFromGlyph(
+  text: string | null | undefined,
+): AnyReactionType | null {
   if (!text) return null;
   const trimmed = text.trim();
   if (!trimmed || trimmed.length > 8) return null;
@@ -49,12 +65,12 @@ export function resolveReactionTypeFromGlyph(text: string | null | undefined): R
   );
 }
 
-function syncButtonTooltip(element: Element, type: ReactionType, glyph: string | null): void {
+function syncButtonTooltip(element: Element, type: AnyReactionType, glyph: string | null): void {
   const button = element.closest("button[title]");
   if (!button) return;
   const currentTitle = button.getAttribute("title");
   if (!currentTitle) return;
-  const label = REACTION_EMOJI_LABELS[type];
+  const label = REACTION_LABELS[type];
   if (!label || !glyph) return;
   const trimmedGlyph = glyph.trim();
   if (!trimmedGlyph || !currentTitle.includes(trimmedGlyph)) return;
@@ -66,9 +82,9 @@ function syncButtonTooltip(element: Element, type: ReactionType, glyph: string |
 
 function syncElementGlyph(element: Element): void {
   if (element.hasAttribute("data-reaction-emoji")) {
-    const pickerType = element.getAttribute("data-reaction-emoji") as ReactionType | null;
-    if (pickerType && pickerType in REACTION_EMOJI_LABELS) {
-      const label = REACTION_EMOJI_LABELS[pickerType];
+    const pickerType = element.getAttribute("data-reaction-emoji");
+    if (pickerType && Object.hasOwn(REACTION_LABELS, pickerType)) {
+      const label = REACTION_LABELS[pickerType];
       if (element.getAttribute("title") !== label) {
         element.setAttribute("title", label);
       }

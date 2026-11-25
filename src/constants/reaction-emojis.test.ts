@@ -1,3 +1,4 @@
+import { PURPLE_HEART_REACTION } from "@/types/application/reaction/any-reaction-type";
 import { REACTION_TYPES } from "@/types/application/reaction/reaction-type";
 import { describe, expect, it } from "vitest";
 
@@ -9,7 +10,6 @@ import {
   REACTION_EMOJI_ASSETS,
   REACTION_FIGURE_EMOJIS,
   REACTION_PICKER_EMOJIS,
-  REACTION_PICKER_FIGURES,
   REACTION_PICKER_ORDER,
 } from "./reaction-emojis";
 
@@ -105,31 +105,32 @@ describe("REACTION_PICKER_ORDER", () => {
     expect(new Set(REACTION_PICKER_ORDER).size).toBe(REACTION_PICKER_ORDER.length);
   });
 
-  it("o coração roxo não é um tipo da API: só o pacote desenha ele", () => {
+  it("o coração roxo é do pacote, não das 76 expressões que casam reação e figurinha", () => {
+    // A API aceita `HEART_PURPLE` (o backend grava o nome), mas ele não entra na lista em que a
+    // reação i é a figurinha i: a fileira ganha o coração pela ordem do seletor.
+    expect(PURPLE_HEART_REACTION).toBe("HEART_PURPLE");
     expect(REACTION_TYPES).not.toContain("HEART_PURPLE");
     expect(Object.keys(REACTION_EMOJI_ASSETS)).not.toContain("HEART_PURPLE");
   });
 });
 
 describe("REACTION_PICKER_EMOJIS", () => {
-  it("desenha a figura de cada tipo — o mapa do resumo e das pílulas", () => {
-    // O resumo e os diálogos usam este mapa para desenhar `emojis[type]`: cada tipo tem a sua
-    // figura, e nenhuma figura é o rosto de outro tipo.
-    expect(REACTION_PICKER_EMOJIS).toBe(REACTION_FIGURE_EMOJIS);
-    expect(Object.keys(REACTION_PICKER_EMOJIS)).toEqual([...REACTION_TYPES]);
-    expect(new Set(Object.values(REACTION_PICKER_EMOJIS)).size).toBe(REACTION_TYPES.length);
-  });
-});
-
-describe("REACTION_PICKER_FIGURES", () => {
   it("mantém a ordem da fileira e desenha o coração roxo em segundo", () => {
-    // O que o seletor recebe: as mesmas chaves, na mesma ordem, e o coração roxo pelo arquivo do
-    // pacote — o resto pela figura do próprio tipo.
-    expect(Object.keys(REACTION_PICKER_FIGURES)).toEqual([...REACTION_PICKER_ORDER]);
-    expect(REACTION_PICKER_FIGURES.HEART_PURPLE).toBe("/emojis/enois/heart_purple.svg");
+    // É o mapa que o seletor e o resumo recebem: as mesmas chaves, na mesma ordem, e o coração roxo
+    // pelo arquivo do pacote — o resto pela figura do próprio tipo.
+    expect(Object.keys(REACTION_PICKER_EMOJIS)).toEqual([...REACTION_PICKER_ORDER]);
+    expect(REACTION_PICKER_EMOJIS.HEART_PURPLE).toBe("/emojis/enois/heart_purple.svg");
     for (const type of REACTION_TYPES) {
-      expect(REACTION_PICKER_FIGURES[type], type).toBe(REACTION_FIGURE_EMOJIS[type]);
+      expect(REACTION_PICKER_EMOJIS[type], type).toBe(REACTION_FIGURE_EMOJIS[type]);
     }
+  });
+
+  it("a figura do coração roxo não é o rosto de outra reação", () => {
+    // O leitor de glifo pinta o ícone do tipo que casa com o emoji desenhado; 💜 é de outro arquivo
+    // do pacote e não pode cair na figura de nenhuma expressão.
+    expect(Object.values(REACTION_FIGURE_EMOJIS)).not.toContain(
+      REACTION_PICKER_EMOJIS.HEART_PURPLE,
+    );
   });
 });
 

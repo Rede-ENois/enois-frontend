@@ -461,6 +461,12 @@ span.rounded-full:has(> [data-enois-reaction-glyph]) {
 [data-enois-reaction-glyph="LIKE"] {
   --enois-reaction-img: url("/emojis/enois/like.webp");
 }
+/* O coração roxo fica fora da lista reação i = figura i (a fileira o põe ao lado do joinha), então
+   tem regra própria, com o seu arquivo: sem ela a pílula dele não teria figura nenhuma. */
+[data-reaction-emoji="HEART_PURPLE"],
+[data-enois-reaction-glyph="HEART_PURPLE"] {
+  --enois-reaction-img: url("/emojis/enois/heart_purple.svg");
+}
 [data-reaction-emoji="LOVE"],
 [data-enois-reaction-glyph="LOVE"] {
   --enois-reaction-img: url("/emojis/enois/love.webp");

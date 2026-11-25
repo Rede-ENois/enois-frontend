@@ -1,3 +1,4 @@
+import { PURPLE_HEART_REACTION } from "@/types/application/reaction/any-reaction-type";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 import { ENOIS_CUSTOM_EMOJIS, getEnoisEmojiByCode } from "@/lib/emotes/enois-pack";
@@ -206,7 +207,7 @@ function figureEmoji(type: ReactionType): string {
  */
 export const REACTION_PICKER_ORDER: readonly string[] = [
   "LIKE",
-  "HEART_PURPLE",
+  PURPLE_HEART_REACTION,
   ...(Object.keys(REACTION_EMOJI_ASSETS) as ReactionType[]).filter((type) => type !== "LIKE"),
 ];
 
@@ -231,23 +232,29 @@ function heartPurpleSource(): string {
 }
 
 /**
- * O que o seletor de reações recebe (`ReactionPicker`) para montar a fileira e o "+": a ordem de
- * `REACTION_PICKER_ORDER` num mapa chave → figura. Toda chave que não é a do coração roxo é um
- * `ReactionType`, e é ela que a view grava ao clicar.
+ * O que o seletor de reações recebe (`ReactionPicker`/`ReactionsSummary`) como `emojis`: a ordem de
+ * `REACTION_PICKER_ORDER` num mapa chave → figura, porque o seletor desenha as chaves na ordem do
+ * mapa. A chave é o que o clique grava — o coração roxo grava `HEART_PURPLE`, que a API aceita como
+ * qualquer outro tipo. Uma pílula desenha a figura do tipo dela, e é esta a fonte (não um mapa só
+ * de `ReactionType`): com a fileira mudando de ordem, a pílula não pode depender dela.
  */
-export const REACTION_PICKER_FIGURES: Record<string, string> = Object.fromEntries(
+export const REACTION_PICKER_EMOJIS: Record<string, string> = Object.fromEntries(
   REACTION_PICKER_ORDER.map((chave) => [
     chave,
-    chave === "HEART_PURPLE" ? heartPurpleSource() : REACTION_FIGURE_EMOJIS[chave as ReactionType],
+    chave === PURPLE_HEART_REACTION
+      ? heartPurpleSource()
+      : REACTION_FIGURE_EMOJIS[chave as ReactionType],
   ]),
 );
 
 /**
- * O que as views do design system recebem como `emojis`: o mapa tipo → figura de cada reação. Uma
- * pílula de reação desenha a figura do TIPO dela — por isso esta é a fonte, e não a ordem do
- * seletor (a primeira fileira muda com `REACTION_PICKER_ORDER`).
+ * O emoji do coração roxo (💜) e o nome dele — o mesmo raciocínio do `REACTION_FIGURE_EMOJIS` para
+ * as expressões: o leitor de glifo casa o desenho e o CSS pinta o arquivo do pacote.
  */
-export const REACTION_PICKER_EMOJIS: Record<ReactionType, string> = REACTION_FIGURE_EMOJIS;
+export const PURPLE_HEART_EMOJI: string =
+  ENOIS_CUSTOM_EMOJIS.find((item) => item.code === "enois_heart_purple")?.unicode ?? "💜";
+export const PURPLE_HEART_LABEL: string =
+  ENOIS_CUSTOM_EMOJIS.find((item) => item.code === "enois_heart_purple")?.label ?? "Coração roxo";
 
 /** Rótulo legível (em português) de cada reação oficial para tooltips de hover. */
 export const REACTION_EMOJI_LABELS: Record<ReactionType, string> = Object.fromEntries(
