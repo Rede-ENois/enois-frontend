@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { BIRTHDAY_CELEBRATION_STICKERS } from "./birthday-stickers";
@@ -6,8 +6,8 @@ import { BIRTHDAY_CELEBRATION_STICKERS } from "./birthday-stickers";
 /**
  * As figurinhas da festa no perfil de aniversariante saem do pacote do repositório
  * (`public/emojis/enois/`), e não do CDN: o arquivo tem de existir no pacote para a figurinha
- * aparecer na festa. O perfil puxa a festa do design system; o teste lê a rota como texto para
- * não precisar de jsdom, que na máquina de desenvolvimento não abre.
+ * aparecer na festa. Quem decide quando a festa aparece é o perfil; o teste da rota está em
+ * `src/routes/perfil.festa-aniversariante.test.tsx`.
  */
 describe("figurinhas da festa de aniversário", () => {
   it("são figurinhas do pacote É Nóis que existem no repositório", () => {
@@ -23,19 +23,5 @@ describe("figurinhas da festa de aniversário", () => {
     expect(BIRTHDAY_CELEBRATION_STICKERS).toContain("/emojis/enois/confetti.webp");
     expect(BIRTHDAY_CELEBRATION_STICKERS).toContain("/emojis/enois/hug.webp");
     expect(BIRTHDAY_CELEBRATION_STICKERS).not.toContain("/emojis/enois/rage.webp");
-  });
-
-  it("o perfil pede a festa só para quem visita e só no dia, com as figurinhas do pacote", () => {
-    const perfil = readFileSync(
-      new URL("../../routes/perfil.$username.tsx", import.meta.url),
-      "utf8",
-    );
-
-    expect(perfil).toMatch(
-      /import\s*\{[^}]*BirthdayCelebration,[^}]*\}\s*from\s*"@rede-enois\/design-system\/domain"/,
-    );
-    expect(perfil).toMatch(
-      /\{user\.birthdayToday && !isOwnProfile && \(\s*<BirthdayCelebration name=\{user\.name\} stickers=\{BIRTHDAY_CELEBRATION_STICKERS\} \/>/,
-    );
   });
 });

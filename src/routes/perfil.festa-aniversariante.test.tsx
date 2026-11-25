@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   meId: "u-dono" as string | null,
   user: { birthdayToday: true },
 }));
+// O próprio perfil é do dono da conta: para a festa aparecer, quem abre a tela é outra pessoa.
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
