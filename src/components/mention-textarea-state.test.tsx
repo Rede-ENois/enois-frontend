@@ -152,6 +152,9 @@ describe("emote insertion through the real mention editor", () => {
     selection.addRange(range);
     // O campo do DS lembra a seleção por `selectionchange`; no jsdom o evento não sai sozinho.
     document.dispatchEvent(new Event("selectionchange"));
+    // O evento só marca a seleção; o campo a lê no render do `act` seguinte (o `settle` anterior
+    // desmonta no mesmo lote).
+    await act(async () => {});
     await chooseEmote();
     expect(changed).toHaveBeenLastCalledWith(":KEKW: ", []);
   });
