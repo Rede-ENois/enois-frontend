@@ -10,7 +10,9 @@ export type WrappedMetricas = {
   comentariosFeitos: number;
   compartilhamentosFeitos: number;
   repostsFeitos: number;
+  votosFeitos: number;
   salvos: number;
   comunidadesParticipadas: number;
   diasAtivos: number;
+  mesMaisAtivo: number | null;
 };

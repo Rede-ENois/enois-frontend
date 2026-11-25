@@ -6,4 +6,8 @@ export type WrappedRitmo = {
   porMes: number[];
   porDiaSemana: number[];
   porHora: number[];
+  comportamento: {
+    porTrimestre: number[];
+    sentido: "CRESCEU" | "DESACELEROU" | "ESTAVEL";
+  };
 };

@@ -33,7 +33,9 @@ export function mapear(r: ApiRetrospectiva): WrappedRetrospectiva {
         r.metricas.reacoesFeitas +
         r.metricas.comentariosFeitos +
         r.metricas.compartilhamentosFeitos +
-        r.metricas.repostsFeitos,
+        r.metricas.repostsFeitos +
+        r.metricas.votosFeitos +
+        r.metricas.salvos,
       interacoesRecebidas:
         r.metricas.reacoesRecebidas +
         r.metricas.comentariosRecebidos +
@@ -41,7 +43,7 @@ export function mapear(r: ApiRetrospectiva): WrappedRetrospectiva {
         r.metricas.repostsRecebidos,
       comunidades: r.metricas.comunidadesParticipadas,
       diasAtivos: r.metricas.diasAtivos,
-      mesMaisAtivo: r.ritmo.mesMaisAtivo,
+      mesMaisAtivo: r.metricas.mesMaisAtivo,
     },
     assuntosPublicados: r.assuntosPublicados,
     assuntosComentados: r.assuntosComentados,
