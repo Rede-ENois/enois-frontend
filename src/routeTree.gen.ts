@@ -33,6 +33,7 @@ import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as FigurinhasRouteImport } from './routes/figurinhas'
 import { Route as FreelancesRouteImport } from './routes/freelances'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as GruposRouteImport } from './routes/grupos'
@@ -224,6 +225,11 @@ const ExplorarRoute = ExplorarRouteImport.update({
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FigurinhasRoute = FigurinhasRouteImport.update({
+  id: '/figurinhas',
+  path: '/figurinhas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FreelancesRoute = FreelancesRouteImport.update({
@@ -616,6 +622,7 @@ export interface FileRoutesByFullPath {
   '/eventos': typeof EventosRoute
   '/explorar': typeof ExplorarRoute
   '/feed': typeof FeedRoute
+  '/figurinhas': typeof FigurinhasRoute
   '/freelances': typeof FreelancesRoute
   '/games': typeof GamesRouteWithChildren
   '/grupos': typeof GruposRouteWithChildren
@@ -714,6 +721,7 @@ export interface FileRoutesByTo {
   '/eventos': typeof EventosRoute
   '/explorar': typeof ExplorarRoute
   '/feed': typeof FeedRoute
+  '/figurinhas': typeof FigurinhasRoute
   '/freelances': typeof FreelancesRoute
   '/games': typeof GamesRouteWithChildren
   '/grupos': typeof GruposRouteWithChildren
@@ -813,6 +821,7 @@ export interface FileRoutesById {
   '/eventos': typeof EventosRoute
   '/explorar': typeof ExplorarRoute
   '/feed': typeof FeedRoute
+  '/figurinhas': typeof FigurinhasRoute
   '/freelances': typeof FreelancesRoute
   '/games': typeof GamesRouteWithChildren
   '/grupos': typeof GruposRouteWithChildren
@@ -913,6 +922,7 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/explorar'
     | '/feed'
+    | '/figurinhas'
     | '/freelances'
     | '/games'
     | '/grupos'
@@ -1011,6 +1021,7 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/explorar'
     | '/feed'
+    | '/figurinhas'
     | '/freelances'
     | '/games'
     | '/grupos'
@@ -1109,6 +1120,7 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/explorar'
     | '/feed'
+    | '/figurinhas'
     | '/freelances'
     | '/games'
     | '/grupos'
@@ -1208,6 +1220,7 @@ export interface RootRouteChildren {
   EventosRoute: typeof EventosRoute
   ExplorarRoute: typeof ExplorarRoute
   FeedRoute: typeof FeedRoute
+  FigurinhasRoute: typeof FigurinhasRoute
   FreelancesRoute: typeof FreelancesRoute
   GamesRoute: typeof GamesRouteWithChildren
   GruposRoute: typeof GruposRouteWithChildren
@@ -1433,6 +1446,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/figurinhas': {
+      id: '/figurinhas'
+      path: '/figurinhas'
+      fullPath: '/figurinhas'
+      preLoaderRoute: typeof FigurinhasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/freelances': {
@@ -2145,6 +2165,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventosRoute: EventosRoute,
   ExplorarRoute: ExplorarRoute,
   FeedRoute: FeedRoute,
+  FigurinhasRoute: FigurinhasRoute,
   FreelancesRoute: FreelancesRoute,
   GamesRoute: GamesRouteWithChildren,
   GruposRoute: GruposRouteWithChildren,

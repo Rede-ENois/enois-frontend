@@ -9,6 +9,7 @@ import {
 import { emoteImageUrl } from "@/lib/emotes/api";
 import { ENOIS_CUSTOM_EMOJIS } from "@/lib/emotes/enois-pack";
 import { useEmoteIndex, useEmoteText } from "@/lib/emotes/use-emotes";
+import { useFigurinhasDoTexto } from "@/lib/figurinhas/use-figurinhas";
 
 import { InlineMedia } from "./inline-media";
 
@@ -45,10 +46,24 @@ function mapaDeFigurinhas(index: Map<string, string>): Record<string, EditorStic
  * O mapa vai junto com o texto (`inlineStickers`): com ele o leitor desenha o código como figurinha
  * no tamanho do texto. Sem o mapa ele só vê imagem de mídia anexada, que é o que a figurinha estava
  * virando (issue #1100).
+ *
+ * As figurinhas da comunidade (`:nomedacomunidade:`) entram pelo mesmo mapa, resolvidas pelo índice
+ * do catálogo da comunidade — só as ativas. A origem de cada uma (oficial ou da comunidade) fica
+ * no mapa, e por isso nenhuma das duas é confundida com a outra.
  */
 export function RichText({ writtenAt, ...props }: PostRichTextProps & { writtenAt?: string }) {
   const index = useEmoteIndex();
-  const inlineStickers = useMemo(() => mapaDeFigurinhas(index), [index]);
+  const daComunidade = useFigurinhasDoTexto(props.content);
+  const inlineStickers = useMemo(() => {
+    const mapa = mapaDeFigurinhas(index);
+    for (const figurinha of daComunidade.values()) {
+      // O endereço já é o público (CDN/S3): vai como está, sem passar pelo montador de proxy.
+      if (!mapa[`:${figurinha.code}:`]) {
+        mapa[`:${figurinha.code}:`] = { url: figurinha.url, alt: figurinha.code };
+      }
+    }
+    return mapa;
+  }, [index, daComunidade]);
   const content = useEmoteText(props.content, writtenAt);
 
   return (
