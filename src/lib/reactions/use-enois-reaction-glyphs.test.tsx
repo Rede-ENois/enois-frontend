@@ -100,4 +100,33 @@ describe("useEnoisReactionGlyphs", () => {
     expect(pillButton?.getAttribute("title")).toBe("Remover reação Joinha É Nóis");
     expect(pickerButton?.getAttribute("title")).toBe("Joinha É Nóis");
   });
+
+  it("reconhece a pílula do coração roxo e põe o nome dele no tooltip", async () => {
+    // O coração roxo não está na lista das 76 expressões, mas a pílula dele tem que desenhar o
+    // coração (CSS) e o tooltip não pode continuar com o emoji cru.
+    function HeartHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <div>
+          <span data-testid="pill">💜</span>
+
+          <button type="button" data-reaction-emoji="HEART_PURPLE" title="💜">
+            💜
+          </button>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<HeartHarness />);
+    });
+
+    expect(resolveReactionTypeFromGlyph("💜")).toBe("HEART_PURPLE");
+    expect(
+      host.querySelector('[data-testid="pill"]')?.getAttribute("data-enois-reaction-glyph"),
+    ).toBe("HEART_PURPLE");
+    expect(
+      host.querySelector('button[data-reaction-emoji="HEART_PURPLE"]')?.getAttribute("title"),
+    ).toBe("Coração roxo");
+  });
 });
