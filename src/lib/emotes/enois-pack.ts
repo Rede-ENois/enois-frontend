@@ -111,6 +111,18 @@ export const ENOIS_CUSTOM_EMOJIS: readonly CustomEmojiEntry[] = [
   entry("nails", "Arrasou", "💅", ["unha", "arrasou", "deboche"], undefined, "svg"),
   entry("useful", "Útil", "🧰", ["util", "ferramenta", "ajuda"], undefined, "svg"),
   entry("salute", "Saudação", "🫡", ["saudacao", "respeito", "capitao"], undefined, "svg"),
+  // O coração roxo da fileira de reações fica no FIM, e não logo depois do joinha: o pacote é uma
+  // lista POSICIONAL (`reaction-figures.test.ts` fixa "a reação i é a figura i"), então inserir no
+  // índice 1 empurrava as 75 reações seguintes uma casa e a pílula de cada uma passaria a mostrar o
+  // rosto da vizinha. O seletor busca o coração por código (`heartPurpleSource`), não pela posição.
+  entry(
+    "heart_purple",
+    "Coração roxo",
+    "💜",
+    ["coracao", "roxo", "amor", "curtir", "enois"],
+    undefined,
+    "svg",
+  ),
 ];
 
 const VARIATION_SELECTOR = /\uFE0F/g;

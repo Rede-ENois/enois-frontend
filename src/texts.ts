@@ -1,4 +1,4 @@
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_EMOJIS, REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
@@ -1831,7 +1831,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: REACTION_EMOJIS,
+      emojis: REACTION_PICKER_EMOJIS,
     },
     report: {
       title: "Denunciar post",
