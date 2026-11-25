@@ -14,6 +14,7 @@ import type { ProfileCropPurpose } from "@/types/routes/profile/profile-crop-pur
 import type { RecommendationItemProps } from "@/types/routes/profile/recommendation-item-props";
 import type { SectionProps } from "@/types/routes/profile/section-props";
 import {
+  BirthdayCelebration,
   BirthdaySeal,
   ContributorTag,
   DiarioLinhaTempo,
@@ -86,6 +87,7 @@ import { authApi } from "@/lib/api";
 import { resolveCdnUrl } from "@/lib/api/media";
 import { conversationErrorMessage } from "@/lib/conversation-error";
 import { profileCardData } from "@/lib/cosmetics";
+import { BIRTHDAY_CELEBRATION_STICKERS } from "@/lib/emotes/birthday-stickers";
 import { withoutRepeatedPosts } from "@/lib/feed/repeated-posts";
 import { croppedFile } from "@/lib/media/cropped-file";
 import { connectionAction } from "@/lib/network/connection-action";
@@ -494,6 +496,11 @@ function Profile() {
   return (
     <AppContainer>
       <ProfileThemeScope look={socialLook} mode={themeMode}>
+        {/* Perfil de quem faz aniversário hoje: a festa é para quem visita, então o próprio
+            aniversariante não precisa vê-la no espelho. */}
+        {user.birthdayToday && !isOwnProfile && (
+          <BirthdayCelebration name={user.name} stickers={BIRTHDAY_CELEBRATION_STICKERS} />
+        )}
         <div className="space-y-5 sm:space-y-6">
           <input
             ref={bannerRef}
