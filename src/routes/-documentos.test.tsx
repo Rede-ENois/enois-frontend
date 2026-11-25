@@ -30,9 +30,12 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const sessao = { logado: true };
-// Mesmo indicador de sessão que a página usa: a flag local (`session_active`), não o cache
+// Quem controla quando cada leitura responde: o caso vazio precisa provar que uma leitura DESLIGADA
+// não é tratada como pronta.
+const espera = { vigentes: null as Promise<unknown> | null, minhaSituacao: null as Promise<unknown> | null };
+// O indicador que a página usa (a pista de sessão + a flag local, sem token), nunca o cache
 // da query `["me"]` — ele só existe depois de `/me` responder e não diz se há sessão.
-vi.mock("@/lib/use-auth", () => ({ isAuthenticated: () => sessao.logado }));
+vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => sessao.logado }));
 
 const aceitar = vi.fn(async (id: string) => ({
   id: "aceite_1",
@@ -58,17 +61,20 @@ const RESUMO_DIRETRIZES = {
 vi.mock("@/lib/documentos", () => ({
   TIPOS_DE_DOCUMENTO: ["DIRETRIZES", "TERMOS_DE_USO"],
   documentosApi: {
-    vigentes: vi.fn(async () => [RESUMO_DIRETRIZES]),
-    minhaSituacao: vi.fn(async () => ({
-      documentos: [
-        {
-          documento: RESUMO_DIRETRIZES,
-          conteudo: "## Zero tolerância\n\nTexto das diretrizes.",
-          aceito: false,
+    vigentes: vi.fn(async () => espera.vigentes ?? [RESUMO_DIRETRIZES]),
+    minhaSituacao: vi.fn(
+      async () =>
+        espera.minhaSituacao ?? {
+          documentos: [
+            {
+              documento: RESUMO_DIRETRIZES,
+              conteudo: "## Zero tolerância\n\nTexto das diretrizes.",
+              aceito: false,
+            },
+          ],
+          pendentes: [RESUMO_DIRETRIZES],
         },
-      ],
-      pendentes: [RESUMO_DIRETRIZES],
-    })),
+    ),
     documento: vi.fn(async () => ({
       documento: RESUMO_DIRETRIZES,
       conteudo: "## Zero tolerância\n\nTexto das diretrizes.",
@@ -93,6 +99,8 @@ let client: QueryClient;
 
 beforeEach(() => {
   sessao.logado = true;
+  espera.vigentes = null;
+  espera.minhaSituacao = null;
   aceitar.mockClear();
   host = document.createElement("div");
   document.body.appendChild(host);
@@ -157,6 +165,25 @@ describe("Meus documentos", () => {
 
     expect(host.textContent).toContain(texts.documentos.pendenciaIr);
     expect(botao(texts.documentos.aceitar)).toBeUndefined();
+  });
+
+  it("sem sessão, a tela fica em carregamento até a leitura do visitante responder", async () => {
+    sessao.logado = false;
+    let liberar: () => void = () => {};
+    espera.vigentes = new Promise((resolve) => {
+      liberar = () => resolve([]);
+    });
+    await renderizar();
+
+    expect(host.textContent).toContain(texts.documentos.loading);
+    expect(host.textContent).not.toContain(texts.documentos.pendenciaTitulo);
+
+    await act(async () => {
+      liberar();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(host.textContent).toContain(texts.documentos.pendenciaIr);
   });
 
   it("sem sessão, usuário que ficou no cache de /me não vira visitante logado", async () => {
