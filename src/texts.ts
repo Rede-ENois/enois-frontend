@@ -2615,6 +2615,7 @@ export const texts = {
 
   jobs: {
     visit: "Visitar vaga",
+    loadingMore: "Carregando mais vagas…",
     applyByEmail: {
       resumeHint: "Currículo baixado: anexe no e-mail que acabou de abrir.",
       noProfile: "Entre na sua conta para usar o envio por e-mail.",

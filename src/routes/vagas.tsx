@@ -86,6 +86,41 @@ export const Route = createFileRoute("/vagas")({
   component: Vagas,
 });
 
+type PaginaDeVagas = { items?: Job[]; nextCursor?: string | null };
+
+// A lista mostrada: a qual busca (`chave`) e a qual página (`cursor`) ela pertence, e as vagas.
+type Paginacao = { chave: string; jobs: Job[]; cursor: string | null };
+
+// Soma a página que acabou de chegar na lista: a primeira (de uma busca nova) começa a lista e as
+// de "carregar mais" entram no fim. Devolve a mesma referência quando nada muda.
+// (Testada em `-vagas.test.tsx` pelo export.)
+export function converterPaginacao(
+  anterior: Paginacao,
+  chave: string,
+  cursor: string | null,
+  resposta: PaginaDeVagas,
+): Paginacao {
+  const itens = resposta.items ?? [];
+  if (anterior.chave !== chave) {
+    return cursor === null ? { chave, jobs: itens, cursor: null } : anterior;
+  }
+  const mesmasVagas =
+    anterior.jobs.length === itens.length &&
+    anterior.jobs.every((job, i) => job.id === itens[i].id);
+  if (anterior.cursor === cursor && mesmasVagas) return anterior;
+  // A mesma página com o mesmo cursor (cache, refetch): a lista não muda. O estado guarda o
+  // cursor de onde a resposta veio, então é ele que a busca do render atual vai usar.
+  if (anterior.cursor === cursor) return anterior;
+  return {
+    chave,
+    jobs:
+      cursor === null
+        ? itens
+        : [...anterior.jobs, ...itens.filter((job) => !anterior.jobs.some((j) => j.id === job.id))],
+    cursor,
+  };
+}
+
 const SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-transparent bg-muted px-3 py-2 text-sm font-normal text-text-strong outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
@@ -138,15 +173,18 @@ export function JobsListPage({
   }, [query]);
   const [level, setLevel] = useState("");
   const [location, setLocation] = useState("");
-  const [type, setType] = useState(lockedType ?? "");
-  useEffect(() => {
-    setType(lockedType ?? "");
-  }, [lockedType]);
+  // O filtro de tipo é o único que pode vir fixo da página (a lista de freelances usa esta
+  // mesma tela): vale na hora do render, sem um efeito no meio só para copiar o valor.
+  const [chosenType, setType] = useState(lockedType ?? "");
+  const type = lockedType ?? chosenType;
   const [skills, setSkills] = useState("");
   const [cursor, setCursor] = useState<string | null>(null);
-  const [allJobs, setAllJobs] = useState<Job[]>([]);
   // As abas (pedido da Mel): Énóis primeiro, sem misturar; externas e salvas têm as suas.
   const [aba, setAba] = useState<"enois" | "externas" | "salvas">("enois");
+  // A lista que a tela mostra: cada página que chega entra aqui já na renderização da própria
+  // resposta, e não num efeito depois dela (o preset do react-hooks reprova `setState` em efeito,
+  // e o efeito antigo ainda atrasava a lista em um render).
+  const [paginacao, setPaginacao] = useState<Paginacao>({ chave: "", jobs: [], cursor: null });
   const [plataforma, setPlataforma] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [showExternal, setShowExternal] = useState(false);
@@ -167,6 +205,9 @@ export function JobsListPage({
     skills,
     lockedType,
   });
+  // Mesma chave da busca (`["jobs", aba, plataforma, filters, cursor]`), para casar com ela e
+  // recomeçar do zero quando o filtro muda.
+  const chave = `${aba}|${plataforma}|${JSON.stringify(filters)}`;
 
   const {
     data: jobsData,
@@ -192,6 +233,12 @@ export function JobsListPage({
     // Na vaga (ou em "Minhas vagas") esta lista não aparece: não vale gastar a requisição.
     enabled: !isChildRoute && aba !== "salvas",
   });
+  // A resposta é um objeto novo a cada requisição: é ele que identifica a página que chegou.
+  useEffect(() => {
+    if (!jobsData) return;
+    setPaginacao((anterior) => converterPaginacao(anterior, chave, cursor, jobsData));
+    // Só quando a resposta muda; a chave e o cursor que a pediram vão com ela no mesmo objeto.
+  }, [jobsData]);
 
   const salvas = useQuery({
     queryKey: ["jobs", "salvas"],
@@ -205,37 +252,18 @@ export function JobsListPage({
     enabled: !isChildRoute && aba === "externas",
   });
 
-  // Memo: o `?? []` criava um array novo a cada render e o efeito de acumular a lista abaixo
-  // rodava em todo render. Os dois ramos do antigo ternário eram iguais.
-  const jobs = useMemo(() => jobsData?.items ?? [], [jobsData]);
+  // A lista é a que está em `paginacao` para a busca atual (filtros + página); enquanto a busca
+  // com outros filtros não chega, é a anterior.
+  const jobs = paginacao.chave === chave ? paginacao.jobs : (jobsData?.items ?? []);
+  const nextCursor = paginacao.chave === chave ? paginacao.cursor : (jobsData?.nextCursor ?? null);
+
   const visibleJobs = useMemo(
     () =>
       lockedType
-        ? allJobs.filter((job) => job.type === lockedType)
-        : allJobs.filter((job) => job.type !== "FREELANCE"),
-    [allJobs, lockedType],
+        ? jobs.filter((job) => job.type === lockedType)
+        : jobs.filter((job) => job.type !== "FREELANCE"),
+    [jobs, lockedType],
   );
-  const nextCursor = jobsData?.nextCursor ?? null;
-
-  // Reset list when filters change
-  const filtersKey = JSON.stringify(filters);
-  const prevKey = useRef(filtersKey);
-  useEffect(() => {
-    if (prevKey.current !== filtersKey) {
-      setAllJobs([]);
-      setCursor(null);
-      prevKey.current = filtersKey;
-    }
-  }, [filtersKey]);
-
-  // Append new page to accumulated list
-  useEffect(() => {
-    if (cursor === null && jobs.length > 0) {
-      setAllJobs(jobs);
-    } else if (cursor !== null && jobs.length > 0) {
-      setAllJobs((prev) => [...prev, ...jobs]);
-    }
-  }, [jobs, cursor]);
 
   const apply = useMutation({
     mutationFn: (jobId: string) => jobsApi.apply(jobId),
@@ -487,7 +515,6 @@ export function JobsListPage({
                 ) {
                   setType("");
                 }
-                setAllJobs([]);
                 setCursor(null);
               }}
             >
@@ -503,7 +530,6 @@ export function JobsListPage({
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${plataforma === "Comunidade" ? "bg-primary text-primary-foreground" : "border border-border-soft text-text-subtle hover:border-primary"}`}
               onClick={() => {
                 setPlataforma(plataforma === "Comunidade" ? "" : "Comunidade");
-                setAllJobs([]);
                 setCursor(null);
               }}
             >
@@ -519,7 +545,6 @@ export function JobsListPage({
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${!plataforma ? "bg-primary text-primary-foreground" : "border border-border-soft text-text-subtle"}`}
               onClick={() => {
                 setPlataforma("");
-                setAllJobs([]);
                 setCursor(null);
               }}
             >
@@ -532,7 +557,6 @@ export function JobsListPage({
                 className={`rounded-full px-3 py-1 text-xs font-medium transition ${plataforma === p ? "bg-primary text-primary-foreground" : "border border-border-soft text-text-subtle hover:border-primary"}`}
                 onClick={() => {
                   setPlataforma(p);
-                  setAllJobs([]);
                   setCursor(null);
                 }}
               >
@@ -744,9 +768,22 @@ export function JobsListPage({
 
             {/* Primeira carga (ou troca de filtro): esqueleto no lugar dos cards, em vez da área em
                 branco. Com cards na tela, o spinner embaixo basta para a próxima página. */}
-            {isFetching && allJobs.length === 0 && <JobCardSkeletons />}
+            {isFetching && visibleJobs.length === 0 && <JobCardSkeletons />}
 
-            {isFetching && allJobs.length > 0 && <LoadingState className="py-6" />}
+            {isFetching && visibleJobs.length > 0 && <LoadingState className="py-6" />}
+
+            {/* Próxima página ao chegar no fim: o cursor que a busca usa é o `nextCursor` da
+                página que acabou de chegar. */}
+            {!isFetching && (
+              <InfiniteScroll
+                hasMore={nextCursor !== null}
+                loading={isFetching}
+                loadingLabel={texts.jobs.loadingMore}
+                onLoadMore={() => {
+                  if (nextCursor !== null && !isFetching) setCursor(nextCursor);
+                }}
+              />
+            )}
 
             {!isFetching && visibleJobs.length === 0 && <EmptyState title={texts.jobs.empty} />}
           </>
