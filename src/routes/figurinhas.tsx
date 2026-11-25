@@ -110,6 +110,7 @@ function FigurinhasPage() {
           loading: texts.figurinhas.pagina.loading,
           empty: texts.figurinhas.pagina.empty,
           error: texts.figurinhas.pagina.error,
+          guest: texts.figurinhas.pagina.guest,
           count: texts.figurinhas.pagina.count,
           page: texts.figurinhas.pagina.page,
           previous: texts.figurinhas.pagina.previous,

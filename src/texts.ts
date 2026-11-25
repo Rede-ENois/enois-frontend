@@ -68,6 +68,7 @@ export const texts = {
       loading: "Carregando figurinhas...",
       empty: "Nenhuma figurinha com essa busca.",
       error: "Não foi possível carregar as figurinhas agora.",
+      guest: "Entre para ver as figurinhas de quem está por aqui.",
       count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
       page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
       previous: "Página anterior",
