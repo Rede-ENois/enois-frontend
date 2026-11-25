@@ -36,6 +36,17 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // A partir do 7 o preset liga as regras do React Compiler como erro. O app tem 91 ocorrências
+      // que não são defeito de execução (setState no efeito de uma subscrição, leitura de ref em
+      // handler) e o preset não diz quais regras mudaram: aqui elas ficam em aviso, como o
+      // `exhaustive-deps` do preset, e a regra dos hooks continua bloqueando. A limpeza para voltar
+      // a erro é issue própria.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/globals": "warn",
+      "react-hooks/use-memo": "warn",
       "no-restricted-imports": [
         "error",
         {

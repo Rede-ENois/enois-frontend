@@ -33,7 +33,7 @@ const SEM_OPENAPI = avisoSemOpenApi();
 
 if (!explicitFetch) {
   const guardado = await readFile(outputPath, "utf8").catch(() => "");
-  let esqueleto = true;
+  let esqueleto: boolean;
   try {
     esqueleto = !eDocumentoDeOpenApi(JSON.parse(guardado));
   } catch {
