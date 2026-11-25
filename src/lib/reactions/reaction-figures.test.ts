@@ -26,13 +26,9 @@ describe("figura de cada reação no styles.css", () => {
 
   it("cada reação aponta para a imagem do MESMO ícone do pacote, na ordem do seletor", () => {
     // O CSS e o pacote contam a mesma história: a reação i é a figura i. Se um dos dois mudar de
-    // ordem sozinho, a pílula de uma reação começa a mostrar o rosto de outra. O coração roxo não
-    // entra nessa contagem (é figura a mais no pacote e tem regra própria, abaixo).
-    const pacoteDasReacoes = ENOIS_CUSTOM_EMOJIS.filter(
-      (item) => item.code !== "enois_heart_purple",
-    );
+    // ordem sozinho, a pílula de uma reação começa a mostrar o rosto de outra.
     for (const [indice, type] of REACTION_TYPES.entries()) {
-      expect(regraDoCss(type), type).toBe(pacoteDasReacoes[indice].src);
+      expect(regraDoCss(type), type).toBe(ENOIS_CUSTOM_EMOJIS[indice].src);
     }
   });
 
