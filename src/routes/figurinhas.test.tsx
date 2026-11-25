@@ -179,13 +179,16 @@ describe("catálogo de figurinhas da comunidade", () => {
     page.unmount();
   });
 
-  it("sem conta, ninguém aparece como autor de nada e o envio pede login", async () => {
+  it("sem conta, a tela pede login e nem chega a pedir o catálogo, que exige sessão", async () => {
     mocks.idAtual.valor = null;
     const page = renderPage();
     await page.pronto();
 
     expect(botaoPorLabel(page.host, "Remover :valeu:")).toBeUndefined();
     expect(page.host.textContent).toContain("Entre na sua conta para enviar figurinhas");
+    expect(page.host.textContent).not.toContain("Não foi possível carregar as figurinhas");
+    expect(page.host.textContent).not.toContain("Tentar de novo");
+    expect(mocks.pagina).not.toHaveBeenCalled();
     page.unmount();
   });
 
