@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { ReactionsSummaryProps } from "@/types/components/post/reactions-summary-props";
 import { ReactionsSummary as ReactionsSummaryView } from "@rede-enois/design-system/domain";
@@ -25,7 +25,7 @@ export function ReactionsSummary({ post, initialSummary }: ReactionsSummaryProps
   return (
     <ReactionsSummaryView
       summary={summary}
-      emojis={REACTION_FIGURE_EMOJIS}
+      emojis={REACTION_PICKER_EMOJIS}
       activeType={post.currentUserReaction ?? null}
       clickable={Boolean(card)}
       // `isPending` é por instância do hook; o flag do store é compartilhado com o

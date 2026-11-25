@@ -26,6 +26,15 @@ const entry = (
 export const ENOIS_CUSTOM_EMOJIS: readonly CustomEmojiEntry[] = [
   // Mascote Joinha É Nóis (núcleo de reações e expressões)
   entry("like", "Joinha É Nóis", "👍", ["joinha", "like", "curtir", "enois", "top"]),
+  // O coração roxo da fileira de reações: fica logo depois do joinha, que é o gatilho.
+  entry(
+    "heart_purple",
+    "Coração roxo",
+    "💜",
+    ["coracao", "roxo", "amor", "curtir", "enois"],
+    undefined,
+    "svg",
+  ),
   entry(
     "love",
     "Apaixonado",

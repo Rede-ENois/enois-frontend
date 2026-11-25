@@ -200,6 +200,17 @@ function figureEmoji(type: ReactionType): string {
 }
 
 /**
+ * A fileira do seletor de reações, na ordem em que a view a recebe: o joinha (o gatilho), o coração
+ * roxo e então as reações oficiais na ordem delas. O coração roxo é a figura nova que só existe no
+ * pacote; as demais chaves são `ReactionType` — o tipo que o clique grava.
+ */
+export const REACTION_PICKER_ORDER: readonly string[] = [
+  "LIKE",
+  "HEART_PURPLE",
+  ...(Object.keys(REACTION_EMOJI_ASSETS) as ReactionType[]).filter((type) => type !== "LIKE"),
+];
+
+/**
  * Emoji de cada figura — o valor que as views do design system recebem em `emojis[type]`.
  *
  * A view escolhe a reação pelo mapa (`emojis[type]` é a chave, e o clique devolve a chave) e desenha
@@ -211,6 +222,32 @@ function figureEmoji(type: ReactionType): string {
 export const REACTION_FIGURE_EMOJIS: Record<ReactionType, string> = Object.fromEntries(
   (Object.keys(REACTION_EMOJI_ASSETS) as ReactionType[]).map((type) => [type, figureEmoji(type)]),
 ) as Record<ReactionType, string>;
+
+/** A figura que o coração roxo desenha no seletor — vem do pacote, não é um `ReactionType`. */
+function heartPurpleSource(): string {
+  const src = getEnoisEmojiByCode("enois_heart_purple")?.src;
+  if (!src) throw new Error("Coração roxo sem figura no pacote É Nóis");
+  return src;
+}
+
+/**
+ * O que o seletor de reações recebe (`ReactionPicker`) para montar a fileira e o "+": a ordem de
+ * `REACTION_PICKER_ORDER` num mapa chave → figura. Toda chave que não é a do coração roxo é um
+ * `ReactionType`, e é ela que a view grava ao clicar.
+ */
+export const REACTION_PICKER_FIGURES: Record<string, string> = Object.fromEntries(
+  REACTION_PICKER_ORDER.map((chave) => [
+    chave,
+    chave === "HEART_PURPLE" ? heartPurpleSource() : REACTION_FIGURE_EMOJIS[chave as ReactionType],
+  ]),
+);
+
+/**
+ * O que as views do design system recebem como `emojis`: o mapa tipo → figura de cada reação. Uma
+ * pílula de reação desenha a figura do TIPO dela — por isso esta é a fonte, e não a ordem do
+ * seletor (a primeira fileira muda com `REACTION_PICKER_ORDER`).
+ */
+export const REACTION_PICKER_EMOJIS: Record<ReactionType, string> = REACTION_FIGURE_EMOJIS;
 
 /** Rótulo legível (em português) de cada reação oficial para tooltips de hover. */
 export const REACTION_EMOJI_LABELS: Record<ReactionType, string> = Object.fromEntries(
