@@ -93,7 +93,6 @@ type Paginacao = { chave: string; jobs: Job[]; cursor: string | null };
 
 // Soma a página que acabou de chegar na lista: a primeira (de uma busca nova) começa a lista e as
 // de "carregar mais" entram no fim. Devolve a mesma referência quando nada muda.
-// (Testada em `-vagas.test.tsx` pelo export.)
 export function converterPaginacao(
   anterior: Paginacao,
   chave: string,
@@ -181,9 +180,9 @@ export function JobsListPage({
   const [cursor, setCursor] = useState<string | null>(null);
   // As abas (pedido da Mel): Énóis primeiro, sem misturar; externas e salvas têm as suas.
   const [aba, setAba] = useState<"enois" | "externas" | "salvas">("enois");
-  // A lista que a tela mostra: cada página que chega entra aqui já na renderização da própria
-  // resposta, e não num efeito depois dela (o preset do react-hooks reprova `setState` em efeito,
-  // e o efeito antigo ainda atrasava a lista em um render).
+  // A lista que a tela mostra: as páginas já buscadas com os filtros atuais. Antes ela era um
+  // espelho de `jobsData` refeito a cada render por efeito (e o preset do react-hooks reprovava o
+  // `setState` ali); agora o efeito só dispara com uma resposta nova.
   const [paginacao, setPaginacao] = useState<Paginacao>({ chave: "", jobs: [], cursor: null });
   const [plataforma, setPlataforma] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -233,11 +232,12 @@ export function JobsListPage({
     // Na vaga (ou em "Minhas vagas") esta lista não aparece: não vale gastar a requisição.
     enabled: !isChildRoute && aba !== "salvas",
   });
-  // A resposta é um objeto novo a cada requisição: é ele que identifica a página que chegou.
+  // A resposta é um objeto novo a cada requisição: é ela que marca a página que chegou. O efeito
+  // só roda com a resposta nova (nunca a cada render), e é o lugar em que a busca pode mudar a
+  // lista sem recriar o estado durante o render.
   useEffect(() => {
     if (!jobsData) return;
     setPaginacao((anterior) => converterPaginacao(anterior, chave, cursor, jobsData));
-    // Só quando a resposta muda; a chave e o cursor que a pediram vão com ela no mesmo objeto.
   }, [jobsData]);
 
   const salvas = useQuery({
