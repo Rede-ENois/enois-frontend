@@ -32,7 +32,10 @@ vi.mock("@tanstack/react-router", () => ({
 const sessao = { logado: true };
 // Quem controla quando cada leitura responde: o caso vazio precisa provar que uma leitura DESLIGADA
 // não é tratada como pronta.
-const espera = { vigentes: null as Promise<unknown> | null, minhaSituacao: null as Promise<unknown> | null };
+const espera = {
+  vigentes: null as Promise<unknown> | null,
+  minhaSituacao: null as Promise<unknown> | null,
+};
 // O indicador que a página usa (a pista de sessão + a flag local, sem token), nunca o cache
 // da query `["me"]` — ele só existe depois de `/me` responder e não diz se há sessão.
 vi.mock("@/lib/use-auth", () => ({ useIsAuthenticated: () => sessao.logado }));
