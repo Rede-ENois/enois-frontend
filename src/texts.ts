@@ -35,6 +35,7 @@ export const texts = {
     tabRecent: "Recentes",
     tabEnois: "É Nóis",
     tabThirdParty: "De terceiros",
+    tabAll: "Todas",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
