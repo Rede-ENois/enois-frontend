@@ -36,6 +36,15 @@ vi.mock("@/lib/current-user", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/current-user")>()),
   getCurrentUserId: () => mocks.idAtual.valor,
 }));
+// A pista de sessão é função de servidor/cliente do router: no jsdom ela tenta ler o cookie do
+// servidor. "Sem sessão" é o padrão dos testes; quem quer logado troca o `idAtual`.
+vi.mock("@/lib/auth-hint", () => ({
+  AUTH_HINT_COOKIE: "enois_auth",
+  setAuthHint: () => {},
+  clearAuthHint: () => {},
+  syncAuthHint: () => {},
+  readAuthHint: () => false,
+}));
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (options: Record<string, unknown>) => ({
     options,
@@ -96,8 +105,20 @@ function renderPage() {
   });
   return {
     host,
-    settle: async () => {
-      for (let turn = 0; turn < 10; turn += 1) await act(async () => {});
+    // A página só fica pronta quando o catálogo saiu de "carregando": esperar um número fixo de
+    // voltas deixa a resolução da promessa para o teste seguinte, que então recebe "Carregando".
+    pronto: async ({ esperaMs = 0 } = {}) => {
+      const motivo = () => host.textContent?.includes("Carregando figurinhas");
+      for (let turn = 0; turn < 100; turn += 1) {
+        if (!motivo()) return;
+        await act(async () => {});
+      }
+      for (let turn = 0; turn < 100 && motivo(); turn += 1) {
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, esperaMs));
+        });
+        if (esperaMs > 0) await act(async () => {});
+      }
     },
     unmount: () => act(() => root?.unmount()),
   };
@@ -119,7 +140,7 @@ describe("catálogo de figurinhas da comunidade", () => {
 
   it("desenha os cartões com nome, código e quem enviou", async () => {
     const page = renderPage();
-    await page.settle();
+    await page.pronto();
 
     const texto = page.host.textContent ?? "";
     expect(texto).toContain("Valeu");
@@ -132,7 +153,7 @@ describe("catálogo de figurinhas da comunidade", () => {
 
   it("deixa remover só a própria figurinha", async () => {
     const page = renderPage();
-    await page.settle();
+    await page.pronto();
 
     expect(botaoPorLabel(page.host, "Remover :valeu:")).toBeTruthy();
     expect(botaoPorLabel(page.host, "Remover :neymar:")).toBeUndefined();
@@ -141,7 +162,7 @@ describe("catálogo de figurinhas da comunidade", () => {
 
   it("remove a própria pelo botão", async () => {
     const page = renderPage();
-    await page.settle();
+    await page.pronto();
 
     act(() => botaoPorLabel(page.host, "Remover :valeu:")!.click());
     await act(async () => {});
@@ -151,7 +172,7 @@ describe("catálogo de figurinhas da comunidade", () => {
 
   it("toda figurinha pode ser denunciada", async () => {
     const page = renderPage();
-    await page.settle();
+    await page.pronto();
 
     expect(botaoPorLabel(page.host, "Denunciar :neymar:")).toBeTruthy();
     expect(botaoPorLabel(page.host, "Denunciar :valeu:")).toBeTruthy();
@@ -161,7 +182,7 @@ describe("catálogo de figurinhas da comunidade", () => {
   it("sem conta, ninguém aparece como autor de nada e o envio pede login", async () => {
     mocks.idAtual.valor = null;
     const page = renderPage();
-    await page.settle();
+    await page.pronto();
 
     expect(botaoPorLabel(page.host, "Remover :valeu:")).toBeUndefined();
     expect(page.host.textContent).toContain("Entre na sua conta para enviar figurinhas");
@@ -171,13 +192,15 @@ describe("catálogo de figurinhas da comunidade", () => {
   it("busca vazia e erro pedem os textos certos", async () => {
     mocks.pagina.mockResolvedValue({ ...PAGINA, items: [], total: 0 });
     const vazio = renderPage();
-    await vazio.settle();
+    await vazio.pronto();
     expect(vazio.host.textContent).toContain("Nenhuma figurinha com essa busca.");
     vazio.unmount();
 
+    // O `retry: 1` da consulta espera 1s de verdade entre as tentativas (o timer roda fora do
+    // `act`), e o erro só aparece depois dela: a espera é do tanque, não do relógio falso.
     mocks.pagina.mockRejectedValue(new Error("500"));
     const erro = renderPage();
-    await erro.settle();
+    await erro.pronto({ esperaMs: 1500 });
     expect(erro.host.textContent).toContain("Não foi possível carregar as figurinhas agora.");
     erro.unmount();
   });
