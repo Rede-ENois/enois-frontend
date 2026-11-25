@@ -29,8 +29,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc-sonda
-          npm config --userconfig .npmrc-sonda pack @rede-enois/design-system@0.46.7 --pack-destination .
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > "$RUNNER_TEMP/.npmrc-sonda"
+          NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc-sonda" npm pack @rede-enois/design-system@0.46.7 --pack-destination .
           tarball="$(ls rede-enois-design-system-0.46.7.tgz)"
           integridade="$(node .github/scripts/integridade-pacote.mjs "$tarball")"
           echo "integridade calculada: $integridade"
