@@ -12,7 +12,7 @@ import { DocumentoLegalMeus } from "@rede-enois/design-system/domain";
 import { ApiError } from "@/lib/api-client";
 import { documentosApi } from "@/lib/documentos";
 import { ogMetas } from "@/lib/seo";
-import { isAuthenticated } from "@/lib/use-auth";
+import { useIsAuthenticated } from "@/lib/use-auth";
 
 import { LegalLayout } from "@/components/legal-layout";
 import { RichText } from "@/components/post/rich-text";
@@ -47,7 +47,7 @@ function vinheta(item: DocumentoResumo): string {
  * nada; sem sessão, a mesma leitura vem do endpoint público.
  */
 function Documentos() {
-  const logado = isAuthenticated();
+  const logado = useIsAuthenticated();
   const client = useQueryClient();
 
   const situacao = useQuery({
@@ -63,9 +63,17 @@ function Documentos() {
     enabled: !logado,
   });
 
-  const carregando = logado ? situacao.isLoading : vigentes.isLoading;
-  const falhou = logado ? situacao.isError : vigentes.isError;
-  const state = carregando ? "loading" : falhou ? "error" : "ready";
+  // Uma leitura desligada (`enabled: false`) não está carregando nem falhou: com o `isLoading` da
+  // leitura DESLIGADA, a tela abria como "pronta" antes de a visão certa chegar. Sem nenhum texto
+  // para ela pousar em cima (página sem versão em vigor), ficava a visão de logado na tela — e,
+  // ao voltar para a tela, a leitura do visitante ia para o cache e a visão de logado reaparecia.
+  // Por isso qualquer busca em andamento também é "carregando".
+  const leitura = logado ? situacao : vigentes;
+  const state = leitura.isError
+    ? "error"
+    : leitura.isLoading || leitura.fetchStatus === "fetching"
+      ? "loading"
+      : "ready";
 
   const pendentes = situacao.data?.pendentes ?? [];
   // Texto inteiro de cada versão em vigor (o `/documentos/me` já traz; sem sessão, um por tipo).
