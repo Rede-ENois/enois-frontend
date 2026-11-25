@@ -18,12 +18,12 @@ import { EnvioDeFigurinha } from "@/components/figurinhas/envio-de-figurinha";
 import { ReportDialog } from "@/components/post/report-dialog";
 
 /**
- * Figurinhas da comunidade: o catálogo que qualquer pessoa consulta, busca e denuncia, e o envio
- * de uma nova (com conta).
+ * Figurinhas da comunidade: o catálogo que quem entrou consulta, busca e denuncia, e o envio de uma
+ * nova.
  *
- * O catálogo é público — quem não tem conta lê; usar no texto e copiar o código pedem sessão. A
- * busca vai ao servidor (nome, código ou id) e só as ativas voltam: figurinha desativada pela
- * moderação sai daqui e do menu do `:` na mesma hora.
+ * O catálogo é só para quem entrou (`GET /figurinhas` responde 401 sem sessão, e o guard de rota
+ * manda a visita ao login antes da consulta). A busca vai ao servidor (nome, código ou id) e só as
+ * ativas voltam: figurinha desativada pela moderação sai daqui e do menu do `:` na mesma hora.
  */
 export const Route = createFileRoute("/figurinhas")({
   head: () => ({
@@ -44,7 +44,7 @@ function FigurinhasPage() {
   const queryClient = useQueryClient();
   const [denunciando, setDenunciando] = useState<FigurinhaComunidade | null>(null);
 
-  const catalogo = useFigurinhasPage(pagina, termo);
+  const catalogo = useFigurinhasPage(pagina, termo, Boolean(meuId));
 
   const remover = useMutation({
     mutationFn: (figurinha: FigurinhaComunidade) => figurinhasApi.remover(figurinha.id),
