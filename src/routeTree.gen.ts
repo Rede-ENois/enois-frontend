@@ -69,6 +69,7 @@ import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as TermometroRouteImport } from './routes/termometro'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
+import { Route as WrappedRouteImport } from './routes/wrapped'
 import { Route as AdminDocumentosRouteImport } from './routes/admin.documentos'
 import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
 import { Route as AgendaAssinaturaRouteImport } from './routes/agenda_.assinatura'
@@ -409,6 +410,11 @@ const VagasRoute = VagasRouteImport.update({
   path: '/vagas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WrappedRoute = WrappedRouteImport.update({
+  id: '/wrapped',
+  path: '/wrapped',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
   id: '/admin/documentos',
   path: '/admin/documentos',
@@ -670,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/wrapped': typeof WrappedRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda/assinatura': typeof AgendaAssinaturaRoute
@@ -771,6 +778,7 @@ export interface FileRoutesByTo {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/wrapped': typeof WrappedRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda/assinatura': typeof AgendaAssinaturaRoute
@@ -873,6 +881,7 @@ export interface FileRoutesById {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/wrapped': typeof WrappedRoute
   '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda_/assinatura': typeof AgendaAssinaturaRoute
@@ -976,6 +985,7 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/wrapped'
     | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda/assinatura'
@@ -1077,6 +1087,7 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/wrapped'
     | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda/assinatura'
@@ -1178,6 +1189,7 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/wrapped'
     | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda_/assinatura'
@@ -1280,6 +1292,7 @@ export interface RootRouteChildren {
   TermometroRoute: typeof TermometroRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
+  WrappedRoute: typeof WrappedRoute
   AdminDocumentosRoute: typeof AdminDocumentosRoute
   AgendaAssinaturaRoute: typeof AgendaAssinaturaRoute
   AgendaDisponibilidadeRoute: typeof AgendaDisponibilidadeRoute
@@ -1724,6 +1737,13 @@ declare module '@tanstack/react-router' {
       path: '/vagas'
       fullPath: '/vagas'
       preLoaderRoute: typeof VagasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wrapped': {
+      id: '/wrapped'
+      path: '/wrapped'
+      fullPath: '/wrapped'
+      preLoaderRoute: typeof WrappedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/documentos': {
@@ -2241,6 +2261,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermometroRoute: TermometroRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
+  WrappedRoute: WrappedRoute,
   AdminDocumentosRoute: AdminDocumentosRoute,
   AgendaAssinaturaRoute: AgendaAssinaturaRoute,
   AgendaDisponibilidadeRoute: AgendaDisponibilidadeRoute,
