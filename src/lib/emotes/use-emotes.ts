@@ -2,6 +2,8 @@ import { useMemo } from "react";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
+import type { PaginaParaOGrade } from "@/types/components/emotes/pagina-para-o-grade";
+
 import { emotesApi } from "./api";
 import { applyEmotes, emoteIndex, usesBareEmoteCodes } from "./catalog";
 import { loadCachedIndex, saveCachedIndex } from "./catalog-cache";
@@ -90,6 +92,29 @@ export function useEmotePage(page: number, termo: string, aberto: boolean) {
   return useQuery({
     queryKey: ["emotes", "pagina", page, termo],
     queryFn: () => emotesApi.page(page, EMOTES_POR_PAGINA, termo || undefined),
+    enabled: aberto,
+    placeholderData: keepPreviousData,
+    staleTime: DEZ_MINUTOS,
+    retry: 1,
+  });
+}
+
+/**
+ * Uma página do catálogo para o seletor, seja de onde for (o de terceiros ou o da comunidade).
+ *
+ * A `fonte` vai na chave da busca: trocar de catálogo vira uma busca nova, e cada catálogo guarda a
+ * página dele em cache. Ela é uma função estável (`module scope` ou `useCallback`).
+ */
+export function useCatalogoDoSeletor(
+  nome: string,
+  fonte: (page: number, termo: string) => Promise<PaginaParaOGrade>,
+  page: number,
+  termo: string,
+  aberto: boolean,
+) {
+  return useQuery({
+    queryKey: ["seletor-figurinhas", nome, page, termo],
+    queryFn: () => fonte(page, termo),
     enabled: aberto,
     placeholderData: keepPreviousData,
     staleTime: DEZ_MINUTOS,

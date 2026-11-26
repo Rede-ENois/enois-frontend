@@ -65,6 +65,11 @@
       "count": 1
     }
   },
+  "src/components/emotes/lista-do-seletor.tsx": {
+    "local/no-front-markup": {
+      "count": 17
+    }
+  },
   "src/components/error-banner.tsx": {
     "local/no-front-markup": {
       "count": 1
