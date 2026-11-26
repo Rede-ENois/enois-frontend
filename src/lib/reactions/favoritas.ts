@@ -14,16 +14,20 @@ const REACOES_OFICIAIS: ReadonlySet<string> = new Set<string>([
 ]);
 
 /**
- * A reação de um código solto, quando o texto é o código dela (`HEART_PURPLE`, ou
- * `:enois_heart_purple:` — como o código se escreve no texto da rede). Serve para não desenhar o
- * código como texto.
+ * A reação de um texto solto, quando é o código dela de algum jeito: `HEART_PURPLE`, o código como
+ * se escreve no texto (`:enois_heart_purple:`) e o arquivo da figurinha
+ * (`/emojis/enois/heart_purple.svg` — o que a lista de quem reagiu e as views do design system às
+ * vezes desenham no lugar da figura, e o que o texto publicado guarda). Serve para não desenhar
+ * nada disso como texto.
  */
 export function reacaoDoCodigo(valor: string | null | undefined): string | null {
   const codigo = (valor ?? "").trim();
   if (!codigo) return null;
   // `:enois_like:` é o mesmo código que `LIKE`; `:enois_heart_purple:` não perde o "heart".
   const estiloTexto = /^:enois_([a-z0-9_]+):$/i.exec(codigo);
-  const maiusculo = (estiloTexto?.[1] ?? codigo).toUpperCase();
+  // O arquivo do pacote: `heart_purple.svg` é a figura do `HEART_PURPLE`.
+  const arquivo = /^(?:\/[a-z0-9_]+)*\/emojis\/enois\/([a-z0-9_]+)\.[a-z]+$/i.exec(codigo);
+  const maiusculo = (estiloTexto?.[1] ?? arquivo?.[1] ?? codigo).toUpperCase();
   return REACOES_OFICIAIS.has(maiusculo) ? maiusculo : null;
 }
 

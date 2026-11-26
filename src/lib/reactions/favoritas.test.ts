@@ -37,9 +37,21 @@ describe("reacaoDoCodigo", () => {
     expect(reacaoDoCodigo(":enois_like:")).toBe("LIKE");
   });
 
+  // O texto publicado guarda o caminho do arquivo (`/emojis/enois/heart_purple.svg`), e é ele que
+  // a lista de quem reagiu e as views do DS desenham no lugar da figura: o caminho volta a ser
+  // reconhecido como a reação, e não como texto (a #1202 trocou o caminho pelo código sem manter
+  // os dois, e o texto publicado passou a mostrar o endereço).
+  it("lê o arquivo da figura como a reação dela", () => {
+    expect(reacaoDoCodigo("/emojis/enois/heart_purple.svg")).toBe("HEART_PURPLE");
+    expect(reacaoDoCodigo("/emojis/enois/like.webp")).toBe("LIKE");
+    expect(reacaoDoCodigo(" /emojis/enois/heart_purple.svg ")).toBe("HEART_PURPLE");
+  });
+
   it("não confunde texto comum com reação", () => {
     expect(reacaoDoCodigo("Marina Rocha")).toBeNull();
-    expect(reacaoDoCodigo("/emojis/enois/heart_purple.svg")).toBeNull();
+    expect(reacaoDoCodigo("/emojis/enois/outro.svg")).toBeNull();
+    expect(reacaoDoCodigo("/emojis/enois/heart_purple.svg?x=1")).toBeNull();
+    expect(reacaoDoCodigo("meu /emojis/enois/heart_purple.svg")).toBeNull();
     expect(reacaoDoCodigo(":enois_outra_coisa:")).toBeNull();
     expect(reacaoDoCodigo("")).toBeNull();
     expect(reacaoDoCodigo(null)).toBeNull();
