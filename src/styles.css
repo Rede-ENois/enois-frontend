@@ -268,8 +268,12 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
   order: 6;
 }
 
-/* Barra de escolha do modal aberto pelo "+" */
+/* Barra de escolha do modal aberto pelo "+". O seletor tem largura de conteúdo (`w-fit`) e a grade
+   de baixo é limitada: a barra se ajusta à mesma largura e os itens que passam da linha rolam de
+   lado (rolagem barata, sem esticar o popover nem a página). */
 [data-reaction-favoritas] {
+  min-width: 0;
+  max-width: min(19.5rem, calc(100vw - 2.5rem));
   margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-soft, #333) 65%, transparent);
@@ -294,13 +298,23 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
 [data-reaction-favoritas-barra] {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 0.375rem;
   min-height: 2rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-reaction-favoritas-barra]::-webkit-scrollbar {
+  display: none;
 }
 
 [data-reaction-favorita] {
   display: inline-flex;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
   align-items: center;
   justify-content: center;
   gap: 0.125rem;
@@ -367,10 +381,37 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
   pointer-events: none;
 }
 
+/* Cada casa da fileira caiba até cinco vezes na largura da barra: no desktop sobra espaço, no
+   celular os itens encolhem (e o botão continua tocável, com o alvo mínimo de 1.75rem). */
+[data-reaction-favorita] {
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 0;
+}
+
+[data-reaction-favorita] > [data-reaction-emoji] {
+  flex: 0 1 auto;
+}
+
 @media (hover: none) and (pointer: coarse) {
   [data-reaction-favorita] > button {
     width: 1.75rem;
     height: 1.75rem;
+  }
+
+  [data-reaction-favoritas-barra] {
+    scroll-snap-type: none;
+  }
+}
+
+@media (max-width: 400px) {
+  [data-reaction-favorita] {
+    padding-inline: 0.125rem;
+  }
+
+  [data-reaction-favorita] > [data-reaction-emoji] {
+    width: 1.75rem !important;
+    min-height: 1.75rem !important;
   }
 }
 
@@ -405,7 +446,7 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
 }
 
 [data-radix-popper-content-wrapper] > div:has([data-reaction-emoji]) {
-  padding: 0.625rem !important;
+  padding: 0.375rem !important;
   border-radius: 0.875rem !important;
   max-width: calc(100vw - 1.5rem) !important;
 }
@@ -442,7 +483,9 @@ div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
   overscroll-behavior-x: contain;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
-  padding: 0.375rem !important;
+  /* Sem o recorte dos 6px de cada lado: a grade ocupa exatamente as casas (por isso o raio da
+     seleção no hover cai para 0.375rem abaixo), e a barra de favoritas cabe na mesma largura. */
+  padding: 0 0.375rem !important;
   scroll-padding-inline: 0.375rem;
 }
 
@@ -454,6 +497,7 @@ div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(
 
 div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
   > [data-reaction-emoji] {
+  border-radius: 0.375rem !important;
   scroll-snap-align: start;
 }
 
