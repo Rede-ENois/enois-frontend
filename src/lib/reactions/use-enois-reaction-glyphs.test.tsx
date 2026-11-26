@@ -47,6 +47,8 @@ describe("useEnoisReactionGlyphs", () => {
     expect(resolveReactionTypeFromGlyph("❤️")).toBe("LOVE");
     expect(resolveReactionTypeFromGlyph("❤")).toBe("LOVE");
     expect(resolveReactionTypeFromGlyph("texto comum")).toBeNull();
+    // O valor de `emojis[HEART_PURPLE]` é o caminho da figura: pintar o caminho como texto é o bug.
+    expect(resolveReactionTypeFromGlyph("/emojis/enois/heart_purple.svg")).toBeNull();
   });
 
   it("marca e atualiza data-enois-reaction-glyph sem tocar em picker ou áreas editáveis", async () => {
