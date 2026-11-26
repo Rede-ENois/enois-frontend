@@ -11,5 +11,4 @@ export interface ReacoesFavoritasState {
 
   alternar: (tipo: string) => void;
   mover: (tipo: string, direcao: -1 | 1) => void;
-  posicionar: (tipo: string, indice: number) => void;
 }

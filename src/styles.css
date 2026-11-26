@@ -381,20 +381,12 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
   pointer-events: none;
 }
 
-/* As cinco casas dividem a largura da barra por igual: no desktop sobra espaço, no celular os itens
-   encolhem até o conteúdo (a figurinha e os botões continuam tocáveis). */
+/* Cada casa da fileira caiba até cinco vezes na largura da barra: no desktop sobra espaço, no
+   celular os itens encolhem (e o botão continua tocável, com o alvo mínimo de 1.75rem). */
 [data-reaction-favorita] {
   flex: 1 1 0;
   min-width: 0;
   gap: 0;
-  cursor: grab;
-}
-
-/* Arrastar a casa põe a favorita na posição em que ela é solta (toque e mouse). */
-[data-reaction-favorita][data-arrastando="sim"] {
-  cursor: grabbing;
-  opacity: 0.6;
-  scroll-snap-align: none;
 }
 
 [data-reaction-favorita] > [data-reaction-emoji] {
@@ -604,13 +596,6 @@ div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-}
-
-/* A fileira de favoritas desenha cada figura numa casa de altura fixa: o glifo não cresce com a
-   largura da casa e a linha não muda de altura conforme as favoritas. */
-[data-reaction-favorita] > [data-reaction-emoji]::before {
-  width: 1.375rem;
-  height: 1.375rem;
 }
 
 /* Garante espaço suficiente no botão de reação ativa e nas pílulas da postagem (acessibilidade) */

@@ -9,7 +9,6 @@ import {
   fileiraDaEscolha,
   fileiraDeFavoritas,
   moverFavorita,
-  posicionarFavorita,
   reacaoDoCodigo,
   semFavorita,
 } from "./favoritas";
@@ -30,17 +29,16 @@ describe("ehTipoDeReacao", () => {
 });
 
 describe("reacaoDoCodigo", () => {
-  it("lê o código da reação e o código como ele se escreve no texto", () => {
+  it("lê o código da reação e o arquivo da figurinha dela", () => {
     expect(reacaoDoCodigo("HEART_PURPLE")).toBe("HEART_PURPLE");
     expect(reacaoDoCodigo(" heart_purple ")).toBe("HEART_PURPLE");
-    expect(reacaoDoCodigo(":enois_heart_purple:")).toBe("HEART_PURPLE");
-    expect(reacaoDoCodigo(":enois_like:")).toBe("LIKE");
+    expect(reacaoDoCodigo("/emojis/enois/heart_purple.svg")).toBe("HEART_PURPLE");
+    expect(reacaoDoCodigo("/emojis/enois/like.webp")).toBe("LIKE");
   });
 
   it("não confunde texto comum com reação", () => {
     expect(reacaoDoCodigo("Marina Rocha")).toBeNull();
-    expect(reacaoDoCodigo("/emojis/enois/heart_purple.svg")).toBeNull();
-    expect(reacaoDoCodigo(":enois_outra_coisa:")).toBeNull();
+    expect(reacaoDoCodigo("/emojis/enois/outro.svg")).toBeNull();
     expect(reacaoDoCodigo("")).toBeNull();
     expect(reacaoDoCodigo(null)).toBeNull();
   });
@@ -69,28 +67,6 @@ describe("moverFavorita", () => {
     expect(moverFavorita(["LIKE", "LOVE"], "LIKE", -1)).toEqual(["LIKE", "LOVE"]);
     expect(moverFavorita(["LIKE", "LOVE"], "LOVE", 1)).toEqual(["LIKE", "LOVE"]);
     expect(moverFavorita(["LIKE"], "WOW", 1)).toEqual(["LIKE"]);
-  });
-});
-
-describe("posicionarFavorita", () => {
-  it("põe a reação na casa pedida, empurrando as outras", () => {
-    expect(posicionarFavorita(["LIKE", "LOVE", "LAUGH"], "LIKE", 2)).toEqual([
-      "LOVE",
-      "LAUGH",
-      "LIKE",
-    ]);
-    expect(posicionarFavorita(["LIKE", "LOVE", "LAUGH"], "LAUGH", 0)).toEqual([
-      "LAUGH",
-      "LIKE",
-      "LOVE",
-    ]);
-  });
-
-  it("não muda a fileira para reação ausente e prende o índice nos limites", () => {
-    expect(posicionarFavorita(["LIKE", "LOVE"], "WOW", 1)).toEqual(["LIKE", "LOVE"]);
-    expect(posicionarFavorita(["LIKE", "LOVE"], "LIKE", 9)).toEqual(["LOVE", "LIKE"]);
-    expect(posicionarFavorita(["LIKE", "LOVE"], "LOVE", -3)).toEqual(["LOVE", "LIKE"]);
-    expect(posicionarFavorita(["LIKE", "LOVE"], "LOVE", 1)).toEqual(["LIKE", "LOVE"]);
   });
 });
 

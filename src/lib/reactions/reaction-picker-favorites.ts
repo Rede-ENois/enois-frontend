@@ -2,7 +2,6 @@ import { useEffect } from "react";
 
 import { REACTION_PICKER_ORDER } from "@/constants/reaction-emojis";
 import {
-  REACOES_FAVORITAS_STORAGE_KEY,
   hidratarReacoesFavoritas,
   useReacoesFavoritasStore,
 } from "@/stores/reacoes-favoritas.store";
@@ -43,7 +42,6 @@ const LABELS = {
   esquerda: "Mover para a esquerda",
   direita: "Mover para a direita",
   salvo: "Reações favoritas salvas",
-  arrastar: "Arraste para mudar a ordem",
 };
 
 /** A fileira do compacto, ou `null` para deixar o desenho do design system como está. */
@@ -76,103 +74,13 @@ function marcarCompacto(grade: HTMLElement): void {
   else popover?.removeAttribute("data-reaction-favoritas-fileira");
 }
 
-const ARRASTO_MINIMO = 4;
-
-/**
- * Arrastar a casa põe a favorita na posição em que ela é solta (mouse e toque).
- *
- * O `pointerdown` na casa — fora dos botões — a segura; o movimento para o lado a acompanha e o
- * `pointerup` destrava. A posição nova é a casa que mais ficou encoberta pela casa arrastada (a
- * comparação de retângulos já leva em conta o `transform`), e um arrasto pequeno não mexe em nada.
- * O deslize vertical fica com a rolagem do popover, que segue rolando a lista de reações.
- */
-function instalarArrasto(lista: HTMLElement): void {
-  if (lista.dataset.arrasto === "sim") return;
-  lista.dataset.arrasto = "sim";
-  let arrastada: HTMLElement | null = null;
-  let inicioX = 0;
-  let inicioY = 0;
-
-  const limpar = () => {
-    if (!arrastada) return;
-    arrastada.removeAttribute("data-arrastando");
-    arrastada.style.removeProperty("transform");
-    arrastada = null;
-  };
-
-  lista.addEventListener("pointerdown", (evento) => {
-    const alvo = evento.target instanceof Element ? evento.target : null;
-    if (!alvo || !evento.isPrimary || alvo.closest("button")) return;
-    const casa = alvo.closest<HTMLElement>("[data-reaction-favorita]");
-    if (!casa || !lista.contains(casa)) return;
-    arrastada = casa;
-    inicioX = evento.clientX;
-    inicioY = evento.clientY;
-  });
-
-  lista.addEventListener("pointermove", (evento) => {
-    if (!arrastada) return;
-    const dx = evento.clientX - inicioX;
-    const dy = evento.clientY - inicioY;
-    if (!arrastada.hasAttribute("data-arrastando")) {
-      if (Math.abs(dx) < ARRASTO_MINIMO && Math.abs(dy) < ARRASTO_MINIMO) return;
-      if (Math.abs(dy) > Math.abs(dx)) {
-        // Deslize vertical: a pessoa está rolando, não arrastando.
-        arrastada = null;
-        return;
-      }
-      arrastada.setAttribute("data-arrastando", "sim");
-    }
-    arrastada.style.transform = `translateX(${dx}px)`;
-  });
-
-  const soltar = (cancelou: boolean) => {
-    const casa = arrastada;
-    const saiu = casa?.hasAttribute("data-arrastando") ?? false;
-    // A medida tem de ser com o `transform` ainda na casa: é ele que mostra onde ela foi solta.
-    const caixa = casa?.getBoundingClientRect();
-    limpar();
-    if (!casa || cancelou || !saiu || !caixa) return;
-    const tipo = casa.getAttribute("data-reaction-favorita") ?? "";
-    let melhor: Element | null = null;
-    let coberta = 0;
-    for (const outra of lista.children) {
-      if (outra === casa) continue;
-      const r = outra.getBoundingClientRect();
-      const sobreposta = Math.max(0, Math.min(caixa.right, r.right) - Math.max(caixa.left, r.left));
-      if (sobreposta > coberta) {
-        coberta = sobreposta;
-        melhor = outra;
-      }
-    }
-    if (!tipo || !melhor) return;
-    const indice = [...lista.children].indexOf(melhor);
-    if (indice >= 0) useReacoesFavoritasStore.getState().posicionar(tipo, indice);
-  };
-  lista.addEventListener("pointerup", () => soltar(false));
-  lista.addEventListener("pointercancel", () => soltar(true));
-}
-
-/**
- * Põe as favoritas na fileira do seletor aberto pelo "+", antes da lista inteira.
- *
- * A grade expandida é do design system e mostra as reações na ordem dele; a fileira traz as
- * favoritas — que podem ser de qualquer parte da lista — para as primeiras casas, cada uma uma vez
- * só (a casa original fica com o mesmo `order`, então as seguintes se ajeitam sozinhas). Reagir
- * continua sendo pelo botão da reação: a fileira só muda onde a reação aparece.
- */
-function marcarFileira(grade: HTMLElement, fileira: readonly string[]): void {
-  const posicao = new Map(fileira.map((tipo, i) => [tipo, i]));
-  for (const el of grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")) {
-    const ordem = posicao.get(el.getAttribute("data-reaction-emoji") ?? "");
-    if (ordem === undefined) el.style.removeProperty("order");
-    else el.style.setProperty("order", String(ordem));
-  }
-}
-
-/** A seta da casa: troca com a vizinha, que é o atalho do arrasto (e o único com teclado). */
-function mover(tipo: string, direcao: -1 | 1): void {
-  useReacoesFavoritasStore.getState().mover(tipo, direcao);
+function mover(tipo: string, direcao: -1 | 1, fileira: readonly string[]): void {
+  const i = fileira.indexOf(tipo);
+  const j = i + direcao;
+  if (i < 0 || j < 0 || j >= fileira.length) return;
+  const proxima = [...fileira];
+  [proxima[i], proxima[j]] = [proxima[j], proxima[i]];
+  useReacoesFavoritasStore.setState({ favoritas: proxima, escolheu: true });
 }
 
 function botaoDeIcone(
@@ -207,17 +115,14 @@ function itemDaFileira(tipo: string, fileira: readonly string[], emoji: string):
   const item = document.createElement("div");
   item.setAttribute("data-reaction-favorita", tipo);
   const i = fileira.indexOf(tipo);
-  // A casa inteira é a pega do arrasto: no touch não há hover, e as setas ficam pequenas.
-  item.title = LABELS.arrastar;
   item.append(
-    botaoDeIcone(ICONE.estrelaCheia, LABELS.desfavoritar, false, () => {
-      useReacoesFavoritasStore.getState().alternar(tipo);
-      avisar(LABELS.salvo);
-    }),
+    botaoDeIcone(ICONE.estrelaCheia, LABELS.desfavoritar, false, () =>
+      useReacoesFavoritasStore.getState().alternar(tipo),
+    ),
     criarIcone(tipo, emoji),
-    botaoDeIcone(ICONE.esquerda, LABELS.esquerda, i <= 0, () => mover(tipo, -1)),
+    botaoDeIcone(ICONE.esquerda, LABELS.esquerda, i <= 0, () => mover(tipo, -1, fileira)),
     botaoDeIcone(ICONE.direita, LABELS.direita, i < 0 || i >= fileira.length - 1, () =>
-      mover(tipo, 1),
+      mover(tipo, 1, fileira),
     ),
   );
   return item;
@@ -268,10 +173,7 @@ function marcarExpandido(grade: HTMLElement): void {
     // posição no DOM, e trocá-la a cada clique tirava o foco do botão tocado.
     if (!lista || lista.dataset.assinatura !== assinatura) {
       lista?.replaceChildren(...novos);
-      if (lista) {
-        lista.dataset.assinatura = assinatura;
-        instalarArrasto(lista);
-      }
+      if (lista) lista.dataset.assinatura = assinatura;
     }
     if (vazio) vazio.hidden = fileira.length > 0;
   }
@@ -281,7 +183,6 @@ function marcarExpandido(grade: HTMLElement): void {
     const tipo = el.getAttribute("data-reaction-emoji") ?? "";
     el.setAttribute("data-favorita", fileira.includes(tipo) ? "sim" : "nao");
   }
-  marcarFileira(grade, fileira);
 }
 
 function avisar(texto: string): void {
@@ -294,20 +195,7 @@ function avisar(texto: string): void {
   setTimeout(() => aviso.remove(), 2200);
 }
 
-/** Redesenha o compacto antes do "+": a grade do "+" não pode mandar na fileira da primeira linha. */
-function marcarCompactos(root: ParentNode): void {
-  for (const popover of root.querySelectorAll<HTMLElement>(
-    "[data-radix-popper-content-wrapper] > div",
-  )) {
-    const grade = popover.querySelector<HTMLElement>("div.grid.grid-cols-6");
-    if (grade && grade.querySelector('button[title="+"]') !== null) marcarCompacto(grade);
-  }
-}
-
 export function attachReactionFavorites(root: ParentNode = document): void {
-  instalarToque();
-  // A passada do compacto vem primeiro: a do "+" põe os links de volta e não pode apagar a fileira.
-  marcarCompactos(root);
   for (const popover of root.querySelectorAll<HTMLElement>(
     "[data-radix-popper-content-wrapper] > div",
   )) {
@@ -324,10 +212,10 @@ export function attachReactionFavorites(root: ParentNode = document): void {
 const INSTALADO = "data-reaction-favoritas-toque";
 
 /**
- * A grade não tem gancho do React: um `capture` no documento, uma vez, cuida do toque.
+ * A grade do modal não tem gancho do React: um `capture` no documento, uma vez, cuida do toque.
  *
- * Reagir e escolher são o mesmo toque: a reação nova entra na fileira (se couber) e a que já é
- * favorita só reage. Tirar da fileira é pela estrela da barra.
+ * Reagir e escolher são o mesmo toque — a reação que não está na fileira entra nela (se couber) e a
+ * que está volta ao padrão nela, com o próprio seletor fechando em seguida.
  */
 function instalarToque(): void {
   if (document.documentElement.hasAttribute(INSTALADO)) return;
@@ -336,11 +224,7 @@ function instalarToque(): void {
     "click",
     (evento) => {
       const alvo = evento.target instanceof Element ? evento.target : null;
-      if (!alvo) return;
-      // A figurinha da barra reagiria duas vezes (o clique dela vai também à grade).
-      if (alvo.closest("[data-reaction-favorita]")) return;
-
-      if (alvo.closest(`[${ESCOLHA_ATTR}]`)) return;
+      if (!alvo || alvo.closest(`[${ESCOLHA_ATTR}]`)) return;
       const tipo = alvo
         .closest<HTMLElement>("[data-reaction-emoji]")
         ?.getAttribute("data-reaction-emoji");
@@ -364,32 +248,19 @@ function instalarToque(): void {
 export function useReactionPickerFavorites(): void {
   useEffect(() => {
     if (typeof document === "undefined") return;
+    instalarToque();
     attachReactionFavorites(document);
     void hidratarReacoesFavoritas().then(() => attachReactionFavorites(document));
     const desinscrever = useReacoesFavoritasStore.subscribe((estado, anterior) => {
-      if (estado.favoritas === anterior.favoritas && estado.escolheu === anterior.escolheu) return;
-      mudouFavoritas = true;
-      attachReactionFavorites(document);
-      mudouFavoritas = false;
+      if (estado.favoritas !== anterior.favoritas || estado.escolheu !== anterior.escolheu) {
+        attachReactionFavorites(document);
+      }
     });
-    // Quando as favoritas mudam, a passada nova já veio do store; um ajuste de DOM por causa dela
-    // reentraria aqui e desfaria a fileira recém-desenhada.
-    let mudouFavoritas = false;
-    const observer = new MutationObserver(() => {
-      if (mudouFavoritas) return;
-      attachReactionFavorites(document);
-    });
+    const observer = new MutationObserver(() => attachReactionFavorites(document));
     observer.observe(document.body, { childList: true, subtree: true });
-    // Outra aba mudou a fileira: o store avisa e o seletor aberto se ajeita.
-    const storage = (evento: StorageEvent) => {
-      if (evento.key !== null && evento.key !== REACOES_FAVORITAS_STORAGE_KEY) return;
-      void hidratarReacoesFavoritas().then(() => attachReactionFavorites(document));
-    };
-    window.addEventListener("storage", storage);
     return () => {
       desinscrever();
       observer.disconnect();
-      window.removeEventListener("storage", storage);
     };
   }, []);
 }
