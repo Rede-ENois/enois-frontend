@@ -14,20 +14,17 @@ const REACOES_OFICIAIS: ReadonlySet<string> = new Set<string>([
 ]);
 
 /**
- * A reação de um texto solto, quando o texto é o código dela (`HEART_PURPLE`) ou o nome curto do
- * arquivo (`heart_purple`, o que as views do design system às vezes recebem no lugar da figura).
- * Serve para não desenhar o código como texto.
+ * A reação de um código solto, quando o texto é o código dela (`HEART_PURPLE`, ou
+ * `:enois_heart_purple:` — como o código se escreve no texto da rede). Serve para não desenhar o
+ * código como texto.
  */
 export function reacaoDoCodigo(valor: string | null | undefined): string | null {
   const codigo = (valor ?? "").trim();
   if (!codigo) return null;
-  const maiusculo = codigo.toUpperCase();
-  if (REACOES_OFICIAIS.has(maiusculo)) return maiusculo;
-  // Algumas views recebem o ARQUIVO da figurinha no lugar do emoji: o nome dele é o mesmo código
-  // em minúsculas (`/emojis/enois/heart_purple.svg`).
-  const arquivo = /^\/emojis\/enois\/([a-z0-9_]+)\.[a-z]+$/.exec(codigo);
-  const pelaFigura = arquivo?.[1]?.toUpperCase();
-  return pelaFigura && REACOES_OFICIAIS.has(pelaFigura) ? pelaFigura : null;
+  // `:enois_like:` é o mesmo código que `LIKE`; `:enois_heart_purple:` não perde o "heart".
+  const estiloTexto = /^:enois_([a-z0-9_]+):$/i.exec(codigo);
+  const maiusculo = (estiloTexto?.[1] ?? codigo).toUpperCase();
+  return REACOES_OFICIAIS.has(maiusculo) ? maiusculo : null;
 }
 
 /** Um código de reação: o `ReactionType` ou `HEART_PURPLE`. Nada além disso entra na fileira. */
@@ -43,6 +40,21 @@ export function semFavorita(favoritas: readonly string[], tipo: string): string[
 /** Põe a reação no fim da fileira (se ela já estava, mantém a posição). */
 export function comFavorita(favoritas: readonly string[], tipo: string): string[] {
   return favoritas.includes(tipo) ? [...favoritas] : [...favoritas, tipo].slice(0, FAVORITAS_MAX);
+}
+
+/** Põe a reação na casa `indice` (0 é a primeira), empurrando para o lado as que estavam ali. */
+export function posicionarFavorita(
+  favoritas: readonly string[],
+  tipo: string,
+  indice: number,
+): string[] {
+  const de = favoritas.indexOf(tipo);
+  if (de < 0) return [...favoritas];
+  const alvo = Math.min(Math.max(Math.trunc(indice) || 0, 0), favoritas.length - 1);
+  if (alvo === de) return [...favoritas];
+  const sem = favoritas.filter((item) => item !== tipo);
+  sem.splice(alvo, 0, tipo);
+  return sem;
 }
 
 /** Move a reação uma casa para o lado (`-1` para a esquerda, `1` para a direita). */

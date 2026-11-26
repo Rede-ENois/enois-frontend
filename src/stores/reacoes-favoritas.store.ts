@@ -9,8 +9,12 @@ import {
   comFavorita,
   ehTipoDeReacao,
   moverFavorita,
+  posicionarFavorita,
   semFavorita,
 } from "@/lib/reactions/favoritas";
+
+/** A chave do navegador onde a fileira fica guardada (o evento `storage` de outra aba usa esta). */
+export const REACOES_FAVORITAS_STORAGE_KEY = "enois-reacoes-favoritas";
 
 /**
  * Traz a fileira guardada para uma forma válida.
@@ -47,9 +51,12 @@ export const useReacoesFavoritasStore = create<ReacoesFavoritasState>()(
 
       mover: (tipo: string, direcao: -1 | 1) =>
         set((s) => ({ favoritas: moverFavorita(s.favoritas, tipo, direcao), escolheu: true })),
+
+      posicionar: (tipo: string, indice: number) =>
+        set((s) => ({ favoritas: posicionarFavorita(s.favoritas, tipo, indice), escolheu: true })),
     }),
     {
-      name: "enois-reacoes-favoritas",
+      name: REACOES_FAVORITAS_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (s): ReacoesFavoritasStorageState => ({
