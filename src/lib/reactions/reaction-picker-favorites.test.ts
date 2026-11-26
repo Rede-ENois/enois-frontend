@@ -210,11 +210,16 @@ describe("attachReactionFavorites", () => {
     });
 
     const escolhidas = ["LIKE", "HEART_PURPLE", "WOW", "SAD", "VIBE"];
-    // Compacto: as duas que estão entre as seis casas do design system vão para a frente.
-    const compacto = montarSeletor(false, gradeCompleta.slice(0, 6));
-    // O compacto vem antes do "+" no documento: o anexo o redesenha a cada passada, como no app.
+    // Compacto: as cinco entram nas primeiras casas (o "+" que vem depois delas no `order`); as
+    // reações de fora da fileira continuam no DOM, escondidas, para o leitor de tela.
+    const compacto = montarSeletor(false, gradeCompleta);
     attachReactionFavorites(document);
-    expect(marcadas(compacto.grade)).toEqual(["LIKE", "HEART_PURPLE"]);
+    expect(marcadas(compacto.grade)).toEqual(escolhidas);
+    expect(
+      [...compacto.grade.querySelectorAll<HTMLElement>('[data-filled="sim"]')].map(
+        (el) => el.style.order,
+      ),
+    ).toEqual(["0", "1", "2", "3", "4"]);
 
     const expandido = montarSeletor(true, gradeCompleta);
     attachReactionFavorites(document);

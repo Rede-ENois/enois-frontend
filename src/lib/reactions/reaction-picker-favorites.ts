@@ -59,10 +59,8 @@ function marcarCompacto(grade: HTMLElement): void {
   const { favoritas, escolheu } = useReacoesFavoritasStore.getState();
   const fileira = fileiraDoCompacto(favoritas, escolheu);
   const popover = grade.closest<HTMLElement>("[data-radix-popper-content-wrapper] > div");
-  // O compacto tem seis casas: uma sétima favorita não cabe na fileira (ela aparece inteira no +).
-  const casas = grade.querySelectorAll("[data-reaction-emoji]").length;
   const posicao = new Map<string, number>();
-  fileira?.slice(0, casas).forEach((tipo, i) => posicao.set(tipo, i));
+  fileira?.forEach((tipo, i) => posicao.set(tipo, i));
   for (const el of grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")) {
     const tipo = el.getAttribute("data-reaction-emoji") ?? "";
     const ordem = posicao.get(tipo);
