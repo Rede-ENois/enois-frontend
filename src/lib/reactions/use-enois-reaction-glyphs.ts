@@ -13,9 +13,21 @@ import {
 } from "@/types/application/reaction/any-reaction-type";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
+import { reacaoDoCodigo } from "./favoritas";
+
 const VARIATION_SELECTOR = /\uFE0F/g;
+
 const IGNORED_ANCESTOR_SELECTOR =
   "input, textarea, code, pre, [contenteditable='true'], script, style";
+
+/**
+ * O emoji de apoio de cada reação oficial: é ele que fica no texto do DOM (e no leitor de tela)
+ * quando uma view desenhou o código da reação no lugar da figura.
+ */
+const GLYPH_OF_REACTION: Record<string, string> = {
+  ...REACTION_EMOJIS,
+  [PURPLE_HEART_REACTION]: PURPLE_HEART_EMOJI,
+};
 
 /**
  * Emoji → tipo, em duas passadas.
@@ -85,6 +97,7 @@ function syncElementGlyph(element: Element): void {
   if (element.hasAttribute("data-reaction-emoji")) {
     const pickerType = element.getAttribute("data-reaction-emoji");
     if (pickerType && Object.hasOwn(REACTION_LABELS, pickerType)) {
+      element.setAttribute("data-enois-reaction-glyph", pickerType);
       const label = REACTION_LABELS[pickerType];
       if (element.getAttribute("title") !== label) {
         element.setAttribute("title", label);
@@ -92,11 +105,32 @@ function syncElementGlyph(element: Element): void {
     }
     return;
   }
+
   if (element.closest(IGNORED_ANCESTOR_SELECTOR)) {
     if (element.hasAttribute("data-enois-reaction-glyph")) {
       element.removeAttribute("data-enois-reaction-glyph");
     }
     return;
+  }
+
+  // Lista de quem reagiu e abas do diálogo desenham o valor de `emojis[type]` como texto: para o
+  // coração roxo ele é o código (`HEART_PURPLE`) ou o nome do arquivo (`heart_purple`), não um
+  // emoji. O texto vira o glifo da reação e o CSS pinta a figura.
+  // Um código tem até 40 letras; texto de verdade não passa por aqui.
+  if (
+    element.childNodes.length === 1 &&
+    element.firstChild?.nodeType === Node.TEXT_NODE &&
+    (element.textContent?.trim().length ?? 0) <= 40
+  ) {
+    const codigo = reacaoDoCodigo(element.textContent);
+    if (codigo) {
+      if (element.getAttribute("data-enois-reaction-glyph") !== codigo) {
+        element.setAttribute("data-enois-reaction-glyph", codigo);
+      }
+      const glyph = GLYPH_OF_REACTION[codigo];
+      if (glyph) element.firstChild.textContent = glyph;
+      return;
+    }
   }
 
   // Only target leaf elements wrapping a single text node with a known reaction glyph

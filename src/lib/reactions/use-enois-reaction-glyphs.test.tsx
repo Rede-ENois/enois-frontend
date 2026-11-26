@@ -62,7 +62,9 @@ describe("useEnoisReactionGlyphs", () => {
     const codeSpan = host.querySelector('[data-testid="code"] span');
 
     expect(pill?.getAttribute("data-enois-reaction-glyph")).toBe("LIKE");
-    expect(picker?.getAttribute("data-enois-reaction-glyph")).toBeNull();
+    // O seletor também é pintado pelo CSS; a marca dele não muda o texto.
+    expect(picker?.getAttribute("data-enois-reaction-glyph")).toBe("LIKE");
+    expect(picker?.textContent).toBe("👍");
     expect(editorSpan?.getAttribute("data-enois-reaction-glyph")).toBeNull();
     expect(codeSpan?.getAttribute("data-enois-reaction-glyph")).toBeNull();
 
@@ -130,5 +132,48 @@ describe("useEnoisReactionGlyphs", () => {
     expect(
       host.querySelector('button[data-reaction-emoji="HEART_PURPLE"]')?.getAttribute("title"),
     ).toBe("Coração roxo");
+  });
+
+  it("lista de quem reagiu e abas desenham o coração roxo como glifo, não como código", async () => {
+    // O diálogo de reações desenha `emojis[type]`, e para o coração roxo esse valor é o nome do
+    // arquivo: sem isto a lista mostrava "/emojis/enois/heart_purple.svg 1" (print da Mel).
+    function DialogHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <ul>
+          <li data-testid="row-file">
+            <span>/emojis/enois/heart_purple.svg</span>
+          </li>
+
+          <li data-testid="row-code">
+            <span>HEART_PURPLE</span>
+          </li>
+
+          <li data-testid="row-name">
+            <span>Marina Rocha</span>
+          </li>
+        </ul>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<DialogHarness />);
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    for (const id of ["row-file", "row-code"]) {
+      const glifo = host.querySelector(`[data-testid="${id}"] span`);
+      expect(glifo?.getAttribute("data-enois-reaction-glyph")).toBe("HEART_PURPLE");
+      expect(glifo?.textContent).toBe("💜");
+    }
+    expect(
+      host
+        .querySelector('[data-testid="row-name"] span')
+        ?.hasAttribute("data-enois-reaction-glyph"),
+    ).toBe(false);
+    expect(host.querySelector('[data-testid="row-name"] span')?.textContent).toBe("Marina Rocha");
   });
 });
