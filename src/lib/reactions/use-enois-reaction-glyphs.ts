@@ -57,7 +57,8 @@ export function resolveReactionTypeFromGlyph(
 ): AnyReactionType | null {
   if (!text) return null;
   const trimmed = text.trim();
-  if (!trimmed || trimmed.length > 8) return null;
+  // Um glifo tem 1 a 8 caracteres (emoji composto); um caminho de figura é bem maior.
+  if (!trimmed || trimmed.length > 16 || trimmed.startsWith("/")) return null;
   return (
     EMOJI_TO_REACTION_TYPE.get(trimmed) ??
     EMOJI_TO_REACTION_TYPE.get(trimmed.replace(VARIATION_SELECTOR, "")) ??

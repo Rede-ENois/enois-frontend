@@ -134,6 +134,9 @@ function escapeRegex(value: string): string {
 const unicodeMap = new Map<string, CustomEmojiEntry>();
 const codeMap = new Map<string, CustomEmojiEntry>();
 
+// A reação oficial do coração roxo usa o nome curto do arquivo (`heart_purple`); o código completo
+// com que a figurinha é escrita no texto (`enois_heart_purple`) aponta para a mesma figura. O apelido
+// fica só no código resolvido: o pacote segue com uma entrada por posição de reação.
 for (const item of ENOIS_CUSTOM_EMOJIS) {
   codeMap.set(item.code, item);
   const candidates = [item.unicode, ...(item.unicodeAliases ?? [])].filter(
@@ -153,6 +156,14 @@ const UNICODE_EMOJI_REGEX =
   sortedUnicodeKeys.length > 0
     ? new RegExp(sortedUnicodeKeys.map(escapeRegex).join("|"), "gu")
     : null;
+
+// `heart_purple` é o nome curto do arquivo, o mesmo que a reação oficial do coração roxo usa; o
+// código das figurinhas é o nome com que ele é escrito no texto. O apelido fica só na busca por
+// código: o pacote continua com uma entrada por posição de reação.
+(() => {
+  const heartPurple = ENOIS_CUSTOM_EMOJIS.find((item) => item.src.endsWith("heart_purple.svg"));
+  if (heartPurple) codeMap.set("heart_purple", heartPurple);
+})();
 
 export function getEnoisEmojiByCode(code: string): CustomEmojiEntry | undefined {
   return codeMap.get(code);
