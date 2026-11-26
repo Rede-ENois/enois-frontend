@@ -94,9 +94,15 @@ export const texts = {
     envio: {
       titulo: "Enviar uma figurinha",
       intro:
-        "PNG ou JPEG, até 400×400 pixels e 512 KB. A imagem é conferida pelo servidor antes de entrar no catálogo, e o código fica reservado para ela.",
+        "PNG, JPG, GIF ou SVG, até 400×400 pixels e 512 KB. A imagem é conferida pelo servidor antes de entrar no catálogo, e o código fica reservado para ela.",
       arquivo: "Imagem",
-      arquivoAjuda: (kb: number) => `Escolha um PNG ou JPEG de até 400×400 e ${kb} KB.`,
+      arquivoAjuda: (kb: number) => `Escolha um PNG, JPG, GIF ou SVG de até 400×400 e ${kb} KB.`,
+      reputacaoTitulo: "Para enviar figurinhas",
+      reputacaoIdentidade:
+        "Verifique sua identidade para liberar o envio de figurinhas. A verificação é o que conta a sua reputação.",
+      reputacaoBaixa: (atual: number, minima: number) =>
+        `Enviar figurinha pede pelo menos ${minima} de reputação. Você tem ${atual}.`,
+      reputacaoAjuda: "A reputação cresce com a sua participação na rede.",
       codigo: "Código",
       codigoAjuda: "É o que a pessoa digita entre dois-pontos. Letras minúsculas, números, _ e -.",
       codigoExemplo: "Exemplo: :gatinho_triste:",
@@ -108,7 +114,8 @@ export const texts = {
       publicado: "Figurinha enviada! Ela já está no catálogo.",
       falhou: "Não foi possível enviar a figurinha.",
       arquivoGrande: "A imagem passa de 512 KB.",
-      formato: "A imagem precisa ser PNG ou JPEG.",
+      formato: "A imagem precisa ser PNG, JPG, GIF ou SVG.",
+      semPermissao: "Sua conta ainda não pode enviar figurinhas.",
       dimensoes: "A imagem precisa ter até 400×400 pixels.",
       codigoInvalido: "Escolha um código com 2 a 32 letras minúsculas, números, _ ou -.",
       codigoReservadoErro: "Esse prefixo é das figurinhas oficiais. Escolha outro código.",

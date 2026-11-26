@@ -1,3 +1,4 @@
+import type { EnvioPermitido } from "@/types/application/figurinhas/envio-permitido";
 import type { FigurinhaComunidadePagina } from "@/types/application/figurinhas/figurinha-comunidade-pagina";
 import type { FigurinhaEnvio } from "@/types/application/figurinhas/figurinha-envio";
 import type { FigurinhaImagemEnviada } from "@/types/application/figurinhas/figurinha-imagem-enviada";
@@ -10,7 +11,15 @@ export const FIGURINHA_MAX_BYTES = 512 * 1024;
 /** O servidor recusa acima disto (400×400). */
 export const FIGURINHA_MAX_LADO = 400;
 /** Formatos que o servidor confere pelo conteúdo do arquivo, não pela extensão. */
-export const FIGURINHA_MIME_TYPES = ["image/png", "image/jpeg"] as const;
+export const FIGURINHA_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/svg+xml",
+] as const;
+
+/** Reputação mínima para enviar figurinha (o mesmo piso do backend). */
+export const FIGURINHA_REPUTACAO_MINIMA = 100;
 
 /**
  * Figurinhas da comunidade: catálogo, envio e publicação.
@@ -33,6 +42,12 @@ export const figurinhasApi = {
       `/figurinhas/index${buildQuery({ codigos: limpos.slice(0, 100).join(",") })}`,
     );
   },
+
+  /**
+   * Se esta conta pode enviar (identidade verificada + reputação mínima), com os números: a tela
+   * mostra o que falta antes de a pessoa escolher o arquivo.
+   */
+  envioPermitido: () => api.get<EnvioPermitido>("/figurinhas/envios/pode"),
 
   criarEnvio: (mimeType: string, size: number) =>
     api.post<FigurinhaEnvio>("/figurinhas/envios", { mimeType, size }),
