@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 
+import type { PageResponse } from "@/types/application/api/page-response";
 import type { Notification } from "@/types/application/notification/notification";
 import type { InterfaceContext } from "@rede-enois/design-system/domain";
 
@@ -20,7 +21,10 @@ import { useLiteMode } from "@/lib/use-lite-mode";
  */
 export const PAGE_SIZE = 10;
 
-/** How many rows of each list the bell previews — sliced from the page it already has. */
+/**
+ * How many rows of each list the bell previews, sliced from the page it already has so the bell
+ * costs no extra request. The slice is per list, so the bell can show up to twice this many.
+ */
 export const PREVIEW_SIZE = 10;
 
 /**
@@ -38,7 +42,7 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
 
   const shared = {
     initialPageParam: null as string | null,
-    getNextPageParam: (last: { nextCursor?: string | null }) => last.nextCursor ?? undefined,
+    getNextPageParam: (last: PageResponse<Notification>) => last.nextCursor ?? undefined,
     enabled,
     staleTime: 30_000,
     refetchInterval: pollMs,
@@ -66,9 +70,15 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
   const lists = [recent, unreadFirst];
 
   return {
-    /** Every page fetched so far from both lists, merged: what the full page lists. */
+    /**
+     * Every page fetched so far from both lists, merged: the full page lists all of them,
+     * including what "Carregar mais" already brought.
+     */
     items: mergeNotices(lists.flatMap((list) => list.data?.pages.map((page) => page.items) ?? [])),
-    /** Only the first page of each list: what the bell previews, even after the page loaded further. */
+    /**
+     * Only the first page of each list: what the bell previews. The bell and the full page share
+     * the same query, so when the full page loads further, the bell keeps only the first rows.
+     */
     latest: mergeNotices(
       lists.map((list) => list.data?.pages[0]?.items.slice(0, PREVIEW_SIZE) ?? []),
     ),
@@ -83,11 +93,12 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
 }
 
 /**
- * Union of the pages of both lists, newest first, for the panel's grouping by day:
- * - one row per id — a grouped notice changes `createdAt` on the server and can come back on a
- *   later page, and the same notice can sit in both lists;
- * - read wins: the same id read in one list and unread in the other was read (reading is
- *   irreversible; the only way back is the rollback in `markReadInCache`, which restores both).
+ * União das páginas das duas listas, do aviso mais novo ao mais velho, para o agrupamento por dia
+ * do painel:
+ * - uma linha por id: um aviso agrupado muda de `createdAt` no servidor e pode voltar numa página
+ *   seguinte, e o mesmo aviso pode estar nas duas listas;
+ * - o lido vence: o mesmo id lido numa lista e não lido na outra foi lido (ler é irreversível; a
+ *   única volta é o rollback em `markReadInCache`, que restaura as duas).
  */
 function mergeNotices(pages: Notification[][]): Notification[] {
   const byId = new Map<string, Notification>();

@@ -36,7 +36,11 @@ function notice(id: string, read: boolean, createdAt: string) {
   return { id, read, kind: "reaction", createdAt };
 }
 
-/** Responde cada lista pelo 4º argumento, uma página por chamada, na ordem dada. */
+/**
+ * Responde cada lista pelo 4º argumento, uma página por chamada, na ordem dada. A última página se
+ * repete: uma chamada a mais (renovação, polling) recebe uma página em vez de `undefined`, que o
+ * React Query rejeita.
+ */
 function serveLists(pages: { unreadFirst: NoticeListTestPage[]; recent: NoticeListTestPage[] }) {
   const queues = { unreadFirst: [...pages.unreadFirst], recent: [...pages.recent] };
   mocks.list.mockImplementation(
@@ -330,7 +334,8 @@ describe("lista de avisos compartilhada", () => {
   it("não consulta enquanto o stream entrega os avisos", async () => {
     mocks.live.mockReturnValue(true);
     await render();
-    // Uma chamada de cada lista na montagem.
+    // Duas na montagem porque cada lista tem a sua chave; o que este teste prende é que o número
+    // não cresce depois.
     expect(mocks.list).toHaveBeenCalledTimes(2);
 
     await act(async () => {
