@@ -1,10 +1,34 @@
 import { PURPLE_HEART_REACTION } from "@/types/application/reaction/any-reaction-type";
+import { REACTION_TYPES } from "@/types/application/reaction/reaction-type";
 
 /** Quantas reações cabem na fileira do seletor compacto, fora o botão "+". */
 export const FAVORITAS_MAX = 5;
 
 /** O padrão de quem nunca escolheu: as duas primeiras do seletor (joinha e coração roxo). */
 export const FAVORITAS_PADRAO: readonly string[] = ["LIKE", PURPLE_HEART_REACTION];
+
+/** Toda reação oficial, com o coração roxo: o que o seletor e as pílulas podem desenhar. */
+const REACOES_OFICIAIS: ReadonlySet<string> = new Set<string>([
+  ...REACTION_TYPES,
+  PURPLE_HEART_REACTION,
+]);
+
+/**
+ * A reação de um texto solto, quando o texto é o código dela (`HEART_PURPLE`) ou o nome curto do
+ * arquivo (`heart_purple`, o que as views do design system às vezes recebem no lugar da figura).
+ * Serve para não desenhar o código como texto.
+ */
+export function reacaoDoCodigo(valor: string | null | undefined): string | null {
+  const codigo = (valor ?? "").trim();
+  if (!codigo) return null;
+  const maiusculo = codigo.toUpperCase();
+  if (REACOES_OFICIAIS.has(maiusculo)) return maiusculo;
+  // Algumas views recebem o ARQUIVO da figurinha no lugar do emoji: o nome dele é o mesmo código
+  // em minúsculas (`/emojis/enois/heart_purple.svg`).
+  const arquivo = /^\/emojis\/enois\/([a-z0-9_]+)\.[a-z]+$/.exec(codigo);
+  const pelaFigura = arquivo?.[1]?.toUpperCase();
+  return pelaFigura && REACOES_OFICIAIS.has(pelaFigura) ? pelaFigura : null;
+}
 
 /** Um código de reação: o `ReactionType` ou `HEART_PURPLE`. Nada além disso entra na fileira. */
 export function ehTipoDeReacao(valor: unknown): valor is string {

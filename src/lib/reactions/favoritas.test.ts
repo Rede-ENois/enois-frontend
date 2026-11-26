@@ -9,6 +9,7 @@ import {
   fileiraDaEscolha,
   fileiraDeFavoritas,
   moverFavorita,
+  reacaoDoCodigo,
   semFavorita,
 } from "./favoritas";
 
@@ -24,6 +25,22 @@ describe("ehTipoDeReacao", () => {
     for (const valor of [null, 3, "", "like", "LIKE!", "/emojis/enois/like.svg", "A".repeat(41)]) {
       expect(ehTipoDeReacao(valor)).toBe(false);
     }
+  });
+});
+
+describe("reacaoDoCodigo", () => {
+  it("lê o código da reação e o arquivo da figurinha dela", () => {
+    expect(reacaoDoCodigo("HEART_PURPLE")).toBe("HEART_PURPLE");
+    expect(reacaoDoCodigo(" heart_purple ")).toBe("HEART_PURPLE");
+    expect(reacaoDoCodigo("/emojis/enois/heart_purple.svg")).toBe("HEART_PURPLE");
+    expect(reacaoDoCodigo("/emojis/enois/like.webp")).toBe("LIKE");
+  });
+
+  it("não confunde texto comum com reação", () => {
+    expect(reacaoDoCodigo("Marina Rocha")).toBeNull();
+    expect(reacaoDoCodigo("/emojis/enois/outro.svg")).toBeNull();
+    expect(reacaoDoCodigo("")).toBeNull();
+    expect(reacaoDoCodigo(null)).toBeNull();
   });
 });
 
