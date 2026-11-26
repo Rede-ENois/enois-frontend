@@ -25,17 +25,29 @@ import { reactionsQueryOptions } from "./query-options";
  * (a barra do post e as pílulas do resumo) precisam enxergar a mesma janela.
  */
 const RAPID_CLICK_WINDOW_MS = 200;
+/** Depois disto uma requisição "em voo" deixa de ser esperada: a resposta se perdeu. */
+const STALE_IN_FLIGHT_MS = 15_000;
 const lastSentAt = new Map<string, number>();
 const inFlight = new Set<string>();
 
 /** Última intenção descartada de cada post enquanto uma requisição estava em voo; executada no fim. */
 const queued = new Map<string, ReactionType>();
 
+/**
+ * Dono da requisição em voo de cada post. O `finally` de uma requisição antiga não pode destravar o
+ * card de uma nova: sem isto, a resposta lenta de A zerava o `reactionPending` setado pela intenção
+ * B, os botões destravavam no meio do voo de B e um clique extra entrava na fila, somando de novo.
+ */
+let nextRequestId = 0;
+const currentRequest = new Map<string, number>();
+
 /** Só para teste: zera a janela entre casos (o estado do módulo sobrevive a cada um). */
 export function resetReactionGuards(): void {
   lastSentAt.clear();
   inFlight.clear();
   queued.clear();
+  currentRequest.clear();
+  nextRequestId = 0;
 }
 
 /**
@@ -68,13 +80,25 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
     // tela não mudar (#1053). Só a última conta: alternar duas vezes durante o voo é um clique
     // apressado, não dois gestos.
     if (inFlight.has(postId)) {
-      queued.set(postId, type);
-      return;
+      // Card fora de órbita não deve segurar clique: sem requisição chegando, o `inFlight` que
+      // sobrou de uma resposta perdida só travava o botão. Passado o teto, a fila é descartada e
+      // o clique entra como requisição nova.
+      const started = lastSentAt.get(postId);
+      if (started !== undefined && now - started < STALE_IN_FLIGHT_MS) {
+        queued.set(postId, type);
+        return;
+      }
+      queued.delete(postId);
+      inFlight.delete(postId);
+      currentRequest.delete(postId);
+      if (usePostCardStore.getState().cards[postId]) setReactionPending(postId, false);
     }
     const previous = lastSentAt.get(postId);
     // Relógio para trás (troca de fuso, teste, aba suspensa) não pode travar o botão.
     if (previous !== undefined && now >= previous && now - previous < RAPID_CLICK_WINDOW_MS) return;
     if (lastSentAt.size > 500) lastSentAt.clear();
+    const requestId = ++nextRequestId;
+    currentRequest.set(postId, requestId);
     inFlight.add(postId);
     lastSentAt.set(postId, now);
     setIsPending(true);
@@ -88,9 +112,15 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
     // Otimismo é melhor esforço: qualquer falha aqui é descartada sem impedir a requisição.
     try {
       updatePostInQueryCache(queryClient, postId, (current) => {
-        const baseSummary = current.reactionSummary ?? {};
+        // O resumo só é otimista se o SERVIDOR mandou um. O feed do post não traz
+        // `reactionSummary` (o backend só o calcula para comentário): partir de `{}` criava um
+        // resumo do nada, que a tela passava a somar no lugar de `counters.reactions` e que
+        // crescia a cada clique sem o backend contar — o número e a pílula subindo juntos.
+        const baseSummary = current.reactionSummary;
         const withoutMine =
-          mine && mine !== type ? removeReactionFromSummary(baseSummary, mine) : baseSummary;
+          baseSummary != null && mine && mine !== type
+            ? removeReactionFromSummary(baseSummary, mine)
+            : baseSummary;
         return {
           ...current,
           currentUserReaction: remove ? null : type,
@@ -101,9 +131,12 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
               (current.counters?.reactions ?? 0) + (remove ? -1 : mine && mine !== type ? 0 : 1),
             ),
           },
-          reactionSummary: remove
-            ? removeReactionFromSummary(baseSummary, mine ?? type)
-            : applyReactionToSummary(withoutMine, type),
+          reactionSummary:
+            baseSummary == null
+              ? current.reactionSummary
+              : remove
+                ? removeReactionFromSummary(baseSummary, mine ?? type)
+                : applyReactionToSummary(withoutMine!, type),
         };
       });
       queryClient.setQueryData<ReactionsListResponse>(queryKey, (current) => {
@@ -118,9 +151,12 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
           mine && mine !== type ? removeReactionFromSummary(base.summary, mine) : base.summary;
         return {
           ...base,
-          summary: remove
-            ? removeReactionFromSummary(base.summary, mine ?? type)
-            : applyReactionToSummary(withoutMine, type),
+          summary:
+            before.reactionSummary == null
+              ? base.summary
+              : remove
+                ? removeReactionFromSummary(base.summary, mine ?? type)
+                : applyReactionToSummary(withoutMine, type),
           reactions:
             myId && !remove
               ? [{ userId: myId, type, createdAt: new Date().toISOString() }, ...others]
@@ -166,19 +202,22 @@ export function usePostReaction(postId: string, post: PostView): UsePostReaction
       }
       toast(messageFor(error), "error");
     } finally {
-      // Revalidação única, DEPOIS da resposta do servidor — inclusive no sucesso: o resumo e a
-      // lista passam a refletir o que o servidor gravou, e o otimismo não fica valendo sozinho.
-      inFlight.delete(postId);
-      setIsPending(false);
-      setReactionPending(postId, false);
-      queryClient.invalidateQueries({ queryKey });
+      // Só quem ainda é dono da trava destrava (a requisição da intenção enfileirada é a dona
+      // nova). A revalidação vem depois e não segura a trava.
+      if (currentRequest.get(postId) === requestId) {
+        currentRequest.delete(postId);
+        inFlight.delete(postId);
+        setIsPending(false);
+        setReactionPending(postId, false);
+      }
+      void queryClient.invalidateQueries({ queryKey });
       // A aba "Ainda não vi" fica de fora: revalidá-la tiraria da tela o post em que a pessoa
       // acabou de reagir (issue #559). O contador já foi atualizado no cache acima.
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ["feed"],
         predicate: (query) => !isUnseenFeedQuery(query.queryKey),
       });
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
+      void queryClient.invalidateQueries({ queryKey: ["post", postId] });
       // A intenção registrada durante o voo roda com o cache já revalidado; a janela de 200ms
       // continua valendo (Date.now real), então toque acidental duplo continua filtrado.
       const nextType = queued.get(postId);
