@@ -5,6 +5,16 @@ import type { PortfolioExploreCard } from "@rede-enois/design-system/domain";
 
 import { ApiError } from "../api-client";
 
+const ENTITIES: Record<string, string> = {
+  "&nbsp;": " ",
+  "&#160;": " ",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&#39;": "'",
+};
+
 /**
  * A primeira frase legível de uma página HTML, como texto. O HTML do autor é escrito pelo próprio
  * dono e não tem estrutura garantida: tira-se o que não é texto (estilo, script), as tags viram
@@ -15,12 +25,11 @@ export function headlineOf(html: string | null | undefined, limit = 160): string
   const text = html
     .replace(/<(style|script)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<[^>]*>/g, " ")
-    .replace(/&(nbsp|#160);/gi, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    // Uma passada só: o `&amp;` desfeito antes do `&lt;` viraria uma tag inventada na decodificação.
+    .replace(
+      /&(nbsp|#160|amp|lt|gt|quot|#39);/gi,
+      (entity) => ENTITIES[entity.toLowerCase()] ?? entity,
+    )
     .replace(/\s+/g, " ")
     .trim();
   if (!text) return null;

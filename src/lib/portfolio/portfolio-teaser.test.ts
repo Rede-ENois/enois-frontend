@@ -20,6 +20,11 @@ describe("headlineOf", () => {
 
   it("desfaz as entidades comuns", () => {
     expect(headlineOf("<p>P&amp;D &lt;web&gt;</p>")).toBe("P&D <web>");
+    expect(headlineOf("<p>a&nbsp;b &quot;c&quot; &#39;d&#39;</p>")).toBe("a b \"c\" 'd'");
+  });
+
+  it("não desfaz a entidade duas vezes", () => {
+    expect(headlineOf("<p>&amp;lt;b&amp;gt;</p>")).toBe("&lt;b&gt;");
   });
 
   it("corta a frase longa com reticências", () => {
