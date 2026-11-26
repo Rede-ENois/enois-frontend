@@ -1,13 +1,16 @@
 import { useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
+import type { AvisoDeEnvio } from "@/types/application/figurinhas/aviso-de-envio";
+import type { EnvioPermitido } from "@/types/application/figurinhas/envio-permitido";
 import type { FigurinhaComunidade } from "@/types/application/figurinhas/figurinha-comunidade";
 import { FigurinhaComunidadeEnvio, FigurinhaComunidadeRow } from "@rede-enois/design-system/domain";
-import { useToast } from "@rede-enois/design-system/ui";
+import { Button, EmptyState, useToast } from "@rede-enois/design-system/ui";
 
+import { figurinhasApi } from "@/lib/figurinhas/api";
 import { CODIGO_COMUNIDADE, publicarFigurinha } from "@/lib/figurinhas/load";
 
 /** O que dizer para cada recusa: a local (`sintomaDoArquivo`) e a do servidor, pelo código. */
@@ -18,14 +21,44 @@ const MENSAGENS: Record<string, string> = {
   FIGURINHA_CODIGO_INVALIDO: texts.figurinhas.envio.codigoInvalido,
   FIGURINHA_CODIGO_RESERVADO: texts.figurinhas.envio.codigoReservadoErro,
   FIGURINHA_CODIGO_EM_USO: texts.figurinhas.envio.codigoEmUso,
+  REPUTACAO_INDISPONIVEL: texts.figurinhas.envio.reputacaoTitulo,
+  LOW_REPUTATION: texts.figurinhas.envio.semPermissao,
+  RATE_LIMIT_EXCEEDED: texts.figurinhas.envio.falhou,
 };
+
+/** Quem não pode enviar vê um aviso no lugar do formulário, com o caminho para destravar. */
+function FigurinhaComunidadeAviso({
+  texto,
+  acao,
+  onAcao,
+}: {
+  texto: string;
+  acao: string;
+  onAcao: () => void;
+}) {
+  return (
+    <EmptyState title={texts.figurinhas.envio.titulo} description={texto}>
+      <Button size="sm" onClick={onAcao}>
+        {acao}
+      </Button>
+    </EmptyState>
+  );
+}
+
+/** Texto do porquê a conta não pode enviar ainda, com o número de reputação quando há. */
+function motivoDoEnvio(permissao: EnvioPermitido): string {
+  if (permissao.motivo === "IDENTITY_REQUIRED") return texts.figurinhas.envio.reputacaoIdentidade;
+  return texts.figurinhas.envio.reputacaoBaixa(permissao.reputacao, permissao.reputacaoMinima);
+}
 
 /**
  * Envio de uma figurinha para o catálogo da comunidade.
  *
- * O botão só libera com imagem, código no formato e nome. A checagem da imagem acontece duas
- * vezes: aqui, para dizer o que corrigir antes de subir, e no servidor, que é quem decide. A
- * figurinha publicada aparece na hora abaixo do formulário com o código para copiar.
+ * Antes do formulário a tela pergunta ao servidor se a conta pode enviar (identidade verificada e
+ * reputação mínima); quem não pode vê o que falta, com os números. O botão só libera com imagem,
+ * código no formato e nome. A checagem da imagem acontece duas vezes: aqui, para dizer o que
+ * corrigir antes de subir, e no servidor, que é quem decide. A figurinha publicada aparece na hora
+ * abaixo do formulário com o código para copiar.
  */
 export function EnvioDeFigurinha({ logado }: { logado: boolean }) {
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -38,6 +71,13 @@ export function EnvioDeFigurinha({ logado }: { logado: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const { data: permissao } = useQuery({
+    queryKey: ["figurinhas", "envio-permitido"],
+    queryFn: figurinhasApi.envioPermitido,
+    enabled: logado,
+    staleTime: 60_000,
+  });
 
   const codigoLimpo = codigo
     .trim()
@@ -62,6 +102,24 @@ export function EnvioDeFigurinha({ logado }: { logado: boolean }) {
     setSeletor((atual) => atual + 1);
     void queryClient.invalidateQueries({ queryKey: ["figurinhas"] });
   };
+
+  const aviso: AvisoDeEnvio | null = !logado
+    ? {
+        texto: texts.figurinhas.envio.login,
+        acao: texts.figurinhas.envio.entrar,
+        onAcao: () => void navigate({ to: "/entrar", search: { tab: "login" } }),
+      }
+    : permissao && !permissao.pode
+      ? {
+          texto: `${motivoDoEnvio(permissao)} ${texts.figurinhas.envio.reputacaoAjuda}`,
+          acao: texts.figurinhas.envio.diretrizes,
+          onAcao: () => void navigate({ to: "/diretrizes" }),
+        }
+      : null;
+
+  if (aviso) {
+    return <FigurinhaComunidadeAviso {...aviso} />;
+  }
 
   return (
     <FigurinhaComunidadeEnvio

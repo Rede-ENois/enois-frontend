@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   pagina: vi.fn(),
   remover: vi.fn(),
   criado: vi.fn(),
+  envioPermitido: vi.fn(),
   idAtual: { valor: "u1" as string | null },
 }));
 
@@ -29,6 +30,7 @@ vi.mock("@/lib/figurinhas/api", async (importOriginal) => {
       ...actual.figurinhasApi,
       pagina: (page: number, limit: number, q?: string) => mocks.pagina(page, limit, q),
       remover: (id: string) => mocks.remover(id),
+      envioPermitido: () => mocks.envioPermitido(),
     },
   };
 });
@@ -131,6 +133,13 @@ describe("catálogo de figurinhas da comunidade", () => {
   beforeEach(() => {
     mocks.pagina.mockResolvedValue(PAGINA);
     mocks.remover.mockResolvedValue(undefined);
+    mocks.envioPermitido.mockResolvedValue({
+      pode: true,
+      reputacao: 250,
+      reputacaoMinima: 100,
+      identidadeVerificada: true,
+      motivo: null,
+    });
     mocks.idAtual.valor = "u1";
   });
 
@@ -179,6 +188,46 @@ describe("catálogo de figurinhas da comunidade", () => {
     page.unmount();
   });
 
+  it("quem ainda não tem 100 de reputação vê o que falta no lugar do envio", async () => {
+    mocks.envioPermitido.mockResolvedValue({
+      pode: false,
+      reputacao: 40,
+      reputacaoMinima: 100,
+      identidadeVerificada: true,
+      motivo: "LOW_REPUTATION",
+    });
+    const page = renderPage();
+    await page.pronto();
+
+    expect(page.host.textContent).toContain("Você tem 40");
+    expect(page.host.querySelector('input[type="file"]')).toBeNull();
+    page.unmount();
+  });
+
+  it("sem identidade verificada, o envio pede a verificação", async () => {
+    mocks.envioPermitido.mockResolvedValue({
+      pode: false,
+      reputacao: 0,
+      reputacaoMinima: 100,
+      identidadeVerificada: false,
+      motivo: "IDENTITY_REQUIRED",
+    });
+    const page = renderPage();
+    await page.pronto();
+
+    expect(page.host.textContent).toContain("Verifique sua identidade");
+    expect(page.host.querySelector('input[type="file"]')).toBeNull();
+    page.unmount();
+  });
+
+  it("com os números certos, o envio aparece com o seletor", async () => {
+    const page = renderPage();
+    await page.pronto();
+
+    expect(page.host.querySelector('input[type="file"]')).toBeTruthy();
+    page.unmount();
+  });
+
   it("sem conta, a tela pede login e nem chega a pedir o catálogo, que exige sessão", async () => {
     mocks.idAtual.valor = null;
     const page = renderPage();
@@ -189,6 +238,7 @@ describe("catálogo de figurinhas da comunidade", () => {
     expect(page.host.textContent).not.toContain("Não foi possível carregar as figurinhas");
     expect(page.host.textContent).not.toContain("Tentar de novo");
     expect(mocks.pagina).not.toHaveBeenCalled();
+    expect(mocks.envioPermitido).not.toHaveBeenCalled();
     page.unmount();
   });
 

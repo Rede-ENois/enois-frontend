@@ -24,8 +24,13 @@ export function normalizarCodigo(digitado: string): string {
 
 function mensagemDeErro(falha: unknown): string {
   const texto = falha instanceof Error ? falha.message : String(falha);
-  // O backend devolve o código no corpo; o cliente da API o inclui na mensagem.
-  const codigo = /FIGURINHA_[A-Z_]+/.exec(texto)?.[0];
+  // O backend devolve o código no corpo; o cliente da API o inclui na mensagem. A recusa pelo
+  // portão de envio tem código fora do prefixo (REPUTACAO_INDISPONIVEL) e entra na lista.
+  const codigo = /FIGURINHA_[A-Z_]+|REPUTACAO_INDISPONIVEL|LOW_REPUTATION/.exec(texto)?.[0];
+  // O envio dos bytes não passa pelo cliente `api`, então o erro dele não carrega o código do corpo.
+  const status = /FIGURINHA_ENVIO_FALHOU_(\d{3})/.exec(texto)?.[1];
+  if (status === "403") return "REPUTACAO_INDISPONIVEL";
+  if (status === "429") return "RATE_LIMIT_EXCEEDED";
   return codigo ?? "FIGURINHA_FALHOU";
 }
 
@@ -33,7 +38,7 @@ function mensagemDeErro(falha: unknown): string {
  * Envia e publica uma figurinha da comunidade.
  *
  * A conferência local da imagem é só cortesia (o servidor confere tudo de novo):
- * 1. o arquivo precisa ser PNG/JPEG de verdade, até 400×400 e 512 KB (`arquivo.ts`);
+ * 1. o arquivo precisa ser PNG/JPG/GIF/SVG de verdade, até 400×400 e 512 KB (`arquivo.ts`);
  * 2. o servidor decide onde guardar (`/figurinhas/envios`) e confere os bytes antes de gravar;
  * 3. só depois o código e o nome são publicados.
  */
