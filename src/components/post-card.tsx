@@ -48,7 +48,10 @@ import { ReactionsSummary } from "./post/reactions-summary";
 import { RichText } from "./post/rich-text";
 import { SandboxedHtmlFrame } from "./post/sandboxed-html-frame";
 
-const TYPE_OPTIONS = POST_TYPES as PostTypeOption[];
+// O `id` do catálogo é texto; `PostView` conhece todo tipo publicado, inclusive `PORTFOLIO`.
+const TYPE_OPTIONS: PostTypeOption[] = POST_TYPES as (Omit<PostTypeOption, "id"> & {
+  id: PostView["type"];
+})[];
 
 function PostCardContainer({
   post,
@@ -342,6 +345,8 @@ function PostCardContainer({
             editType={editType}
             // A poll is born in the composer with its options; editing never turns a post into one.
             onTypeChange={(type) => {
+              // O selo vem do catálogo daqui (`TYPE_OPTIONS`), que só mostra tipos que `PostView`
+              // conhece — inclusive `PORTFOLIO`.
               if (type !== "POLL") setEditType(type);
             }}
             draft={draft}
