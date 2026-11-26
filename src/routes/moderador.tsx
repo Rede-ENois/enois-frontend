@@ -3,66 +3,27 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 
-import {
-  TAB_GROUP_OF,
-  resolveActiveTab,
-  tabsOfActiveGroup,
-  visiblePanelGroups,
-} from "@/routes/-moderador/panel-groups";
+import { PANEL_TABS, resolveActiveTab, visiblePanelGroups } from "@/routes/-moderador/panel-groups";
 import { texts } from "@/texts";
 import type { ModeratorApplicationView } from "@/types/application/moderation/moderator-application-view";
 import type { ModeratorMeView } from "@/types/application/moderation/moderator-me-view";
 import type { SanctionProposalDecision } from "@/types/application/moderation/sanction-proposal-decision";
 import type { SanctionProposalView } from "@/types/application/moderation/sanction-proposal-view";
-import type { ModeratorGroupId } from "@/types/routes/moderador/moderator-group-id";
 import type { ModeratorTabId } from "@/types/routes/moderador/moderator-tab-id";
+import { ModeratorWorkspace } from "@rede-enois/design-system/domain";
 import {
   Button,
   ConfirmDialog,
-  EmptyState,
   Input,
   LoadingState,
-  Pill,
-  PillRow,
   Textarea,
   useToast,
 } from "@rede-enois/design-system/ui";
-import {
-  Activity,
-  ArrowLeft,
-  Bug,
-  Check,
-  FileText,
-  Flag,
-  FolderKanban,
-  Gamepad2,
-  Gavel,
-  GitPullRequest,
-  History,
-  Inbox,
-  LifeBuoy,
-  Lightbulb,
-  Mail,
-  Megaphone,
-  Scale,
-  ScanEye,
-  Server,
-  Shield,
-  ShieldAlert,
-  ShieldCheck,
-  Sparkles,
-  StickyNote,
-  Trash2,
-  UserCheck,
-  Users,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Check, Shield, ShieldCheck, X } from "lucide-react";
 
 import { moderationApi } from "@/lib/api";
-import { reportsAdminApi } from "@/lib/api/reports-admin";
 import { dataHora } from "@/lib/date/format";
 import { requireAuth } from "@/lib/require-auth";
-import { cn } from "@/lib/utils";
 
 import { AppContainer } from "@/components/app-container";
 import { AppealsSection } from "@/components/moderation/appeals-section";
@@ -81,6 +42,7 @@ import { PenaltiesSection } from "@/components/moderation/penalties-section";
 import { ProjectsReviewSection } from "@/components/moderation/projects-review-section";
 import { PullRequestsSection } from "@/components/moderation/pull-requests-section";
 import { ReleaseNotesSection } from "@/components/moderation/release-notes-section";
+import { ReportsSection } from "@/components/moderation/reports-section";
 import { SuggestionsSection } from "@/components/moderation/suggestions-section";
 import { SupportTicketsSection } from "@/components/moderation/support-tickets-section";
 import { SuspiciousPostsSection } from "@/components/moderation/suspicious-posts-section";
@@ -89,75 +51,21 @@ import { UserPicker } from "@/components/user-picker";
 
 export const Route = createFileRoute("/moderador")({
   beforeLoad: requireAuth,
+  validateSearch: (search: Record<string, unknown>): { aba?: ModeratorTabId } => {
+    const requested = PANEL_TABS.find((item) => item.id === search.aba);
+    return requested ? { aba: requested.id } : {};
+  },
   head: () => ({ meta: [{ title: texts.moderator.seoTitle }] }),
   component: Moderador,
 });
 
-/**
- * Uma aba do painel, e o grupo em que ela vive.
- *
- * <p>As abas são o trabalho do dia a dia do time de moderação: o que chegou para decidir. O grupo
- * importa porque a lista ANTES era um `select` único com 22 opções — não dava para saber o que era
- * urgente, o que era rotina e o que era administração, e o item certo ficava a três cliques dentro
- * de uma lista sem ordem.</p>
- */
-/**
- * O ícone de cada grupo. Fica aqui, não em `panel-groups`, porque ícone é decisão de tela: o
- * módulo de dados não depende da biblioteca de ícones.
- */
-const GROUP_ICON: Record<ModeratorGroupId, typeof Flag> = {
-  queue: Inbox,
-  content: FileText,
-  community: Users,
-  admin: ShieldCheck,
-};
-
-/**
- * O ícone de cada aba. Fica aqui, não em `panel-groups`, porque ícone é decisão de tela: o
- * módulo de dados não depende da biblioteca de ícones.
- */
-const TAB_ICON: Record<ModeratorTabId, typeof Flag> = {
-  reports: Flag,
-  games: Gamepad2,
-  projects: FolderKanban,
-  support: LifeBuoy,
-  suggestions: Lightbulb,
-  issues: Bug,
-  pulls: GitPullRequest,
-  notes: StickyNote,
-  history: History,
-  appeals: ShieldAlert,
-  disputes: Scale,
-  applications: UserCheck,
-  users: Gavel,
-  notices: Megaphone,
-  releaseNotes: Sparkles,
-  suspicious: ScanEye,
-  suspiciousPosts: Trash2,
-  emails: Mail,
-  monitoring: Activity,
-  contributors: Users,
-  githubContributions: GitPullRequest,
-  identityRelease: ShieldCheck,
-  network: Server,
-};
-
-/**
- * Painel de moderador.
- *
- * - Sem papel: mostra a credibilidade e, se elegível (>= 200), o formulário de candidatura.
- * - Moderador aprovado: todas as filas do painel (denúncias, jogos, suporte e histórico,
- *   recursos, disputas, usuários, contas suspostas, e-mails e monitoramento).
- * - Admin: o mesmo, mais as candidaturas e a gestão de moderadores.
- *
- * Quem decide o papel é o backend; esta tela só reflete `/moderation/me`.
- */
 function Moderador() {
-  const [tab, setTab] = useState<ModeratorTabId>("reports");
+  const { aba: tab = "reports" } = Route.useSearch();
+  const navigate = Route.useNavigate();
 
   const {
     data: me,
-    isLoading,
+    isPending,
     error,
   } = useQuery({
     queryKey: ["moderator", "me"],
@@ -165,7 +73,7 @@ function Moderador() {
     retry: false,
   });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <AppContainer>
         <div className="mx-auto w-full max-w-3xl">
@@ -192,7 +100,7 @@ function Moderador() {
 
   return (
     <AppContainer>
-      <div className="mx-auto w-full max-w-3xl space-y-6">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
         <Link
           to="/feed"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -226,53 +134,19 @@ function Moderador() {
           <p className="text-sm text-muted-foreground">{texts.moderator.description}</p>
         </header>
 
-        {me.admin && <PanicModeSection />}
+        {me.admin && <PanicModeSection compact />}
 
         {canModerate ? (
-          <div className="space-y-4">
-            {/* Navegação em dois níveis, tudo pelo design system.
-                Antes eram QUATRO listas de abas empilhadas: no celular cada faixa estourava a
-                largura e as abas das pontas ficavam cortadas, com um bloco de navegação enorme
-                antes do conteúdo.
-                Celular: um PillRow rolável com os grupos e outro com as abas do grupo ativo — o
-                mesmo gesto lateral do feed (arrasto natural no toque, nada cortado).
-                Desktop: os mesmos dados viram uma faixa de grupos e a faixa de abas do grupo. */}
-            {/* O espacamento entre as faixas vem do className do proprio PillRow: mais um
-                container div aqui seria markup a mais no route, que a casa proibe. */}
-            <PillRow label={texts.moderator.groupSelector} className="mb-3">
-              {groups.map(({ group, tabs: groupTabs }) => (
-                <Pill
-                  key={group.id}
-                  active={group.id === TAB_GROUP_OF[activeTab]}
-                  onClick={() => setTab(groupTabs[0].id)}
-                >
-                  {(() => {
-                    const GroupIcon = GROUP_ICON[group.id];
-                    return <GroupIcon className="h-3.5 w-3.5" />;
-                  })()}
-
-                  <>{group.label}</>
-                </Pill>
-              ))}
-            </PillRow>
-
-            <PillRow label={texts.moderator.tabSelector}>
-              {tabsOfActiveGroup(activeTab, me.admin).map((item) => {
-                const Icon = TAB_ICON[item.id];
-                return (
-                  <Pill
-                    key={item.id}
-                    active={item.id === activeTab}
-                    onClick={() => setTab(item.id)}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-
-                    <>{item.label}</>
-                  </Pill>
-                );
-              })}
-            </PillRow>
-
+          <ModeratorWorkspace
+            groups={groups.map(({ group, tabs }) => ({ ...group, tabs }))}
+            activeTab={activeTab}
+            onTabChange={(requested) => {
+              const selected = groups
+                .flatMap(({ tabs }) => tabs)
+                .find((item) => item.id === requested);
+              if (selected) void navigate({ search: { aba: selected.id } });
+            }}
+          >
             {activeTab === "reports" && <ReportsSection admin={me.admin} />}
             {activeTab === "games" && <GamesReviewSection />}
             {activeTab === "projects" && <ProjectsReviewSection />}
@@ -298,7 +172,7 @@ function Moderador() {
             {me.admin && activeTab === "releaseNotes" && <ReleaseNotesSection />}
             {me.admin && activeTab === "identityRelease" && <IdentityReleaseSection />}
             {me.admin && activeTab === "network" && <NetworkNodesSection />}
-          </div>
+          </ModeratorWorkspace>
         ) : (
           <ApplicationSection me={me} />
         )}
@@ -445,398 +319,6 @@ function ApplicationSection({ me }: { me: ModeratorMeView }) {
           </Button>
         </form>
       )}
-    </section>
-  );
-}
-
-/** Cor do badge por severidade do motivo. */
-function reasonStyle(reason: string): string {
-  switch (reason) {
-    case "VIOLENCE":
-    case "HARASSMENT":
-      return "bg-destructive/15 text-destructive";
-    case "SCAM":
-    case "SPAM":
-      return "bg-orange-500/15 text-orange-600 dark:text-orange-400";
-    case "DISCRIMINATION":
-    case "PREJUDICE":
-      return "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400";
-    default:
-      return "bg-surface-2 text-text-strong";
-  }
-}
-
-function ReportsSection({ admin }: { admin: boolean }) {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [filterReason, setFilterReason] = useState<string | null>(null);
-  const [filterTarget, setFilterTarget] = useState<string | null>(null);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["moderator", "reports"],
-    queryFn: () => moderationApi.reports(),
-    retry: false,
-  });
-
-  const vote = useMutation({
-    mutationFn: ({ reportId, vote }: { reportId: string; vote: "PUNISH" | "DISMISS" }) =>
-      moderationApi.vote(reportId, vote),
-    onSuccess: (result) => {
-      toast(result.message, "success");
-      void queryClient.invalidateQueries({
-        queryKey: ["moderator", "reports"],
-      });
-    },
-    onError: () => toast(texts.moderator.reports.voteError, "error"),
-  });
-
-  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
-  const [removeCompanyTarget, setRemoveCompanyTarget] = useState<string | null>(null);
-
-  const adminAction = useMutation({
-    mutationFn: ({
-      reportId,
-      action,
-    }: {
-      reportId: string;
-      action: "remove" | "warn" | "remove-company";
-    }) => {
-      if (action === "remove")
-        return reportsAdminApi.deletePost(reportId, "Removido pelo painel de moderador");
-      if (action === "remove-company") return reportsAdminApi.removeCompany(reportId);
-      return reportsAdminApi.warn(reportId);
-    },
-    onSuccess: (_result, variables) => {
-      toast(
-        variables.action === "remove"
-          ? texts.moderator.reports.removeDone
-          : variables.action === "remove-company"
-            ? texts.moderator.reports.removeCompanyDone
-            : texts.moderator.reports.warnDone,
-        "success",
-      );
-      void queryClient.invalidateQueries({
-        queryKey: ["moderator", "reports"],
-      });
-    },
-    onError: () => toast(texts.moderator.reports.actionError, "error"),
-  });
-
-  const filtered = (data ?? []).filter((r) => {
-    if (filterReason && r.reason !== filterReason) return false;
-    if (filterTarget && r.targetType !== filterTarget) return false;
-    return true;
-  });
-
-  const activeReasons = [...new Set((data ?? []).map((r) => r.reason))];
-  const activeTargets = [...new Set((data ?? []).map((r) => r.targetType))];
-
-  return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-text-subtle">
-        {texts.moderator.reports.title}
-      </h2>
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (data?.length ?? 0) === 0 ? (
-        <div className="rounded-2xl border border-border-soft bg-surface-card">
-          <EmptyState icon={Gavel} title={texts.moderator.reports.empty} />
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setFilterReason(null);
-                setFilterTarget(null);
-              }}
-              className={cn(
-                "rounded-full px-2.5 py-1 text-xs font-medium transition",
-                !filterReason && !filterTarget
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border-soft text-text-subtle hover:border-primary/50",
-              )}
-            >
-              {texts.moderator.reports.filterAll}
-            </button>
-
-            {activeReasons.map((reason) => (
-              <button
-                key={reason}
-                type="button"
-                onClick={() => {
-                  setFilterReason(filterReason === reason ? null : reason);
-                  setFilterTarget(null);
-                }}
-                className={cn(
-                  "rounded-full px-2.5 py-1 text-xs font-medium transition",
-                  filterReason === reason
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border-soft text-text-subtle hover:border-primary/50",
-                )}
-              >
-                {texts.moderator.reports.reasons[reason] ?? reason}
-              </button>
-            ))}
-
-            {activeTargets.length > 1 &&
-              activeTargets.map((target) => (
-                <button
-                  key={target}
-                  type="button"
-                  onClick={() => {
-                    setFilterTarget(filterTarget === target ? null : target);
-                    setFilterReason(null);
-                  }}
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-xs font-medium transition",
-                    filterTarget === target
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border-soft text-text-subtle hover:border-primary/50",
-                  )}
-                >
-                  {texts.moderator.reports.targets[target] ?? target}
-                </button>
-              ))}
-          </div>
-
-          <ul className="space-y-3">
-            {filtered.map((report) => {
-              const alreadyVoted = report.myVote !== null;
-              return (
-                <li
-                  key={report.reportId}
-                  className={cn(
-                    "space-y-3 rounded-2xl border bg-surface-card p-4 transition",
-                    alreadyVoted ? "border-primary/20" : "border-border-soft",
-                  )}
-                >
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-text-subtle">
-                    <span
-                      className={cn(
-                        "rounded-full px-2.5 py-0.5 font-semibold",
-                        reasonStyle(report.reason),
-                      )}
-                    >
-                      {texts.moderator.reports.reasons[report.reason] ?? report.reason}
-                    </span>
-
-                    <span className="rounded-full border border-border-soft px-2 py-0.5">
-                      {texts.moderator.reports.targets[report.targetType] ?? report.targetType}
-                    </span>
-
-                    <span>{dataHora(report.createdAt)}</span>
-                  </div>
-
-                  <div className="grid gap-1 text-sm sm:grid-cols-2">
-                    <p>
-                      <span className="text-text-subtle">{texts.moderator.reports.reporter}: </span>
-
-                      <span className="font-medium text-text-strong">{report.reporter}</span>
-                    </p>
-
-                    <p>
-                      <span className="text-text-subtle">{texts.moderator.reports.author}: </span>
-
-                      <span className="font-medium text-text-strong">
-                        {report.author || texts.moderator.reports.noAuthor}
-                      </span>
-                    </p>
-                  </div>
-
-                  {report.content ? (
-                    <div className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-xl border border-border-soft bg-surface-2 px-3 py-2 text-sm text-text-strong">
-                      {report.content}
-                    </div>
-                  ) : (
-                    <p className="rounded-xl bg-surface-2 px-3 py-2 text-sm italic text-text-subtle">
-                      {texts.moderator.reports.noContent}
-                    </p>
-                  )}
-
-                  {report.description && (
-                    <p className="rounded-lg border-l-2 border-primary/30 pl-3 text-xs text-text-subtle">
-                      "{report.description}"
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-3 text-xs font-medium">
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5",
-                          report.punishVotes > 0
-                            ? "bg-destructive/10 text-destructive"
-                            : "text-text-subtle",
-                        )}
-                      >
-                        Punir: {report.punishVotes}
-                      </span>
-
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5",
-                          report.dismissVotes > 0
-                            ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                            : "text-text-subtle",
-                        )}
-                      >
-                        Descartar: {report.dismissVotes}
-                      </span>
-
-                      <span className="text-text-subtle">Quórum: {report.quorum}</span>
-
-                      {report.myVote && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-                          {texts.moderator.reports.myVote(report.myVote)}
-                        </span>
-                      )}
-                    </div>
-
-                    {admin && (
-                      <Link
-                        to="/moderacao/$reportId"
-                        params={{ reportId: report.reportId }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {texts.moderator.reports.openReview}
-                      </Link>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      className={cn(
-                        "rounded-full gap-1.5",
-                        report.myVote === "PUNISH" &&
-                          "ring-2 ring-primary ring-offset-2 ring-offset-surface-card",
-                      )}
-                      disabled={vote.isPending}
-                      onClick={() =>
-                        vote.mutate({
-                          reportId: report.reportId,
-                          vote: "PUNISH",
-                        })
-                      }
-                    >
-                      <Check className="h-3.5 w-3.5" />
-
-                      <>{texts.moderator.reports.punish}</>
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "rounded-full gap-1.5",
-                        report.myVote === "DISMISS" &&
-                          "ring-2 ring-primary ring-offset-2 ring-offset-surface-card",
-                      )}
-                      disabled={vote.isPending}
-                      onClick={() =>
-                        vote.mutate({
-                          reportId: report.reportId,
-                          vote: "DISMISS",
-                        })
-                      }
-                    >
-                      <X className="h-3.5 w-3.5" />
-
-                      <>{texts.moderator.reports.dismiss}</>
-                    </Button>
-                  </div>
-
-                  {admin && (
-                    <div className="flex flex-wrap items-center gap-2 border-t border-border-soft pt-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-text-subtle">
-                        {texts.moderator.reports.adminActions}
-                      </span>
-
-                      {report.targetType === "POST" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full"
-                          disabled={adminAction.isPending}
-                          onClick={() => setRemoveTarget(report.reportId)}
-                        >
-                          {texts.moderator.reports.removePost}
-                        </Button>
-                      )}
-
-                      {report.targetType === "COMPANY" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full"
-                          disabled={adminAction.isPending}
-                          onClick={() => setRemoveCompanyTarget(report.reportId)}
-                        >
-                          {texts.moderator.reports.removeCompany}
-                        </Button>
-                      )}
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-full"
-                        disabled={adminAction.isPending}
-                        onClick={() =>
-                          adminAction.mutate({
-                            reportId: report.reportId,
-                            action: "warn",
-                          })
-                        }
-                      >
-                        {texts.moderator.reports.warn}
-                      </Button>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
-
-      <ConfirmDialog
-        open={removeTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setRemoveTarget(null);
-        }}
-        title={texts.moderator.reports.removeTitle}
-        description={texts.moderator.reports.removeBody}
-        confirmLabel={texts.moderator.reports.removePost}
-        destructive
-        pending={adminAction.isPending}
-        onConfirm={() => {
-          if (!removeTarget) return;
-          adminAction.mutate({ reportId: removeTarget, action: "remove" });
-          setRemoveTarget(null);
-        }}
-      />
-      <ConfirmDialog
-        open={removeCompanyTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setRemoveCompanyTarget(null);
-        }}
-        title={texts.moderator.reports.removeCompanyTitle}
-        description={texts.moderator.reports.removeCompanyBody}
-        confirmLabel={texts.moderator.reports.removeCompany}
-        destructive
-        pending={adminAction.isPending}
-        onConfirm={() => {
-          if (!removeCompanyTarget) return;
-          adminAction.mutate({
-            reportId: removeCompanyTarget,
-            action: "remove-company",
-          });
-          setRemoveCompanyTarget(null);
-        }}
-      />
     </section>
   );
 }

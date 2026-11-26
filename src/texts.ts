@@ -3519,6 +3519,8 @@ export const texts = {
         "A postagem sai do ar e a denúncia é marcada como resolvida. O autor não é banido por esta ação.",
       removeDone: "Postagem removida; denúncia resolvida.",
       warnDone: "Aviso enviado ao autor; a postagem foi mantida.",
+      penalizeDone: "Punição aplicada diretamente; denúncia resolvida.",
+      alreadyReviewed: "Esta denúncia já foi decidida. A fila foi atualizada.",
       removeCompany: "Remover página empresarial",
       removeCompanyTitle: "Remover a página empresarial denunciada",
       removeCompanyBody:

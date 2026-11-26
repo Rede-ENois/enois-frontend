@@ -14,16 +14,17 @@ Plataforma de networking profissional focada em conexões humanas autênticas, m
 
 ## Índice da Documentação
 
-| Documento                                                             | Descrição                               |
-| --------------------------------------------------------------------- | --------------------------------------- |
-| [Arquitetura](arquitetura.md)                                         | Visão geral da arquitetura do projeto   |
-| [Rotas](rotas.md)                                                     | Todas as rotas/páginas da aplicação     |
-| [Interfaces social e profissional](interfaces-social-profissional.md) | Seletor, menus e regras de contexto     |
-| [Componentes](componentes.md)                                         | Todos os componentes React              |
-| [API - Módulos](api-modulos.md)                                       | Módulos de API e cliente HTTP           |
-| [Modelos de Dados](modelos-de-dados.md)                               | Interfaces e tipos do sistema           |
-| [Configuração](configuracao.md)                                       | Arquivos de configuração do projeto     |
-| [Integração de jogos](jogos-integracao.md)                            | Jogos externos no player do Énóis Games |
+| Documento                                                             | Descrição                                  |
+| --------------------------------------------------------------------- | ------------------------------------------ |
+| [Arquitetura](arquitetura.md)                                         | Visão geral da arquitetura do projeto      |
+| [Rotas](rotas.md)                                                     | Todas as rotas/páginas da aplicação        |
+| [Interfaces social e profissional](interfaces-social-profissional.md) | Seletor, menus e regras de contexto        |
+| [Componentes](componentes.md)                                         | Todos os componentes React                 |
+| [API - Módulos](api-modulos.md)                                       | Módulos de API e cliente HTTP              |
+| [Modelos de Dados](modelos-de-dados.md)                               | Interfaces e tipos do sistema              |
+| [Configuração](configuracao.md)                                       | Arquivos de configuração do projeto        |
+| [Painel de moderação](PAINEL-MODERACAO.md)                            | Navegação, fila e decisões administrativas |
+| [Integração de jogos](jogos-integracao.md)                            | Jogos externos no player do Énóis Games    |
 
 ## Scripts
 

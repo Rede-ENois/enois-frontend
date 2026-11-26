@@ -1,0 +1,200 @@
+[
+  {
+    "repo": "enois-backend-moderation",
+    "head": "893ae3269c590b254ae6b9f90b6fd65dd68ad245",
+    "sources": [
+      {
+        "path": "src/main/java/com/socialcoisa/rede/moderation/adapters/in/web/ReportController.java",
+        "sha256": "640bb4572834de38755d19c5dda37697606b9d4ed448aa80472fd4cd1ad698df"
+      },
+      {
+        "path": "src/main/java/com/socialcoisa/rede/moderation/application/ModerationService.java",
+        "sha256": "8172488749a91f13dc160929f4d6e7ff04644a00b148edb4bfeb562c506fd3d8"
+      },
+      {
+        "path": "src/main/java/com/socialcoisa/rede/moderation/application/SanctionService.java",
+        "sha256": "4a97e0b3326621c98d237703e56b829dbbbb3ded5a292b8bf7ba74b59b5779c4"
+      },
+      {
+        "path": "src/main/java/com/socialcoisa/rede/moderation/domain/Report.java",
+        "sha256": "43c0548b7a9f928d7109ef5cb0219f3d9585a2e225682ba27f2971d97f059915"
+      },
+      {
+        "path": "src/test/java/com/socialcoisa/rede/moderation/adapters/in/web/SanctionFlowTests.java",
+        "sha256": "e4363d7be0de63e05b64865f0369e9b5ce6889d95c7c15ff6ceef0c2bd57c2bb"
+      }
+    ]
+  },
+  {
+    "repo": "enois-design-system-moderation",
+    "head": "a524861f86587660e679217ed2a578d54fbe3ef4",
+    "sources": [
+      {
+        "path": "src/domain/moderation/index.ts",
+        "sha256": "3c9638b33bd40913d66e2432aab0274fe5360355abfc271d578cba9e23dbdee4"
+      },
+      {
+        "path": "src/domain/moderation/moderator-workspace.stories.tsx",
+        "sha256": "6bd2f578a163bf8123aa6cb856d45c54dba8dcae30d6faf1235311d4f2d5059f"
+      },
+      {
+        "path": "src/domain/moderation/moderator-workspace.test.tsx",
+        "sha256": "e40f146bd59d9933de67e466197e590747bf2e5e2cb1fbc7c8db12e7724b4c44"
+      },
+      {
+        "path": "src/domain/moderation/moderator-workspace.tsx",
+        "sha256": "7b00f502c352d7e96d040555e914657bcdc447c272d5d1b618c872e4c0887e9a"
+      },
+      {
+        "path": "src/domain/moderation/panic-mode-section.test.tsx",
+        "sha256": "5c2de17b75114d9ce441cead845a10e7fffbc9a11b2aced80f4a61c204011eb3"
+      },
+      {
+        "path": "src/domain/moderation/panic-mode-section.tsx",
+        "sha256": "4e91223d2f739b68d0423d390efa2e1fcfaae82976b37eb4c9436ccc6b1b55ae"
+      },
+      {
+        "path": "src/domain/moderation/panic-mode.stories.tsx",
+        "sha256": "d616e9912ef3ae17f41698c8e2cedd32c0b2ad1a8a61e41e1cea7f978185a276"
+      },
+      {
+        "path": "src/domain/moderation/report-card.tsx",
+        "sha256": "94258780fa7e042ded1c913d501f6ea00d95d1cfd9b072bd23dc844527a2367a"
+      },
+      {
+        "path": "src/domain/moderation/reports-section.test.tsx",
+        "sha256": "fc3568b2be0d2319b09913aeca6c375274bc0416a63b10dfdaa928593639b572"
+      },
+      {
+        "path": "src/domain/moderation/reports-section.tsx",
+        "sha256": "0ebe792462f745f963ae05f58b38badbd51847ecc7ef8cc88c2538f39373dcda"
+      },
+      {
+        "path": "src/domain/moderation/reports.fixture.ts",
+        "sha256": "5ba0b9936df534767f5e562bb77bbc7949f55fbb814c12f28955ab6033705fc9"
+      },
+      {
+        "path": "src/domain/moderation/reports.stories.tsx",
+        "sha256": "eba3f8cf5499366e6560a65ab6776d34039163188325a73e2d10f18c71ea0dce"
+      },
+      {
+        "path": "src/domain/moderation/use-report-action-focus.ts",
+        "sha256": "64f0d7f6bbb4e1f5333cfeb73f32000d0492e32c5251bc31881c4fe83fd974df"
+      },
+      {
+        "path": "src/index.ts",
+        "sha256": "d8f242b59213308eed1757c3a8543d8cf9b115304dcaa656cbb119aaa9f210c3"
+      },
+      {
+        "path": "src/messages/default-messages.ts",
+        "sha256": "bba8a34c01045c9c5ad8af488ac549ece1c3349f91f42412c14eea5977c79173"
+      },
+      {
+        "path": "src/messages/defaults/moderation.ts",
+        "sha256": "326011c3374fa83040eaf032194f102a34c80e5e08d58bbf830337b01985bf78"
+      },
+      {
+        "path": "src/messages/defaults/moderator-workspace.ts",
+        "sha256": "f7b3b55bde0350ac8b25279ec6dfb75b87e8936d49ef4ee5eda7dc4882b4d885"
+      },
+      {
+        "path": "src/messages/defaults/reports.ts",
+        "sha256": "9274c98013c85bfcfb5c1a9a072b763c884f7e0ee5124f68be48d449080c9e2d"
+      },
+      {
+        "path": "src/types/domain/moderation/moderation-report-data.ts",
+        "sha256": "c30114496b7996b2efe3e9b2b9afb826e010d228c29835fed8c8be8feca3ec14"
+      },
+      {
+        "path": "src/types/domain/moderation/moderation-report-vote.ts",
+        "sha256": "a69b7415e586b4da5f36af2061f7abdb10db1c9cfbbe8c75616590e517585b46"
+      },
+      {
+        "path": "src/types/domain/moderation/moderator-workspace-group.ts",
+        "sha256": "92ae11e78b2596444c63d757b63c06d8a6df0d3dd0813583d3abecd59e98d11f"
+      },
+      {
+        "path": "src/types/domain/moderation/moderator-workspace-props.ts",
+        "sha256": "d7212440602d49da2cdae4d4d805a1f943ff5e77f2e41d737bd166a12b8f4cbe"
+      },
+      {
+        "path": "src/types/domain/moderation/moderator-workspace-tab.ts",
+        "sha256": "9d3688afb3732cd05698eb9d3ea1b633e97a6a8ab72fa7a9be9e36ad4d036994"
+      },
+      {
+        "path": "src/types/domain/moderation/panic-mode-section-props.ts",
+        "sha256": "669a081089198fc429566c027fd442490a6086e98db457f8d3e9a430874f2d55"
+      },
+      {
+        "path": "src/types/domain/moderation/report-action-confirmation.ts",
+        "sha256": "337b1accb920415781250c1720be707b5cb7cc06fc03e3b83a6957cd5a937445"
+      },
+      {
+        "path": "src/types/domain/moderation/report-admin-action.ts",
+        "sha256": "1ae5187cbdc2b8592f291d2cb8dd95da78a3018789dc874a9d07a6a08d3ae7bc"
+      },
+      {
+        "path": "src/types/domain/moderation/reports-section-props.ts",
+        "sha256": "66b6c4b873367bb4ce5589a69a3d8c1a5a7050754dfae9771d26137bdaa7888a"
+      },
+      {
+        "path": "src/types/messages/messages.ts",
+        "sha256": "b888d1870b6fc1a81c170e2b9e29e87248c90b3ca841ebf17d098529e17cf564"
+      },
+      {
+        "path": "src/types/messages/moderation-messages.ts",
+        "sha256": "3c6c8891cdab401b33a8f2144bb2c317a911aad545102c46de1d5e95935a2a53"
+      },
+      {
+        "path": "src/types/messages/moderator-workspace-messages.ts",
+        "sha256": "e0dcab2d99ce31240c0da535ddbd569359418f14dd41401e0921f4d4ac01e9d0"
+      },
+      {
+        "path": "src/types/messages/reports-messages.ts",
+        "sha256": "b1ff45d8b63975a8e206299e244e6f932c77faa074aae544d062ba9328f49815"
+      },
+      {
+        "path": "src/ui/confirm-dialog.tsx",
+        "sha256": "45314db797ae20de92770397ac1cc9708fe611000d21fd83bc1cae3cf36cf2e7"
+      }
+    ]
+  },
+  {
+    "repo": "enois-frontend-moderation",
+    "head": "1820fe0bcba8de4630318a4c13a6c5d41cae90e8",
+    "sources": [
+      {
+        "path": "src/components/moderation/panic-mode-section.test.tsx",
+        "sha256": "be66e4e3391ae386d9ec9817180af01b5a4630ebb9d7f931f2b32f58ac57cdd9"
+      },
+      {
+        "path": "src/components/moderation/panic-mode-section.tsx",
+        "sha256": "321bd7f76cb1e00807734e4285f04a60759aaa80417eb44cddc417099dabadb9"
+      },
+      {
+        "path": "src/components/moderation/reports-section.test.tsx",
+        "sha256": "7ca95a26ea3bc26ef4fd1ea0ba5148bf9d8b0115099147f394777abfb9510e26"
+      },
+      {
+        "path": "src/components/moderation/reports-section.tsx",
+        "sha256": "fd8baea77f91995128a5cf15ee9ae11944396b0207326d692df7ece37a22f759"
+      },
+      {
+        "path": "src/lib/api/reports-admin.ts",
+        "sha256": "6e0632e3fdfe68bd7bcc97c691ac1b44708adf14f36f8a202fb347ddd22bc8f7"
+      },
+      {
+        "path": "src/routes/moderacao.$reportId.tsx",
+        "sha256": "9c83cf01b23fdfcba835576968433049671a47ee9f4d803b92ad67927c94514e"
+      },
+      {
+        "path": "src/routes/moderador.tsx",
+        "sha256": "5a2fb4b65c0c08db315facae002ac3008c0a6ed5de7bd80eaf258a4ea9432c6f"
+      },
+      {
+        "path": "src/texts.ts",
+        "sha256": "af6d5a7b72c3ef81f9083bf023f3e4df86aacc77d0744b9c7d5c55ecc04098bd"
+      }
+    ]
+  }
+]

@@ -59,6 +59,16 @@ describe("painel de moderador: grupos de navegação", () => {
     expect(groups.flatMap((entry) => entry.tabs)).toHaveLength(PANEL_TABS.length);
   });
 
+  it("preserva a área da rede da QA, acessível somente para admin", () => {
+    const admin = visiblePanelGroups(true).find((entry) => entry.group.id === "admin");
+    expect(admin?.tabs).toContainEqual(expect.objectContaining({ id: "network", adminOnly: true }));
+    expect(visiblePanelGroups(false).flatMap((entry) => entry.tabs)).not.toContainEqual(
+      expect.objectContaining({ id: "network" }),
+    );
+    expect(resolveActiveTab("network", true)).toBe("network");
+    expect(resolveActiveTab("network", false)).toBe("reports");
+  });
+
   it("a fila do dia vem primeiro e começa pelas denúncias", () => {
     const groups = visiblePanelGroups(false);
     expect(groups[0].group.id).toBe("queue");

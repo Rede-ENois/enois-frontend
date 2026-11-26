@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 
 import { texts } from "@/texts";
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/moderacao/$reportId")({
  * e-mail, porque clientes de e-mail pré-carregam links).
  */
 function ModeracaoDenuncia() {
+  const queryClient = useQueryClient();
   const { reportId } = useParams({ from: "/moderacao/$reportId" });
   const { acao } = useSearch({ from: "/moderacao/$reportId" }) as { acao?: ModeracaoAcao };
 
@@ -40,6 +41,13 @@ function ModeracaoDenuncia() {
       if (action === "banir") return reportsAdminApi.ban(reportId);
       if (action === "empresa") return reportsAdminApi.removeCompany(reportId);
       return reportsAdminApi.deletePost(reportId, "Excluído pelo painel de revisão");
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "report", reportId] }),
+        queryClient.invalidateQueries({ queryKey: ["moderator", "reports"] }),
+        queryClient.invalidateQueries({ queryKey: ["moderator", "sanctions"] }),
+      ]);
     },
   });
 
