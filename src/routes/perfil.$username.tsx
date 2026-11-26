@@ -35,6 +35,7 @@ import {
   ImageCropDialog,
   InfiniteScroll,
   LocationLine,
+  ProfilePortfolioLink,
   formatLocation,
 } from "@rede-enois/design-system/patterns";
 import {
@@ -79,6 +80,7 @@ import {
   gamesApi,
   messagesApi,
   networkApi,
+  portfolioApi,
   profileApi,
   rankingApi,
   recommendationsApi,
@@ -228,6 +230,23 @@ function Profile() {
 
   const user = liveProfile ?? loaderUser;
   const isOwnProfile = me?.id === user.id;
+
+  // A vitrine publicada é a única porta para `/portfolio/{username}`: sem publicação a rota responde
+  // 404, e o link some em vez de levar a uma página vazia.
+  const { data: portfolioPublished } = useQuery({
+    queryKey: ["portfolio-live", user.username],
+    queryFn: async () => {
+      try {
+        await portfolioApi.byUsername(user.username);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    staleTime: 60_000,
+  });
+  const hasPortfolio = portfolioPublished === true;
+
   // The professional side is a separate interface: on the own profile this is the way across.
   const professional = useProfessionalIdentity();
 
@@ -963,6 +982,19 @@ function Profile() {
               <div id="projetos" className="scroll-mt-20">
                 <ProfileProjectsSection username={user.username} isOwner={isOwnProfile} />
               </div>
+
+              {/* Portfólio: a vitrine publicada, aberta a quem visita. O dono, de lá, vai para o
+                editor (`/portfolio/editar`); quem nunca publicou não tem vitrine para abrir. */}
+              {(isOwnProfile || hasPortfolio) && (
+                <ProfilePortfolioLink
+                  href={
+                    isOwnProfile
+                      ? "/portfolio/editar"
+                      : `/portfolio/${encodeURIComponent(user.username)}`
+                  }
+                  owner={isOwnProfile}
+                />
+              )}
 
               {/* Trajetória profissional logo abaixo dos projetos: cargo, empresa, período
                 (com "atual") e descrição, como no LinkedIn. */}
