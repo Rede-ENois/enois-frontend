@@ -616,11 +616,6 @@
       "count": 2
     }
   },
-  "src/routes/penalidades.tsx": {
-    "local/no-front-markup": {
-      "count": 55
-    }
-  },
   "src/routes/perfil.$username.tsx": {
     "local/no-front-markup": {
       "count": 174

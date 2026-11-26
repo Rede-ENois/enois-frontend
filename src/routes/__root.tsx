@@ -12,6 +12,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 
+import { hasSanctionAccess, useSanctionAccess } from "@/stores/sanction-access.store";
 import { texts } from "@/texts";
 import type { WithRequiredChildren } from "@/types/components/with-required-children";
 import type { PushNavigateMessage } from "@/types/push/push-navigate-message";
@@ -214,6 +215,7 @@ function RootComponent() {
 
 function RootInsideProvider() {
   const router = useRouter();
+  const limited = useSanctionAccess();
   const markPushRead = useMarkPushRead();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   // Lido uma vez, na montagem: o efeito de push apaga a query antes de navegar, e um segundo
@@ -287,10 +289,29 @@ function RootInsideProvider() {
     // localStorage) e nao e reexecutado na hidratacao, entao quem abre uma rota protegida
     // direto sem estar logado veria a UI autenticada e erros nas acoes. Aqui no cliente
     // mandamos para o login, seja qual for a forma de entrada.
-    if (isProtectedPath(pathname) && !hasSession()) {
+    if (isProtectedPath(pathname) && !hasSanctionAccess() && !hasSession()) {
       void router.navigate({ to: "/entrar", search: { tab: "login" }, replace: true });
     }
-  }, [pathname, router]);
+  }, [pathname, router, limited]);
+
+  useEffect(() => {
+    if (
+      limited &&
+      pathname !== "/conta-suspensa" &&
+      pathname !== "/entrar" &&
+      !pathname.startsWith("/auth/")
+    ) {
+      void router.navigate({ to: "/conta-suspensa", replace: true });
+    }
+  }, [limited, pathname, router]);
+
+  if (limited || pathname === "/conta-suspensa") {
+    return (
+      <ToastProvider>
+        <Outlet />
+      </ToastProvider>
+    );
+  }
 
   return (
     <ToastProvider>

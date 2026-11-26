@@ -9,9 +9,9 @@ import { CheckCircle2, Loader2, MailCheck, MailWarning } from "lucide-react";
 import { z } from "zod";
 
 import { ApiError, authApi } from "@/lib/api";
+import { acceptAuthSession } from "@/lib/moderation/auth-access";
 import { landingPathFor } from "@/lib/onboarding";
 import { hasSessionFlag } from "@/lib/session";
-import { storeSession } from "@/lib/session";
 
 const searchSchema = z.object({
   token: z.string().optional(),
@@ -63,7 +63,18 @@ function VerifyEmail() {
     void authApi
       .verifyEmail(search.token)
       .then((auth) => {
-        storeSession(auth);
+        if (auth.user === null) {
+          void navigate({
+            to: "/auth/callback",
+            search: { status: "two_factor_required" },
+            replace: true,
+          });
+          return;
+        }
+        if (acceptAuthSession(auth) === "SANCTIONS_ONLY") {
+          void navigate({ to: "/conta-suspensa", replace: true });
+          return;
+        }
         setStatus("done");
         const landing = landingPathFor(auth.user);
         setLanding(landing);

@@ -144,7 +144,10 @@ function PostDetail() {
     void navigate({
       to: "/post/$postId",
       params: { postId },
-      search: (previous) => ({ ...previous, reacoes: undefined }),
+      search: (previous: ReturnType<typeof Route.useSearch>) => ({
+        ...previous,
+        reacoes: undefined,
+      }),
       replace: true,
     });
   }, [reacoes, loaded, postId, setShowReactions, navigate]);

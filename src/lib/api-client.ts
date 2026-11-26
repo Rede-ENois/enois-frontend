@@ -1,3 +1,8 @@
+import {
+  clearSanctionAccess,
+  hasSanctionAccess,
+  markSanctionAccess,
+} from "@/stores/sanction-access.store";
 import { texts } from "@/texts";
 import { HttpStatus } from "@/types/application/api/http-status";
 import type { RefreshOutcome } from "@/types/application/api/refresh-outcome";
@@ -325,7 +330,8 @@ if (typeof window !== "undefined") {
 }
 
 export function clearSession() {
-  const hadSession = hasSessionFlag();
+  const hadSession = hasSessionFlag() || hasSanctionAccess();
+  clearSanctionAccess();
   localStorage.removeItem(SESSION_FLAG_KEY);
   dropLegacyTokens();
   localStorage.removeItem("session_expires_at");
@@ -583,6 +589,12 @@ async function request<T>(
  */
 async function fail<T>(response: Response, path: string, hadSession: boolean): Promise<T> {
   const errorBody = await response.json().catch(() => null);
+  if (
+    response.status === HttpStatus.FORBIDDEN &&
+    ["ACCOUNT_SUSPENDED", "SESSION_RESTRICTED"].includes(errorBody?.code)
+  ) {
+    markSanctionAccess();
+  }
   const retryAfter = response.headers.get("Retry-After") ?? response.headers.get("retry-after");
   if (
     !errorBody?.code &&

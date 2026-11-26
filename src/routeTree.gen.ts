@@ -22,6 +22,7 @@ import { Route as ColecoesRouteImport } from './routes/colecoes'
 import { Route as ComunidadesRouteImport } from './routes/comunidades'
 import { Route as ConfessionarioRouteImport } from './routes/confessionario'
 import { Route as ContaRouteImport } from './routes/conta'
+import { Route as ContaSuspensaRouteImport } from './routes/conta-suspensa'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as DenunciasRouteImport } from './routes/denuncias'
 import { Route as DesabafosRouteImport } from './routes/desabafos'
@@ -173,6 +174,11 @@ const ConfessionarioRoute = ConfessionarioRouteImport.update({
 const ContaRoute = ContaRouteImport.update({
   id: '/conta',
   path: '/conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContaSuspensaRoute = ContaSuspensaRouteImport.update({
+  id: '/conta-suspensa',
+  path: '/conta-suspensa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContatoRoute = ContatoRouteImport.update({
@@ -629,6 +635,7 @@ export interface FileRoutesByFullPath {
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
+  '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
@@ -731,6 +738,7 @@ export interface FileRoutesByTo {
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
+  '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
@@ -834,6 +842,7 @@ export interface FileRoutesById {
   '/comunidades': typeof ComunidadesRouteWithChildren
   '/confessionario': typeof ConfessionarioRoute
   '/conta': typeof ContaRoute
+  '/conta-suspensa': typeof ContaSuspensaRoute
   '/contato': typeof ContatoRoute
   '/denuncias': typeof DenunciasRoute
   '/desabafos': typeof DesabafosRoute
@@ -938,6 +947,7 @@ export interface FileRouteTypes {
     | '/comunidades'
     | '/confessionario'
     | '/conta'
+    | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
     | '/desabafos'
@@ -1040,6 +1050,7 @@ export interface FileRouteTypes {
     | '/comunidades'
     | '/confessionario'
     | '/conta'
+    | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
     | '/desabafos'
@@ -1142,6 +1153,7 @@ export interface FileRouteTypes {
     | '/comunidades'
     | '/confessionario'
     | '/conta'
+    | '/conta-suspensa'
     | '/contato'
     | '/denuncias'
     | '/desabafos'
@@ -1245,6 +1257,7 @@ export interface RootRouteChildren {
   ComunidadesRoute: typeof ComunidadesRouteWithChildren
   ConfessionarioRoute: typeof ConfessionarioRoute
   ContaRoute: typeof ContaRoute
+  ContaSuspensaRoute: typeof ContaSuspensaRoute
   ContatoRoute: typeof ContatoRoute
   DenunciasRoute: typeof DenunciasRoute
   DesabafosRoute: typeof DesabafosRoute
@@ -1408,6 +1421,13 @@ declare module '@tanstack/react-router' {
       path: '/conta'
       fullPath: '/conta'
       preLoaderRoute: typeof ContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conta-suspensa': {
+      id: '/conta-suspensa'
+      path: '/conta-suspensa'
+      fullPath: '/conta-suspensa'
+      preLoaderRoute: typeof ContaSuspensaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contato': {
@@ -2214,6 +2234,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComunidadesRoute: ComunidadesRouteWithChildren,
   ConfessionarioRoute: ConfessionarioRoute,
   ContaRoute: ContaRoute,
+  ContaSuspensaRoute: ContaSuspensaRoute,
   ContatoRoute: ContatoRoute,
   DenunciasRoute: DenunciasRoute,
   DesabafosRoute: DesabafosRoute,

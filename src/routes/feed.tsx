@@ -470,7 +470,10 @@ export function Home() {
   useEffect(() => {
     if (!compor) return;
     setComposerOpen(true);
-    void navigate({ search: (prev) => ({ ...prev, compor: undefined }), replace: true });
+    void navigate({
+      search: (prev: ReturnType<typeof Route.useSearch>) => ({ ...prev, compor: undefined }),
+      replace: true,
+    });
   }, [compor, navigate]);
   // Opening puts the cursor in the field, so one tap on the launcher (or on "Publicar") is enough.
   useEffect(() => {
