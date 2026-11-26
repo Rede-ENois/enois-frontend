@@ -29,9 +29,11 @@ import {
   updatePostInQueryCache,
 } from "@/lib/feed/post-query-cache";
 import { savedPostsQueryOptions } from "@/lib/feed/saved-posts";
+import { portfolioHref } from "@/lib/portfolio/portfolio-teaser";
 import { useAuth } from "@/lib/use-auth";
 
 import { MentionTextarea } from "@/components/mention-textarea";
+import { PortfolioPointer } from "@/components/portfolio/portfolio-pointer";
 import { PollCard } from "@/components/post/poll-card";
 import { PresenceIndicator } from "@/components/presence-indicator";
 import { ProfilePeek } from "@/components/profile/profile-peek";
@@ -254,7 +256,13 @@ function PostCardContainer({
         repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
         repostedBy: post.repostedBy?.username ? `/perfil/${post.repostedBy.username}` : null,
         blog: `/blog/${post.authorUsername}/${post.id}`,
+        portfolio: post.type === "PORTFOLIO" ? portfolioHref(post.authorUsername) : null,
       }}
+      portfolio={
+        post.type === "PORTFOLIO" && !isOwner ? (
+          <PortfolioPointer post={post} feedTab={feedTab} />
+        ) : undefined
+      }
       timeLabel={formatTime(post.createdAt)}
       editedTimeLabel={formatTime(post.editedAt)}
       topicLabel={

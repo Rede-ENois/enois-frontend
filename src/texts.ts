@@ -2066,6 +2066,8 @@ export const texts = {
     titleTooLong: "O título da peça passa de 160 caracteres.",
     textTooLong: "O texto da peça passa de 4.000 caracteres.",
     invalidPage: "A página precisa de HTML válido.",
+    loadError: "Não foi possível carregar sua vitrine.",
+    retry: "Tentar de novo",
   },
   blog: {
     readingTime: (minutes: number) => `${minutes} min de leitura estimada`,

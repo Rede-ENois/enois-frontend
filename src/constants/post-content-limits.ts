@@ -29,6 +29,8 @@ const LIMITS: Record<PostView["type"], number> = {
   // Conteúdo profissional: mesmo teto do backend (PostContentLimits.BUSINESS).
   BUSINESS: 2000,
   BLOG: 1200,
+  // Vitrine: o texto do post é o recado; a página mora no portfólio.
+  PORTFOLIO: 1200,
   // Reclamação: texto padrão, como o insight (backend não tem teto próprio para ela).
   COMPLAINT: 1200,
 };

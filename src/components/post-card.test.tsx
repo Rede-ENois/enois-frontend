@@ -22,6 +22,7 @@ vi.mock("@/lib/api", () => ({
   communitiesApi: { follow: vi.fn(), unfollow: vi.fn() },
   feedApi: { get: mocks.get },
   mediaApi: { get: vi.fn() },
+  portfolioApi: { byUsername: vi.fn() },
 }));
 vi.mock("@/lib/api/seals", () => ({
   sealsApi: { forPost: () => Promise.resolve({ seals: [] }) },
@@ -204,5 +205,20 @@ describe("PostCard container", () => {
 
     expect(mocks.get).toHaveBeenCalledExactlyOnceWith(post.id);
     expect(mocks.card?.mediaSpoiler).toBe(true);
+  });
+
+  it("uma publicação de vitrine aponta para a vitrine, mas o dono não vê o resumo", async () => {
+    // post.authorId é u1, o mesmo de useAuth: quem publicou já vê a própria vitrine no editor.
+    await render(<PostCard post={{ ...post, type: "PORTFOLIO" }} />);
+
+    expect(mocks.card?.hrefs.portfolio).toBe("/portfolio/ana");
+    expect(mocks.card?.portfolio).toBeUndefined();
+  });
+
+  it("a publicação de outro tipo não aponta para vitrine nem traz o resumo", async () => {
+    await render(<PostCard post={post} />);
+
+    expect(mocks.card?.hrefs.portfolio).toBeNull();
+    expect(mocks.card?.portfolio).toBeUndefined();
   });
 });

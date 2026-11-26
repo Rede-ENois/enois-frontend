@@ -7,6 +7,8 @@ import { texts } from "@/texts";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api-client";
+
 /**
  * A rota do Explorar: o app traduz preferências, contagens e interface para o contrato do hub no
  * design system, e este teste prende exatamente essa tradução — os três estados de verdade
@@ -19,6 +21,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   personalization: vi.fn(),
   navigationCounts: vi.fn(),
+  me: vi.fn(),
+  portfolioByUsername: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -40,6 +44,10 @@ vi.mock("@/lib/navigation-signals", () => ({
 vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
 vi.mock("@/lib/use-personalization", () => ({
   usePersonalization: mocks.personalization,
+}));
+vi.mock("@/lib/api", () => ({
+  profileApi: { me: mocks.me },
+  portfolioApi: { byUsername: mocks.portfolioByUsername },
 }));
 vi.mock("@/components/app-container", () => ({
   AppContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -84,6 +92,12 @@ describe("rota do Explorar", () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     mocks.personalization.mockReset();
     mocks.navigationCounts.mockReset();
+    mocks.me.mockReset();
+    mocks.portfolioByUsername.mockReset();
+    mocks.me.mockResolvedValue({ id: "u1", username: "ana", name: "Ana Souza", avatar: null });
+    mocks.portfolioByUsername.mockRejectedValue(
+      new ApiError(404, "PORTFOLIO_NOT_FOUND", "não encontrado"),
+    );
     mocks.personalization.mockReturnValue(pessoais());
     mocks.navigationCounts.mockReturnValue({
       summary: undefined,
@@ -149,5 +163,45 @@ describe("rota do Explorar", () => {
     await settle();
 
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("a vitrine de quem está lendo abre o Explorar, antes das salas", async () => {
+    await render();
+
+    const secao = document.body.querySelector("#explorar-vitrines");
+    expect(secao?.textContent).toContain("Vitrines da comunidade");
+    expect(secao?.textContent).toContain("Editar minha vitrine");
+    expect(document.body.textContent).toContain("Desabafos");
+  });
+
+  it("vitrine no ar: a seção mostra o resumo publicado no lugar do convite", async () => {
+    mocks.portfolioByUsername.mockResolvedValue({
+      username: "ana",
+      version: 1,
+      html: "<p>Desenho e construo interfaces.</p>",
+      publishedAt: "2026-11-20",
+      blocks: [],
+    });
+    await render();
+
+    const secao = document.body.querySelector("#explorar-vitrines");
+    expect(secao?.textContent).toContain("Desenho e construo interfaces.");
+    expect(secao?.querySelector('a[href="/portfolio/ana"]')).not.toBeNull();
+    expect(secao?.textContent).not.toContain("Editar minha vitrine");
+  });
+
+  it("vitrine ilegível: o aviso com tentar de novo aparece e as salas seguem", async () => {
+    mocks.portfolioByUsername.mockRejectedValue(new ApiError(503, undefined, "indisponível"));
+    await render();
+
+    expect(document.body.textContent).toContain(texts.portfolio.loadError);
+    expect(document.body.textContent).toContain("Desabafos");
+
+    const retry = botao(texts.portfolio.retry);
+    if (!retry) throw new Error("botão de tentar de novo da vitrine não renderizado");
+    await act(async () => retry.click());
+    await settle();
+
+    expect(mocks.portfolioByUsername).toHaveBeenCalledTimes(2);
   });
 });
