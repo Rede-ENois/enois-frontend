@@ -29,9 +29,11 @@ import {
   updatePostInQueryCache,
 } from "@/lib/feed/post-query-cache";
 import { savedPostsQueryOptions } from "@/lib/feed/saved-posts";
+import { portfolioHref } from "@/lib/portfolio/portfolio-teaser";
 import { useAuth } from "@/lib/use-auth";
 
 import { MentionTextarea } from "@/components/mention-textarea";
+import { PortfolioPointer } from "@/components/portfolio/portfolio-pointer";
 import { PollCard } from "@/components/post/poll-card";
 import { PresenceIndicator } from "@/components/presence-indicator";
 import { ProfilePeek } from "@/components/profile/profile-peek";
@@ -46,7 +48,10 @@ import { ReactionsSummary } from "./post/reactions-summary";
 import { RichText } from "./post/rich-text";
 import { SandboxedHtmlFrame } from "./post/sandboxed-html-frame";
 
-const TYPE_OPTIONS = POST_TYPES as PostTypeOption[];
+// O `id` do catálogo é texto; `PostView` conhece todo tipo publicado, inclusive `PORTFOLIO`.
+const TYPE_OPTIONS: PostTypeOption[] = POST_TYPES as (Omit<PostTypeOption, "id"> & {
+  id: PostView["type"];
+})[];
 
 function PostCardContainer({
   post,
@@ -254,7 +259,13 @@ function PostCardContainer({
         repostOf: post.repostOf ? `/post/${post.repostOf}` : null,
         repostedBy: post.repostedBy?.username ? `/perfil/${post.repostedBy.username}` : null,
         blog: `/blog/${post.authorUsername}/${post.id}`,
+        portfolio: post.type === "PORTFOLIO" ? portfolioHref(post.authorUsername) : null,
       }}
+      portfolio={
+        post.type === "PORTFOLIO" && !isOwner ? (
+          <PortfolioPointer post={post} feedTab={feedTab} />
+        ) : undefined
+      }
       timeLabel={formatTime(post.createdAt)}
       editedTimeLabel={formatTime(post.editedAt)}
       topicLabel={
@@ -334,6 +345,8 @@ function PostCardContainer({
             editType={editType}
             // A poll is born in the composer with its options; editing never turns a post into one.
             onTypeChange={(type) => {
+              // O selo vem do catálogo daqui (`TYPE_OPTIONS`), que só mostra tipos que `PostView`
+              // conhece — inclusive `PORTFOLIO`.
               if (type !== "POLL") setEditType(type);
             }}
             draft={draft}
