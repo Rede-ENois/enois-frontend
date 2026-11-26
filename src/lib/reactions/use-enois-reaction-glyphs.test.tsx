@@ -47,6 +47,8 @@ describe("useEnoisReactionGlyphs", () => {
     expect(resolveReactionTypeFromGlyph("❤️")).toBe("LOVE");
     expect(resolveReactionTypeFromGlyph("❤")).toBe("LOVE");
     expect(resolveReactionTypeFromGlyph("texto comum")).toBeNull();
+    // O valor de `emojis[HEART_PURPLE]` é o caminho da figura: pintar o caminho como texto é o bug.
+    expect(resolveReactionTypeFromGlyph("/emojis/enois/heart_purple.svg")).toBeNull();
   });
 
   it("marca e atualiza data-enois-reaction-glyph sem tocar em picker ou áreas editáveis", async () => {
@@ -60,7 +62,9 @@ describe("useEnoisReactionGlyphs", () => {
     const codeSpan = host.querySelector('[data-testid="code"] span');
 
     expect(pill?.getAttribute("data-enois-reaction-glyph")).toBe("LIKE");
-    expect(picker?.getAttribute("data-enois-reaction-glyph")).toBeNull();
+    // O seletor também é pintado pelo CSS; a marca dele não muda o texto.
+    expect(picker?.getAttribute("data-enois-reaction-glyph")).toBe("LIKE");
+    expect(picker?.textContent).toBe("👍");
     expect(editorSpan?.getAttribute("data-enois-reaction-glyph")).toBeNull();
     expect(codeSpan?.getAttribute("data-enois-reaction-glyph")).toBeNull();
 
@@ -99,5 +103,77 @@ describe("useEnoisReactionGlyphs", () => {
     const pickerButton = host.querySelector('button[data-reaction-emoji="LIKE"]');
     expect(pillButton?.getAttribute("title")).toBe("Remover reação Joinha É Nóis");
     expect(pickerButton?.getAttribute("title")).toBe("Joinha É Nóis");
+  });
+
+  it("reconhece a pílula do coração roxo e põe o nome dele no tooltip", async () => {
+    // O coração roxo não está na lista das 76 expressões, mas a pílula dele tem que desenhar o
+    // coração (CSS) e o tooltip não pode continuar com o emoji cru.
+    function HeartHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <div>
+          <span data-testid="pill">💜</span>
+
+          <button type="button" data-reaction-emoji="HEART_PURPLE" title="💜">
+            💜
+          </button>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<HeartHarness />);
+    });
+
+    expect(resolveReactionTypeFromGlyph("💜")).toBe("HEART_PURPLE");
+    expect(
+      host.querySelector('[data-testid="pill"]')?.getAttribute("data-enois-reaction-glyph"),
+    ).toBe("HEART_PURPLE");
+    expect(
+      host.querySelector('button[data-reaction-emoji="HEART_PURPLE"]')?.getAttribute("title"),
+    ).toBe("Coração roxo");
+  });
+
+  it("lista de quem reagiu e abas desenham o coração roxo como glifo, não como código", async () => {
+    // O diálogo de reações desenha `emojis[type]`, e para o coração roxo esse valor é o nome do
+    // arquivo: sem isto a lista mostrava "/emojis/enois/heart_purple.svg 1" (print da Mel).
+    function DialogHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <ul>
+          <li data-testid="row-file">
+            <span>/emojis/enois/heart_purple.svg</span>
+          </li>
+
+          <li data-testid="row-code">
+            <span>HEART_PURPLE</span>
+          </li>
+
+          <li data-testid="row-name">
+            <span>Marina Rocha</span>
+          </li>
+        </ul>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<DialogHarness />);
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    for (const id of ["row-file", "row-code"]) {
+      const glifo = host.querySelector(`[data-testid="${id}"] span`);
+      expect(glifo?.getAttribute("data-enois-reaction-glyph")).toBe("HEART_PURPLE");
+      expect(glifo?.textContent).toBe("💜");
+    }
+    expect(
+      host
+        .querySelector('[data-testid="row-name"] span')
+        ?.hasAttribute("data-enois-reaction-glyph"),
+    ).toBe(false);
+    expect(host.querySelector('[data-testid="row-name"] span')?.textContent).toBe("Marina Rocha");
   });
 });

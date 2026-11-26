@@ -3,8 +3,14 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import type { Job } from "@/types/application/job/job";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { buildJobFilters } from "@/lib/job-filters";
+import { converterPaginacao } from "@/lib/jobs-paginacao";
+
+(globalThis as unknown as { __dbg?: number }).__dbg = 1;
 
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),
@@ -117,6 +123,43 @@ describe("/vagas — filtros da aba de plataformas externas", () => {
 
     expect(host.querySelector('input[aria-label="Habilidades (ex.: Java, Spring)"]')).toBeNull();
     expect(lastListParams().skills).toBeUndefined();
+  });
+
+  it("a página seguinte entra no fim da lista e a seguinte começa do zero", () => {
+    // O acumulado das páginas era refeito por um efeito sobre o estado delas; com a segunda
+    // página voltando do cache (sem resposta nova) a lista ficava só com a primeira. Agora a
+    // página entra na renderização da própria resposta, e é esta peça que decide como.
+    // Só o id é comparado; o resto do Job não é lido pela peça testada.
+    const vaga = (id: string) => ({ id, title: `Vaga ${id}` }) as unknown as Job;
+    const vazia = { chave: "", jobs: [] as Job[], cursor: null };
+
+    const primeira = converterPaginacao(vazia, "enois", null, {
+      items: [vaga("a"), vaga("b")],
+      nextCursor: "pagina-2",
+    });
+    expect(primeira).toEqual({ chave: "enois", jobs: [vaga("a"), vaga("b")], cursor: null });
+
+    const segunda = converterPaginacao(primeira, "enois", "pagina-2", {
+      items: [vaga("c"), vaga("b")],
+      nextCursor: null,
+    });
+    // A vaga que já estava na lista (b) não entra duas vezes.
+    expect(segunda.jobs.map((job) => job.id)).toEqual(["a", "b", "c"]);
+    // De novo com a mesma página (cache): a mesma lista, sem render extra.
+    expect(
+      converterPaginacao(segunda, "enois", "pagina-2", {
+        items: [vaga("c")],
+        nextCursor: null,
+      }),
+    ).toBe(segunda);
+    // Filtro diferente: a lista recomeça na primeira página dele.
+    expect(
+      converterPaginacao(segunda, "outro", null, { items: [vaga("z")], nextCursor: null }),
+    ).toEqual({
+      chave: "outro",
+      jobs: [vaga("z")],
+      cursor: null,
+    });
   });
 
   it("na aba do Énóis continua mandando os filtros da busca interna", async () => {

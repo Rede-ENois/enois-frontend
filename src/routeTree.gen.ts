@@ -28,11 +28,13 @@ import { Route as DesabafosRouteImport } from './routes/desabafos'
 import { Route as DesafiosRouteImport } from './routes/desafios'
 import { Route as DevelopersRouteImport } from './routes/developers'
 import { Route as DiretrizesRouteImport } from './routes/diretrizes'
+import { Route as DocumentosRouteImport } from './routes/documentos'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as FigurinhasRouteImport } from './routes/figurinhas'
 import { Route as FreelancesRouteImport } from './routes/freelances'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as GruposRouteImport } from './routes/grupos'
@@ -67,6 +69,8 @@ import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as TermometroRouteImport } from './routes/termometro'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VagasRouteImport } from './routes/vagas'
+import { Route as WrappedRouteImport } from './routes/wrapped'
+import { Route as AdminDocumentosRouteImport } from './routes/admin.documentos'
 import { Route as AgendaEntryIdRouteImport } from './routes/agenda.$entryId'
 import { Route as AgendaAssinaturaRouteImport } from './routes/agenda_.assinatura'
 import { Route as AgendaDisponibilidadeRouteImport } from './routes/agenda_.disponibilidade'
@@ -201,6 +205,11 @@ const DiretrizesRoute = DiretrizesRouteImport.update({
   path: '/diretrizes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocumentosRoute = DocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmpresasRoute = EmpresasRouteImport.update({
   id: '/empresas',
   path: '/empresas',
@@ -224,6 +233,11 @@ const ExplorarRoute = ExplorarRouteImport.update({
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FigurinhasRoute = FigurinhasRouteImport.update({
+  id: '/figurinhas',
+  path: '/figurinhas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FreelancesRoute = FreelancesRouteImport.update({
@@ -394,6 +408,16 @@ const TermosRoute = TermosRouteImport.update({
 const VagasRoute = VagasRouteImport.update({
   id: '/vagas',
   path: '/vagas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WrappedRoute = WrappedRouteImport.update({
+  id: '/wrapped',
+  path: '/wrapped',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDocumentosRoute = AdminDocumentosRouteImport.update({
+  id: '/admin/documentos',
+  path: '/admin/documentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgendaEntryIdRoute = AgendaEntryIdRouteImport.update({
@@ -611,11 +635,13 @@ export interface FileRoutesByFullPath {
   '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/documentos': typeof DocumentosRoute
   '/empresas': typeof EmpresasRoute
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
   '/explorar': typeof ExplorarRoute
   '/feed': typeof FeedRoute
+  '/figurinhas': typeof FigurinhasRoute
   '/freelances': typeof FreelancesRoute
   '/games': typeof GamesRouteWithChildren
   '/grupos': typeof GruposRouteWithChildren
@@ -650,6 +676,8 @@ export interface FileRoutesByFullPath {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/wrapped': typeof WrappedRoute
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda/assinatura': typeof AgendaAssinaturaRoute
   '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
@@ -709,11 +737,13 @@ export interface FileRoutesByTo {
   '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/documentos': typeof DocumentosRoute
   '/empresas': typeof EmpresasRoute
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
   '/explorar': typeof ExplorarRoute
   '/feed': typeof FeedRoute
+  '/figurinhas': typeof FigurinhasRoute
   '/freelances': typeof FreelancesRoute
   '/games': typeof GamesRouteWithChildren
   '/grupos': typeof GruposRouteWithChildren
@@ -748,6 +778,8 @@ export interface FileRoutesByTo {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/wrapped': typeof WrappedRoute
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda/assinatura': typeof AgendaAssinaturaRoute
   '/agenda/disponibilidade': typeof AgendaDisponibilidadeRoute
@@ -808,11 +840,13 @@ export interface FileRoutesById {
   '/desafios': typeof DesafiosRoute
   '/developers': typeof DevelopersRoute
   '/diretrizes': typeof DiretrizesRoute
+  '/documentos': typeof DocumentosRoute
   '/empresas': typeof EmpresasRoute
   '/entrar': typeof EntrarRoute
   '/eventos': typeof EventosRoute
   '/explorar': typeof ExplorarRoute
   '/feed': typeof FeedRoute
+  '/figurinhas': typeof FigurinhasRoute
   '/freelances': typeof FreelancesRoute
   '/games': typeof GamesRouteWithChildren
   '/grupos': typeof GruposRouteWithChildren
@@ -847,6 +881,8 @@ export interface FileRoutesById {
   '/termometro': typeof TermometroRoute
   '/termos': typeof TermosRoute
   '/vagas': typeof VagasRouteWithChildren
+  '/wrapped': typeof WrappedRoute
+  '/admin/documentos': typeof AdminDocumentosRoute
   '/agenda/$entryId': typeof AgendaEntryIdRoute
   '/agenda_/assinatura': typeof AgendaAssinaturaRoute
   '/agenda_/disponibilidade': typeof AgendaDisponibilidadeRoute
@@ -908,11 +944,13 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/developers'
     | '/diretrizes'
+    | '/documentos'
     | '/empresas'
     | '/entrar'
     | '/eventos'
     | '/explorar'
     | '/feed'
+    | '/figurinhas'
     | '/freelances'
     | '/games'
     | '/grupos'
@@ -947,6 +985,8 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/wrapped'
+    | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda/assinatura'
     | '/agenda/disponibilidade'
@@ -1006,11 +1046,13 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/developers'
     | '/diretrizes'
+    | '/documentos'
     | '/empresas'
     | '/entrar'
     | '/eventos'
     | '/explorar'
     | '/feed'
+    | '/figurinhas'
     | '/freelances'
     | '/games'
     | '/grupos'
@@ -1045,6 +1087,8 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/wrapped'
+    | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda/assinatura'
     | '/agenda/disponibilidade'
@@ -1104,11 +1148,13 @@ export interface FileRouteTypes {
     | '/desafios'
     | '/developers'
     | '/diretrizes'
+    | '/documentos'
     | '/empresas'
     | '/entrar'
     | '/eventos'
     | '/explorar'
     | '/feed'
+    | '/figurinhas'
     | '/freelances'
     | '/games'
     | '/grupos'
@@ -1143,6 +1189,8 @@ export interface FileRouteTypes {
     | '/termometro'
     | '/termos'
     | '/vagas'
+    | '/wrapped'
+    | '/admin/documentos'
     | '/agenda/$entryId'
     | '/agenda_/assinatura'
     | '/agenda_/disponibilidade'
@@ -1203,11 +1251,13 @@ export interface RootRouteChildren {
   DesafiosRoute: typeof DesafiosRoute
   DevelopersRoute: typeof DevelopersRoute
   DiretrizesRoute: typeof DiretrizesRoute
+  DocumentosRoute: typeof DocumentosRoute
   EmpresasRoute: typeof EmpresasRoute
   EntrarRoute: typeof EntrarRoute
   EventosRoute: typeof EventosRoute
   ExplorarRoute: typeof ExplorarRoute
   FeedRoute: typeof FeedRoute
+  FigurinhasRoute: typeof FigurinhasRoute
   FreelancesRoute: typeof FreelancesRoute
   GamesRoute: typeof GamesRouteWithChildren
   GruposRoute: typeof GruposRouteWithChildren
@@ -1242,6 +1292,8 @@ export interface RootRouteChildren {
   TermometroRoute: typeof TermometroRoute
   TermosRoute: typeof TermosRoute
   VagasRoute: typeof VagasRouteWithChildren
+  WrappedRoute: typeof WrappedRoute
+  AdminDocumentosRoute: typeof AdminDocumentosRoute
   AgendaAssinaturaRoute: typeof AgendaAssinaturaRoute
   AgendaDisponibilidadeRoute: typeof AgendaDisponibilidadeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -1400,6 +1452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiretrizesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/documentos': {
+      id: '/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof DocumentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/empresas': {
       id: '/empresas'
       path: '/empresas'
@@ -1433,6 +1492,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/figurinhas': {
+      id: '/figurinhas'
+      path: '/figurinhas'
+      fullPath: '/figurinhas'
+      preLoaderRoute: typeof FigurinhasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/freelances': {
@@ -1671,6 +1737,20 @@ declare module '@tanstack/react-router' {
       path: '/vagas'
       fullPath: '/vagas'
       preLoaderRoute: typeof VagasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wrapped': {
+      id: '/wrapped'
+      path: '/wrapped'
+      fullPath: '/wrapped'
+      preLoaderRoute: typeof WrappedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/documentos': {
+      id: '/admin/documentos'
+      path: '/admin/documentos'
+      fullPath: '/admin/documentos'
+      preLoaderRoute: typeof AdminDocumentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/agenda/$entryId': {
@@ -2140,11 +2220,13 @@ const rootRouteChildren: RootRouteChildren = {
   DesafiosRoute: DesafiosRoute,
   DevelopersRoute: DevelopersRoute,
   DiretrizesRoute: DiretrizesRoute,
+  DocumentosRoute: DocumentosRoute,
   EmpresasRoute: EmpresasRoute,
   EntrarRoute: EntrarRoute,
   EventosRoute: EventosRoute,
   ExplorarRoute: ExplorarRoute,
   FeedRoute: FeedRoute,
+  FigurinhasRoute: FigurinhasRoute,
   FreelancesRoute: FreelancesRoute,
   GamesRoute: GamesRouteWithChildren,
   GruposRoute: GruposRouteWithChildren,
@@ -2179,6 +2261,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermometroRoute: TermometroRoute,
   TermosRoute: TermosRoute,
   VagasRoute: VagasRouteWithChildren,
+  WrappedRoute: WrappedRoute,
+  AdminDocumentosRoute: AdminDocumentosRoute,
   AgendaAssinaturaRoute: AgendaAssinaturaRoute,
   AgendaDisponibilidadeRoute: AgendaDisponibilidadeRoute,
   AuthCallbackRoute: AuthCallbackRoute,

@@ -1,4 +1,4 @@
-import { REACTION_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_EMOJIS, REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 
 import { dataCurta, dataDeEvento } from "@/lib/date/format";
 import { formatFaisca } from "@/lib/faisca";
@@ -34,7 +34,7 @@ export const texts = {
     searchPlaceholder: "Buscar figurinha",
     tabRecent: "Recentes",
     tabEnois: "É Nóis",
-    tabAll: "Todas",
+    tabThirdParty: "De terceiros",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
@@ -43,6 +43,88 @@ export const texts = {
     page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
     previous: "Página anterior",
     next: "Próxima página",
+  },
+
+  /** Autocomplete do `:` no campo de escrita e a página do catálogo da comunidade. */
+  figurinhas: {
+    composer: {
+      loading: "Procurando figurinhas...",
+      suggestions: "Figurinhas com esse nome",
+    },
+    origem: {
+      ENOIS: "É Nóis",
+      BTTV: "BetterTTV",
+      FFZ: "FrankerFaceZ",
+      COMUNIDADE: "Comunidade",
+    },
+    pagina: {
+      seoTitle: "Figurinhas da comunidade · Énóis",
+      seoDescription:
+        "As figurinhas feitas pela comunidade do Énóis: procure pelo nome ou pelo código e use no texto como :codigo:.",
+      title: "Figurinhas da comunidade",
+      intro:
+        "Figurinhas enviadas por quem usa o Énóis. Elas entram no texto como :codigo:, do jeito que quem lê alguém fala delas nos chats.",
+      searchPlaceholder: "Buscar por nome, código ou id",
+      loading: "Carregando figurinhas...",
+      empty: "Nenhuma figurinha com essa busca.",
+      error: "Não foi possível carregar as figurinhas agora.",
+      count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
+      page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
+      previous: "Página anterior",
+      next: "Próxima página",
+      usar: (codigo: string) => `Usar ${codigo}`,
+      denunciar: (codigo: string) => `Denunciar ${codigo}`,
+      remover: (codigo: string) => `Remover ${codigo}`,
+      removida: "Figurinha tirada do catálogo.",
+      removidaErro: "Não foi possível remover a figurinha.",
+      denunciaEnviada: "Denúncia registrada. A moderação vai olhar.",
+      denunciaErro: "Não foi possível registrar a denúncia.",
+      copiado: "Código copiado. É só colar no texto.",
+      copiarErro: "Não foi possível copiar o código.",
+      autorDesconhecido: "Quem enviou saiu do Énóis",
+      loginParaUsar: "Para usar a figurinha no texto, entre na sua conta.",
+      reportTitle: "Denunciar figurinha",
+      reportHint:
+        "A denúncia vai para a moderação. A figurinha só sai do catálogo se uma pessoa do time decidir.",
+      filtrarMinhas: "Só as minhas",
+      minhas: (total: number) => `${total} ${total === 1 ? "sua figurinha" : "suas figurinhas"}`,
+      buscarMeuId: "Carregando suas figurinhas...",
+      buscarMeuIdErro: "Não foi possível separar as suas figurinhas.",
+    },
+    envio: {
+      titulo: "Enviar uma figurinha",
+      intro:
+        "PNG, JPG, GIF ou SVG, até 400×400 pixels e 512 KB. A imagem é conferida pelo servidor antes de entrar no catálogo, e o código fica reservado para ela.",
+      arquivo: "Imagem",
+      arquivoAjuda: (kb: number) => `Escolha um PNG, JPG, GIF ou SVG de até 400×400 e ${kb} KB.`,
+      reputacaoTitulo: "Para enviar figurinhas",
+      reputacaoIdentidade:
+        "Verifique sua identidade para liberar o envio de figurinhas. A verificação é o que conta a sua reputação.",
+      reputacaoBaixa: (atual: number, minima: number) =>
+        `Enviar figurinha pede pelo menos ${minima} de reputação. Você tem ${atual}.`,
+      reputacaoAjuda: "A reputação cresce com a sua participação na rede.",
+      codigo: "Código",
+      codigoAjuda: "É o que a pessoa digita entre dois-pontos. Letras minúsculas, números, _ e -.",
+      codigoExemplo: "Exemplo: :gatinho_triste:",
+      codigoReservado: "Os prefixos enois_, bttv_ e ffz_ são das figurinhas oficiais.",
+      nome: "Nome",
+      nomeAjuda: "Como a figurinha aparece na busca (até 60 caracteres).",
+      enviar: "Enviar figurinha",
+      enviando: "Enviando...",
+      publicado: "Figurinha enviada! Ela já está no catálogo.",
+      falhou: "Não foi possível enviar a figurinha.",
+      arquivoGrande: "A imagem passa de 512 KB.",
+      formato: "A imagem precisa ser PNG, JPG, GIF ou SVG.",
+      semPermissao: "Sua conta ainda não pode enviar figurinhas.",
+      dimensoes: "A imagem precisa ter até 400×400 pixels.",
+      codigoInvalido: "Escolha um código com 2 a 32 letras minúsculas, números, _ ou -.",
+      codigoReservadoErro: "Esse prefixo é das figurinhas oficiais. Escolha outro código.",
+      codigoEmUso: "Esse código já é de outra figurinha.",
+      login: "Entre na sua conta para enviar figurinhas.",
+      entrar: "Entrar",
+      dica: "Imagens do cotidiano do É Nóis funcionam melhor: reações, piadas internas, referências dos murais. Não envie conteúdo sexual, de ódio ou de outra pessoa sem permissão — as figurinhas seguem as Diretrizes.",
+      diretrizes: "Ler as Diretrizes",
+    },
   },
 
   coinEconomy: {
@@ -1756,7 +1838,7 @@ export const texts = {
       rateLimitError: "Muitas ações em pouco tempo. Aguarde um minuto e tente de novo.",
       /** Sem resposta do servidor (rede, bloqueio do proxy): não é recusa da reação. */
       networkError: "Sem conexão com o servidor. Tente de novo em instantes.",
-      emojis: REACTION_EMOJIS,
+      emojis: REACTION_PICKER_EMOJIS,
     },
     report: {
       title: "Denunciar post",
@@ -2540,6 +2622,7 @@ export const texts = {
 
   jobs: {
     visit: "Visitar vaga",
+    loadingMore: "Carregando mais vagas…",
     applyByEmail: {
       resumeHint: "Currículo baixado: anexe no e-mail que acabou de abrir.",
       noProfile: "Entre na sua conta para usar o envio por e-mail.",
@@ -4253,6 +4336,66 @@ export const texts = {
     empty: "Nenhum post salvo ainda. Salve posts para encontrá-los facilmente depois.",
   },
 
+  documentos: {
+    seoTitle: "Meus documentos · Énóis",
+    seoDescription:
+      "As Diretrizes e os Termos de Uso que estão em vigor, o que você já aceitou e o histórico de versões.",
+    title: "Meus documentos",
+    intro:
+      "Aqui ficam os documentos que valem agora no Énóis, o que você já aceitou e as versões anteriores. Cada versão é guardada inteira: o aceite vale para o texto exato que você leu.",
+    loading: "Carregando os documentos...",
+    error: "Não foi possível carregar os documentos agora.",
+    pendenciaTitulo: "O que falta aceitar",
+    pendenciaIntro:
+      "Estes textos pedem o seu aceite. Abra o documento, leia e aceite quando concordar — o aceite não é marcado sozinho.",
+    pendenciaIr: "Entre na sua conta para aceitar os documentos que pedem aceite.",
+    aceitar: "Li e aceito esta versão",
+    aceitando: "Registrando o aceite...",
+    aceiteAviso:
+      "O aceite registra a versão, o texto exato (pela impressão digital dele) e a data.",
+    aceiteFeito: "Você aceitou todas as versões em vigor.",
+    aceito: (data: string) => `Aceito em ${data}.`,
+    aceiteErro: "Não foi possível registrar o aceite. Se o texto mudou, recarregue a página.",
+    aceiteDeVersaoAntiga: "Esta versão não está em vigor: o aceite vale só para o texto atual.",
+    historico: "Versões anteriores",
+    versao: (versao: number) => `versão ${versao}`,
+    vigente: "Versão em vigor.",
+    naoVigente: "Esta versão ainda não está em vigor — dá para ler, mas não dá para aceitar.",
+    anterior: "Ler a versão anterior",
+    rotulo: {
+      DIRETRIZES: "Diretrizes da Comunidade",
+      TERMOS_DE_USO: "Termos de Uso",
+    },
+    admin: {
+      seoTitle: "Documentos legais · Admin",
+      title: "Documentos legais",
+      intro:
+        "Criar o rascunho de uma versão nova não muda o que está em vigor. Só a publicação explícita põe o texto no ar e passa a pedir o aceite de quem ainda não aceitou aquela versão.",
+      tipo: "Documento",
+      tituloCampo: "Título da versão",
+      resumo: "Resumo (o que muda nesta versão)",
+      conteudo: "Texto completo",
+      conteudoAjuda:
+        "Texto leve: parágrafos são linhas em branco, listas começam com “- ”. O texto entra exatamente como está aqui.",
+      enviar: "Criar rascunho",
+      enviando: "Criando rascunho...",
+      erro: "Não foi possível criar o rascunho.",
+      criarFeito: (versao: number) =>
+        `Rascunho da versão ${versao} criado. Nada mudou para quem usa o Énóis.`,
+      publicar: "Publicar esta versão",
+      publicarAviso:
+        "Publicar põe o texto em vigor agora e passa a pedir o aceite de quem não aceitou esta versão. Confira o texto antes: o que foi publicado não é editado.",
+      confirmacaoTitulo: "Confirmar a publicação",
+      publicando: "Publicando...",
+      publicados: "Versões no ar",
+      confirmar: "Confirmar publicação",
+      cancelar: "Cancelar",
+      publicado: "Versão publicada e em vigor.",
+      publicadoErro: "Não foi possível publicar a versão.",
+      vazio: "Nenhum documento publicado ainda.",
+    },
+  },
+
   legal: {
     footer: {
       guidelines: "Diretrizes da Comunidade",
@@ -4756,6 +4899,15 @@ export const texts = {
       "Fichas publicadas pelas mesas da rede. O que aparece aqui é o que o dono do personagem abriu.",
     libraryEmpty: "Nenhuma ficha publicada ainda.",
     librarySearchPlaceholder: "Buscar por personagem ou sistema...",
+  },
+
+  /** A rota do Énóis Wrapped: só o que a rota orquestra; desenho e texto da experiência vêm do DS. */
+  wrapped: {
+    seoTitle: "Seu Énóis Wrapped · Énóis",
+    title: "Seu Énóis Wrapped",
+    subtitle: "A sua retrospectiva do ano no Énóis.",
+    shareTitle: "Meu Énóis Wrapped",
+    shareCopied: "Card copiado. Cole onde quiser.",
   },
 
   pwa: {

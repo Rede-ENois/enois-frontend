@@ -40,7 +40,7 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(1);
   const [recentes, setRecentes] = useState<RecentEmote[]>([]);
-  const [aba, setAba] = useState<EmotePickerTab>("all");
+  const [aba, setAba] = useState<EmotePickerTab>("third");
   const [aberto, setAberto] = useState(false);
   // Liga o botão ao seletor: são irmãos, e o botão nasce onde o campo de escrita o põe.
   const id = useId();
@@ -80,10 +80,10 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
     }
     const salvos = loadRecentEmotes();
     setRecentes(salvos);
-    setAba(salvos.length > 0 ? "recent" : "all");
+    setAba(salvos.length > 0 ? "recent" : "third");
   }, [aberto]);
 
-  // Buscar em Recentes cai no catálogo; em É Nóis a busca é local, na lista do pacote.
+  // Buscar em Recentes cai em De terceiros; em É Nóis a busca é local, na lista do pacote.
   const mostrandoRecentes = aba === "recent" && !busca.trim() && recentesVisiveis.length > 0;
   const mostrandoEnois = aba === "enois";
   const enoisFiltrados = mostrandoEnois
@@ -106,7 +106,7 @@ export function EmotePickerDialog({ onOpenChange, onSelect }: EmotePickerDialogP
       ? [{ value: "recent", label: texts.emotes.tabRecent }]
       : []),
     { value: "enois", label: texts.emotes.tabEnois },
-    { value: "all", label: texts.emotes.tabAll },
+    { value: "third", label: texts.emotes.tabThirdParty },
   ];
 
   // `src` é o que a grade desenha: a miniatura do proxy (`/api/emotes/...`), como sempre. O

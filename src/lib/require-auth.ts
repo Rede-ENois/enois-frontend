@@ -33,9 +33,13 @@ const PROTECTED_ROUTES = [
   "/conta",
   "/notificacoes",
   "/explorar",
+  "/wrapped",
   // A Colagem pede sessão na leitura (espaço de convivência): deep link também cai no login.
   "/colagem",
   "/par-de-estudo",
+  // O catálogo de figurinhas da comunidade é para quem entrou: `GET /figurinhas` responde 401 sem
+  // sessão, então a visita vai para o login em vez de ver um erro de carregamento.
+  "/figurinhas",
   // A agenda é do dono: a API exige sessão e responde 401 sem ela, então o deep link também.
   "/agenda",
   // A lista de campanhas é pública; a campanha em si mostra o recorte do participante e as

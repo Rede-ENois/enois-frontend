@@ -187,7 +187,10 @@ describe("Seletor de figurinhas", () => {
     );
 
     expect(rotulos).toContain("É Nóis");
-    expect(rotulos).toContain("Todas");
+    // A aba do catálogo externo é "De terceiros" (BTTV + FFZ), não "Todas": o É Nóis e a
+    // comunidade não estão nela.
+    expect(rotulos).toContain("De terceiros");
+    expect(rotulos).not.toContain("Todas");
     expect(rotulos).not.toContain("Populares");
     expect(rotulos).not.toContain("BTTV");
     expect(rotulos).not.toContain("FFZ");

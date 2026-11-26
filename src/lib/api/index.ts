@@ -23,6 +23,7 @@ export { desafiosApi } from "./desafios";
 export { termometroApi } from "./termometro";
 export { papoRetoApi } from "./papo-reto";
 export { muraisApi } from "./murais";
+export { wrappedApi } from "./wrapped";
 export { colecoesApi } from "./colecoes";
 export { jobsApi } from "./jobs";
 export { recruitmentApi } from "./recruitment";

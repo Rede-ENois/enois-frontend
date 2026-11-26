@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { PostActionsProps } from "@/types/components/post/post-actions-props";
@@ -176,7 +176,7 @@ export function PostActions({ post, onComments, shareUrl, children }: PostAction
 
   return (
     <PostActionsView
-      emojis={REACTION_FIGURE_EMOJIS}
+      emojis={REACTION_PICKER_EMOJIS}
       reactionStatus={post.currentUserReaction ?? null}
       onReact={toggleReaction}
       // Enquanto há reação em andamento, o estado otimista manda — a prop do feed não sobrescreve.

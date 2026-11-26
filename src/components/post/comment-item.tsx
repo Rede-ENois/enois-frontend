@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { COMMENT_MAX_LENGTH } from "@/constants/post-content-limits";
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import { texts } from "@/texts";
 import type { ReactionSummary } from "@/types/application/reaction/reaction-summary";
@@ -188,7 +188,7 @@ export function CommentItem({
       acceptPending={acceptance?.pending}
       onAccept={acceptance?.onAccept}
       onUnaccept={acceptance?.onUnaccept}
-      emojis={REACTION_FIGURE_EMOJIS}
+      emojis={REACTION_PICKER_EMOJIS}
       reaction={commentReaction}
       onReact={handleCommentReaction}
       // Sem resumo do servidor (resposta antiga), fica só o total, sem pílulas.

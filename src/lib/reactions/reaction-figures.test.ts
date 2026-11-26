@@ -32,6 +32,11 @@ describe("figura de cada reação no styles.css", () => {
     }
   });
 
+  it("o coração roxo tem a regra dele, apontando para o próprio arquivo", () => {
+    // O tipo entra pela fileira (segundo, ao lado do joinha), e a pílula dele desenha o coração.
+    expect(regraDoCss("HEART_PURPLE")).toBe("/emojis/enois/heart_purple.svg");
+  });
+
   it("nenhuma duas reações dividem a mesma figura", () => {
     const figuras = REACTION_TYPES.map((type) => regraDoCss(type));
     expect(new Set(figuras).size).toBe(figuras.length);

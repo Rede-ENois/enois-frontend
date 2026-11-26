@@ -1,10 +1,17 @@
+import { PURPLE_HEART_REACTION } from "@/types/application/reaction/any-reaction-type";
 import { REACTION_TYPES } from "@/types/application/reaction/reaction-type";
 import { describe, expect, it } from "vitest";
 
 import { ENOIS_CUSTOM_EMOJIS } from "@/lib/emotes/enois-pack";
 import { resolveReactionTypeFromGlyph } from "@/lib/reactions/use-enois-reaction-glyphs";
 
-import { REACTION_EMOJIS, REACTION_EMOJI_ASSETS, REACTION_FIGURE_EMOJIS } from "./reaction-emojis";
+import {
+  REACTION_EMOJIS,
+  REACTION_EMOJI_ASSETS,
+  REACTION_FIGURE_EMOJIS,
+  REACTION_PICKER_EMOJIS,
+  REACTION_PICKER_ORDER,
+} from "./reaction-emojis";
 
 describe("REACTION_EMOJI_ASSETS", () => {
   it("cobre todas as reações oficiais com figurinha única e sem repetições", () => {
@@ -14,13 +21,16 @@ describe("REACTION_EMOJI_ASSETS", () => {
     expect(new Set(assets).size).toBe(assets.length);
   });
 
-  it("é a reação de cada uma das 76 expressões do pacote, na mesma ordem", () => {
+  it("é a reação de cada uma das 77 expressões do pacote, na mesma ordem", () => {
     // Reação e figurinha são a mesma lista: trocar a ordem de um lado sem o outro faria a pílula
     // de uma reação mostrar o ícone de outra.
     expect(REACTION_TYPES).toHaveLength(76);
-    expect(ENOIS_CUSTOM_EMOJIS).toHaveLength(76);
+    expect(ENOIS_CUSTOM_EMOJIS).toHaveLength(77);
+    // A fileira do seletor é das reações; o coração roxo é figura A MAIS no pacote (fora da lista).
     expect(Object.values(REACTION_EMOJI_ASSETS)).toEqual(
-      ENOIS_CUSTOM_EMOJIS.map((item) => item.src),
+      ENOIS_CUSTOM_EMOJIS.filter((item) => item.code !== "enois_heart_purple").map(
+        (item) => item.src,
+      ),
     );
   });
 
@@ -80,5 +90,55 @@ describe("REACTION_FIGURE_EMOJIS", () => {
     expect(REACTION_FIGURE_EMOJIS.WOW).toBe("😤");
     expect(REACTION_FIGURE_EMOJIS.SAD).toBe("😎");
     expect(REACTION_FIGURE_EMOJIS.ROFL).not.toBe(REACTION_EMOJIS.ROFL);
+  });
+});
+
+describe("REACTION_PICKER_ORDER", () => {
+  it("abre com o joinha e o coração roxo logo em seguida", () => {
+    // O pedido é o coração do lado do joinha: ele é a segunda figura da fileira.
+    expect(REACTION_PICKER_ORDER.slice(0, 2)).toEqual(["LIKE", "HEART_PURPLE"]);
+  });
+
+  it("depois do coração vêm todas as reações, sem repetir nenhuma", () => {
+    const restantes = REACTION_PICKER_ORDER.slice(2);
+    expect(restantes).toEqual(REACTION_TYPES.filter((type) => type !== "LIKE"));
+    expect(new Set(REACTION_PICKER_ORDER).size).toBe(REACTION_PICKER_ORDER.length);
+  });
+
+  it("o coração roxo é do pacote, não das 76 expressões que casam reação e figurinha", () => {
+    // A API aceita `HEART_PURPLE` (o backend grava o nome), mas ele não entra na lista em que a
+    // reação i é a figurinha i: a fileira ganha o coração pela ordem do seletor.
+    expect(PURPLE_HEART_REACTION).toBe("HEART_PURPLE");
+    expect(REACTION_TYPES).not.toContain("HEART_PURPLE");
+    expect(Object.keys(REACTION_EMOJI_ASSETS)).not.toContain("HEART_PURPLE");
+  });
+});
+
+describe("REACTION_PICKER_EMOJIS", () => {
+  it("mantém a ordem da fileira e desenha o coração roxo em segundo", () => {
+    // É o mapa que o seletor e o resumo recebem: as mesmas chaves, na mesma ordem, e o coração roxo
+    // pelo arquivo do pacote — o resto pela figura do próprio tipo.
+    expect(Object.keys(REACTION_PICKER_EMOJIS)).toEqual([...REACTION_PICKER_ORDER]);
+    expect(REACTION_PICKER_EMOJIS.HEART_PURPLE).toBe("/emojis/enois/heart_purple.svg");
+    for (const type of REACTION_TYPES) {
+      expect(REACTION_PICKER_EMOJIS[type], type).toBe(REACTION_FIGURE_EMOJIS[type]);
+    }
+  });
+
+  it("a figura do coração roxo não é o rosto de outra reação", () => {
+    // O leitor de glifo pinta o ícone do tipo que casa com o emoji desenhado; 💜 é de outro arquivo
+    // do pacote e não pode cair na figura de nenhuma expressão.
+    expect(Object.values(REACTION_FIGURE_EMOJIS)).not.toContain(
+      REACTION_PICKER_EMOJIS.HEART_PURPLE,
+    );
+  });
+});
+
+describe("coração roxo no pacote É Nóis", () => {
+  it("está no pacote com o arquivo servido pelo próprio front", () => {
+    const coracao = ENOIS_CUSTOM_EMOJIS.find((item) => item.code === "enois_heart_purple");
+    expect(coracao).toBeDefined();
+    expect(coracao?.src).toBe("/emojis/enois/heart_purple.svg");
+    expect(coracao?.unicode).toBe("💜");
   });
 });

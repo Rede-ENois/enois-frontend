@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import { texts } from "@/texts";
 import type { ColagemCommentView as ColagemCommentApi } from "@/types/application/colagem/colagem-comment-view";
 import type { ColagemPostView } from "@/types/application/colagem/colagem-post-view";
@@ -289,7 +289,7 @@ function ColagemDetalhe({
             ? ({ kind: "error" } as const)
             : ({ kind: "ready" } as const)
       }
-      emojis={REACTION_FIGURE_EMOJIS}
+      emojis={REACTION_PICKER_EMOJIS}
       reactionPending={reagir.isPending}
       onToggleReaction={(tipo) => reagir.mutate(tipo)}
       // Rejeita quando a contribuição recusa: o DS mantém o rascunho na linha.

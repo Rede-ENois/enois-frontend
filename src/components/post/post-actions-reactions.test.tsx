@@ -11,7 +11,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import type { PostView } from "@/types/application/feed/post-view";
 import type { ReactionType } from "@/types/application/reaction/reaction-type";
 import { ToastProvider } from "@rede-enois/design-system/ui";
@@ -97,11 +97,11 @@ describe("PostActions: reações reais da publicação", () => {
   };
 
   const reactionButton = () => host.querySelector('button[aria-label^="Ver quem reagiu ("]');
-  // O resumo desenha o emoji da FIGURA de cada tipo (`REACTION_FIGURE_EMOJIS`), não o emoji de
-  // apoio: FIRE desenha o termômetro, CLAP o pirata e LOVE o coração — os mesmos do seletor.
+  // O resumo desenha a figura do próprio tipo (`REACTION_PICKER_EMOJIS`), não o emoji de apoio:
+  // FIRE desenha o termômetro e CLAP o pirata.
   const reactionEmojis = () =>
     Array.from(reactionButton()?.querySelectorAll("span") ?? [], (item) => item.textContent);
-  const figura = (type: ReactionType) => REACTION_FIGURE_EMOJIS[type];
+  const figura = (type: ReactionType) => REACTION_PICKER_EMOJIS[type];
 
   it("mostra só fogo quando essa é a única reação que o post recebeu", async () => {
     await render(post);

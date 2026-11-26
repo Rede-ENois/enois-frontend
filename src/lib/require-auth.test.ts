@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { shouldLeaveLanding } from "./require-auth";
+import { isProtectedPath, shouldLeaveLanding } from "./require-auth";
 
 describe("shouldLeaveLanding", () => {
   it("manda quem tem sessão da landing para o feed", () => {
@@ -18,5 +18,15 @@ describe("shouldLeaveLanding", () => {
   it("não mexe em nenhuma outra rota", () => {
     expect(shouldLeaveLanding("/feed", true, false)).toBe(false);
     expect(shouldLeaveLanding("/perfil/enois", true, false)).toBe(false);
+  });
+});
+
+describe("isProtectedPath", () => {
+  it("leva o catálogo de figurinhas ao login, porque a API exige sessão para listar", () => {
+    expect(isProtectedPath("/figurinhas")).toBe(true);
+  });
+
+  it("não confunde o catálogo com outro caminho que começa igual", () => {
+    expect(isProtectedPath("/figurinhas-antigas")).toBe(false);
   });
 });

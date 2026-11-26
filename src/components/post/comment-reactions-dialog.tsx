@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import type { CommentReactionsDialogProps } from "@/types/components/post/comment-reactions-dialog-props";
 import { ReactionsDialog as ReactionsDialogView } from "@rede-enois/design-system/domain";
 
@@ -49,7 +49,7 @@ export function CommentReactionsDialog({
       summary={data?.summary ?? {}}
       users={users}
       currentUserId={user?.id ?? null}
-      emojis={REACTION_FIGURE_EMOJIS}
+      emojis={REACTION_PICKER_EMOJIS}
       profileHref={(username) => `/perfil/${username}`}
       isLoading={isLoading}
       isError={isError}

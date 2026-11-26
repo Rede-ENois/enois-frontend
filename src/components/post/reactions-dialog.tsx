@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 
-import { REACTION_FIGURE_EMOJIS } from "@/constants/reaction-emojis";
+import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 import { ReactionsDialog as ReactionsDialogView } from "@rede-enois/design-system/domain";
@@ -49,7 +49,7 @@ export function ReactionsDialog({ postId }: PostIdProps) {
       summary={data?.summary ?? {}}
       users={users}
       currentUserId={currentUserId}
-      emojis={REACTION_FIGURE_EMOJIS}
+      emojis={REACTION_PICKER_EMOJIS}
       profileHref={(username) => `/perfil/${username}`}
       isLoading={isLoading}
       isError={isError}
