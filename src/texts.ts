@@ -399,7 +399,7 @@ export const texts = {
     recruiterTitle: "Meu banco de talentos",
     recruiterSubtitle:
       "O banco que você publica: a finalidade, as condições de tratamento e as informações que pede. Quem se inscreve vê tudo isso antes de autorizar.",
-    recruiterModeOff: "Ative o modo recrutador no seu perfil para abrir o seu banco de talentos.",
+    recruiterModeOff: "Ative o modo recrutador para abrir o seu banco de talentos.",
     recruiterError: "Não foi possível carregar seu banco. Tente de novo.",
     recruiterNotFound: "Você ainda não criou o seu banco de talentos.",
     saveDone: "Banco atualizado.",
@@ -413,7 +413,6 @@ export const texts = {
     resumeError: "Não foi possível baixar o currículo. Tente de novo.",
     openShowcase: "Ver o Banco de Talentos",
     openPanel: "Abrir meu banco de talentos",
-    openProfile: "Ir para o meu perfil",
   },
 
   /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */
@@ -1897,6 +1896,14 @@ export const texts = {
       removed: "Currículo removido.",
       saved: "Currículo atualizado.",
       error: "Não foi possível salvar o currículo. Tente novamente.",
+    },
+    /** Modo recrutador: ligado na conta, abre a central de recrutamento e o banco de talentos. */
+    recruiterMode: {
+      label: "Sou recrutador",
+      hint: "Ligado, você ganha a central de recrutamento (vagas) e o seu banco de talentos.",
+      on: "Modo recrutador ligado.",
+      off: "Modo recrutador desligado.",
+      error: "Não foi possível salvar o modo recrutador. Tente de novo.",
     },
     /** Etiqueta ao lado do nome: "vulgo Java". */
     aka: (value: string) => `vulgo ${value}`,
