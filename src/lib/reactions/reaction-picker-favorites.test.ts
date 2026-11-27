@@ -37,6 +37,31 @@ function montarSeletor(
 }
 
 /** Quem está favorita na grade, na ordem do store (a mesma do `data-filled` no markup). */
+/** O compacto de verdade: a figura vem pelo CSS e o coração roxo chega como o caminho do arquivo. */
+function montarComoODesignSystem(): { popover: HTMLElement; grade: HTMLElement } {
+  const { popover, grade } = montarSeletor(false);
+  for (const botao of grade.querySelectorAll<HTMLButtonElement>("button[data-reaction-emoji]")) {
+    botao.removeAttribute("data-reaction-emoji");
+  }
+  grade.innerHTML = "";
+  const figuras: [string, string][] = [
+    ["LIKE", "👍"],
+    ["HEART_PURPLE", "/emojis/enois/heart_purple.svg"],
+    ["LOVE", "❤️"],
+    ["LAUGH", "😂"],
+    ["ROFL", "🤣"],
+    ["+", "+"],
+  ];
+  for (const [tipo, figura] of figuras) {
+    const botao = document.createElement("button");
+    if (tipo !== "+") botao.dataset.reactionEmoji = tipo;
+    else botao.title = "+";
+    botao.textContent = figura;
+    grade.append(botao);
+  }
+  return { popover, grade };
+}
+
 function marcadas(grade: HTMLElement): string[] {
   return [...grade.querySelectorAll<HTMLElement>('[data-filled="sim"]')].map(
     (el) => el.getAttribute("data-reaction-emoji") ?? "",
@@ -97,6 +122,31 @@ describe("attachReactionFavorites", () => {
     expect(popover.getAttribute("data-reaction-favoritas-fileira")).toBe("sim");
     expect(marcadas(grade)).toEqual([]);
     expect(grade.querySelector('button[title="+"]')).not.toBeNull();
+  });
+
+  it("no compacto do DS, dá nome às favoritas e põe a figura do coração roxo no lugar do caminho", () => {
+    useReacoesFavoritasStore.setState({ favoritas: ["LIKE", "HEART_PURPLE"], escolheu: true });
+    const { grade } = montarComoODesignSystem();
+    attachReactionFavorites(document);
+    const coracao = grade.querySelector<HTMLButtonElement>('[data-reaction-emoji="HEART_PURPLE"]');
+    expect(coracao?.textContent).toBe(" :enois_heart_purple: ");
+    const joinha = grade.querySelector<HTMLButtonElement>('[data-reaction-emoji="LIKE"]');
+    expect(joinha?.textContent).toBe("👍");
+    // O nome decorativo fica longo: se ele ainda fosse ao glypher, a pílula de quem reagiu perderia a figura.
+    expect(coracao?.textContent?.length ?? 0).toBeGreaterThan(16);
+    // Uma vez basta: a cada nó novo do React o hook roda de novo, e o texto não se multiplica.
+    attachReactionFavorites(document);
+    expect(coracao?.textContent).toBe(" :enois_heart_purple: ");
+    // Quem não está na fileira fica como o DS deixou.
+    expect(grade.querySelector('[data-reaction-emoji="LOVE"]')?.textContent).toBe("❤️");
+  });
+
+  it("no compacto do DS, o botão de figura que ficou sem texto ganha o emoji dela", () => {
+    const { grade } = montarComoODesignSystem();
+    const risos = grade.querySelector<HTMLButtonElement>('[data-reaction-emoji="LAUGH"]');
+    if (risos) risos.textContent = "";
+    attachReactionFavorites(document);
+    expect(risos?.textContent).toBe("😂");
   });
 
   it("no modal, monta a barra da fileira com estrela e setas", () => {
