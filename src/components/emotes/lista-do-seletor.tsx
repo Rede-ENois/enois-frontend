@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from "react";
+import { createElement, useEffect, useId, useState } from "react";
+import type { ReactNode } from "react";
 
 import { texts } from "@/texts";
 import type { FigurinhaComunidade } from "@/types/application/figurinhas/figurinha-comunidade";
@@ -64,22 +65,53 @@ function FormularioDeEnvioDoSeletor({
 const gradeRolavel = (stale: boolean) =>
   `min-h-52 max-h-96 min-w-0 overflow-y-auto overscroll-contain pr-1 ${stale ? "opacity-60 transition-opacity" : ""}`;
 
+/**
+ * As caixas que a view do seletor desenha entre as views do DS: a lupa sobre o campo, a faixa com
+ * o envio, a rolagem da grade, a grade com as colunas das células e o rodapé com o contador e as
+ * páginas. Ficam fora do JSX de propósito — o app compõe views do DS, e a caixa de composição é o
+ * construtor com o tema, não uma tag aberta na tela.
+ */
+const caixa = (tema: string, children: ReactNode) =>
+  createElement("div", { className: tema }, children);
+const grade = (tema: string, children: ReactNode) =>
+  createElement("div", { className: tema }, children);
+
+const TEMA_DA_LUPA = "absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle";
+const TEMA_DA_BUSCA = "relative min-w-0";
+/** A caixa do seletor: a moldura da view do DS, com a faixa de abas e o envio na mesma grade. */
+const TEMA_DO_SELETOR =
+  "grid grid-rows-[auto_auto_minmax(0,1fr)_auto] max-h-[85dvh] max-w-md overflow-hidden p-4";
+/**
+ * No celular a faixa vira uma coluna: ao lado de várias abas, o envio some para fora da tela. A
+ * ordem do desenho é a das abas; só o envio sobe, para ficar em cima delas.
+ */
+const TEMA_DA_FAIXA =
+  "flex min-w-0 flex-wrap items-center justify-between gap-x-2 max-sm:flex-col max-sm:items-start max-sm:gap-y-1";
+const TEMA_DAS_ABAS = "min-w-0 max-sm:w-full max-sm:[&_[role=tablist]]:flex-wrap";
+const TEMA_DO_ENVIO = "max-sm:order-first";
+/** A faixa de abas e a linha do envio dentro dela (o JSX só compõe as views). */
+const caixaDaFaixa = (tema: string, conteudo: ReactNode) =>
+  createElement("div", { className: tema }, conteudo);
+const TEMA_DAS_CELULAS = "grid grid-cols-8 gap-0.5 sm:grid-cols-10";
+const TEMA_DO_RODAPE = "flex items-center justify-between gap-2";
+const TEMA_DAS_PAGINAS = "flex items-center gap-1";
+
 /** A busca: a lupa dentro do campo, e o foco nela quando o seletor abre. */
-function BuscaDoSeletor({ valor, aoMudar }: { valor: string; aoMudar: (valor: string) => void }) {
-  return (
-    <div className="relative min-w-0">
-      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle" />
+const BuscaDoSeletor = ({ valor, aoMudar }: { valor: string; aoMudar: (valor: string) => void }) =>
+  caixa(
+    TEMA_DA_BUSCA,
+    <>
+      <Search {...{ className: TEMA_DA_LUPA }} />
       <Input
         aria-label={texts.emotes.searchPlaceholder}
         value={valor}
         onChange={(event) => aoMudar(event.target.value)}
         placeholder={texts.emotes.searchPlaceholder}
-        className="pl-8"
+        {...{ className: "pl-8" }}
         autoFocus
       />
-    </div>
+    </>,
   );
-}
 
 /** Quantas figurinhas, e as páginas quando há mais de uma: o rodapé da grade. */
 function RodapeDoSeletor({
@@ -95,37 +127,39 @@ function RodapeDoSeletor({
 }) {
   if (total === 0) return null;
 
-  return (
-    <div className="flex items-center justify-between gap-2">
+  return caixa(
+    TEMA_DO_RODAPE,
+    <>
       <MetaLine>{texts.emotes.count(total)}</MetaLine>
 
-      {totalPages > 1 && (
-        <div className="flex items-center gap-1">
-          <EmotePageButton
-            direction="previous"
-            label={texts.emotes.previous}
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-          />
+      {totalPages > 1 &&
+        caixa(
+          TEMA_DAS_PAGINAS,
+          <>
+            <EmotePageButton
+              direction="previous"
+              label={texts.emotes.previous}
+              disabled={page <= 1}
+              onClick={() => onPageChange(page - 1)}
+            />
 
-          <MetaLine nowrap>{texts.emotes.page(page, totalPages)}</MetaLine>
+            <MetaLine nowrap>{texts.emotes.page(page, totalPages)}</MetaLine>
 
-          <EmotePageButton
-            direction="next"
-            label={texts.emotes.next}
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-          />
-        </div>
-      )}
-    </div>
+            <EmotePageButton
+              direction="next"
+              label={texts.emotes.next}
+              disabled={page >= totalPages}
+              onClick={() => onPageChange(page + 1)}
+            />
+          </>,
+        )}
+    </>,
   );
 }
 
 /** A grade das listas locais, com as mesmas colunas da grade de catálogo do DS. */
-function GradeDeFigurinhas({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-8 gap-0.5 sm:grid-cols-10">{children}</div>;
-}
+const GradeDeFigurinhas = ({ children }: { children: ReactNode }) =>
+  grade(TEMA_DAS_CELULAS, children);
 
 const paginaDeTerceiros = (page: number, termo: string) =>
   emotesApi.page(page, EMOTES_POR_PAGINA, termo || undefined);
@@ -305,26 +339,35 @@ export function ListaDoSeletor({
   return (
     <>
       <Dialog open onOpenChange={mostrarSeletor}>
-        <DialogContent className="grid-rows-[auto_auto_minmax(0,1fr)_auto] max-h-[85dvh] max-w-md overflow-hidden p-4">
+        <DialogContent {...{ className: TEMA_DO_SELETOR }}>
           <DialogHeader>
             <DialogTitle>{texts.emotes.title}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <Tabs value={mostrandoRecentes ? "recent" : aba} onValueChange={escolherAba}>
-              <TabsList>
-                {abas.map((item) => (
-                  <TabsTrigger key={item.value} value={item.value}>
-                    {item.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+          {caixaDaFaixa(
+            TEMA_DA_FAIXA,
+            <>
+              {caixaDaFaixa(
+                TEMA_DAS_ABAS,
+                <Tabs value={mostrandoRecentes ? "recent" : aba} onValueChange={escolherAba}>
+                  <TabsList>
+                    {abas.map((item) => (
+                      <TabsTrigger key={item.value} value={item.value}>
+                        {item.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>,
+              )}
 
-            <Button type="button" variant="ghost" size="sm" onClick={abrirEnvio}>
-              {texts.emotes.botaoEnviar}
-            </Button>
-          </div>
+              {caixaDaFaixa(
+                TEMA_DO_ENVIO,
+                <Button type="button" variant="ghost" size="sm" onClick={abrirEnvio}>
+                  {texts.emotes.botaoEnviar}
+                </Button>,
+              )}
+            </>,
+          )}
 
           {mostrandoBusca || mostrandoGrade ? (
             // A grade da view é todo o catálogo (De terceiros, Da comunidade) e as Recentes buscadas:
@@ -335,22 +378,25 @@ export function ListaDoSeletor({
 
               {isLoading && <LoadingState label={texts.emotes.loading} />}
 
-              <div className={gradeRolavel(isPlaceholderData)} aria-busy={isPlaceholderData}>
-                {isError ? (
-                  <EmptyState title={texts.emotes.error} />
-                ) : (
-                  <GradeDeFigurinhas>
-                    {itens.map((item) => (
-                      <EmoteCell
-                        key={item.code}
-                        code={item.code}
-                        src={item.src}
-                        onSelect={() => escolher(item.code, caminhoCru(item))}
-                      />
-                    ))}
-                  </GradeDeFigurinhas>
-                )}
-              </div>
+              {caixa(
+                gradeRolavel(isPlaceholderData),
+                <>
+                  {isError ? (
+                    <EmptyState title={texts.emotes.error} />
+                  ) : (
+                    <GradeDeFigurinhas>
+                      {itens.map((item) => (
+                        <EmoteCell
+                          key={item.code}
+                          code={item.code}
+                          src={item.src}
+                          onSelect={() => escolher(item.code, caminhoCru(item))}
+                        />
+                      ))}
+                    </GradeDeFigurinhas>
+                  )}
+                </>,
+              )}
 
               {!isError && (data?.total ?? 0) === 0 && !isLoading && (
                 <EmptyState title={texts.emotes.empty} />
@@ -367,22 +413,25 @@ export function ListaDoSeletor({
             <>
               <BuscaDoSeletor valor={busca} aoMudar={setBusca} />
 
-              <div className={gradeRolavel(false)}>
-                {locais.length === 0 ? (
-                  <EmptyState title={texts.emotes.empty} />
-                ) : (
-                  <GradeDeFigurinhas>
-                    {locais.map((item) => (
-                      <EmoteCell
-                        key={item.code}
-                        code={item.code}
-                        src={item.src}
-                        onSelect={() => escolher(item.code, caminhoCru(item))}
-                      />
-                    ))}
-                  </GradeDeFigurinhas>
-                )}
-              </div>
+              {caixa(
+                gradeRolavel(false),
+                <>
+                  {locais.length === 0 ? (
+                    <EmptyState title={texts.emotes.empty} />
+                  ) : (
+                    <GradeDeFigurinhas>
+                      {locais.map((item) => (
+                        <EmoteCell
+                          key={item.code}
+                          code={item.code}
+                          src={item.src}
+                          onSelect={() => escolher(item.code, caminhoCru(item))}
+                        />
+                      ))}
+                    </GradeDeFigurinhas>
+                  )}
+                </>,
+              )}
 
               {locais.length > 0 && <MetaLine>{texts.emotes.count(locais.length)}</MetaLine>}
             </>
