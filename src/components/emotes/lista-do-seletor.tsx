@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { texts } from "@/texts";
 import type { FigurinhaComunidade } from "@/types/application/figurinhas/figurinha-comunidade";
@@ -6,22 +6,8 @@ import type { EmotePickerItem } from "@/types/components/emotes/emote-picker-ite
 import type { EmotePickerTab } from "@/types/components/emotes/emote-picker-tab";
 import type { ListaDoSeletorProps } from "@/types/components/emotes/lista-do-seletor-props";
 import type { RecentEmote } from "@/types/components/emotes/recent-emote";
-import { EmoteCell, EmotePageButton, EmotePickerIcon } from "@rede-enois/design-system/domain";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  EmptyState,
-  Input,
-  LoadingState,
-  MetaLine,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@rede-enois/design-system/ui";
-import { Search } from "lucide-react";
+import { EmotePickerDialogView, EmotePickerIcon } from "@rede-enois/design-system/domain";
+import { Button, Dialog, DialogContent, DialogTitle } from "@rede-enois/design-system/ui";
 
 import { resolveCdnUrl } from "@/lib/api/media";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -60,73 +46,6 @@ function FormularioDeEnvioDoSeletor({
   );
 }
 
-/** A rolagem da grade, com a página que está chegando ainda por baixo, apagada. */
-const gradeRolavel = (stale: boolean) =>
-  `min-h-52 max-h-96 min-w-0 overflow-y-auto overscroll-contain pr-1 ${stale ? "opacity-60 transition-opacity" : ""}`;
-
-/** A busca: a lupa dentro do campo, e o foco nela quando o seletor abre. */
-function BuscaDoSeletor({ valor, aoMudar }: { valor: string; aoMudar: (valor: string) => void }) {
-  return (
-    <div className="relative min-w-0">
-      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle" />
-      <Input
-        aria-label={texts.emotes.searchPlaceholder}
-        value={valor}
-        onChange={(event) => aoMudar(event.target.value)}
-        placeholder={texts.emotes.searchPlaceholder}
-        className="pl-8"
-        autoFocus
-      />
-    </div>
-  );
-}
-
-/** Quantas figurinhas, e as páginas quando há mais de uma: o rodapé da grade. */
-function RodapeDoSeletor({
-  total,
-  page,
-  totalPages,
-  onPageChange,
-}: {
-  total: number;
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}) {
-  if (total === 0) return null;
-
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <MetaLine>{texts.emotes.count(total)}</MetaLine>
-
-      {totalPages > 1 && (
-        <div className="flex items-center gap-1">
-          <EmotePageButton
-            direction="previous"
-            label={texts.emotes.previous}
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-          />
-
-          <MetaLine nowrap>{texts.emotes.page(page, totalPages)}</MetaLine>
-
-          <EmotePageButton
-            direction="next"
-            label={texts.emotes.next}
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** A grade das listas locais, com as mesmas colunas da grade de catálogo do DS. */
-function GradeDeFigurinhas({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-8 gap-0.5 sm:grid-cols-10">{children}</div>;
-}
-
 const paginaDeTerceiros = (page: number, termo: string) =>
   emotesApi.page(page, EMOTES_POR_PAGINA, termo || undefined);
 
@@ -154,14 +73,18 @@ const comDesenho = (itens: { code: string; src?: string }[]): EmotePickerItem[] 
   }));
 
 /**
- * A caixa aberta do seletor: busca, abas, a grade e o rodapé. Monta a cada abertura — fechar e
- * abrir de novo começa do começo, não no meio de uma busca antiga.
+ * Container do seletor de figurinhas: busca os dados, guarda o estado de abertura e desenha pela
+ * view do design system (`EmotePickerDialogView`).
  *
- * A caixa é desta tela, e a view do DS desenha a grade e o rodapé dentro dela (`open` sempre
- * verdadeiro): a view não tem lugar para uma ação que não é aba, e "Enviar figurinha" precisa
- * ficar ao lado das listas para ser achado. A faixa de abas daqui tem os mesmos valores e abas da
- * view, e as duas trocam a mesma aba. Recentes e É Nóis sem busca são listas do aparelho e do
- * pacote: usam as mesmas células do DS, com a mesma geometria da grade.
+ * A view é a do DS — a mesma que a barra de formatação usa —, com busca, abas, grade e páginas. O
+ * que mora aqui é só o que precisa de rede, sessão ou aparelho: as páginas do catálogo e da
+ * comunidade, as Recentes gravadas no aparelho, o pacote É Nóis e o formulário de envio. O
+ * "Enviar figurinha" fica no rodapé, ao lado da dica: a view não tem lugar para uma ação que não é
+ * aba.
+ *
+ * A caixa é montada a cada abertura — fechar e abrir de novo começa do começo, não no meio de uma
+ * busca antiga. Recentes aparecem por cima do catálogo quando há algo lá (issue #555): buscar ali
+ * cai na lista do backend.
  */
 export function ListaDoSeletor({
   onAbertoMudou,
@@ -176,14 +99,10 @@ export function ListaDoSeletor({
   const [termo, setTermo] = useState("");
   const [pagina, setPagina] = useState(1);
   const [recentes, setRecentes] = useState<RecentEmote[]>(() => loadRecentEmotes());
-  // Recentes aparecem por cima do catálogo quando há algo lá (issue #555): a aba de trás segue
-  // sendo a de catálogo, então buscar ali cai na lista do backend.
   const [aba, setAba] = useState<EmotePickerTab>(abaInicial);
   // Toda aba de catálogo abre nas Recentes (issue #555); buscar ou escolher outra lista as tira de
   // cena, e é escolher Recentes de volta que as traz.
   const [recentesAFrente, setRecentesAFrente] = useState(recentes.length > 0);
-  // Liga o botão ao seletor: são irmãos, e o botão nasce onde o campo de escrita o põe.
-  const id = useId();
   // Fechado, o seletor só lê o índice em cache: abrir o campo de escrita não custa requisição. O
   // índice é reserva das entradas antigas — a aba Recentes desenha o que está no aparelho.
   const index = useEmoteIndex(true);
@@ -207,17 +126,12 @@ export function ListaDoSeletor({
     return () => clearTimeout(timer);
   }, [busca, termo]);
 
-  const mostrarSeletor = (open: boolean) => {
-    if (open) return;
-    onAbertoMudou(false);
-  };
-
   // Buscar nas Recentes cai no catálogo (a lista inteira, filtrada pelo termo).
   const mostrandoRecentes = recentesAFrente && !busca.trim() && recentesVisiveis.length > 0;
   const mostrandoEnois = aba === "enois";
   const mostrandoComunidade = aba === "community";
   // A grade do DS é todo o catálogo (De terceiros, Da comunidade) e também as Recentes buscadas,
-  // que caem nele; Recentes e É Nóis são listas do app, desenhadas aqui.
+  // que caem nele; Recentes e É Nóis são listas do app, desenhadas pela mesma view com `localTab`.
   const mostrandoGrade = !mostrandoRecentes && aba !== "enois";
   const enoisFiltrados = mostrandoEnois
     ? filterEnoisEmojis(busca).map((item) => ({ code: item.code, src: item.src }))
@@ -225,9 +139,6 @@ export function ListaDoSeletor({
   // A aba que está na grade é a que pede página: trocar de aba não deixa o pedido da anterior em
   // voo para desenhar depois.
   const buscarNaGrade = mostrandoRecentes || mostrandoGrade;
-  // Buscar nas Recentes cai na grade de catálogo, e a busca é a da view; É Nóis filtra a lista do
-  // app na hora.
-  const mostrandoBusca = mostrandoRecentes && Boolean(busca.trim());
 
   const aoPublicar = (figurinha: FigurinhaComunidade) =>
     setPublicadas((atuais) => [figurinha, ...atuais]);
@@ -261,9 +172,9 @@ export function ListaDoSeletor({
     ? comunidade
     : deTerceiros;
 
-  // A faixa de abas (a de cá) é a única: a da view fica escondida dentro da moldura que some.
   // Recentes é o estado da abertura, e escolher outra lista as tira de cena; escolher Recentes de
-  // volta as traz.
+  // volta as traz. A view trata Recentes não vazio com busca como catálogo (o termo filtra a lista
+  // inteira), que é o mesmo comportamento daqui.
   const escolherAba = (value: string) => {
     setRecentesAFrente(value === "recent");
     setAba(value === "recent" ? "third" : (value as EmotePickerTab));
@@ -293,105 +204,47 @@ export function ListaDoSeletor({
           .map((emote) => ({ code: emote.code, src: emote.thumb })),
       ]
     : (data?.items ?? []).map((emote) => ({ code: emote.code, src: emote.thumb }));
-  const itens = comDesenho(crus);
+  // As listas do aparelho (Recentes) e do pacote (É Nóis) desenham pela mesma view, com `localTab`.
+  const crusDaGrade = comDesenho(crus);
   // O item volta do clique com o `src` desenhado; o Recentes precisa do cru por trás dele.
-  const cruPorDesenho = new Map(crus.map((item, indice) => [itens[indice]?.src, item.src]));
-  const caminhoCru = (item: EmotePickerItem) => cruPorDesenho.get(item.src) ?? item.src;
-
-  // As listas do aparelho e do pacote desenham aqui, nas mesmas células do DS; as de catálogo
-  // desenham pela view, que também traz carregando, erro e o rodapé de páginas.
-  const locais = comDesenho(mostrandoRecentes ? recentesVisiveis : enoisFiltrados);
+  const cruPorDesenho = new Map(crus.map((item, indice) => [crusDaGrade[indice]?.src, item.src]));
+  const itens = mostrandoGrade
+    ? crusDaGrade
+    : comDesenho(mostrandoRecentes ? recentesVisiveis : enoisFiltrados);
+  const caminhoCru = (item: EmotePickerItem) =>
+    cruPorDesenho.get(item.src) ??
+    recentesVisiveis.find((recente) => recente.code === item.code)?.src ??
+    item.src;
 
   return (
     <>
-      <Dialog open onOpenChange={mostrarSeletor}>
-        <DialogContent className="grid-rows-[auto_auto_minmax(0,1fr)_auto] max-h-[85dvh] max-w-md overflow-hidden p-4">
-          <DialogHeader>
-            <DialogTitle>{texts.emotes.title}</DialogTitle>
-          </DialogHeader>
+      <EmotePickerDialogView
+        open
+        onOpenChange={(open) => {
+          if (!open) onAbertoMudou(false);
+        }}
+        query={busca}
+        onQueryChange={setBusca}
+        tab={mostrandoRecentes ? "recent" : aba}
+        onTabChange={escolherAba}
+        tabs={abas}
+        items={itens}
+        localTab={!mostrandoGrade && !mostrandoRecentes}
+        localTotal={!mostrandoGrade && !mostrandoRecentes ? itens.length : undefined}
+        loading={isLoading}
+        error={isError}
+        stale={isPlaceholderData}
+        total={data?.total ?? 0}
+        page={data?.page ?? 1}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={setPagina}
+        onSelect={(item) => escolher(item.code, caminhoCru(item))}
+      />
 
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <Tabs value={mostrandoRecentes ? "recent" : aba} onValueChange={escolherAba}>
-              <TabsList>
-                {abas.map((item) => (
-                  <TabsTrigger key={item.value} value={item.value}>
-                    {item.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            <Button type="button" variant="ghost" size="sm" onClick={abrirEnvio}>
-              {texts.emotes.botaoEnviar}
-            </Button>
-          </div>
-
-          {mostrandoBusca || mostrandoGrade ? (
-            // A grade da view é todo o catálogo (De terceiros, Da comunidade) e as Recentes buscadas:
-            // mesmas células, mesmas colunas e a mesma rolagem, sem estado de carregando, porque a
-            // página anterior fica na tela, apagada, até a nova chegar.
-            <>
-              <BuscaDoSeletor valor={busca} aoMudar={setBusca} />
-
-              {isLoading && <LoadingState label={texts.emotes.loading} />}
-
-              <div className={gradeRolavel(isPlaceholderData)} aria-busy={isPlaceholderData}>
-                {isError ? (
-                  <EmptyState title={texts.emotes.error} />
-                ) : (
-                  <GradeDeFigurinhas>
-                    {itens.map((item) => (
-                      <EmoteCell
-                        key={item.code}
-                        code={item.code}
-                        src={item.src}
-                        onSelect={() => escolher(item.code, caminhoCru(item))}
-                      />
-                    ))}
-                  </GradeDeFigurinhas>
-                )}
-              </div>
-
-              {!isError && (data?.total ?? 0) === 0 && !isLoading && (
-                <EmptyState title={texts.emotes.empty} />
-              )}
-
-              <RodapeDoSeletor
-                total={data?.total ?? 0}
-                page={data?.page ?? 1}
-                totalPages={data?.totalPages ?? 1}
-                onPageChange={setPagina}
-              />
-            </>
-          ) : (
-            <>
-              <BuscaDoSeletor valor={busca} aoMudar={setBusca} />
-
-              <div className={gradeRolavel(false)}>
-                {locais.length === 0 ? (
-                  <EmptyState title={texts.emotes.empty} />
-                ) : (
-                  <GradeDeFigurinhas>
-                    {locais.map((item) => (
-                      <EmoteCell
-                        key={item.code}
-                        code={item.code}
-                        src={item.src}
-                        onSelect={() => escolher(item.code, caminhoCru(item))}
-                      />
-                    ))}
-                  </GradeDeFigurinhas>
-                )}
-              </div>
-
-              {locais.length > 0 && <MetaLine>{texts.emotes.count(locais.length)}</MetaLine>}
-            </>
-          )}
-
-          {/* A dica do rodapé é a mesma da view, e diz como o código entra no texto. */}
-          <MetaLine>{texts.emotes.hint}</MetaLine>
-        </DialogContent>
-      </Dialog>
+      {/* A view não tem lugar para uma ação que não é aba: o envio fica logo abaixo dela. */}
+      <Button type="button" variant="ghost" size="sm" onClick={abrirEnvio}>
+        {texts.emotes.botaoEnviar}
+      </Button>
 
       <FormularioDeEnvioDoSeletor
         aberto={enviando}
