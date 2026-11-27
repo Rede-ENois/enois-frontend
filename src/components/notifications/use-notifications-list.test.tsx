@@ -130,15 +130,16 @@ describe("lista de avisos compartilhada", () => {
     // Antes: o sino usava ["notifications", ctx] com limit=20 e a página
     // ["notifications","page",ctx] com limit=30 — duas chaves, duas chamadas na mesma carga, e a
     // página nunca aproveitava o cache do sino. Agora as duas montagens resolvem as MESMAS
-    // consultas: uma chamada da lista recente e uma da lista de não lidos primeiro, nada mais.
+    // consultas: uma chamada da lista que alimenta o Histórico e uma da que alimenta Novas,
+    // nada mais.
     // O stream fica aberto para a recarga periódica não entrar na contagem: o que este teste prende
     // é a deduplicação das duas montagens, não o polling (que tem teste próprio).
     mocks.live.mockReturnValue(true);
     await render();
 
     expect(mocks.list).toHaveBeenCalledTimes(2);
-    // Dez por página: a lista carrega aos poucos, como o feed e as mensagens. A lista recente vai
-    // sem opção nenhuma, exatamente como antes.
+    // Dez por página: a lista carrega aos poucos, como o feed e as mensagens. A lista que alimenta
+    // o Histórico vai sem opção nenhuma, exatamente como antes.
     expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL");
     expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL", { unreadFirst: true });
     expect(page.items).toHaveLength(1);
@@ -238,9 +239,10 @@ describe("lista de avisos compartilhada", () => {
     expect(mocks.list.mock.calls.length).toBeGreaterThan(afterRender);
   });
 
-  it("traz o aviso não lido que a lista recente empurrou para a página seguinte", async () => {
-    // Issue #1147: dez mensagens lidas mais novas enchiam a página 1 da lista recente e a reação
-    // não lida ficava na página 2, nunca carregada: o sino contava 1 e "Novas" ficava vazia.
+  it("traz o aviso não lido empurrado para a página seguinte pela lista que alimenta o Histórico", async () => {
+    // Issue #1147: dez mensagens lidas mais novas enchiam a página 1 da lista, em ordem de chegada,
+    // e a reação não lida ficava na página 2, nunca carregada: o sino contava 1 e "Novas" ficava
+    // vazia.
     mocks.live.mockReturnValue(true);
     const readMessages = Array.from({ length: 10 }, (_, i) =>
       notice(`m${i}`, true, `2026-11-02T10:${String(10 + i).padStart(2, "0")}:00Z`, "new_message"),
@@ -314,7 +316,7 @@ describe("lista de avisos compartilhada", () => {
     expect(page.latest.map((item) => item.id)).toEqual(["a", "same", "b", "c"]);
   });
 
-  it("lido vence também quando a lista recente ainda traz a versão não lida", async () => {
+  it("lido vence também quando a lista que alimenta o Histórico ainda traz a versão não lida", async () => {
     mocks.live.mockReturnValue(true);
     serveLists({
       unreadFirst: [{ items: [notice("same", true, "2026-11-02T11:00:00Z")], nextCursor: null }],
@@ -349,7 +351,7 @@ describe("lista de avisos compartilhada", () => {
     expect(page.hasNextPage).toBe(false);
   });
 
-  it("carregar mais na lista recente pede o cursor de instante sem a opção de não lidos", async () => {
+  it("carregar mais na lista que alimenta o Histórico continua da data do último aviso, sem pedir os não lidos primeiro", async () => {
     mocks.live.mockReturnValue(true);
     serveLists({
       unreadFirst: [{ items: [], nextCursor: null }],
@@ -366,7 +368,7 @@ describe("lista de avisos compartilhada", () => {
     await flush();
 
     expect(mocks.list).toHaveBeenCalledTimes(3);
-    expect(mocks.list).toHaveBeenLastCalledWith("2026-11-02T10:00:00Z", 10, "SOCIAL");
+    expect(mocks.list).toHaveBeenCalledWith("2026-11-02T10:00:00Z", 10, "SOCIAL");
     expect(page.items.map((item) => item.id)).toEqual(["r1", "r0"]);
   });
 
