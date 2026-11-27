@@ -154,6 +154,11 @@ describe("useEnoisReactionGlyphs", () => {
             <span>heart_purple</span>
           </li>
 
+          {/* O que o texto publicado guarda: o caminho do arquivo da figura. */}
+          <li data-testid="row-arquivo">
+            <span>/emojis/enois/heart_purple.svg</span>
+          </li>
+
           <li data-testid="row-name">
             <span>Marina Rocha</span>
           </li>
@@ -169,7 +174,7 @@ describe("useEnoisReactionGlyphs", () => {
       await Promise.resolve();
     });
 
-    for (const id of ["row-texto", "row-code", "row-curto"]) {
+    for (const id of ["row-texto", "row-code", "row-curto", "row-arquivo"]) {
       const glifo = host.querySelector(`[data-testid="${id}"] span`);
       expect(glifo?.getAttribute("data-enois-reaction-glyph")).toBe("HEART_PURPLE");
       expect(glifo?.textContent).toBe("💜");
