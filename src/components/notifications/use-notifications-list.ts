@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 
 import type { PageResponse } from "@/types/application/api/page-response";
@@ -69,6 +71,16 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
 
   const lists = [recent, unreadFirst];
 
+  // Estável entre renders, como o `refetch` de cada query: a página usa esta função como
+  // dependência do gesto de puxar para renovar, e uma função nova a cada render refazia os
+  // listeners do gesto a cada toque.
+  const { refetch: refetchRecent } = recent;
+  const { refetch: refetchUnreadFirst } = unreadFirst;
+  const refetch = useCallback(
+    () => Promise.all([refetchRecent(), refetchUnreadFirst()]),
+    [refetchRecent, refetchUnreadFirst],
+  );
+
   return {
     /**
      * Every page fetched so far from both lists, merged: the full page lists all of them,
@@ -88,7 +100,7 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
     // O frontend não sabe qual aba do painel está aberta: "Carregar mais" avança as duas listas.
     fetchNextPage: () =>
       Promise.all(lists.filter((list) => list.hasNextPage).map((list) => list.fetchNextPage())),
-    refetch: () => Promise.all(lists.map((list) => list.refetch())),
+    refetch,
   };
 }
 

@@ -23,9 +23,10 @@ export const Route = createFileRoute("/notificacoes/")({
 /** Every notice, grouped by day, with more pages on demand: where a tapped push lands. */
 function NotificationsPage() {
   const context = useInterfaceContext();
-  // A MESMA lista do sino do header (uma chave, um fetch): abrir Avisos pelo dock reusa o que
-  // já veio — no celular o sino segue montado (escondido abaixo de lg), e ter duas consultas
-  // com limites diferentes duplicava a chamada e fazia a página piscar em toda revalidação.
+  // As MESMAS listas do sino do header (uma chave e um fetch por lista): abrir Avisos pelo dock
+  // reusa o que já veio — no celular o sino segue montado (escondido abaixo de lg), e ter duas
+  // consultas com limites diferentes duplicava a chamada e fazia a página piscar em toda
+  // revalidação.
   const list = useNotificationsList(context);
 
   const panel = useNotificationsPanel(list.items, {

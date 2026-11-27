@@ -198,6 +198,30 @@ describe("lista de avisos compartilhada", () => {
     expect(page.items).toHaveLength(1);
   });
 
+  it("renovar pede de novo as duas listas", async () => {
+    await render();
+    vi.mocked(notificationsApi.list).mockClear();
+
+    await act(async () => {
+      await page.refetch();
+    });
+
+    const unreadFirstFlags = vi
+      .mocked(notificationsApi.list)
+      .mock.calls.map((call) => call[3]?.unreadFirst === true)
+      .sort();
+    expect(unreadFirstFlags).toEqual([false, true]);
+  });
+
+  it("a ação de renovar não muda entre renders, para o gesto de puxar não refazer os listeners a cada toque", async () => {
+    await render();
+    const renew = page.refetch;
+
+    await render();
+
+    expect(page.refetch).toBe(renew);
+  });
+
   it("recarrega sozinha quando o stream está fora", async () => {
     // Antes não havia recarga nenhuma: sem stream, o aviso só aparecia ao carregar a página de novo.
     await render();
