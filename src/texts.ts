@@ -1785,6 +1785,24 @@ export const texts = {
       reason: "Advertência",
       sanctionReason: "Sanção",
     },
+    /**
+     * O selo de apoiador registrado à mão, no painel do perfil. Para quando o Pix chegou e o
+     * comprovante não foi reconhecido — sem isto a pessoa paga e fica sem o selo.
+     */
+    seal: {
+      button: "Adicionar tag de apoiador",
+      buttonDone: "Selo de apoiador registrado",
+      hint: "Para quando a doação chegou e o comprovante não foi reconhecido. Registra o selo à mão, com o seu nome e o motivo.",
+      title: "Adicionar tag de apoiador?",
+      description: (target: string) =>
+        `${target} passa a aparecer como apoiador no perfil e nas publicações. Um selo por conta: a próxima tentativa só confirma que já foi registrado.`,
+      placeholder: "Por que o selo está sendo registrado à mão? (mínimo 10 caracteres)",
+      tooShort: "Escreva pelo menos 10 caracteres.",
+      confirm: "Registrar selo",
+      done: "Selo de apoiador registrado.",
+      already: "Esta conta já tem o selo registrado.",
+      error: "Não foi possível registrar o selo.",
+    },
   },
 
   posts: {

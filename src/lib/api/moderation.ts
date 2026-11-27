@@ -1,6 +1,7 @@
 import type { AdminAccountView } from "@/types/application/moderation/admin-account-view";
 import type { AdminHistoryView } from "@/types/application/moderation/admin-history-view";
 import type { AdminPostRemovalView } from "@/types/application/moderation/admin-post-removal-view";
+import type { AdminSupporterSealView } from "@/types/application/moderation/admin-supporter-seal-view";
 import type { AdminWarningView } from "@/types/application/moderation/admin-warning-view";
 import type { BulkBanResult } from "@/types/application/moderation/bulk-ban-result";
 import type { BulkDeletePostsResult } from "@/types/application/moderation/bulk-delete-posts-result";
@@ -139,6 +140,17 @@ export const moderationApi = {
   adminDeleteAccount: (username: string, reason: string) =>
     api.post<{ userId: string; username: string; outcome: "DELETED" }>(
       `/admin/moderation/users/${encodeURIComponent(username)}/delete`,
+      { reason },
+    ),
+
+  /**
+   * Registra o selo de apoiador à mão (admin): para quando o dinheiro chegou e o comprovante não
+   * foi reconhecido. Motivo obrigatório; o backend recusa o segundo selo e quem já é apoiador por
+   * doação confirmada.
+   */
+  adminGrantSupporterSeal: (username: string, reason: string) =>
+    api.post<AdminSupporterSealView>(
+      `/admin/doacoes/sele/${encodeURIComponent(username)}`,
       { reason },
     ),
 
