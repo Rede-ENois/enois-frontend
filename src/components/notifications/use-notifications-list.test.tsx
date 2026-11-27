@@ -3,9 +3,12 @@ import { act } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import type { NoticeListTestPage } from "@/types/components/notifications/notice-list-test-page";
+import type { PageResponse } from "@/types/application/api/page-response";
+import type { Notification } from "@/types/application/notification/notification";
 import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { notificationsApi } from "@/lib/api";
 
 import { useNotificationsList } from "./use-notifications-list";
 
@@ -32,8 +35,21 @@ const PAGE = {
   nextCursor: null,
 };
 
-function notice(id: string, read: boolean, createdAt: string) {
-  return { id, read, kind: "reaction", createdAt };
+function notice(id: string, read: boolean, createdAt: string, kind = "reaction"): Notification {
+  return {
+    id,
+    kind,
+    read,
+    createdAt,
+    actorId: null,
+    actorName: null,
+    actorUsername: null,
+    actorAvatar: null,
+    title: "Aviso",
+    body: "Aviso de teste",
+    href: "/notificacoes",
+    ctaLabel: "Ver",
+  };
 }
 
 /**
@@ -41,17 +57,17 @@ function notice(id: string, read: boolean, createdAt: string) {
  * repete: uma chamada a mais (renovação, polling) recebe uma página em vez de `undefined`, que o
  * React Query rejeita.
  */
-function serveLists(pages: { unreadFirst: NoticeListTestPage[]; recent: NoticeListTestPage[] }) {
+function serveLists(pages: {
+  unreadFirst: PageResponse<Notification>[];
+  recent: PageResponse<Notification>[];
+}) {
   const queues = { unreadFirst: [...pages.unreadFirst], recent: [...pages.recent] };
-  mocks.list.mockImplementation(
-    async (
-      _cursor: string | null,
-      _limit: number,
-      _context: string,
-      options?: { unreadFirst?: boolean },
-    ) => {
+  vi.mocked(notificationsApi.list).mockImplementation(
+    async (_cursor, _limit, _context, options) => {
       const queue = options?.unreadFirst ? queues.unreadFirst : queues.recent;
-      return queue.length > 1 ? queue.shift() : queue[0];
+      const page = queue.length > 1 ? queue.shift() : queue[0];
+      if (!page) throw new Error("serveLists: lista sem página");
+      return page;
     },
   );
 }
@@ -202,25 +218,12 @@ describe("lista de avisos compartilhada", () => {
     // Issue #1147: dez mensagens lidas mais novas enchiam a página 1 da lista recente e a reação
     // não lida ficava na página 2, nunca carregada: o sino contava 1 e "Novas" ficava vazia.
     mocks.live.mockReturnValue(true);
-    const readMessages = Array.from({ length: 10 }, (_, i) => ({
-      id: `m${i}`,
-      read: true,
-      kind: "new_message",
-      createdAt: `2026-11-02T10:${String(10 + i).padStart(2, "0")}:00Z`,
-    }));
-    const reaction = {
-      id: "r1",
-      read: false,
-      kind: "reaction",
-      createdAt: "2026-11-02T09:00:00Z",
-    };
-    mocks.list.mockImplementation(
-      async (
-        _cursor: string | null,
-        _limit: number,
-        _context: string,
-        options?: { unreadFirst?: boolean },
-      ) =>
+    const readMessages = Array.from({ length: 10 }, (_, i) =>
+      notice(`m${i}`, true, `2026-11-02T10:${String(10 + i).padStart(2, "0")}:00Z`, "new_message"),
+    );
+    const reaction = notice("r1", false, "2026-11-02T09:00:00Z");
+    vi.mocked(notificationsApi.list).mockImplementation(
+      async (_cursor, _limit, _context, options) =>
         options?.unreadFirst
           ? { items: [reaction], nextCursor: null }
           : { items: readMessages, nextCursor: "2026-11-02T10:10:00Z" },

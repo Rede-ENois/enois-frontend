@@ -2,10 +2,10 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 
+import type { PageResponse } from "@/types/application/api/page-response";
 import type { InboxSyncTestPage } from "@/types/lib/inbox-sync-page";
 import type { InboxSyncTestRow } from "@/types/lib/inbox-sync-test";
-import type { PositionNotice } from "@/types/lib/position-notice";
-import type { PositionNoticePage } from "@/types/lib/position-notice-page";
+import type { PositionNoticeTestRow } from "@/types/lib/position-notice-test-row";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { refreshConversation, refreshNotifications, resyncInbox } from "./inbox-sync.js";
@@ -86,7 +86,7 @@ describe("sincronia da caixa de entrada", () => {
      * por página e o cursor `o:<n>` sendo a posição na ordem. Ler um aviso o leva para o fim.
      */
     function positionServer(ids: string[]) {
-      const rows: PositionNotice[] = ids.map((id) => ({ id, read: false }));
+      const rows: PositionNoticeTestRow[] = ids.map((id) => ({ id, read: false }));
       const calls: (string | null)[] = [];
       return {
         calls,
@@ -95,7 +95,7 @@ describe("sincronia da caixa de entrada", () => {
           const [row] = rows.splice(index, 1);
           rows.push({ ...row, read: true });
         },
-        async page(cursor: string | null): Promise<PositionNoticePage> {
+        async page(cursor: string | null): Promise<PageResponse<PositionNoticeTestRow>> {
           calls.push(cursor);
           const offset = cursor ? Number(cursor.slice(2)) : 0;
           const end = offset + 2;
@@ -118,7 +118,8 @@ describe("sincronia da caixa de entrada", () => {
         queryKey: key,
         queryFn: ({ pageParam }) => server.page(pageParam),
         initialPageParam: null as string | null,
-        getNextPageParam: (last: PositionNoticePage) => last.nextCursor ?? undefined,
+        getNextPageParam: (last: PageResponse<PositionNoticeTestRow>) =>
+          last.nextCursor ?? undefined,
         pages,
         meta,
       });
@@ -129,7 +130,7 @@ describe("sincronia da caixa de entrada", () => {
       server.calls.length = 0;
       const cachedIds = () =>
         queryClient
-          .getQueryData<InfiniteData<PositionNoticePage, string | null>>(key)!
+          .getQueryData<InfiniteData<PageResponse<PositionNoticeTestRow>, string | null>>(key)!
           .pages.flatMap((page) => page.items.map((item) => item.id));
       return { queryClient, cachedIds };
     }
