@@ -301,4 +301,98 @@ describe("Reações rápidas de uma publicação", () => {
     expect(depois?.currentUserReaction).toBeNull();
     expect(depois?.reactionSummary).toEqual({ LIKE: 1 });
   });
+
+  it("a resposta lenta de uma requisição não destrava o card de uma intenção nova", async () => {
+    const primeira = deferredResponse();
+    const segunda = deferredResponse();
+    mocks.react.mockReturnValueOnce(primeira.promise).mockReturnValueOnce(segunda.promise);
+
+    await act(async () => controls[0].toggle("LOVE"));
+    now += 1_000;
+    // Em voo: o segundo clique vira intenção enfileirada.
+    await act(async () => controls[1].toggle("WOW"));
+    // A primeira responde e a intenção enfileirada entra em voo na hora.
+    await act(async () => primeira.resolve({ counters: { ...post.counters, reactions: 1 } }));
+
+    expect(
+      usePostCardStore.getState().cards[post.id].reactionPending,
+      "a resposta antiga destravou o card com a nova ainda em voo",
+    ).toBe(true);
+
+    await act(async () => segunda.resolve({ counters: { ...post.counters, reactions: 1 } }));
+    await act(async () => {});
+    expect(usePostCardStore.getState().cards[post.id].reactionPending).toBe(false);
+  });
+
+  it("sem resumo do servidor, a reação não inventa resumo: só o contador muda", async () => {
+    // O feed não manda `reactionSummary` (o backend só o calcula para comentário).
+    client.setQueryData<PostView>(["post", post.id], {
+      id: post.id,
+      authorId: post.authorId,
+      authorUsername: post.authorUsername,
+      authorName: post.authorName,
+      authorAvatar: null,
+      type: "INSIGHT",
+      content: "conteudo",
+      tags: [],
+      mediaIds: [],
+      createdAt: "2026-10-23T12:00:00Z",
+      visibility: "PUBLIC",
+      status: "ACTIVE",
+      counters: { reactions: 5, comments: 0, saves: 0, shares: 0, reposts: 0 },
+    });
+    mocks.react.mockResolvedValue({
+      counters: { reactions: 6, comments: 0, saves: 0, shares: 0, reposts: 0 },
+    });
+
+    await act(async () => controls[0].toggle("LOVE"));
+    await act(async () => {});
+
+    const depois = client.getQueryData<PostView>(["post", post.id]);
+    // A tela mostra `soma(reactionSummary) ?? counters.reactions`: sem resumo inventado, mostra o
+    // contador do servidor — o mesmo número que o backend conta.
+    expect(depois?.reactionSummary ?? null).toBeNull();
+    expect(depois?.counters.reactions).toBe(6);
+    // Dois cliques no mesmo tipo alternam (remove), não somam de novo.
+    await act(async () => controls[1].toggle("LOVE"));
+    await act(async () => {});
+    expect(client.getQueryData<PostView>(["post", post.id])?.reactionSummary ?? null).toBeNull();
+  });
+
+  it("quando o resumo vem do servidor (comentário), ele continua sendo somado", async () => {
+    const comResumo: PostView = {
+      ...post,
+      counters: { ...post.counters, reactions: 3 },
+      reactionSummary: { LOVE: 3 },
+    };
+    client.setQueryData<PostView>(["post", post.id], comResumo);
+    mocks.react.mockResolvedValue({ counters: { ...post.counters, reactions: 4 } });
+
+    await act(async () => controls[0].toggle("WOW"));
+    await act(async () => {});
+
+    expect(client.getQueryData<PostView>(["post", post.id])?.reactionSummary).toEqual({
+      LOVE: 3,
+      WOW: 1,
+    });
+  });
+
+  it("requisição sem resposta não deixa o card irresponsivo para sempre", async () => {
+    const perdida = deferredResponse();
+    mocks.react
+      .mockReturnValueOnce(perdida.promise)
+      .mockResolvedValue({ counters: { ...post.counters, reactions: 1 } });
+
+    await act(async () => controls[0].toggle("LOVE"));
+    // A resposta nunca chega (rede perdida, aba suspensa). O botão parece travado.
+    now += 20_000;
+    await act(async () => controls[1].toggle("WOW"));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
+
+    // O clique entra como requisição nova em vez de ficar encalhado na fila.
+    expect(mocks.react).toHaveBeenCalledTimes(2);
+    expect(mocks.react).toHaveBeenLastCalledWith(post.id, "WOW");
+    await act(async () => {});
+    expect(usePostCardStore.getState().cards[post.id].reactionPending).toBe(false);
+  });
 });
