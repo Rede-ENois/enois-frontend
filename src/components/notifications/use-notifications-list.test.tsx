@@ -239,6 +239,23 @@ describe("lista de avisos compartilhada", () => {
     expect(mocks.list.mock.calls.length).toBeGreaterThan(afterRender);
   });
 
+  it("com o stream fora, Novas e Histórico recarregam sozinhas", async () => {
+    await render();
+    // Esquece as buscas da montagem, em que as duas listas sempre buscam: daqui para frente, só
+    // conta o que a recarga automática pedir.
+    mocks.list.mockClear();
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS * 3));
+    });
+    await flush();
+
+    // A recarga de Novas pede os não lidos primeiro.
+    expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL", { unreadFirst: true });
+    // A recarga do Histórico pede a lista em ordem de chegada, sem opção.
+    expect(mocks.list).toHaveBeenCalledWith(null, 10, "SOCIAL");
+  });
+
   it("traz o aviso não lido empurrado para a página seguinte pela lista que alimenta o Histórico", async () => {
     // Issue #1147: dez mensagens lidas mais novas enchiam a página 1 da lista, em ordem de chegada,
     // e a reação não lida ficava na página 2, nunca carregada: o sino contava 1 e "Novas" ficava
