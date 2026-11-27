@@ -59,8 +59,16 @@ function motivoDoEnvio(permissao: EnvioPermitido): string {
  * código no formato e nome. A checagem da imagem acontece duas vezes: aqui, para dizer o que
  * corrigir antes de subir, e no servidor, que é quem decide. A figurinha publicada aparece na hora
  * abaixo do formulário com o código para copiar.
+ *
+ * `aoPublicar` deixa o seletor de figurinhas mostrar a nova na hora, sem esperar o cache expirar.
  */
-export function EnvioDeFigurinha({ logado }: { logado: boolean }) {
+export function EnvioDeFigurinha({
+  logado,
+  aoPublicar,
+}: {
+  logado: boolean;
+  aoPublicar?: (figurinha: FigurinhaComunidade) => void;
+}) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [codigo, setCodigo] = useState("");
   const [nome, setNome] = useState("");
@@ -101,6 +109,7 @@ export function EnvioDeFigurinha({ logado }: { logado: boolean }) {
     setNome("");
     setSeletor((atual) => atual + 1);
     void queryClient.invalidateQueries({ queryKey: ["figurinhas"] });
+    aoPublicar?.(resultado.figurinha);
   };
 
   const aviso: AvisoDeEnvio | null = !logado
