@@ -127,11 +127,11 @@ export function AdminProfilePanel({ username }: { username: string }) {
   ) => React.ReactNode;
 
   return (
-    <div className="space-y-3">
+    <>
       {/*
-        O selo de apoiador registrado à mão vem ANTES da seção do design system: é uma ação
-        administrativa a mais na mesma tela, e o DS instalado não tem onde encaixar um botão. Só é
-        montado para admin, como o resto do painel, e o backend recusa qualquer outro papel.
+        O selo de apoiador registrado à mão precisa de uma view do design system (issue
+        Rede-ENois/enois-design-system#459): o app não desenha markup. Enquanto ela não chega, o
+        componente não desenha nada e o painel é o de sempre.
       */}
       <AdminSupporterSealButton username={username} />
       <Section
@@ -175,6 +175,6 @@ export function AdminProfilePanel({ username }: { username: string }) {
           }
         }}
       />
-    </div>
+    </>
   );
 }
