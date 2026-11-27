@@ -2,11 +2,13 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 
+import type { PageResponse } from "@/types/application/api/page-response";
 import type { InboxSyncTestPage } from "@/types/lib/inbox-sync-page";
 import type { InboxSyncTestRow } from "@/types/lib/inbox-sync-test";
+import type { PositionNoticeTestRow } from "@/types/lib/position-notice-test-row";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { refreshConversation, resyncInbox } from "./inbox-sync.js";
+import { refreshConversation, refreshNotifications, resyncInbox } from "./inbox-sync.js";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -76,5 +78,107 @@ describe("sincronia da caixa de entrada", () => {
     await resyncInbox(queryClient);
 
     expect(firstItems(queryClient, key)[0]).toEqual({ id: "n1", preview: "a", unread: 0 });
+  });
+
+  describe("lista de avisos paginada por posição", () => {
+    /**
+     * Servidor de `unreadFirst=true` em miniatura: não lidos primeiro, depois os lidos, duas linhas
+     * por página e o cursor `o:<n>` sendo a posição na ordem. Ler um aviso o leva para o fim.
+     */
+    function positionServer(ids: string[]) {
+      const rows: PositionNoticeTestRow[] = ids.map((id) => ({ id, read: false }));
+      const calls: (string | null)[] = [];
+      return {
+        calls,
+        read(id: string) {
+          const index = rows.findIndex((row) => row.id === id);
+          const [row] = rows.splice(index, 1);
+          rows.push({ ...row, read: true });
+        },
+        async page(cursor: string | null): Promise<PageResponse<PositionNoticeTestRow>> {
+          calls.push(cursor);
+          const offset = cursor ? Number(cursor.slice(2)) : 0;
+          const end = offset + 2;
+          return {
+            items: rows.slice(offset, end),
+            nextCursor: end < rows.length ? `o:${end}` : null,
+          };
+        },
+      };
+    }
+
+    async function screenWithNotices(
+      server: ReturnType<typeof positionServer>,
+      pages: number,
+      meta?: Record<string, unknown>,
+    ) {
+      const queryClient = new QueryClient();
+      const key = ["notifications", "SOCIAL", "unread-first"];
+      await queryClient.fetchInfiniteQuery({
+        queryKey: key,
+        queryFn: ({ pageParam }) => server.page(pageParam),
+        initialPageParam: null as string | null,
+        getNextPageParam: (last: PageResponse<PositionNoticeTestRow>) =>
+          last.nextCursor ?? undefined,
+        pages,
+        meta,
+      });
+      vi.spyOn(
+        queryClient.getQueryCache().find({ queryKey: key })!,
+        "getObserversCount",
+      ).mockReturnValue(1);
+      server.calls.length = 0;
+      const cachedIds = () =>
+        queryClient
+          .getQueryData<InfiniteData<PageResponse<PositionNoticeTestRow>, string | null>>(key)!
+          .pages.flatMap((page) => page.items.map((item) => item.id));
+      return { queryClient, cachedIds };
+    }
+
+    it("ler um aviso não faz o não lido seguinte sumir do que já foi carregado", async () => {
+      // A, B, C, D carregados em duas páginas; E viria em `o:4`. Ler A empurra todo mundo uma
+      // posição: E passa a ocupar a posição 3, que já tinha sido carregada. Renovando só a
+      // primeira página, o cursor guardado (`o:4`) pula E e ele nunca aparece em "Novas".
+      const server = positionServer(["A", "B", "C", "D", "E"]);
+      const { queryClient, cachedIds } = await screenWithNotices(server, 2, {
+        positionCursor: true,
+      });
+
+      server.read("A");
+      await refreshNotifications(queryClient);
+
+      expect(cachedIds()).toContain("E");
+    });
+
+    it("falha de rede na renovação da lista por posição mantém o que já estava carregado", async () => {
+      const server = positionServer(["A", "B", "C", "D", "E"]);
+      const { queryClient, cachedIds } = await screenWithNotices(server, 2, {
+        positionCursor: true,
+      });
+      vi.spyOn(server, "page").mockRejectedValue(new Error("offline"));
+
+      await expect(refreshNotifications(queryClient)).resolves.toBeDefined();
+
+      expect(cachedIds()).toEqual(["A", "B", "C", "D"]);
+    });
+
+    it("com uma página só, a lista por posição renova só a primeira página", async () => {
+      const server = positionServer(["A", "B", "C"]);
+      const { queryClient } = await screenWithNotices(server, 1, { positionCursor: true });
+
+      server.read("A");
+      await refreshNotifications(queryClient);
+
+      expect(server.calls).toEqual([null]);
+    });
+
+    it("lista sem cursor de posição continua renovando só a primeira página", async () => {
+      const server = positionServer(["A", "B", "C", "D", "E"]);
+      const { queryClient } = await screenWithNotices(server, 2);
+
+      await resyncInbox(queryClient);
+
+      expect(server.calls).toEqual([null]);
+    });
   });
 });

@@ -7,9 +7,25 @@ import type { InterfaceContext } from "@rede-enois/design-system/domain";
 import { api, buildQuery } from "../api-client";
 
 export const notificationsApi = {
-  /** `context`: notifications of that interface plus the account-wide ones (omitted = all). */
-  list: (cursor?: string | null, limit = 20, context?: InterfaceContext) =>
-    api.get<PageResponse<Notification>>(`/notifications${buildQuery({ cursor, limit, context })}`),
+  /**
+   * `context`: notifications of that interface plus the account-wide ones (omitted = all).
+   * `unreadFirst`: unread rows first (newest to oldest), then the read ones; the cursor becomes a
+   * position in that order (`o:<n>`). Without it the request is the plain arrival-order list.
+   */
+  list: (
+    cursor?: string | null,
+    limit = 20,
+    context?: InterfaceContext,
+    options?: { unreadFirst?: boolean },
+  ) =>
+    api.get<PageResponse<Notification>>(
+      `/notifications${buildQuery({
+        cursor,
+        limit,
+        context,
+        unreadFirst: options?.unreadFirst === true ? true : undefined,
+      })}`,
+    ),
 
   /** Unread count per area, for the menu and dock signals (same `context` filter as `list`). */
   unreadSummary: (context?: InterfaceContext) =>

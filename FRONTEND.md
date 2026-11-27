@@ -401,6 +401,12 @@ Response: { "items": [{ "id": "...", "kind": "...", "actorId": "...", "title": "
                         "body": "...", "createdAt": "...", "read": false, "href": "...", "ctaLabel": "..." }] }
 ```
 
+Com `unreadFirst=true` (`GET /api/notifications?unreadFirst=true&limit=10`), os não lidos vêm
+primeiro, do mais novo ao mais velho, e depois os lidos. O `nextCursor` passa a ser uma posição na
+ordem (`o:<n>`), que muda quando um aviso carregado é lido: por isso a renovação refaz todas as
+páginas já carregadas dessa lista. A aba "Novas" do painel usa essa lista; a aba "Histórico" usa a
+lista sem o parâmetro, em ordem de chegada.
+
 ### Marcar como lida / Ler todas
 
 ```
