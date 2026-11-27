@@ -1,12 +1,15 @@
 import { useEffect } from "react";
 
-import { REACTION_PICKER_ORDER } from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS, REACTION_PICKER_ORDER } from "@/constants/reaction-emojis";
 import {
   REACOES_FAVORITAS_STORAGE_KEY,
   hidratarReacoesFavoritas,
   useReacoesFavoritasStore,
 } from "@/stores/reacoes-favoritas.store";
+import { PURPLE_HEART_REACTION } from "@/types/application/reaction/any-reaction-type";
+import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
+import { getEnoisEmojiByCode } from "@/lib/emotes/enois-pack";
 import { FAVORITAS_MAX, FAVORITAS_PADRAO, fileiraDaEscolha } from "@/lib/reactions/favoritas";
 
 /**
@@ -46,6 +49,23 @@ const LABELS = {
   arrastar: "Arraste para mudar a ordem",
 };
 
+/**
+ * O texto do botão com a figura da reação. O coração roxo vai no seletor como o caminho do arquivo:
+ * um botão com só ele fica sem nome para o leitor de tela e sem figura no CSS, que pinta pelo emoji.
+ * O texto é o código com que a figurinha é escrita no texto (`:enois_heart_purple:`), que o leitor
+ * deste arquivo já desenha como 💜.
+ */
+function comFigura(tipo: string, atual: string | null): string | null {
+  if (tipo === PURPLE_HEART_REACTION) {
+    const codigo = getEnoisEmojiByCode(tipo.toLowerCase())?.code;
+    if (!codigo) return null;
+    const marcado = `:${codigo}:`;
+    return atual?.includes(marcado) && !atual.includes("/") ? null : ` ${marcado} `;
+  }
+  const figura = REACTION_FIGURE_EMOJIS[tipo as ReactionType];
+  return figura && !atual?.trim() ? figura : null;
+}
+
 /** A fileira do compacto, ou `null` para deixar o desenho do design system como está. */
 function fileiraDoCompacto(favoritas: string[], escolheu: boolean): string[] | null {
   if (escolheu) return favoritas;
@@ -71,6 +91,8 @@ function marcarCompacto(grade: HTMLElement): void {
       el.setAttribute("data-filled", "sim");
       el.style.setProperty("order", String(ordem));
     }
+    const texto = comFigura(tipo, el.textContent);
+    if (texto !== null) el.textContent = texto;
   }
   if (fileira && popover) popover.setAttribute("data-reaction-favoritas-fileira", "sim");
   else popover?.removeAttribute("data-reaction-favoritas-fileira");
