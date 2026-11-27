@@ -314,6 +314,18 @@ describe("lista de avisos compartilhada", () => {
     expect(page.latest.map((item) => item.id)).toEqual(["a", "same", "b", "c"]);
   });
 
+  it("lido vence também quando a lista recente ainda traz a versão não lida", async () => {
+    mocks.live.mockReturnValue(true);
+    serveLists({
+      unreadFirst: [{ items: [notice("same", true, "2026-11-02T11:00:00Z")], nextCursor: null }],
+      recent: [{ items: [notice("same", false, "2026-11-02T11:00:00Z")], nextCursor: null }],
+    });
+
+    await render();
+
+    expect(page.items.map((item) => [item.id, item.read])).toEqual([["same", true]]);
+  });
+
   it("carregar mais avança cada lista pelo próprio cursor e só a que tem próxima página", async () => {
     mocks.live.mockReturnValue(true);
     serveLists({

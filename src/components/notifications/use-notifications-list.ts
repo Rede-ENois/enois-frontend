@@ -114,11 +114,12 @@ export function useNotificationsList(context: InterfaceContext, enabled = true) 
  */
 function mergeNotices(pages: Notification[][]): Notification[] {
   const byId = new Map<string, Notification>();
-  for (const page of pages) {
-    for (const notice of page) {
-      const known = byId.get(notice.id);
-      if (!known || (notice.read && !known.read)) byId.set(notice.id, notice);
-    }
+  for (const notice of pages.flat()) {
+    if (isFirstOrReadVersion(notice, byId.get(notice.id))) byId.set(notice.id, notice);
   }
   return [...byId.values()].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+function isFirstOrReadVersion(notice: Notification, known: Notification | undefined): boolean {
+  return !known || (notice.read && !known.read);
 }
