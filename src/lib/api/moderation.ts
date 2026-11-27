@@ -149,10 +149,7 @@ export const moderationApi = {
    * doação confirmada.
    */
   adminGrantSupporterSeal: (username: string, reason: string) =>
-    api.post<AdminSupporterSealView>(
-      `/admin/doacoes/sele/${encodeURIComponent(username)}`,
-      { reason },
-    ),
+    api.post<AdminSupporterSealView>(`/admin/doacoes/sele/${encodeURIComponent(username)}`, reason),
 
   adminUserHistory: (username: string, limit = 50) =>
     api.get<AdminHistoryView>(
