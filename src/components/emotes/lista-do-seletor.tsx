@@ -1,4 +1,4 @@
-import { createElement, useEffect, useId, useState } from "react";
+import { Fragment, createElement, useEffect, useId, useState } from "react";
 import type { ReactNode } from "react";
 
 import { texts } from "@/texts";
@@ -15,14 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
   EmptyState,
-  Input,
   LoadingState,
   MetaLine,
+  SearchField,
   Tabs,
   TabsList,
   TabsTrigger,
 } from "@rede-enois/design-system/ui";
-import { Search } from "lucide-react";
 
 import { resolveCdnUrl } from "@/lib/api/media";
 import { getCurrentUserId } from "@/lib/current-user";
@@ -66,21 +65,20 @@ const gradeRolavel = (stale: boolean) =>
   `min-h-52 max-h-96 min-w-0 overflow-y-auto overscroll-contain pr-1 ${stale ? "opacity-60 transition-opacity" : ""}`;
 
 /**
- * As caixas que a view do seletor desenha entre as views do DS: a lupa sobre o campo, a faixa com
- * o envio, a rolagem da grade, a grade com as colunas das células e o rodapé com o contador e as
- * páginas. Ficam fora do JSX de propósito — o app compõe views do DS, e a caixa de composição é o
+ * As caixas que a view do seletor desenha entre as views do DS: a faixa com o envio, a busca, a
+ * rolagem da grade, a grade com as colunas das células e o rodapé com o contador e as páginas. Ficam fora do JSX de propósito — o app compõe views do DS, e a caixa de composição é o
  * construtor com o tema, não uma tag aberta na tela.
  */
 const caixa = (tema: string, children: ReactNode) =>
   createElement("div", { className: tema }, children);
-const grade = (tema: string, children: ReactNode) =>
-  createElement("div", { className: tema }, children);
-
-const TEMA_DA_LUPA = "absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle";
-const TEMA_DA_BUSCA = "relative min-w-0";
-/** A caixa do seletor: a moldura da view do DS, com a faixa de abas e o envio na mesma grade. */
+/**
+ * A caixa do seletor: a moldura da view do DS, com a faixa de abas e o envio na mesma grade. As
+ * linhas são as mesmas do desenho (título, faixa, busca, grade, rodapé e a dica) — uma por filho.
+ * Um nó a mais, como a dica solta, empurrava a grade para a linha elástica e levava o rodapé para
+ * fora da caixa.
+ */
 const TEMA_DO_SELETOR =
-  "grid grid-rows-[auto_auto_minmax(0,1fr)_auto] max-h-[85dvh] max-w-md overflow-hidden p-4";
+  "grid grid-rows-[auto_auto_auto_minmax(0,1fr)_auto_auto] max-h-[85dvh] max-w-md overflow-hidden p-4";
 /**
  * No celular a faixa vira uma coluna: ao lado de várias abas, o envio some para fora da tela. A
  * ordem do desenho é a das abas; só o envio sobe, para ficar em cima delas.
@@ -96,21 +94,19 @@ const TEMA_DAS_CELULAS = "grid grid-cols-8 gap-0.5 sm:grid-cols-10";
 const TEMA_DO_RODAPE = "flex items-center justify-between gap-2";
 const TEMA_DAS_PAGINAS = "flex items-center gap-1";
 
-/** A busca: a lupa dentro do campo, e o foco nela quando o seletor abre. */
+/**
+ * A busca. O campo do DS já põe a lupa e o espaço dela — desenhar a lupa por fora, como aqui
+ * antes, sobrepunha o desenho ao texto do marcador e a lente caía no meio dele.
+ */
 const BuscaDoSeletor = ({ valor, aoMudar }: { valor: string; aoMudar: (valor: string) => void }) =>
   caixa(
-    TEMA_DA_BUSCA,
-    <>
-      <Search {...{ className: TEMA_DA_LUPA }} />
-      <Input
-        aria-label={texts.emotes.searchPlaceholder}
-        value={valor}
-        onChange={(event) => aoMudar(event.target.value)}
-        placeholder={texts.emotes.searchPlaceholder}
-        {...{ className: "pl-8" }}
-        autoFocus
-      />
-    </>,
+    "min-w-0 py-1",
+    <SearchField
+      id="busca-do-seletor"
+      value={valor}
+      onChange={aoMudar}
+      placeholder={texts.emotes.searchPlaceholder}
+    />,
   );
 
 /** Quantas figurinhas, e as páginas quando há mais de uma: o rodapé da grade. */
@@ -159,7 +155,7 @@ function RodapeDoSeletor({
 
 /** A grade das listas locais, com as mesmas colunas da grade de catálogo do DS. */
 const GradeDeFigurinhas = ({ children }: { children: ReactNode }) =>
-  grade(TEMA_DAS_CELULAS, children);
+  caixa(TEMA_DAS_CELULAS, children);
 
 const paginaDeTerceiros = (page: number, termo: string) =>
   emotesApi.page(page, EMOTES_POR_PAGINA, termo || undefined);
@@ -372,8 +368,9 @@ export function ListaDoSeletor({
           {mostrandoBusca || mostrandoGrade ? (
             // A grade da view é todo o catálogo (De terceiros, Da comunidade) e as Recentes buscadas:
             // mesmas células, mesmas colunas e a mesma rolagem, sem estado de carregando, porque a
-            // página anterior fica na tela, apagada, até a nova chegar.
-            <>
+            // página anterior fica na tela, apagada, até a nova chegar. O fragmento não conta
+            // como caixa: a busca, a grade e o rodapé ficam nas linhas delas da caixa de fora.
+            <Fragment>
               <BuscaDoSeletor valor={busca} aoMudar={setBusca} />
 
               {isLoading && <LoadingState label={texts.emotes.loading} />}
@@ -408,9 +405,9 @@ export function ListaDoSeletor({
                 totalPages={data?.totalPages ?? 1}
                 onPageChange={setPagina}
               />
-            </>
+            </Fragment>
           ) : (
-            <>
+            <Fragment>
               <BuscaDoSeletor valor={busca} aoMudar={setBusca} />
 
               {caixa(
@@ -433,12 +430,13 @@ export function ListaDoSeletor({
                 </>,
               )}
 
-              {locais.length > 0 && <MetaLine>{texts.emotes.count(locais.length)}</MetaLine>}
-            </>
+              {locais.length > 0 &&
+                caixa(TEMA_DO_RODAPE, <MetaLine>{texts.emotes.count(locais.length)}</MetaLine>)}
+            </Fragment>
           )}
 
           {/* A dica do rodapé é a mesma da view, e diz como o código entra no texto. */}
-          <MetaLine>{texts.emotes.hint}</MetaLine>
+          <MetaLine {...{ className: "pt-2" }}>{texts.emotes.hint}</MetaLine>
         </DialogContent>
       </Dialog>
 

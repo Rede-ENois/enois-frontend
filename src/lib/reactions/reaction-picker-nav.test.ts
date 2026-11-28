@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { attachReactionPickerNav } from "./reaction-picker-nav";
+import { attachReactionPickerNav, posicionarColunas } from "./reaction-picker-nav";
 
 describe("attachReactionPickerNav", () => {
   afterEach(() => {
@@ -81,6 +81,42 @@ describe("attachReactionPickerNav", () => {
     );
     expect(css).not.toMatch(
       /@media\s*\(hover:\s*none\)\s*and\s*\(pointer:\s*coarse\)\s*\{[^}]*\[data-reaction-nav-bar\]\s*\{\s*display:\s*none/s,
+    );
+  });
+
+  it("põe cada casa na coluna dela, três por coluna, e a favorita puxa a coluna para a frente", () => {
+    const grade = document.createElement("div");
+    grade.className = "grid grid-cols-6";
+    const tipos = ["LIKE", "HEART_PURPLE", "LOVE", "LAUGH", "ROFL", "SKULL", "WOW", "SAD"];
+    for (const tipo of tipos) {
+      // No markup do app a marca está no `<span>` dentro da casa, com a contagem.
+      const casa = document.createElement("button");
+      const figura = document.createElement("span");
+      figura.setAttribute("data-reaction-emoji", tipo);
+      casa.append(figura, document.createElement("span"));
+      grade.append(casa);
+    }
+    document.body.append(grade);
+
+    posicionarColunas(grade, ["LIKE", "HEART_PURPLE", "WOW"]);
+    const coluna = (el: Element) => el.getAttribute("data-reaction-coluna");
+    const ordem = (el: Element) => (el as HTMLElement).style.order;
+    const casas = [...grade.children];
+    expect(casas.map(coluna)).toEqual(["0", "0", "0", "1", "1", "1", "2", "2"]);
+    // LIKE e HEART_PURPLE já estão na fileira de cima da coluna delas: só a coluna muda de lugar.
+    expect(casas.map(ordem)).toEqual(["0", "0", "0", "3", "3", "3", "2", "2"]);
+    expect(casas[6]?.getAttribute("data-reaction-favorita-grade")).toBe("sim");
+    expect(casas[4]?.hasAttribute("data-reaction-favorita-grade")).toBe(false);
+  });
+
+  it("a favorita da fileira de baixo sobe para a fileira de cima no painel do +", () => {
+    const css = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
+    // A coluna é do JS (`grid-auto-flow: column`); a favorita sai da coluna pela fileira.
+    expect(css).toMatch(
+      /grid-auto-flow:\s*column\s*!important;[^}]*grid-template-rows:\s*repeat\(3,/s,
+    );
+    expect(css).toMatch(
+      />\s*\[data-reaction-favorita-grade="sim"\]\s*\{[^}]*grid-row:\s*1\s*!important;/s,
     );
   });
 });

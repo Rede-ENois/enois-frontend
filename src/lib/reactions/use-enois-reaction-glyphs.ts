@@ -102,6 +102,13 @@ function syncElementGlyph(element: Element): void {
       if (element.getAttribute("title") !== label) {
         element.setAttribute("title", label);
       }
+      // O coração roxo chega como o caminho da figura: o botão com só ele fica sem figura no
+      // CSS, que pinta pelo emoji, e o leitor de tela lê o nome de arquivo.
+      const figura =
+        pickerType === PURPLE_HEART_REACTION
+          ? PURPLE_HEART_EMOJI
+          : REACTION_FIGURE_EMOJIS[pickerType as ReactionType];
+      if (figura && element.textContent?.trim() !== figura) element.textContent = figura;
     }
     return;
   }
