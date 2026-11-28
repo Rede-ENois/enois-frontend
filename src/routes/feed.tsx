@@ -145,6 +145,7 @@ import { LinkedInSyncPrompt } from "@/components/linkedin-sync-prompt";
 import { MentionTextarea } from "@/components/mention-textarea";
 import { ConductLessonDialog } from "@/components/moderation/conduct-lesson-dialog";
 import { NightRestReminder } from "@/components/night-rest-reminder";
+import { PortfolioFeedEntry } from "@/components/portfolio/portfolio-feed-entry";
 import { PostCard } from "@/components/post-card";
 import { PdfAttachmentCard } from "@/components/post/pdf-attachment-card";
 import { PollComposer } from "@/components/post/poll-composer";
@@ -1746,13 +1747,31 @@ export function Home() {
 
             <div className="space-y-4">
               {!feedLoading &&
-                feedPosts.map((p, index) => (
-                  <Fragment key={p.id}>
-                    {index === caughtUpAt && <CaughtUpDivider />}
+                feedPosts.map((p, index) => {
+                  const row = (
+                    <Fragment key={p.id}>
+                      {index === caughtUpAt && <CaughtUpDivider />}
 
-                    <FeedPostRow post={p} index={index} feedTab={tab} firstPostRef={firstPostRef} />
-                  </Fragment>
-                ))}
+                      <FeedPostRow
+                        post={p}
+                        index={index}
+                        feedTab={tab}
+                        firstPostRef={firstPostRef}
+                      />
+                    </Fragment>
+                  );
+
+                  // A entrada do feed principal, logo depois do compositor: a vitrine de quem está
+                  // lendo, ou o convite para montar a dela, antes de qualquer publicação.
+                  return tab === "FOR_YOU" && index === 0 ? (
+                    <Fragment key={`portfolio-${p.id}`}>
+                      <PortfolioFeedEntry />
+                      {row}
+                    </Fragment>
+                  ) : (
+                    row
+                  );
+                })}
 
               {!feedLoading && feedPosts.length === 0 && (
                 <EmptyState

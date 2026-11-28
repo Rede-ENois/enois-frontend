@@ -15,6 +15,7 @@ import {
   LayoutGrid,
   MessageCircle,
   NotebookPen,
+  Sticker,
   Users,
   UsersRound,
   Wrench,
@@ -103,6 +104,14 @@ export const navigationItems: {
     context: "SOCIAL",
     section: "community",
     notifies: "BLOGS",
+  },
+  {
+    to: "/figurinhas",
+    label: texts.navigation.items.stickers,
+    icon: Sticker,
+    module: null,
+    context: "SOCIAL",
+    section: "community",
   },
   {
     to: "/par-de-estudo",

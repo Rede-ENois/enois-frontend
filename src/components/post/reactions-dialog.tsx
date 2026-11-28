@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 
-import { REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
+import { PURPLE_HEART_EMOJI, REACTION_PICKER_EMOJIS } from "@/constants/reaction-emojis";
 import { usePostCardStore } from "@/stores/post-card.store";
 import type { PostIdProps } from "@/types/components/post/post-id-props";
 import { ReactionsDialog as ReactionsDialogView } from "@rede-enois/design-system/domain";
@@ -8,6 +8,16 @@ import { ReactionsDialog as ReactionsDialogView } from "@rede-enois/design-syste
 import { profileQueries } from "@/lib/query-options/profiles";
 import { reactionsQueryOptions } from "@/lib/reactions/query-options";
 import { useAuth } from "@/lib/use-auth";
+
+/**
+ * O diálogo desenha `emojis[tipo]` como texto, e o valor do seletor para o coração roxo é o
+ * caminho da figurinha (`/emojis/enois/heart_purple.svg`): aqui a pílula mostra o emoji dele. As
+ * demais reações ficam como estão — o CSS desenha a figurinha por cima do texto.
+ */
+const DIALOG_EMOJIS: Record<string, string> = {
+  ...REACTION_PICKER_EMOJIS,
+  HEART_PURPLE: PURPLE_HEART_EMOJI,
+};
 
 /**
  * Lista quem reagiu ao post, filtrável por tipo.
@@ -49,7 +59,7 @@ export function ReactionsDialog({ postId }: PostIdProps) {
       summary={data?.summary ?? {}}
       users={users}
       currentUserId={currentUserId}
-      emojis={REACTION_PICKER_EMOJIS}
+      emojis={DIALOG_EMOJIS}
       profileHref={(username) => `/perfil/${username}`}
       isLoading={isLoading}
       isError={isError}

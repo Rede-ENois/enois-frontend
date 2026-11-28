@@ -19,6 +19,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   personalization: vi.fn(),
   navigationCounts: vi.fn(),
+  me: vi.fn(),
+  portfolioByUsername: vi.fn(),
+  portfolioList: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -40,6 +43,10 @@ vi.mock("@/lib/navigation-signals", () => ({
 vi.mock("@/lib/require-auth", () => ({ requireAuth: () => undefined }));
 vi.mock("@/lib/use-personalization", () => ({
   usePersonalization: mocks.personalization,
+}));
+vi.mock("@/lib/api", () => ({
+  profileApi: { me: mocks.me },
+  portfolioApi: { byUsername: mocks.portfolioByUsername, list: mocks.portfolioList },
 }));
 vi.mock("@/components/app-container", () => ({
   AppContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -84,6 +91,18 @@ describe("rota do Explorar", () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     mocks.personalization.mockReset();
     mocks.navigationCounts.mockReset();
+    mocks.me.mockReset();
+    mocks.portfolioByUsername.mockReset();
+    mocks.portfolioList.mockReset();
+    mocks.me.mockResolvedValue({ username: "eu", name: "Eu", avatar: null });
+    mocks.portfolioByUsername.mockResolvedValue({
+      username: "eu",
+      version: 1,
+      html: "<h1>Interfaces</h1>",
+      publishedAt: "2026-11-20T12:00:00Z",
+      blocks: [],
+    });
+    mocks.portfolioList.mockResolvedValue({ items: [], nextCursor: null });
     mocks.personalization.mockReturnValue(pessoais());
     mocks.navigationCounts.mockReturnValue({
       summary: undefined,
@@ -149,5 +168,152 @@ describe("rota do Explorar", () => {
     await settle();
 
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("vitrines no Explorar", () => {
+  let root: Root;
+  let host: HTMLDivElement;
+
+  const settle = () => act(() => new Promise<void>((done) => setTimeout(done, 0)));
+
+  const render = async () => {
+    host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root.render(
+        <QueryClientProvider
+          client={
+            new QueryClient({
+              // A leitura das vitrines é a mesma do app (60 s): devolver a consulta no cache faz
+              // o Explorar de cada teste reusar a resposta do teste anterior.
+              defaultOptions: { queries: { retry: false, gcTime: 0 } },
+            })
+          }
+        >
+          <ExplorePage />
+        </QueryClientProvider>,
+      );
+    });
+    await settle();
+  };
+
+  const secao = (titulo: string) =>
+    [...document.body.querySelectorAll("section")].find((item) =>
+      item.textContent?.startsWith(titulo),
+    );
+
+  beforeEach(() => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    mocks.personalization.mockReset();
+    mocks.navigationCounts.mockReset();
+    mocks.me.mockReset();
+    mocks.portfolioByUsername.mockReset();
+    mocks.portfolioList.mockReset();
+    mocks.personalization.mockReturnValue(pessoais());
+    mocks.navigationCounts.mockReturnValue({
+      summary: undefined,
+      disabledModules: new Set<string>(),
+      unreadMessages: 0,
+      pendingRequests: 0,
+    });
+    mocks.me.mockResolvedValue({ username: "eu", name: "Eu", avatar: null });
+    mocks.portfolioByUsername.mockResolvedValue({
+      username: "eu",
+      version: 1,
+      html: "<h1>Interfaces</h1>",
+      publishedAt: "2026-11-20T12:00:00Z",
+      blocks: [],
+    });
+    mocks.portfolioList.mockResolvedValue({ items: [], nextCursor: null });
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("a própria vitrine vem em destaque e as outras com o nome de quem publicou", async () => {
+    mocks.portfolioList.mockResolvedValueOnce({
+      items: [
+        {
+          username: "eu",
+          name: "Eu",
+          avatarUrl: null,
+          version: 3,
+          publishedAt: "2026-11-22T12:00:00Z",
+          title: "Interfaces",
+        },
+        {
+          username: "bia",
+          name: "Bia",
+          avatarUrl: null,
+          version: 1,
+          publishedAt: "2026-11-21T12:00:00Z",
+          title: "Ilustração e cerâmica",
+        },
+      ],
+      nextCursor: null,
+    });
+    await render();
+
+    const vitrines = secao("Vitrines da comunidade");
+    if (!vitrines) throw new Error("seção de vitrines não renderizada");
+    expect(vitrines.textContent).toContain("Sua vitrine");
+    expect(vitrines.textContent).toContain("Bia");
+    expect(vitrines.textContent).toContain("Ilustração e cerâmica");
+    expect(vitrines.querySelectorAll('a[href="/portfolio/eu"]')).toHaveLength(1);
+    expect(vitrines.querySelector('a[href="/portfolio/bia"]')).not.toBeNull();
+  });
+
+  it("o carregar mais busca a página seguinte pelo cursor", async () => {
+    mocks.portfolioList
+      .mockResolvedValueOnce({
+        items: [
+          {
+            username: "bia",
+            name: "Bia",
+            avatarUrl: null,
+            version: 1,
+            publishedAt: "2026-11-21T12:00:00Z",
+            title: "Ilustração e cerâmica",
+          },
+        ],
+        nextCursor: "abc",
+      })
+      .mockResolvedValueOnce({
+        items: [
+          {
+            username: "caio",
+            name: "Caio",
+            avatarUrl: null,
+            version: 1,
+            publishedAt: "2026-11-19T12:00:00Z",
+            title: null,
+          },
+        ],
+        nextCursor: null,
+      });
+    await render();
+
+    const more = [...document.body.querySelectorAll("button")].find(
+      (item) => item.textContent?.trim() === "Carregar mais vitrines",
+    );
+    if (!more) throw new Error("botão de carregar mais não renderizado");
+    await act(async () => more.click());
+    await settle();
+
+    expect(mocks.portfolioList).toHaveBeenLastCalledWith("abc", 12);
+    expect(document.body.textContent).toContain("Caio");
+  });
+
+  it("só as outras falhando: a própria continua e o aviso oferece tentar de novo", async () => {
+    mocks.portfolioList.mockRejectedValueOnce(new Error("rede fora"));
+    await render();
+
+    expect(document.body.textContent).toContain("Não foi possível carregar as outras vitrines.");
+    expect(document.body.textContent).toContain("Sua vitrine");
+    expect(document.body.textContent).toContain("Desabafos");
   });
 });

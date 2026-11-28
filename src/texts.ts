@@ -35,9 +35,11 @@ export const texts = {
     tabRecent: "Recentes",
     tabEnois: "É Nóis",
     tabThirdParty: "De terceiros",
+    tabCommunity: "Da comunidade",
     loading: "Carregando figurinhas...",
     empty: "Nenhuma figurinha com esse nome.",
     error: "Não foi possível carregar as figurinhas agora.",
+    botaoEnviar: "Enviar figurinha",
     hint: "As mais usadas primeiro. A figurinha entra no texto como :codigo:, e quem lê vê a imagem.",
     count: (total: number) => `${total} ${total === 1 ? "figurinha" : "figurinhas"}`,
     page: (page: number, totalPages: number) => `Página ${page} de ${totalPages}`,
@@ -189,6 +191,7 @@ export const texts = {
       messages: "Mensagens",
       saved: "Salvos",
       blogs: "Blogs",
+      stickers: "Figurinhas",
       jobs: "Vagas",
       companies: "Empresas",
       mentoring: "Mentoria",
@@ -399,7 +402,7 @@ export const texts = {
     recruiterTitle: "Meu banco de talentos",
     recruiterSubtitle:
       "O banco que você publica: a finalidade, as condições de tratamento e as informações que pede. Quem se inscreve vê tudo isso antes de autorizar.",
-    recruiterModeOff: "Ative o modo recrutador no seu perfil para abrir o seu banco de talentos.",
+    recruiterModeOff: "Ative o modo recrutador para abrir o seu banco de talentos.",
     recruiterError: "Não foi possível carregar seu banco. Tente de novo.",
     recruiterNotFound: "Você ainda não criou o seu banco de talentos.",
     saveDone: "Banco atualizado.",
@@ -413,7 +416,6 @@ export const texts = {
     resumeError: "Não foi possível baixar o currículo. Tente de novo.",
     openShowcase: "Ver o Banco de Talentos",
     openPanel: "Abrir meu banco de talentos",
-    openProfile: "Ir para o meu perfil",
   },
 
   /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */
@@ -1782,6 +1784,24 @@ export const texts = {
       reason: "Advertência",
       sanctionReason: "Sanção",
     },
+    /**
+     * O selo de apoiador registrado à mão, no painel do perfil. Para quando o Pix chegou e o
+     * comprovante não foi reconhecido — sem isto a pessoa paga e fica sem o selo.
+     */
+    seal: {
+      button: "Adicionar tag de apoiador",
+      buttonDone: "Selo de apoiador registrado",
+      hint: "Para quando a doação chegou e o comprovante não foi reconhecido. Registra o selo à mão, com o seu nome e o motivo.",
+      title: "Adicionar tag de apoiador?",
+      description: (target: string) =>
+        `${target} passa a aparecer como apoiador no perfil e nas publicações. Um selo por conta: a próxima tentativa só confirma que já foi registrado.`,
+      placeholder: "Por que o selo está sendo registrado à mão? (mínimo 10 caracteres)",
+      tooShort: "Escreva pelo menos 10 caracteres.",
+      confirm: "Registrar selo",
+      done: "Selo de apoiador registrado.",
+      already: "Esta conta já tem o selo registrado.",
+      error: "Não foi possível registrar o selo.",
+    },
   },
 
   posts: {
@@ -1897,6 +1917,14 @@ export const texts = {
       removed: "Currículo removido.",
       saved: "Currículo atualizado.",
       error: "Não foi possível salvar o currículo. Tente novamente.",
+    },
+    /** Modo recrutador: ligado na conta, abre a central de recrutamento e o banco de talentos. */
+    recruiterMode: {
+      label: "Sou recrutador",
+      hint: "Ligado, você ganha a central de recrutamento (vagas) e o seu banco de talentos.",
+      on: "Modo recrutador ligado.",
+      off: "Modo recrutador desligado.",
+      error: "Não foi possível salvar o modo recrutador. Tente de novo.",
     },
     /** Etiqueta ao lado do nome: "vulgo Java". */
     aka: (value: string) => `vulgo ${value}`,
@@ -2033,6 +2061,37 @@ export const texts = {
     },
   },
 
+  portfolio: {
+    seoTitle: (name: string) => `Portfólio de ${name} · Énóis`,
+    seoFallbackTitle: "Portfólio",
+    seoDescription: (name: string) =>
+      `A vitrine profissional de ${name} no Énóis: projetos, textos, imagens e documentos publicados pela própria pessoa.`,
+    notFound: "Esta vitrine não existe ou não está no ar.",
+    blockMissing: "Esta peça não está mais no portfólio.",
+    backToProfile: "Ir para o perfil",
+    editorTitle: "Publicar no portfólio",
+    savePageError: "Não foi possível salvar a página.",
+    saveBlockError: "Não foi possível salvar a peça.",
+    removeError: "Não foi possível remover a peça.",
+    reorderError: "Não foi possível mudar a ordem das peças.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    pageSaved: "Página salva. O público continua vendo a versão publicada.",
+    blockSaved: "Peça salva.",
+    blockRemoved: "Peça removida.",
+    published: "Portfólio publicado.",
+    linkInvalid: "O link da peça precisa começar com https://.",
+    blockContentRequired: "A peça precisa de texto ou de link.",
+    blockTypeRequired: "Escolha o tipo da peça.",
+    projectInvalid: "Escolha um dos seus projetos do perfil.",
+    blockLimit: "O portfólio chegou ao limite de 30 peças.",
+    titleTooLong: "O título da peça passa de 160 caracteres.",
+    textTooLong: "O texto da peça passa de 4.000 caracteres.",
+    invalidPage: "A página precisa de HTML válido.",
+    loadError: "Não foi possível carregar sua vitrine.",
+    showcasesLoadError: "Não foi possível carregar as outras vitrines.",
+    loadMore: "Carregar mais vitrines",
+    retry: "Tentar de novo",
+  },
   blog: {
     readingTime: (minutes: number) => `${minutes} min de leitura estimada`,
     seoFallbackTitle: "Blog",

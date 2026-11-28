@@ -169,6 +169,20 @@ describe("Seletor de figurinhas", () => {
     expect(document.body.textContent).toContain(texts.emotes.count(TOTAL));
   });
 
+  it("a busca é o campo do DS: a lupa fica nele, não solta sobre o marcador", async () => {
+    await renderizar();
+    await esperarAte(() => grade().length === EMOTES_POR_PAGINA);
+
+    const campo = document.querySelector<HTMLInputElement>(
+      `input[placeholder="${texts.emotes.searchPlaceholder}"]`,
+    );
+    expect(campo?.type).toBe("search");
+    // O campo do DS já vem com a lupa dentro e com o espaço dela para o texto.
+    expect(campo?.className).toContain("pl-10");
+    // O contador do campo do DS fica ao lado dele; antes, um campo sem contador o deixaria aparecer.
+    expect(campo?.parentElement?.textContent).not.toMatch(/\d+ \/ /);
+  });
+
   it("a grade usa a miniatura do proxy, não a imagem grande", async () => {
     await renderizar();
     await esperarAte(() => grade().length === EMOTES_POR_PAGINA);

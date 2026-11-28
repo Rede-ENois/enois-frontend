@@ -92,6 +92,8 @@ import { Route as NotificacoesIndexRouteImport } from './routes/notificacoes.ind
 import { Route as NotificacoesPreferenciasRouteImport } from './routes/notificacoes.preferencias'
 import { Route as PerfilIndexRouteImport } from './routes/perfil.index'
 import { Route as PerfilUsernameRouteImport } from './routes/perfil.$username'
+import { Route as PortfolioUsernameRouteImport } from './routes/portfolio.$username'
+import { Route as PortfolioEditarRouteImport } from './routes/portfolio.editar'
 import { Route as PostPostIdRouteImport } from './routes/post.$postId'
 import { Route as ProfissionalUsernameRouteImport } from './routes/profissional_.$username'
 import { Route as ProjetosIndexRouteImport } from './routes/projetos.index'
@@ -526,6 +528,16 @@ const PerfilUsernameRoute = PerfilUsernameRouteImport.update({
   path: '/perfil/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortfolioUsernameRoute = PortfolioUsernameRouteImport.update({
+  id: '/portfolio/$username',
+  path: '/portfolio/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioEditarRoute = PortfolioEditarRouteImport.update({
+  id: '/portfolio/editar',
+  path: '/portfolio/editar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PostPostIdRoute = PostPostIdRouteImport.update({
   id: '/post/$postId',
   path: '/post/$postId',
@@ -697,6 +709,8 @@ export interface FileRoutesByFullPath {
   '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
+  '/portfolio/$username': typeof PortfolioUsernameRoute
+  '/portfolio/editar': typeof PortfolioEditarRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
@@ -799,6 +813,8 @@ export interface FileRoutesByTo {
   '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
+  '/portfolio/$username': typeof PortfolioUsernameRoute
+  '/portfolio/editar': typeof PortfolioEditarRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
@@ -902,6 +918,8 @@ export interface FileRoutesById {
   '/murais/$muralId': typeof MuraisMuralIdRoute
   '/notificacoes/preferencias': typeof NotificacoesPreferenciasRoute
   '/perfil/$username': typeof PerfilUsernameRoute
+  '/portfolio/$username': typeof PortfolioUsernameRoute
+  '/portfolio/editar': typeof PortfolioEditarRoute
   '/post/$postId': typeof PostPostIdRoute
   '/profissional_/$username': typeof ProfissionalUsernameRoute
   '/projetos/$username': typeof ProjetosUsernameRouteWithChildren
@@ -1006,6 +1024,8 @@ export interface FileRouteTypes {
     | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
+    | '/portfolio/$username'
+    | '/portfolio/editar'
     | '/post/$postId'
     | '/profissional/$username'
     | '/projetos/$username'
@@ -1108,6 +1128,8 @@ export interface FileRouteTypes {
     | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
+    | '/portfolio/$username'
+    | '/portfolio/editar'
     | '/post/$postId'
     | '/profissional/$username'
     | '/projetos/$username'
@@ -1210,6 +1232,8 @@ export interface FileRouteTypes {
     | '/murais/$muralId'
     | '/notificacoes/preferencias'
     | '/perfil/$username'
+    | '/portfolio/$username'
+    | '/portfolio/editar'
     | '/post/$postId'
     | '/profissional_/$username'
     | '/projetos/$username'
@@ -1304,6 +1328,8 @@ export interface RootRouteChildren {
   EmpresaSlugRoute: typeof EmpresaSlugRoute
   NotificacoesPreferenciasRoute: typeof NotificacoesPreferenciasRoute
   PerfilUsernameRoute: typeof PerfilUsernameRoute
+  PortfolioUsernameRoute: typeof PortfolioUsernameRoute
+  PortfolioEditarRoute: typeof PortfolioEditarRoute
   PostPostIdRoute: typeof PostPostIdRoute
   ProfissionalUsernameRoute: typeof ProfissionalUsernameRoute
   ProjetosUsernameRoute: typeof ProjetosUsernameRouteWithChildren
@@ -1900,6 +1926,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portfolio/$username': {
+      id: '/portfolio/$username'
+      path: '/portfolio/$username'
+      fullPath: '/portfolio/$username'
+      preLoaderRoute: typeof PortfolioUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio/editar': {
+      id: '/portfolio/editar'
+      path: '/portfolio/editar'
+      fullPath: '/portfolio/editar'
+      preLoaderRoute: typeof PortfolioEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/post/$postId': {
       id: '/post/$postId'
       path: '/post/$postId'
@@ -2273,6 +2313,8 @@ const rootRouteChildren: RootRouteChildren = {
   EmpresaSlugRoute: EmpresaSlugRoute,
   NotificacoesPreferenciasRoute: NotificacoesPreferenciasRoute,
   PerfilUsernameRoute: PerfilUsernameRoute,
+  PortfolioUsernameRoute: PortfolioUsernameRoute,
+  PortfolioEditarRoute: PortfolioEditarRoute,
   PostPostIdRoute: PostPostIdRoute,
   ProfissionalUsernameRoute: ProfissionalUsernameRoute,
   ProjetosUsernameRoute: ProjetosUsernameRouteWithChildren,

@@ -151,7 +151,11 @@ function anosAtras(years: number, hoje = new Date()): string {
 beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   mocks.update.mockReset().mockResolvedValue(perfilPublico);
-  mocks.me.mockReset().mockResolvedValue({ ...perfilPublico, birthDate: "1990-05-10" });
+  mocks.me.mockReset().mockResolvedValue({
+    ...perfilPublico,
+    birthDate: "1990-05-10",
+    isRecruiter: true,
+  });
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -247,5 +251,14 @@ describe("Data de nascimento na edição do perfil", () => {
     } finally {
       process.env.TZ = tzOriginal;
     }
+  });
+
+  it("salvar outro campo não mexe no modo recrutador", async () => {
+    await montar();
+
+    await salvar();
+
+    const enviado = mocks.update.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(enviado).not.toHaveProperty("isRecruiter");
   });
 });

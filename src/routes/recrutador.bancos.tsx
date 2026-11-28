@@ -10,7 +10,7 @@ import type {
   TalentBankCandidateListState,
   TalentBankEditorValues,
 } from "@rede-enois/design-system/domain";
-import { Button, EmptyState, LoadingState, useToast } from "@rede-enois/design-system/ui";
+import { EmptyState, LoadingState, useToast } from "@rede-enois/design-system/ui";
 
 import { ApiError, talentBanksApi } from "@/lib/api";
 import { useCurrentUser } from "@/lib/current-user";
@@ -18,6 +18,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { paraCandidato } from "@/lib/talent-banks/view-models";
 
 import { AppContainer } from "@/components/app-container";
+import { RecruiterModeSwitch } from "@/components/profile/recruiter-mode-switch";
 
 /**
  * O painel do recrutador: o banco dele e as pessoas que se inscreveram.
@@ -182,13 +183,9 @@ function RecrutadorBancosPage() {
           title={texts.talentBanks.recruiterTitle}
           description={texts.talentBanks.recruiterModeOff}
         >
-          <Button
-            onClick={() =>
-              void navigate({ to: "/perfil/$username", params: { username: me.username ?? "" } })
-            }
-          >
-            {texts.talentBanks.openProfile}
-          </Button>
+          {/* O interruptor aqui, e não um desvio para o perfil: a frase manda ativar o modo, então
+              o botão que ativa fica do lado dela. */}
+          <RecruiterModeSwitch />
         </EmptyState>
       </AppContainer>
     );

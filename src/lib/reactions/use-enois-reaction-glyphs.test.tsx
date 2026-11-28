@@ -134,19 +134,52 @@ describe("useEnoisReactionGlyphs", () => {
     ).toBe("Coração roxo");
   });
 
+  it("o coração roxo do seletor sai do caminho do arquivo e ganha o emoji da figura", async () => {
+    // O valor de `emojis[HEART_PURPLE]` é o caminho da figura: o botão ficava sem figura (o CSS
+    // pinta pelo emoji) e sem nome para o leitor de tela.
+    function PickerHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <div>
+          <button type="button" data-reaction-emoji="HEART_PURPLE" title="heart_purple">
+            /emojis/enois/heart_purple.svg
+          </button>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<PickerHarness />);
+    });
+
+    const coracao = host.querySelector('button[data-reaction-emoji="HEART_PURPLE"]');
+    expect(coracao?.textContent).toBe("💜");
+    expect(coracao?.getAttribute("title")).toBe("Coração roxo");
+  });
+
   it("lista de quem reagiu e abas desenham o coração roxo como glifo, não como código", async () => {
-    // O diálogo de reações desenha `emojis[type]`, e para o coração roxo esse valor é o nome do
-    // arquivo: sem isto a lista mostrava "/emojis/enois/heart_purple.svg 1" (print da Mel).
+    // O diálogo de reações pode desenhar o valor de `emojis[type]` como texto; o código da rede é
+    // `:enois_heart_purple:`, e abstrações dele (`HEART_PURPLE`, `heart_purple`) também não podem
+    // aparecer escritas na pílula (print da Mel).
     function DialogHarness() {
       useEnoisReactionGlyphs();
       return (
         <ul>
-          <li data-testid="row-file">
-            <span>/emojis/enois/heart_purple.svg</span>
+          <li data-testid="row-texto">
+            <span>:enois_heart_purple:</span>
           </li>
 
           <li data-testid="row-code">
             <span>HEART_PURPLE</span>
+          </li>
+
+          <li data-testid="row-curto">
+            <span>heart_purple</span>
+          </li>
+
+          {/* O que o texto publicado guarda: o caminho do arquivo da figura. */}
+          <li data-testid="row-arquivo">
+            <span>/emojis/enois/heart_purple.svg</span>
           </li>
 
           <li data-testid="row-name">
@@ -164,7 +197,7 @@ describe("useEnoisReactionGlyphs", () => {
       await Promise.resolve();
     });
 
-    for (const id of ["row-file", "row-code"]) {
+    for (const id of ["row-texto", "row-code", "row-curto", "row-arquivo"]) {
       const glifo = host.querySelector(`[data-testid="${id}"] span`);
       expect(glifo?.getAttribute("data-enois-reaction-glyph")).toBe("HEART_PURPLE");
       expect(glifo?.textContent).toBe("💜");
