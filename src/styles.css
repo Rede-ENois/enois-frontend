@@ -243,33 +243,14 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
     box-shadow 150ms ease !important;
 }
 
-/* Fileira de reações favoritas no compacto: as casas do compacto são as favoritas (uma por casa,
-   na ordem da escolha) e o "+" vem logo depois delas. O desenho não depende do que o design system
-   colocou antes do "+": as casas saem da célula da grade, que passa a ter seis colunas (a grade
-   segue sendo filha do mesmo pai para o "+" continuar onde o React o pôs) e a linha de origem é
-   recolhida pelo pai, então o desenho é só esta linha — sem as seis casas de antes da fileira.
-   A `order` inline desta regra é do CSS: o JS não põe `order` nas casas do compacto.
-   Com a fileira vazia fica só o "+", e as reações continuam no DOM para o leitor de tela. */
-[data-radix-popper-content-wrapper] > div[data-reaction-favoritas-fileira="sim"] {
-  display: flex !important;
-  flex-wrap: wrap !important;
-}
-
+/* Fileira de reações favoritas: quem escolheu vê só a escolha, nas primeiras casas do compacto.
+   O `order` põe a favorita na casa dela e o "+" vem logo depois delas, sem mexer na ordem do DOM
+   (que é do React). A grade nunca fica vazia de desenho: com a fileira vazia só sobram o "+" e as
+   reações fora da tela, que continuam no DOM para o leitor de tela. */
 [data-radix-popper-content-wrapper]
   > div[data-reaction-favoritas-fileira="sim"]
-  .grid.grid-cols-6 {
-  display: contents !important;
-}
-
-[data-radix-popper-content-wrapper]
-  > div[data-reaction-favoritas-fileira="sim"]
-  [data-reaction-emoji][data-reaction-na-fileira="sim"] {
-  order: var(--favorita-ordem, 0);
-}
-
-[data-radix-popper-content-wrapper]
-  > div[data-reaction-favoritas-fileira="sim"]
-  [data-reaction-emoji]:not([data-reaction-na-fileira="sim"]) {
+  .grid.grid-cols-6
+  > [data-reaction-emoji]:not([data-filled="sim"]) {
   position: absolute !important;
   width: 1px !important;
   height: 1px !important;
@@ -278,6 +259,13 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
   overflow: hidden !important;
   clip-path: inset(50%) !important;
   white-space: nowrap !important;
+}
+
+[data-radix-popper-content-wrapper]
+  > div[data-reaction-favoritas-fileira="sim"]
+  div.grid.grid-cols-6
+  > button[title="+"] {
+  order: 6;
 }
 
 /* Barra de escolha do modal aberto pelo "+". O seletor tem largura de conteúdo (`w-fit`) e a grade
@@ -519,15 +507,6 @@ div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
   > [data-reaction-emoji] {
   border-radius: 0.375rem !important;
   scroll-snap-align: start;
-}
-
-/* A favorita no painel do "+" sai de dentro da coluna dela e sobe para a fileira de cima: assim
-   as três primeiras casas são as três primeiras colunas, e as favoritas mais abaixo aparecem na
-   primeira linha em vez de ficarem escondidas no meio da lista. A coluna dela perde o lugar e as
-   seguintes se fecham; a ordem entre as favoritas é a posição da coluna, a mesma do `order`. */
-div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
-  > [data-reaction-favorita-grade="sim"] {
-  grid-row: 1 !important;
 }
 
 [data-reaction-nav-bar] {

@@ -402,7 +402,7 @@ export const texts = {
     recruiterTitle: "Meu banco de talentos",
     recruiterSubtitle:
       "O banco que você publica: a finalidade, as condições de tratamento e as informações que pede. Quem se inscreve vê tudo isso antes de autorizar.",
-    recruiterModeOff: "Ative o modo recrutador no seu perfil para abrir o seu banco de talentos.",
+    recruiterModeOff: "Ative o modo recrutador para abrir o seu banco de talentos.",
     recruiterError: "Não foi possível carregar seu banco. Tente de novo.",
     recruiterNotFound: "Você ainda não criou o seu banco de talentos.",
     saveDone: "Banco atualizado.",
@@ -416,7 +416,6 @@ export const texts = {
     resumeError: "Não foi possível baixar o currículo. Tente de novo.",
     openShowcase: "Ver o Banco de Talentos",
     openPanel: "Abrir meu banco de talentos",
-    openProfile: "Ir para o meu perfil",
   },
 
   /** Textos que a rota do Termômetro orquestra (cabeçalho e avisos); o desenho vive no DS. */
@@ -1901,6 +1900,14 @@ export const texts = {
       saved: "Currículo atualizado.",
       error: "Não foi possível salvar o currículo. Tente novamente.",
     },
+    /** Modo recrutador: ligado na conta, abre a central de recrutamento e o banco de talentos. */
+    recruiterMode: {
+      label: "Sou recrutador",
+      hint: "Ligado, você ganha a central de recrutamento (vagas) e o seu banco de talentos.",
+      on: "Modo recrutador ligado.",
+      off: "Modo recrutador desligado.",
+      error: "Não foi possível salvar o modo recrutador. Tente de novo.",
+    },
     /** Etiqueta ao lado do nome: "vulgo Java". */
     aka: (value: string) => `vulgo ${value}`,
     connect: "Conectar",
@@ -2036,6 +2043,37 @@ export const texts = {
     },
   },
 
+  portfolio: {
+    seoTitle: (name: string) => `Portfólio de ${name} · Énóis`,
+    seoFallbackTitle: "Portfólio",
+    seoDescription: (name: string) =>
+      `A vitrine profissional de ${name} no Énóis: projetos, textos, imagens e documentos publicados pela própria pessoa.`,
+    notFound: "Esta vitrine não existe ou não está no ar.",
+    blockMissing: "Esta peça não está mais no portfólio.",
+    backToProfile: "Ir para o perfil",
+    editorTitle: "Publicar no portfólio",
+    savePageError: "Não foi possível salvar a página.",
+    saveBlockError: "Não foi possível salvar a peça.",
+    removeError: "Não foi possível remover a peça.",
+    reorderError: "Não foi possível mudar a ordem das peças.",
+    publishError: "Não foi possível publicar. Tente de novo.",
+    pageSaved: "Página salva. O público continua vendo a versão publicada.",
+    blockSaved: "Peça salva.",
+    blockRemoved: "Peça removida.",
+    published: "Portfólio publicado.",
+    linkInvalid: "O link da peça precisa começar com https://.",
+    blockContentRequired: "A peça precisa de texto ou de link.",
+    blockTypeRequired: "Escolha o tipo da peça.",
+    projectInvalid: "Escolha um dos seus projetos do perfil.",
+    blockLimit: "O portfólio chegou ao limite de 30 peças.",
+    titleTooLong: "O título da peça passa de 160 caracteres.",
+    textTooLong: "O texto da peça passa de 4.000 caracteres.",
+    invalidPage: "A página precisa de HTML válido.",
+    loadError: "Não foi possível carregar sua vitrine.",
+    showcasesLoadError: "Não foi possível carregar as outras vitrines.",
+    loadMore: "Carregar mais vitrines",
+    retry: "Tentar de novo",
+  },
   blog: {
     readingTime: (minutes: number) => `${minutes} min de leitura estimada`,
     seoFallbackTitle: "Blog",
