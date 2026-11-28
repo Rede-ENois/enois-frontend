@@ -497,6 +497,13 @@ div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
   scroll-padding-inline: 0.375rem;
 }
 
+/* A favorita que a grade do "+" tem mais abaixo sobe para a fileira de cima: ela sai da coluna dela
+   e as seguintes se fecham, em vez de ficar escondida na segunda ou na terceira linha. */
+div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(:has(> button[title="+"]))
+  > [data-reaction-favorita-grade="sim"] {
+  grid-row: 1 !important;
+}
+
 div.grid.grid-cols-6:has(> [data-reaction-emoji]):not(
     :has(> button[title="+"])
   )::-webkit-scrollbar {
