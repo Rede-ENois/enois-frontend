@@ -17,8 +17,6 @@ import { useToast } from "@rede-enois/design-system/ui";
 import { ApiError, moderationApi } from "@/lib/api";
 import { dataCurta } from "@/lib/date/format";
 
-import { AdminSupporterSealButton } from "./admin-supporter-seal-button";
-
 /** Rótulos das sanções como o histórico as desenha (o tipo vem da API, em caixa alta). */
 const TIPO = {
   WARNING: "Advertência",
@@ -127,54 +125,44 @@ export function AdminProfilePanel({ username }: { username: string }) {
   ) => React.ReactNode;
 
   return (
-    <>
-      {/*
-        O selo de apoiador registrado à mão precisa de uma view do design system (issue
-        Rede-ENois/enois-design-system#459): o app não desenha markup. Enquanto ela não chega, o
-        componente não desenha nada e o painel é o de sempre.
-      */}
-      <AdminSupporterSealButton username={username} />
-      <Section
-        profile={{ username, activeWarnings }}
-        history={rows}
-        loading={history.isLoading}
-        error={history.isError}
-        pending={
-          warn.isPending || sanction.isPending || revoke.isPending || deleteAccount.isPending
+    <Section
+      profile={{ username, activeWarnings }}
+      history={rows}
+      loading={history.isLoading}
+      error={history.isError}
+      pending={warn.isPending || sanction.isPending || revoke.isPending || deleteAccount.isPending}
+      onWarn={async (reason) => {
+        try {
+          await warn.mutateAsync(reason);
+          return true;
+        } catch {
+          return false;
         }
-        onWarn={async (reason) => {
-          try {
-            await warn.mutateAsync(reason);
-            return true;
-          } catch {
-            return false;
-          }
-        }}
-        onSanction={async (punishment, reason) => {
-          try {
-            await sanction.mutateAsync({ type: punishment.type, reason });
-            return true;
-          } catch {
-            return false;
-          }
-        }}
-        onDeleteAccount={async (reason) => {
-          try {
-            await deleteAccount.mutateAsync(reason);
-            return true;
-          } catch {
-            return false;
-          }
-        }}
-        onRevokeWarning={async (warningId, reason) => {
-          try {
-            await revoke.mutateAsync({ warningId, reason });
-            return true;
-          } catch {
-            return false;
-          }
-        }}
-      />
-    </>
+      }}
+      onSanction={async (punishment, reason) => {
+        try {
+          await sanction.mutateAsync({ type: punishment.type, reason });
+          return true;
+        } catch {
+          return false;
+        }
+      }}
+      onDeleteAccount={async (reason) => {
+        try {
+          await deleteAccount.mutateAsync(reason);
+          return true;
+        } catch {
+          return false;
+        }
+      }}
+      onRevokeWarning={async (warningId, reason) => {
+        try {
+          await revoke.mutateAsync({ warningId, reason });
+          return true;
+        } catch {
+          return false;
+        }
+      }}
+    />
   );
 }
