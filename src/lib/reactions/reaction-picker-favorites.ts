@@ -18,7 +18,7 @@ import { FAVORITAS_MAX, FAVORITAS_PADRAO, fileiraDaEscolha } from "@/lib/reactio
  * O seletor é do design system e desenha todas as reações: o compacto mostra as seis primeiras e um
  * "+", e o modal aberto pelo "+" mostra todas. Aqui, no DOM:
  *
- * - no compacto, cada reação ganha `data-filled="sim"` se está na fileira; o CSS põe as favoritas
+ * - no compacto, cada reação ganha `data-reaction-na-fileira="sim"` se está na fileira; o CSS põe as favoritas
  *   nas primeiras casas e troca pelo `order` (a posição no DOM é do React e não se mexe). Quem
  *   nunca escolheu vê o padrão (joinha e coração roxo); com a fileira vazia fica só o "+", que abre
  *   a lista inteira;
@@ -27,6 +27,8 @@ import { FAVORITAS_MAX, FAVORITAS_PADRAO, fileiraDaEscolha } from "@/lib/reactio
  */
 
 const ESCOLHA_ATTR = "data-reaction-favoritas";
+/** A casa que entrou na fileira do compacto: a marca é só daqui (o `data-filled` é do app). */
+export const FILEIRA_ATTR = "data-reaction-na-fileira";
 const TOAST_ATTR = "data-reaction-favoritas-toast";
 
 const ICONE_TRACO =
@@ -85,10 +87,10 @@ function marcarCompacto(grade: HTMLElement): void {
     const tipo = el.getAttribute("data-reaction-emoji") ?? "";
     const ordem = posicao.get(tipo);
     if (ordem === undefined) {
-      el.removeAttribute("data-filled");
+      el.removeAttribute(FILEIRA_ATTR);
       el.style.removeProperty("order");
     } else {
-      el.setAttribute("data-filled", "sim");
+      el.setAttribute(FILEIRA_ATTR, "sim");
       el.style.setProperty("order", String(ordem));
     }
     const texto = comFigura(tipo, el.textContent);

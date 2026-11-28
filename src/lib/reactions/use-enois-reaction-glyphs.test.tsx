@@ -134,6 +134,29 @@ describe("useEnoisReactionGlyphs", () => {
     ).toBe("Coração roxo");
   });
 
+  it("o coração roxo do seletor sai do caminho do arquivo e ganha o emoji da figura", async () => {
+    // O valor de `emojis[HEART_PURPLE]` é o caminho da figura: o botão ficava sem figura (o CSS
+    // pinta pelo emoji) e sem nome para o leitor de tela.
+    function PickerHarness() {
+      useEnoisReactionGlyphs();
+      return (
+        <div>
+          <button type="button" data-reaction-emoji="HEART_PURPLE" title="heart_purple">
+            /emojis/enois/heart_purple.svg
+          </button>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      root?.render(<PickerHarness />);
+    });
+
+    const coracao = host.querySelector('button[data-reaction-emoji="HEART_PURPLE"]');
+    expect(coracao?.textContent).toBe("💜");
+    expect(coracao?.getAttribute("title")).toBe("Coração roxo");
+  });
+
   it("lista de quem reagiu e abas desenham o coração roxo como glifo, não como código", async () => {
     // O diálogo de reações pode desenhar o valor de `emojis[type]` como texto; o código da rede é
     // `:enois_heart_purple:`, e abstrações dele (`HEART_PURPLE`, `heart_purple`) também não podem

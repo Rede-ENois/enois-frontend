@@ -36,7 +36,7 @@ function montarSeletor(
   return { popover, grade };
 }
 
-/** Quem está favorita na grade, na ordem do store (a mesma do `data-filled` no markup). */
+/** Quem está favorita na grade, na ordem do store (a mesma do `data-reaction-na-fileira`). */
 /** O compacto de verdade: a figura vem pelo CSS e o coração roxo chega como o caminho do arquivo. */
 function montarComoODesignSystem(): { popover: HTMLElement; grade: HTMLElement } {
   const { popover, grade } = montarSeletor(false);
@@ -63,7 +63,7 @@ function montarComoODesignSystem(): { popover: HTMLElement; grade: HTMLElement }
 }
 
 function marcadas(grade: HTMLElement): string[] {
-  return [...grade.querySelectorAll<HTMLElement>('[data-filled="sim"]')].map(
+  return [...grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')].map(
     (el) => el.getAttribute("data-reaction-emoji") ?? "",
   );
 }
@@ -266,7 +266,7 @@ describe("attachReactionFavorites", () => {
     attachReactionFavorites(document);
     expect(marcadas(compacto.grade)).toEqual(escolhidas);
     expect(
-      [...compacto.grade.querySelectorAll<HTMLElement>('[data-filled="sim"]')].map(
+      [...compacto.grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')].map(
         (el) => el.style.order,
       ),
     ).toEqual(["0", "1", "2", "3", "4"]);
@@ -320,13 +320,13 @@ describe("attachReactionFavorites", () => {
     // A fileira real (o CSS reordena as casas): só as favoritas ficam marcadas, cada uma na sua
     // posição — não há resto do seletor anterior.
     expect(
-      [...segundo.grade.querySelectorAll<HTMLElement>('[data-filled="sim"]')]
+      [...segundo.grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')]
         .sort((a, b) => Number(a.style.order) - Number(b.style.order))
         .map((el) => el.getAttribute("data-reaction-emoji")),
     ).toEqual(["LIKE", "LAUGH", "LOVE"]);
     expect(
       [...segundo.grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")]
-        .filter((el) => el.getAttribute("data-filled") !== "sim")
+        .filter((el) => el.getAttribute("data-reaction-na-fileira") !== "sim")
         .every((el) => el.style.order === ""),
     ).toBe(true);
   });
@@ -344,7 +344,7 @@ describe("attachReactionFavorites", () => {
 
     expect(useReacoesFavoritasStore.getState().favoritas).toEqual(["WOW", "LAUGH"]);
     expect(
-      [...grade.querySelectorAll<HTMLElement>('[data-filled="sim"]')]
+      [...grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')]
         .sort((a, b) => Number(a.style.order) - Number(b.style.order))
         .map((el) => el.getAttribute("data-reaction-emoji")),
     ).toEqual(["WOW", "LAUGH"]);
@@ -354,6 +354,18 @@ describe("attachReactionFavorites", () => {
     attachReactionFavorites(document);
     expect(fileiraDoModal(expandido.popover)).toEqual(["WOW", "LAUGH"]);
     window.localStorage.clear();
+  });
+
+  it("a marca do app (`data-filled`) não faz a casa fora da fileira ficar na linha", () => {
+    useReacoesFavoritasStore.setState({ favoritas: ["LIKE", "WOW"], escolheu: true });
+    const { grade } = montarSeletor(false);
+    // O app marca as próprias casas com `data-filled`; só a marca da fileira é que as tira da linha.
+    (grade.querySelector('[data-reaction-emoji="LOVE"]') as HTMLElement).setAttribute(
+      "data-filled",
+      "sim",
+    );
+    attachReactionFavorites(document);
+    expect(marcadas(grade)).toEqual(["LIKE", "WOW"]);
   });
 
   it("no modal, marca a grade com quem é favorita", () => {
