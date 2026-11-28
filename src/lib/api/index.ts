@@ -4,6 +4,7 @@ export { onboardingApi } from "./onboarding";
 export { parentalApi } from "./age";
 export { identityApi } from "./identity";
 export { profileApi } from "./profile";
+export { portfolioApi } from "./portfolio";
 export { preferencesApi } from "./preferences";
 export { feedApi } from "./feed";
 export { commentsApi } from "./comments";

@@ -1,11 +1,6 @@
 import { useEffect } from "react";
 
-import {
-  REACTION_EMOJI_LABELS,
-  REACTION_FIGURE_EMOJIS,
-  REACTION_PICKER_EMOJIS,
-  REACTION_PICKER_ORDER,
-} from "@/constants/reaction-emojis";
+import { REACTION_FIGURE_EMOJIS, REACTION_PICKER_ORDER } from "@/constants/reaction-emojis";
 import {
   REACOES_FAVORITAS_STORAGE_KEY,
   hidratarReacoesFavoritas,
@@ -16,7 +11,6 @@ import type { ReactionType } from "@/types/application/reaction/reaction-type";
 
 import { getEnoisEmojiByCode } from "@/lib/emotes/enois-pack";
 import { FAVORITAS_MAX, FAVORITAS_PADRAO, fileiraDaEscolha } from "@/lib/reactions/favoritas";
-import { posicionarColunas } from "@/lib/reactions/reaction-picker-nav";
 
 /**
  * Põe a fileira de reações favoritas da pessoa no seletor.
@@ -24,15 +18,17 @@ import { posicionarColunas } from "@/lib/reactions/reaction-picker-nav";
  * O seletor é do design system e desenha todas as reações: o compacto mostra as seis primeiras e um
  * "+", e o modal aberto pelo "+" mostra todas. Aqui, no DOM:
  *
- * - no compacto, cada reação ganha `data-reaction-na-fileira="sim"` se está na fileira; o CSS monta a linha com
- *   as favoritas, na ordem da escolha, e o "+" logo depois (a posição no DOM é do React e não se
- *   mexe). Quem nunca escolheu vê o padrão (joinha e coração roxo); com a fileira vazia fica só o
- *   "+", que abre a lista inteira;
+ * - no compacto, cada reação ganha `data-reaction-na-fileira="sim"` se está na fileira; o CSS põe as favoritas
+ *   nas primeiras casas e troca pelo `order` (a posição no DOM é do React e não se mexe). Quem
+ *   nunca escolheu vê o padrão (joinha e coração roxo); com a fileira vazia fica só o "+", que abre
+ *   a lista inteira;
  * - no modal, a lista ganha uma barra no topo: a fileira de agora, com a estrela para tirar e setas
  *   para mudar a ordem; o toque na grade põe (e tira) da fileira.
  */
 
 const ESCOLHA_ATTR = "data-reaction-favoritas";
+/** A casa que entrou na fileira do compacto: a marca é só daqui (o `data-filled` é do app). */
+export const FILEIRA_ATTR = "data-reaction-na-fileira";
 const TOAST_ATTR = "data-reaction-favoritas-toast";
 
 const ICONE_TRACO =
@@ -81,151 +77,27 @@ function fileiraDoCompacto(favoritas: string[], escolheu: boolean): string[] | n
   return mesmoPadrao ? null : [...FAVORITAS_PADRAO];
 }
 
-/**
- * A casa de uma favorita que o compacto do design system não desenha.
- *
- * O seletor desenha só as cinco primeiras reações e o "+": uma favorita de qualquer outra parte da
- * lista não existe na linha, e o "+" — que sempre abre o mural inteiro — é o único nó livre para
- * ela. A casa criada aqui carrega o `data-reaction-emoji`, que é o que o toque do seletor lê para
- * reagir, e some quando o popover fecha ou vira o mural.
- */
-const FANTASMA_ATTR = "data-reaction-favorita-fantasma";
-/** A casa que entrou na fileira do compacto: é a marca daqui, e não o `data-filled` do app. */
-export const FILEIRA_ATTR = "data-reaction-na-fileira";
-
-/** O `order` do "+" é da fileira; a marca separa esse `order` do que a grade do "+" monta nas casas. */
-const ORDEM_DA_FILEIRA_ATTR = "data-reaction-fileira-ordem";
-
-/** A figura que o React desenha na casa (o `<img>`/`<svg>`): é o desenho das oficiais do pacote. */
-function figuraDaLinha(linha: ParentNode): HTMLElement | null {
-  for (const el of linha.querySelectorAll<HTMLElement>("[data-reaction-emoji]")) {
-    if (el.closest(`[${FANTASMA_ATTR}]`)) continue;
-    const figura = el.querySelector<HTMLElement>("img, svg");
-    if (figura) return figura;
-  }
-  return null;
-}
-
-/** O glifo de uma reação no seletor: o mesmo que o design system desenha (💜 no lugar do arquivo). */
-function glifoDaReacao(tipo: string): string {
-  if (tipo === PURPLE_HEART_REACTION) {
-    const codigo = getEnoisEmojiByCode(tipo.toLowerCase())?.code;
-    if (codigo) return `:${codigo}:`;
-  }
-  return (
-    REACTION_PICKER_EMOJIS[tipo]?.trim() || REACTION_FIGURE_EMOJIS[tipo as ReactionType] || tipo
-  );
-}
-
-/**
- * Uma casa com o desenho e o toque da de verdade: a figura é a mesma do `<img>` que o React pôs na
- * linha, o texto é o glifo e o título é o nome da reação. O CSS pinta o `data-reaction-emoji` como
- * pinta as outras casas; a figura copiada entra por baixo, para a casa aparecer também antes de o
- * leitor de glifos passar.
- */
-function criarFantasma(tipo: string, modelo: HTMLElement): HTMLButtonElement {
-  const botao = document.createElement("button");
-  botao.type = "button";
-  botao.setAttribute(FANTASMA_ATTR, "sim");
-  botao.setAttribute("data-reaction-emoji", tipo);
-  botao.className = modelo.className;
-  const figura = figuraDaLinha(modelo.parentElement ?? modelo);
-  if (figura) {
-    const desenho = document.createElement("span");
-    desenho.className = "h-4";
-    desenho.append(figura.cloneNode(true));
-    botao.append(desenho);
-  }
-  botao.append(glifoDaReacao(tipo));
-  botao.title = REACTION_EMOJI_LABELS[tipo as ReactionType] ?? tipo.toLowerCase();
-  return botao;
-}
-
-/**
- * A grade do React só desenha as cinco primeiras: a casa que a favorita já tem por lá é reaproveitada
- * (o CSS só muda o lugar dela), e a que não tem — de fora da primeira fileira — ganha uma casa aqui,
- * na frente do "+". Assim a linha tem uma casa por favorita, na ordem da escolha, e o "+" depois.
- */
-function completarCompacto(grade: HTMLElement, fileira: readonly string[]): void {
-  for (const el of grade.querySelectorAll<HTMLElement>(`[${FANTASMA_ATTR}]`)) el.remove();
-  const mais = grade.querySelector<HTMLElement>('button[title="+"]');
-  if (!mais || fileira.length === 0) return;
-  // No markup do app a marca fica no `<span>` que o botão envolve; por isso o filtro é no pacote todo.
-  const desenhadas = new Set(
-    [...grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")]
-      .filter((el) => !el.closest(`[${FANTASMA_ATTR}]`))
-      .map((el) => el.getAttribute("data-reaction-emoji") ?? ""),
-  );
-  const faltam = fileira.filter((tipo) => !desenhadas.has(tipo));
-  for (const tipo of faltam) mais.insertAdjacentElement("beforebegin", criarFantasma(tipo, mais));
-}
-
-/**
- * A fileira no compacto: a linha recebe uma casa por favorita, na ordem da escolha, e o "+" logo
- * depois delas. Quem nunca escolheu fica com o desenho do design system.
- */
 function marcarCompacto(grade: HTMLElement): void {
   const { favoritas, escolheu } = useReacoesFavoritasStore.getState();
   const fileira = fileiraDoCompacto(favoritas, escolheu);
-  const popover = grade.closest<HTMLElement>(
-    "[data-radix-popper-content-wrapper], [data-radix-popper-content-wrapper] > div",
-  );
-  // A grade do compacto é do React e só tem as cinco primeiras: uma favorita de fora da primeira
-  // fileira não espera uma casa do React — a casa criada aqui é dela, e a lista desenhada por ele
-  // fica no lugar dela quando aparece (daí a casa sair antes de cada passada).
-  completarCompacto(grade, fileira ?? []);
+  const popover = grade.closest<HTMLElement>("[data-radix-popper-content-wrapper] > div");
   const posicao = new Map<string, number>();
   fileira?.forEach((tipo, i) => posicao.set(tipo, i));
   for (const el of grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")) {
-    // A casa é o botão da grade; a figura dentro dele (o `<span>` que o app desenha) não é casa.
-    const casa = el.closest<HTMLElement>("div.grid.grid-cols-6") === grade ? el : null;
-    if (!casa) continue;
-    const tipo = casa.getAttribute("data-reaction-emoji") ?? "";
+    const tipo = el.getAttribute("data-reaction-emoji") ?? "";
     const ordem = posicao.get(tipo);
     if (ordem === undefined) {
-      casa.removeAttribute(FILEIRA_ATTR);
-      casa.style.removeProperty("--favorita-ordem");
+      el.removeAttribute(FILEIRA_ATTR);
+      el.style.removeProperty("order");
     } else {
-      casa.setAttribute(FILEIRA_ATTR, "sim");
-      casa.style.setProperty("--favorita-ordem", String(ordem));
+      el.setAttribute(FILEIRA_ATTR, "sim");
+      el.style.setProperty("order", String(ordem));
     }
-    // Sempre por último: o CSS (compacto e grade do "+") coloca as casas pelos atributos e pelo
-    // `order`, e um `order` inline deixado aqui nunca seria vencido pelo desenho seguinte.
-    casa.style.removeProperty("order");
-    const texto = comFigura(tipo, casa.textContent);
-    if (texto !== null) casa.textContent = texto;
+    const texto = comFigura(tipo, el.textContent);
+    if (texto !== null) el.textContent = texto;
   }
-  const mais = grade.querySelector<HTMLElement>('button[title="+"]');
-  // Sem fileira, o "+" fica na mão do seletor do design system, sem nenhum ajuste daqui.
-  const ordemDoMais = fileira && fileira.length > 0 ? String(fileira.length) : null;
-  if (mais && ordemDoMais !== null) {
-    mais.style.setProperty("order", ordemDoMais);
-    mais.setAttribute(ORDEM_DA_FILEIRA_ATTR, "sim");
-  } else if (mais?.hasAttribute(ORDEM_DA_FILEIRA_ATTR)) {
-    mais.style.removeProperty("order");
-    mais.removeAttribute(ORDEM_DA_FILEIRA_ATTR);
-  }
-  if (fileira) popover?.setAttribute("data-reaction-favoritas-fileira", "sim");
+  if (fileira && popover) popover.setAttribute("data-reaction-favoritas-fileira", "sim");
   else popover?.removeAttribute("data-reaction-favoritas-fileira");
-}
-
-/**
- * O painel do "+" também desenha as reações fora do compacto — a fileira não pode chegar até ele.
- *
- * A limpeza é só da fileira: a grade do "+" é do outro hook, que monta o `order` das colunas dele,
- * e um `order` removido aqui faria o painel ser redesenhado fora de lugar a cada passada.
- */
-export function limparCompacto(popover: HTMLElement): void {
-  popover.removeAttribute("data-reaction-favoritas-fileira");
-  for (const el of popover.querySelectorAll<HTMLElement>(`[${FANTASMA_ATTR}]`)) el.remove();
-  for (const el of popover.querySelectorAll<HTMLElement>(`[${FILEIRA_ATTR}]`)) {
-    el.removeAttribute(FILEIRA_ATTR);
-  }
-  const mais = popover.querySelector<HTMLElement>('button[title="+"]');
-  if (mais?.hasAttribute(ORDEM_DA_FILEIRA_ATTR)) {
-    mais.style.removeProperty("order");
-    mais.removeAttribute(ORDEM_DA_FILEIRA_ATTR);
-  }
 }
 
 const ARRASTO_MINIMO = 4;
@@ -310,12 +182,16 @@ function instalarArrasto(lista: HTMLElement): void {
  *
  * A grade expandida é do design system e mostra as reações na ordem dele; a fileira traz as
  * favoritas — que podem ser de qualquer parte da lista — para as primeiras casas, cada uma uma vez
- * só (a casa original fica com o mesmo `order`, então as seguintes se ajeitam sozinhas), e a coluna
- * de cada casa vem do hook da grade: o `order` muda a coluna de lugar, não a fileira dentro dela.
- * Reagir continua sendo pelo botão da reação: a fileira só muda onde a reação aparece.
+ * só (a casa original fica com o mesmo `order`, então as seguintes se ajeitam sozinhas). Reagir
+ * continua sendo pelo botão da reação: a fileira só muda onde a reação aparece.
  */
 function marcarFileira(grade: HTMLElement, fileira: readonly string[]): void {
-  posicionarColunas(grade, fileira);
+  const posicao = new Map(fileira.map((tipo, i) => [tipo, i]));
+  for (const el of grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")) {
+    const ordem = posicao.get(el.getAttribute("data-reaction-emoji") ?? "");
+    if (ordem === undefined) el.style.removeProperty("order");
+    else el.style.setProperty("order", String(ordem));
+  }
 }
 
 /** A seta da casa: troca com a vizinha, que é o atalho do arrasto (e o único com teclado). */
@@ -399,13 +275,7 @@ function marcarExpandido(grade: HTMLElement): void {
   );
   const fileira = fileiraDaEscolha(escolheu ? favoritas : FAVORITAS_PADRAO, elegiveis);
 
-  // A barra fica logo antes da grade, dentro do painel. O `<div>` de fora do popover é filho
-  // direto do wrapper: procurar lá (e não no pai da grade) acha a barra que já está montada em vez
-  // de pôr outra no nó de fora do seletor.
-  const painel = grade.closest<HTMLElement>(
-    "[data-radix-popper-content-wrapper]",
-  )?.firstElementChild;
-  let barra = painel?.querySelector<HTMLElement>(`:scope > [${ESCOLHA_ATTR}]`);
+  let barra = grade.parentElement?.querySelector<HTMLElement>(`:scope > [${ESCOLHA_ATTR}]`);
   if (!barra) barra = montarBarra(grade);
   const assinatura = JSON.stringify([fileira, elegiveis.length]);
   if (barra.dataset.assinatura !== assinatura) {
@@ -430,12 +300,11 @@ function marcarExpandido(grade: HTMLElement): void {
     if (vazio) vazio.hidden = fileira.length > 0;
   }
 
-  // O painel pode chegar como a raiz do caso de teste (a grade é o próprio wrapper): a limpeza do
-  // compacto fica no painel, seja ele quem for.
-  const dono = grade.closest<HTMLElement>(
-    "[data-radix-popper-content-wrapper], [data-radix-popper-content-wrapper] > div",
-  );
-  if (dono) limparCompacto(dono);
+  // A grade mostra quais são as favoritas: o CSS põe a estrela no canto de quem não é.
+  for (const el of grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")) {
+    const tipo = el.getAttribute("data-reaction-emoji") ?? "";
+    el.setAttribute("data-favorita", fileira.includes(tipo) ? "sim" : "nao");
+  }
   marcarFileira(grade, fileira);
 }
 

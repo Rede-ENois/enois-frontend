@@ -52,6 +52,8 @@ export type PostView = {
     | "INSTANTE"
     /** Ponteiro de um post de blog: o conteúdo mora em /blog/{username}. */
     | "BLOG"
+    /** Ponteiro de uma vitrine: o conteúdo mora em /portfolio/{username}. */
+    | "PORTFOLIO"
     /** Enquete: o content é o título e o `poll` traz as alternativas e o voto. */
     | "POLL"
     /** Reclamação: desabafo/denúncia de problema (pedido do painel de suporte). */

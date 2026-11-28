@@ -247,20 +247,20 @@ div:has(> img.rounded-xl[src*="/emojis/enois/"]) {
    na ordem da escolha) e o "+" vem logo depois delas. O desenho não depende do que o design system
    colocou antes do "+": as casas saem da célula da grade, que passa a ter seis colunas (a grade
    segue sendo filha do mesmo pai para o "+" continuar onde o React o pôs) e a linha de origem é
-   recolhida pelo pai, então o desenho é só esta linha — sem as seis casas de antes da fileira.
-   A `order` inline desta regra é do CSS: o JS não põe `order` nas casas do compacto.
-   Com a fileira vazia fica só o "+", e as reações continuam no DOM para o leitor de tela. */
+   recolhida pelo pai, então o desenho é só esta linha — sem as seis casas de antes da fileira. A
+   casa fora da fileira continua no DOM para o leitor de tela. As marcas são só da fileira: a do
+   `data-filled="sim"` é do app, e a grade do modal carrega outra. */
 [data-radix-popper-content-wrapper] > div[data-reaction-favoritas-fileira="sim"] {
   display: flex !important;
   flex-wrap: wrap !important;
 }
 
-[data-radix-popper-content-wrapper]
-  > div[data-reaction-favoritas-fileira="sim"]
-  .grid.grid-cols-6 {
+[data-radix-popper-content-wrapper] > div[data-reaction-favoritas-fileira="sim"] .grid.grid-cols-6 {
   display: contents !important;
 }
 
+/* A casa na fileira fica no lugar da escolha (`--favorita-ordem`, uma por casa) e a casa fora dela
+   some do desenho (o leitor de tela ainda a lê). */
 [data-radix-popper-content-wrapper]
   > div[data-reaction-favoritas-fileira="sim"]
   [data-reaction-emoji][data-reaction-na-fileira="sim"] {

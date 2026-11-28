@@ -128,6 +128,7 @@ import { ProfilePeek } from "@/components/profile/profile-peek";
 import { ProfileQuickComposer } from "@/components/profile/profile-quick-composer";
 import { ProfileStatusDialog } from "@/components/profile/profile-status-dialog";
 import { ProfileProjectsSection } from "@/components/profile/projects-section";
+import { RecruiterModeSwitch } from "@/components/profile/recruiter-mode-switch";
 import { VerifiedContributorPrompt } from "@/components/verified-contributor-prompt";
 
 /** Paginas de "Publicacoes recentes": o mesmo tamanho do feed, para nao sobrecarregar o perfil. */
@@ -672,6 +673,8 @@ function Profile() {
                         {texts.talentBanks.openPanel}
                       </Button>
                     )}
+                    {/* Declaração visível no próprio perfil: ligada, a central e o banco abrem. */}
+                    <RecruiterModeSwitch />
                     <ProfileResumeDialog
                       open={resumeOpen}
                       onOpenChange={setResumeOpen}

@@ -3,7 +3,7 @@ import { useReacoesFavoritasStore } from "@/stores/reacoes-favoritas.store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FAVORITAS_PADRAO } from "./favoritas";
-import { attachReactionFavorites, limparCompacto } from "./reaction-picker-favorites";
+import { attachReactionFavorites } from "./reaction-picker-favorites";
 
 const TIPOS = ["LIKE", "HEART_PURPLE", "LOVE", "LAUGH", "ROFL", "SKULL", "WOW", "SAD"];
 
@@ -36,7 +36,7 @@ function montarSeletor(
   return { popover, grade };
 }
 
-/** Quem está favorita na grade, na ordem do store (a mesma do `data-reaction-na-fileira` no markup). */
+/** Quem está favorita na grade, na ordem do store (a mesma do `data-reaction-na-fileira`). */
 /** O compacto de verdade: a figura vem pelo CSS e o coração roxo chega como o caminho do arquivo. */
 function montarComoODesignSystem(): { popover: HTMLElement; grade: HTMLElement } {
   const { popover, grade } = montarSeletor(false);
@@ -62,45 +62,22 @@ function montarComoODesignSystem(): { popover: HTMLElement; grade: HTMLElement }
   return { popover, grade };
 }
 
-/** A casa que a favorita ocupa no compacto e a do "+" (o CSS as tira da célula e as põe na linha). */
-function ordemCss(el: HTMLElement): string {
-  return el.style.getPropertyValue("--favorita-ordem");
-}
-
 function marcadas(grade: HTMLElement): string[] {
   return [...grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')].map(
     (el) => el.getAttribute("data-reaction-emoji") ?? "",
   );
 }
 
-/**
- * A ordem em que a grade expandida desenha as reações: a coluna de cada casa (o `data-reaction-coluna`
- * que o hook põe), as colunas pela `order` (sem ela, pela ordem do DOM) e, dentro de cada coluna,
- * as casas na ordem do DOM (`grid-auto-flow: column` — o `order` não mexe nelas).
- */
+/** A ordem em que a grade expandida desenha as reações (o `order` inline e, depois, a do DOM). */
 function ordemDaGrade(grade: HTMLElement): string[] {
-  // No markup do app a marca (`data-reaction-emoji`) está no `<span>` dentro do botão; no markup do
-  // design system, no próprio botão.
-  const casas = [...grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")]
-    .filter((el) => el.closest("div.grid.grid-cols-6") === grade)
-    .map((el) => ({
-      tipo: el.getAttribute("data-reaction-emoji") ?? "",
-      coluna:
-        (el.parentElement?.hasAttribute("data-reaction-coluna")
-          ? el.parentElement
-          : el
-        )?.getAttribute("data-reaction-coluna") ?? "0",
-      order: (el.parentElement?.hasAttribute("data-reaction-coluna") ? el.parentElement : el).style
-        .order,
-    }));
-  const colunas = [...new Set(casas.map((casa) => casa.coluna))].sort((a, b) => {
-    const oa = casas.find((casa) => casa.coluna === a)?.order;
-    const ob = casas.find((casa) => casa.coluna === b)?.order;
-    return (oa ? Number(oa) : Infinity) - (ob ? Number(ob) : Infinity) || Number(a) - Number(b);
-  });
-  return colunas.flatMap((coluna) =>
-    casas.filter((casa) => casa.coluna === coluna).map((casa) => casa.tipo),
-  );
+  return [...grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")]
+    .map((el) => ({ tipo: el.getAttribute("data-reaction-emoji") ?? "", order: el.style.order }))
+    .sort((a, b) => {
+      const oa = a.order ? Number(a.order) : Infinity;
+      const ob = b.order ? Number(b.order) : Infinity;
+      return oa !== ob ? oa - ob : 0;
+    })
+    .map((item) => item.tipo);
 }
 
 function fileiraDoModal(popover: HTMLElement): string[] {
@@ -135,10 +112,7 @@ describe("attachReactionFavorites", () => {
     expect(popover.getAttribute("data-reaction-favoritas-fileira")).toBe("sim");
     expect(marcadas(grade)).toEqual(["LIKE", "LAUGH"]);
     const risos = grade.querySelector<HTMLElement>('[data-reaction-emoji="LAUGH"]');
-    expect(risos ? ordemCss(risos) : null).toBe("0");
-    // O `order` inline em si é do CSS (vale também entre as casas do compacto): aqui não pode haver.
-    expect(risos?.style.order).toBe("");
-    expect(grade.querySelector<HTMLElement>('button[title="+"]')?.style.order).toBe("2");
+    expect(risos?.style.getPropertyValue("order")).toBe("0");
   });
 
   it('fileira vazia esconde todas as reações do compacto e deixa o "+" — que reabre a lista', () => {
@@ -286,46 +260,21 @@ describe("attachReactionFavorites", () => {
     });
 
     const escolhidas = ["LIKE", "HEART_PURPLE", "WOW", "SAD", "VIBE"];
-    // O compacto de verdade desenha só a primeira fileira (até SKULL) e o "+": WOW, SAD e VIBE não
-    // estão nele. O hook cria a casa delas com o mesmo desenho e o mesmo `data-reaction-emoji` — o
-    // toque do seletor lê o tipo para reagir —, na frente do "+".
-    const compacto = montarSeletor(false, [...TIPOS]);
+    // Compacto: as cinco entram nas primeiras casas (o "+" que vem depois delas no `order`); as
+    // reações de fora da fileira continuam no DOM, escondidas, para o leitor de tela.
+    const compacto = montarSeletor(false, gradeCompleta);
     attachReactionFavorites(document);
-    const linha = [
-      ...compacto.grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]'),
-    ].sort((a, b) => Number(ordemCss(a)) - Number(ordemCss(b)));
-    expect(linha.map((el) => el.getAttribute("data-reaction-emoji"))).toEqual(escolhidas);
-    expect(linha.map(ordemCss)).toEqual(["0", "1", "2", "3", "4"]);
-    // WOW e SAD já são casas da grade que o teste monta; VIBE não existe nela e é a casa criada.
-    const criada = compacto.grade.querySelector<HTMLElement>(
-      '[data-reaction-favorita-fantasma][data-reaction-emoji="VIBE"]',
-    );
-    expect(compacto.grade.querySelectorAll("[data-reaction-favorita-fantasma]")).toHaveLength(1);
-    expect(criada?.getAttribute("data-reaction-na-fileira")).toBe("sim");
-    expect(criada?.title).toBeTruthy();
-    expect(criada?.textContent?.trim()).toBeTruthy();
-    // A casa criada fica antes do "+" da linha, e o "+" vai depois das favoritas.
-    const filhos = [...compacto.grade.children].map(
-      (el) => el.getAttribute("data-reaction-emoji") ?? el.getAttribute("title"),
-    );
-    expect(filhos.at(-2)).toBe("VIBE");
-    expect(filhos.at(-1)).toBe("+");
+    expect(marcadas(compacto.grade)).toEqual(escolhidas);
+    expect(
+      [...compacto.grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')].map(
+        (el) => el.style.order,
+      ),
+    ).toEqual(["0", "1", "2", "3", "4"]);
 
     const expandido = montarSeletor(true, gradeCompleta);
     attachReactionFavorites(document);
-    // As colunas com favorita abrem a grade (a de LIKE, a de HEART_PURPLE e a de WOW, onde constam
-    // WOW, SAD e VIBE) e a de LAUGH vem depois, fechando a grade.
-    expect(ordemDaGrade(expandido.grade)).toEqual([
-      "LIKE",
-      "HEART_PURPLE",
-      "LOVE",
-      "WOW",
-      "SAD",
-      "VIBE",
-      "LAUGH",
-      "ROFL",
-      "SKULL",
-    ]);
+    // A grade do "+" mostrava só as reações do design system; agora as favoritas vêm na frente.
+    expect(ordemDaGrade(expandido.grade).slice(0, 5)).toEqual(escolhidas);
     expect(fileiraDoModal(expandido.popover)).toEqual(escolhidas);
     expect(expandido.grade.querySelectorAll("[data-reaction-emoji]")).toHaveLength(
       gradeCompleta.length,
@@ -343,17 +292,7 @@ describe("attachReactionFavorites", () => {
     (grade.querySelector('[data-reaction-emoji="ROFL"]') as HTMLElement).click();
     expect(useReacoesFavoritasStore.getState().favoritas).toEqual(["LIKE", "ROFL"]);
     expect(fileiraDoModal(popover)).toEqual(["LIKE", "ROFL"]);
-    // A coluna de LIKE abre (primeira favorita) e a de ROFL vem em seguida, inteira — a casa de
-    // ROFL sobe para a fileira de cima dela.
-    expect(ordemDaGrade(grade).slice(0, 7)).toEqual([
-      "LIKE",
-      "HEART_PURPLE",
-      "LOVE",
-      "LAUGH",
-      "ROFL",
-      "SKULL",
-      "WOW",
-    ]);
+    expect(ordemDaGrade(grade).slice(0, 2)).toEqual(["LIKE", "ROFL"]);
 
     // Reabrir o seletor (nó novo de outro React) mostra a mesma fileira: o estado é o do store.
     popover.remove();
@@ -382,13 +321,13 @@ describe("attachReactionFavorites", () => {
     // posição — não há resto do seletor anterior.
     expect(
       [...segundo.grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')]
-        .sort((a, b) => Number(ordemCss(a)) - Number(ordemCss(b)))
+        .sort((a, b) => Number(a.style.order) - Number(b.style.order))
         .map((el) => el.getAttribute("data-reaction-emoji")),
     ).toEqual(["LIKE", "LAUGH", "LOVE"]);
     expect(
       [...segundo.grade.querySelectorAll<HTMLElement>("[data-reaction-emoji]")]
         .filter((el) => el.getAttribute("data-reaction-na-fileira") !== "sim")
-        .every((el) => ordemCss(el) === "" && el.style.order === ""),
+        .every((el) => el.style.order === ""),
     ).toBe(true);
   });
 
@@ -406,7 +345,7 @@ describe("attachReactionFavorites", () => {
     expect(useReacoesFavoritasStore.getState().favoritas).toEqual(["WOW", "LAUGH"]);
     expect(
       [...grade.querySelectorAll<HTMLElement>('[data-reaction-na-fileira="sim"]')]
-        .sort((a, b) => Number(ordemCss(a)) - Number(ordemCss(b)))
+        .sort((a, b) => Number(a.style.order) - Number(b.style.order))
         .map((el) => el.getAttribute("data-reaction-emoji")),
     ).toEqual(["WOW", "LAUGH"]);
     expect(popover.getAttribute("data-reaction-favoritas-fileira")).toBe("sim");
@@ -417,114 +356,27 @@ describe("attachReactionFavorites", () => {
     window.localStorage.clear();
   });
 
+  it("a marca do app (`data-filled`) não faz a casa fora da fileira ficar na linha", () => {
+    useReacoesFavoritasStore.setState({ favoritas: ["LIKE", "WOW"], escolheu: true });
+    const { grade } = montarSeletor(false);
+    // O app marca as próprias casas com `data-filled`; só a marca da fileira é que as tira da linha.
+    (grade.querySelector('[data-reaction-emoji="LOVE"]') as HTMLElement).setAttribute(
+      "data-filled",
+      "sim",
+    );
+    attachReactionFavorites(document);
+    expect(marcadas(grade)).toEqual(["LIKE", "WOW"]);
+  });
+
   it("no modal, marca a grade com quem é favorita", () => {
     useReacoesFavoritasStore.setState({ favoritas: ["LIKE"], escolheu: true });
     const { grade } = montarSeletor(true);
     attachReactionFavorites(document);
-    // A marca é da coluna (a casa das reações com a contagem): o CSS tira a favorita da coluna
-    // dela e a põe na fileira de cima.
-    expect(
-      grade
-        .querySelector<HTMLElement>('[data-reaction-emoji="LIKE"]')
-        ?.parentElement?.getAttribute("data-reaction-favorita-grade"),
-    ).toBe("sim");
-    expect(
-      grade
-        .querySelector<HTMLElement>('[data-reaction-emoji="LOVE"]')
-        ?.parentElement?.hasAttribute("data-reaction-favorita-grade"),
-    ).toBe(false);
-  });
-
-  it("a limpeza da fileira do compacto não apaga nada do painel do +", () => {
-    useReacoesFavoritasStore.setState({ favoritas: ["LIKE", "WOW"], escolheu: true });
-    // O compacto marca as casas da fileira e o popover recebe a marca da fileira; o "+" abre, e a
-    // limpeza roda antes do painel montar: ela tira as marcas dela e mais nada da grade.
-    const compacto = montarSeletor(false);
-    attachReactionFavorites(document);
-    compacto.popover.remove();
-    const painel = montarSeletor(true).popover;
-    const grade = painel.firstElementChild as HTMLElement;
-    const mais = document.createElement("button");
-    mais.title = "+";
-    mais.style.setProperty("order", "9");
-    grade.append(mais);
-    limparCompacto(painel);
-    expect(painel.hasAttribute("data-reaction-favoritas-fileira")).toBe(false);
-    expect(grade.querySelectorAll("[data-reaction-favorita-fantasma]")).toHaveLength(0);
-    expect(grade.querySelectorAll("[data-reaction-na-fileira]")).toHaveLength(0);
-    expect(mais.style.order).toBe("9");
-    expect(grade.children).toHaveLength(TIPOS.length + 1);
-  });
-
-  it("a casa criada para a favorita de fora da primeira fileira não sobra no mural do +", () => {
-    useReacoesFavoritasStore.setState({ favoritas: ["LIKE", "VIBE"], escolheu: true });
-    const compacto = montarSeletor(false);
-    attachReactionFavorites(document);
-    expect(
-      compacto.grade.querySelector('[data-reaction-favorita-fantasma][data-reaction-emoji="VIBE"]'),
-    ).not.toBeNull();
-
-    // O "+": o compacto vira o mural (a mesma grade) e a casa criada sai — o mural já tem VIBE.
-    compacto.grade.querySelector('button[title="+"]')?.remove();
-    for (const tipo of ["SKULL", "WOW", "SAD", "VIBE"]) {
-      const botao = document.createElement("button");
-      botao.setAttribute("data-reaction-emoji", tipo);
-      compacto.grade.append(botao);
-    }
-    attachReactionFavorites(document);
-    expect(compacto.grade.querySelector("[data-reaction-favorita-fantasma]")).toBeNull();
-    expect(compacto.popover.hasAttribute("data-reaction-favoritas-fileira")).toBe(false);
-    expect(fileiraDoModal(compacto.popover)).toEqual(["LIKE", "VIBE"]);
-  });
-
-  it("a casa criada some quando a favorita deixa de estar na fileira", () => {
-    useReacoesFavoritasStore.setState({ favoritas: ["LIKE", "VIBE"], escolheu: true });
-    const { grade } = montarSeletor(false);
-    attachReactionFavorites(document);
-    expect(grade.querySelector("[data-reaction-favorita-fantasma]")).not.toBeNull();
-    useReacoesFavoritasStore.setState({ favoritas: ["LIKE"], escolheu: true });
-    attachReactionFavorites(document);
-    expect(grade.querySelector("[data-reaction-favorita-fantasma]")).toBeNull();
-  });
-
-  it("a favorita de fora da linha que entra na lista ganha a casa na hora, sem esperar o React", () => {
-    // A grade do compacto é a do React e só desenha a primeira fileira: escolher uma reação de fora
-    // dela (pelo "+") não muda a grade, e a favorita precisa aparecer na linha mesmo assim.
-    useReacoesFavoritasStore.setState({ favoritas: ["LIKE"], escolheu: true });
-    const { grade } = montarSeletor(false);
-    attachReactionFavorites(document);
-    expect(grade.querySelector('[data-reaction-emoji="VIBE"]')).toBeNull();
-    useReacoesFavoritasStore.getState().alternar("VIBE");
-    const mais = grade.querySelector<HTMLElement>('button[title="+"]');
-    for (const tipo of ["SKULL", "WOW", "SAD"]) {
-      const botao = document.createElement("button");
-      botao.setAttribute("data-reaction-emoji", tipo);
-      grade.insertBefore(botao, mais);
-    }
-    // A casa criada é da fileira (marcada como tal); a grade do React continua sem VIBE própria.
-    expect(
-      grade.querySelector('[data-reaction-emoji="VIBE"]:not([data-reaction-favorita-fantasma])'),
-    ).toBeNull();
-    attachReactionFavorites(document);
-    expect(
-      grade.querySelector<HTMLElement>(
-        '[data-reaction-favorita-fantasma][data-reaction-emoji="VIBE"]',
-      ),
-    ).not.toBeNull();
-    expect(
-      grade
-        .querySelector<HTMLElement>('[data-reaction-emoji="VIBE"]')
-        ?.getAttribute("data-reaction-na-fileira"),
-    ).toBe("sim");
-    // E quando o React desenha o compacto de novo, a casa dele fica no lugar da criada — uma só.
-    for (const el of [...grade.children]) {
-      if (el.hasAttribute("data-reaction-favorita-fantasma")) el.remove();
-    }
-    const desenhada = document.createElement("button");
-    desenhada.setAttribute("data-reaction-emoji", "VIBE");
-    grade.querySelector('button[title="+"]')?.before(desenhada);
-    attachReactionFavorites(document);
-    expect(grade.querySelectorAll('[data-reaction-emoji="VIBE"]')).toHaveLength(1);
-    expect(grade.querySelector("[data-reaction-favorita-fantasma]")).toBeNull();
+    expect(grade.querySelector('[data-reaction-emoji="LIKE"]')?.getAttribute("data-favorita")).toBe(
+      "sim",
+    );
+    expect(grade.querySelector('[data-reaction-emoji="LOVE"]')?.getAttribute("data-favorita")).toBe(
+      "nao",
+    );
   });
 });
